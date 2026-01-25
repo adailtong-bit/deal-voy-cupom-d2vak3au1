@@ -8,6 +8,7 @@ import {
   Map,
   Bell,
   Trophy,
+  Briefcase,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -48,7 +49,7 @@ export function DesktopHeader() {
             </span>
           </Link>
 
-          <div className="hidden xl:flex items-center space-x-4 text-sm font-medium">
+          <div className="hidden xl:flex items-center space-x-6 text-sm font-medium">
             <Link
               to="/"
               className={
@@ -90,16 +91,6 @@ export function DesktopHeader() {
               {t('nav.travel')}
             </Link>
             <Link
-              to="/vendor"
-              className={
-                isActive('/vendor')
-                  ? 'text-primary font-bold'
-                  : 'text-muted-foreground hover:text-foreground'
-              }
-            >
-              {t('nav.vendor')}
-            </Link>
-            <Link
               to="/seasonal"
               className={
                 isActive('/seasonal')
@@ -118,7 +109,7 @@ export function DesktopHeader() {
             <Input
               type="search"
               placeholder={t('search.placeholder')}
-              className="w-full bg-white border-2 border-primary/10 pl-9 rounded-full focus-visible:ring-primary h-9 focus-visible:border-primary/50 transition-colors"
+              className="w-full bg-white border-2 border-slate-100 pl-9 rounded-full focus-visible:ring-primary h-9 focus-visible:border-primary/50 transition-colors"
             />
           </div>
         </div>
@@ -144,13 +135,14 @@ export function DesktopHeader() {
             </Button>
           </Link>
 
-          <Link to="/upload">
+          {/* Removed Public Upload Button - Replaced with Vendor Link for clarity if needed or just removed as requested */}
+          <Link to="/vendor">
             <Button
-              variant="default"
+              variant="outline"
               size="sm"
-              className="bg-primary hover:bg-primary/90 h-8 text-xs font-bold"
+              className="hidden lg:flex gap-2 text-xs"
             >
-              {t('nav.upload')}
+              <Briefcase className="h-3 w-3" /> Area B2B
             </Button>
           </Link>
 
@@ -207,7 +199,7 @@ export function DesktopHeader() {
                   to="/vendor"
                   className="text-lg font-medium flex items-center gap-2 hover:text-primary transition-colors"
                 >
-                  <ShoppingBag className="h-4 w-4" /> {t('nav.vendor')}
+                  <Briefcase className="h-4 w-4" /> {t('nav.vendor')}
                 </Link>
               </div>
             </SheetContent>

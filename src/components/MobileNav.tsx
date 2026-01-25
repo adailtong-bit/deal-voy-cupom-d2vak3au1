@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Home, Map as MapIcon, PlusCircle, User, Trophy } from 'lucide-react'
+import { Home, Map as MapIcon, User, Trophy, Briefcase } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useLanguage } from '@/stores/LanguageContext'
 
@@ -8,38 +8,20 @@ export function MobileNav() {
   const path = location.pathname
   const { t } = useLanguage()
 
-  // Simplified for mobile - focused on core consumer experience
   const navItems = [
     { icon: Home, label: t('nav.home'), href: '/' },
     { icon: MapIcon, label: t('nav.explore'), href: '/explore' },
-    { icon: PlusCircle, label: 'Doc', href: '/upload', special: true },
+    // Removed "Upload" from here as well, kept navigation clean
     { icon: Trophy, label: 'Desafios', href: '/challenges' },
     { icon: User, label: t('nav.profile'), href: '/profile' },
   ]
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 border-t bg-background/80 backdrop-blur-md pb-safe z-50 md:hidden">
+    <div className="fixed bottom-0 left-0 right-0 border-t bg-white/95 backdrop-blur-md pb-safe z-50 md:hidden shadow-[0_-2px_10px_rgba(0,0,0,0.03)]">
       <nav className="flex items-center justify-around h-16 px-2">
         {navItems.map((item) => {
           const isActive = path === item.href
           const Icon = item.icon
-
-          if (item.special) {
-            return (
-              <Link
-                key={item.href}
-                to={item.href}
-                className="flex flex-col items-center justify-center -mt-6"
-              >
-                <div className="bg-primary text-primary-foreground rounded-full p-3 shadow-lg shadow-primary/30 transform transition-transform active:scale-95">
-                  <Icon className="h-7 w-7" />
-                </div>
-                <span className="text-[10px] font-medium mt-1 text-primary">
-                  {item.label}
-                </span>
-              </Link>
-            )
-          }
 
           return (
             <Link
@@ -49,7 +31,7 @@ export function MobileNav() {
                 'flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors',
                 isActive
                   ? 'text-primary'
-                  : 'text-muted-foreground hover:text-foreground',
+                  : 'text-slate-400 hover:text-slate-600',
               )}
             >
               <Icon

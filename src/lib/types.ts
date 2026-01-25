@@ -48,6 +48,8 @@ export interface Coupon {
     | 'Outros'
   distance: number // in meters
   expiryDate: string
+  startDate?: string
+  endDate?: string
   image: string
   logo?: string
   code: string
@@ -74,6 +76,7 @@ export interface Coupon {
   acceptsBooking?: boolean
   price?: number // For premium coupons/reservations
   isPaid?: boolean
+  source?: 'partner' | 'aggregated'
 }
 
 export type CategoryType = Coupon['category']

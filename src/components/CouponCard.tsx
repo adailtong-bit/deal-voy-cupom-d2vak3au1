@@ -2,10 +2,11 @@ import { Coupon } from '@/lib/types'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Heart, MapPin, Sparkles } from 'lucide-react'
+import { Heart, MapPin, CheckCircle2, Globe } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useCouponStore } from '@/stores/CouponContext'
 import { Link } from 'react-router-dom'
+import { useLanguage } from '@/stores/LanguageContext'
 
 interface CouponCardProps {
   coupon: Coupon
@@ -19,6 +20,7 @@ export function CouponCard({
   className,
 }: CouponCardProps) {
   const { isSaved, toggleSave } = useCouponStore()
+  const { t } = useLanguage()
   const saved = isSaved(coupon.id)
 
   const handleSave = (e: React.MouseEvent) => {
@@ -27,121 +29,85 @@ export function CouponCard({
     toggleSave(coupon.id)
   }
 
-  const isLowStock =
-    coupon.totalAvailable &&
-    coupon.reservedCount &&
-    coupon.totalAvailable - coupon.reservedCount < 20
-
-  if (variant === 'compact') {
-    return (
-      <Link to={`/coupon/${coupon.id}`} className="block h-full">
-        <Card
-          className={cn(
-            'overflow-hidden h-full flex flex-col hover:shadow-md transition-shadow',
-            className,
-          )}
-        >
-          <div className="relative h-24 w-full">
-            <img
-              src={coupon.image}
-              alt={coupon.title}
-              className="w-full h-full object-cover"
-            />
-            <Badge className="absolute top-2 left-2 bg-primary text-white font-bold shadow-sm">
-              {coupon.discount}
-            </Badge>
-          </div>
-          <CardContent className="p-3 flex-1 flex flex-col">
-            <h3 className="font-bold text-sm line-clamp-1">
-              {coupon.storeName}
-            </h3>
-            <p className="text-xs text-muted-foreground line-clamp-1">
-              {coupon.title}
-            </p>
-          </CardContent>
-        </Card>
-      </Link>
-    )
-  }
-
+  // Rakuten-inspired layout: Clean, Image Top, Logo Overlay, Clear Price
   return (
     <Link to={`/coupon/${coupon.id}`} className="block h-full">
       <Card
         className={cn(
-          'overflow-hidden group h-full flex flex-col hover:shadow-lg transition-all duration-300 relative',
+          'overflow-hidden group h-full flex flex-col hover:shadow-elevation transition-all duration-300 border border-slate-100',
           className,
         )}
       >
-        {coupon.isSpecial && (
-          <div className="absolute top-0 right-0 z-10 p-2">
-            <Badge className="bg-purple-600 hover:bg-purple-700 animate-pulse">
-              <Sparkles className="h-3 w-3 mr-1" /> Especial
-            </Badge>
-          </div>
-        )}
-        <div className="relative aspect-video overflow-hidden">
+        <div className="relative aspect-[4/3] overflow-hidden">
           <img
             src={coupon.image}
             alt={coupon.title}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60" />
-
-          <Badge className="absolute top-3 left-3 bg-emerald-500 text-white font-bold text-sm px-3 py-1 shadow-md">
+          {/* Discount Badge - Rakuten Orange */}
+          <div className="absolute top-0 left-0 bg-primary text-white font-bold text-sm px-3 py-1.5 shadow-md rounded-br-lg z-10">
             {coupon.discount}
-          </Badge>
+          </div>
 
-          <Button
-            variant="ghost"
-            size="icon"
-            className={cn(
-              'absolute top-2 right-2 rounded-full bg-white/20 hover:bg-white/40 text-white backdrop-blur-sm transition-all',
-              saved &&
-                'text-red-500 bg-white hover:bg-white hover:text-red-600 fill-current',
+          {/* Source Badge */}
+          <div className="absolute top-2 right-2 z-10">
+            {coupon.source === 'partner' ? (
+              <Badge
+                variant="secondary"
+                className="bg-white/90 text-primary hover:bg-white backdrop-blur-sm gap-1 shadow-sm"
+              >
+                <CheckCircle2 className="h-3 w-3 text-blue-500" />
+                Oficial
+              </Badge>
+            ) : (
+              <Badge
+                variant="outline"
+                className="bg-black/50 text-white border-none backdrop-blur-sm gap-1"
+              >
+                <Globe className="h-3 w-3" />
+                Tracked
+              </Badge>
             )}
-            onClick={handleSave}
-          >
-            <Heart className={cn('h-5 w-5', saved && 'fill-current')} />
-          </Button>
-
-          <div className="absolute bottom-3 left-3 text-white">
-            <p className="font-bold text-lg leading-none mb-1">
-              {coupon.storeName}
-            </p>
-            <div className="flex items-center text-xs opacity-90">
-              <MapPin className="h-3 w-3 mr-1" />
-              <span>{coupon.distance}m de você</span>
-            </div>
           </div>
         </div>
 
-        <CardContent className="p-4 flex-1 flex flex-col justify-between">
-          <div>
-            <h3 className="font-medium text-base leading-tight mb-2 text-foreground group-hover:text-primary transition-colors">
-              {coupon.title}
-            </h3>
-            <p className="text-sm text-muted-foreground line-clamp-2">
-              {coupon.description}
-            </p>
+        <CardContent className="p-4 flex-1 flex flex-col">
+          <div className="flex items-start justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-full border border-slate-100 overflow-hidden bg-white flex-shrink-0 p-0.5">
+                {coupon.logo ? (
+                  <img
+                    src={coupon.logo}
+                    alt={coupon.storeName}
+                    className="w-full h-full object-contain rounded-full"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-muted-foreground">
+                    IMG
+                  </div>
+                )}
+              </div>
+              <span className="font-bold text-sm text-slate-700 line-clamp-1">
+                {coupon.storeName}
+              </span>
+            </div>
           </div>
 
-          <div className="mt-4 flex items-center justify-between">
-            <Badge
-              variant="outline"
-              className="text-xs font-normal border-primary/20 text-primary bg-primary/5"
+          <h3 className="font-medium text-base leading-tight mb-2 text-foreground group-hover:text-primary transition-colors line-clamp-2 min-h-[2.5rem]">
+            {coupon.title}
+          </h3>
+
+          <div className="mt-auto pt-3 flex items-center justify-between gap-2">
+            <div className="flex items-center text-xs text-muted-foreground">
+              <MapPin className="h-3 w-3 mr-1 text-slate-400" />
+              <span>{coupon.distance}m</span>
+            </div>
+            <Button
+              size="sm"
+              className="bg-primary hover:bg-primary/90 text-white font-bold text-xs h-8 px-4 rounded-full shadow-sm"
             >
-              {coupon.category}
-            </Badge>
-            {isLowStock ? (
-              <span className="text-xs text-red-500 font-bold animate-pulse">
-                Poucas unidades!
-              </span>
-            ) : (
-              <span className="text-xs text-muted-foreground">
-                Expira:{' '}
-                {new Date(coupon.expiryDate).toLocaleDateString('pt-BR')}
-              </span>
-            )}
+              {t('coupon.reserve')}
+            </Button>
           </div>
         </CardContent>
       </Card>

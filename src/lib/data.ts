@@ -199,6 +199,7 @@ export const MOCK_COUPONS: Coupon[] = [
         },
       },
     ],
+    source: 'partner',
   },
   {
     id: '7',
@@ -219,6 +220,7 @@ export const MOCK_COUPONS: Coupon[] = [
     acceptsBooking: true,
     reviews: [],
     menu: [],
+    source: 'partner',
   },
   {
     id: '2',
@@ -238,6 +240,7 @@ export const MOCK_COUPONS: Coupon[] = [
     reservedCount: 120,
     averageRating: 4.0,
     reviews: [],
+    source: 'aggregated',
   },
   {
     id: 'premium1',
@@ -261,6 +264,26 @@ export const MOCK_COUPONS: Coupon[] = [
     moods: ['Relaxing'],
     acceptsBooking: true,
     reviews: [],
+    source: 'partner',
+  },
+  {
+    id: 'agg1',
+    storeName: 'Tech Store',
+    title: 'Fones Bluetooth',
+    description: 'Promoção relâmpago de fones de ouvido.',
+    discount: '15% OFF',
+    category: 'Eletrônicos',
+    distance: 2000,
+    expiryDate: '2024-12-10',
+    image: 'https://img.usecurling.com/p/600/400?q=headphones',
+    logo: 'https://img.usecurling.com/i?q=tech&shape=fill&color=gray',
+    code: 'TECH15',
+    coordinates: { lat: -23.56, lng: -46.65 },
+    totalAvailable: 100,
+    reservedCount: 10,
+    averageRating: 4.2,
+    reviews: [],
+    source: 'aggregated',
   },
 ]
 
