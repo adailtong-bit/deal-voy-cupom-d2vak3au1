@@ -1,312 +1,365 @@
 import { useState, useEffect } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { useCouponStore } from '@/stores/CouponContext'
 import { CouponCard } from '@/components/CouponCard'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   MapPin,
-  ArrowRight,
+  Search,
   Navigation,
-  PlayCircle,
-  StopCircle,
-  Leaf,
-  Timer,
-  PiggyBank,
-  Download,
-  Locate,
+  Globe,
+  LayoutList,
+  Map as MapIcon,
+  TentTree,
+  Plane,
 } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
-import { useNotification } from '@/stores/NotificationContext'
-import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { cn } from '@/lib/utils'
 
 export default function TravelPlanner() {
-  const { coupons, downloadOffline } = useCouponStore()
+  const { coupons, tripIds } = useCouponStore()
   const { t } = useLanguage()
-  const { addNotification } = useNotification()
-  const [origin, setOrigin] = useState('')
+
+  // State for View Mode: GPS (Current) vs Planned (Destination)
+  const [navMode, setNavMode] = useState<'gps' | 'planned'>('gps')
   const [destination, setDestination] = useState('')
-  const [isRouteCalculated, setIsRouteCalculated] = useState(false)
-  const [isTravelModeActive, setIsTravelModeActive] = useState(false)
-  const [routeType, setRouteType] = useState<'fastest' | 'economical'>(
-    'fastest',
-  )
+  const [searchQuery, setSearchQuery] = useState('')
+  const [viewType, setViewType] = useState<'list' | 'map'>('list')
+  const [activeTab, setActiveTab] = useState<'explore' | 'itinerary'>('explore')
 
-  const handlePlanRoute = () => {
-    if (origin && destination) {
-      setIsRouteCalculated(true)
-      toast.success('Rota calculada com sucesso!')
+  // Mocking "Dynamic Offer Loading" based on destination
+  // If destination includes "Orlando", we show specific coupons
+  const destinationCoupons = coupons.filter((c) => {
+    if (destination.toLowerCase().includes('orlando')) {
+      // Filter for mock Orlando items (ids starting with 'orl')
+      return c.id.startsWith('orl')
+    }
+    // Fallback: If planned mode but generic destination, show trending
+    return c.isTrending || c.isFeatured
+  })
+
+  const displayedCoupons = navMode === 'gps' ? coupons : destinationCoupons
+  const tripCoupons = coupons.filter((c) => tripIds.includes(c.id))
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (searchQuery) {
+      setNavMode('planned')
+      setDestination(searchQuery)
+      setActiveTab('explore')
     }
   }
 
-  const toggleTravelMode = () => {
-    setIsTravelModeActive(!isTravelModeActive)
-    if (!isTravelModeActive) {
-      toast.info('Navegação iniciada. Alertas de ofertas ativos.')
-    } else {
-      toast.info('Navegação encerrada.')
-    }
+  const clearDestination = () => {
+    setNavMode('gps')
+    setDestination('')
+    setSearchQuery('')
   }
-
-  const handleDownloadRoute = () => {
-    // Simulate downloading the coupons on the route
-    downloadOffline(routeDeals.map((c) => c.id))
-  }
-
-  // Real-Time GPS Navigation & Proximity Alerts Simulation
-  useEffect(() => {
-    let interval: NodeJS.Timeout
-    if (isTravelModeActive) {
-      interval = setInterval(() => {
-        // Mock random alerts
-        const rand = Math.random()
-        if (rand > 0.6) {
-          if (rand > 0.8) {
-            addNotification({
-              title: 'Alerta de Almoço!',
-              message:
-                'Restaurante da Vila tem pratos a R$ 35,00 a 200m de você!',
-              type: 'alert',
-            })
-            toast('Oferta Encontrada: Restaurante da Vila', {
-              description: 'Desvie 200m para economizar R$ 15,00',
-              action: { label: 'Ver', onClick: () => console.log('Navigate') },
-            })
-          } else {
-            const randomCoupon =
-              coupons[Math.floor(Math.random() * coupons.length)]
-            addNotification({
-              title: `Oferta próxima em sua rota!`,
-              message: `${randomCoupon.storeName} tem ${randomCoupon.discount} - Desvio de apenas 2 min!`,
-              type: 'deal',
-            })
-          }
-        }
-      }, 8000)
-    }
-    return () => clearInterval(interval)
-  }, [isTravelModeActive, coupons, addNotification])
-
-  // Mock Route Data Calculation
-  const routeDeals =
-    routeType === 'economical' ? coupons.slice(0, 6) : coupons.slice(0, 2)
-  const totalSavings = routeType === 'economical' ? 180 : 45
-  const travelTime = routeType === 'economical' ? '45 min' : '28 min'
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-8 text-center">
-          <Badge className="mb-2 bg-secondary text-white">
-            Intelligent GPS
-          </Badge>
-          <h1 className="text-3xl font-bold mb-2">{t('travel.title')}</h1>
-          <p className="text-muted-foreground">
-            Otimize sua rota para máxima economia ou rapidez.
-          </p>
-        </div>
-
-        <Card className="mb-8 shadow-lg border-primary/10">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Navigation className="h-5 w-5 text-primary" />
-              Defina sua Rota
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid md:grid-cols-[1fr,auto,1fr] gap-4 items-end">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">De onde?</label>
-                <div className="relative">
-                  <Locate className="absolute left-3 top-3 h-4 w-4 text-primary" />
-                  <Input
-                    placeholder="Sua localização"
-                    className="pl-9"
-                    value={origin}
-                    onChange={(e) => setOrigin(e.target.value)}
-                  />
-                </div>
-              </div>
-              <div className="hidden md:flex pb-3 text-muted-foreground justify-center">
-                <ArrowRight className="h-6 w-6" />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Para onde?</label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-3 h-4 w-4 text-red-500" />
-                  <Input
-                    placeholder="Destino final"
-                    className="pl-9"
-                    value={destination}
-                    onChange={(e) => setDestination(e.target.value)}
-                  />
-                </div>
-              </div>
+    <div className="flex flex-col h-[calc(100vh-64px-64px)] md:h-[calc(100vh-64px)] overflow-hidden bg-slate-50">
+      {/* Header & Controls Area */}
+      <div className="bg-white border-b z-20 shadow-sm flex-shrink-0">
+        <div className="container mx-auto px-4 py-4 space-y-4">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-bold flex items-center gap-2 text-[#2196F3]">
+                <Plane className="h-6 w-6" /> {t('travel.title')}
+              </h1>
+              <p className="text-sm text-muted-foreground hidden md:block">
+                Planeje sua economia, não importa onde você esteja.
+              </p>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Modo de Viagem</label>
-              <ToggleGroup
-                type="single"
-                value={routeType}
-                onValueChange={(v) => v && setRouteType(v as any)}
-                className="justify-start"
-              >
-                <ToggleGroupItem
-                  value="fastest"
-                  className="flex gap-2 px-4 py-2 border data-[state=on]:bg-secondary/10 data-[state=on]:text-secondary data-[state=on]:border-secondary transition-all"
-                >
-                  <Timer className="h-4 w-4" /> Mais Rápida
-                </ToggleGroupItem>
-                <ToggleGroupItem
-                  value="economical"
-                  className="flex gap-2 px-4 py-2 border data-[state=on]:bg-accent/10 data-[state=on]:text-accent data-[state=on]:border-accent transition-all"
-                >
-                  <Leaf className="h-4 w-4" /> Rota Econômica
-                </ToggleGroupItem>
-              </ToggleGroup>
-            </div>
-
-            <Button
-              className="w-full h-12 text-lg font-bold bg-primary hover:bg-primary/90"
-              onClick={handlePlanRoute}
-              disabled={!origin || !destination}
-            >
-              Calcular Melhor Rota
-            </Button>
-          </CardContent>
-        </Card>
-
-        {isRouteCalculated && (
-          <div className="space-y-6 animate-in slide-in-from-bottom duration-500">
-            <div className="flex flex-col md:flex-row justify-between gap-4 bg-white p-6 rounded-xl border shadow-sm">
-              <div>
-                <h2 className="text-xl font-bold flex items-center gap-2 mb-2">
-                  {routeType === 'economical' ? (
-                    <Leaf className="text-accent" />
-                  ) : (
-                    <Timer className="text-secondary" />
-                  )}
-                  Rota {routeType === 'economical' ? 'Econômica' : 'Expressa'}
-                </h2>
-                <div className="flex flex-wrap gap-4 mt-2">
-                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                    <Timer className="h-4 w-4" /> Tempo:{' '}
-                    <span className="font-bold text-foreground">
-                      {travelTime}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1 text-sm text-accent font-bold bg-accent/10 px-3 py-1 rounded-full border border-accent/20">
-                    <PiggyBank className="h-4 w-4" /> Economia: R${' '}
-                    {totalSavings},00
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex gap-2 items-center">
-                <Button
-                  variant="outline"
-                  onClick={handleDownloadRoute}
-                  className="h-12 border-primary/20 text-primary hover:bg-primary/5"
-                >
-                  <Download className="mr-2 h-4 w-4" /> Baixar
-                </Button>
-                <Button
-                  onClick={toggleTravelMode}
-                  className={`h-12 px-6 font-bold ${isTravelModeActive ? 'bg-red-500 hover:bg-red-600 animate-pulse' : 'bg-secondary hover:bg-secondary/90'}`}
-                >
-                  {isTravelModeActive ? (
-                    <>
-                      <StopCircle className="mr-2 h-5 w-5" /> Parar GPS
-                    </>
-                  ) : (
-                    <>
-                      <PlayCircle className="mr-2 h-5 w-5" /> Iniciar Navegação
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
-
-            <div className="relative h-80 w-full rounded-xl overflow-hidden bg-slate-100 border-2 border-white shadow-lg">
-              <img
-                src="https://img.usecurling.com/p/1200/400?q=gps%20navigation%20map&color=blue"
-                alt="Route Map"
-                className="w-full h-full object-cover opacity-90"
-              />
-              {/* Simplified Route Line Visualization */}
-              <svg className="absolute inset-0 w-full h-full pointer-events-none drop-shadow-lg">
-                <path
-                  d="M 50,250 Q 400,50 1150,250"
-                  fill="none"
-                  stroke={routeType === 'economical' ? '#4CAF50' : '#2196F3'}
-                  strokeWidth="6"
-                  strokeLinecap="round"
-                  strokeDasharray={routeType === 'economical' ? '0' : '15,10'}
-                />
-                {/* Savings Markers */}
-                {routeType === 'economical' && (
-                  <>
-                    <circle
-                      cx="200"
-                      cy="180"
-                      r="10"
-                      fill="white"
-                      stroke="#4CAF50"
-                      strokeWidth="3"
-                    />
-                    <circle
-                      cx="500"
-                      cy="120"
-                      r="10"
-                      fill="white"
-                      stroke="#4CAF50"
-                      strokeWidth="3"
-                    />
-                    <circle
-                      cx="900"
-                      cy="190"
-                      r="10"
-                      fill="white"
-                      stroke="#4CAF50"
-                      strokeWidth="3"
-                    />
-                  </>
+            {/* Dual-Mode Toggle */}
+            <div className="bg-slate-100 p-1 rounded-lg inline-flex">
+              <button
+                onClick={clearDestination}
+                className={cn(
+                  'px-4 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-2',
+                  navMode === 'gps'
+                    ? 'bg-white text-primary shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground',
                 )}
-              </svg>
-              {/* User Location Marker */}
-              {isTravelModeActive && (
-                <div className="absolute top-[60%] left-[10%] transform -translate-x-1/2 -translate-y-1/2">
-                  <div className="w-4 h-4 bg-primary rounded-full ring-4 ring-white shadow-xl animate-ping absolute"></div>
-                  <div className="w-4 h-4 bg-primary rounded-full ring-2 ring-white shadow-xl relative z-10"></div>
-                </div>
-              )}
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <h3 className="md:col-span-2 font-bold text-lg text-muted-foreground mt-4">
-                Paradas de Economia
-              </h3>
-              {routeDeals.map((coupon, index) => (
-                <div
-                  key={coupon.id}
-                  className="relative pl-8 border-l-2 border-dashed border-accent/40 pb-8 last:pb-0"
-                >
-                  <div className="absolute -left-[11px] top-0 h-6 w-6 rounded-full bg-accent text-white flex items-center justify-center text-[10px] font-bold shadow-sm">
-                    {index + 1}
-                  </div>
-                  <CouponCard
-                    coupon={coupon}
-                    variant="horizontal"
-                    className="h-auto"
-                  />
-                </div>
-              ))}
+              >
+                <Navigation className="h-4 w-4" /> GPS Atual
+              </button>
+              <button
+                onClick={() => setNavMode('planned')}
+                className={cn(
+                  'px-4 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-2',
+                  navMode === 'planned'
+                    ? 'bg-[#2196F3] text-white shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground',
+                )}
+              >
+                <Globe className="h-4 w-4" /> Planejar Destino
+              </button>
             </div>
           </div>
-        )}
+
+          {/* Destination Search Bar - Visible when planning or usually available to switch */}
+          <div
+            className={cn(
+              'relative transition-all duration-300',
+              navMode === 'planned'
+                ? 'opacity-100 translate-y-0'
+                : 'opacity-100',
+            )}
+          >
+            <form
+              onSubmit={handleSearch}
+              className="relative max-w-2xl mx-auto"
+            >
+              <MapPin className="absolute left-4 top-3.5 h-5 w-5 text-[#FF5722]" />
+              <Input
+                placeholder="Para onde você vai? (Ex: Orlando, FL)"
+                className={cn(
+                  'pl-12 h-12 rounded-full text-base border-2 focus-visible:ring-offset-0',
+                  navMode === 'planned'
+                    ? 'border-[#2196F3] bg-blue-50/50'
+                    : 'border-slate-200',
+                )}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <Button
+                type="submit"
+                className="absolute right-1.5 top-1.5 h-9 rounded-full bg-[#FF5722] hover:bg-[#F4511E] text-white font-bold px-6"
+              >
+                Buscar
+              </Button>
+            </form>
+            {navMode === 'planned' && destination && (
+              <div className="flex justify-center mt-2">
+                <Badge
+                  variant="outline"
+                  className="gap-2 bg-blue-50 text-[#2196F3] border-blue-200 px-3 py-1"
+                >
+                  Exibindo ofertas para:{' '}
+                  <span className="font-bold">{destination}</span>
+                  <button
+                    onClick={clearDestination}
+                    className="ml-1 hover:text-red-500"
+                  >
+                    ✕
+                  </button>
+                </Badge>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 overflow-hidden relative container mx-auto px-0 md:px-4 py-0 md:py-4">
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => setActiveTab(v as any)}
+          className="h-full flex flex-col"
+        >
+          <div className="px-4 py-2 bg-white md:bg-transparent md:p-0 flex justify-center flex-shrink-0">
+            <TabsList className="bg-slate-200 p-1">
+              <TabsTrigger
+                value="explore"
+                className="px-6 gap-2 data-[state=active]:bg-white data-[state=active]:text-[#2196F3]"
+              >
+                <TentTree className="h-4 w-4" /> Explorar{' '}
+                {navMode === 'planned' ? 'Destino' : 'Local'}
+              </TabsTrigger>
+              <TabsTrigger
+                value="itinerary"
+                className="px-6 gap-2 data-[state=active]:bg-white data-[state=active]:text-[#4CAF50]"
+              >
+                <LayoutList className="h-4 w-4" /> Meu Roteiro ({tripIds.length}
+                )
+              </TabsTrigger>
+            </TabsList>
+          </div>
+
+          <TabsContent
+            value="explore"
+            className="flex-1 overflow-hidden mt-0 data-[state=active]:flex flex-col"
+          >
+            <div className="flex items-center justify-between px-4 py-2 md:hidden bg-white border-b">
+              <span className="text-xs text-muted-foreground">
+                {displayedCoupons.length} ofertas encontradas
+              </span>
+              <div className="flex gap-1">
+                <Button
+                  variant={viewType === 'list' ? 'secondary' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewType('list')}
+                  className="h-8 w-8 p-0"
+                >
+                  <LayoutList className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={viewType === 'map' ? 'secondary' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewType('map')}
+                  className="h-8 w-8 p-0"
+                >
+                  <MapIcon className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+
+            <div className="flex-1 relative flex overflow-hidden md:rounded-xl md:border md:shadow-sm md:bg-white">
+              {/* List View */}
+              <div
+                className={cn(
+                  'w-full md:w-[400px] lg:w-[450px] bg-white flex flex-col absolute md:relative inset-0 z-10 transition-transform duration-300 md:translate-x-0 md:border-r',
+                  viewType === 'map' ? 'translate-x-[-100%]' : 'translate-x-0',
+                )}
+              >
+                <ScrollArea className="flex-1">
+                  <div className="p-4 space-y-4">
+                    {displayedCoupons.length > 0 ? (
+                      displayedCoupons.map((coupon) => (
+                        <CouponCard
+                          key={coupon.id}
+                          coupon={coupon}
+                          variant="horizontal"
+                          className="h-auto"
+                        />
+                      ))
+                    ) : (
+                      <div className="text-center py-12 text-muted-foreground">
+                        <p>Nenhuma oferta encontrada nesta região.</p>
+                        {navMode === 'planned' && (
+                          <Button variant="link" onClick={clearDestination}>
+                            Voltar ao GPS atual
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </ScrollArea>
+              </div>
+
+              {/* Map View */}
+              <div
+                className={cn(
+                  'flex-1 bg-slate-100 relative absolute md:relative inset-0 transition-transform duration-300 md:translate-x-0',
+                  viewType === 'list'
+                    ? 'translate-x-[100%] md:translate-x-0'
+                    : 'translate-x-0',
+                )}
+              >
+                <div className="w-full h-full relative">
+                  <img
+                    src={`https://img.usecurling.com/p/1200/800?q=map ${navMode === 'planned' ? destination : 'city'}&color=blue`}
+                    className="w-full h-full object-cover grayscale opacity-50"
+                    alt="Map"
+                  />
+                  {/* Map Markers Simulation */}
+                  {displayedCoupons.map((coupon, idx) => (
+                    <div
+                      key={coupon.id}
+                      className="absolute transform -translate-x-1/2 -translate-y-1/2 group cursor-pointer hover:z-50"
+                      style={{
+                        top: `${20 + ((idx * 15) % 70)}%`,
+                        left: `${15 + ((idx * 20) % 75)}%`,
+                      }}
+                    >
+                      <div
+                        className={cn(
+                          'p-2 rounded-full shadow-lg hover:scale-110 transition-transform',
+                          tripIds.includes(coupon.id)
+                            ? 'bg-[#4CAF50] text-white'
+                            : 'bg-[#FF5722] text-white',
+                        )}
+                      >
+                        {tripIds.includes(coupon.id) ? (
+                          <Check className="h-4 w-4" />
+                        ) : (
+                          <div className="h-3 w-3 bg-white rounded-full" />
+                        )}
+                      </div>
+                      {/* Tooltip */}
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-40 bg-white rounded-lg shadow-xl p-2 hidden group-hover:block z-50 text-xs">
+                        <div className="w-full h-20 bg-slate-100 rounded mb-1 overflow-hidden">
+                          <img
+                            src={coupon.image}
+                            className="w-full h-full object-cover"
+                            alt=""
+                          />
+                        </div>
+                        <p className="font-bold truncate">{coupon.storeName}</p>
+                        <p className="text-[#FF5722] font-bold">
+                          {coupon.discount}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Center/User Pin */}
+                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                    <div
+                      className={cn(
+                        'h-6 w-6 rounded-full border-4 border-white shadow-xl animate-bounce',
+                        navMode === 'planned' ? 'bg-[#2196F3]' : 'bg-[#FF5722]',
+                      )}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent
+            value="itinerary"
+            className="flex-1 overflow-hidden mt-0 data-[state=active]:flex flex-col"
+          >
+            <div className="flex-1 container max-w-4xl mx-auto md:py-6">
+              <Card className="h-full flex flex-col shadow-none md:shadow-sm border-0 md:border bg-white">
+                <CardContent className="p-0 flex-1 flex flex-col">
+                  <div className="p-6 bg-[#4CAF50]/10 border-b border-[#4CAF50]/20">
+                    <h2 className="text-xl font-bold flex items-center gap-2 text-[#2e7d32]">
+                      <LayoutList className="h-6 w-6" /> Meu Roteiro de Economia
+                    </h2>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {tripCoupons.length} cupons salvos para sua viagem.
+                    </p>
+                  </div>
+
+                  <ScrollArea className="flex-1">
+                    <div className="p-4 md:p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {tripCoupons.length > 0 ? (
+                        tripCoupons.map((coupon) => (
+                          <CouponCard key={coupon.id} coupon={coupon} />
+                        ))
+                      ) : (
+                        <div className="col-span-full flex flex-col items-center justify-center py-20 text-center opacity-70">
+                          <TentTree className="h-16 w-16 text-slate-300 mb-4" />
+                          <h3 className="text-lg font-semibold mb-2">
+                            Seu roteiro está vazio
+                          </h3>
+                          <p className="text-sm text-muted-foreground max-w-xs mb-6">
+                            Explore ofertas e clique em "Add Trip" para
+                            organizar sua viagem.
+                          </p>
+                          <Button
+                            onClick={() => setActiveTab('explore')}
+                            className="bg-[#FF5722] hover:bg-[#F4511E]"
+                          >
+                            Explorar Ofertas
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </ScrollArea>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   )

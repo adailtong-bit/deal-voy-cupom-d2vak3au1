@@ -33,6 +33,7 @@ interface CouponContextType {
   user: User | null
   savedIds: string[]
   reservedIds: string[]
+  tripIds: string[]
   userLocation: UserLocation | null
   uploads: UploadedDocument[]
   bookings: Booking[]
@@ -44,10 +45,12 @@ interface CouponContextType {
   downloadedIds: string[]
   itineraries: Itinerary[]
   toggleSave: (id: string) => void
+  toggleTrip: (id: string) => void
   reserveCoupon: (id: string) => boolean
   addCoupon: (coupon: Coupon) => void
   isSaved: (id: string) => boolean
   isReserved: (id: string) => boolean
+  isInTrip: (id: string) => boolean
   isLoadingLocation: boolean
   addReview: (couponId: string, review: Omit<Review, 'id' | 'date'>) => void
   addUpload: (doc: UploadedDocument) => void
@@ -82,6 +85,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(MOCK_USERS[1]) // Default to regular user
   const [savedIds, setSavedIds] = useState<string[]>([])
   const [reservedIds, setReservedIds] = useState<string[]>([])
+  const [tripIds, setTripIds] = useState<string[]>([])
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null)
   const [isLoadingLocation, setIsLoadingLocation] = useState(true)
   const [uploads, setUploads] = useState<UploadedDocument[]>([])
@@ -100,6 +104,9 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
 
     const storedReserved = localStorage.getItem('reservedCoupons')
     if (storedReserved) setReservedIds(JSON.parse(storedReserved))
+
+    const storedTrip = localStorage.getItem('tripCoupons')
+    if (storedTrip) setTripIds(JSON.parse(storedTrip))
 
     const storedDownloaded = localStorage.getItem('downloadedCoupons')
     if (storedDownloaded) setDownloadedIds(JSON.parse(storedDownloaded))
@@ -133,6 +140,10 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     [reservedIds],
   )
   useEffect(
+    () => localStorage.setItem('tripCoupons', JSON.stringify(tripIds)),
+    [tripIds],
+  )
+  useEffect(
     () =>
       localStorage.setItem('downloadedCoupons', JSON.stringify(downloadedIds)),
     [downloadedIds],
@@ -149,6 +160,21 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     setSavedIds((prev) =>
       prev.includes(id) ? prev.filter((sid) => sid !== id) : [...prev, id],
     )
+  }
+
+  const toggleTrip = (id: string) => {
+    setTripIds((prev) => {
+      const exists = prev.includes(id)
+      if (exists) {
+        toast.info('Removido do roteiro de viagem.')
+        return prev.filter((tid) => tid !== id)
+      } else {
+        toast.success('Salvo para sua viagem!', {
+          description: 'Acesse na aba "Meu Roteiro" no Planejador.',
+        })
+        return [...prev, id]
+      }
+    })
   }
 
   const reserveCoupon = (id: string) => {
@@ -350,6 +376,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   const isSaved = (id: string) => savedIds.includes(id)
   const isReserved = (id: string) => reservedIds.includes(id)
   const isDownloaded = (id: string) => downloadedIds.includes(id)
+  const isInTrip = (id: string) => tripIds.includes(id)
 
   return React.createElement(
     CouponContext.Provider,
@@ -361,6 +388,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         user,
         savedIds,
         reservedIds,
+        tripIds,
         userLocation,
         uploads,
         bookings,
@@ -372,10 +400,12 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         downloadedIds,
         itineraries,
         toggleSave,
+        toggleTrip,
         reserveCoupon,
         addCoupon,
         isSaved,
         isReserved,
+        isInTrip,
         isLoadingLocation,
         addReview,
         addUpload,
