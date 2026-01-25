@@ -72,6 +72,8 @@ export interface Coupon {
   downvotes?: number
   status?: 'active' | 'expired' | 'issue'
   acceptsBooking?: boolean
+  price?: number // For premium coupons/reservations
+  isPaid?: boolean
 }
 
 export type CategoryType = Coupon['category']
@@ -116,7 +118,8 @@ export interface Booking {
   date: string
   time: string
   guests: number
-  status: 'confirmed' | 'cancelled'
+  status: 'confirmed' | 'cancelled' | 'paid'
+  price?: number
 }
 
 export interface Challenge {
@@ -136,4 +139,25 @@ export interface Badge {
   description: string
   image: string
   earnedDate?: string
+}
+
+export interface ABVariant {
+  id: string
+  name: string
+  title: string
+  discount: string
+  image: string
+  views: number
+  clicks: number
+  redemptions: number
+}
+
+export interface ABTest {
+  id: string
+  couponId: string
+  startDate: string
+  endDate: string
+  status: 'active' | 'completed' | 'draft'
+  variantA: ABVariant
+  variantB: ABVariant
 }

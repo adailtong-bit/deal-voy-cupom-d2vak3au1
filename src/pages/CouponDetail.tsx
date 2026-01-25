@@ -30,6 +30,8 @@ import {
   ThumbsDown,
   AlertTriangle,
   Wallet,
+  CreditCard,
+  Download,
 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
@@ -56,6 +58,8 @@ export default function CouponDetail() {
     points,
     fetchCredits,
     redeemPoints,
+    downloadOffline,
+    isDownloaded,
   } = useCouponStore()
   const { t } = useLanguage()
   const [showConfetti, setShowConfetti] = useState(false)
@@ -76,9 +80,15 @@ export default function CouponDetail() {
 
   const saved = isSaved(coupon.id)
   const reserved = isReserved(coupon.id)
+  const downloaded = isDownloaded(coupon.id)
   const isOffline = !navigator.onLine
 
   const handleReserve = () => {
+    if (coupon.price && !coupon.isPaid) {
+      navigate('/checkout', { state: { coupon } })
+      return
+    }
+
     if (useFetchCredits) {
       if (!redeemPoints(10, 'fetch')) {
         toast.error('Saldo Fetch insuficiente.')
@@ -91,7 +101,7 @@ export default function CouponDetail() {
     if (success) {
       setShowConfetti(true)
       setTimeout(() => setShowConfetti(false), 3000)
-      toast.success('Cupom reservado com sucesso!')
+      toast.success('Cupom garantido com sucesso!')
     } else {
       toast.error('Não foi possível reservar. Limite atingido.')
     }
@@ -123,10 +133,16 @@ export default function CouponDetail() {
     }
   }
 
+  const handleDownload = () => {
+    downloadOffline([coupon.id])
+  }
+
   const stockPercent =
     coupon.totalAvailable && coupon.reservedCount
       ? Math.round((coupon.reservedCount / coupon.totalAvailable) * 100)
       : 0
+
+  const needsPayment = coupon.price && !coupon.isPaid && !reserved
 
   return (
     <div className="pb-24 bg-background min-h-screen">
@@ -164,14 +180,29 @@ export default function CouponDetail() {
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <Button
-          variant="secondary"
-          size="icon"
-          className="absolute top-4 right-4 rounded-full bg-background/80"
-          onClick={handleShare}
-        >
-          <Share2 className="h-5 w-5" />
-        </Button>
+        <div className="absolute top-4 right-4 flex gap-2">
+          <Button
+            variant="secondary"
+            size="icon"
+            className="rounded-full bg-background/80"
+            onClick={handleDownload}
+            disabled={downloaded}
+          >
+            {downloaded ? (
+              <CheckCircle className="h-5 w-5 text-green-600" />
+            ) : (
+              <Download className="h-5 w-5" />
+            )}
+          </Button>
+          <Button
+            variant="secondary"
+            size="icon"
+            className="rounded-full bg-background/80"
+            onClick={handleShare}
+          >
+            <Share2 className="h-5 w-5" />
+          </Button>
+        </div>
       </div>
 
       <div className="container mx-auto px-4 -mt-12 relative z-10">
@@ -202,6 +233,11 @@ export default function CouponDetail() {
                 </Badge>
                 {coupon.isSpecial && (
                   <Badge className="bg-purple-600">Especial Local</Badge>
+                )}
+                {coupon.price && !coupon.isPaid && (
+                  <Badge className="bg-emerald-600">
+                    R$ {coupon.price.toFixed(2)}
+                  </Badge>
                 )}
                 {coupon.averageRating && (
                   <div className="flex items-center gap-1 text-sm font-medium text-yellow-600 bg-yellow-50 px-2 py-1 rounded-md">
@@ -348,7 +384,7 @@ export default function CouponDetail() {
           <CouponReviews coupon={coupon} />
 
           <div className="mt-8 border-t pt-6">
-            {!reserved && (
+            {!reserved && !needsPayment && (
               <div className="mb-4 bg-primary/5 p-4 rounded-lg border border-primary/10">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
@@ -386,7 +422,11 @@ export default function CouponDetail() {
               </Button>
             ) : (
               <Button
-                className="w-full text-lg h-14 font-bold shadow-lg animate-pulse-slow"
+                className={
+                  needsPayment
+                    ? 'w-full text-lg h-14 font-bold bg-emerald-600 hover:bg-emerald-700'
+                    : 'w-full text-lg h-14 font-bold shadow-lg animate-pulse-slow'
+                }
                 onClick={handleReserve}
                 disabled={
                   (coupon.totalAvailable !== undefined &&
@@ -398,6 +438,11 @@ export default function CouponDetail() {
                 {isOffline ? (
                   <>
                     <WifiOff className="mr-2 h-4 w-4" /> Indisponível Offline
+                  </>
+                ) : needsPayment ? (
+                  <>
+                    <CreditCard className="mr-2 h-4 w-4" /> Comprar por R${' '}
+                    {coupon.price?.toFixed(2)}
                   </>
                 ) : (
                   t('coupon.reserve')

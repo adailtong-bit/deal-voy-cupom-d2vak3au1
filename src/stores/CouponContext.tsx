@@ -7,12 +7,14 @@ import {
   Booking,
   Challenge,
   Badge,
+  ABTest,
 } from '@/lib/types'
 import {
   MOCK_COUPONS,
   MOCK_USER_LOCATION,
   MOCK_CHALLENGES,
   MOCK_BADGES,
+  MOCK_AB_TESTS,
 } from '@/lib/data'
 import { toast } from 'sonner'
 
@@ -27,6 +29,8 @@ interface CouponContextType {
   fetchCredits: number
   challenges: Challenge[]
   badges: Badge[]
+  abTests: ABTest[]
+  downloadedIds: string[]
   toggleSave: (id: string) => void
   reserveCoupon: (id: string) => boolean
   addCoupon: (coupon: Coupon) => void
@@ -40,6 +44,13 @@ interface CouponContextType {
   reportCoupon: (id: string, issue: string) => void
   makeBooking: (booking: Omit<Booking, 'id' | 'status'>) => void
   redeemPoints: (amount: number, type: 'points' | 'fetch') => boolean
+  addABTest: (test: ABTest) => void
+  downloadOffline: (ids: string[]) => void
+  processPayment: (details: {
+    couponId?: string
+    amount: number
+  }) => Promise<boolean>
+  isDownloaded: (id: string) => boolean
 }
 
 const CouponContext = createContext<CouponContextType | undefined>(undefined)
@@ -56,17 +67,19 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   const [fetchCredits, setFetchCredits] = useState(50.0)
   const [challenges, setChallenges] = useState<Challenge[]>(MOCK_CHALLENGES)
   const [badges] = useState<Badge[]>(MOCK_BADGES)
+  const [abTests, setAbTests] = useState<ABTest[]>(MOCK_AB_TESTS)
+  const [downloadedIds, setDownloadedIds] = useState<string[]>([])
 
   useEffect(() => {
     const storedSaved = localStorage.getItem('savedCoupons')
-    if (storedSaved) {
-      setSavedIds(JSON.parse(storedSaved))
-    }
+    if (storedSaved) setSavedIds(JSON.parse(storedSaved))
+
     const storedReserved = localStorage.getItem('reservedCoupons')
-    if (storedReserved) {
-      setReservedIds(JSON.parse(storedReserved))
-    }
-    // Mock upload history
+    if (storedReserved) setReservedIds(JSON.parse(storedReserved))
+
+    const storedDownloaded = localStorage.getItem('downloadedCoupons')
+    if (storedDownloaded) setDownloadedIds(JSON.parse(storedDownloaded))
+
     setUploads([
       {
         id: 'u1',
@@ -84,13 +97,19 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     }, 1500)
   }, [])
 
-  useEffect(() => {
-    localStorage.setItem('savedCoupons', JSON.stringify(savedIds))
-  }, [savedIds])
-
-  useEffect(() => {
-    localStorage.setItem('reservedCoupons', JSON.stringify(reservedIds))
-  }, [reservedIds])
+  useEffect(
+    () => localStorage.setItem('savedCoupons', JSON.stringify(savedIds)),
+    [savedIds],
+  )
+  useEffect(
+    () => localStorage.setItem('reservedCoupons', JSON.stringify(reservedIds)),
+    [reservedIds],
+  )
+  useEffect(
+    () =>
+      localStorage.setItem('downloadedCoupons', JSON.stringify(downloadedIds)),
+    [downloadedIds],
+  )
 
   const toggleSave = (id: string) => {
     setSavedIds((prev) =>
@@ -99,39 +118,27 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   }
 
   const reserveCoupon = (id: string) => {
-    const couponIndex = coupons.findIndex((c) => c.id === id)
-    if (couponIndex === -1) return false
-    const coupon = coupons[couponIndex]
-
+    const coupon = coupons.find((c) => c.id === id)
+    if (!coupon) return false
     if (
-      coupon.totalAvailable !== undefined &&
-      coupon.reservedCount !== undefined &&
+      coupon.totalAvailable &&
+      coupon.reservedCount &&
       coupon.reservedCount >= coupon.totalAvailable
-    ) {
+    )
       return false
-    }
+    if (reservedIds.includes(id)) return false
 
-    if (reservedIds.includes(id)) {
-      return false
-    }
-
-    const updatedCoupons = [...coupons]
-    updatedCoupons[couponIndex] = {
-      ...coupon,
-      reservedCount: (coupon.reservedCount || 0) + 1,
-    }
-    setCoupons(updatedCoupons)
+    setCoupons((prev) =>
+      prev.map((c) =>
+        c.id === id ? { ...c, reservedCount: (c.reservedCount || 0) + 1 } : c,
+      ),
+    )
     setReservedIds((prev) => [...prev, id])
-
-    // Gamification hook mock
     setPoints((prev) => prev + 10)
-
     return true
   }
 
-  const addCoupon = (coupon: Coupon) => {
-    setCoupons((prev) => [coupon, ...prev])
-  }
+  const addCoupon = (coupon: Coupon) => setCoupons((prev) => [coupon, ...prev])
 
   const addReview = (
     couponId: string,
@@ -141,18 +148,16 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       prev.map((coupon) => {
         if (coupon.id !== couponId) return coupon
         const newReview: Review = {
-          id: Math.random().toString(36).substr(2, 9),
+          id: Math.random().toString(),
           date: new Date().toISOString(),
           ...reviewData,
         }
-        const currentReviews = coupon.reviews || []
-        const updatedReviews = [newReview, ...currentReviews]
-        const totalRating = updatedReviews.reduce((sum, r) => sum + r.rating, 0)
-        const averageRating = totalRating / updatedReviews.length
+        const reviews = [newReview, ...(coupon.reviews || [])]
         return {
           ...coupon,
-          reviews: updatedReviews,
-          averageRating,
+          reviews,
+          averageRating:
+            reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length,
         }
       }),
     )
@@ -163,43 +168,39 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     setUploads((prev) => [doc, ...prev])
     setPoints((prev) => prev + 50)
   }
-
   const refreshCoupons = () => {
     toast.success('Ofertas atualizadas com sucesso!')
     setCoupons([...MOCK_COUPONS])
   }
-
   const voteCoupon = (id: string, type: 'up' | 'down') => {
     setCoupons((prev) =>
-      prev.map((c) => {
-        if (c.id !== id) return c
-        return {
-          ...c,
-          upvotes: type === 'up' ? (c.upvotes || 0) + 1 : c.upvotes,
-          downvotes: type === 'down' ? (c.downvotes || 0) + 1 : c.downvotes,
-          lastVerified: new Date().toISOString(),
-        }
-      }),
+      prev.map((c) =>
+        c.id === id
+          ? {
+              ...c,
+              upvotes: type === 'up' ? (c.upvotes || 0) + 1 : c.upvotes,
+              downvotes: type === 'down' ? (c.downvotes || 0) + 1 : c.downvotes,
+              lastVerified: new Date().toISOString(),
+            }
+          : c,
+      ),
     )
     toast.success('Obrigado pelo seu voto!')
     setPoints((prev) => prev + 5)
   }
-
   const reportCoupon = (id: string, issue: string) => {
-    console.log('Reported issue for', id, issue)
-    toast.success('Problema reportado. Obrigado por ajudar!')
+    console.log('Reported', id, issue)
+    toast.success('Problema reportado.')
   }
 
   const makeBooking = (bookingData: Omit<Booking, 'id' | 'status'>) => {
     const newBooking: Booking = {
-      id: Math.random().toString(36).substr(2, 9),
+      id: Math.random().toString(),
       status: 'confirmed',
       ...bookingData,
     }
     setBookings((prev) => [newBooking, ...prev])
     setPoints((prev) => prev + 100)
-
-    // Update challenge progress mock
     setChallenges((prev) =>
       prev.map((c) =>
         c.id === '2'
@@ -225,8 +226,35 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  const addABTest = (test: ABTest) => setAbTests((prev) => [test, ...prev])
+
+  const downloadOffline = (ids: string[]) => {
+    setDownloadedIds((prev) => Array.from(new Set([...prev, ...ids])))
+    toast.success('Itens baixados para acesso offline!')
+  }
+
+  const processPayment = async (details: {
+    couponId?: string
+    amount: number
+  }) => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        if (details.couponId) {
+          setCoupons((prev) =>
+            prev.map((c) =>
+              c.id === details.couponId ? { ...c, isPaid: true } : c,
+            ),
+          )
+          reserveCoupon(details.couponId)
+        }
+        resolve(true)
+      }, 1500)
+    })
+  }
+
   const isSaved = (id: string) => savedIds.includes(id)
   const isReserved = (id: string) => reservedIds.includes(id)
+  const isDownloaded = (id: string) => downloadedIds.includes(id)
 
   return React.createElement(
     CouponContext.Provider,
@@ -242,6 +270,8 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         fetchCredits,
         challenges,
         badges,
+        abTests,
+        downloadedIds,
         toggleSave,
         reserveCoupon,
         addCoupon,
@@ -255,6 +285,10 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         reportCoupon,
         makeBooking,
         redeemPoints,
+        addABTest,
+        downloadOffline,
+        processPayment,
+        isDownloaded,
       },
     },
     children,
@@ -263,8 +297,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
 
 export function useCouponStore() {
   const context = useContext(CouponContext)
-  if (context === undefined) {
+  if (context === undefined)
     throw new Error('useCouponStore must be used within a CouponProvider')
-  }
   return context
 }

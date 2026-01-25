@@ -20,18 +20,28 @@ import {
 } from '@/components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Plus, Users, Tag, BarChart as BarChartIcon } from 'lucide-react'
+import {
+  Plus,
+  Users,
+  Tag,
+  BarChart as BarChartIcon,
+  FlaskConical,
+} from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
+import { useCouponStore } from '@/stores/CouponContext'
 import { toast } from 'sonner'
-import { MOCK_COUPONS } from '@/lib/data'
 import { VendorAnalytics } from '@/components/VendorAnalytics'
 import { TargetedOffers } from '@/components/TargetedOffers'
+import { ABTestCreator } from '@/components/ABTestCreator'
+import { ABTestResults } from '@/components/ABTestResults'
 
 export default function VendorDashboard() {
   const { t } = useLanguage()
-  const [coupons, setCoupons] = useState(MOCK_COUPONS.slice(0, 3))
+  const { abTests, coupons: allCoupons } = useCouponStore()
+  const [coupons, setCoupons] = useState(allCoupons.slice(0, 3))
   const { register, handleSubmit, reset } = useForm()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isABCreatorOpen, setIsABCreatorOpen] = useState(false)
 
   const onSubmit = (data: any) => {
     const newCoupon = {
@@ -62,6 +72,7 @@ export default function VendorDashboard() {
         <TabsList>
           <TabsTrigger value="overview">Visão Geral</TabsTrigger>
           <TabsTrigger value="offers">Minhas Ofertas</TabsTrigger>
+          <TabsTrigger value="abtesting">Testes A/B</TabsTrigger>
           <TabsTrigger value="marketing">Marketing Direto</TabsTrigger>
         </TabsList>
 
@@ -196,6 +207,34 @@ export default function VendorDashboard() {
               </Table>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="abtesting">
+          <div className="flex flex-col gap-6">
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-xl font-bold">Otimização de Ofertas</h2>
+                <p className="text-muted-foreground">
+                  Compare versões e maximize conversões.
+                </p>
+              </div>
+              <Button
+                onClick={() => setIsABCreatorOpen(true)}
+                className="gap-2"
+              >
+                <FlaskConical className="h-4 w-4" /> Novo Teste A/B
+              </Button>
+            </div>
+
+            {abTests.map((test) => (
+              <ABTestResults key={test.id} test={test} />
+            ))}
+
+            <ABTestCreator
+              isOpen={isABCreatorOpen}
+              onClose={() => setIsABCreatorOpen(false)}
+            />
+          </div>
         </TabsContent>
 
         <TabsContent value="marketing">

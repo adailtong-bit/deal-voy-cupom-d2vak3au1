@@ -1,4 +1,11 @@
-import { Coupon, SeasonalEvent, Notification, Challenge, Badge } from './types'
+import {
+  Coupon,
+  SeasonalEvent,
+  Notification,
+  Challenge,
+  Badge,
+  ABTest,
+} from './types'
 
 export const MOCK_USER_LOCATION = {
   lat: -23.55052,
@@ -199,5 +206,58 @@ export const MOCK_COUPONS: Coupon[] = [
     reservedCount: 120,
     averageRating: 4.0,
     reviews: [],
+  },
+  {
+    id: 'premium1',
+    storeName: 'Spa Relax',
+    title: 'Massagem Relaxante Completa',
+    description: '60 minutos de massagem relaxante com pedras quentes.',
+    discount: '30% OFF',
+    category: 'Serviços',
+    distance: 1200,
+    expiryDate: '2024-12-20',
+    image: 'https://img.usecurling.com/p/600/400?q=spa%20massage',
+    logo: 'https://img.usecurling.com/i?q=lotus&shape=fill&color=purple',
+    code: 'SPA-LUXO',
+    isFeatured: true,
+    isSpecial: true,
+    coordinates: { lat: -23.555, lng: -46.64 },
+    price: 89.9,
+    totalAvailable: 20,
+    reservedCount: 5,
+    averageRating: 4.8,
+    moods: ['Relaxing'],
+    acceptsBooking: true,
+    reviews: [],
+  },
+]
+
+export const MOCK_AB_TESTS: ABTest[] = [
+  {
+    id: 'ab1',
+    couponId: '1',
+    startDate: '2024-10-01',
+    endDate: '2024-10-15',
+    status: 'active',
+    variantA: {
+      id: 'vA',
+      name: 'Imagem Padrão',
+      title: '2 Whoppers por R$ 25,90',
+      discount: '40% OFF',
+      image: 'https://img.usecurling.com/p/600/400?q=burger%20whopper',
+      views: 1200,
+      clicks: 450,
+      redemptions: 89,
+    },
+    variantB: {
+      id: 'vB',
+      name: 'Imagem Lifestyle',
+      title: 'Oferta Imperdível: Combo Whopper',
+      discount: '40% OFF',
+      image: 'https://img.usecurling.com/p/600/400?q=people%20eating%20burger',
+      views: 1150,
+      clicks: 520,
+      redemptions: 112,
+    },
   },
 ]

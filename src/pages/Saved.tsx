@@ -2,22 +2,50 @@ import { useCouponStore } from '@/stores/CouponContext'
 import { CouponCard } from '@/components/CouponCard'
 import { Button } from '@/components/ui/button'
 import { useNavigate } from 'react-router-dom'
-import { HeartOff } from 'lucide-react'
+import { HeartOff, Download, CheckCircle } from 'lucide-react'
 
 export default function Saved() {
-  const { coupons, savedIds } = useCouponStore()
+  const { coupons, savedIds, downloadOffline, downloadedIds } = useCouponStore()
   const navigate = useNavigate()
 
   const savedCoupons = coupons.filter((c) => savedIds.includes(c.id))
 
+  // Check if all displayed coupons are already downloaded
+  const allDownloaded =
+    savedCoupons.length > 0 &&
+    savedCoupons.every((c) => downloadedIds.includes(c.id))
+
+  const handleDownloadAll = () => {
+    downloadOffline(savedIds)
+  }
+
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6 flex items-center gap-2">
-        Meus Cupons Salvos
-        <span className="text-sm font-normal text-muted-foreground ml-auto bg-muted px-3 py-1 rounded-full">
-          {savedCoupons.length} itens
-        </span>
-      </h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold flex items-center gap-2">
+          Meus Cupons Salvos
+          <span className="text-sm font-normal text-muted-foreground bg-muted px-3 py-1 rounded-full">
+            {savedCoupons.length} itens
+          </span>
+        </h1>
+        {savedCoupons.length > 0 && (
+          <Button
+            variant={allDownloaded ? 'secondary' : 'outline'}
+            onClick={handleDownloadAll}
+            disabled={allDownloaded}
+          >
+            {allDownloaded ? (
+              <>
+                <CheckCircle className="mr-2 h-4 w-4" /> Offline Pronto
+              </>
+            ) : (
+              <>
+                <Download className="mr-2 h-4 w-4" /> Baixar Tudo
+              </>
+            )}
+          </Button>
+        )}
+      </div>
 
       {savedCoupons.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

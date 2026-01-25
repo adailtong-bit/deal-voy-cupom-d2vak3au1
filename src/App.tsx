@@ -16,6 +16,7 @@ import TravelPlanner from './pages/TravelPlanner'
 import VendorDashboard from './pages/VendorDashboard'
 import Seasonal from './pages/Seasonal'
 import Notifications from './pages/Notifications'
+import Checkout from './pages/Checkout'
 import NotFound from './pages/NotFound'
 import Layout from './components/Layout'
 
@@ -41,6 +42,7 @@ const App = () => (
                 <Route path="/vendor" element={<VendorDashboard />} />
                 <Route path="/seasonal" element={<Seasonal />} />
                 <Route path="/notifications" element={<Notifications />} />
+                <Route path="/checkout" element={<Checkout />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
