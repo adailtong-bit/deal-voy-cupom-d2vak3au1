@@ -12,6 +12,7 @@ import {
   StopCircle,
   BellRing,
   Flame,
+  Utensils,
 } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useNotification } from '@/stores/NotificationContext'
@@ -35,19 +36,32 @@ export default function TravelPlanner() {
     setIsTravelModeActive(!isTravelModeActive)
   }
 
-  // Mock travel mode simulation
+  // Real-Time GPS Navigation & Proximity Alerts Simulation
   useEffect(() => {
     let interval: NodeJS.Timeout
     if (isTravelModeActive) {
       interval = setInterval(() => {
-        if (Math.random() > 0.7) {
-          const randomCoupon =
-            coupons[Math.floor(Math.random() * coupons.length)]
-          addNotification({
-            title: `Oferta próxima em sua rota!`,
-            message: `${randomCoupon.storeName} tem ${randomCoupon.discount} - Desvio de apenas 2 min!`,
-            type: 'deal',
-          })
+        // Mock random alerts
+        const rand = Math.random()
+        if (rand > 0.6) {
+          if (rand > 0.8) {
+            // Lunch Special
+            addNotification({
+              title: 'Alerta de Almoço!',
+              message:
+                'Restaurante da Vila tem pratos a R$ 35,00 a 200m de você!',
+              type: 'alert',
+            })
+          } else {
+            // Generic Deal
+            const randomCoupon =
+              coupons[Math.floor(Math.random() * coupons.length)]
+            addNotification({
+              title: `Oferta próxima em sua rota!`,
+              message: `${randomCoupon.storeName} tem ${randomCoupon.discount} - Desvio de apenas 2 min!`,
+              type: 'deal',
+            })
+          }
         }
       }, 5000)
     }
@@ -55,8 +69,7 @@ export default function TravelPlanner() {
   }, [isTravelModeActive, coupons, addNotification])
 
   const routeDeals = coupons.slice(0, 4)
-  // Calculate potential savings for visualization
-  const totalSavings = routeDeals.length * 25 // Arbitrary mock value
+  const totalSavings = routeDeals.length * 25
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -142,7 +155,8 @@ export default function TravelPlanner() {
                   </>
                 ) : (
                   <>
-                    <PlayCircle className="mr-2 h-4 w-4" /> Iniciar Modo Viagem
+                    <PlayCircle className="mr-2 h-4 w-4" /> Iniciar Navegação
+                    GPS
                   </>
                 )}
               </Button>
@@ -152,9 +166,9 @@ export default function TravelPlanner() {
               <div className="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-md flex items-center gap-3">
                 <BellRing className="h-5 w-5 animate-bounce" />
                 <div>
-                  <p className="font-bold text-sm">Monitoramento Ativo</p>
+                  <p className="font-bold text-sm">Navegação Ativa</p>
                   <p className="text-xs">
-                    Você receberá alertas de ofertas conforme avança na rota.
+                    Monitorando ofertas de ALMOÇO e PROXIMIDADE em tempo real...
                   </p>
                 </div>
               </div>
@@ -168,8 +182,8 @@ export default function TravelPlanner() {
               />
               {/* Savings Hotspot Marker on Map (Mock) */}
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
-                <div className="bg-green-600 text-white text-xs px-2 py-1 rounded-full font-bold shadow-lg animate-bounce">
-                  $$$ Hotspot
+                <div className="bg-green-600 text-white text-xs px-2 py-1 rounded-full font-bold shadow-lg animate-bounce flex items-center gap-1">
+                  <Utensils className="h-3 w-3" /> LUNCH SPECIAL
                 </div>
                 <div className="h-4 w-4 bg-green-600 rounded-full border-2 border-white shadow-md"></div>
               </div>

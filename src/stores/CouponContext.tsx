@@ -1,6 +1,19 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
-import { Coupon, UserLocation, Review, UploadedDocument } from '@/lib/types'
-import { MOCK_COUPONS, MOCK_USER_LOCATION } from '@/lib/data'
+import {
+  Coupon,
+  UserLocation,
+  Review,
+  UploadedDocument,
+  Booking,
+  Challenge,
+  Badge,
+} from '@/lib/types'
+import {
+  MOCK_COUPONS,
+  MOCK_USER_LOCATION,
+  MOCK_CHALLENGES,
+  MOCK_BADGES,
+} from '@/lib/data'
 import { toast } from 'sonner'
 
 interface CouponContextType {
@@ -9,6 +22,11 @@ interface CouponContextType {
   reservedIds: string[]
   userLocation: UserLocation | null
   uploads: UploadedDocument[]
+  bookings: Booking[]
+  points: number
+  fetchCredits: number
+  challenges: Challenge[]
+  badges: Badge[]
   toggleSave: (id: string) => void
   reserveCoupon: (id: string) => boolean
   addCoupon: (coupon: Coupon) => void
@@ -20,6 +38,8 @@ interface CouponContextType {
   refreshCoupons: () => void
   voteCoupon: (id: string, type: 'up' | 'down') => void
   reportCoupon: (id: string, issue: string) => void
+  makeBooking: (booking: Omit<Booking, 'id' | 'status'>) => void
+  redeemPoints: (amount: number, type: 'points' | 'fetch') => boolean
 }
 
 const CouponContext = createContext<CouponContextType | undefined>(undefined)
@@ -31,6 +51,11 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null)
   const [isLoadingLocation, setIsLoadingLocation] = useState(true)
   const [uploads, setUploads] = useState<UploadedDocument[]>([])
+  const [bookings, setBookings] = useState<Booking[]>([])
+  const [points, setPoints] = useState(1250)
+  const [fetchCredits, setFetchCredits] = useState(50.0)
+  const [challenges, setChallenges] = useState<Challenge[]>(MOCK_CHALLENGES)
+  const [badges] = useState<Badge[]>(MOCK_BADGES)
 
   useEffect(() => {
     const storedSaved = localStorage.getItem('savedCoupons')
@@ -97,6 +122,10 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     }
     setCoupons(updatedCoupons)
     setReservedIds((prev) => [...prev, id])
+
+    // Gamification hook mock
+    setPoints((prev) => prev + 10)
+
     return true
   }
 
@@ -127,14 +156,15 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         }
       }),
     )
+    setPoints((prev) => prev + 25)
   }
 
   const addUpload = (doc: UploadedDocument) => {
     setUploads((prev) => [doc, ...prev])
+    setPoints((prev) => prev + 50)
   }
 
   const refreshCoupons = () => {
-    // Mock refresh
     toast.success('Ofertas atualizadas com sucesso!')
     setCoupons([...MOCK_COUPONS])
   }
@@ -152,11 +182,47 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       }),
     )
     toast.success('Obrigado pelo seu voto!')
+    setPoints((prev) => prev + 5)
   }
 
   const reportCoupon = (id: string, issue: string) => {
     console.log('Reported issue for', id, issue)
     toast.success('Problema reportado. Obrigado por ajudar!')
+  }
+
+  const makeBooking = (bookingData: Omit<Booking, 'id' | 'status'>) => {
+    const newBooking: Booking = {
+      id: Math.random().toString(36).substr(2, 9),
+      status: 'confirmed',
+      ...bookingData,
+    }
+    setBookings((prev) => [newBooking, ...prev])
+    setPoints((prev) => prev + 100)
+
+    // Update challenge progress mock
+    setChallenges((prev) =>
+      prev.map((c) =>
+        c.id === '2'
+          ? {
+              ...c,
+              current: Math.min(c.current + 1, c.total),
+              completed: c.current + 1 >= c.total,
+            }
+          : c,
+      ),
+    )
+  }
+
+  const redeemPoints = (amount: number, type: 'points' | 'fetch') => {
+    if (type === 'points') {
+      if (points < amount) return false
+      setPoints((prev) => prev - amount)
+      return true
+    } else {
+      if (fetchCredits < amount) return false
+      setFetchCredits((prev) => prev - amount)
+      return true
+    }
   }
 
   const isSaved = (id: string) => savedIds.includes(id)
@@ -171,6 +237,11 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         reservedIds,
         userLocation,
         uploads,
+        bookings,
+        points,
+        fetchCredits,
+        challenges,
+        badges,
         toggleSave,
         reserveCoupon,
         addCoupon,
@@ -182,6 +253,8 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         refreshCoupons,
         voteCoupon,
         reportCoupon,
+        makeBooking,
+        redeemPoints,
       },
     },
     children,

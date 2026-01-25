@@ -3,8 +3,12 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { Settings, LogOut, Award, User, Bell } from 'lucide-react'
+import { GamificationSection } from '@/components/GamificationSection'
+import { useCouponStore } from '@/stores/CouponContext'
 
 export default function Profile() {
+  const { uploads, savedIds, points } = useCouponStore()
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-lg">
       <div className="flex flex-col items-center mb-8">
@@ -20,25 +24,29 @@ export default function Profile() {
         </div>
       </div>
 
-      <Card className="mb-6">
+      <Card className="mb-8">
         <CardHeader>
           <CardTitle className="text-lg">Estatísticas</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-3 gap-4 text-center">
           <div>
-            <p className="text-2xl font-bold text-primary">12</p>
+            <p className="text-2xl font-bold text-primary">{uploads.length}</p>
             <p className="text-xs text-muted-foreground">Docs Enviados</p>
           </div>
           <div>
-            <p className="text-2xl font-bold text-primary">45</p>
+            <p className="text-2xl font-bold text-primary">{savedIds.length}</p>
             <p className="text-xs text-muted-foreground">Cupons Salvos</p>
           </div>
           <div>
-            <p className="text-2xl font-bold text-primary">R$ 350</p>
-            <p className="text-xs text-muted-foreground">Economizados</p>
+            <p className="text-2xl font-bold text-primary">{points}</p>
+            <p className="text-xs text-muted-foreground">Pontos Totais</p>
           </div>
         </CardContent>
       </Card>
+
+      <div className="mb-8">
+        <GamificationSection />
+      </div>
 
       <div className="space-y-4">
         <Button

@@ -71,6 +71,7 @@ export interface Coupon {
   upvotes?: number
   downvotes?: number
   status?: 'active' | 'expired' | 'issue'
+  acceptsBooking?: boolean
 }
 
 export type CategoryType = Coupon['category']
@@ -106,4 +107,33 @@ export interface UploadedDocument {
   type: 'Receipt' | 'Coupon'
   storeName: string
   image: string
+}
+
+export interface Booking {
+  id: string
+  couponId: string
+  storeName: string
+  date: string
+  time: string
+  guests: number
+  status: 'confirmed' | 'cancelled'
+}
+
+export interface Challenge {
+  id: string
+  title: string
+  description: string
+  total: number
+  current: number
+  reward: string
+  icon: string
+  completed: boolean
+}
+
+export interface Badge {
+  id: string
+  name: string
+  description: string
+  image: string
+  earnedDate?: string
 }

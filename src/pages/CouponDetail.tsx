@@ -29,16 +29,18 @@ import {
   ThumbsUp,
   ThumbsDown,
   AlertTriangle,
+  Wallet,
 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { cn } from '@/lib/utils'
 import { StarRating } from '@/components/StarRating'
 import { LoyaltyCard } from '@/components/LoyaltyCard'
 import { CouponMenu } from '@/components/CouponMenu'
 import { CouponReviews } from '@/components/CouponReviews'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { BookingForm } from '@/components/BookingForm'
+import { Switch } from '@/components/ui/switch'
 
 export default function CouponDetail() {
   const { id } = useParams()
@@ -51,11 +53,15 @@ export default function CouponDetail() {
     isReserved,
     voteCoupon,
     reportCoupon,
+    points,
+    fetchCredits,
+    redeemPoints,
   } = useCouponStore()
   const { t } = useLanguage()
   const [showConfetti, setShowConfetti] = useState(false)
   const [reportIssue, setReportIssue] = useState('')
   const [isReportOpen, setIsReportOpen] = useState(false)
+  const [useFetchCredits, setUseFetchCredits] = useState(false)
 
   const coupon = coupons.find((c) => c.id === id)
 
@@ -73,6 +79,14 @@ export default function CouponDetail() {
   const isOffline = !navigator.onLine
 
   const handleReserve = () => {
+    if (useFetchCredits) {
+      if (!redeemPoints(10, 'fetch')) {
+        toast.error('Saldo Fetch insuficiente.')
+        return
+      }
+      toast.success('Créditos Fetch aplicados!')
+    }
+
     const success = reserveCoupon(coupon.id)
     if (success) {
       setShowConfetti(true)
@@ -211,6 +225,12 @@ export default function CouponDetail() {
             </Button>
           </div>
 
+          {coupon.acceptsBooking && (
+            <div className="mb-6">
+              <BookingForm coupon={coupon} />
+            </div>
+          )}
+
           {coupon.loyaltyProgram && (
             <div className="mb-6">
               <LoyaltyCard program={coupon.loyaltyProgram} />
@@ -327,7 +347,36 @@ export default function CouponDetail() {
 
           <CouponReviews coupon={coupon} />
 
-          <div className="mt-8">
+          <div className="mt-8 border-t pt-6">
+            {!reserved && (
+              <div className="mb-4 bg-primary/5 p-4 rounded-lg border border-primary/10">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <Wallet className="h-4 w-4 text-primary" />
+                    <span className="font-semibold text-sm">
+                      Integração Fetch
+                    </span>
+                  </div>
+                  <span className="text-xs font-bold text-primary">
+                    Saldo: ${fetchCredits.toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Switch
+                    id="fetch-credits"
+                    checked={useFetchCredits}
+                    onCheckedChange={setUseFetchCredits}
+                  />
+                  <Label
+                    htmlFor="fetch-credits"
+                    className="text-sm text-muted-foreground"
+                  >
+                    Usar créditos para obter desconto extra
+                  </Label>
+                </div>
+              </div>
+            )}
+
             {reserved ? (
               <Button
                 className="w-full text-lg h-14 font-bold bg-green-600 hover:bg-green-700 cursor-default"
