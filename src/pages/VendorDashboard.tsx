@@ -21,7 +21,13 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card'
 import {
   Plus,
   Target,
@@ -29,6 +35,8 @@ import {
   Briefcase,
   QrCode,
   Calendar as CalendarIcon,
+  MessageSquare,
+  Send,
 } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useCouponStore } from '@/stores/CouponContext'
@@ -48,6 +56,13 @@ export default function VendorDashboard() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isABCreatorOpen, setIsABCreatorOpen] = useState(false)
   const [generatedCode, setGeneratedCode] = useState<string | null>(null)
+
+  // Feedback form handling
+  const {
+    register: registerFeedback,
+    handleSubmit: handleSubmitFeedback,
+    reset: resetFeedback,
+  } = useForm()
 
   const onSubmit = (data: any) => {
     // Generate unique code if not provided
@@ -78,6 +93,15 @@ export default function VendorDashboard() {
       setGeneratedCode(null)
       reset()
     }, 2000)
+  }
+
+  const onFeedbackSubmit = (data: any) => {
+    // Mock sending feedback to admin
+    console.log('Feedback sent:', data)
+    toast.success('Feedback enviado aos administradores!', {
+      description: 'Entraremos em contato em breve.',
+    })
+    resetFeedback()
   }
 
   return (
@@ -220,7 +244,7 @@ export default function VendorDashboard() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        {/* Metric Cards - Same as before but ensuring colors match spec */}
+        {/* Metric Cards */}
         <Card className="border-l-4 border-l-primary shadow-sm">
           <CardHeader className="p-4 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -234,7 +258,6 @@ export default function VendorDashboard() {
             </p>
           </CardContent>
         </Card>
-        {/* ... other cards ... */}
         <Card className="border-l-4 border-l-secondary shadow-sm">
           <CardHeader className="p-4 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -251,11 +274,12 @@ export default function VendorDashboard() {
       </div>
 
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="bg-white p-1 shadow-sm border">
+        <TabsList className="bg-white p-1 shadow-sm border w-full justify-start overflow-x-auto">
           <TabsTrigger value="overview">Visão Geral</TabsTrigger>
           <TabsTrigger value="offers">Gerenciar Ofertas</TabsTrigger>
           <TabsTrigger value="abtesting">Testes A/B</TabsTrigger>
           <TabsTrigger value="marketing">Marketing Direto</TabsTrigger>
+          <TabsTrigger value="feedback">Feedback</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview">
@@ -330,6 +354,58 @@ export default function VendorDashboard() {
 
         <TabsContent value="marketing">
           <TargetedOffers />
+        </TabsContent>
+
+        <TabsContent value="feedback">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MessageSquare className="h-5 w-5 text-primary" /> Canal de
+                Feedback
+              </CardTitle>
+              <CardDescription>
+                Envie sugestões, reporte problemas ou solicite suporte
+                diretamente aos administradores da plataforma.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form
+                onSubmit={handleSubmitFeedback(onFeedbackSubmit)}
+                className="space-y-4 max-w-lg"
+              >
+                <div className="space-y-2">
+                  <Label>Assunto</Label>
+                  <Input
+                    {...registerFeedback('subject', { required: true })}
+                    placeholder="Ex: Sugestão de nova funcionalidade"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Tipo de Mensagem</Label>
+                  <select
+                    {...registerFeedback('type')}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <option value="suggestion">Sugestão</option>
+                    <option value="support">Suporte Técnico</option>
+                    <option value="bug">Reportar Erro</option>
+                    <option value="other">Outro</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Mensagem</Label>
+                  <Textarea
+                    {...registerFeedback('message', { required: true })}
+                    placeholder="Descreva detalhadamente..."
+                    className="min-h-[120px]"
+                  />
+                </div>
+                <Button type="submit" className="gap-2">
+                  <Send className="h-4 w-4" /> Enviar Mensagem
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

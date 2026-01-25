@@ -33,6 +33,7 @@ import {
   CreditCard,
   Download,
   Navigation,
+  ShoppingCart,
 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
@@ -473,7 +474,7 @@ export default function CouponDetail() {
                   </>
                 ) : needsPayment ? (
                   <>
-                    <CreditCard className="mr-2 h-4 w-4" /> Comprar por R${' '}
+                    <ShoppingCart className="mr-2 h-4 w-4" /> Comprar Agora - R${' '}
                     {coupon.price?.toFixed(2)}
                   </>
                 ) : (

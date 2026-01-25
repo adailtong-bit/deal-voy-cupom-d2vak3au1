@@ -14,7 +14,14 @@ import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { useCouponStore } from '@/stores/CouponContext'
 import { Coupon } from '@/lib/types'
-import { CreditCard, Lock, ArrowLeft, Coins, Wallet } from 'lucide-react'
+import {
+  CreditCard,
+  Lock,
+  ArrowLeft,
+  Coins,
+  Wallet,
+  CheckCircle,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { useState } from 'react'
 
@@ -23,6 +30,7 @@ export default function Checkout() {
   const navigate = useNavigate()
   const { processPayment, fetchCredits, redeemPoints } = useCouponStore()
   const [isProcessing, setIsProcessing] = useState(false)
+  const [isSuccess, setIsSuccess] = useState(false)
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'fetch'>('card')
   const {
     register,
@@ -46,6 +54,9 @@ export default function Checkout() {
   const onSubmit = async (data: any) => {
     setIsProcessing(true)
 
+    // Simulate payment processing delay
+    await new Promise((resolve) => setTimeout(resolve, 2000))
+
     if (paymentMethod === 'fetch') {
       if (!redeemPoints(coupon.price || 0, 'fetch')) {
         toast.error('Saldo insuficiente.')
@@ -56,15 +67,34 @@ export default function Checkout() {
 
     try {
       await processPayment({ couponId: coupon.id, amount: coupon.price || 0 })
+      setIsSuccess(true)
       toast.success('Pagamento aprovado!', {
         description: 'Recibo enviado para seu email.',
       })
-      navigate(`/coupon/${coupon.id}`)
+      // Navigate after small delay to show success state
+      setTimeout(() => {
+        navigate(`/coupon/${coupon.id}`)
+      }, 1500)
     } catch (error) {
       toast.error('Erro no pagamento. Tente novamente.')
-    } finally {
       setIsProcessing(false)
     }
+  }
+
+  if (isSuccess) {
+    return (
+      <div className="container mx-auto px-4 py-20 flex flex-col items-center justify-center min-h-[60vh] text-center animate-in zoom-in">
+        <div className="h-24 w-24 bg-green-100 rounded-full flex items-center justify-center mb-6">
+          <CheckCircle className="h-12 w-12 text-green-600" />
+        </div>
+        <h1 className="text-3xl font-bold mb-2 text-green-800">
+          Pagamento Confirmado!
+        </h1>
+        <p className="text-muted-foreground mb-8">
+          Redirecionando para seu cupom...
+        </p>
+      </div>
+    )
   }
 
   return (
@@ -73,6 +103,7 @@ export default function Checkout() {
         variant="ghost"
         className="mb-4 pl-0 hover:bg-transparent hover:text-primary"
         onClick={() => navigate(-1)}
+        disabled={isProcessing}
       >
         <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
       </Button>
@@ -153,6 +184,10 @@ export default function Checkout() {
                           />
                         </div>
                       </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs">Nome no Cartão</Label>
+                        <Input placeholder="JOAO SILVA" {...register('name')} />
+                      </div>
                     </div>
                   )}
                 </div>
@@ -201,11 +236,13 @@ export default function Checkout() {
                 (paymentMethod === 'fetch' && !canAffordWithCredits)
               }
             >
-              {isProcessing
-                ? 'Processando...'
-                : paymentMethod === 'fetch'
-                  ? `Usar Saldo (R$ ${coupon.price?.toFixed(2)})`
-                  : `Pagar R$ ${coupon.price?.toFixed(2)}`}
+              {isProcessing ? (
+                <span className="flex items-center gap-2">Processando...</span>
+              ) : paymentMethod === 'fetch' ? (
+                `Usar Saldo (R$ ${coupon.price?.toFixed(2)})`
+              ) : (
+                `Pagar R$ ${coupon.price?.toFixed(2)}`
+              )}
             </Button>
           </CardFooter>
         </Card>

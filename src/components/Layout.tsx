@@ -109,14 +109,14 @@ export default function Layout() {
       <MobileHeader />
 
       <div className="flex-1 overflow-auto md:pb-0 flex flex-col">
-        {/* Top Ad Slot */}
+        {/* Top Ad Slot - Ad 1 of 2 */}
         {!isAuthPage && <AdSpace position="top" />}
 
         <div className="flex-1">
           <Outlet />
         </div>
 
-        {/* Bottom Ad Slot */}
+        {/* Bottom Ad Slot - Ad 2 of 2 */}
         {!isAuthPage && <AdSpace position="bottom" className="mb-0 border-t" />}
       </div>
 
