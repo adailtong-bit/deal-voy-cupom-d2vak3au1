@@ -10,6 +10,15 @@ export interface MenuItem {
   }
 }
 
+export interface Review {
+  id: string
+  userId: string
+  userName: string
+  rating: number
+  comment: string
+  date: string
+}
+
 export interface Coupon {
   id: string
   storeName: string
@@ -42,6 +51,9 @@ export interface Coupon {
   reservedCount?: number
   // Menu for restaurants
   menu?: MenuItem[]
+  // Social
+  reviews?: Review[]
+  averageRating?: number
 }
 
 export type CategoryType = Coupon['category']
@@ -58,4 +70,14 @@ export interface SeasonalEvent {
   date: Date
   description: string
   type: 'sale' | 'holiday' | 'event'
+}
+
+export interface Notification {
+  id: string
+  title: string
+  message: string
+  type: 'deal' | 'alert' | 'system'
+  read: boolean
+  date: string
+  link?: string
 }

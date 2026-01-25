@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
-import { Coupon, UserLocation } from '@/lib/types'
+import { Coupon, UserLocation, Review } from '@/lib/types'
 import { MOCK_COUPONS, MOCK_USER_LOCATION } from '@/lib/data'
 
 interface CouponContextType {
@@ -13,6 +13,7 @@ interface CouponContextType {
   isSaved: (id: string) => boolean
   isReserved: (id: string) => boolean
   isLoadingLocation: boolean
+  addReview: (couponId: string, review: Omit<Review, 'id' | 'date'>) => void
 }
 
 const CouponContext = createContext<CouponContextType | undefined>(undefined)
@@ -73,7 +74,6 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     }
 
     // Check max per user
-    // Simplified logic: reservedIds only stores ID, assuming 1 reservation per ID per session for now
     if (reservedIds.includes(id)) {
       return false // Already reserved
     }
@@ -93,6 +93,36 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     setCoupons((prev) => [coupon, ...prev])
   }
 
+  const addReview = (
+    couponId: string,
+    reviewData: Omit<Review, 'id' | 'date'>,
+  ) => {
+    setCoupons((prev) =>
+      prev.map((coupon) => {
+        if (coupon.id !== couponId) return coupon
+
+        const newReview: Review = {
+          id: Math.random().toString(36).substr(2, 9),
+          date: new Date().toISOString(),
+          ...reviewData,
+        }
+
+        const currentReviews = coupon.reviews || []
+        const updatedReviews = [newReview, ...currentReviews]
+
+        // Recalculate average
+        const totalRating = updatedReviews.reduce((sum, r) => sum + r.rating, 0)
+        const averageRating = totalRating / updatedReviews.length
+
+        return {
+          ...coupon,
+          reviews: updatedReviews,
+          averageRating,
+        }
+      }),
+    )
+  }
+
   const isSaved = (id: string) => savedIds.includes(id)
   const isReserved = (id: string) => reservedIds.includes(id)
 
@@ -110,6 +140,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         isSaved,
         isReserved,
         isLoadingLocation,
+        addReview,
       },
     },
     children,

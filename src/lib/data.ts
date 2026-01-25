@@ -1,4 +1,4 @@
-import { Coupon, SeasonalEvent } from './types'
+import { Coupon, SeasonalEvent, Notification } from './types'
 
 // Mock location (Sao Paulo center-ish)
 export const MOCK_USER_LOCATION = {
@@ -46,6 +46,17 @@ export const SEASONAL_EVENTS: SeasonalEvent[] = [
   },
 ]
 
+export const MOCK_NOTIFICATIONS: Notification[] = [
+  {
+    id: '1',
+    title: 'Bem-vindo ao CupomGeo!',
+    message: 'Explore as melhores ofertas ao seu redor.',
+    type: 'system',
+    read: false,
+    date: new Date().toISOString(),
+  },
+]
+
 export const MOCK_COUPONS: Coupon[] = [
   {
     id: '1',
@@ -67,6 +78,25 @@ export const MOCK_COUPONS: Coupon[] = [
     totalAvailable: 1000,
     reservedCount: 450,
     maxPerUser: 2,
+    averageRating: 4.5,
+    reviews: [
+      {
+        id: 'r1',
+        userId: 'u1',
+        userName: 'Carlos Silva',
+        rating: 5,
+        comment: 'Muito bom e barato!',
+        date: '2024-01-15',
+      },
+      {
+        id: 'r2',
+        userId: 'u2',
+        userName: 'Ana Costa',
+        rating: 4,
+        comment: 'O lanche estava ótimo, mas a fila estava grande.',
+        date: '2024-01-16',
+      },
+    ],
     menu: [
       {
         name: 'Whopper',
@@ -121,6 +151,8 @@ export const MOCK_COUPONS: Coupon[] = [
     totalAvailable: 500,
     reservedCount: 120,
     maxPerUser: 1,
+    averageRating: 4.0,
+    reviews: [],
   },
   {
     id: '3',
@@ -140,6 +172,17 @@ export const MOCK_COUPONS: Coupon[] = [
     totalAvailable: 200,
     reservedCount: 180, // High demand
     maxPerUser: 2,
+    averageRating: 4.8,
+    reviews: [
+      {
+        id: 'r3',
+        userId: 'u3',
+        userName: 'Marcos Paulo',
+        rating: 5,
+        comment: 'Excelente promoção para dia de semana.',
+        date: '2024-02-10',
+      },
+    ],
   },
   {
     id: '4',
@@ -155,6 +198,8 @@ export const MOCK_COUPONS: Coupon[] = [
     code: 'SMART-ZERO',
     terms: 'Válido para plano Black.',
     coordinates: { lat: -23.552, lng: -46.631 },
+    averageRating: 3.5,
+    reviews: [],
   },
   {
     id: '5',
@@ -169,6 +214,8 @@ export const MOCK_COUPONS: Coupon[] = [
     logo: 'https://img.usecurling.com/i?q=samsung&shape=fill&color=blue',
     code: 'SAMS15',
     coordinates: { lat: -23.56, lng: -46.65 },
+    averageRating: 4.2,
+    reviews: [],
   },
   {
     id: '6',
@@ -185,6 +232,8 @@ export const MOCK_COUPONS: Coupon[] = [
     isTrending: true,
     coordinates: { lat: -23.549, lng: -46.632 },
     isSpecial: true, // Executive lunch style
+    averageRating: 4.6,
+    reviews: [],
   },
   {
     id: '7',
@@ -200,6 +249,17 @@ export const MOCK_COUPONS: Coupon[] = [
     code: 'ALMOCO35',
     isSpecial: true,
     coordinates: { lat: -23.55, lng: -46.633 },
+    averageRating: 5.0,
+    reviews: [
+      {
+        id: 'r4',
+        userId: 'u4',
+        userName: 'Julia Mendes',
+        rating: 5,
+        comment: 'Comida caseira deliciosa!',
+        date: '2024-03-01',
+      },
+    ],
     menu: [
       {
         name: 'Feijoada Completa',

@@ -4,6 +4,7 @@ import { Toaster as Sonner } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { CouponProvider } from '@/stores/CouponContext'
 import { LanguageProvider } from '@/stores/LanguageContext'
+import { NotificationProvider } from '@/stores/NotificationContext'
 
 import Index from './pages/Index'
 import Explore from './pages/Explore'
@@ -14,34 +15,38 @@ import Profile from './pages/Profile'
 import TravelPlanner from './pages/TravelPlanner'
 import VendorDashboard from './pages/VendorDashboard'
 import Seasonal from './pages/Seasonal'
+import Notifications from './pages/Notifications'
 import NotFound from './pages/NotFound'
 import Layout from './components/Layout'
 
 const App = () => (
   <LanguageProvider>
     <CouponProvider>
-      <BrowserRouter
-        future={{ v7_startTransition: false, v7_relativeSplatPath: false }}
-      >
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <Routes>
-            <Route element={<Layout />}>
-              <Route path="/" element={<Index />} />
-              <Route path="/explore" element={<Explore />} />
-              <Route path="/coupon/:id" element={<CouponDetail />} />
-              <Route path="/upload" element={<Upload />} />
-              <Route path="/saved" element={<Saved />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/travel-planner" element={<TravelPlanner />} />
-              <Route path="/vendor" element={<VendorDashboard />} />
-              <Route path="/seasonal" element={<Seasonal />} />
-            </Route>
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </TooltipProvider>
-      </BrowserRouter>
+      <NotificationProvider>
+        <BrowserRouter
+          future={{ v7_startTransition: false, v7_relativeSplatPath: false }}
+        >
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <Routes>
+              <Route element={<Layout />}>
+                <Route path="/" element={<Index />} />
+                <Route path="/explore" element={<Explore />} />
+                <Route path="/coupon/:id" element={<CouponDetail />} />
+                <Route path="/upload" element={<Upload />} />
+                <Route path="/saved" element={<Saved />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/travel-planner" element={<TravelPlanner />} />
+                <Route path="/vendor" element={<VendorDashboard />} />
+                <Route path="/seasonal" element={<Seasonal />} />
+                <Route path="/notifications" element={<Notifications />} />
+              </Route>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </TooltipProvider>
+        </BrowserRouter>
+      </NotificationProvider>
     </CouponProvider>
   </LanguageProvider>
 )

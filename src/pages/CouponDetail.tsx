@@ -3,7 +3,7 @@ import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Card } from '@/components/ui/card'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import {
   Dialog,
@@ -27,20 +27,28 @@ import {
   Languages,
   Utensils,
   CheckCircle,
+  MessageSquare,
+  WifiOff,
 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { StarRating } from '@/components/StarRating'
+import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
 
 export default function CouponDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { coupons, toggleSave, isSaved, reserveCoupon, isReserved } =
+  const { coupons, toggleSave, isSaved, reserveCoupon, isReserved, addReview } =
     useCouponStore()
   const { t, language } = useLanguage()
   const [showConfetti, setShowConfetti] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [menuLang, setMenuLang] = useState(language)
+  const [newRating, setNewRating] = useState(0)
+  const [newComment, setNewComment] = useState('')
+  const [isReviewOpen, setIsReviewOpen] = useState(false)
 
   const coupon = coupons.find((c) => c.id === id)
 
@@ -55,6 +63,7 @@ export default function CouponDetail() {
 
   const saved = isSaved(coupon.id)
   const reserved = isReserved(coupon.id)
+  const isOffline = !navigator.onLine
 
   const handleReserve = () => {
     const success = reserveCoupon(coupon.id)
@@ -70,6 +79,23 @@ export default function CouponDetail() {
   const handleCopyCode = () => {
     navigator.clipboard.writeText(coupon.code)
     toast.success('Código copiado!')
+  }
+
+  const handleSubmitReview = () => {
+    if (newRating === 0) {
+      toast.error('Por favor, selecione uma nota.')
+      return
+    }
+    addReview(coupon.id, {
+      userId: 'currentUser',
+      userName: 'Você',
+      rating: newRating,
+      comment: newComment,
+    })
+    setIsReviewOpen(false)
+    setNewRating(0)
+    setNewComment('')
+    toast.success('Avaliação enviada!')
   }
 
   const handleShare = () => {
@@ -158,7 +184,7 @@ export default function CouponDetail() {
               <h1 className="text-2xl font-bold leading-tight mb-2">
                 {coupon.title}
               </h1>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2 items-center">
                 <Badge
                   variant="secondary"
                   className="text-sm px-3 py-1 font-bold"
@@ -167,6 +193,16 @@ export default function CouponDetail() {
                 </Badge>
                 {coupon.isSpecial && (
                   <Badge className="bg-purple-600">Especial Local</Badge>
+                )}
+                {coupon.averageRating && (
+                  <div className="flex items-center gap-1 text-sm font-medium text-yellow-600 bg-yellow-50 px-2 py-1 rounded-md">
+                    <StarRating
+                      rating={coupon.averageRating}
+                      size="sm"
+                      readonly
+                    />
+                    <span>({coupon.averageRating.toFixed(1)})</span>
+                  </div>
                 )}
               </div>
             </div>
@@ -293,6 +329,81 @@ export default function CouponDetail() {
             )}
           </div>
 
+          {/* Reviews Section */}
+          <div className="mt-8">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-lg flex items-center gap-2">
+                <MessageSquare className="h-5 w-5" /> {t('coupon.reviews')}
+              </h3>
+              <Dialog open={isReviewOpen} onOpenChange={setIsReviewOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    {t('coupon.add_review')}
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>{t('coupon.add_review')}</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Label>{t('coupon.rating')}</Label>
+                      <StarRating
+                        rating={newRating}
+                        onRatingChange={setNewRating}
+                        size="lg"
+                        className="justify-center"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>{t('coupon.comment')}</Label>
+                      <Textarea
+                        value={newComment}
+                        onChange={(e) => setNewComment(e.target.value)}
+                        placeholder="Conte sobre sua experiência..."
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button onClick={handleSubmitReview}>
+                      {t('coupon.submit_review')}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </div>
+
+            <div className="space-y-4">
+              {coupon.reviews && coupon.reviews.length > 0 ? (
+                coupon.reviews.map((review) => (
+                  <div key={review.id} className="border-b pb-4 last:border-0">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="font-semibold text-sm">
+                        {review.userName}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(review.date).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <StarRating
+                      rating={review.rating}
+                      size="sm"
+                      readonly
+                      className="mb-2"
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      {review.comment}
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground italic">
+                  Seja o primeiro a avaliar!
+                </p>
+              )}
+            </div>
+          </div>
+
           <div className="mt-8">
             {reserved ? (
               <Button
@@ -306,12 +417,19 @@ export default function CouponDetail() {
                 className="w-full text-lg h-14 font-bold shadow-lg animate-pulse-slow"
                 onClick={handleReserve}
                 disabled={
-                  coupon.totalAvailable !== undefined &&
-                  coupon.reservedCount !== undefined &&
-                  coupon.reservedCount >= coupon.totalAvailable
+                  (coupon.totalAvailable !== undefined &&
+                    coupon.reservedCount !== undefined &&
+                    coupon.reservedCount >= coupon.totalAvailable) ||
+                  isOffline
                 }
               >
-                {t('coupon.reserve')}
+                {isOffline ? (
+                  <>
+                    <WifiOff className="mr-2 h-4 w-4" /> Indisponível Offline
+                  </>
+                ) : (
+                  t('coupon.reserve')
+                )}
               </Button>
             )}
 
@@ -346,11 +464,21 @@ export default function CouponDetail() {
                     </Button>
 
                     <div className="flex items-center gap-2 text-sm text-muted-foreground mt-4">
-                      <img
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${coupon.code}`}
-                        alt="QR Code"
-                        className="w-32 h-32 border p-2 rounded-lg"
-                      />
+                      {isOffline ? (
+                        <div className="text-center p-4 border rounded bg-yellow-50 text-yellow-800">
+                          <WifiOff className="h-6 w-6 mx-auto mb-2" />
+                          <p>Modo Offline</p>
+                          <p className="text-xs">
+                            QR Code não disponível, use o código de texto.
+                          </p>
+                        </div>
+                      ) : (
+                        <img
+                          src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${coupon.code}`}
+                          alt="QR Code"
+                          className="w-32 h-32 border p-2 rounded-lg"
+                        />
+                      )}
                     </div>
                   </div>
                   <DialogFooter className="sm:justify-center">

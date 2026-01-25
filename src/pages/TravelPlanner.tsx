@@ -1,24 +1,58 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useCouponStore } from '@/stores/CouponContext'
 import { CouponCard } from '@/components/CouponCard'
-import { MapPin, ArrowRight, Navigation } from 'lucide-react'
+import {
+  MapPin,
+  ArrowRight,
+  Navigation,
+  PlayCircle,
+  StopCircle,
+  BellRing,
+} from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
+import { useNotification } from '@/stores/NotificationContext'
 
 export default function TravelPlanner() {
   const { coupons } = useCouponStore()
   const { t } = useLanguage()
+  const { addNotification } = useNotification()
   const [origin, setOrigin] = useState('')
   const [destination, setDestination] = useState('')
   const [isRouteCalculated, setIsRouteCalculated] = useState(false)
+  const [isTravelModeActive, setIsTravelModeActive] = useState(false)
 
   const handlePlanRoute = () => {
     if (origin && destination) {
       setIsRouteCalculated(true)
     }
   }
+
+  const toggleTravelMode = () => {
+    setIsTravelModeActive(!isTravelModeActive)
+  }
+
+  // Mock travel mode simulation
+  useEffect(() => {
+    let interval: NodeJS.Timeout
+    if (isTravelModeActive) {
+      interval = setInterval(() => {
+        // Randomly trigger a proximity alert
+        if (Math.random() > 0.7) {
+          const randomCoupon =
+            coupons[Math.floor(Math.random() * coupons.length)]
+          addNotification({
+            title: `Oferta próxima em sua rota!`,
+            message: `${randomCoupon.storeName} tem ${randomCoupon.discount} - Desvio de apenas 2 min!`,
+            type: 'deal',
+          })
+        }
+      }, 5000) // Every 5 seconds check for deals
+    }
+    return () => clearInterval(interval)
+  }, [isTravelModeActive, coupons, addNotification])
 
   // Mock deals along the route (randomly select few)
   const routeDeals = coupons.slice(0, 4)
@@ -80,14 +114,44 @@ export default function TravelPlanner() {
 
         {isRouteCalculated && (
           <div className="space-y-6 animate-in slide-in-from-bottom duration-500">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold">
-                Ofertas Encontradas no Caminho
-              </h2>
-              <span className="text-sm text-muted-foreground bg-muted px-3 py-1 rounded-full">
-                4 paradas sugeridas
-              </span>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-bold">
+                  Ofertas Encontradas no Caminho
+                </h2>
+                <span className="text-sm text-muted-foreground bg-muted px-3 py-1 rounded-full">
+                  4 paradas sugeridas
+                </span>
+              </div>
+
+              <Button
+                onClick={toggleTravelMode}
+                variant={isTravelModeActive ? 'destructive' : 'default'}
+                className={isTravelModeActive ? 'animate-pulse' : ''}
+              >
+                {isTravelModeActive ? (
+                  <>
+                    <StopCircle className="mr-2 h-4 w-4" /> Parar Modo Viagem
+                  </>
+                ) : (
+                  <>
+                    <PlayCircle className="mr-2 h-4 w-4" /> Iniciar Modo Viagem
+                  </>
+                )}
+              </Button>
             </div>
+
+            {isTravelModeActive && (
+              <div className="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-md flex items-center gap-3">
+                <BellRing className="h-5 w-5 animate-bounce" />
+                <div>
+                  <p className="font-bold text-sm">Monitoramento Ativo</p>
+                  <p className="text-xs">
+                    Você receberá alertas de ofertas conforme avança na rota.
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* Simulated Map View */}
             <div className="relative h-64 w-full rounded-xl overflow-hidden bg-slate-100 border shadow-inner">

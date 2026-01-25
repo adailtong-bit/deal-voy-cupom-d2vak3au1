@@ -1,7 +1,16 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Search, MapPin, Menu, ShoppingBag, Calendar, Map } from 'lucide-react'
+import {
+  Search,
+  MapPin,
+  Menu,
+  ShoppingBag,
+  Calendar,
+  Map,
+  Bell,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
 import {
   Sheet,
   SheetContent,
@@ -13,10 +22,12 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useLanguage } from '@/stores/LanguageContext'
 import { LanguageSelector } from './LanguageSelector'
+import { useNotification } from '@/stores/NotificationContext'
 
 export function DesktopHeader() {
   const location = useLocation()
   const { t } = useLanguage()
+  const { unreadCount } = useNotification()
 
   const isActive = (path: string) => location.pathname === path
 
@@ -100,6 +111,20 @@ export function DesktopHeader() {
 
         <div className="flex items-center gap-3">
           <LanguageSelector />
+
+          <Link to="/notifications">
+            <Button variant="ghost" size="icon" className="relative">
+              <Bell className="h-5 w-5" />
+              {unreadCount > 0 && (
+                <Badge
+                  variant="destructive"
+                  className="absolute -top-1 -right-1 h-4 w-4 flex items-center justify-center p-0 rounded-full text-[10px]"
+                >
+                  {unreadCount}
+                </Badge>
+              )}
+            </Button>
+          </Link>
 
           <Link to="/upload">
             <Button
