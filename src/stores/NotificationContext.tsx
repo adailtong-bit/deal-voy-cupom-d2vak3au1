@@ -7,6 +7,8 @@ import { toast } from 'sonner'
 interface NotificationContextType {
   notifications: Notification[]
   unreadCount: number
+  smartAlertsEnabled: boolean
+  toggleSmartAlerts: () => void
   markAsRead: (id: string) => void
   addNotification: (
     notification: Omit<Notification, 'id' | 'date' | 'read'>,
@@ -24,6 +26,7 @@ export function NotificationProvider({
   children: React.ReactNode
 }) {
   const [notifications, setNotifications] = useState<Notification[]>([])
+  const [smartAlertsEnabled, setSmartAlertsEnabled] = useState(true)
   const { t } = useLanguage()
 
   useEffect(() => {
@@ -39,13 +42,26 @@ export function NotificationProvider({
     )
   }
 
+  const toggleSmartAlerts = () => {
+    setSmartAlertsEnabled((prev) => !prev)
+    toast.success(
+      smartAlertsEnabled
+        ? 'Notificações inteligentes desativadas'
+        : 'Notificações inteligentes ativadas',
+    )
+  }
+
   const addNotification = (
     notification: Omit<Notification, 'id' | 'date' | 'read'>,
   ) => {
+    if (!smartAlertsEnabled && notification.category === 'smart') return
+
     const newNotification: Notification = {
       id: Math.random().toString(36).substr(2, 9),
       date: new Date().toISOString(),
       read: false,
+      priority: notification.priority || 'medium',
+      category: notification.category || 'system',
       ...notification,
     }
     setNotifications((prev) => [newNotification, ...prev])
@@ -70,6 +86,8 @@ export function NotificationProvider({
       value: {
         notifications,
         unreadCount,
+        smartAlertsEnabled,
+        toggleSmartAlerts,
         markAsRead,
         addNotification,
         clearAll,

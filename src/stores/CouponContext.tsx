@@ -8,6 +8,7 @@ import {
   Challenge,
   Badge,
   ABTest,
+  Itinerary,
 } from '@/lib/types'
 import {
   MOCK_COUPONS,
@@ -15,6 +16,7 @@ import {
   MOCK_CHALLENGES,
   MOCK_BADGES,
   MOCK_AB_TESTS,
+  MOCK_ITINERARIES,
 } from '@/lib/data'
 import { toast } from 'sonner'
 
@@ -31,6 +33,7 @@ interface CouponContextType {
   badges: Badge[]
   abTests: ABTest[]
   downloadedIds: string[]
+  itineraries: Itinerary[]
   toggleSave: (id: string) => void
   reserveCoupon: (id: string) => boolean
   addCoupon: (coupon: Coupon) => void
@@ -51,6 +54,7 @@ interface CouponContextType {
     amount: number
   }) => Promise<boolean>
   isDownloaded: (id: string) => boolean
+  joinChallenge: (id: string) => void
 }
 
 const CouponContext = createContext<CouponContextType | undefined>(undefined)
@@ -69,6 +73,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   const [badges] = useState<Badge[]>(MOCK_BADGES)
   const [abTests, setAbTests] = useState<ABTest[]>(MOCK_AB_TESTS)
   const [downloadedIds, setDownloadedIds] = useState<string[]>([])
+  const [itineraries] = useState<Itinerary[]>(MOCK_ITINERARIES)
 
   useEffect(() => {
     const storedSaved = localStorage.getItem('savedCoupons')
@@ -208,6 +213,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
               ...c,
               current: Math.min(c.current + 1, c.total),
               completed: c.current + 1 >= c.total,
+              status: c.current + 1 >= c.total ? 'completed' : 'active',
             }
           : c,
       ),
@@ -252,6 +258,13 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     })
   }
 
+  const joinChallenge = (id: string) => {
+    setChallenges((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, status: 'active' } : c)),
+    )
+    toast.success('Desafio aceito! Boa sorte.')
+  }
+
   const isSaved = (id: string) => savedIds.includes(id)
   const isReserved = (id: string) => reservedIds.includes(id)
   const isDownloaded = (id: string) => downloadedIds.includes(id)
@@ -272,6 +285,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         badges,
         abTests,
         downloadedIds,
+        itineraries,
         toggleSave,
         reserveCoupon,
         addCoupon,
@@ -289,6 +303,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         downloadOffline,
         processPayment,
         isDownloaded,
+        joinChallenge,
       },
     },
     children,

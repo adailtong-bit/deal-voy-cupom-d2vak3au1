@@ -100,6 +100,8 @@ export interface Notification {
   read: boolean
   date: string
   link?: string
+  priority?: 'high' | 'medium' | 'low'
+  category?: 'smart' | 'system'
 }
 
 export interface UploadedDocument {
@@ -131,6 +133,8 @@ export interface Challenge {
   reward: string
   icon: string
   completed: boolean
+  status: 'active' | 'completed' | 'available'
+  type?: 'travel' | 'social' | 'collection'
 }
 
 export interface Badge {
@@ -160,4 +164,16 @@ export interface ABTest {
   status: 'active' | 'completed' | 'draft'
   variantA: ABVariant
   variantB: ABVariant
+}
+
+export interface Itinerary {
+  id: string
+  title: string
+  description: string
+  stops: Coupon[]
+  totalSavings: number
+  duration: string
+  image: string
+  tags: string[]
+  matchScore: number // 0-100
 }

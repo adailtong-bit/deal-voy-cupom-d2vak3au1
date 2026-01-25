@@ -5,6 +5,7 @@ import {
   Challenge,
   Badge,
   ABTest,
+  Itinerary,
 } from './types'
 
 export const MOCK_USER_LOCATION = {
@@ -62,6 +63,19 @@ export const MOCK_NOTIFICATIONS: Notification[] = [
     type: 'system',
     read: false,
     date: new Date().toISOString(),
+    priority: 'low',
+    category: 'system',
+  },
+  {
+    id: '2',
+    title: 'Oferta Relâmpago!',
+    message: '50% OFF no Burger King - Expira em 1 hora',
+    type: 'deal',
+    read: false,
+    date: new Date(Date.now() - 3600000).toISOString(),
+    priority: 'high',
+    category: 'smart',
+    link: '/coupon/1',
   },
 ]
 
@@ -75,6 +89,8 @@ export const MOCK_CHALLENGES: Challenge[] = [
     reward: '500 pts',
     icon: 'MapPin',
     completed: false,
+    status: 'active',
+    type: 'travel',
   },
   {
     id: '2',
@@ -85,6 +101,8 @@ export const MOCK_CHALLENGES: Challenge[] = [
     reward: 'Super Cupom',
     icon: 'Utensils',
     completed: false,
+    status: 'active',
+    type: 'collection',
   },
   {
     id: '3',
@@ -95,6 +113,20 @@ export const MOCK_CHALLENGES: Challenge[] = [
     reward: 'Badge',
     icon: 'Camera',
     completed: true,
+    status: 'completed',
+    type: 'social',
+  },
+  {
+    id: '4',
+    title: 'Rota Histórica',
+    description: 'Complete a rota "Centro Histórico"',
+    total: 1,
+    current: 0,
+    reward: 'Badge Historiador',
+    icon: 'Landmark',
+    completed: false,
+    status: 'available',
+    type: 'travel',
   },
 ]
 
@@ -259,5 +291,44 @@ export const MOCK_AB_TESTS: ABTest[] = [
       clicks: 520,
       redemptions: 112,
     },
+  },
+]
+
+export const MOCK_ITINERARIES: Itinerary[] = [
+  {
+    id: 'it1',
+    title: 'Tour Gastronômico Econômico',
+    description:
+      'Um passeio pelos sabores da cidade sem gastar muito. Inclui almoço, lanche e jantar com descontos.',
+    stops: [MOCK_COUPONS[0], MOCK_COUPONS[1]],
+    totalSavings: 60,
+    duration: '4h',
+    image: 'https://img.usecurling.com/p/600/300?q=food%20tour',
+    tags: ['Gastronomia', 'Econômico'],
+    matchScore: 95,
+  },
+  {
+    id: 'it2',
+    title: 'Dia de Compras & Relax',
+    description:
+      'Aproveite as melhores ofertas de moda e termine o dia com um spa relaxante.',
+    stops: [MOCK_COUPONS[2], MOCK_COUPONS[3]],
+    totalSavings: 150,
+    duration: '6h',
+    image: 'https://img.usecurling.com/p/600/300?q=shopping%20bags',
+    tags: ['Compras', 'Bem-estar'],
+    matchScore: 88,
+  },
+  {
+    id: 'it3',
+    title: 'Rota Histórica e Cultural',
+    description:
+      'Conheça o centro histórico e aproveite descontos em cafés tradicionais.',
+    stops: [MOCK_COUPONS[1]],
+    totalSavings: 35,
+    duration: '3h',
+    image: 'https://img.usecurling.com/p/600/300?q=historic%20building',
+    tags: ['Cultura', 'Turismo'],
+    matchScore: 75,
   },
 ]

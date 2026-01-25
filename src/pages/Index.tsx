@@ -7,6 +7,7 @@ import {
   Calendar,
   Sparkles,
   RefreshCw,
+  Compass,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -21,14 +22,20 @@ import {
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
 import { CouponCard } from '@/components/CouponCard'
+import { ItineraryCard } from '@/components/ItineraryCard'
 import { CATEGORIES, MOODS } from '@/lib/data'
 import * as Icons from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 
 export default function Index() {
-  const { coupons, userLocation, isLoadingLocation, refreshCoupons } =
-    useCouponStore()
+  const {
+    coupons,
+    itineraries,
+    userLocation,
+    isLoadingLocation,
+    refreshCoupons,
+  } = useCouponStore()
   const { t } = useLanguage()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedMood, setSelectedMood] = useState<string | null>(null)
@@ -157,7 +164,34 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Seasonal Highlights (New) */}
+      {/* Suggested Itineraries (New Section) */}
+      <section className="py-8 bg-blue-50/50">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl md:text-2xl font-bold flex items-center gap-2 text-blue-800">
+              <Compass className="h-5 w-5" /> Sugerido para você
+            </h2>
+          </div>
+          <Carousel className="w-full">
+            <CarouselContent className="-ml-4">
+              {itineraries.map((itinerary) => (
+                <CarouselItem
+                  key={itinerary.id}
+                  className="pl-4 basis-[85%] md:basis-1/2 lg:basis-1/3"
+                >
+                  <ItineraryCard itinerary={itinerary} />
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <div className="hidden md:block">
+              <CarouselPrevious />
+              <CarouselNext />
+            </div>
+          </Carousel>
+        </div>
+      </section>
+
+      {/* Seasonal Highlights */}
       <section className="py-8 bg-orange-50/50">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between mb-4">

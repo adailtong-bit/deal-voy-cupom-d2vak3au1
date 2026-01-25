@@ -7,6 +7,7 @@ import {
   Calendar,
   Map,
   Bell,
+  Trophy,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -64,6 +65,16 @@ export function DesktopHeader() {
               }
             >
               {t('nav.explore')}
+            </Link>
+            <Link
+              to="/challenges"
+              className={
+                isActive('/challenges')
+                  ? 'text-primary'
+                  : 'text-muted-foreground hover:text-foreground'
+              }
+            >
+              Desafios
             </Link>
             <Link
               to="/travel-planner"
@@ -166,6 +177,12 @@ export function DesktopHeader() {
                   className="text-lg font-medium flex items-center gap-2"
                 >
                   <MapPin className="h-4 w-4" /> {t('nav.explore')}
+                </Link>
+                <Link
+                  to="/challenges"
+                  className="text-lg font-medium flex items-center gap-2"
+                >
+                  <Trophy className="h-4 w-4" /> Desafios
                 </Link>
                 <Link
                   to="/travel-planner"
