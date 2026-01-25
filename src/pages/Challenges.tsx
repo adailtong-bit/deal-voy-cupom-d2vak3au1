@@ -17,13 +17,26 @@ import {
   Camera,
   Utensils,
   CheckCircle,
+  Lock,
 } from 'lucide-react'
 import * as Icons from 'lucide-react'
 import { toast } from 'sonner'
 import { Challenge } from '@/lib/types'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog'
+import { useState } from 'react'
 
 export default function Challenges() {
   const { challenges, joinChallenge } = useCouponStore()
+  const [unlockedChallenge, setUnlockedChallenge] = useState<Challenge | null>(
+    null,
+  )
 
   // Helper to dynamically get icon component
   const getIcon = (iconName: string) => {
@@ -36,6 +49,13 @@ export default function Challenges() {
   const completedChallenges = challenges.filter((c) => c.status === 'completed')
   const availableChallenges = challenges.filter((c) => c.status === 'available')
 
+  const handleJoin = (id: string) => {
+    joinChallenge(id)
+    toast.success('Desafio aceito!', {
+      description: "Verifique seu progresso na aba 'Ativos'.",
+    })
+  }
+
   const ChallengeCard = ({
     challenge,
     type,
@@ -43,12 +63,14 @@ export default function Challenges() {
     challenge: Challenge
     type: 'active' | 'available' | 'completed'
   }) => (
-    <Card className="mb-4 overflow-hidden border-l-4 border-l-primary">
+    <Card
+      className={`mb-4 overflow-hidden border-l-4 ${type === 'completed' ? 'border-l-accent' : 'border-l-primary'} transition-all hover:shadow-md`}
+    >
       <CardContent className="p-0">
         <div className="flex flex-col sm:flex-row">
-          <div className="bg-muted/30 p-6 flex flex-col items-center justify-center min-w-[120px] gap-2 border-b sm:border-b-0 sm:border-r">
+          <div className="bg-muted/10 p-6 flex flex-col items-center justify-center min-w-[120px] gap-2 border-b sm:border-b-0 sm:border-r">
             <div
-              className={`p-3 rounded-full ${type === 'completed' ? 'bg-green-100 text-green-600' : 'bg-primary/10 text-primary'}`}
+              className={`p-3 rounded-full ${type === 'completed' ? 'bg-accent/20 text-accent' : 'bg-primary/10 text-primary'}`}
             >
               {type === 'completed' ? (
                 <CheckCircle className="h-6 w-6" />
@@ -68,9 +90,11 @@ export default function Challenges() {
                   {challenge.description}
                 </p>
               </div>
-              {type === 'active' && <Badge>Em Progresso</Badge>}
+              {type === 'active' && (
+                <Badge className="bg-secondary">Em Progresso</Badge>
+              )}
               {type === 'completed' && (
-                <Badge className="bg-green-600">Concluído</Badge>
+                <Badge className="bg-accent">Concluído</Badge>
               )}
               {type === 'available' && <Badge variant="outline">Novo</Badge>}
             </div>
@@ -96,17 +120,17 @@ export default function Challenges() {
 
             {type === 'available' && (
               <Button
-                className="w-full mt-4"
-                onClick={() => joinChallenge(challenge.id)}
+                className="w-full mt-4 bg-primary hover:bg-primary/90"
+                onClick={() => handleJoin(challenge.id)}
               >
                 Aceitar Desafio
               </Button>
             )}
 
             {type === 'completed' && (
-              <div className="mt-4 p-2 bg-green-50 text-green-800 text-sm rounded flex items-center gap-2">
-                <Trophy className="h-4 w-4" /> Recompensa resgatada em{' '}
-                {new Date().toLocaleDateString()}
+              <div className="mt-4 p-2 bg-accent/10 text-accent-foreground text-sm rounded flex items-center gap-2 border border-accent/20">
+                <Trophy className="h-4 w-4 text-accent" /> Recompensa resgatada
+                em {new Date().toLocaleDateString()}
               </div>
             )}
           </div>
@@ -117,14 +141,15 @@ export default function Challenges() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-3xl">
-      <div className="mb-8 flex items-center gap-3">
-        <div className="bg-yellow-100 p-3 rounded-xl text-yellow-700">
+      <div className="mb-8 flex items-center gap-4 bg-gradient-to-r from-primary/10 to-transparent p-6 rounded-xl">
+        <div className="bg-primary p-4 rounded-full text-white shadow-lg">
           <Trophy className="h-8 w-8" />
         </div>
         <div>
-          <h1 className="text-3xl font-bold">Desafios de Viagem</h1>
+          <h1 className="text-3xl font-bold">Desafios & Recompensas</h1>
           <p className="text-muted-foreground">
-            Complete missões, ganhe badges e recompensas exclusivas.
+            Gamificação Deal Voy: Complete missões, ganhe badges e desbloqueie
+            descontos exclusivos.
           </p>
         </div>
       </div>
@@ -148,13 +173,14 @@ export default function Challenges() {
               <ChallengeCard key={c.id} challenge={c} type="active" />
             ))
           ) : (
-            <div className="text-center py-12 text-muted-foreground">
-              <p>Você não tem desafios ativos no momento.</p>
+            <div className="text-center py-12 text-muted-foreground bg-muted/10 rounded-xl border-dashed border-2">
+              <p className="mb-4">Você não tem desafios ativos no momento.</p>
               <Button
                 variant="link"
                 onClick={() =>
                   document.getElementById('available-tab')?.click()
                 }
+                className="text-primary"
               >
                 Ver disponíveis
               </Button>
@@ -180,6 +206,39 @@ export default function Challenges() {
           ))}
         </TabsContent>
       </Tabs>
+
+      {/* Badge Unlocked Modal Simulation */}
+      <Dialog
+        open={!!unlockedChallenge}
+        onOpenChange={() => setUnlockedChallenge(null)}
+      >
+        <DialogContent className="sm:max-w-md text-center">
+          <DialogHeader>
+            <DialogTitle className="text-2xl text-center text-primary">
+              Badge Desbloqueada!
+            </DialogTitle>
+            <DialogDescription className="text-center">
+              Parabéns! Você completou um desafio.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-center py-6">
+            <div className="relative">
+              <div className="absolute inset-0 bg-yellow-400 blur-xl opacity-50 rounded-full animate-pulse"></div>
+              <Trophy className="h-24 w-24 text-yellow-500 relative z-10 drop-shadow-lg" />
+            </div>
+          </div>
+          <h3 className="text-xl font-bold">{unlockedChallenge?.title}</h3>
+          <p className="text-muted-foreground mb-4">+500 Pontos Deal Voy</p>
+          <DialogFooter className="sm:justify-center">
+            <Button
+              onClick={() => setUnlockedChallenge(null)}
+              className="w-full"
+            >
+              Coletar Recompensa
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

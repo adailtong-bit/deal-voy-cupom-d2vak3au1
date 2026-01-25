@@ -19,13 +19,21 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card'
 import {
   Plus,
   Users,
   Tag,
   BarChart as BarChartIcon,
   FlaskConical,
+  Target,
+  TrendingUp,
 } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useCouponStore } from '@/stores/CouponContext'
@@ -63,59 +71,91 @@ export default function VendorDashboard() {
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-bold">{t('vendor.dashboard')}</h1>
-          <p className="text-muted-foreground">Portal do Parceiro CupomGeo</p>
+          <h1 className="text-3xl font-bold text-foreground">
+            {t('vendor.dashboard')}
+          </h1>
+          <p className="text-muted-foreground">
+            B2B Analytics & Growth Platform
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" className="gap-2">
+            <Target className="h-4 w-4" /> Segmentar
+          </Button>
+          <Button className="gap-2 bg-primary hover:bg-primary/90">
+            <Plus className="h-4 w-4" /> Nova Campanha
+          </Button>
         </div>
       </div>
 
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <Card className="border-l-4 border-l-primary">
+          <CardHeader className="p-4 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Resgates Totais
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 pt-0">
+            <div className="text-2xl font-bold">1,284</div>
+            <p className="text-xs text-accent flex items-center gap-1">
+              <TrendingUp className="h-3 w-3" /> +12% esse mês
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="border-l-4 border-l-secondary">
+          <CardHeader className="p-4 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              ROI Médio
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 pt-0">
+            <div className="text-2xl font-bold">340%</div>
+            <p className="text-xs text-accent flex items-center gap-1">
+              <TrendingUp className="h-3 w-3" /> +5% vs mercado
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="border-l-4 border-l-purple-500">
+          <CardHeader className="p-4 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Novos Clientes
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 pt-0">
+            <div className="text-2xl font-bold">450</div>
+            <p className="text-xs text-muted-foreground">Últimos 30 dias</p>
+          </CardContent>
+        </Card>
+        <Card className="border-l-4 border-l-orange-400">
+          <CardHeader className="p-4 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Conversão A/B
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 pt-0">
+            <div className="text-2xl font-bold">8.5%</div>
+            <p className="text-xs text-accent">Teste #23 Vencendo</p>
+          </CardContent>
+        </Card>
+      </div>
+
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList>
+        <TabsList className="bg-muted/50 p-1">
           <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-          <TabsTrigger value="offers">Minhas Ofertas</TabsTrigger>
-          <TabsTrigger value="abtesting">Testes A/B</TabsTrigger>
+          <TabsTrigger value="offers">Gerenciar Ofertas</TabsTrigger>
+          <TabsTrigger
+            value="abtesting"
+            className="data-[state=active]:text-primary"
+          >
+            Testes A/B
+          </TabsTrigger>
           <TabsTrigger value="marketing">Marketing Direto</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Cupons Ativos
-                </CardTitle>
-                <Tag className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{coupons.length}</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Reservas Hoje
-                </CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">124</div>
-                <p className="text-xs text-muted-foreground">
-                  +10% em relação a ontem
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Taxa de Conversão
-                </CardTitle>
-                <BarChartIcon className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">18.5%</div>
-              </CardContent>
-            </Card>
-          </div>
-
+        <TabsContent
+          value="overview"
+          className="space-y-6 animate-in fade-in-50"
+        >
           <VendorAnalytics />
         </TabsContent>
 
@@ -124,7 +164,7 @@ export default function VendorDashboard() {
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button className="gap-2">
-                  <Plus className="h-4 w-4" /> {t('vendor.add')}
+                  <Plus className="h-4 w-4" /> Criar Oferta
                 </Button>
               </DialogTrigger>
               <DialogContent>
@@ -174,6 +214,9 @@ export default function VendorDashboard() {
           <Card>
             <CardHeader>
               <CardTitle>Suas Ofertas Ativas</CardTitle>
+              <CardDescription>
+                Gerencie estoque e status em tempo real.
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <Table>
@@ -183,6 +226,7 @@ export default function VendorDashboard() {
                     <TableHead>Desconto</TableHead>
                     <TableHead>Estoque</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -197,9 +241,14 @@ export default function VendorDashboard() {
                         {coupon.totalAvailable || '∞'}
                       </TableCell>
                       <TableCell>
-                        <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors bg-green-100 text-green-800">
+                        <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors bg-accent/20 text-accent-foreground border-transparent">
                           Ativo
                         </span>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="ghost" size="sm">
+                          Editar
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -211,18 +260,21 @@ export default function VendorDashboard() {
 
         <TabsContent value="abtesting">
           <div className="flex flex-col gap-6">
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center bg-muted/20 p-6 rounded-lg border">
               <div>
-                <h2 className="text-xl font-bold">Otimização de Ofertas</h2>
+                <h2 className="text-xl font-bold">
+                  Otimização de Ofertas (A/B)
+                </h2>
                 <p className="text-muted-foreground">
-                  Compare versões e maximize conversões.
+                  Compare imagens, títulos e descontos para maximizar
+                  conversões.
                 </p>
               </div>
               <Button
                 onClick={() => setIsABCreatorOpen(true)}
-                className="gap-2"
+                className="gap-2 bg-primary"
               >
-                <FlaskConical className="h-4 w-4" /> Novo Teste A/B
+                <FlaskConical className="h-4 w-4" /> Novo Experimento
               </Button>
             </div>
 

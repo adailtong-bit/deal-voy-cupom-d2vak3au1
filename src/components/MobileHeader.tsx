@@ -3,6 +3,7 @@ import { Bell } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useNotification } from '@/stores/NotificationContext'
+import logoImg from '@/assets/whatsapp-image-2026-01-25-at-5.40.56-am.jpeg'
 
 export function MobileHeader() {
   const { unreadCount } = useNotification()
@@ -10,16 +11,22 @@ export function MobileHeader() {
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:hidden flex items-center justify-between px-4 h-14">
       <Link to="/" className="flex items-center gap-2">
-        <div className="bg-primary h-7 w-7 rounded-lg flex items-center justify-center text-primary-foreground font-bold text-lg">
-          C
-        </div>
+        <img
+          src={logoImg}
+          alt="Deal Voy Logo"
+          className="h-8 w-8 rounded-md object-contain"
+        />
         <span className="font-bold text-lg tracking-tight text-foreground">
-          Cupom<span className="text-primary">Geo</span>
+          Deal <span className="text-primary">Voy</span>
         </span>
       </Link>
 
       <Link to="/notifications">
-        <Button variant="ghost" size="icon" className="relative">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="relative hover:bg-secondary/10"
+        >
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
             <Badge

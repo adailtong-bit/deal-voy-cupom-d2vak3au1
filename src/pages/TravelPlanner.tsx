@@ -11,16 +11,16 @@ import {
   Navigation,
   PlayCircle,
   StopCircle,
-  BellRing,
-  Flame,
-  Utensils,
+  Leaf,
   Timer,
   PiggyBank,
   Download,
+  Locate,
 } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useNotification } from '@/stores/NotificationContext'
 import { toast } from 'sonner'
+import { Badge } from '@/components/ui/badge'
 
 export default function TravelPlanner() {
   const { coupons, downloadOffline } = useCouponStore()
@@ -37,11 +37,17 @@ export default function TravelPlanner() {
   const handlePlanRoute = () => {
     if (origin && destination) {
       setIsRouteCalculated(true)
+      toast.success('Rota calculada com sucesso!')
     }
   }
 
   const toggleTravelMode = () => {
     setIsTravelModeActive(!isTravelModeActive)
+    if (!isTravelModeActive) {
+      toast.info('Navegação iniciada. Alertas de ofertas ativos.')
+    } else {
+      toast.info('Navegação encerrada.')
+    }
   }
 
   const handleDownloadRoute = () => {
@@ -64,6 +70,10 @@ export default function TravelPlanner() {
                 'Restaurante da Vila tem pratos a R$ 35,00 a 200m de você!',
               type: 'alert',
             })
+            toast('Oferta Encontrada: Restaurante da Vila', {
+              description: 'Desvie 200m para economizar R$ 15,00',
+              action: { label: 'Ver', onClick: () => console.log('Navigate') },
+            })
           } else {
             const randomCoupon =
               coupons[Math.floor(Math.random() * coupons.length)]
@@ -74,7 +84,7 @@ export default function TravelPlanner() {
             })
           }
         }
-      }, 5000)
+      }, 8000)
     }
     return () => clearInterval(interval)
   }, [isTravelModeActive, coupons, addNotification])
@@ -89,13 +99,16 @@ export default function TravelPlanner() {
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto">
         <div className="mb-8 text-center">
+          <Badge className="mb-2 bg-secondary text-white">
+            Intelligent GPS
+          </Badge>
           <h1 className="text-3xl font-bold mb-2">{t('travel.title')}</h1>
           <p className="text-muted-foreground">
-            Otimize sua rota por tempo ou por economia.
+            Otimize sua rota para máxima economia ou rapidez.
           </p>
         </div>
 
-        <Card className="mb-8 shadow-lg border-primary/20">
+        <Card className="mb-8 shadow-lg border-primary/10">
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <Navigation className="h-5 w-5 text-primary" />
@@ -107,9 +120,9 @@ export default function TravelPlanner() {
               <div className="space-y-2">
                 <label className="text-sm font-medium">De onde?</label>
                 <div className="relative">
-                  <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Locate className="absolute left-3 top-3 h-4 w-4 text-primary" />
                   <Input
-                    placeholder="Origem"
+                    placeholder="Sua localização"
                     className="pl-9"
                     value={origin}
                     onChange={(e) => setOrigin(e.target.value)}
@@ -122,9 +135,9 @@ export default function TravelPlanner() {
               <div className="space-y-2">
                 <label className="text-sm font-medium">Para onde?</label>
                 <div className="relative">
-                  <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <MapPin className="absolute left-3 top-3 h-4 w-4 text-red-500" />
                   <Input
-                    placeholder="Destino"
+                    placeholder="Destino final"
                     className="pl-9"
                     value={destination}
                     onChange={(e) => setDestination(e.target.value)}
@@ -134,7 +147,7 @@ export default function TravelPlanner() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Preferência de Rota</label>
+              <label className="text-sm font-medium">Modo de Viagem</label>
               <ToggleGroup
                 type="single"
                 value={routeType}
@@ -143,117 +156,151 @@ export default function TravelPlanner() {
               >
                 <ToggleGroupItem
                   value="fastest"
-                  className="flex gap-2 px-4 py-2 border data-[state=on]:bg-blue-100 data-[state=on]:text-blue-800 data-[state=on]:border-blue-300"
+                  className="flex gap-2 px-4 py-2 border data-[state=on]:bg-secondary/10 data-[state=on]:text-secondary data-[state=on]:border-secondary transition-all"
                 >
                   <Timer className="h-4 w-4" /> Mais Rápida
                 </ToggleGroupItem>
                 <ToggleGroupItem
                   value="economical"
-                  className="flex gap-2 px-4 py-2 border data-[state=on]:bg-green-100 data-[state=on]:text-green-800 data-[state=on]:border-green-300"
+                  className="flex gap-2 px-4 py-2 border data-[state=on]:bg-accent/10 data-[state=on]:text-accent data-[state=on]:border-accent transition-all"
                 >
-                  <PiggyBank className="h-4 w-4" /> Maior Economia
+                  <Leaf className="h-4 w-4" /> Rota Econômica
                 </ToggleGroupItem>
               </ToggleGroup>
             </div>
 
             <Button
-              className="w-full"
+              className="w-full h-12 text-lg font-bold bg-primary hover:bg-primary/90"
               onClick={handlePlanRoute}
               disabled={!origin || !destination}
             >
-              Calcular Rota
+              Calcular Melhor Rota
             </Button>
           </CardContent>
         </Card>
 
         {isRouteCalculated && (
           <div className="space-y-6 animate-in slide-in-from-bottom duration-500">
-            <div className="flex flex-col md:flex-row justify-between gap-4 bg-muted/30 p-4 rounded-xl border">
+            <div className="flex flex-col md:flex-row justify-between gap-4 bg-white p-6 rounded-xl border shadow-sm">
               <div>
-                <h2 className="text-xl font-bold flex items-center gap-2">
+                <h2 className="text-xl font-bold flex items-center gap-2 mb-2">
                   {routeType === 'economical' ? (
-                    <PiggyBank className="text-green-600" />
+                    <Leaf className="text-accent" />
                   ) : (
-                    <Timer className="text-blue-600" />
+                    <Timer className="text-secondary" />
                   )}
                   Rota {routeType === 'economical' ? 'Econômica' : 'Expressa'}
                 </h2>
                 <div className="flex flex-wrap gap-4 mt-2">
                   <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                    <Timer className="h-4 w-4" /> Tempo estimado:{' '}
+                    <Timer className="h-4 w-4" /> Tempo:{' '}
                     <span className="font-bold text-foreground">
                       {travelTime}
                     </span>
                   </div>
-                  <div className="flex items-center gap-1 text-sm text-green-700 font-bold bg-green-100 px-2 py-0.5 rounded">
-                    <Flame className="h-4 w-4" /> Economia estimada: R${' '}
+                  <div className="flex items-center gap-1 text-sm text-accent font-bold bg-accent/10 px-3 py-1 rounded-full border border-accent/20">
+                    <PiggyBank className="h-4 w-4" /> Economia: R${' '}
                     {totalSavings},00
                   </div>
                 </div>
               </div>
 
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={handleDownloadRoute}>
-                  <Download className="mr-2 h-4 w-4" /> Baixar Rota
+              <div className="flex gap-2 items-center">
+                <Button
+                  variant="outline"
+                  onClick={handleDownloadRoute}
+                  className="h-12 border-primary/20 text-primary hover:bg-primary/5"
+                >
+                  <Download className="mr-2 h-4 w-4" /> Baixar
                 </Button>
                 <Button
                   onClick={toggleTravelMode}
-                  variant={isTravelModeActive ? 'destructive' : 'default'}
-                  className={isTravelModeActive ? 'animate-pulse' : ''}
+                  className={`h-12 px-6 font-bold ${isTravelModeActive ? 'bg-red-500 hover:bg-red-600 animate-pulse' : 'bg-secondary hover:bg-secondary/90'}`}
                 >
                   {isTravelModeActive ? (
                     <>
-                      <StopCircle className="mr-2 h-4 w-4" /> Parar
+                      <StopCircle className="mr-2 h-5 w-5" /> Parar GPS
                     </>
                   ) : (
                     <>
-                      <PlayCircle className="mr-2 h-4 w-4" /> Iniciar
+                      <PlayCircle className="mr-2 h-5 w-5" /> Iniciar Navegação
                     </>
                   )}
                 </Button>
               </div>
             </div>
 
-            <div className="relative h-64 w-full rounded-xl overflow-hidden bg-slate-100 border shadow-inner">
+            <div className="relative h-80 w-full rounded-xl overflow-hidden bg-slate-100 border-2 border-white shadow-lg">
               <img
-                src="https://img.usecurling.com/p/1200/400?q=highway%20map&color=blue"
+                src="https://img.usecurling.com/p/1200/400?q=gps%20navigation%20map&color=blue"
                 alt="Route Map"
-                className="w-full h-full object-cover opacity-80"
+                className="w-full h-full object-cover opacity-90"
               />
               {/* Simplified Route Line Visualization */}
-              <svg className="absolute inset-0 w-full h-full pointer-events-none">
+              <svg className="absolute inset-0 w-full h-full pointer-events-none drop-shadow-lg">
                 <path
-                  d="M 50,200 Q 400,50 1150,200"
+                  d="M 50,250 Q 400,50 1150,250"
                   fill="none"
-                  stroke={routeType === 'economical' ? '#16a34a' : '#2563eb'}
-                  strokeWidth="5"
-                  strokeDasharray={routeType === 'economical' ? '0' : '10,5'}
+                  stroke={routeType === 'economical' ? '#4CAF50' : '#2196F3'}
+                  strokeWidth="6"
+                  strokeLinecap="round"
+                  strokeDasharray={routeType === 'economical' ? '0' : '15,10'}
                 />
                 {/* Savings Markers */}
                 {routeType === 'economical' && (
                   <>
-                    <circle cx="200" cy="150" r="8" fill="#16a34a" />
-                    <circle cx="500" cy="100" r="8" fill="#16a34a" />
-                    <circle cx="900" cy="160" r="8" fill="#16a34a" />
+                    <circle
+                      cx="200"
+                      cy="180"
+                      r="10"
+                      fill="white"
+                      stroke="#4CAF50"
+                      strokeWidth="3"
+                    />
+                    <circle
+                      cx="500"
+                      cy="120"
+                      r="10"
+                      fill="white"
+                      stroke="#4CAF50"
+                      strokeWidth="3"
+                    />
+                    <circle
+                      cx="900"
+                      cy="190"
+                      r="10"
+                      fill="white"
+                      stroke="#4CAF50"
+                      strokeWidth="3"
+                    />
                   </>
                 )}
               </svg>
+              {/* User Location Marker */}
+              {isTravelModeActive && (
+                <div className="absolute top-[60%] left-[10%] transform -translate-x-1/2 -translate-y-1/2">
+                  <div className="w-4 h-4 bg-primary rounded-full ring-4 ring-white shadow-xl animate-ping absolute"></div>
+                  <div className="w-4 h-4 bg-primary rounded-full ring-2 ring-white shadow-xl relative z-10"></div>
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <h3 className="md:col-span-2 font-bold text-lg text-muted-foreground mt-4">
+                Paradas de Economia
+              </h3>
               {routeDeals.map((coupon, index) => (
                 <div
                   key={coupon.id}
-                  className="relative pl-8 border-l-2 border-dashed border-primary/30 pb-8 last:pb-0"
+                  className="relative pl-8 border-l-2 border-dashed border-accent/40 pb-8 last:pb-0"
                 >
-                  <div className="absolute -left-[9px] top-0 h-4 w-4 rounded-full bg-primary" />
-                  <div className="mb-2 text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                    Parada {index + 1}
+                  <div className="absolute -left-[11px] top-0 h-6 w-6 rounded-full bg-accent text-white flex items-center justify-center text-[10px] font-bold shadow-sm">
+                    {index + 1}
                   </div>
                   <CouponCard
                     coupon={coupon}
                     variant="horizontal"
-                    className="h-32"
+                    className="h-auto"
                   />
                 </div>
               ))}

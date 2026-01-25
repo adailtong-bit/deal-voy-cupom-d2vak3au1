@@ -29,13 +29,8 @@ import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 
 export default function Index() {
-  const {
-    coupons,
-    itineraries,
-    userLocation,
-    isLoadingLocation,
-    refreshCoupons,
-  } = useCouponStore()
+  const { coupons, itineraries, isLoadingLocation, refreshCoupons } =
+    useCouponStore()
   const { t } = useLanguage()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedMood, setSelectedMood] = useState<string | null>(null)
@@ -55,7 +50,6 @@ export default function Index() {
   const trendingCoupons = filteredCoupons.filter((c) => c.isTrending)
   const specialCoupons = filteredCoupons.filter((c) => c.isSpecial)
 
-  // Helper to dynamically get icon component
   const getIcon = (iconName: string) => {
     // @ts-expect-error
     const Icon = Icons[iconName]
@@ -63,69 +57,75 @@ export default function Index() {
   }
 
   return (
-    <div className="pb-20 md:pb-8">
+    <div className="pb-20 md:pb-8 bg-background">
       {/* Hero Section */}
-      <section className="relative bg-primary px-4 py-8 md:py-16 overflow-hidden">
-        <div className="absolute inset-0 bg-[url('https://img.usecurling.com/p/1920/600?q=city%20pattern&color=green')] opacity-10 mix-blend-multiply"></div>
+      <section className="relative bg-secondary px-4 py-12 md:py-20 overflow-hidden">
+        <div className="absolute inset-0 bg-[url('https://img.usecurling.com/p/1920/600?q=city%20pattern&color=blue')] opacity-20 mix-blend-multiply"></div>
+        <div className="absolute -bottom-10 -right-10 w-64 h-64 bg-primary/30 rounded-full blur-3xl"></div>
         <div className="container mx-auto relative z-10 text-center md:text-left md:flex md:items-center md:justify-between">
           <div className="md:w-1/2">
-            <Badge
-              variant="secondary"
-              className="mb-4 bg-secondary text-white border-none animate-fade-in-down"
-            >
-              <Zap className="h-3 w-3 mr-1 fill-current" /> Novas ofertas perto
+            <Badge className="mb-6 bg-accent text-accent-foreground border-none animate-fade-in-down px-3 py-1 text-sm shadow-md">
+              <Zap className="h-3 w-3 mr-2 fill-current" /> Novas ofertas perto
               de você
             </Badge>
-            <h1 className="text-3xl md:text-5xl font-extrabold text-white mb-4 leading-tight">
+            <h1 className="text-4xl md:text-6xl font-extrabold text-white mb-6 leading-tight drop-shadow-sm">
               {t('hero.title')}
             </h1>
-            <p className="text-primary-foreground/90 text-lg mb-6 max-w-md mx-auto md:mx-0">
+            <p className="text-white/90 text-xl mb-8 max-w-lg mx-auto md:mx-0">
               {t('hero.subtitle')}
             </p>
 
-            <div className="relative max-w-md mx-auto md:mx-0">
-              <Search className="absolute left-3 top-3.5 h-5 w-5 text-muted-foreground" />
+            <div className="relative max-w-lg mx-auto md:mx-0 shadow-elevation rounded-full">
+              <Search className="absolute left-4 top-4 h-5 w-5 text-muted-foreground" />
               <Input
                 placeholder={t('search.placeholder')}
-                className="pl-10 h-12 rounded-full bg-white text-foreground shadow-lg border-none"
+                className="pl-12 h-14 rounded-full bg-white text-foreground border-0 text-base"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
+              <Button className="absolute right-2 top-2 h-10 rounded-full px-6 bg-primary hover:bg-primary/90 text-white font-bold">
+                Buscar
+              </Button>
             </div>
 
-            <div className="mt-4 flex items-center justify-center md:justify-start text-primary-foreground/80 text-sm gap-2">
+            <div className="mt-6 flex items-center justify-center md:justify-start text-white/80 text-sm gap-2">
               {isLoadingLocation ? (
                 <span className="animate-pulse">Detectando localização...</span>
               ) : (
                 <>
                   <MapPin className="h-4 w-4" />
-                  <span>Localização atual: São Paulo, SP (Precisão alta)</span>
+                  <span>Localização atual: São Paulo, SP</span>
                 </>
               )}
             </div>
           </div>
 
-          <div className="hidden md:block md:w-1/2 pl-8">
-            <img
-              src="https://img.usecurling.com/p/600/400?q=happy%20shopper&dpr=2"
-              alt="Happy Shopper"
-              className="rounded-2xl shadow-2xl rotate-3 hover:rotate-0 transition-transform duration-500 border-4 border-white/20"
-            />
+          <div className="hidden md:block md:w-5/12 pl-8">
+            <div className="relative">
+              <div className="absolute inset-0 bg-primary/20 rounded-3xl transform rotate-6"></div>
+              <img
+                src="https://img.usecurling.com/p/600/400?q=happy%20shopper&dpr=2"
+                alt="Happy Shopper"
+                className="relative rounded-3xl shadow-2xl transform hover:-translate-y-2 transition-transform duration-500 border-4 border-white"
+              />
+            </div>
           </div>
         </div>
       </section>
 
       {/* Mood Discovery */}
-      <section className="py-6 bg-muted/20">
+      <section className="py-8 bg-white border-b">
         <div className="container mx-auto px-4">
-          <h3 className="text-lg font-bold mb-4">{t('mood.title')}</h3>
+          <h3 className="text-lg font-bold mb-4 text-foreground/80">
+            {t('mood.title')}
+          </h3>
           <ScrollArea className="w-full whitespace-nowrap">
-            <div className="flex space-x-3 pb-2">
+            <div className="flex space-x-3 pb-4">
               {MOODS.map((mood) => (
                 <Button
                   key={mood.id}
                   variant={selectedMood === mood.id ? 'default' : 'outline'}
-                  className="rounded-full flex items-center gap-2 h-10"
+                  className={`rounded-full flex items-center gap-2 h-11 px-5 transition-all ${selectedMood === mood.id ? 'bg-secondary hover:bg-secondary/90 border-transparent text-white shadow-md' : 'border-input hover:border-primary hover:text-primary'}`}
                   onClick={() =>
                     setSelectedMood(selectedMood === mood.id ? null : mood.id)
                   }
@@ -140,36 +140,12 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Categories Bar */}
-      <section className="py-4 bg-background border-b sticky top-[64px] md:top-0 z-30 shadow-sm">
+      {/* Suggested Itineraries (Personalized Engine) */}
+      <section className="py-10 bg-secondary/5">
         <div className="container mx-auto px-4">
-          <ScrollArea className="w-full whitespace-nowrap">
-            <div className="flex space-x-4 pb-2">
-              {CATEGORIES.map((cat) => (
-                <button
-                  key={cat.id}
-                  className="flex flex-col items-center justify-center min-w-[72px] group"
-                >
-                  <div className="h-14 w-14 rounded-full bg-white border shadow-sm flex items-center justify-center text-muted-foreground group-hover:bg-primary group-hover:text-white transition-colors duration-300">
-                    {getIcon(cat.icon)}
-                  </div>
-                  <span className="text-xs font-medium mt-2 text-muted-foreground group-hover:text-primary transition-colors">
-                    {cat.label}
-                  </span>
-                </button>
-              ))}
-            </div>
-            <ScrollBar orientation="horizontal" className="invisible" />
-          </ScrollArea>
-        </div>
-      </section>
-
-      {/* Suggested Itineraries (New Section) */}
-      <section className="py-8 bg-blue-50/50">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl md:text-2xl font-bold flex items-center gap-2 text-blue-800">
-              <Compass className="h-5 w-5" /> Sugerido para você
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-2xl font-bold flex items-center gap-2 text-foreground">
+              <Compass className="h-6 w-6 text-secondary" /> Roteiros Sugeridos
             </h2>
           </div>
           <Carousel className="w-full">
@@ -191,32 +167,56 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Seasonal Highlights */}
-      <section className="py-8 bg-orange-50/50">
+      {/* Categories Bar */}
+      <section className="py-6">
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl md:text-2xl font-bold flex items-center gap-2 text-orange-700">
-              <Calendar className="h-5 w-5" />
+          <ScrollArea className="w-full whitespace-nowrap">
+            <div className="flex space-x-6 pb-2">
+              {CATEGORIES.map((cat) => (
+                <button
+                  key={cat.id}
+                  className="flex flex-col items-center justify-center min-w-[80px] group"
+                >
+                  <div className="h-16 w-16 rounded-2xl bg-white border shadow-sm flex items-center justify-center text-muted-foreground group-hover:bg-primary group-hover:text-white transition-all duration-300 transform group-hover:scale-110">
+                    {getIcon(cat.icon)}
+                  </div>
+                  <span className="text-xs font-semibold mt-3 text-muted-foreground group-hover:text-primary transition-colors">
+                    {cat.label}
+                  </span>
+                </button>
+              ))}
+            </div>
+            <ScrollBar orientation="horizontal" className="invisible" />
+          </ScrollArea>
+        </div>
+      </section>
+
+      {/* Seasonal Highlights */}
+      <section className="py-10 bg-gradient-to-r from-orange-50 to-amber-50">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold flex items-center gap-2 text-primary">
+              <Calendar className="h-6 w-6" />
               Sazonal: Esquenta Black Friday
             </h2>
             <Link to="/seasonal">
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
-                className="text-orange-700 hover:text-orange-800 hover:bg-orange-100"
+                className="text-primary border-primary hover:bg-primary hover:text-white"
               >
                 Ver Calendário
               </Button>
             </Link>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="bg-gradient-to-r from-orange-500 to-red-500 rounded-xl p-6 text-white flex flex-col justify-center shadow-lg">
-              <h3 className="text-2xl font-bold mb-2">Prepare-se!</h3>
-              <p className="mb-4 text-white/90">
-                As melhores ofertas do ano estão chegando. Veja o que preparamos
-                para você.
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="bg-gradient-to-br from-primary to-orange-600 rounded-2xl p-8 text-white flex flex-col justify-center shadow-lg transform hover:scale-[1.02] transition-transform">
+              <h3 className="text-3xl font-extrabold mb-4">Prepare-se!</h3>
+              <p className="mb-6 text-white/90 text-lg leading-relaxed">
+                As melhores ofertas do ano estão chegando. Veja o que a Deal Voy
+                preparou para você.
               </p>
-              <Button variant="secondary" className="w-fit">
+              <Button className="w-fit bg-white text-primary hover:bg-white/90 font-bold border-0">
                 Ver Destaques
               </Button>
             </div>
@@ -226,51 +226,23 @@ export default function Index() {
                 key={coupon.id}
                 coupon={coupon}
                 variant="horizontal"
-                className="h-40"
+                className="h-auto"
               />
             ))}
           </div>
         </div>
       </section>
 
-      {/* Local Specials (Discovery) */}
-      {specialCoupons.length > 0 && (
-        <section className="py-8 container mx-auto px-4">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl md:text-2xl font-bold flex items-center gap-2 text-purple-700">
-              <Sparkles className="h-5 w-5" />
-              Achados Locais & Especiais
-            </h2>
-          </div>
-          <Carousel className="w-full">
-            <CarouselContent className="-ml-4">
-              {specialCoupons.map((coupon) => (
-                <CarouselItem
-                  key={coupon.id}
-                  className="pl-4 basis-[85%] md:basis-1/2 lg:basis-1/3"
-                >
-                  <CouponCard coupon={coupon} />
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <div className="hidden md:block">
-              <CarouselPrevious />
-              <CarouselNext />
-            </div>
-          </Carousel>
-        </section>
-      )}
-
       {/* Featured Near You */}
-      <section className="py-8 container mx-auto px-4">
+      <section className="py-10 container mx-auto px-4">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl md:text-2xl font-bold flex items-center gap-2">
-            <MapPin className="h-5 w-5 text-primary" />
+          <h2 className="text-2xl font-bold flex items-center gap-2">
+            <MapPin className="h-6 w-6 text-secondary" />
             Destaques Próximos
           </h2>
           <Link
             to="/explore"
-            className="text-sm font-medium text-primary hover:underline flex items-center"
+            className="text-sm font-medium text-secondary hover:underline flex items-center"
           >
             Ver tudo <ArrowRight className="h-4 w-4 ml-1" />
           </Link>
@@ -295,20 +267,20 @@ export default function Index() {
       </section>
 
       {/* Trending Grid */}
-      <section className="py-8 bg-muted/30">
+      <section className="py-10 bg-muted/20">
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl md:text-2xl font-bold flex items-center gap-2">
-              <Zap className="h-5 w-5 text-secondary fill-secondary" />
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-2xl font-bold flex items-center gap-2">
+              <Zap className="h-6 w-6 text-primary fill-primary" />
               Em Alta Agora
             </h2>
             <Button
               variant="outline"
               size="sm"
-              className="gap-2"
+              className="gap-2 border-primary/20 text-primary hover:bg-primary/5"
               onClick={refreshCoupons}
             >
-              <RefreshCw className="h-3 w-3" /> {t('common.refresh')}
+              <RefreshCw className="h-4 w-4" /> {t('common.refresh')}
             </Button>
           </div>
 

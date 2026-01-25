@@ -24,6 +24,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useLanguage } from '@/stores/LanguageContext'
 import { LanguageSelector } from './LanguageSelector'
 import { useNotification } from '@/stores/NotificationContext'
+import logoImg from '@/assets/whatsapp-image-2026-01-25-at-5.40.56-am.jpeg'
 
 export function DesktopHeader() {
   const location = useLocation()
@@ -37,11 +38,13 @@ export function DesktopHeader() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <div className="flex items-center gap-6">
           <Link to="/" className="flex items-center gap-2">
-            <div className="bg-primary h-8 w-8 rounded-lg flex items-center justify-center text-primary-foreground font-bold text-xl">
-              C
-            </div>
+            <img
+              src={logoImg}
+              alt="Deal Voy Logo"
+              className="h-10 w-10 rounded-md object-contain"
+            />
             <span className="font-bold text-xl tracking-tight text-foreground">
-              Cupom<span className="text-primary">Geo</span>
+              Deal <span className="text-primary">Voy</span>
             </span>
           </Link>
 
@@ -50,7 +53,7 @@ export function DesktopHeader() {
               to="/"
               className={
                 isActive('/')
-                  ? 'text-primary'
+                  ? 'text-primary font-bold'
                   : 'text-muted-foreground hover:text-foreground'
               }
             >
@@ -60,7 +63,7 @@ export function DesktopHeader() {
               to="/explore"
               className={
                 isActive('/explore')
-                  ? 'text-primary'
+                  ? 'text-primary font-bold'
                   : 'text-muted-foreground hover:text-foreground'
               }
             >
@@ -70,7 +73,7 @@ export function DesktopHeader() {
               to="/challenges"
               className={
                 isActive('/challenges')
-                  ? 'text-primary'
+                  ? 'text-primary font-bold'
                   : 'text-muted-foreground hover:text-foreground'
               }
             >
@@ -80,7 +83,7 @@ export function DesktopHeader() {
               to="/travel-planner"
               className={
                 isActive('/travel-planner')
-                  ? 'text-primary'
+                  ? 'text-primary font-bold'
                   : 'text-muted-foreground hover:text-foreground'
               }
             >
@@ -90,7 +93,7 @@ export function DesktopHeader() {
               to="/vendor"
               className={
                 isActive('/vendor')
-                  ? 'text-primary'
+                  ? 'text-primary font-bold'
                   : 'text-muted-foreground hover:text-foreground'
               }
             >
@@ -100,7 +103,7 @@ export function DesktopHeader() {
               to="/seasonal"
               className={
                 isActive('/seasonal')
-                  ? 'text-primary'
+                  ? 'text-primary font-bold'
                   : 'text-muted-foreground hover:text-foreground'
               }
             >
@@ -115,7 +118,7 @@ export function DesktopHeader() {
             <Input
               type="search"
               placeholder={t('search.placeholder')}
-              className="w-full bg-muted pl-9 rounded-full focus-visible:ring-primary h-9"
+              className="w-full bg-white border-2 border-primary/10 pl-9 rounded-full focus-visible:ring-primary h-9 focus-visible:border-primary/50 transition-colors"
             />
           </div>
         </div>
@@ -124,8 +127,12 @@ export function DesktopHeader() {
           <LanguageSelector />
 
           <Link to="/notifications">
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="h-5 w-5" />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative hover:bg-secondary/10"
+            >
+              <Bell className="h-5 w-5 text-foreground" />
               {unreadCount > 0 && (
                 <Badge
                   variant="destructive"
@@ -141,14 +148,14 @@ export function DesktopHeader() {
             <Button
               variant="default"
               size="sm"
-              className="bg-primary hover:bg-primary/90 h-8 text-xs"
+              className="bg-primary hover:bg-primary/90 h-8 text-xs font-bold"
             >
               {t('nav.upload')}
             </Button>
           </Link>
 
           <Link to="/profile">
-            <Avatar className="h-8 w-8 cursor-pointer hover:ring-2 hover:ring-primary hover:ring-offset-2 transition-all">
+            <Avatar className="h-8 w-8 cursor-pointer hover:ring-2 hover:ring-secondary hover:ring-offset-2 transition-all">
               <AvatarImage src="https://img.usecurling.com/ppl/thumbnail?gender=male" />
               <AvatarFallback>U</AvatarFallback>
             </Avatar>
@@ -162,43 +169,43 @@ export function DesktopHeader() {
             </SheetTrigger>
             <SheetContent side="right">
               <SheetHeader>
-                <SheetTitle>Menu</SheetTitle>
-                <SheetDescription>Navegue pelo CupomGeo</SheetDescription>
+                <SheetTitle>Menu Deal Voy</SheetTitle>
+                <SheetDescription>Navegue pelo aplicativo</SheetDescription>
               </SheetHeader>
               <div className="flex flex-col gap-4 mt-6">
                 <Link
                   to="/"
-                  className="text-lg font-medium flex items-center gap-2"
+                  className="text-lg font-medium flex items-center gap-2 hover:text-primary transition-colors"
                 >
                   <ShoppingBag className="h-4 w-4" /> {t('nav.home')}
                 </Link>
                 <Link
                   to="/explore"
-                  className="text-lg font-medium flex items-center gap-2"
+                  className="text-lg font-medium flex items-center gap-2 hover:text-primary transition-colors"
                 >
                   <MapPin className="h-4 w-4" /> {t('nav.explore')}
                 </Link>
                 <Link
                   to="/challenges"
-                  className="text-lg font-medium flex items-center gap-2"
+                  className="text-lg font-medium flex items-center gap-2 hover:text-primary transition-colors"
                 >
                   <Trophy className="h-4 w-4" /> Desafios
                 </Link>
                 <Link
                   to="/travel-planner"
-                  className="text-lg font-medium flex items-center gap-2"
+                  className="text-lg font-medium flex items-center gap-2 hover:text-primary transition-colors"
                 >
                   <Map className="h-4 w-4" /> {t('nav.travel')}
                 </Link>
                 <Link
                   to="/seasonal"
-                  className="text-lg font-medium flex items-center gap-2"
+                  className="text-lg font-medium flex items-center gap-2 hover:text-primary transition-colors"
                 >
                   <Calendar className="h-4 w-4" /> {t('nav.seasonal')}
                 </Link>
                 <Link
                   to="/vendor"
-                  className="text-lg font-medium flex items-center gap-2"
+                  className="text-lg font-medium flex items-center gap-2 hover:text-primary transition-colors"
                 >
                   <ShoppingBag className="h-4 w-4" /> {t('nav.vendor')}
                 </Link>
