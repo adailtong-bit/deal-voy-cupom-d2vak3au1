@@ -1,7 +1,13 @@
 import { useState } from 'react'
-import { Search, MapPin, ArrowRight, Zap } from 'lucide-react'
+import {
+  Search,
+  MapPin,
+  ArrowRight,
+  Zap,
+  Calendar,
+  Sparkles,
+} from 'lucide-react'
 import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import {
@@ -12,17 +18,21 @@ import {
   CarouselPrevious,
 } from '@/components/ui/carousel'
 import { useCouponStore } from '@/stores/CouponContext'
+import { useLanguage } from '@/stores/LanguageContext'
 import { CouponCard } from '@/components/CouponCard'
 import { CATEGORIES } from '@/lib/data'
 import * as Icons from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { Button } from '@/components/ui/button'
 
 export default function Index() {
   const { coupons, userLocation, isLoadingLocation } = useCouponStore()
+  const { t } = useLanguage()
   const [searchQuery, setSearchQuery] = useState('')
 
   const featuredCoupons = coupons.filter((c) => c.isFeatured)
   const trendingCoupons = coupons.filter((c) => c.isTrending)
+  const specialCoupons = coupons.filter((c) => c.isSpecial)
 
   // Helper to dynamically get icon component
   const getIcon = (iconName: string) => {
@@ -46,18 +56,16 @@ export default function Index() {
               de você
             </Badge>
             <h1 className="text-3xl md:text-5xl font-extrabold text-white mb-4 leading-tight">
-              Economize <br className="md:hidden" />
-              <span className="text-secondary">perto de você</span>
+              {t('hero.title')}
             </h1>
             <p className="text-primary-foreground/90 text-lg mb-6 max-w-md mx-auto md:mx-0">
-              Descubra cupons exclusivos e oportunidades imperdíveis na sua
-              região.
+              {t('hero.subtitle')}
             </p>
 
             <div className="relative max-w-md mx-auto md:mx-0">
               <Search className="absolute left-3 top-3.5 h-5 w-5 text-muted-foreground" />
               <Input
-                placeholder="Busque por loja, categoria ou produto..."
+                placeholder={t('search.placeholder')}
                 className="pl-10 h-12 rounded-full bg-white text-foreground shadow-lg border-none"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -110,6 +118,76 @@ export default function Index() {
         </div>
       </section>
 
+      {/* Seasonal Highlights (New) */}
+      <section className="py-8 bg-orange-50/50">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl md:text-2xl font-bold flex items-center gap-2 text-orange-700">
+              <Calendar className="h-5 w-5" />
+              Sazonal: Esquenta Black Friday
+            </h2>
+            <Link to="/seasonal">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-orange-700 hover:text-orange-800 hover:bg-orange-100"
+              >
+                Ver Calendário
+              </Button>
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="bg-gradient-to-r from-orange-500 to-red-500 rounded-xl p-6 text-white flex flex-col justify-center shadow-lg">
+              <h3 className="text-2xl font-bold mb-2">Prepare-se!</h3>
+              <p className="mb-4 text-white/90">
+                As melhores ofertas do ano estão chegando. Veja o que preparamos
+                para você.
+              </p>
+              <Button variant="secondary" className="w-fit">
+                Ver Destaques
+              </Button>
+            </div>
+            {/* Show mock seasonal items */}
+            {coupons.slice(0, 2).map((coupon) => (
+              <CouponCard
+                key={coupon.id}
+                coupon={coupon}
+                variant="horizontal"
+                className="h-40"
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Local Specials (Discovery) */}
+      {specialCoupons.length > 0 && (
+        <section className="py-8 container mx-auto px-4">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl md:text-2xl font-bold flex items-center gap-2 text-purple-700">
+              <Sparkles className="h-5 w-5" />
+              Achados Locais & Especiais
+            </h2>
+          </div>
+          <Carousel className="w-full">
+            <CarouselContent className="-ml-4">
+              {specialCoupons.map((coupon) => (
+                <CarouselItem
+                  key={coupon.id}
+                  className="pl-4 basis-[85%] md:basis-1/2 lg:basis-1/3"
+                >
+                  <CouponCard coupon={coupon} />
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <div className="hidden md:block">
+              <CarouselPrevious />
+              <CarouselNext />
+            </div>
+          </Carousel>
+        </section>
+      )}
+
       {/* Featured Near You */}
       <section className="py-8 container mx-auto px-4">
         <div className="flex items-center justify-between mb-6">
@@ -159,7 +237,7 @@ export default function Index() {
             ))}
             {/* Fill with regular coupons if not enough trending */}
             {coupons
-              .filter((c) => !c.isTrending)
+              .filter((c) => !c.isTrending && !c.isSpecial)
               .slice(0, 4)
               .map((coupon) => (
                 <CouponCard
@@ -168,29 +246,6 @@ export default function Index() {
                   variant="vertical"
                 />
               ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-12 container mx-auto px-4">
-        <div className="bg-gradient-to-r from-primary to-emerald-600 rounded-2xl p-8 md:p-12 text-white flex flex-col md:flex-row items-center justify-between shadow-xl">
-          <div className="mb-6 md:mb-0 md:max-w-lg">
-            <h2 className="text-2xl md:text-3xl font-bold mb-4">
-              Encontrou uma oferta imperdível?
-            </h2>
-            <p className="text-primary-foreground/90 mb-6">
-              Ajude a comunidade compartilhando cupons e oportunidades que você
-              encontrou. Ganhe pontos e destaque no ranking!
-            </p>
-            <Link to="/upload">
-              <Button size="lg" variant="secondary" className="font-bold">
-                Compartilhar Oferta (Subir Doc)
-              </Button>
-            </Link>
-          </div>
-          <div className="w-32 h-32 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-sm">
-            <Icons.UploadCloud className="h-16 w-16 text-white" />
           </div>
         </div>
       </section>

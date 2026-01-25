@@ -5,10 +5,13 @@ import { MOCK_COUPONS, MOCK_USER_LOCATION } from '@/lib/data'
 interface CouponContextType {
   coupons: Coupon[]
   savedIds: string[]
+  reservedIds: string[]
   userLocation: UserLocation | null
   toggleSave: (id: string) => void
+  reserveCoupon: (id: string) => boolean
   addCoupon: (coupon: Coupon) => void
   isSaved: (id: string) => boolean
+  isReserved: (id: string) => boolean
   isLoadingLocation: boolean
 }
 
@@ -17,6 +20,7 @@ const CouponContext = createContext<CouponContextType | undefined>(undefined)
 export function CouponProvider({ children }: { children: React.ReactNode }) {
   const [coupons, setCoupons] = useState<Coupon[]>(MOCK_COUPONS)
   const [savedIds, setSavedIds] = useState<string[]>([])
+  const [reservedIds, setReservedIds] = useState<string[]>([])
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null)
   const [isLoadingLocation, setIsLoadingLocation] = useState(true)
 
@@ -25,6 +29,10 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     const storedSaved = localStorage.getItem('savedCoupons')
     if (storedSaved) {
       setSavedIds(JSON.parse(storedSaved))
+    }
+    const storedReserved = localStorage.getItem('reservedCoupons')
+    if (storedReserved) {
+      setReservedIds(JSON.parse(storedReserved))
     }
 
     // Simulate getting location
@@ -39,10 +47,46 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('savedCoupons', JSON.stringify(savedIds))
   }, [savedIds])
 
+  useEffect(() => {
+    localStorage.setItem('reservedCoupons', JSON.stringify(reservedIds))
+  }, [reservedIds])
+
   const toggleSave = (id: string) => {
     setSavedIds((prev) =>
       prev.includes(id) ? prev.filter((sid) => sid !== id) : [...prev, id],
     )
+  }
+
+  const reserveCoupon = (id: string) => {
+    const couponIndex = coupons.findIndex((c) => c.id === id)
+    if (couponIndex === -1) return false
+
+    const coupon = coupons[couponIndex]
+
+    // Check availability
+    if (
+      coupon.totalAvailable !== undefined &&
+      coupon.reservedCount !== undefined &&
+      coupon.reservedCount >= coupon.totalAvailable
+    ) {
+      return false
+    }
+
+    // Check max per user
+    // Simplified logic: reservedIds only stores ID, assuming 1 reservation per ID per session for now
+    if (reservedIds.includes(id)) {
+      return false // Already reserved
+    }
+
+    // Update coupon state
+    const updatedCoupons = [...coupons]
+    updatedCoupons[couponIndex] = {
+      ...coupon,
+      reservedCount: (coupon.reservedCount || 0) + 1,
+    }
+    setCoupons(updatedCoupons)
+    setReservedIds((prev) => [...prev, id])
+    return true
   }
 
   const addCoupon = (coupon: Coupon) => {
@@ -50,6 +94,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   }
 
   const isSaved = (id: string) => savedIds.includes(id)
+  const isReserved = (id: string) => reservedIds.includes(id)
 
   return React.createElement(
     CouponContext.Provider,
@@ -57,10 +102,13 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       value: {
         coupons,
         savedIds,
+        reservedIds,
         userLocation,
         toggleSave,
+        reserveCoupon,
         addCoupon,
         isSaved,
+        isReserved,
         isLoadingLocation,
       },
     },

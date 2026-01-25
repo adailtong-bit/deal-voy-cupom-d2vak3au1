@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useCouponStore } from '@/stores/CouponContext'
+import { useLanguage } from '@/stores/LanguageContext'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
@@ -22,17 +23,24 @@ import {
   Info,
   ExternalLink,
   Heart,
-  Check,
   Copy,
+  Languages,
+  Utensils,
+  CheckCircle,
 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
 
 export default function CouponDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { coupons, toggleSave, isSaved } = useCouponStore()
+  const { coupons, toggleSave, isSaved, reserveCoupon, isReserved } =
+    useCouponStore()
+  const { t, language } = useLanguage()
   const [showConfetti, setShowConfetti] = useState(false)
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [menuLang, setMenuLang] = useState(language)
 
   const coupon = coupons.find((c) => c.id === id)
 
@@ -46,11 +54,17 @@ export default function CouponDetail() {
   }
 
   const saved = isSaved(coupon.id)
+  const reserved = isReserved(coupon.id)
 
-  const handleRedeem = () => {
-    setShowConfetti(true)
-    setTimeout(() => setShowConfetti(false), 3000)
-    toast.success('Cupom ativado com sucesso!')
+  const handleReserve = () => {
+    const success = reserveCoupon(coupon.id)
+    if (success) {
+      setShowConfetti(true)
+      setTimeout(() => setShowConfetti(false), 3000)
+      toast.success('Cupom reservado com sucesso!')
+    } else {
+      toast.error('Não foi possível reservar. Limite atingido.')
+    }
   }
 
   const handleCopyCode = () => {
@@ -72,6 +86,11 @@ export default function CouponDetail() {
       toast.success('Link copiado para a área de transferência!')
     }
   }
+
+  const stockPercent =
+    coupon.totalAvailable && coupon.reservedCount
+      ? Math.round((coupon.reservedCount / coupon.totalAvailable) * 100)
+      : 0
 
   return (
     <div className="pb-24 bg-background min-h-screen">
@@ -139,12 +158,17 @@ export default function CouponDetail() {
               <h1 className="text-2xl font-bold leading-tight mb-2">
                 {coupon.title}
               </h1>
-              <Badge
-                variant="secondary"
-                className="text-sm px-3 py-1 font-bold"
-              >
-                {coupon.discount}
-              </Badge>
+              <div className="flex gap-2">
+                <Badge
+                  variant="secondary"
+                  className="text-sm px-3 py-1 font-bold"
+                >
+                  {coupon.discount}
+                </Badge>
+                {coupon.isSpecial && (
+                  <Badge className="bg-purple-600">Especial Local</Badge>
+                )}
+              </div>
             </div>
             <Button
               variant="outline"
@@ -155,6 +179,24 @@ export default function CouponDetail() {
               <Heart className={saved ? 'fill-current' : ''} />
             </Button>
           </div>
+
+          {/* Stock Indicator */}
+          {coupon.totalAvailable && (
+            <div className="mb-6 bg-muted/50 p-3 rounded-lg border">
+              <div className="flex justify-between text-xs mb-1 font-medium">
+                <span>{coupon.reservedCount} reservados</span>
+                <span>
+                  Restam {coupon.totalAvailable - (coupon.reservedCount || 0)}
+                </span>
+              </div>
+              <div className="h-2 w-full bg-secondary/20 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-secondary transition-all duration-1000"
+                  style={{ width: `${stockPercent}%` }}
+                />
+              </div>
+            </div>
+          )}
 
           <div className="flex flex-col gap-4 text-sm text-muted-foreground mb-6">
             <div className="flex items-center gap-2">
@@ -176,6 +218,67 @@ export default function CouponDetail() {
 
           <Separator className="my-6" />
 
+          {/* Menu Translation Feature */}
+          {coupon.category === 'Alimentação' && coupon.menu && (
+            <div className="mb-6">
+              <Dialog open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+                <DialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-full gap-2 border-primary/50 text-primary"
+                  >
+                    <Utensils className="h-4 w-4" /> {t('coupon.menu')}
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-h-[80vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle className="flex justify-between items-center">
+                      Menu: {coupon.storeName}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() =>
+                          setMenuLang(menuLang === 'pt' ? language : 'pt')
+                        }
+                      >
+                        <Languages className="h-4 w-4 mr-2" />
+                        {menuLang === 'pt' ? 'Original' : 'Traduzido'}
+                      </Button>
+                    </DialogTitle>
+                    <DialogDescription>
+                      Itens disponíveis nesta oferta
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    {coupon.menu.map((item, idx) => {
+                      const translation =
+                        menuLang !== 'pt' && item.translations?.[menuLang]
+                          ? item.translations[menuLang]
+                          : item
+                      return (
+                        <div
+                          key={idx}
+                          className="flex justify-between border-b pb-4 last:border-0"
+                        >
+                          <div>
+                            <p className="font-bold">{translation.name}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {translation.description}
+                            </p>
+                          </div>
+                          <p className="font-medium ml-4">
+                            R$ {item.price.toFixed(2)}
+                          </p>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </DialogContent>
+              </Dialog>
+              <Separator className="my-6" />
+            </div>
+          )}
+
           <div className="space-y-4">
             <h3 className="font-semibold text-lg flex items-center gap-2">
               <Info className="h-5 w-5" /> Detalhes da Oferta
@@ -191,55 +294,75 @@ export default function CouponDetail() {
           </div>
 
           <div className="mt-8">
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button
-                  className="w-full text-lg h-14 font-bold shadow-lg animate-pulse-slow"
-                  onClick={handleRedeem}
-                >
-                  Pegar Cupom
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle className="text-center text-xl">
-                    Seu Cupom está Pronto!
-                  </DialogTitle>
-                  <DialogDescription className="text-center">
-                    Apresente este código no caixa ou use no site da loja.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="flex flex-col items-center justify-center p-6 space-y-4">
-                  <div className="bg-muted p-6 rounded-xl border-2 border-dashed border-primary w-full text-center">
-                    <span className="text-3xl font-mono font-bold tracking-wider text-primary select-all">
-                      {coupon.code}
-                    </span>
-                  </div>
-                  <Button
-                    variant="outline"
-                    className="gap-2"
-                    onClick={handleCopyCode}
-                  >
-                    <Copy className="h-4 w-4" /> Copiar Código
-                  </Button>
+            {reserved ? (
+              <Button
+                className="w-full text-lg h-14 font-bold bg-green-600 hover:bg-green-700 cursor-default"
+                disabled
+              >
+                <CheckCircle className="h-5 w-5 mr-2" /> {t('coupon.reserved')}
+              </Button>
+            ) : (
+              <Button
+                className="w-full text-lg h-14 font-bold shadow-lg animate-pulse-slow"
+                onClick={handleReserve}
+                disabled={
+                  coupon.totalAvailable !== undefined &&
+                  coupon.reservedCount !== undefined &&
+                  coupon.reservedCount >= coupon.totalAvailable
+                }
+              >
+                {t('coupon.reserve')}
+              </Button>
+            )}
 
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground mt-4">
-                    <img
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${coupon.code}`}
-                      alt="QR Code"
-                      className="w-32 h-32 border p-2 rounded-lg"
-                    />
-                  </div>
-                </div>
-                <DialogFooter className="sm:justify-center">
-                  <DialogClose asChild>
-                    <Button type="button" variant="secondary">
-                      Fechar
+            {reserved && (
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="link" className="w-full mt-2">
+                    Ver Código
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle className="text-center text-xl">
+                      Seu Cupom está Pronto!
+                    </DialogTitle>
+                    <DialogDescription className="text-center">
+                      Apresente este código no caixa ou use no site da loja.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="flex flex-col items-center justify-center p-6 space-y-4">
+                    <div className="bg-muted p-6 rounded-xl border-2 border-dashed border-primary w-full text-center">
+                      <span className="text-3xl font-mono font-bold tracking-wider text-primary select-all">
+                        {coupon.code}
+                      </span>
+                    </div>
+                    <Button
+                      variant="outline"
+                      className="gap-2"
+                      onClick={handleCopyCode}
+                    >
+                      <Copy className="h-4 w-4" /> Copiar Código
                     </Button>
-                  </DialogClose>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground mt-4">
+                      <img
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${coupon.code}`}
+                        alt="QR Code"
+                        className="w-32 h-32 border p-2 rounded-lg"
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter className="sm:justify-center">
+                    <DialogClose asChild>
+                      <Button type="button" variant="secondary">
+                        Fechar
+                      </Button>
+                    </DialogClose>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            )}
           </div>
         </Card>
 

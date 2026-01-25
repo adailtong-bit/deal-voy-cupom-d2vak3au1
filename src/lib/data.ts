@@ -1,4 +1,4 @@
-import { Coupon } from './types'
+import { Coupon, SeasonalEvent } from './types'
 
 // Mock location (Sao Paulo center-ish)
 export const MOCK_USER_LOCATION = {
@@ -13,6 +13,37 @@ export const CATEGORIES: { id: string; label: string; icon: string }[] = [
   { id: 'Serviços', label: 'Serviços', icon: 'Briefcase' },
   { id: 'Eletrônicos', label: 'Eletrônicos', icon: 'Smartphone' },
   { id: 'Lazer', label: 'Lazer', icon: 'Ticket' },
+]
+
+export const SEASONAL_EVENTS: SeasonalEvent[] = [
+  {
+    id: '1',
+    title: 'Black Friday',
+    date: new Date('2024-11-29'),
+    description: 'As maiores ofertas do ano em todas as lojas.',
+    type: 'sale',
+  },
+  {
+    id: '2',
+    title: 'Natal',
+    date: new Date('2024-12-25'),
+    description: 'Ofertas especiais de presentes e decoração.',
+    type: 'holiday',
+  },
+  {
+    id: '3',
+    title: 'Dia do Consumidor',
+    date: new Date('2024-03-15'),
+    description: 'Descontos exclusivos para celebrar o consumidor.',
+    type: 'sale',
+  },
+  {
+    id: '4',
+    title: 'Festival de Inverno',
+    date: new Date('2024-06-21'),
+    description: 'Ofertas de roupas e comidas típicas da estação.',
+    type: 'event',
+  },
 ]
 
 export const MOCK_COUPONS: Coupon[] = [
@@ -33,6 +64,43 @@ export const MOCK_COUPONS: Coupon[] = [
     isTrending: true,
     terms: 'Válido apenas para unidades participantes. Não acumulável.',
     coordinates: { lat: -23.551, lng: -46.634 },
+    totalAvailable: 1000,
+    reservedCount: 450,
+    maxPerUser: 2,
+    menu: [
+      {
+        name: 'Whopper',
+        description: 'Hambúrguer grelhado no fogo com queijo, picles e molho.',
+        price: 24.9,
+        translations: {
+          en: {
+            name: 'Whopper',
+            description:
+              'Flame-grilled beef patty with cheese, pickles and sauce.',
+          },
+          es: {
+            name: 'Whopper',
+            description:
+              'Hamburguesa a la parrilla con queso, pepinillos y salsa.',
+          },
+        },
+      },
+      {
+        name: 'Batata Frita Média',
+        description: 'Batatas fritas crocantes e douradas.',
+        price: 12.9,
+        translations: {
+          en: {
+            name: 'Medium Fries',
+            description: 'Crispy and golden french fries.',
+          },
+          es: {
+            name: 'Papas Fritas Medianas',
+            description: 'Papas fritas crujientes y doradas.',
+          },
+        },
+      },
+    ],
   },
   {
     id: '2',
@@ -50,6 +118,9 @@ export const MOCK_COUPONS: Coupon[] = [
     isFeatured: true,
     terms: 'Exceto peças remarcadas.',
     coordinates: { lat: -23.548, lng: -46.636 },
+    totalAvailable: 500,
+    reservedCount: 120,
+    maxPerUser: 1,
   },
   {
     id: '3',
@@ -66,6 +137,9 @@ export const MOCK_COUPONS: Coupon[] = [
     isTrending: true,
     terms: 'Válido para sessões 2D. Não válido para feriados.',
     coordinates: { lat: -23.555, lng: -46.64 },
+    totalAvailable: 200,
+    reservedCount: 180, // High demand
+    maxPerUser: 2,
   },
   {
     id: '4',
@@ -110,5 +184,40 @@ export const MOCK_COUPONS: Coupon[] = [
     code: 'BIGMAC19',
     isTrending: true,
     coordinates: { lat: -23.549, lng: -46.632 },
+    isSpecial: true, // Executive lunch style
+  },
+  {
+    id: '7',
+    storeName: 'Restaurante da Vila',
+    title: 'Menu Executivo - Prato do Dia',
+    description: 'Almoço completo com entrada, prato principal e sobremesa.',
+    discount: 'R$ 35,00',
+    category: 'Alimentação',
+    distance: 50,
+    expiryDate: '2024-12-31',
+    image: 'https://img.usecurling.com/p/600/400?q=lunch%20plate',
+    logo: 'https://img.usecurling.com/i?q=fork&shape=fill&color=green',
+    code: 'ALMOCO35',
+    isSpecial: true,
+    coordinates: { lat: -23.55, lng: -46.633 },
+    menu: [
+      {
+        name: 'Feijoada Completa',
+        description: 'Feijão preto, carnes nobres, arroz, couve e farofa.',
+        price: 35.0,
+        translations: {
+          en: {
+            name: 'Complete Feijoada',
+            description:
+              'Black beans stew with pork, rice, collard greens and cassava flour.',
+          },
+          es: {
+            name: 'Feijoada Completa',
+            description:
+              'Estofado de frijoles negros con cerdo, arroz, col y harina de yuca.',
+          },
+        },
+      },
+    ],
   },
 ]

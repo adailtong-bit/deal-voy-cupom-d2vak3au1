@@ -2,7 +2,7 @@ import { Coupon } from '@/lib/types'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Heart, MapPin } from 'lucide-react'
+import { Heart, MapPin, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useCouponStore } from '@/stores/CouponContext'
 import { Link } from 'react-router-dom'
@@ -26,6 +26,11 @@ export function CouponCard({
     e.stopPropagation()
     toggleSave(coupon.id)
   }
+
+  const isLowStock =
+    coupon.totalAvailable &&
+    coupon.reservedCount &&
+    coupon.totalAvailable - coupon.reservedCount < 20
 
   if (variant === 'compact') {
     return (
@@ -63,10 +68,17 @@ export function CouponCard({
     <Link to={`/coupon/${coupon.id}`} className="block h-full">
       <Card
         className={cn(
-          'overflow-hidden group h-full flex flex-col hover:shadow-lg transition-all duration-300',
+          'overflow-hidden group h-full flex flex-col hover:shadow-lg transition-all duration-300 relative',
           className,
         )}
       >
+        {coupon.isSpecial && (
+          <div className="absolute top-0 right-0 z-10 p-2">
+            <Badge className="bg-purple-600 hover:bg-purple-700 animate-pulse">
+              <Sparkles className="h-3 w-3 mr-1" /> Especial
+            </Badge>
+          </div>
+        )}
         <div className="relative aspect-video overflow-hidden">
           <img
             src={coupon.image}
@@ -120,9 +132,16 @@ export function CouponCard({
             >
               {coupon.category}
             </Badge>
-            <span className="text-xs text-muted-foreground">
-              Expira: {new Date(coupon.expiryDate).toLocaleDateString('pt-BR')}
-            </span>
+            {isLowStock ? (
+              <span className="text-xs text-red-500 font-bold animate-pulse">
+                Poucas unidades!
+              </span>
+            ) : (
+              <span className="text-xs text-muted-foreground">
+                Expira:{' '}
+                {new Date(coupon.expiryDate).toLocaleDateString('pt-BR')}
+              </span>
+            )}
           </div>
         </CardContent>
       </Card>

@@ -1,17 +1,28 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Home, Map as MapIcon, PlusCircle, Heart, User } from 'lucide-react'
+import {
+  Home,
+  Map as MapIcon,
+  PlusCircle,
+  User,
+  MapPin,
+  Calendar,
+  ShoppingBag,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useLanguage } from '@/stores/LanguageContext'
 
 export function MobileNav() {
   const location = useLocation()
   const path = location.pathname
+  const { t } = useLanguage()
 
+  // Simplified for mobile - focused on core consumer experience
   const navItems = [
-    { icon: Home, label: 'Início', href: '/' },
-    { icon: MapIcon, label: 'Explorar', href: '/explore' },
-    { icon: PlusCircle, label: 'Enviar Doc', href: '/upload', special: true },
-    { icon: Heart, label: 'Salvos', href: '/saved' },
-    { icon: User, label: 'Perfil', href: '/profile' },
+    { icon: Home, label: t('nav.home'), href: '/' },
+    { icon: MapIcon, label: t('nav.explore'), href: '/explore' },
+    { icon: PlusCircle, label: 'Doc', href: '/upload', special: true },
+    { icon: MapPin, label: 'Trip', href: '/travel-planner' },
+    { icon: User, label: t('nav.profile'), href: '/profile' },
   ]
 
   return (
