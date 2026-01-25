@@ -14,6 +14,8 @@ import Saved from './pages/Saved'
 import Profile from './pages/Profile'
 import TravelPlanner from './pages/TravelPlanner'
 import VendorDashboard from './pages/VendorDashboard'
+import AdminDashboard from './pages/AdminDashboard'
+import AdminLogin from './pages/AdminLogin'
 import Seasonal from './pages/Seasonal'
 import Notifications from './pages/Notifications'
 import Checkout from './pages/Checkout'
@@ -33,6 +35,7 @@ const App = () => (
             <Toaster />
             <Sonner />
             <Routes>
+              <Route path="/admin/login" element={<AdminLogin />} />
               <Route element={<Layout />}>
                 <Route path="/" element={<Index />} />
                 <Route path="/explore" element={<Explore />} />
@@ -42,6 +45,7 @@ const App = () => (
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/travel-planner" element={<TravelPlanner />} />
                 <Route path="/vendor" element={<VendorDashboard />} />
+                <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/seasonal" element={<Seasonal />} />
                 <Route path="/notifications" element={<Notifications />} />
                 <Route path="/checkout" element={<Checkout />} />

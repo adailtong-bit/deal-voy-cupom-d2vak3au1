@@ -180,3 +180,41 @@ export interface Itinerary {
   tags: string[]
   matchScore: number // 0-100
 }
+
+export type UserRole = 'admin' | 'user' | 'company'
+
+export interface User {
+  id: string
+  name: string
+  email: string
+  role: UserRole
+  avatar?: string
+}
+
+export interface Company {
+  id: string
+  name: string
+  email: string
+  status: 'active' | 'pending' | 'rejected'
+  registrationDate: string
+  region: string
+}
+
+export type AdBillingType = 'fixed' | 'ppc' | 'ticketing'
+
+export interface Advertisement {
+  id: string
+  title: string
+  companyId: string
+  region: string
+  category: string
+  billingType: AdBillingType
+  placement: 'home_hero' | 'sidebar' | 'feed'
+  status: 'active' | 'paused' | 'ended'
+  budget?: number
+  costPerClick?: number
+  views: number
+  clicks: number
+  startDate: string
+  endDate: string
+}

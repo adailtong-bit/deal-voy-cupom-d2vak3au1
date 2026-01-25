@@ -9,6 +9,9 @@ import {
   Badge,
   ABTest,
   Itinerary,
+  Company,
+  Advertisement,
+  User,
 } from '@/lib/types'
 import {
   MOCK_COUPONS,
@@ -17,11 +20,17 @@ import {
   MOCK_BADGES,
   MOCK_AB_TESTS,
   MOCK_ITINERARIES,
+  MOCK_COMPANIES,
+  MOCK_ADS,
+  MOCK_USERS,
 } from '@/lib/data'
 import { toast } from 'sonner'
 
 interface CouponContextType {
   coupons: Coupon[]
+  companies: Company[]
+  ads: Advertisement[]
+  user: User | null
   savedIds: string[]
   reservedIds: string[]
   userLocation: UserLocation | null
@@ -55,12 +64,22 @@ interface CouponContextType {
   }) => Promise<boolean>
   isDownloaded: (id: string) => boolean
   joinChallenge: (id: string) => void
+  login: (email: string, role: User['role']) => void
+  logout: () => void
+  approveCompany: (id: string) => void
+  rejectCompany: (id: string) => void
+  createAd: (ad: Advertisement) => void
+  deleteAd: (id: string) => void
+  updateCampaign: (id: string, data: Partial<Coupon>) => void
 }
 
 const CouponContext = createContext<CouponContextType | undefined>(undefined)
 
 export function CouponProvider({ children }: { children: React.ReactNode }) {
   const [coupons, setCoupons] = useState<Coupon[]>(MOCK_COUPONS)
+  const [companies, setCompanies] = useState<Company[]>(MOCK_COMPANIES)
+  const [ads, setAds] = useState<Advertisement[]>(MOCK_ADS)
+  const [user, setUser] = useState<User | null>(MOCK_USERS[1]) // Default to regular user
   const [savedIds, setSavedIds] = useState<string[]>([])
   const [reservedIds, setReservedIds] = useState<string[]>([])
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null)
@@ -84,6 +103,9 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
 
     const storedDownloaded = localStorage.getItem('downloadedCoupons')
     if (storedDownloaded) setDownloadedIds(JSON.parse(storedDownloaded))
+
+    const storedUser = localStorage.getItem('currentUser')
+    if (storedUser) setUser(JSON.parse(storedUser))
 
     setUploads([
       {
@@ -115,6 +137,13 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem('downloadedCoupons', JSON.stringify(downloadedIds)),
     [downloadedIds],
   )
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem('currentUser', JSON.stringify(user))
+    } else {
+      localStorage.removeItem('currentUser')
+    }
+  }, [user])
 
   const toggleSave = (id: string) => {
     setSavedIds((prev) =>
@@ -265,6 +294,59 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     toast.success('Desafio aceito! Boa sorte.')
   }
 
+  const login = (email: string, role: User['role']) => {
+    const user = MOCK_USERS.find((u) => u.email === email && u.role === role)
+    if (user) {
+      setUser(user)
+      toast.success(`Bem-vindo, ${user.name}!`)
+    } else {
+      // Create mock user session if not found in mock data
+      const newUser: User = {
+        id: Math.random().toString(),
+        name: email.split('@')[0],
+        email,
+        role,
+        avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=male',
+      }
+      setUser(newUser)
+      toast.success('Login realizado com sucesso!')
+    }
+  }
+
+  const logout = () => {
+    setUser(null)
+    toast.info('Sessão encerrada.')
+  }
+
+  const approveCompany = (id: string) => {
+    setCompanies((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, status: 'active' } : c)),
+    )
+    toast.success('Empresa aprovada com sucesso!')
+  }
+
+  const rejectCompany = (id: string) => {
+    setCompanies((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, status: 'rejected' } : c)),
+    )
+    toast.error('Empresa rejeitada.')
+  }
+
+  const createAd = (ad: Advertisement) => {
+    setAds((prev) => [ad, ...prev])
+    toast.success('Anúncio criado com sucesso!')
+  }
+
+  const deleteAd = (id: string) => {
+    setAds((prev) => prev.filter((a) => a.id !== id))
+    toast.info('Anúncio removido.')
+  }
+
+  const updateCampaign = (id: string, data: Partial<Coupon>) => {
+    setCoupons((prev) => prev.map((c) => (c.id === id ? { ...c, ...data } : c)))
+    toast.success('Campanha atualizada.')
+  }
+
   const isSaved = (id: string) => savedIds.includes(id)
   const isReserved = (id: string) => reservedIds.includes(id)
   const isDownloaded = (id: string) => downloadedIds.includes(id)
@@ -274,6 +356,9 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     {
       value: {
         coupons,
+        companies,
+        ads,
+        user,
         savedIds,
         reservedIds,
         userLocation,
@@ -304,6 +389,13 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         processPayment,
         isDownloaded,
         joinChallenge,
+        login,
+        logout,
+        approveCompany,
+        rejectCompany,
+        createAd,
+        deleteAd,
+        updateCampaign,
       },
     },
     children,

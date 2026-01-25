@@ -6,6 +6,9 @@ import {
   Badge,
   ABTest,
   Itinerary,
+  Company,
+  Advertisement,
+  User,
 } from './types'
 
 export const MOCK_USER_LOCATION = {
@@ -353,5 +356,66 @@ export const MOCK_ITINERARIES: Itinerary[] = [
     image: 'https://img.usecurling.com/p/600/300?q=historic%20building',
     tags: ['Cultura', 'Turismo'],
     matchScore: 75,
+  },
+]
+
+export const MOCK_COMPANIES: Company[] = [
+  {
+    id: 'c1',
+    name: 'Burger King',
+    email: 'contact@bk.com',
+    status: 'active',
+    registrationDate: '2024-01-01',
+    region: 'São Paulo, SP',
+  },
+  {
+    id: 'c2',
+    name: 'Restaurante da Vila',
+    email: 'admin@vila.com',
+    status: 'active',
+    registrationDate: '2024-02-14',
+    region: 'São Paulo, SP',
+  },
+  {
+    id: 'c3',
+    name: 'Loja Exemplo',
+    email: 'pending@store.com',
+    status: 'pending',
+    registrationDate: '2024-03-20',
+    region: 'Rio de Janeiro, RJ',
+  },
+]
+
+export const MOCK_ADS: Advertisement[] = [
+  {
+    id: 'ad1',
+    title: 'Verão Burger King',
+    companyId: 'c1',
+    region: 'São Paulo, SP',
+    category: 'Alimentação',
+    billingType: 'fixed',
+    placement: 'home_hero',
+    status: 'active',
+    views: 15000,
+    clicks: 3400,
+    startDate: '2024-12-01',
+    endDate: '2025-01-31',
+  },
+]
+
+export const MOCK_USERS: User[] = [
+  {
+    id: 'u1',
+    name: 'Admin User',
+    email: 'admin@dealvoy.com',
+    role: 'admin',
+    avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=male',
+  },
+  {
+    id: 'u2',
+    name: 'João da Silva',
+    email: 'joao@email.com',
+    role: 'user',
+    avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=male',
   },
 ]

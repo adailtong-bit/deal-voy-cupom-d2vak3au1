@@ -9,6 +9,7 @@ import {
   Bell,
   Trophy,
   Briefcase,
+  ShieldCheck,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -25,12 +26,14 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useLanguage } from '@/stores/LanguageContext'
 import { LanguageSelector } from './LanguageSelector'
 import { useNotification } from '@/stores/NotificationContext'
+import { useCouponStore } from '@/stores/CouponContext'
 import logoImg from '@/assets/whatsapp-image-2026-01-25-at-5.40.56-am.jpeg'
 
 export function DesktopHeader() {
   const location = useLocation()
   const { t } = useLanguage()
   const { unreadCount } = useNotification()
+  const { user } = useCouponStore()
 
   const isActive = (path: string) => location.pathname === path
 
@@ -100,6 +103,18 @@ export function DesktopHeader() {
             >
               {t('nav.seasonal')}
             </Link>
+            {user?.role === 'admin' && (
+              <Link
+                to="/admin"
+                className={
+                  isActive('/admin')
+                    ? 'text-primary font-bold flex items-center gap-1'
+                    : 'text-muted-foreground hover:text-foreground flex items-center gap-1'
+                }
+              >
+                <ShieldCheck className="h-4 w-4" /> Admin
+              </Link>
+            )}
           </div>
         </div>
 
@@ -135,7 +150,6 @@ export function DesktopHeader() {
             </Button>
           </Link>
 
-          {/* Removed Public Upload Button - Replaced with Vendor Link for clarity if needed or just removed as requested */}
           <Link to="/vendor">
             <Button
               variant="outline"
@@ -146,9 +160,14 @@ export function DesktopHeader() {
             </Button>
           </Link>
 
-          <Link to="/profile">
+          <Link to={user ? '/profile' : '/admin/login'}>
             <Avatar className="h-8 w-8 cursor-pointer hover:ring-2 hover:ring-secondary hover:ring-offset-2 transition-all">
-              <AvatarImage src="https://img.usecurling.com/ppl/thumbnail?gender=male" />
+              <AvatarImage
+                src={
+                  user?.avatar ||
+                  'https://img.usecurling.com/ppl/thumbnail?gender=male'
+                }
+              />
               <AvatarFallback>U</AvatarFallback>
             </Avatar>
           </Link>
@@ -201,6 +220,14 @@ export function DesktopHeader() {
                 >
                   <Briefcase className="h-4 w-4" /> {t('nav.vendor')}
                 </Link>
+                {user?.role === 'admin' && (
+                  <Link
+                    to="/admin"
+                    className="text-lg font-medium flex items-center gap-2 hover:text-primary transition-colors"
+                  >
+                    <ShieldCheck className="h-4 w-4" /> Admin Dashboard
+                  </Link>
+                )}
               </div>
             </SheetContent>
           </Sheet>

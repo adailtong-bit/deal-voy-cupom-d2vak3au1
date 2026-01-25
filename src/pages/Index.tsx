@@ -6,6 +6,7 @@ import {
   Zap,
   ShoppingBag,
   TrendingUp,
+  LayoutGrid,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -24,11 +25,13 @@ import { CATEGORIES } from '@/lib/data'
 import * as Icons from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 export default function Index() {
   const { coupons, isLoadingLocation } = useCouponStore()
   const { t } = useLanguage()
   const [searchQuery, setSearchQuery] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState<string>('all')
 
   const filteredCoupons = coupons.filter((c) => {
     if (
@@ -36,6 +39,8 @@ export default function Index() {
       !c.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
       !c.storeName.toLowerCase().includes(searchQuery.toLowerCase())
     )
+      return false
+    if (selectedCategory !== 'all' && c.category !== selectedCategory)
       return false
     return true
   })
@@ -49,7 +54,7 @@ export default function Index() {
 
   const getIcon = (iconName: string) => {
     // @ts-expect-error - Icons are dynamic
-    const Icon = Icons[iconName]
+    const Icon = Icons[iconName] || LayoutGrid
     return Icon ? <Icon className="h-5 w-5 mb-1" /> : null
   }
 
@@ -91,19 +96,37 @@ export default function Index() {
         <div className="container mx-auto px-4">
           <ScrollArea className="w-full whitespace-nowrap">
             <div className="flex space-x-6 px-2 py-2">
-              {CATEGORIES.map((cat) => (
-                <button
-                  key={cat.id}
-                  className="flex flex-col items-center justify-center min-w-[72px] group"
-                >
-                  <div className="h-14 w-14 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-500 group-hover:bg-primary/10 group-hover:text-primary group-hover:border-primary/20 transition-all duration-300">
-                    {getIcon(cat.icon)}
-                  </div>
-                  <span className="text-xs font-medium mt-2 text-slate-600 group-hover:text-primary transition-colors">
-                    {cat.label}
-                  </span>
-                </button>
-              ))}
+              {CATEGORIES.map((cat) => {
+                const isActive = selectedCategory === cat.id
+                return (
+                  <button
+                    key={cat.id}
+                    className="flex flex-col items-center justify-center min-w-[72px] group"
+                    onClick={() => setSelectedCategory(cat.id)}
+                  >
+                    <div
+                      className={cn(
+                        'h-14 w-14 rounded-full border flex items-center justify-center transition-all duration-300',
+                        isActive
+                          ? 'bg-primary text-white border-primary shadow-lg scale-110'
+                          : 'bg-slate-50 border-slate-100 text-slate-500 group-hover:bg-primary/10 group-hover:text-primary group-hover:border-primary/20',
+                      )}
+                    >
+                      {getIcon(cat.icon)}
+                    </div>
+                    <span
+                      className={cn(
+                        'text-xs font-medium mt-2 transition-colors',
+                        isActive
+                          ? 'text-primary font-bold'
+                          : 'text-slate-600 group-hover:text-primary',
+                      )}
+                    >
+                      {cat.label}
+                    </span>
+                  </button>
+                )
+              })}
             </div>
             <ScrollBar orientation="horizontal" className="invisible" />
           </ScrollArea>
@@ -113,37 +136,39 @@ export default function Index() {
       {/* Main Content Area */}
       <div className="container mx-auto px-4 py-8 space-y-10">
         {/* Featured / Partners Section */}
-        <section>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold flex items-center gap-2 text-slate-800">
-              <ShoppingBag className="h-5 w-5 text-primary" />
-              Ofertas em Destaque
-            </h2>
-            <Link
-              to="/explore"
-              className="text-sm font-medium text-primary hover:underline flex items-center"
-            >
-              Ver tudo <ArrowRight className="h-4 w-4 ml-1" />
-            </Link>
-          </div>
-
-          <Carousel className="w-full">
-            <CarouselContent className="-ml-4">
-              {featuredCoupons.map((coupon) => (
-                <CarouselItem
-                  key={coupon.id}
-                  className="pl-4 basis-[70%] md:basis-1/3 lg:basis-1/4 xl:basis-1/5"
-                >
-                  <CouponCard coupon={coupon} />
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <div className="hidden md:block">
-              <CarouselPrevious />
-              <CarouselNext />
+        {featuredCoupons.length > 0 && (
+          <section>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold flex items-center gap-2 text-slate-800">
+                <ShoppingBag className="h-5 w-5 text-primary" />
+                Ofertas em Destaque
+              </h2>
+              <Link
+                to="/explore"
+                className="text-sm font-medium text-primary hover:underline flex items-center"
+              >
+                Ver tudo <ArrowRight className="h-4 w-4 ml-1" />
+              </Link>
             </div>
-          </Carousel>
-        </section>
+
+            <Carousel className="w-full">
+              <CarouselContent className="-ml-4">
+                {featuredCoupons.map((coupon) => (
+                  <CarouselItem
+                    key={coupon.id}
+                    className="pl-4 basis-[70%] md:basis-1/3 lg:basis-1/4 xl:basis-1/5"
+                  >
+                    <CouponCard coupon={coupon} />
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <div className="hidden md:block">
+                <CarouselPrevious />
+                <CarouselNext />
+              </div>
+            </Carousel>
+          </section>
+        )}
 
         {/* Travel Planner Highlight - Blue Theme */}
         <section className="bg-secondary/10 rounded-2xl p-6 md:p-8 relative overflow-hidden">
@@ -189,8 +214,7 @@ export default function Index() {
               ? aggregatedCoupons.map((coupon) => (
                   <CouponCard key={coupon.id} coupon={coupon} />
                 ))
-              : // Fallback if no aggregated mock data
-                featuredCoupons.slice(0, 4).map((coupon) => (
+              : featuredCoupons.slice(0, 4).map((coupon) => (
                   <div key={`fallback-${coupon.id}`} className="opacity-75">
                     <CouponCard coupon={coupon} />
                   </div>
@@ -203,23 +227,40 @@ export default function Index() {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold flex items-center gap-2 text-slate-800">
               <Zap className="h-5 w-5 text-yellow-500" />
-              Todas as Ofertas
+              {selectedCategory === 'all'
+                ? 'Todas as Ofertas'
+                : `Ofertas de ${selectedCategory}`}
             </h2>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {filteredCoupons.map((coupon) => (
-              <CouponCard key={`all-${coupon.id}`} coupon={coupon} />
-            ))}
-          </div>
-          <div className="mt-8 text-center">
-            <Button
-              variant="outline"
-              size="lg"
-              className="rounded-full px-8 border-primary text-primary hover:bg-primary/5"
-            >
-              Carregar Mais
-            </Button>
-          </div>
+          {filteredCoupons.length > 0 ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {filteredCoupons.map((coupon) => (
+                <CouponCard key={`all-${coupon.id}`} coupon={coupon} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12 text-muted-foreground bg-white rounded-lg border border-dashed">
+              Nenhuma oferta encontrada para esta categoria no momento.
+              <Button
+                variant="link"
+                className="text-primary"
+                onClick={() => setSelectedCategory('all')}
+              >
+                Ver todas as ofertas
+              </Button>
+            </div>
+          )}
+          {filteredCoupons.length > 0 && (
+            <div className="mt-8 text-center">
+              <Button
+                variant="outline"
+                size="lg"
+                className="rounded-full px-8 border-primary text-primary hover:bg-primary/5"
+              >
+                Carregar Mais
+              </Button>
+            </div>
+          )}
         </section>
       </div>
     </div>
