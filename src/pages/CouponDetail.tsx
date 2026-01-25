@@ -32,6 +32,7 @@ import {
   Wallet,
   CreditCard,
   Download,
+  Navigation,
 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
@@ -135,6 +136,19 @@ export default function CouponDetail() {
 
   const handleDownload = () => {
     downloadOffline([coupon.id])
+  }
+
+  const openMap = (type: 'google' | 'waze') => {
+    if (!coupon.coordinates) return
+    const { lat, lng } = coupon.coordinates
+    if (type === 'google') {
+      window.open(
+        `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`,
+        '_blank',
+      )
+    } else {
+      window.open(`https://waze.com/ul?ll=${lat},${lng}&navigate=yes`, '_blank')
+    }
   }
 
   const stockPercent =
@@ -304,6 +318,24 @@ export default function CouponDetail() {
                 Expira em: {new Date(coupon.expiryDate).toLocaleDateString()}
               </span>
             </div>
+          </div>
+
+          {/* External Map Integration */}
+          <div className="mb-6 flex gap-2">
+            <Button
+              variant="outline"
+              className="flex-1 gap-2 border-blue-200 text-blue-600 hover:bg-blue-50"
+              onClick={() => openMap('google')}
+            >
+              <MapPin className="h-4 w-4" /> Google Maps
+            </Button>
+            <Button
+              variant="outline"
+              className="flex-1 gap-2 border-cyan-200 text-cyan-600 hover:bg-cyan-50"
+              onClick={() => openMap('waze')}
+            >
+              <Navigation className="h-4 w-4" /> Waze
+            </Button>
           </div>
 
           <Separator className="my-6" />
@@ -499,22 +531,6 @@ export default function CouponDetail() {
             )}
           </div>
         </Card>
-        <div className="mt-6 rounded-xl overflow-hidden border shadow-sm">
-          <img
-            src="https://img.usecurling.com/p/800/300?q=map%20location&color=cyan"
-            className="w-full h-40 object-cover"
-            alt="Localização"
-          />
-          <div className="p-4 bg-white flex justify-between items-center">
-            <div>
-              <p className="font-bold">{coupon.storeName}</p>
-              <p className="text-xs text-muted-foreground">Abrir no GPS</p>
-            </div>
-            <Button size="sm" variant="outline" className="gap-2">
-              <ExternalLink className="h-4 w-4" /> Como chegar
-            </Button>
-          </div>
-        </div>
       </div>
     </div>
   )

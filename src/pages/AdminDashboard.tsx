@@ -86,6 +86,10 @@ export default function AdminDashboard() {
       status: 'active',
       views: 0,
       clicks: 0,
+      image:
+        data.image ||
+        'https://img.usecurling.com/p/800/200?q=' + (data.category || 'ad'),
+      link: data.link || '#',
       ...data,
     }
     createAd(newAd)
@@ -293,7 +297,7 @@ export default function AdminDashboard() {
                     <Plus className="h-4 w-4" /> Novo Anúncio
                   </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="max-w-2xl">
                   <DialogHeader>
                     <DialogTitle>Criar Novo Anúncio</DialogTitle>
                   </DialogHeader>
@@ -301,19 +305,12 @@ export default function AdminDashboard() {
                     onSubmit={handleSubmit(onSubmitAd)}
                     className="space-y-4 py-4"
                   >
-                    <div className="space-y-2">
-                      <Label>Título do Anúncio</Label>
-                      <Input
-                        {...register('title', { required: true })}
-                        placeholder="Campanha de Verão"
-                      />
-                    </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label>Região Alvo</Label>
+                        <Label>Título do Anúncio</Label>
                         <Input
-                          {...register('region', { required: true })}
-                          placeholder="São Paulo, SP"
+                          {...register('title', { required: true })}
+                          placeholder="Campanha de Verão"
                         />
                       </div>
                       <div className="space-y-2">
@@ -324,7 +321,32 @@ export default function AdminDashboard() {
                         />
                       </div>
                     </div>
+
                     <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Link de Destino</Label>
+                        <Input
+                          {...register('link', { required: true })}
+                          placeholder="https://..."
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>URL da Imagem</Label>
+                        <Input
+                          {...register('image')}
+                          placeholder="https://..."
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Região Alvo</Label>
+                        <Input
+                          {...register('region', { required: true })}
+                          placeholder="São Paulo, SP"
+                        />
+                      </div>
                       <div className="space-y-2">
                         <Label>Modelo de Cobrança</Label>
                         <select
@@ -338,18 +360,21 @@ export default function AdminDashboard() {
                           </option>
                         </select>
                       </div>
-                      <div className="space-y-2">
-                        <Label>Posicionamento</Label>
-                        <select
-                          {...register('placement')}
-                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          <option value="home_hero">Home Hero</option>
-                          <option value="sidebar">Barra Lateral</option>
-                          <option value="feed">Feed de Cupons</option>
-                        </select>
-                      </div>
                     </div>
+
+                    <div className="space-y-2">
+                      <Label>Posicionamento</Label>
+                      <select
+                        {...register('placement')}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <option value="content">Conteúdo (Principal)</option>
+                        <option value="footer">Rodapé</option>
+                        <option value="home_hero">Home Hero</option>
+                        <option value="sidebar">Barra Lateral</option>
+                      </select>
+                    </div>
+
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label>Início</Label>

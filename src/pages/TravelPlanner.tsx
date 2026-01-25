@@ -1,25 +1,26 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { useCouponStore } from '@/stores/CouponContext'
 import { CouponCard } from '@/components/CouponCard'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   MapPin,
-  Search,
   Navigation,
   Globe,
   LayoutList,
   Map as MapIcon,
   TentTree,
   Plane,
+  Check,
+  Share2,
 } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
+import { toast } from 'sonner'
 
 export default function TravelPlanner() {
   const { coupons, tripIds } = useCouponStore()
@@ -59,6 +60,27 @@ export default function TravelPlanner() {
     setNavMode('gps')
     setDestination('')
     setSearchQuery('')
+  }
+
+  const handleShare = async () => {
+    const shareText = `Confira meu roteiro de viagem no Deal Voy com ${tripCoupons.length} paradas econômicas!`
+    const shareUrl = window.location.href
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Meu Roteiro Deal Voy',
+          text: shareText,
+          url: shareUrl,
+        })
+        toast.success('Compartilhado com sucesso!')
+      } catch (err) {
+        console.error('Share failed:', err)
+      }
+    } else {
+      navigator.clipboard.writeText(`${shareText} ${shareUrl}`)
+      toast.success('Link copiado para a área de transferência!')
+    }
   }
 
   return (
@@ -320,13 +342,24 @@ export default function TravelPlanner() {
             <div className="flex-1 container max-w-4xl mx-auto md:py-6">
               <Card className="h-full flex flex-col shadow-none md:shadow-sm border-0 md:border bg-white">
                 <CardContent className="p-0 flex-1 flex flex-col">
-                  <div className="p-6 bg-[#4CAF50]/10 border-b border-[#4CAF50]/20">
-                    <h2 className="text-xl font-bold flex items-center gap-2 text-[#2e7d32]">
-                      <LayoutList className="h-6 w-6" /> Meu Roteiro de Economia
-                    </h2>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {tripCoupons.length} cupons salvos para sua viagem.
-                    </p>
+                  <div className="p-6 bg-[#4CAF50]/10 border-b border-[#4CAF50]/20 flex justify-between items-center">
+                    <div>
+                      <h2 className="text-xl font-bold flex items-center gap-2 text-[#2e7d32]">
+                        <LayoutList className="h-6 w-6" /> Meu Roteiro de
+                        Economia
+                      </h2>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {tripCoupons.length} cupons salvos para sua viagem.
+                      </p>
+                    </div>
+                    {tripCoupons.length > 0 && (
+                      <Button
+                        onClick={handleShare}
+                        className="bg-[#4CAF50] hover:bg-[#43A047] gap-2"
+                      >
+                        <Share2 className="h-4 w-4" /> Compartilhar
+                      </Button>
+                    )}
                   </div>
 
                   <ScrollArea className="flex-1">

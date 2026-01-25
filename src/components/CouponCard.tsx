@@ -2,11 +2,12 @@ import { Coupon } from '@/lib/types'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { MapPin, CheckCircle2, Globe, Plus, Check } from 'lucide-react'
+import { MapPin, CheckCircle2, Globe, Plus, Check, Clock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useCouponStore } from '@/stores/CouponContext'
 import { Link } from 'react-router-dom'
 import { useLanguage } from '@/stores/LanguageContext'
+import { differenceInHours, parseISO } from 'date-fns'
 
 interface CouponCardProps {
   coupon: Coupon
@@ -30,6 +31,12 @@ export function CouponCard({
     toggleTrip(coupon.id)
   }
 
+  // Calculate if expiring soon (less than 48 hours)
+  const isExpiringSoon =
+    coupon.expiryDate &&
+    differenceInHours(parseISO(coupon.expiryDate), new Date()) < 48 &&
+    differenceInHours(parseISO(coupon.expiryDate), new Date()) > 0
+
   // Rakuten-inspired layout: Clean, Image Top, Logo Overlay, Clear Price
   return (
     <Link to={`/coupon/${coupon.id}`} className="block h-full relative group">
@@ -51,6 +58,13 @@ export function CouponCard({
             {coupon.discount}
           </div>
 
+          {/* Expiring Soon Badge */}
+          {isExpiringSoon && (
+            <div className="absolute top-0 right-0 bg-red-600 text-white font-bold text-[10px] uppercase px-2 py-1 shadow-md rounded-bl-lg z-10 flex items-center gap-1 animate-pulse">
+              <Clock className="h-3 w-3" /> Expira em breve
+            </div>
+          )}
+
           {/* Visual Indicator for Trip - Lime Green Checkmark */}
           {inTrip && (
             <div className="absolute top-2 right-2 z-20 bg-[#4CAF50] text-white p-1.5 rounded-full shadow-lg animate-in zoom-in">
@@ -59,7 +73,7 @@ export function CouponCard({
           )}
 
           {/* Source Badge (if not in trip or to show other info) */}
-          {!inTrip && (
+          {!inTrip && !isExpiringSoon && (
             <div className="absolute top-2 right-2 z-10">
               {coupon.source === 'partner' ? (
                 <Badge

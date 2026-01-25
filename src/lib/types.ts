@@ -209,7 +209,7 @@ export interface Advertisement {
   region: string
   category: string
   billingType: AdBillingType
-  placement: 'home_hero' | 'sidebar' | 'feed'
+  placement: 'home_hero' | 'sidebar' | 'feed' | 'footer' | 'content'
   status: 'active' | 'paused' | 'ended'
   budget?: number
   costPerClick?: number
@@ -217,4 +217,6 @@ export interface Advertisement {
   clicks: number
   startDate: string
   endDate: string
+  image: string
+  link: string
 }
