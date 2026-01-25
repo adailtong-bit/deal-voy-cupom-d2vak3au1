@@ -1,10 +1,18 @@
 import { Coupon, SeasonalEvent, Notification } from './types'
 
-// Mock location (Sao Paulo center-ish)
 export const MOCK_USER_LOCATION = {
   lat: -23.55052,
   lng: -46.633308,
 }
+
+export const MOODS: { id: string; label: string; icon: string }[] = [
+  { id: 'Romantic', label: 'Romântico', icon: 'Heart' },
+  { id: 'Economic', label: 'Econômico', icon: 'PiggyBank' },
+  { id: 'Quick Bite', label: 'Rápido', icon: 'Zap' },
+  { id: 'Adventure', label: 'Aventura', icon: 'Compass' },
+  { id: 'Relaxing', label: 'Relax', icon: 'Coffee' },
+  { id: 'Family', label: 'Família', icon: 'Users' },
+]
 
 export const CATEGORIES: { id: string; label: string; icon: string }[] = [
   { id: 'all', label: 'Todos', icon: 'LayoutGrid' },
@@ -73,12 +81,22 @@ export const MOCK_COUPONS: Coupon[] = [
     code: 'BK-WHOP-2X',
     isFeatured: true,
     isTrending: true,
-    terms: 'Válido apenas para unidades participantes. Não acumulável.',
+    terms: 'Válido apenas para unidades participantes.',
     coordinates: { lat: -23.551, lng: -46.634 },
     totalAvailable: 1000,
     reservedCount: 450,
     maxPerUser: 2,
     averageRating: 4.5,
+    moods: ['Quick Bite', 'Family', 'Economic'],
+    loyaltyProgram: {
+      totalStamps: 5,
+      currentStamps: 3,
+      reward: '1 Combo Grátis',
+    },
+    lastVerified: new Date().toISOString(),
+    upvotes: 120,
+    downvotes: 2,
+    status: 'active',
     reviews: [
       {
         id: 'r1',
@@ -93,7 +111,7 @@ export const MOCK_COUPONS: Coupon[] = [
         userId: 'u2',
         userName: 'Ana Costa',
         rating: 4,
-        comment: 'O lanche estava ótimo, mas a fila estava grande.',
+        comment: 'O lanche estava ótimo.',
         date: '2024-01-16',
       },
     ],
@@ -112,21 +130,6 @@ export const MOCK_COUPONS: Coupon[] = [
             name: 'Whopper',
             description:
               'Hamburguesa a la parrilla con queso, pepinillos y salsa.',
-          },
-        },
-      },
-      {
-        name: 'Batata Frita Média',
-        description: 'Batatas fritas crocantes e douradas.',
-        price: 12.9,
-        translations: {
-          en: {
-            name: 'Medium Fries',
-            description: 'Crispy and golden french fries.',
-          },
-          es: {
-            name: 'Papas Fritas Medianas',
-            description: 'Papas fritas crujientes y doradas.',
           },
         },
       },
@@ -152,6 +155,7 @@ export const MOCK_COUPONS: Coupon[] = [
     reservedCount: 120,
     maxPerUser: 1,
     averageRating: 4.0,
+    moods: ['Economic'],
     reviews: [],
   },
   {
@@ -170,16 +174,22 @@ export const MOCK_COUPONS: Coupon[] = [
     terms: 'Válido para sessões 2D. Não válido para feriados.',
     coordinates: { lat: -23.555, lng: -46.64 },
     totalAvailable: 200,
-    reservedCount: 180, // High demand
+    reservedCount: 180,
     maxPerUser: 2,
     averageRating: 4.8,
+    moods: ['Romantic', 'Relaxing', 'Family'],
+    loyaltyProgram: {
+      totalStamps: 10,
+      currentStamps: 9,
+      reward: '1 Ingresso VIP',
+    },
     reviews: [
       {
         id: 'r3',
         userId: 'u3',
         userName: 'Marcos Paulo',
         rating: 5,
-        comment: 'Excelente promoção para dia de semana.',
+        comment: 'Excelente promoção.',
         date: '2024-02-10',
       },
     ],
@@ -199,6 +209,7 @@ export const MOCK_COUPONS: Coupon[] = [
     terms: 'Válido para plano Black.',
     coordinates: { lat: -23.552, lng: -46.631 },
     averageRating: 3.5,
+    moods: ['Adventure'],
     reviews: [],
   },
   {
@@ -231,8 +242,9 @@ export const MOCK_COUPONS: Coupon[] = [
     code: 'BIGMAC19',
     isTrending: true,
     coordinates: { lat: -23.549, lng: -46.632 },
-    isSpecial: true, // Executive lunch style
+    isSpecial: true,
     averageRating: 4.6,
+    moods: ['Quick Bite', 'Family'],
     reviews: [],
   },
   {
@@ -250,6 +262,12 @@ export const MOCK_COUPONS: Coupon[] = [
     isSpecial: true,
     coordinates: { lat: -23.55, lng: -46.633 },
     averageRating: 5.0,
+    moods: ['Relaxing', 'Economic'],
+    loyaltyProgram: {
+      totalStamps: 10,
+      currentStamps: 2,
+      reward: '1 Almoço Grátis',
+    },
     reviews: [
       {
         id: 'r4',

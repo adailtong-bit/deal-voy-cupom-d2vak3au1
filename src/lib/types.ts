@@ -19,6 +19,20 @@ export interface Review {
   date: string
 }
 
+export type Mood =
+  | 'Romantic'
+  | 'Economic'
+  | 'Quick Bite'
+  | 'Adventure'
+  | 'Relaxing'
+  | 'Family'
+
+export interface LoyaltyProgram {
+  totalStamps: number
+  currentStamps: number
+  reward: string
+}
+
 export interface Coupon {
   id: string
   storeName: string
@@ -39,21 +53,24 @@ export interface Coupon {
   code: string
   isFeatured?: boolean
   isTrending?: boolean
-  isSpecial?: boolean // For hidden/local specials like Happy Hour
+  isSpecial?: boolean
   terms?: string
   coordinates: {
     lat: number
     lng: number
   }
-  // Inventory management
   totalAvailable?: number
   maxPerUser?: number
   reservedCount?: number
-  // Menu for restaurants
   menu?: MenuItem[]
-  // Social
   reviews?: Review[]
   averageRating?: number
+  moods?: Mood[]
+  loyaltyProgram?: LoyaltyProgram
+  lastVerified?: string
+  upvotes?: number
+  downvotes?: number
+  status?: 'active' | 'expired' | 'issue'
 }
 
 export type CategoryType = Coupon['category']
@@ -80,4 +97,13 @@ export interface Notification {
   read: boolean
   date: string
   link?: string
+}
+
+export interface UploadedDocument {
+  id: string
+  date: string
+  status: 'Pending' | 'Verified' | 'Rejected'
+  type: 'Receipt' | 'Coupon'
+  storeName: string
+  image: string
 }

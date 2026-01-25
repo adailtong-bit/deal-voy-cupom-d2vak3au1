@@ -11,6 +11,7 @@ import {
   PlayCircle,
   StopCircle,
   BellRing,
+  Flame,
 } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useNotification } from '@/stores/NotificationContext'
@@ -39,7 +40,6 @@ export default function TravelPlanner() {
     let interval: NodeJS.Timeout
     if (isTravelModeActive) {
       interval = setInterval(() => {
-        // Randomly trigger a proximity alert
         if (Math.random() > 0.7) {
           const randomCoupon =
             coupons[Math.floor(Math.random() * coupons.length)]
@@ -49,13 +49,14 @@ export default function TravelPlanner() {
             type: 'deal',
           })
         }
-      }, 5000) // Every 5 seconds check for deals
+      }, 5000)
     }
     return () => clearInterval(interval)
   }, [isTravelModeActive, coupons, addNotification])
 
-  // Mock deals along the route (randomly select few)
   const routeDeals = coupons.slice(0, 4)
+  // Calculate potential savings for visualization
+  const totalSavings = routeDeals.length * 25 // Arbitrary mock value
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -119,9 +120,15 @@ export default function TravelPlanner() {
                 <h2 className="text-xl font-bold">
                   Ofertas Encontradas no Caminho
                 </h2>
-                <span className="text-sm text-muted-foreground bg-muted px-3 py-1 rounded-full">
-                  4 paradas sugeridas
-                </span>
+                <div className="flex gap-2 mt-1">
+                  <span className="text-sm text-muted-foreground bg-muted px-3 py-1 rounded-full">
+                    4 paradas sugeridas
+                  </span>
+                  <span className="text-sm text-green-700 bg-green-100 px-3 py-1 rounded-full font-bold flex items-center gap-1">
+                    <Flame className="h-3 w-3 fill-current" /> Hotspot de
+                    Economia: R$ {totalSavings},00
+                  </span>
+                </div>
               </div>
 
               <Button
@@ -153,20 +160,18 @@ export default function TravelPlanner() {
               </div>
             )}
 
-            {/* Simulated Map View */}
             <div className="relative h-64 w-full rounded-xl overflow-hidden bg-slate-100 border shadow-inner">
               <img
                 src="https://img.usecurling.com/p/1200/400?q=highway%20map&color=blue"
                 alt="Route Map"
                 className="w-full h-full object-cover opacity-80"
               />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="bg-white/90 backdrop-blur-sm p-4 rounded-lg shadow-lg text-center">
-                  <p className="font-bold text-primary">Rota Otimizada</p>
-                  <p className="text-xs text-muted-foreground">
-                    Economia estimada: R$ 125,00
-                  </p>
+              {/* Savings Hotspot Marker on Map (Mock) */}
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
+                <div className="bg-green-600 text-white text-xs px-2 py-1 rounded-full font-bold shadow-lg animate-bounce">
+                  $$$ Hotspot
                 </div>
+                <div className="h-4 w-4 bg-green-600 rounded-full border-2 border-white shadow-md"></div>
               </div>
             </div>
 

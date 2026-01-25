@@ -3,7 +3,7 @@ import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Card } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import {
   Dialog,
@@ -24,31 +24,38 @@ import {
   ExternalLink,
   Heart,
   Copy,
-  Languages,
-  Utensils,
   CheckCircle,
-  MessageSquare,
   WifiOff,
+  ThumbsUp,
+  ThumbsDown,
+  AlertTriangle,
 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { StarRating } from '@/components/StarRating'
-import { Textarea } from '@/components/ui/textarea'
+import { LoyaltyCard } from '@/components/LoyaltyCard'
+import { CouponMenu } from '@/components/CouponMenu'
+import { CouponReviews } from '@/components/CouponReviews'
+import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
 export default function CouponDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { coupons, toggleSave, isSaved, reserveCoupon, isReserved, addReview } =
-    useCouponStore()
-  const { t, language } = useLanguage()
+  const {
+    coupons,
+    toggleSave,
+    isSaved,
+    reserveCoupon,
+    isReserved,
+    voteCoupon,
+    reportCoupon,
+  } = useCouponStore()
+  const { t } = useLanguage()
   const [showConfetti, setShowConfetti] = useState(false)
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [menuLang, setMenuLang] = useState(language)
-  const [newRating, setNewRating] = useState(0)
-  const [newComment, setNewComment] = useState('')
-  const [isReviewOpen, setIsReviewOpen] = useState(false)
+  const [reportIssue, setReportIssue] = useState('')
+  const [isReportOpen, setIsReportOpen] = useState(false)
 
   const coupon = coupons.find((c) => c.id === id)
 
@@ -81,21 +88,10 @@ export default function CouponDetail() {
     toast.success('Código copiado!')
   }
 
-  const handleSubmitReview = () => {
-    if (newRating === 0) {
-      toast.error('Por favor, selecione uma nota.')
-      return
-    }
-    addReview(coupon.id, {
-      userId: 'currentUser',
-      userName: 'Você',
-      rating: newRating,
-      comment: newComment,
-    })
-    setIsReviewOpen(false)
-    setNewRating(0)
-    setNewComment('')
-    toast.success('Avaliação enviada!')
+  const handleReport = () => {
+    reportCoupon(coupon.id, reportIssue)
+    setIsReportOpen(false)
+    setReportIssue('')
   }
 
   const handleShare = () => {
@@ -103,13 +99,13 @@ export default function CouponDetail() {
       navigator
         .share({
           title: coupon.title,
-          text: `Olha esse desconto que achei no CupomGeo: ${coupon.title} na ${coupon.storeName}`,
+          text: `Olha esse desconto: ${coupon.title}`,
           url: window.location.href,
         })
         .catch(console.error)
     } else {
       navigator.clipboard.writeText(window.location.href)
-      toast.success('Link copiado para a área de transferência!')
+      toast.success('Link copiado!')
     }
   }
 
@@ -139,7 +135,6 @@ export default function CouponDetail() {
         </div>
       )}
 
-      {/* Header Image */}
       <div className="relative h-64 md:h-80 w-full">
         <img
           src={coupon.image}
@@ -150,7 +145,7 @@ export default function CouponDetail() {
         <Button
           variant="secondary"
           size="icon"
-          className="absolute top-4 left-4 rounded-full bg-background/80 hover:bg-background"
+          className="absolute top-4 left-4 rounded-full bg-background/80"
           onClick={() => navigate(-1)}
         >
           <ArrowLeft className="h-5 w-5" />
@@ -158,7 +153,7 @@ export default function CouponDetail() {
         <Button
           variant="secondary"
           size="icon"
-          className="absolute top-4 right-4 rounded-full bg-background/80 hover:bg-background"
+          className="absolute top-4 right-4 rounded-full bg-background/80"
           onClick={handleShare}
         >
           <Share2 className="h-5 w-5" />
@@ -216,7 +211,12 @@ export default function CouponDetail() {
             </Button>
           </div>
 
-          {/* Stock Indicator */}
+          {coupon.loyaltyProgram && (
+            <div className="mb-6">
+              <LoyaltyCard program={coupon.loyaltyProgram} />
+            </div>
+          )}
+
           {coupon.totalAvailable && (
             <div className="mb-6 bg-muted/50 p-3 rounded-lg border">
               <div className="flex justify-between text-xs mb-1 font-medium">
@@ -239,9 +239,7 @@ export default function CouponDetail() {
               <MapPin className="h-4 w-4" />
               <span>
                 {coupon.distance}m de distância •{' '}
-                {coupon.coordinates
-                  ? 'Rua Exemplo, 123'
-                  : 'Endereço não disponível'}
+                {coupon.coordinates ? 'Rua Exemplo, 123' : 'N/A'}
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -254,155 +252,80 @@ export default function CouponDetail() {
 
           <Separator className="my-6" />
 
-          {/* Menu Translation Feature */}
-          {coupon.category === 'Alimentação' && coupon.menu && (
-            <div className="mb-6">
-              <Dialog open={isMenuOpen} onOpenChange={setIsMenuOpen}>
-                <DialogTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="w-full gap-2 border-primary/50 text-primary"
-                  >
-                    <Utensils className="h-4 w-4" /> {t('coupon.menu')}
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-h-[80vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle className="flex justify-between items-center">
-                      Menu: {coupon.storeName}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() =>
-                          setMenuLang(menuLang === 'pt' ? language : 'pt')
-                        }
-                      >
-                        <Languages className="h-4 w-4 mr-2" />
-                        {menuLang === 'pt' ? 'Original' : 'Traduzido'}
-                      </Button>
-                    </DialogTitle>
-                    <DialogDescription>
-                      Itens disponíveis nesta oferta
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4 py-4">
-                    {coupon.menu.map((item, idx) => {
-                      const translation =
-                        menuLang !== 'pt' && item.translations?.[menuLang]
-                          ? item.translations[menuLang]
-                          : item
-                      return (
-                        <div
-                          key={idx}
-                          className="flex justify-between border-b pb-4 last:border-0"
-                        >
-                          <div>
-                            <p className="font-bold">{translation.name}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {translation.description}
-                            </p>
-                          </div>
-                          <p className="font-medium ml-4">
-                            R$ {item.price.toFixed(2)}
-                          </p>
-                        </div>
-                      )
-                    })}
-                  </div>
-                </DialogContent>
-              </Dialog>
-              <Separator className="my-6" />
-            </div>
-          )}
+          <CouponMenu coupon={coupon} />
 
           <div className="space-y-4">
             <h3 className="font-semibold text-lg flex items-center gap-2">
-              <Info className="h-5 w-5" /> Detalhes da Oferta
+              <Info className="h-5 w-5" /> Detalhes
             </h3>
             <p className="text-foreground/90 leading-relaxed">
               {coupon.description}
             </p>
             {coupon.terms && (
               <div className="bg-muted p-4 rounded-lg text-xs text-muted-foreground">
-                <strong>Termos e Condições:</strong> {coupon.terms}
+                <strong>Termos:</strong> {coupon.terms}
               </div>
             )}
           </div>
 
-          {/* Reviews Section */}
-          <div className="mt-8">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-lg flex items-center gap-2">
-                <MessageSquare className="h-5 w-5" /> {t('coupon.reviews')}
-              </h3>
-              <Dialog open={isReviewOpen} onOpenChange={setIsReviewOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    {t('coupon.add_review')}
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>{t('coupon.add_review')}</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4 py-4">
-                    <div className="space-y-2">
-                      <Label>{t('coupon.rating')}</Label>
-                      <StarRating
-                        rating={newRating}
-                        onRatingChange={setNewRating}
-                        size="lg"
-                        className="justify-center"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>{t('coupon.comment')}</Label>
-                      <Textarea
-                        value={newComment}
-                        onChange={(e) => setNewComment(e.target.value)}
-                        placeholder="Conte sobre sua experiência..."
-                      />
-                    </div>
-                  </div>
-                  <DialogFooter>
-                    <Button onClick={handleSubmitReview}>
-                      {t('coupon.submit_review')}
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
+          <div className="mt-6 bg-slate-50 p-4 rounded-lg border flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">{t('coupon.verify')}</span>
+              <span className="text-xs text-muted-foreground">
+                {t('coupon.verified_at')}:{' '}
+                {coupon.lastVerified
+                  ? new Date(coupon.lastVerified).toLocaleDateString()
+                  : 'Hoje'}
+              </span>
             </div>
-
-            <div className="space-y-4">
-              {coupon.reviews && coupon.reviews.length > 0 ? (
-                coupon.reviews.map((review) => (
-                  <div key={review.id} className="border-b pb-4 last:border-0">
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="font-semibold text-sm">
-                        {review.userName}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        {new Date(review.date).toLocaleDateString()}
-                      </span>
-                    </div>
-                    <StarRating
-                      rating={review.rating}
-                      size="sm"
-                      readonly
-                      className="mb-2"
-                    />
-                    <p className="text-sm text-muted-foreground">
-                      {review.comment}
-                    </p>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-muted-foreground italic">
-                  Seja o primeiro a avaliar!
-                </p>
-              )}
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1 gap-2 text-green-600 hover:text-green-700 hover:bg-green-50"
+                onClick={() => voteCoupon(coupon.id, 'up')}
+              >
+                <ThumbsUp className="h-4 w-4" /> Sim ({coupon.upvotes || 0})
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1 gap-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+                onClick={() => voteCoupon(coupon.id, 'down')}
+              >
+                <ThumbsDown className="h-4 w-4" /> Não ({coupon.downvotes || 0})
+              </Button>
             </div>
+            <Dialog open={isReportOpen} onOpenChange={setIsReportOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs text-muted-foreground w-fit ml-auto gap-1 h-auto p-1"
+                >
+                  <AlertTriangle className="h-3 w-3" /> {t('coupon.report')}
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>{t('coupon.report')}</DialogTitle>
+                </DialogHeader>
+                <div className="py-4">
+                  <Label>Qual o problema?</Label>
+                  <Input
+                    value={reportIssue}
+                    onChange={(e) => setReportIssue(e.target.value)}
+                    placeholder="Ex: Preço incorreto, loja fechada..."
+                  />
+                </div>
+                <DialogFooter>
+                  <Button onClick={handleReport}>Enviar</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
+
+          <CouponReviews coupon={coupon} />
 
           <div className="mt-8">
             {reserved ? (
@@ -443,10 +366,10 @@ export default function CouponDetail() {
                 <DialogContent className="sm:max-w-md">
                   <DialogHeader>
                     <DialogTitle className="text-center text-xl">
-                      Seu Cupom está Pronto!
+                      Seu Cupom
                     </DialogTitle>
                     <DialogDescription className="text-center">
-                      Apresente este código no caixa ou use no site da loja.
+                      Apresente este código.
                     </DialogDescription>
                   </DialogHeader>
                   <div className="flex flex-col items-center justify-center p-6 space-y-4">
@@ -462,24 +385,13 @@ export default function CouponDetail() {
                     >
                       <Copy className="h-4 w-4" /> Copiar Código
                     </Button>
-
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground mt-4">
-                      {isOffline ? (
-                        <div className="text-center p-4 border rounded bg-yellow-50 text-yellow-800">
-                          <WifiOff className="h-6 w-6 mx-auto mb-2" />
-                          <p>Modo Offline</p>
-                          <p className="text-xs">
-                            QR Code não disponível, use o código de texto.
-                          </p>
-                        </div>
-                      ) : (
-                        <img
-                          src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${coupon.code}`}
-                          alt="QR Code"
-                          className="w-32 h-32 border p-2 rounded-lg"
-                        />
-                      )}
-                    </div>
+                    {!isOffline && (
+                      <img
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${coupon.code}`}
+                        alt="QR Code"
+                        className="w-32 h-32 border p-2 rounded-lg"
+                      />
+                    )}
                   </div>
                   <DialogFooter className="sm:justify-center">
                     <DialogClose asChild>
@@ -493,8 +405,6 @@ export default function CouponDetail() {
             )}
           </div>
         </Card>
-
-        {/* Location Map Static */}
         <div className="mt-6 rounded-xl overflow-hidden border shadow-sm">
           <img
             src="https://img.usecurling.com/p/800/300?q=map%20location&color=cyan"

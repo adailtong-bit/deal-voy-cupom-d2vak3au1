@@ -6,6 +6,7 @@ import {
   Zap,
   Calendar,
   Sparkles,
+  RefreshCw,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -20,19 +21,32 @@ import {
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
 import { CouponCard } from '@/components/CouponCard'
-import { CATEGORIES } from '@/lib/data'
+import { CATEGORIES, MOODS } from '@/lib/data'
 import * as Icons from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 
 export default function Index() {
-  const { coupons, userLocation, isLoadingLocation } = useCouponStore()
+  const { coupons, userLocation, isLoadingLocation, refreshCoupons } =
+    useCouponStore()
   const { t } = useLanguage()
   const [searchQuery, setSearchQuery] = useState('')
+  const [selectedMood, setSelectedMood] = useState<string | null>(null)
 
-  const featuredCoupons = coupons.filter((c) => c.isFeatured)
-  const trendingCoupons = coupons.filter((c) => c.isTrending)
-  const specialCoupons = coupons.filter((c) => c.isSpecial)
+  const filteredCoupons = coupons.filter((c) => {
+    if (selectedMood && (!c.moods || !c.moods.includes(selectedMood as any)))
+      return false
+    if (
+      searchQuery &&
+      !c.title.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+      return false
+    return true
+  })
+
+  const featuredCoupons = filteredCoupons.filter((c) => c.isFeatured)
+  const trendingCoupons = filteredCoupons.filter((c) => c.isTrending)
+  const specialCoupons = filteredCoupons.filter((c) => c.isSpecial)
 
   // Helper to dynamically get icon component
   const getIcon = (iconName: string) => {
@@ -94,8 +108,33 @@ export default function Index() {
         </div>
       </section>
 
+      {/* Mood Discovery */}
+      <section className="py-6 bg-muted/20">
+        <div className="container mx-auto px-4">
+          <h3 className="text-lg font-bold mb-4">{t('mood.title')}</h3>
+          <ScrollArea className="w-full whitespace-nowrap">
+            <div className="flex space-x-3 pb-2">
+              {MOODS.map((mood) => (
+                <Button
+                  key={mood.id}
+                  variant={selectedMood === mood.id ? 'default' : 'outline'}
+                  className="rounded-full flex items-center gap-2 h-10"
+                  onClick={() =>
+                    setSelectedMood(selectedMood === mood.id ? null : mood.id)
+                  }
+                >
+                  {getIcon(mood.icon)}
+                  {mood.label}
+                </Button>
+              ))}
+            </div>
+            <ScrollBar orientation="horizontal" className="invisible" />
+          </ScrollArea>
+        </div>
+      </section>
+
       {/* Categories Bar */}
-      <section className="py-6 bg-background border-b sticky top-[64px] md:top-0 z-30 shadow-sm">
+      <section className="py-4 bg-background border-b sticky top-[64px] md:top-0 z-30 shadow-sm">
         <div className="container mx-auto px-4">
           <ScrollArea className="w-full whitespace-nowrap">
             <div className="flex space-x-4 pb-2">
@@ -229,6 +268,14 @@ export default function Index() {
               <Zap className="h-5 w-5 text-secondary fill-secondary" />
               Em Alta Agora
             </h2>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={refreshCoupons}
+            >
+              <RefreshCw className="h-3 w-3" /> {t('common.refresh')}
+            </Button>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
@@ -236,7 +283,7 @@ export default function Index() {
               <CouponCard key={coupon.id} coupon={coupon} variant="vertical" />
             ))}
             {/* Fill with regular coupons if not enough trending */}
-            {coupons
+            {filteredCoupons
               .filter((c) => !c.isTrending && !c.isSpecial)
               .slice(0, 4)
               .map((coupon) => (

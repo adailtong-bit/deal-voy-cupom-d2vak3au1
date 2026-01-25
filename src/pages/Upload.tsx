@@ -19,14 +19,24 @@ import {
   CardTitle,
   CardDescription,
 } from '@/components/ui/card'
-import { UploadCloud, Camera, CheckCircle2 } from 'lucide-react'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  UploadCloud,
+  Camera,
+  CheckCircle2,
+  FileText,
+  Clock,
+  AlertCircle,
+} from 'lucide-react'
 import { useCouponStore } from '@/stores/CouponContext'
+import { useLanguage } from '@/stores/LanguageContext'
 import { CATEGORIES } from '@/lib/data'
 import { toast } from 'sonner'
 
 export default function Upload() {
   const navigate = useNavigate()
-  const { addCoupon } = useCouponStore()
+  const { addCoupon, addUpload, uploads } = useCouponStore()
+  const { t } = useLanguage()
   const [isDragging, setIsDragging] = useState(false)
   const [file, setFile] = useState<File | null>(null)
   const [step, setStep] = useState(1)
@@ -62,15 +72,14 @@ export default function Upload() {
   }
 
   const onSubmit = (data: any) => {
-    // Mock upload process
     const newCoupon = {
       id: Math.random().toString(36).substr(2, 9),
       storeName: data.storeName,
-      title: data.description.substring(0, 30) + '...', // Generate title from desc
+      title: data.description.substring(0, 30) + '...',
       description: data.description,
       discount: data.discountValue,
       category: data.category,
-      distance: 50, // Mock proximity
+      distance: 50,
       expiryDate: data.expiryDate,
       image: file
         ? URL.createObjectURL(file)
@@ -79,8 +88,15 @@ export default function Upload() {
       coordinates: { lat: 0, lng: 0 },
     }
 
-    // @ts-expect-error
-    addCoupon(newCoupon)
+    addCoupon(newCoupon as any)
+    addUpload({
+      id: Math.random().toString(),
+      date: new Date().toISOString(),
+      status: 'Pending',
+      type: 'Coupon',
+      storeName: data.storeName,
+      image: newCoupon.image,
+    })
     setStep(2)
     toast.success('Doc enviado com sucesso!')
   }
@@ -109,126 +125,185 @@ export default function Upload() {
   return (
     <div className="container mx-auto px-4 py-8">
       <Card className="max-w-2xl mx-auto shadow-md">
-        <CardHeader>
-          <CardTitle className="text-2xl">Subir um Doc</CardTitle>
-          <CardDescription>
-            Encontrou uma oferta física? Tire uma foto e compartilhe com a
-            comunidade.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Upload Zone */}
-            <div
-              className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center text-center transition-colors cursor-pointer ${
-                isDragging
-                  ? 'border-primary bg-primary/5'
-                  : 'border-border bg-muted/30 hover:bg-muted/50'
-              }`}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-              onClick={() => document.getElementById('file-upload')?.click()}
-            >
-              <input
-                id="file-upload"
-                type="file"
-                className="hidden"
-                accept="image/*"
-                onChange={handleFileChange}
-              />
-
-              {file ? (
-                <div className="relative w-full aspect-video rounded-lg overflow-hidden">
-                  <img
-                    src={URL.createObjectURL(file)}
-                    alt="Preview"
-                    className="w-full h-full object-cover"
+        <Tabs defaultValue="upload" className="w-full">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-2xl">Subir um Doc</CardTitle>
+              <TabsList>
+                <TabsTrigger value="upload">{t('upload.camera')}</TabsTrigger>
+                <TabsTrigger value="history">{t('upload.history')}</TabsTrigger>
+              </TabsList>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <TabsContent value="upload">
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                <div
+                  className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center text-center transition-colors cursor-pointer ${
+                    isDragging
+                      ? 'border-primary bg-primary/5'
+                      : 'border-border bg-muted/30 hover:bg-muted/50'
+                  }`}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  onClick={() =>
+                    document.getElementById('file-upload')?.click()
+                  }
+                >
+                  <input
+                    id="file-upload"
+                    type="file"
+                    className="hidden"
+                    accept="image/*"
+                    onChange={handleFileChange}
                   />
-                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white font-medium opacity-0 hover:opacity-100 transition-opacity">
-                    Clique para alterar
+
+                  {file ? (
+                    <div className="relative w-full aspect-video rounded-lg overflow-hidden">
+                      <img
+                        src={URL.createObjectURL(file)}
+                        alt="Preview"
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white font-medium opacity-0 hover:opacity-100 transition-opacity">
+                        Clique para alterar
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="h-16 w-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-4">
+                        <Camera className="h-8 w-8" />
+                      </div>
+                      <h3 className="font-semibold mb-1">
+                        Clique para fotografar ou arraste aqui
+                      </h3>
+                      <p className="text-xs text-muted-foreground">
+                        Suporta JPG, PNG
+                      </p>
+                    </>
+                  )}
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="storeName">Nome da Loja</Label>
+                    <Input
+                      id="storeName"
+                      placeholder="Ex: Americanas"
+                      {...register('storeName', { required: true })}
+                    />
+                    {errors.storeName && (
+                      <span className="text-xs text-red-500">Obrigatório</span>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="discountValue">Valor do Desconto</Label>
+                    <Input
+                      id="discountValue"
+                      placeholder="Ex: 50% OFF ou R$ 20,00"
+                      {...register('discountValue', { required: true })}
+                    />
                   </div>
                 </div>
-              ) : (
-                <>
-                  <div className="h-16 w-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-4">
-                    <Camera className="h-8 w-8" />
-                  </div>
-                  <h3 className="font-semibold mb-1">
-                    Clique para fotografar ou arraste aqui
-                  </h3>
-                  <p className="text-xs text-muted-foreground">
-                    Suporta JPG, PNG
-                  </p>
-                </>
-              )}
-            </div>
 
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="storeName">Nome da Loja</Label>
-                <Input
-                  id="storeName"
-                  placeholder="Ex: Americanas"
-                  {...register('storeName', { required: true })}
-                />
-                {errors.storeName && (
-                  <span className="text-xs text-red-500">Obrigatório</span>
+                <div className="space-y-2">
+                  <Label htmlFor="description">Descrição / Regras</Label>
+                  <Textarea
+                    id="description"
+                    placeholder="Descreva o produto e as condições da oferta..."
+                    className="resize-none"
+                    {...register('description', { required: true })}
+                  />
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="expiryDate">Validade</Label>
+                    <Input
+                      type="date"
+                      id="expiryDate"
+                      {...register('expiryDate', { required: true })}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Categoria</Label>
+                    <Select onValueChange={(val) => setValue('category', val)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CATEGORIES.filter((c) => c.id !== 'all').map((cat) => (
+                          <SelectItem key={cat.id} value={cat.id}>
+                            {cat.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <Button
+                  type="submit"
+                  size="lg"
+                  className="w-full"
+                  disabled={!file}
+                >
+                  {file ? 'Enviar Oferta' : 'Adicione uma foto para continuar'}
+                </Button>
+              </form>
+            </TabsContent>
+            <TabsContent value="history">
+              <div className="space-y-4">
+                {uploads.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Nenhum envio recente.
+                  </div>
+                ) : (
+                  uploads.map((doc) => (
+                    <div
+                      key={doc.id}
+                      className="flex items-center p-3 border rounded-lg bg-card"
+                    >
+                      <div className="h-10 w-10 bg-muted rounded flex items-center justify-center mr-3">
+                        <FileText className="h-5 w-5 text-muted-foreground" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-sm">
+                          {doc.storeName}
+                        </h4>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(doc.date).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1 text-xs font-medium">
+                        {doc.status === 'Verified' && (
+                          <span className="text-green-600 flex items-center gap-1">
+                            <CheckCircle2 className="h-3 w-3" />{' '}
+                            {t('upload.verified')}
+                          </span>
+                        )}
+                        {doc.status === 'Pending' && (
+                          <span className="text-orange-600 flex items-center gap-1">
+                            <Clock className="h-3 w-3" /> {t('upload.pending')}
+                          </span>
+                        )}
+                        {doc.status === 'Rejected' && (
+                          <span className="text-red-600 flex items-center gap-1">
+                            <AlertCircle className="h-3 w-3" />{' '}
+                            {t('upload.rejected')}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))
                 )}
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="discountValue">Valor do Desconto</Label>
-                <Input
-                  id="discountValue"
-                  placeholder="Ex: 50% OFF ou R$ 20,00"
-                  {...register('discountValue', { required: true })}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="description">Descrição / Regras</Label>
-              <Textarea
-                id="description"
-                placeholder="Descreva o produto e as condições da oferta..."
-                className="resize-none"
-                {...register('description', { required: true })}
-              />
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="expiryDate">Validade</Label>
-                <Input
-                  type="date"
-                  id="expiryDate"
-                  {...register('expiryDate', { required: true })}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Categoria</Label>
-                <Select onValueChange={(val) => setValue('category', val)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CATEGORIES.filter((c) => c.id !== 'all').map((cat) => (
-                      <SelectItem key={cat.id} value={cat.id}>
-                        {cat.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <Button type="submit" size="lg" className="w-full" disabled={!file}>
-              {file ? 'Enviar Oferta' : 'Adicione uma foto para continuar'}
-            </Button>
-          </form>
-        </CardContent>
+            </TabsContent>
+          </CardContent>
+        </Tabs>
       </Card>
     </div>
   )
