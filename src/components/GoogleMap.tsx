@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { cn } from '@/lib/utils'
 import { Loader2, MapPinOff } from 'lucide-react'
+import { useLanguage } from '@/stores/LanguageContext'
 
 declare global {
   interface Window {
@@ -47,6 +48,7 @@ export function GoogleMap({
   const [isLoaded, setIsLoaded] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const markersRef = useRef<any[]>([])
+  const { t } = useLanguage()
 
   // Helper to load Google Maps Script
   const loadScript = useCallback(() => {
@@ -63,7 +65,6 @@ export function GoogleMap({
 
     const existingScript = document.getElementById('google-maps-script')
     if (existingScript) {
-      // Check if already loaded or wait
       existingScript.addEventListener('load', () => setIsLoaded(true))
       existingScript.addEventListener('error', () =>
         setError('Failed to load Google Maps script'),
@@ -96,7 +97,6 @@ export function GoogleMap({
           streetViewControl: false,
           fullscreenControl: false,
           styles: [
-            // Custom styles to match app identity (optional, simplified here)
             {
               featureType: 'poi',
               elementType: 'labels.text.fill',
@@ -130,17 +130,13 @@ export function GoogleMap({
 
     // Add new markers
     markers.forEach((marker) => {
-      // Determine pin color based on category or prop
-      // Using standard google maps marker or custom icon if possible
-      // For this demo, we use simple colored pins logic via URL if needed, or default
-
       const pinColor =
         marker.color === 'green'
-          ? '4CAF50'
+          ? 'green'
           : marker.color === 'blue'
-            ? '2196F3'
-            : 'FF5722'
-      const iconUrl = `https://img.usecurling.com/i?q=map-pin&color=${marker.color === 'green' ? 'green' : marker.color === 'blue' ? 'blue' : 'orange'}&shape=fill`
+            ? 'blue'
+            : 'orange'
+      const iconUrl = `https://img.usecurling.com/i?q=map-pin&color=${pinColor}&shape=fill`
 
       const mapMarker = new window.google.maps.Marker({
         position: { lat: marker.lat, lng: marker.lng },
@@ -148,7 +144,7 @@ export function GoogleMap({
         title: marker.title,
         icon: {
           url: iconUrl,
-          scaledSize: new window.google.maps.Size(32, 32),
+          scaledSize: new window.google.maps.Size(40, 40),
         },
         animation: window.google.maps.Animation.DROP,
       })
@@ -156,13 +152,17 @@ export function GoogleMap({
       // Info Window
       if (marker.data) {
         const infoContent = `
-          <div style="width: 200px; padding: 4px;">
-            <div style="width: 100%; height: 100px; background-color: #f1f5f9; border-radius: 6px; overflow: hidden; margin-bottom: 8px;">
+          <div style="width: 220px; font-family: 'Inter', sans-serif; padding: 0;">
+            <div style="width: 100%; height: 120px; background-color: #f1f5f9; border-radius: 8px; overflow: hidden; margin-bottom: 8px; position: relative;">
               <img src="${marker.data.image}" style="width: 100%; height: 100%; object-fit: cover;" />
+              ${marker.data.discount ? `<div style="position: absolute; top: 0; left: 0; background: #FF5722; color: white; font-size: 10px; font-weight: bold; padding: 2px 6px; border-bottom-right-radius: 6px;">${marker.data.discount}</div>` : ''}
             </div>
-            <h3 style="font-weight: 700; font-size: 14px; margin-bottom: 4px; color: #0f172a;">${marker.title}</h3>
-            <p style="font-size: 12px; color: #64748b; margin-bottom: 8px;">${marker.data.discount || ''}</p>
-            <div style="font-size: 10px; color: #2196F3; font-weight: 600;">${marker.category || ''}</div>
+            <h3 style="font-weight: 700; font-size: 14px; margin: 0 0 4px 0; color: #0f172a; line-height: 1.2;">${marker.title}</h3>
+            <p style="font-size: 11px; color: #64748b; margin: 0 0 8px 0; line-height: 1.4;">${marker.data.description || ''}</p>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 10px; color: #2196F3; font-weight: 600; text-transform: uppercase;">${marker.category || ''}</span>
+              <button style="background: #2196F3; color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 10px; font-weight: bold; cursor: pointer;">${t('common.view')}</button>
+            </div>
           </div>
         `
 
@@ -178,7 +178,7 @@ export function GoogleMap({
 
       markersRef.current.push(mapMarker)
     })
-  }, [mapInstance, markers, onMarkerClick])
+  }, [mapInstance, markers, onMarkerClick, t])
 
   if (error && fallback) {
     return <>{fallback}</>
@@ -193,9 +193,7 @@ export function GoogleMap({
         )}
       >
         <MapPinOff className="h-10 w-10 mb-4 opacity-50" />
-        <p className="text-center font-medium">
-          Não foi possível carregar o mapa.
-        </p>
+        <p className="text-center font-medium">{t('map.error')}</p>
         <p className="text-xs text-center mt-2 max-w-xs opacity-70">{error}</p>
       </div>
     )
@@ -207,7 +205,7 @@ export function GoogleMap({
         <div className="absolute inset-0 flex items-center justify-center bg-slate-50 z-10">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <span className="ml-2 text-sm text-slate-500">
-            Carregando mapa...
+            {t('map.loading')}
           </span>
         </div>
       )}

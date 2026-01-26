@@ -18,10 +18,11 @@ import { Filter, Map as MapIcon, List } from 'lucide-react'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
-import { Coupon } from '@/lib/types'
+import { useLanguage } from '@/stores/LanguageContext'
 
 export default function Explore() {
   const { coupons } = useCouponStore()
+  const { t } = useLanguage()
   const [viewMode, setViewMode] = useState<'map' | 'list'>('list')
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [maxDistance, setMaxDistance] = useState([10]) // km
@@ -40,18 +41,18 @@ export default function Explore() {
         <Sheet>
           <SheetTrigger asChild>
             <Button variant="outline" size="sm" className="gap-2">
-              <Filter className="h-4 w-4" /> Filtros
+              <Filter className="h-4 w-4" /> {t('explore.filters')}
             </Button>
           </SheetTrigger>
           <SheetContent side="left">
             <SheetHeader>
-              <SheetTitle>Filtrar Ofertas</SheetTitle>
-              <SheetDescription>Encontre o que você precisa</SheetDescription>
+              <SheetTitle>{t('explore.filter_title')}</SheetTitle>
+              <SheetDescription>{t('explore.filter_desc')}</SheetDescription>
             </SheetHeader>
             <div className="py-6 space-y-6">
               <div className="space-y-3">
                 <h3 className="font-medium text-sm">
-                  Distância Máxima: {maxDistance}km
+                  {t('explore.max_distance')}: {maxDistance}km
                 </h3>
                 <Slider
                   defaultValue={[10]}
@@ -67,7 +68,9 @@ export default function Explore() {
               </div>
 
               <div className="space-y-3">
-                <h3 className="font-medium text-sm">Categorias</h3>
+                <h3 className="font-medium text-sm">
+                  {t('explore.categories')}
+                </h3>
                 {[
                   'Alimentação',
                   'Moda',
@@ -95,7 +98,7 @@ export default function Explore() {
             </div>
             <SheetFooter>
               <SheetClose asChild>
-                <Button className="w-full">Aplicar Filtros</Button>
+                <Button className="w-full">{t('explore.apply_filters')}</Button>
               </SheetClose>
             </SheetFooter>
           </SheetContent>
@@ -127,7 +130,7 @@ export default function Explore() {
         >
           <div className="p-4 border-b bg-muted/10">
             <p className="text-sm text-muted-foreground font-medium">
-              {filteredCoupons.length} ofertas encontradas
+              {filteredCoupons.length} {t('travel.offers_found')}
             </p>
           </div>
           <ScrollArea className="flex-1">
@@ -142,7 +145,7 @@ export default function Explore() {
               ))}
               {filteredCoupons.length === 0 && (
                 <div className="text-center py-10 text-muted-foreground">
-                  Nenhuma oferta encontrada com esses filtros.
+                  {t('travel.no_offers')}
                 </div>
               )}
             </div>
@@ -158,7 +161,7 @@ export default function Explore() {
               : 'translate-x-0',
           )}
         >
-          {/* Simulated Map */}
+          {/* Simulated Map - In a real app we'd use GoogleMap here too */}
           <div className="w-full h-full relative overflow-hidden">
             <img
               src="https://img.usecurling.com/p/1200/800?q=map%20street%20view&color=gray"
@@ -177,7 +180,6 @@ export default function Explore() {
                 }}
               >
                 <div className="bg-primary text-white p-2 rounded-full shadow-lg hover:scale-110 transition-transform">
-                  {/* Simplified category icon */}
                   <div className="h-3 w-3 rounded-full bg-white" />
                 </div>
                 {/* Tooltip on hover */}
@@ -208,11 +210,11 @@ export default function Explore() {
         >
           {viewMode === 'list' ? (
             <>
-              <MapIcon className="h-5 w-5" /> Ver Mapa
+              <MapIcon className="h-5 w-5" /> {t('explore.view_map')}
             </>
           ) : (
             <>
-              <List className="h-5 w-5" /> Ver Lista
+              <List className="h-5 w-5" /> {t('explore.view_list')}
             </>
           )}
         </Button>

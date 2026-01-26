@@ -60,7 +60,7 @@ export default function Index() {
 
   return (
     <div className="pb-20 md:pb-8 bg-slate-50 min-h-screen">
-      {/* Search Header - Rakuten Style Clean */}
+      {/* Search Header */}
       <section className="bg-white border-b sticky top-16 z-30 shadow-sm md:static">
         <div className="container mx-auto px-4 py-4">
           <div className="relative max-w-2xl mx-auto">
@@ -75,16 +75,18 @@ export default function Index() {
               size="sm"
               className="absolute right-1.5 top-1.5 h-9 rounded-full bg-primary hover:bg-primary/90 text-white font-bold px-4"
             >
-              Buscar
+              {t('common.search')}
             </Button>
           </div>
           <div className="mt-3 flex items-center justify-center text-xs text-slate-500 gap-2">
             {isLoadingLocation ? (
-              <span className="animate-pulse">Detectando localização...</span>
+              <span className="animate-pulse">
+                {t('home.detecting_location')}
+              </span>
             ) : (
               <>
                 <MapPin className="h-3 w-3" />
-                <span>Localização atual: São Paulo, SP</span>
+                <span>{t('home.current_location')} São Paulo, SP</span>
               </>
             )}
           </div>
@@ -141,13 +143,13 @@ export default function Index() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold flex items-center gap-2 text-slate-800">
                 <ShoppingBag className="h-5 w-5 text-primary" />
-                Ofertas em Destaque
+                {t('home.featured_deals')}
               </h2>
               <Link
                 to="/explore"
                 className="text-sm font-medium text-primary hover:underline flex items-center"
               >
-                Ver tudo <ArrowRight className="h-4 w-4 ml-1" />
+                {t('common.view_all')} <ArrowRight className="h-4 w-4 ml-1" />
               </Link>
             </div>
 
@@ -176,18 +178,17 @@ export default function Index() {
           <div className="relative z-10 md:flex items-center justify-between">
             <div className="mb-6 md:mb-0 md:w-1/2">
               <Badge className="bg-secondary text-white border-none mb-3">
-                Planejador de Viagem
+                {t('travel.title')}
               </Badge>
               <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">
-                Vai viajar? Economize no caminho.
+                {t('home.travel_card_title')}
               </h2>
               <p className="text-slate-600 mb-6 max-w-md">
-                Trace sua rota e descubra paradas estratégicas com descontos
-                exclusivos em postos, restaurantes e hotéis.
+                {t('home.travel_card_desc')}
               </p>
               <Link to="/travel-planner">
                 <Button className="bg-secondary hover:bg-secondary/90 text-white font-bold rounded-full px-6">
-                  Planejar Rota Agora
+                  {t('home.plan_route')}
                 </Button>
               </Link>
             </div>
@@ -206,7 +207,7 @@ export default function Index() {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold flex items-center gap-2 text-slate-800">
               <TrendingUp className="h-5 w-5 text-accent" />
-              Achados da Web (Tracked)
+              {t('home.tracked_deals')}
             </h2>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
@@ -228,8 +229,8 @@ export default function Index() {
             <h2 className="text-xl font-bold flex items-center gap-2 text-slate-800">
               <Zap className="h-5 w-5 text-yellow-500" />
               {selectedCategory === 'all'
-                ? 'Todas as Ofertas'
-                : `Ofertas de ${selectedCategory}`}
+                ? t('home.all_offers')
+                : `${t('home.offers_of')} ${selectedCategory}`}
             </h2>
           </div>
           {filteredCoupons.length > 0 ? (
@@ -240,13 +241,13 @@ export default function Index() {
             </div>
           ) : (
             <div className="text-center py-12 text-muted-foreground bg-white rounded-lg border border-dashed">
-              Nenhuma oferta encontrada para esta categoria no momento.
+              {t('home.no_offers')}
               <Button
                 variant="link"
                 className="text-primary"
                 onClick={() => setSelectedCategory('all')}
               >
-                Ver todas as ofertas
+                {t('common.view_all')}
               </Button>
             </div>
           )}
@@ -257,7 +258,7 @@ export default function Index() {
                 size="lg"
                 className="rounded-full px-8 border-primary text-primary hover:bg-primary/5"
               >
-                Carregar Mais
+                {t('common.load_more')}
               </Button>
             </div>
           )}

@@ -113,7 +113,7 @@ export function DesktopHeader() {
                     : 'text-muted-foreground hover:text-foreground flex items-center gap-1'
                 }
               >
-                <ShieldCheck className="h-4 w-4" /> Admin
+                <ShieldCheck className="h-4 w-4" /> {t('nav.admin')}
               </Link>
             )}
           </div>
@@ -157,7 +157,7 @@ export function DesktopHeader() {
               size="sm"
               className="hidden lg:flex gap-2 text-xs"
             >
-              <Briefcase className="h-3 w-3" /> Area B2B
+              <Briefcase className="h-3 w-3" /> {t('nav.vendor')}
             </Button>
           </Link>
 
@@ -182,7 +182,7 @@ export function DesktopHeader() {
             <SheetContent side="right">
               <SheetHeader>
                 <SheetTitle>Menu Deal Voy</SheetTitle>
-                <SheetDescription>Navegue pelo aplicativo</SheetDescription>
+                <SheetDescription>Deal Voy App</SheetDescription>
               </SheetHeader>
               <div className="flex flex-col gap-4 mt-6">
                 <SheetClose asChild>
@@ -239,7 +239,7 @@ export function DesktopHeader() {
                       to="/admin"
                       className="text-lg font-medium flex items-center gap-2 hover:text-primary transition-colors"
                     >
-                      <ShieldCheck className="h-4 w-4" /> Admin Dashboard
+                      <ShieldCheck className="h-4 w-4" /> {t('nav.admin')}
                     </Link>
                   </SheetClose>
                 )}

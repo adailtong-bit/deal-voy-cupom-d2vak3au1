@@ -13,7 +13,6 @@ import {
   Map as MapIcon,
   TentTree,
   Plane,
-  Check,
   Share2,
   CalendarDays,
   AlertCircle,
@@ -43,7 +42,7 @@ export default function TravelPlanner() {
   const [navMode, setNavMode] = useState<'gps' | 'planned'>('gps')
   const [destination, setDestination] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
-  const [viewType, setViewType] = useState<'list' | 'map'>('list')
+  const [viewType, setViewType] = useState<'list' | 'map'>('map')
   const [activeTab, setActiveTab] = useState<'explore' | 'itinerary'>('explore')
   const [showEvents, setShowEvents] = useState(true)
   const [mapCenter, setMapCenter] = useState<{
@@ -60,7 +59,6 @@ export default function TravelPlanner() {
   }, [navMode, mapCenter, userLocation])
 
   // Mocking "Dynamic Offer Loading" based on destination
-  // If destination includes "Orlando", we show specific coupons
   const destinationCoupons = useMemo(() => {
     if (!destination) return []
     if (destination.toLowerCase().includes('orlando')) {
@@ -79,16 +77,13 @@ export default function TravelPlanner() {
       setDestination(searchQuery)
       setActiveTab('explore')
 
-      // Simple mock geocoding
       const key = Object.keys(DESTINATIONS).find((k) =>
         searchQuery.toLowerCase().includes(k),
       )
       if (key) {
         setMapCenter(DESTINATIONS[key])
       } else {
-        // If unknown, just keep current but show toast (in real app, use Geocoding API)
-        toast.info(`Localizando ofertas em ${searchQuery}...`)
-        // Fallback to random nearby shift for demo
+        toast.info(`${t('home.detecting_location')} ${searchQuery}...`)
         setMapCenter({
           lat: -23.55052 + Math.random() * 0.1,
           lng: -46.633308 + Math.random() * 0.1,
@@ -111,17 +106,17 @@ export default function TravelPlanner() {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'Meu Roteiro Deal Voy',
+          title: t('travel.itinerary_title'),
           text: shareText,
           url: shareUrl,
         })
-        toast.success('Compartilhado com sucesso!')
+        toast.success(t('common.share'))
       } catch (err) {
         console.error('Share failed:', err)
       }
     } else {
       navigator.clipboard.writeText(`${shareText} ${shareUrl}`)
-      toast.success('Link copiado para a área de transferência!')
+      toast.success(t('common.share'))
     }
   }
 
@@ -153,7 +148,7 @@ export default function TravelPlanner() {
             title: event.title,
             category: 'Evento',
             color: 'blue',
-            data: event,
+            data: { ...event, image: event.image },
           })
         }
       })
@@ -162,7 +157,7 @@ export default function TravelPlanner() {
     return markers
   }, [displayedCoupons, showEvents, tripIds])
 
-  // Fallback content in case map fails (Static Image)
+  // Fallback content in case map fails
   const FallbackMap = (
     <div className="w-full h-full relative bg-slate-100">
       <img
@@ -172,7 +167,7 @@ export default function TravelPlanner() {
       />
       <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-2 rounded shadow-sm text-xs z-10 flex items-center gap-2">
         <AlertCircle className="h-4 w-4" />
-        <span>Modo de visualização estática (Chave de API ausente)</span>
+        <span>{t('map.error')}</span>
       </div>
       {/* Simulate markers on static image */}
       {displayedCoupons.slice(0, 5).map((coupon, idx) => (
@@ -198,7 +193,7 @@ export default function TravelPlanner() {
   )
 
   return (
-    <div className="flex flex-col h-[calc(100vh-64px-64px)] md:h-[calc(100vh-64px)] overflow-hidden bg-slate-50">
+    <div className="flex flex-col h-full bg-slate-50">
       {/* Header & Controls Area */}
       <div className="bg-white border-b z-20 shadow-sm flex-shrink-0">
         <div className="container mx-auto px-4 py-4 space-y-4">
@@ -208,7 +203,7 @@ export default function TravelPlanner() {
                 <Plane className="h-6 w-6" /> {t('travel.title')}
               </h1>
               <p className="text-sm text-muted-foreground hidden md:block">
-                Planeje sua economia, não importa onde você esteja.
+                {t('travel.subtitle')}
               </p>
             </div>
 
@@ -223,7 +218,7 @@ export default function TravelPlanner() {
                     : 'text-muted-foreground hover:text-foreground',
                 )}
               >
-                <Navigation className="h-4 w-4" /> GPS Atual
+                <Navigation className="h-4 w-4" /> {t('travel.gps')}
               </button>
               <button
                 onClick={() => setNavMode('planned')}
@@ -234,7 +229,7 @@ export default function TravelPlanner() {
                     : 'text-muted-foreground hover:text-foreground',
                 )}
               >
-                <Globe className="h-4 w-4" /> Planejar Destino
+                <Globe className="h-4 w-4" /> {t('travel.plan_destination')}
               </button>
             </div>
           </div>
@@ -254,7 +249,7 @@ export default function TravelPlanner() {
             >
               <MapPin className="absolute left-4 top-3.5 h-5 w-5 text-[#FF5722]" />
               <Input
-                placeholder="Para onde você vai? (Ex: Orlando, FL)"
+                placeholder={t('travel.search_placeholder')}
                 className={cn(
                   'pl-12 h-12 rounded-full text-base border-2 focus-visible:ring-offset-0',
                   navMode === 'planned'
@@ -268,7 +263,7 @@ export default function TravelPlanner() {
                 type="submit"
                 className="absolute right-1.5 top-1.5 h-9 rounded-full bg-[#FF5722] hover:bg-[#F4511E] text-white font-bold px-6"
               >
-                Buscar
+                {t('common.search')}
               </Button>
             </form>
             {navMode === 'planned' && destination && (
@@ -277,7 +272,7 @@ export default function TravelPlanner() {
                   variant="outline"
                   className="gap-2 bg-blue-50 text-[#2196F3] border-blue-200 px-3 py-1"
                 >
-                  Exibindo ofertas para:{' '}
+                  {t('travel.showing_offers_for')}{' '}
                   <span className="font-bold">{destination}</span>
                   <button
                     onClick={clearDestination}
@@ -305,15 +300,14 @@ export default function TravelPlanner() {
                 value="explore"
                 className="px-6 gap-2 data-[state=active]:bg-white data-[state=active]:text-[#2196F3]"
               >
-                <TentTree className="h-4 w-4" /> Explorar{' '}
-                {navMode === 'planned' ? 'Destino' : 'Local'}
+                <TentTree className="h-4 w-4" /> {t('travel.explore_offers')}
               </TabsTrigger>
               <TabsTrigger
                 value="itinerary"
                 className="px-6 gap-2 data-[state=active]:bg-white data-[state=active]:text-[#4CAF50]"
               >
-                <LayoutList className="h-4 w-4" /> Meu Roteiro ({tripIds.length}
-                )
+                <LayoutList className="h-4 w-4" /> {t('travel.my_itinerary')} (
+                {tripIds.length})
               </TabsTrigger>
             </TabsList>
           </div>
@@ -324,7 +318,7 @@ export default function TravelPlanner() {
           >
             <div className="flex items-center justify-between px-4 py-2 md:hidden bg-white border-b">
               <span className="text-xs text-muted-foreground">
-                {displayedCoupons.length} ofertas encontradas
+                {displayedCoupons.length} {t('travel.offers_found')}
               </span>
               <div className="flex gap-1">
                 <Button
@@ -351,7 +345,9 @@ export default function TravelPlanner() {
               <div
                 className={cn(
                   'w-full md:w-[400px] lg:w-[450px] bg-white flex flex-col absolute md:relative inset-0 z-10 transition-transform duration-300 md:translate-x-0 md:border-r shadow-lg md:shadow-none',
-                  viewType === 'map' ? 'translate-x-[-100%]' : 'translate-x-0',
+                  viewType === 'map'
+                    ? 'translate-x-[-100%] md:translate-x-0'
+                    : 'translate-x-0',
                 )}
               >
                 <div className="p-2 border-b flex items-center justify-between bg-slate-50">
@@ -364,7 +360,7 @@ export default function TravelPlanner() {
                     className="text-xs h-7"
                     onClick={() => setShowEvents(!showEvents)}
                   >
-                    {showEvents ? 'Ocultar' : 'Mostrar'}
+                    {showEvents ? t('common.hide') : t('common.show')}
                   </Button>
                 </div>
                 <ScrollArea className="flex-1">
@@ -409,10 +405,10 @@ export default function TravelPlanner() {
                       ))
                     ) : (
                       <div className="text-center py-12 text-muted-foreground">
-                        <p>Nenhuma oferta encontrada nesta região.</p>
+                        <p>{t('travel.no_offers')}</p>
                         {navMode === 'planned' && (
                           <Button variant="link" onClick={clearDestination}>
-                            Voltar ao GPS atual
+                            {t('travel.back_to_gps')}
                           </Button>
                         )}
                       </div>
@@ -424,7 +420,7 @@ export default function TravelPlanner() {
               {/* Map View - Interactive Google Map */}
               <div
                 className={cn(
-                  'flex-1 bg-slate-100 relative absolute md:relative inset-0 transition-transform duration-300 md:translate-x-0',
+                  'flex-1 bg-slate-100 relative transition-transform duration-300 md:translate-x-0',
                   viewType === 'list'
                     ? 'translate-x-[100%] md:translate-x-0'
                     : 'translate-x-0',
@@ -451,11 +447,11 @@ export default function TravelPlanner() {
                   <div className="p-6 bg-[#4CAF50]/10 border-b border-[#4CAF50]/20 flex justify-between items-center">
                     <div>
                       <h2 className="text-xl font-bold flex items-center gap-2 text-[#2e7d32]">
-                        <LayoutList className="h-6 w-6" /> Meu Roteiro de
-                        Economia
+                        <LayoutList className="h-6 w-6" />{' '}
+                        {t('travel.itinerary_title')}
                       </h2>
                       <p className="text-sm text-muted-foreground mt-1">
-                        {tripCoupons.length} cupons salvos para sua viagem.
+                        {tripCoupons.length} {t('travel.saved_coupons')}
                       </p>
                     </div>
                     {tripCoupons.length > 0 && (
@@ -463,7 +459,7 @@ export default function TravelPlanner() {
                         onClick={handleShare}
                         className="bg-[#4CAF50] hover:bg-[#43A047] gap-2"
                       >
-                        <Share2 className="h-4 w-4" /> Compartilhar
+                        <Share2 className="h-4 w-4" /> {t('common.share')}
                       </Button>
                     )}
                   </div>
@@ -478,17 +474,16 @@ export default function TravelPlanner() {
                         <div className="col-span-full flex flex-col items-center justify-center py-20 text-center opacity-70">
                           <TentTree className="h-16 w-16 text-slate-300 mb-4" />
                           <h3 className="text-lg font-semibold mb-2">
-                            Seu roteiro está vazio
+                            {t('travel.empty_itinerary')}
                           </h3>
                           <p className="text-sm text-muted-foreground max-w-xs mb-6">
-                            Explore ofertas e clique em "Add Trip" para
-                            organizar sua viagem.
+                            {t('travel.empty_desc')}
                           </p>
                           <Button
                             onClick={() => setActiveTab('explore')}
                             className="bg-[#FF5722] hover:bg-[#F4511E]"
                           >
-                            Explorar Ofertas
+                            {t('travel.explore_offers')}
                           </Button>
                         </div>
                       )}
