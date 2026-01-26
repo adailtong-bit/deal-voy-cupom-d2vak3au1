@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Home, Map as MapIcon, User, Trophy, Briefcase } from 'lucide-react'
+import { Home, Map as MapIcon, User, Trophy } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useLanguage } from '@/stores/LanguageContext'
 
@@ -11,8 +11,7 @@ export function MobileNav() {
   const navItems = [
     { icon: Home, label: t('nav.home'), href: '/' },
     { icon: MapIcon, label: t('nav.explore'), href: '/explore' },
-    // Removed "Upload" from here as well, kept navigation clean
-    { icon: Trophy, label: 'Desafios', href: '/challenges' },
+    { icon: Trophy, label: t('nav.challenges'), href: '/challenges' },
     { icon: User, label: t('nav.profile'), href: '/profile' },
   ]
 

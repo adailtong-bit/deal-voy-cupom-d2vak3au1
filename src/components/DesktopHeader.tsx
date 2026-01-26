@@ -21,6 +21,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
+  SheetClose,
 } from '@/components/ui/sheet'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useLanguage } from '@/stores/LanguageContext'
@@ -81,7 +82,7 @@ export function DesktopHeader() {
                   : 'text-muted-foreground hover:text-foreground'
               }
             >
-              Desafios
+              {t('nav.challenges')}
             </Link>
             <Link
               to="/travel-planner"
@@ -184,49 +185,63 @@ export function DesktopHeader() {
                 <SheetDescription>Navegue pelo aplicativo</SheetDescription>
               </SheetHeader>
               <div className="flex flex-col gap-4 mt-6">
-                <Link
-                  to="/"
-                  className="text-lg font-medium flex items-center gap-2 hover:text-primary transition-colors"
-                >
-                  <ShoppingBag className="h-4 w-4" /> {t('nav.home')}
-                </Link>
-                <Link
-                  to="/explore"
-                  className="text-lg font-medium flex items-center gap-2 hover:text-primary transition-colors"
-                >
-                  <MapPin className="h-4 w-4" /> {t('nav.explore')}
-                </Link>
-                <Link
-                  to="/challenges"
-                  className="text-lg font-medium flex items-center gap-2 hover:text-primary transition-colors"
-                >
-                  <Trophy className="h-4 w-4" /> Desafios
-                </Link>
-                <Link
-                  to="/travel-planner"
-                  className="text-lg font-medium flex items-center gap-2 hover:text-primary transition-colors"
-                >
-                  <Map className="h-4 w-4" /> {t('nav.travel')}
-                </Link>
-                <Link
-                  to="/seasonal"
-                  className="text-lg font-medium flex items-center gap-2 hover:text-primary transition-colors"
-                >
-                  <Calendar className="h-4 w-4" /> {t('nav.seasonal')}
-                </Link>
-                <Link
-                  to="/vendor"
-                  className="text-lg font-medium flex items-center gap-2 hover:text-primary transition-colors"
-                >
-                  <Briefcase className="h-4 w-4" /> {t('nav.vendor')}
-                </Link>
-                {user?.role === 'admin' && (
+                <SheetClose asChild>
                   <Link
-                    to="/admin"
+                    to="/"
                     className="text-lg font-medium flex items-center gap-2 hover:text-primary transition-colors"
                   >
-                    <ShieldCheck className="h-4 w-4" /> Admin Dashboard
+                    <ShoppingBag className="h-4 w-4" /> {t('nav.home')}
                   </Link>
+                </SheetClose>
+                <SheetClose asChild>
+                  <Link
+                    to="/explore"
+                    className="text-lg font-medium flex items-center gap-2 hover:text-primary transition-colors"
+                  >
+                    <MapPin className="h-4 w-4" /> {t('nav.explore')}
+                  </Link>
+                </SheetClose>
+                <SheetClose asChild>
+                  <Link
+                    to="/challenges"
+                    className="text-lg font-medium flex items-center gap-2 hover:text-primary transition-colors"
+                  >
+                    <Trophy className="h-4 w-4" /> {t('nav.challenges')}
+                  </Link>
+                </SheetClose>
+                <SheetClose asChild>
+                  <Link
+                    to="/travel-planner"
+                    className="text-lg font-medium flex items-center gap-2 hover:text-primary transition-colors"
+                  >
+                    <Map className="h-4 w-4" /> {t('nav.travel')}
+                  </Link>
+                </SheetClose>
+                <SheetClose asChild>
+                  <Link
+                    to="/seasonal"
+                    className="text-lg font-medium flex items-center gap-2 hover:text-primary transition-colors"
+                  >
+                    <Calendar className="h-4 w-4" /> {t('nav.seasonal')}
+                  </Link>
+                </SheetClose>
+                <SheetClose asChild>
+                  <Link
+                    to="/vendor"
+                    className="text-lg font-medium flex items-center gap-2 hover:text-primary transition-colors"
+                  >
+                    <Briefcase className="h-4 w-4" /> {t('nav.vendor')}
+                  </Link>
+                </SheetClose>
+                {user?.role === 'admin' && (
+                  <SheetClose asChild>
+                    <Link
+                      to="/admin"
+                      className="text-lg font-medium flex items-center gap-2 hover:text-primary transition-colors"
+                    >
+                      <ShieldCheck className="h-4 w-4" /> Admin Dashboard
+                    </Link>
+                  </SheetClose>
                 )}
               </div>
             </SheetContent>

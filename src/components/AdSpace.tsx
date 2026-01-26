@@ -1,6 +1,7 @@
 import { useCouponStore } from '@/stores/CouponContext'
 import { cn } from '@/lib/utils'
 import { ExternalLink } from 'lucide-react'
+import { useLanguage } from '@/stores/LanguageContext'
 
 interface AdSpaceProps {
   position?: 'top' | 'bottom'
@@ -9,6 +10,7 @@ interface AdSpaceProps {
 
 export function AdSpace({ position, className }: AdSpaceProps) {
   const { ads } = useCouponStore()
+  const { t } = useLanguage()
 
   // In a real app, this would filter based on current page/route context and user data
   // For now, we randomize or pick based on position if available in mock data
@@ -26,7 +28,7 @@ export function AdSpace({ position, className }: AdSpaceProps) {
       <div className="container mx-auto px-4">
         <div className="relative group overflow-hidden rounded-lg border border-slate-200 shadow-sm bg-white">
           <div className="absolute top-0 right-0 bg-slate-200 text-slate-500 text-[10px] px-2 py-0.5 z-10 font-medium">
-            Patrocinado
+            {t('ad.sponsored')}
           </div>
           <a
             href={ad.link || '#'}

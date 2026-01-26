@@ -3,15 +3,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Trophy, Medal, Target } from 'lucide-react'
 import * as Icons from 'lucide-react'
+import { useLanguage } from '@/stores/LanguageContext'
 
 export function GamificationSection() {
   const { challenges, badges, points } = useCouponStore()
+  const { t } = useLanguage()
 
   // Helper to dynamically get icon component
   const getIcon = (iconName: string) => {
     // @ts-expect-error - Icons are dynamic
     const Icon = Icons[iconName] || Target
-    return <Icon className="h-5 w-5 text-primary" />
+    return <Icon className="h-5 w-5 text-[#FF5722]" />
   }
 
   return (
@@ -19,7 +21,7 @@ export function GamificationSection() {
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold flex items-center gap-2">
           <Trophy className="h-6 w-6 text-yellow-500" />
-          Desafios & Conquistas
+          {t('challenges.title')}
         </h2>
         <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full font-bold text-sm">
           {points} pts
@@ -28,14 +30,14 @@ export function GamificationSection() {
 
       <div className="space-y-4">
         <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wider">
-          Desafios Ativos
+          {t('challenges.active')}
         </h3>
         {challenges.map((challenge) => (
           <Card key={challenge.id} className="overflow-hidden">
             <CardContent className="p-4">
               <div className="flex justify-between items-start mb-2">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-primary/10 rounded-lg">
+                  <div className="p-2 bg-[#FF5722]/10 rounded-lg">
                     {getIcon(challenge.icon)}
                   </div>
                   <div>
@@ -46,18 +48,18 @@ export function GamificationSection() {
                   </div>
                 </div>
                 {challenge.completed ? (
-                  <span className="text-xs font-bold text-green-600 bg-green-100 px-2 py-1 rounded">
-                    Completo
+                  <span className="text-xs font-bold text-[#4CAF50] bg-[#4CAF50]/10 px-2 py-1 rounded">
+                    {t('challenges.completed')}
                   </span>
                 ) : (
-                  <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-1 rounded">
+                  <span className="text-xs font-bold text-[#FF5722] bg-[#FF5722]/10 px-2 py-1 rounded">
                     {challenge.reward}
                   </span>
                 )}
               </div>
               <div className="space-y-1">
                 <div className="flex justify-between text-xs font-medium">
-                  <span>Progresso</span>
+                  <span>{t('challenges.progress')}</span>
                   <span>
                     {challenge.current} / {challenge.total}
                   </span>

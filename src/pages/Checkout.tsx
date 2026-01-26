@@ -24,6 +24,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useState } from 'react'
+import { useLanguage } from '@/stores/LanguageContext'
 
 export default function Checkout() {
   const location = useLocation()
@@ -32,6 +33,7 @@ export default function Checkout() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'fetch'>('card')
+  const { t } = useLanguage()
   const {
     register,
     handleSubmit,
@@ -68,7 +70,7 @@ export default function Checkout() {
     try {
       await processPayment({ couponId: coupon.id, amount: coupon.price || 0 })
       setIsSuccess(true)
-      toast.success('Pagamento aprovado!', {
+      toast.success(t('checkout.success'), {
         description: 'Recibo enviado para seu email.',
       })
       // Navigate after small delay to show success state
@@ -84,15 +86,13 @@ export default function Checkout() {
   if (isSuccess) {
     return (
       <div className="container mx-auto px-4 py-20 flex flex-col items-center justify-center min-h-[60vh] text-center animate-in zoom-in">
-        <div className="h-24 w-24 bg-green-100 rounded-full flex items-center justify-center mb-6">
-          <CheckCircle className="h-12 w-12 text-green-600" />
+        <div className="h-24 w-24 bg-[#4CAF50]/20 rounded-full flex items-center justify-center mb-6">
+          <CheckCircle className="h-12 w-12 text-[#4CAF50]" />
         </div>
         <h1 className="text-3xl font-bold mb-2 text-green-800">
-          Pagamento Confirmado!
+          {t('checkout.success')}
         </h1>
-        <p className="text-muted-foreground mb-8">
-          Redirecionando para seu cupom...
-        </p>
+        <p className="text-muted-foreground mb-8">{t('checkout.redirect')}</p>
       </div>
     )
   }
@@ -105,18 +105,19 @@ export default function Checkout() {
         onClick={() => navigate(-1)}
         disabled={isProcessing}
       >
-        <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
+        <ArrowLeft className="mr-2 h-4 w-4" /> {t('common.close')}
       </Button>
 
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-foreground">Checkout Seguro</h1>
+        <h1 className="text-3xl font-bold text-foreground">
+          {t('checkout.title')}
+        </h1>
         <p className="text-muted-foreground flex items-center gap-1 text-sm mt-1">
-          <Lock className="h-3 w-3 text-accent" /> Seus dados estão
-          criptografados por Deal Voy
+          <Lock className="h-3 w-3 text-[#4CAF50]" /> {t('checkout.secure')}
         </p>
       </div>
 
-      <Card className="mb-6 border-l-4 border-l-primary shadow-sm">
+      <Card className="mb-6 border-l-4 border-l-[#FF5722] shadow-sm">
         <CardContent className="p-4 flex gap-4">
           <img
             src={coupon.image}
@@ -130,7 +131,7 @@ export default function Checkout() {
               <span className="text-sm text-muted-foreground">
                 Total a pagar:
               </span>
-              <span className="text-xl font-bold text-primary">
+              <span className="text-xl font-bold text-[#FF5722]">
                 R$ {coupon.price?.toFixed(2)}
               </span>
             </div>
@@ -141,7 +142,9 @@ export default function Checkout() {
       <form onSubmit={handleSubmit(onSubmit)}>
         <Card className="mb-6 overflow-hidden">
           <CardHeader className="bg-muted/30 pb-4">
-            <CardTitle className="text-lg">Forma de Pagamento</CardTitle>
+            <CardTitle className="text-lg">
+              {t('checkout.payment_method')}
+            </CardTitle>
           </CardHeader>
           <CardContent className="p-6">
             <RadioGroup
@@ -150,7 +153,7 @@ export default function Checkout() {
               className="space-y-4"
             >
               <div
-                className={`flex items-start space-x-3 border p-4 rounded-lg cursor-pointer transition-colors ${paymentMethod === 'card' ? 'border-primary bg-primary/5' : ''}`}
+                className={`flex items-start space-x-3 border p-4 rounded-lg cursor-pointer transition-colors ${paymentMethod === 'card' ? 'border-[#FF5722] bg-[#FF5722]/5' : ''}`}
               >
                 <RadioGroupItem value="card" id="card" className="mt-1" />
                 <div className="flex-1">
@@ -194,7 +197,7 @@ export default function Checkout() {
               </div>
 
               <div
-                className={`flex items-start space-x-3 border p-4 rounded-lg cursor-pointer transition-colors ${paymentMethod === 'fetch' ? 'border-primary bg-primary/5' : ''}`}
+                className={`flex items-start space-x-3 border p-4 rounded-lg cursor-pointer transition-colors ${paymentMethod === 'fetch' ? 'border-[#FF5722] bg-[#FF5722]/5' : ''}`}
               >
                 <RadioGroupItem
                   value="fetch"
@@ -229,7 +232,7 @@ export default function Checkout() {
           </CardContent>
           <CardFooter className="bg-muted/30 p-6">
             <Button
-              className="w-full h-14 text-lg font-bold shadow-md hover:shadow-lg transition-all"
+              className="w-full h-14 text-lg font-bold shadow-md hover:shadow-lg transition-all bg-[#4CAF50] hover:bg-[#43A047]"
               type="submit"
               disabled={
                 isProcessing ||
@@ -241,7 +244,7 @@ export default function Checkout() {
               ) : paymentMethod === 'fetch' ? (
                 `Usar Saldo (R$ ${coupon.price?.toFixed(2)})`
               ) : (
-                `Pagar R$ ${coupon.price?.toFixed(2)}`
+                `${t('checkout.pay')} R$ ${coupon.price?.toFixed(2)}`
               )}
             </Button>
           </CardFooter>

@@ -3,16 +3,7 @@ import { useLanguage } from '@/stores/LanguageContext'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
-import { Label } from '@/components/ui/label'
-import {
-  Bell,
-  Check,
-  Tag,
-  Info,
-  AlertTriangle,
-  Settings,
-  Zap,
-} from 'lucide-react'
+import { Bell, Tag, Info, AlertTriangle, Settings, Zap } from 'lucide-react'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { cn } from '@/lib/utils'
@@ -32,18 +23,15 @@ export default function Notifications() {
   const getIcon = (type: string) => {
     switch (type) {
       case 'deal':
-        return <Tag className="h-5 w-5 text-green-500" />
+        return <Tag className="h-5 w-5 text-[#4CAF50]" />
       case 'alert':
         return <AlertTriangle className="h-5 w-5 text-orange-500" />
       default:
-        return <Info className="h-5 w-5 text-blue-500" />
+        return <Info className="h-5 w-5 text-[#2196F3]" />
     }
   }
 
   const highPriority = notifications.filter((n) => n.priority === 'high')
-  const others = notifications.filter(
-    (n) => !n.priority || n.priority !== 'high',
-  )
 
   const NotificationList = ({ items }: { items: typeof notifications }) => (
     <div className="space-y-4">
@@ -101,7 +89,7 @@ export default function Notifications() {
               <Link to={notification.link}>
                 <Button
                   variant="link"
-                  className="p-0 h-auto text-xs font-bold text-primary"
+                  className="p-0 h-auto text-xs font-bold text-[#FF5722]"
                 >
                   {t('common.view')}
                 </Button>
@@ -121,7 +109,7 @@ export default function Notifications() {
         </h1>
         {notifications.length > 0 && (
           <Button variant="ghost" size="sm" onClick={clearAll}>
-            Limpar tudo
+            {t('common.close')}
           </Button>
         )}
       </div>

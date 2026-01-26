@@ -41,13 +41,18 @@ export const SEASONAL_EVENTS: SeasonalEvent[] = [
     date: new Date('2024-11-29'),
     description: 'As maiores ofertas do ano em todas as lojas.',
     type: 'sale',
+    coordinates: { lat: -23.55052, lng: -46.633308 },
+    image: 'https://img.usecurling.com/p/600/400?q=black%20friday',
   },
   {
     id: '2',
-    title: 'Natal',
+    title: 'Natal na Paulista',
     date: new Date('2024-12-25'),
-    description: 'Ofertas especiais de presentes e decoração.',
+    description:
+      'Ofertas especiais de presentes e decoração com show de luzes.',
     type: 'holiday',
+    coordinates: { lat: -23.5614, lng: -46.656 },
+    image: 'https://img.usecurling.com/p/600/400?q=christmas%20lights',
   },
   {
     id: '3',
@@ -55,6 +60,17 @@ export const SEASONAL_EVENTS: SeasonalEvent[] = [
     date: new Date('2024-03-15'),
     description: 'Descontos exclusivos para celebrar o consumidor.',
     type: 'sale',
+    coordinates: { lat: -23.5489, lng: -46.6388 },
+    image: 'https://img.usecurling.com/p/600/400?q=shopping%20bag',
+  },
+  {
+    id: '4',
+    title: 'Festival Gastronômico',
+    date: new Date(), // Today for demo
+    description: 'Experimente pratos de chefs renomados com desconto.',
+    type: 'event',
+    coordinates: { lat: -23.555, lng: -46.64 },
+    image: 'https://img.usecurling.com/p/600/400?q=food%20festival',
   },
 ]
 
@@ -452,7 +468,7 @@ export const MOCK_ADS: Advertisement[] = [
     region: 'São Paulo, SP',
     category: 'Alimentação',
     billingType: 'fixed',
-    placement: 'content',
+    placement: 'top',
     status: 'active',
     views: 15000,
     clicks: 3400,
@@ -468,7 +484,7 @@ export const MOCK_ADS: Advertisement[] = [
     region: 'Brasil',
     category: 'Serviços',
     billingType: 'ppc',
-    placement: 'footer',
+    placement: 'bottom',
     status: 'active',
     views: 8000,
     clicks: 500,

@@ -31,9 +31,11 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { useState } from 'react'
+import { useLanguage } from '@/stores/LanguageContext'
 
 export default function Challenges() {
   const { challenges, joinChallenge } = useCouponStore()
+  const { t } = useLanguage()
   const [unlockedChallenge, setUnlockedChallenge] = useState<Challenge | null>(
     null,
   )
@@ -64,13 +66,13 @@ export default function Challenges() {
     type: 'active' | 'available' | 'completed'
   }) => (
     <Card
-      className={`mb-4 overflow-hidden border-l-4 ${type === 'completed' ? 'border-l-accent' : 'border-l-primary'} transition-all hover:shadow-md`}
+      className={`mb-4 overflow-hidden border-l-4 ${type === 'completed' ? 'border-l-[#4CAF50]' : 'border-l-[#FF5722]'} transition-all hover:shadow-md`}
     >
       <CardContent className="p-0">
         <div className="flex flex-col sm:flex-row">
           <div className="bg-muted/10 p-6 flex flex-col items-center justify-center min-w-[120px] gap-2 border-b sm:border-b-0 sm:border-r">
             <div
-              className={`p-3 rounded-full ${type === 'completed' ? 'bg-accent/20 text-accent' : 'bg-primary/10 text-primary'}`}
+              className={`p-3 rounded-full ${type === 'completed' ? 'bg-[#4CAF50]/20 text-[#4CAF50]' : 'bg-[#FF5722]/10 text-[#FF5722]'}`}
             >
               {type === 'completed' ? (
                 <CheckCircle className="h-6 w-6" />
@@ -91,18 +93,22 @@ export default function Challenges() {
                 </p>
               </div>
               {type === 'active' && (
-                <Badge className="bg-secondary">Em Progresso</Badge>
+                <Badge className="bg-[#2196F3]">{t('challenges.active')}</Badge>
               )}
               {type === 'completed' && (
-                <Badge className="bg-accent">Concluído</Badge>
+                <Badge className="bg-[#4CAF50]">
+                  {t('challenges.completed')}
+                </Badge>
               )}
-              {type === 'available' && <Badge variant="outline">Novo</Badge>}
+              {type === 'available' && (
+                <Badge variant="outline">{t('challenges.available')}</Badge>
+              )}
             </div>
 
             {type === 'active' && (
               <div className="mt-4 space-y-2">
                 <div className="flex justify-between text-xs font-medium">
-                  <span>Progresso</span>
+                  <span>{t('challenges.progress')}</span>
                   <span>
                     {Math.round((challenge.current / challenge.total) * 100)}%
                   </span>
@@ -120,17 +126,17 @@ export default function Challenges() {
 
             {type === 'available' && (
               <Button
-                className="w-full mt-4 bg-primary hover:bg-primary/90"
+                className="w-full mt-4 bg-[#FF5722] hover:bg-[#F4511E]"
                 onClick={() => handleJoin(challenge.id)}
               >
-                Aceitar Desafio
+                {t('challenges.accept')}
               </Button>
             )}
 
             {type === 'completed' && (
-              <div className="mt-4 p-2 bg-accent/10 text-accent-foreground text-sm rounded flex items-center gap-2 border border-accent/20">
-                <Trophy className="h-4 w-4 text-accent" /> Recompensa resgatada
-                em {new Date().toLocaleDateString()}
+              <div className="mt-4 p-2 bg-[#4CAF50]/10 text-green-800 text-sm rounded flex items-center gap-2 border border-[#4CAF50]/20">
+                <Trophy className="h-4 w-4 text-[#4CAF50]" /> Recompensa
+                resgatada em {new Date().toLocaleDateString()}
               </div>
             )}
           </div>
@@ -141,29 +147,26 @@ export default function Challenges() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-3xl">
-      <div className="mb-8 flex items-center gap-4 bg-gradient-to-r from-primary/10 to-transparent p-6 rounded-xl">
-        <div className="bg-primary p-4 rounded-full text-white shadow-lg">
+      <div className="mb-8 flex items-center gap-4 bg-gradient-to-r from-[#FF5722]/10 to-transparent p-6 rounded-xl">
+        <div className="bg-[#FF5722] p-4 rounded-full text-white shadow-lg">
           <Trophy className="h-8 w-8" />
         </div>
         <div>
-          <h1 className="text-3xl font-bold">Desafios & Recompensas</h1>
-          <p className="text-muted-foreground">
-            Gamificação Deal Voy: Complete missões, ganhe badges e desbloqueie
-            descontos exclusivos.
-          </p>
+          <h1 className="text-3xl font-bold">{t('challenges.title')}</h1>
+          <p className="text-muted-foreground">{t('challenges.subtitle')}</p>
         </div>
       </div>
 
       <Tabs defaultValue="active" className="w-full">
         <TabsList className="grid w-full grid-cols-3 mb-6">
           <TabsTrigger value="active">
-            Ativos ({activeChallenges.length})
+            {t('challenges.active')} ({activeChallenges.length})
           </TabsTrigger>
           <TabsTrigger value="available">
-            Disponíveis ({availableChallenges.length})
+            {t('challenges.available')} ({availableChallenges.length})
           </TabsTrigger>
           <TabsTrigger value="completed">
-            Concluídos ({completedChallenges.length})
+            {t('challenges.completed')} ({completedChallenges.length})
           </TabsTrigger>
         </TabsList>
 
@@ -174,15 +177,15 @@ export default function Challenges() {
             ))
           ) : (
             <div className="text-center py-12 text-muted-foreground bg-muted/10 rounded-xl border-dashed border-2">
-              <p className="mb-4">Você não tem desafios ativos no momento.</p>
+              <p className="mb-4">{t('challenges.empty')}</p>
               <Button
                 variant="link"
                 onClick={() =>
                   document.getElementById('available-tab')?.click()
                 }
-                className="text-primary"
+                className="text-[#FF5722]"
               >
-                Ver disponíveis
+                {t('challenges.available')}
               </Button>
             </div>
           )}
@@ -214,7 +217,7 @@ export default function Challenges() {
       >
         <DialogContent className="sm:max-w-md text-center">
           <DialogHeader>
-            <DialogTitle className="text-2xl text-center text-primary">
+            <DialogTitle className="text-2xl text-center text-[#FF5722]">
               Badge Desbloqueada!
             </DialogTitle>
             <DialogDescription className="text-center">
@@ -232,7 +235,7 @@ export default function Challenges() {
           <DialogFooter className="sm:justify-center">
             <Button
               onClick={() => setUnlockedChallenge(null)}
-              className="w-full"
+              className="w-full bg-[#4CAF50] hover:bg-[#43A047]"
             >
               Coletar Recompensa
             </Button>

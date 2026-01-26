@@ -15,12 +15,14 @@ import {
   Plane,
   Check,
   Share2,
+  CalendarDays,
 } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
+import { SEASONAL_EVENTS } from '@/lib/data'
 
 export default function TravelPlanner() {
   const { coupons, tripIds } = useCouponStore()
@@ -32,6 +34,7 @@ export default function TravelPlanner() {
   const [searchQuery, setSearchQuery] = useState('')
   const [viewType, setViewType] = useState<'list' | 'map'>('list')
   const [activeTab, setActiveTab] = useState<'explore' | 'itinerary'>('explore')
+  const [showEvents, setShowEvents] = useState(true)
 
   // Mocking "Dynamic Offer Loading" based on destination
   // If destination includes "Orlando", we show specific coupons
@@ -240,8 +243,50 @@ export default function TravelPlanner() {
                   viewType === 'map' ? 'translate-x-[-100%]' : 'translate-x-0',
                 )}
               >
+                <div className="p-2 border-b flex items-center justify-between bg-slate-50">
+                  <h3 className="font-semibold text-sm px-2">
+                    {t('travel.events')}
+                  </h3>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs h-7"
+                    onClick={() => setShowEvents(!showEvents)}
+                  >
+                    {showEvents ? 'Ocultar' : 'Mostrar'}
+                  </Button>
+                </div>
                 <ScrollArea className="flex-1">
                   <div className="p-4 space-y-4">
+                    {showEvents &&
+                      SEASONAL_EVENTS.filter((e) => e.coordinates).map(
+                        (event) => (
+                          <Card
+                            key={`event-${event.id}`}
+                            className="border-l-4 border-l-purple-500 bg-purple-50/30"
+                          >
+                            <CardContent className="p-3">
+                              <div className="flex gap-3">
+                                <div className="h-10 w-10 bg-purple-100 rounded-full flex items-center justify-center shrink-0">
+                                  <CalendarDays className="h-5 w-5 text-purple-600" />
+                                </div>
+                                <div>
+                                  <h4 className="font-bold text-sm">
+                                    {event.title}
+                                  </h4>
+                                  <p className="text-xs text-muted-foreground line-clamp-2">
+                                    {event.description}
+                                  </p>
+                                  <p className="text-xs font-medium text-purple-600 mt-1">
+                                    {event.date.toLocaleDateString()}
+                                  </p>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ),
+                      )}
+
                     {displayedCoupons.length > 0 ? (
                       displayedCoupons.map((coupon) => (
                         <CouponCard
@@ -320,6 +365,28 @@ export default function TravelPlanner() {
                       </div>
                     </div>
                   ))}
+
+                  {/* Event Markers */}
+                  {showEvents &&
+                    SEASONAL_EVENTS.filter((e) => e.coordinates).map(
+                      (event, idx) => (
+                        <div
+                          key={`map-event-${event.id}`}
+                          className="absolute transform -translate-x-1/2 -translate-y-1/2 group cursor-pointer hover:z-50"
+                          style={{
+                            top: `${40 + ((idx * 10) % 40)}%`,
+                            left: `${40 + ((idx * 10) % 40)}%`,
+                          }}
+                        >
+                          <div className="p-2 rounded-full shadow-lg hover:scale-110 transition-transform bg-purple-600 text-white border-2 border-white">
+                            <CalendarDays className="h-4 w-4" />
+                          </div>
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-32 bg-white rounded-lg shadow-xl p-2 hidden group-hover:block z-50 text-xs text-center">
+                            <p className="font-bold">{event.title}</p>
+                          </div>
+                        </div>
+                      ),
+                    )}
 
                   {/* Center/User Pin */}
                   <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">

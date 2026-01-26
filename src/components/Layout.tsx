@@ -8,43 +8,60 @@ import { AdSpace } from './AdSpace'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useNotification } from '@/stores/NotificationContext'
 import { differenceInHours, parseISO } from 'date-fns'
+import { SEASONAL_EVENTS } from '@/lib/data'
+import { useLanguage } from '@/stores/LanguageContext'
 
 export default function Layout() {
   const [isOffline, setIsOffline] = useState(!navigator.onLine)
   const { userLocation, savedIds, coupons } = useCouponStore()
   const { addNotification } = useNotification()
   const location = useLocation()
+  const { t } = useLanguage()
 
   // Track notifications to avoid spam
   const notifiedCoupons = useRef<Set<string>>(new Set())
+
+  // Helper to calculate distance
+  const calculateDistance = (
+    lat1: number,
+    lng1: number,
+    lat2: number,
+    lng2: number,
+  ) => {
+    const R = 6371e3 // metres
+    const φ1 = (lat1 * Math.PI) / 180
+    const φ2 = (lat2 * Math.PI) / 180
+    const Δφ = ((lat2 - lat1) * Math.PI) / 180
+    const Δλ = ((lng2 - lng1) * Math.PI) / 180
+
+    const a =
+      Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+      Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2)
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+    return R * c
+  }
 
   // Geo-Fencing Logic (Smart Notifications)
   useEffect(() => {
     if (!userLocation) return
 
+    // Notify about saved coupons nearby
     const savedCoupons = coupons.filter((c) => savedIds.includes(c.id))
 
     savedCoupons.forEach((coupon) => {
-      // Calculate distance (simple Euclidean for demo, real app uses Haversine)
-      // Lat ~ 111km per deg, Lng ~ 111km * cos(lat)
       if (!coupon.coordinates) return
 
-      const R = 6371e3 // metres
-      const φ1 = (userLocation.lat * Math.PI) / 180
-      const φ2 = (coupon.coordinates.lat * Math.PI) / 180
-      const Δφ = ((coupon.coordinates.lat - userLocation.lat) * Math.PI) / 180
-      const Δλ = ((coupon.coordinates.lng - userLocation.lng) * Math.PI) / 180
-
-      const a =
-        Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-        Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2)
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-      const distance = R * c
+      const distance = calculateDistance(
+        userLocation.lat,
+        userLocation.lng,
+        coupon.coordinates.lat,
+        coupon.coordinates.lng,
+      )
 
       // If close (e.g., 500m) and not notified yet
       if (distance < 500 && !notifiedCoupons.current.has(coupon.id)) {
         addNotification({
-          title: 'Oferta Próxima!',
+          title: t('notification.deal'),
           message: `Você está perto de ${coupon.storeName}. Aproveite ${coupon.discount}!`,
           type: 'deal',
           priority: 'high',
@@ -54,7 +71,33 @@ export default function Layout() {
         notifiedCoupons.current.add(coupon.id)
       }
     })
-  }, [userLocation, savedIds, coupons, addNotification])
+
+    // Notify about local events nearby
+    SEASONAL_EVENTS.forEach((event) => {
+      if (!event.coordinates) return
+
+      const distance = calculateDistance(
+        userLocation.lat,
+        userLocation.lng,
+        event.coordinates.lat,
+        event.coordinates.lng,
+      )
+
+      const eventKey = `event-${event.id}`
+
+      if (distance < 1000 && !notifiedCoupons.current.has(eventKey)) {
+        addNotification({
+          title: t('notification.event'),
+          message: `${event.title} está acontecendo perto de você!`,
+          type: 'event',
+          priority: 'medium',
+          category: 'smart',
+          link: `/seasonal`,
+        })
+        notifiedCoupons.current.add(eventKey)
+      }
+    })
+  }, [userLocation, savedIds, coupons, addNotification, t])
 
   // Expiration Alert Logic
   useEffect(() => {
@@ -74,7 +117,7 @@ export default function Layout() {
         !notifiedCoupons.current.has(expiryKey)
       ) {
         addNotification({
-          title: 'Expira em breve!',
+          title: t('notification.alert'),
           message: `Seu cupom da ${coupon.storeName} vence em menos de 48h.`,
           type: 'alert',
           priority: 'high',
@@ -84,7 +127,7 @@ export default function Layout() {
         notifiedCoupons.current.add(expiryKey)
       }
     })
-  }, [savedIds, coupons, addNotification])
+  }, [savedIds, coupons, addNotification, t])
 
   useEffect(() => {
     const handleOnline = () => setIsOffline(false)

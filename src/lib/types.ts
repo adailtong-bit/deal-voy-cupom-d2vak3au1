@@ -93,13 +93,18 @@ export interface SeasonalEvent {
   date: Date
   description: string
   type: 'sale' | 'holiday' | 'event'
+  coordinates?: {
+    lat: number
+    lng: number
+  }
+  image?: string
 }
 
 export interface Notification {
   id: string
   title: string
   message: string
-  type: 'deal' | 'alert' | 'system'
+  type: 'deal' | 'alert' | 'system' | 'event'
   read: boolean
   date: string
   link?: string
@@ -209,7 +214,14 @@ export interface Advertisement {
   region: string
   category: string
   billingType: AdBillingType
-  placement: 'home_hero' | 'sidebar' | 'feed' | 'footer' | 'content'
+  placement:
+    | 'home_hero'
+    | 'sidebar'
+    | 'feed'
+    | 'footer'
+    | 'content'
+    | 'top'
+    | 'bottom'
   status: 'active' | 'paused' | 'ended'
   budget?: number
   costPerClick?: number
