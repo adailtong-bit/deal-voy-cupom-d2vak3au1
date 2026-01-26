@@ -6,7 +6,6 @@ import { useCouponStore } from '@/stores/CouponContext'
 import { CouponCard } from '@/components/CouponCard'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
-  MapPin,
   Navigation,
   Globe,
   LayoutList,
@@ -16,6 +15,9 @@ import {
   Share2,
   CalendarDays,
   AlertCircle,
+  Download,
+  Check,
+  MapPin,
 } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
 import { Badge } from '@/components/ui/badge'
@@ -25,7 +27,6 @@ import { toast } from 'sonner'
 import { SEASONAL_EVENTS } from '@/lib/data'
 import { GoogleMap, MapMarker } from '@/components/GoogleMap'
 
-// Known destinations for mock geocoding
 const DESTINATIONS: Record<string, { lat: number; lng: number }> = {
   orlando: { lat: 28.5383, lng: -81.3792 },
   'sao paulo': { lat: -23.55052, lng: -46.633308 },
@@ -35,10 +36,10 @@ const DESTINATIONS: Record<string, { lat: number; lng: number }> = {
 }
 
 export default function TravelPlanner() {
-  const { coupons, tripIds, userLocation } = useCouponStore()
+  const { coupons, tripIds, userLocation, downloadOffline, downloadedIds } =
+    useCouponStore()
   const { t } = useLanguage()
 
-  // State for View Mode: GPS (Current) vs Planned (Destination)
   const [navMode, setNavMode] = useState<'gps' | 'planned'>('gps')
   const [destination, setDestination] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
@@ -50,15 +51,13 @@ export default function TravelPlanner() {
     lng: number
   } | null>(null)
 
-  // Determine current map center logic
   const currentCenter = useMemo(() => {
     if (navMode === 'planned' && mapCenter) return mapCenter
     if (navMode === 'gps' && userLocation)
       return { lat: userLocation.lat, lng: userLocation.lng }
-    return { lat: -23.55052, lng: -46.633308 } // Fallback default
+    return { lat: -23.55052, lng: -46.633308 }
   }, [navMode, mapCenter, userLocation])
 
-  // Mocking "Dynamic Offer Loading" based on destination
   const destinationCoupons = useMemo(() => {
     if (!destination) return []
     if (destination.toLowerCase().includes('orlando')) {
@@ -120,7 +119,17 @@ export default function TravelPlanner() {
     }
   }
 
-  // Convert coupons and events to map markers
+  const handleDownloadOffline = () => {
+    if (tripIds.length === 0) return
+    downloadOffline(tripIds)
+    toast.success('Roteiro salvo para uso offline!', {
+      description: 'Você pode acessar seus cupons mesmo sem internet.',
+    })
+  }
+
+  const allTripDownloaded =
+    tripIds.length > 0 && tripIds.every((id) => downloadedIds.includes(id))
+
   const mapMarkers: MapMarker[] = useMemo(() => {
     const markers: MapMarker[] = []
 
@@ -157,35 +166,39 @@ export default function TravelPlanner() {
     return markers
   }, [displayedCoupons, showEvents, tripIds])
 
-  // Fallback content in case map fails
   const FallbackMap = (
-    <div className="w-full h-full relative bg-slate-100">
+    <div className="w-full h-full relative bg-slate-100 group overflow-hidden">
       <img
         src={`https://img.usecurling.com/p/1200/800?q=map ${navMode === 'planned' ? destination : 'city'}&color=blue`}
-        className="w-full h-full object-cover grayscale opacity-50"
+        className="w-full h-full object-cover grayscale opacity-50 transition-opacity duration-700"
         alt="Map"
       />
       <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-2 rounded shadow-sm text-xs z-10 flex items-center gap-2">
         <AlertCircle className="h-4 w-4" />
-        <span>{t('map.error')}</span>
+        <span>Modo Visualização Simplificada (API Key ausente)</span>
       </div>
-      {/* Simulate markers on static image */}
-      {displayedCoupons.slice(0, 5).map((coupon, idx) => (
+      {displayedCoupons.slice(0, 8).map((coupon, idx) => (
         <div
           key={coupon.id}
-          className="absolute transform -translate-x-1/2 -translate-y-1/2"
+          className="absolute transform -translate-x-1/2 -translate-y-1/2 hover:z-50 group/pin"
           style={{
-            top: `${20 + ((idx * 15) % 60)}%`,
-            left: `${20 + ((idx * 20) % 60)}%`,
+            top: `${20 + ((idx * 13) % 60)}%`,
+            left: `${20 + ((idx * 17) % 60)}%`,
           }}
         >
           <div
             className={cn(
-              'p-1.5 rounded-full shadow-lg',
-              tripIds.includes(coupon.id) ? 'bg-green-500' : 'bg-orange-500',
+              'p-2 rounded-full shadow-lg transition-transform hover:scale-110 cursor-pointer',
+              tripIds.includes(coupon.id)
+                ? 'bg-[#4CAF50] text-white'
+                : 'bg-[#FF5722] text-white',
             )}
           >
-            <div className="h-2 w-2 bg-white rounded-full" />
+            <MapPin className="h-4 w-4" />
+          </div>
+          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-32 bg-white rounded-lg shadow-xl p-2 hidden group-hover/pin:block text-xs z-50">
+            <p className="font-bold truncate">{coupon.storeName}</p>
+            <p className="text-[#FF5722] font-bold">{coupon.discount}</p>
           </div>
         </div>
       ))}
@@ -194,7 +207,6 @@ export default function TravelPlanner() {
 
   return (
     <div className="flex flex-col h-full bg-slate-50">
-      {/* Header & Controls Area */}
       <div className="bg-white border-b z-20 shadow-sm flex-shrink-0">
         <div className="container mx-auto px-4 py-4 space-y-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -207,7 +219,6 @@ export default function TravelPlanner() {
               </p>
             </div>
 
-            {/* Dual-Mode Toggle */}
             <div className="bg-slate-100 p-1 rounded-lg inline-flex">
               <button
                 onClick={clearDestination}
@@ -234,7 +245,6 @@ export default function TravelPlanner() {
             </div>
           </div>
 
-          {/* Destination Search Bar */}
           <div
             className={cn(
               'relative transition-all duration-300',
@@ -287,7 +297,6 @@ export default function TravelPlanner() {
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="flex-1 overflow-hidden relative container mx-auto px-0 md:px-4 py-0 md:py-4">
         <Tabs
           value={activeTab}
@@ -341,7 +350,6 @@ export default function TravelPlanner() {
             </div>
 
             <div className="flex-1 relative flex overflow-hidden md:rounded-xl md:border md:shadow-sm md:bg-white">
-              {/* List View */}
               <div
                 className={cn(
                   'w-full md:w-[400px] lg:w-[450px] bg-white flex flex-col absolute md:relative inset-0 z-10 transition-transform duration-300 md:translate-x-0 md:border-r shadow-lg md:shadow-none',
@@ -417,7 +425,6 @@ export default function TravelPlanner() {
                 </ScrollArea>
               </div>
 
-              {/* Map View - Interactive Google Map */}
               <div
                 className={cn(
                   'flex-1 bg-slate-100 relative transition-transform duration-300 md:translate-x-0',
@@ -454,14 +461,34 @@ export default function TravelPlanner() {
                         {tripCoupons.length} {t('travel.saved_coupons')}
                       </p>
                     </div>
-                    {tripCoupons.length > 0 && (
-                      <Button
-                        onClick={handleShare}
-                        className="bg-[#4CAF50] hover:bg-[#43A047] gap-2"
-                      >
-                        <Share2 className="h-4 w-4" /> {t('common.share')}
-                      </Button>
-                    )}
+                    <div className="flex gap-2">
+                      {tripCoupons.length > 0 && (
+                        <>
+                          <Button
+                            variant="outline"
+                            onClick={handleDownloadOffline}
+                            disabled={allTripDownloaded}
+                            className="bg-white border-[#4CAF50]/30 text-[#2e7d32] hover:bg-[#4CAF50]/10 gap-2"
+                          >
+                            {allTripDownloaded ? (
+                              <>
+                                <Check className="h-4 w-4" /> Offline OK
+                              </>
+                            ) : (
+                              <>
+                                <Download className="h-4 w-4" /> Salvar Offline
+                              </>
+                            )}
+                          </Button>
+                          <Button
+                            onClick={handleShare}
+                            className="bg-[#4CAF50] hover:bg-[#43A047] gap-2"
+                          >
+                            <Share2 className="h-4 w-4" /> {t('common.share')}
+                          </Button>
+                        </>
+                      )}
+                    </div>
                   </div>
 
                   <ScrollArea className="flex-1">

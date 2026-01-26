@@ -22,6 +22,7 @@ import Checkout from './pages/Checkout'
 import Challenges from './pages/Challenges'
 import ItineraryDetail from './pages/ItineraryDetail'
 import NotFound from './pages/NotFound'
+import Rewards from './pages/Rewards'
 import Layout from './components/Layout'
 
 const App = () => (
@@ -50,6 +51,7 @@ const App = () => (
                 <Route path="/notifications" element={<Notifications />} />
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/challenges" element={<Challenges />} />
+                <Route path="/rewards" element={<Rewards />} />
                 <Route path="/itinerary/:id" element={<ItineraryDetail />} />
               </Route>
               <Route path="*" element={<NotFound />} />

@@ -12,6 +12,7 @@ import {
   Company,
   Advertisement,
   User,
+  RewardActivity,
 } from '@/lib/types'
 import {
   MOCK_COUPONS,
@@ -38,6 +39,7 @@ interface CouponContextType {
   uploads: UploadedDocument[]
   bookings: Booking[]
   points: number
+  rewardHistory: RewardActivity[]
   fetchCredits: number
   challenges: Challenge[]
   badges: Badge[]
@@ -82,7 +84,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   const [coupons, setCoupons] = useState<Coupon[]>(MOCK_COUPONS)
   const [companies, setCompanies] = useState<Company[]>(MOCK_COMPANIES)
   const [ads, setAds] = useState<Advertisement[]>(MOCK_ADS)
-  const [user, setUser] = useState<User | null>(MOCK_USERS[1]) // Default to regular user
+  const [user, setUser] = useState<User | null>(MOCK_USERS[1])
   const [savedIds, setSavedIds] = useState<string[]>([])
   const [reservedIds, setReservedIds] = useState<string[]>([])
   const [tripIds, setTripIds] = useState<string[]>([])
@@ -97,6 +99,29 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   const [abTests, setAbTests] = useState<ABTest[]>(MOCK_AB_TESTS)
   const [downloadedIds, setDownloadedIds] = useState<string[]>([])
   const [itineraries] = useState<Itinerary[]>(MOCK_ITINERARIES)
+  const [rewardHistory, setRewardHistory] = useState<RewardActivity[]>([
+    {
+      id: '1',
+      title: 'Bônus de Boas-vindas',
+      points: 500,
+      date: new Date(Date.now() - 86400000 * 30).toISOString(),
+      type: 'earned',
+    },
+    {
+      id: '2',
+      title: 'Cupom Resgatado - Burger King',
+      points: -50,
+      date: new Date(Date.now() - 86400000 * 5).toISOString(),
+      type: 'redeemed',
+    },
+    {
+      id: '3',
+      title: 'Check-in Diário',
+      points: 10,
+      date: new Date(Date.now() - 86400000 * 2).toISOString(),
+      type: 'earned',
+    },
+  ])
 
   useEffect(() => {
     const storedSaved = localStorage.getItem('savedCoupons')
@@ -156,6 +181,20 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user])
 
+  const addPoints = (amount: number, reason: string) => {
+    setPoints((prev) => prev + amount)
+    setRewardHistory((prev) => [
+      {
+        id: Math.random().toString(),
+        title: reason,
+        points: amount,
+        date: new Date().toISOString(),
+        type: 'earned',
+      },
+      ...prev,
+    ])
+  }
+
   const toggleSave = (id: string) => {
     setSavedIds((prev) =>
       prev.includes(id) ? prev.filter((sid) => sid !== id) : [...prev, id],
@@ -194,7 +233,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       ),
     )
     setReservedIds((prev) => [...prev, id])
-    setPoints((prev) => prev + 10)
+    addPoints(10, `Reserva: ${coupon.storeName}`)
     return true
   }
 
@@ -221,12 +260,12 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         }
       }),
     )
-    setPoints((prev) => prev + 25)
+    addPoints(25, 'Avaliação de oferta')
   }
 
   const addUpload = (doc: UploadedDocument) => {
     setUploads((prev) => [doc, ...prev])
-    setPoints((prev) => prev + 50)
+    addPoints(50, 'Upload de documento')
   }
   const refreshCoupons = () => {
     toast.success('Ofertas atualizadas com sucesso!')
@@ -246,7 +285,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       ),
     )
     toast.success('Obrigado pelo seu voto!')
-    setPoints((prev) => prev + 5)
+    addPoints(5, 'Voto na comunidade')
   }
   const reportCoupon = (id: string, issue: string) => {
     console.log('Reported', id, issue)
@@ -260,7 +299,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       ...bookingData,
     }
     setBookings((prev) => [newBooking, ...prev])
-    setPoints((prev) => prev + 100)
+    addPoints(100, `Reserva confirmada: ${bookingData.storeName}`)
     setChallenges((prev) =>
       prev.map((c) =>
         c.id === '2'
@@ -279,6 +318,16 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     if (type === 'points') {
       if (points < amount) return false
       setPoints((prev) => prev - amount)
+      setRewardHistory((prev) => [
+        {
+          id: Math.random().toString(),
+          title: 'Resgate de Recompensa',
+          points: -amount,
+          date: new Date().toISOString(),
+          type: 'redeemed',
+        },
+        ...prev,
+      ])
       return true
     } else {
       if (fetchCredits < amount) return false
@@ -326,7 +375,6 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       setUser(user)
       toast.success(`Bem-vindo, ${user.name}!`)
     } else {
-      // Create mock user session if not found in mock data
       const newUser: User = {
         id: Math.random().toString(),
         name: email.split('@')[0],
@@ -393,6 +441,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         uploads,
         bookings,
         points,
+        rewardHistory,
         fetchCredits,
         challenges,
         badges,

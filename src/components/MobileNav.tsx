@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Home, Map as MapIcon, User, Trophy } from 'lucide-react'
+import { Home, Map as MapIcon, User, Trophy, Gift } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useLanguage } from '@/stores/LanguageContext'
 
@@ -12,6 +12,7 @@ export function MobileNav() {
     { icon: Home, label: t('nav.home'), href: '/' },
     { icon: MapIcon, label: t('nav.explore'), href: '/explore' },
     { icon: Trophy, label: t('nav.challenges'), href: '/challenges' },
+    { icon: Gift, label: 'Rewards', href: '/rewards' },
     { icon: User, label: t('nav.profile'), href: '/profile' },
   ]
 

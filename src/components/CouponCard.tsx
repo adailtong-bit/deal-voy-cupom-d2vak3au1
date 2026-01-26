@@ -11,6 +11,7 @@ import {
   Check,
   Clock,
   ImageOff,
+  ShieldCheck,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useCouponStore } from '@/stores/CouponContext'
@@ -42,19 +43,23 @@ export function CouponCard({
     toggleTrip(coupon.id)
   }
 
-  // Calculate if expiring soon (less than 48 hours)
   const isExpiringSoon =
     coupon.expiryDate &&
     differenceInHours(parseISO(coupon.expiryDate), new Date()) < 48 &&
     differenceInHours(parseISO(coupon.expiryDate), new Date()) > 0
 
-  // Rakuten-inspired layout: Clean, Image Top, Logo Overlay, Clear Price
+  const isStrategicPartner = coupon.source === 'partner'
+
   return (
     <Link to={`/coupon/${coupon.id}`} className="block h-full relative group">
       <Card
         className={cn(
-          'overflow-hidden h-full flex flex-col hover:shadow-elevation transition-all duration-300 border border-slate-100',
-          inTrip ? 'ring-2 ring-[#4CAF50] border-[#4CAF50]' : '',
+          'overflow-hidden h-full flex flex-col hover:shadow-elevation transition-all duration-300',
+          inTrip
+            ? 'ring-2 ring-[#4CAF50] border-[#4CAF50]'
+            : isStrategicPartner
+              ? 'border-[#2196F3] border-l-4'
+              : 'border-slate-100',
           className,
         )}
       >
@@ -72,35 +77,31 @@ export function CouponCard({
             />
           )}
 
-          {/* Discount Badge - Rakuten Orange */}
           <div className="absolute top-0 left-0 bg-[#FF5722] text-white font-bold text-sm px-3 py-1.5 shadow-md rounded-br-lg z-10">
             {coupon.discount}
           </div>
 
-          {/* Expiring Soon Badge */}
           {isExpiringSoon && (
             <div className="absolute top-0 right-0 bg-red-600 text-white font-bold text-[10px] uppercase px-2 py-1 shadow-md rounded-bl-lg z-10 flex items-center gap-1 animate-pulse">
               <Clock className="h-3 w-3" /> Expira em breve
             </div>
           )}
 
-          {/* Visual Indicator for Trip - Lime Green Checkmark */}
           {inTrip && (
             <div className="absolute top-2 right-2 z-20 bg-[#4CAF50] text-white p-1.5 rounded-full shadow-lg animate-in zoom-in">
               <Check className="h-4 w-4" strokeWidth={3} />
             </div>
           )}
 
-          {/* Source Badge (if not in trip or to show other info) */}
           {!inTrip && !isExpiringSoon && (
             <div className="absolute top-2 right-2 z-10">
-              {coupon.source === 'partner' ? (
+              {isStrategicPartner ? (
                 <Badge
                   variant="secondary"
-                  className="bg-white/90 text-primary hover:bg-white backdrop-blur-sm gap-1 shadow-sm"
+                  className="bg-[#2196F3] text-white hover:bg-[#1976D2] border-none backdrop-blur-sm gap-1 shadow-sm font-bold"
                 >
-                  <CheckCircle2 className="h-3 w-3 text-blue-500" />
-                  Oficial
+                  <ShieldCheck className="h-3 w-3 text-white" />
+                  Verificado
                 </Badge>
               ) : (
                 <Badge
@@ -118,7 +119,14 @@ export function CouponCard({
         <CardContent className="p-4 flex-1 flex flex-col">
           <div className="flex items-start justify-between mb-2">
             <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-full border border-slate-100 overflow-hidden bg-white flex-shrink-0 p-0.5">
+              <div
+                className={cn(
+                  'h-8 w-8 rounded-full border overflow-hidden bg-white flex-shrink-0 p-0.5',
+                  isStrategicPartner
+                    ? 'border-[#2196F3] ring-1 ring-[#2196F3]/30'
+                    : 'border-slate-100',
+                )}
+              >
                 {coupon.logo && !logoError ? (
                   <img
                     src={coupon.logo}
@@ -148,7 +156,6 @@ export function CouponCard({
               <span>{coupon.distance}m</span>
             </div>
 
-            {/* Add to Trip Action */}
             <Button
               size="sm"
               onClick={handleTripToggle}

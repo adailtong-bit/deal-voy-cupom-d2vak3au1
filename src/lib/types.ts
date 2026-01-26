@@ -153,6 +153,14 @@ export interface Badge {
   earnedDate?: string
 }
 
+export interface RewardActivity {
+  id: string
+  title: string
+  points: number
+  date: string
+  type: 'earned' | 'redeemed'
+}
+
 export interface ABVariant {
   id: string
   name: string

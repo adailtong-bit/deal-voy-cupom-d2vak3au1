@@ -18,7 +18,7 @@ export interface MapMarker {
   category?: string
   color?: string
   icon?: string
-  content?: React.ReactNode // For complex info windows, we might render to string
+  content?: React.ReactNode
   data?: any
 }
 
@@ -50,7 +50,6 @@ export function GoogleMap({
   const markersRef = useRef<any[]>([])
   const { t } = useLanguage()
 
-  // Helper to load Google Maps Script
   const loadScript = useCallback(() => {
     if (window.google?.maps) {
       setIsLoaded(true)
@@ -59,7 +58,9 @@ export function GoogleMap({
 
     const key = apiKey || import.meta.env.VITE_GOOGLE_MAPS_API_KEY
     if (!key) {
-      setError('Google Maps API Key is missing')
+      // Instead of failing, we immediately set error to trigger fallback
+      console.warn('Google Maps API Key missing. Falling back to static image.')
+      setError('Missing API Key')
       return
     }
 
@@ -86,7 +87,6 @@ export function GoogleMap({
     loadScript()
   }, [loadScript])
 
-  // Initialize Map
   useEffect(() => {
     if (isLoaded && mapRef.current && !mapInstance) {
       try {
@@ -112,7 +112,6 @@ export function GoogleMap({
     }
   }, [isLoaded, mapRef, mapInstance, center, zoom])
 
-  // Update Center & Zoom
   useEffect(() => {
     if (mapInstance && center) {
       mapInstance.panTo(center)
@@ -120,15 +119,12 @@ export function GoogleMap({
     }
   }, [mapInstance, center, zoom])
 
-  // Manage Markers
   useEffect(() => {
     if (!mapInstance || !window.google) return
 
-    // Clear existing markers
     markersRef.current.forEach((m) => m.setMap(null))
     markersRef.current = []
 
-    // Add new markers
     markers.forEach((marker) => {
       const pinColor =
         marker.color === 'green'
@@ -136,6 +132,7 @@ export function GoogleMap({
           : marker.color === 'blue'
             ? 'blue'
             : 'orange'
+      // Using solid-black as a fallback shape if fill isn't available for the specific color/icon combo, but shape=fill is standard
       const iconUrl = `https://img.usecurling.com/i?q=map-pin&color=${pinColor}&shape=fill`
 
       const mapMarker = new window.google.maps.Marker({
@@ -149,7 +146,6 @@ export function GoogleMap({
         animation: window.google.maps.Animation.DROP,
       })
 
-      // Info Window
       if (marker.data) {
         const infoContent = `
           <div style="width: 220px; font-family: 'Inter', sans-serif; padding: 0;">
@@ -180,6 +176,7 @@ export function GoogleMap({
     })
   }, [mapInstance, markers, onMarkerClick, t])
 
+  // If we have an error (e.g., missing key), showing fallback immediately resolves the "could not load" UX
   if (error && fallback) {
     return <>{fallback}</>
   }
@@ -188,7 +185,7 @@ export function GoogleMap({
     return (
       <div
         className={cn(
-          'flex flex-col items-center justify-center bg-slate-100 text-slate-500 p-8',
+          'flex flex-col items-center justify-center bg-slate-100 text-slate-500 p-8 h-full',
           className,
         )}
       >

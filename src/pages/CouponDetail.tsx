@@ -21,7 +21,6 @@ import {
   MapPin,
   Clock,
   Info,
-  ExternalLink,
   Heart,
   Copy,
   CheckCircle,
@@ -30,10 +29,10 @@ import {
   ThumbsDown,
   AlertTriangle,
   Wallet,
-  CreditCard,
   Download,
   Navigation,
   ShoppingCart,
+  Star,
 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
@@ -57,11 +56,10 @@ export default function CouponDetail() {
     isReserved,
     voteCoupon,
     reportCoupon,
-    points,
-    fetchCredits,
     redeemPoints,
     downloadOffline,
     isDownloaded,
+    fetchCredits,
   } = useCouponStore()
   const { t } = useLanguage()
   const [showConfetti, setShowConfetti] = useState(false)
@@ -242,7 +240,7 @@ export default function CouponDetail() {
               <div className="flex flex-wrap gap-2 items-center">
                 <Badge
                   variant="secondary"
-                  className="text-sm px-3 py-1 font-bold"
+                  className="text-sm px-3 py-1 font-bold bg-[#FF5722] text-white hover:bg-[#E64A19]"
                 >
                   {coupon.discount}
                 </Badge>
@@ -254,16 +252,10 @@ export default function CouponDetail() {
                     R$ {coupon.price.toFixed(2)}
                   </Badge>
                 )}
-                {coupon.averageRating && (
-                  <div className="flex items-center gap-1 text-sm font-medium text-yellow-600 bg-yellow-50 px-2 py-1 rounded-md">
-                    <StarRating
-                      rating={coupon.averageRating}
-                      size="sm"
-                      readonly
-                    />
-                    <span>({coupon.averageRating.toFixed(1)})</span>
-                  </div>
-                )}
+                <div className="flex items-center gap-1 text-sm font-medium text-yellow-600 bg-yellow-50 px-2 py-1 rounded-md border border-yellow-200">
+                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                  <span>{coupon.averageRating?.toFixed(1) || 'N/A'}</span>
+                </div>
               </div>
             </div>
             <Button
@@ -321,7 +313,6 @@ export default function CouponDetail() {
             </div>
           </div>
 
-          {/* External Map Integration */}
           <div className="mb-6 flex gap-2">
             <Button
               variant="outline"

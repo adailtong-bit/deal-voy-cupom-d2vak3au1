@@ -10,6 +10,7 @@ import {
   Trophy,
   Briefcase,
   ShieldCheck,
+  Gift,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -83,6 +84,16 @@ export function DesktopHeader() {
               }
             >
               {t('nav.challenges')}
+            </Link>
+            <Link
+              to="/rewards"
+              className={
+                isActive('/rewards')
+                  ? 'text-primary font-bold flex items-center gap-1'
+                  : 'text-muted-foreground hover:text-foreground flex items-center gap-1'
+              }
+            >
+              <Gift className="h-4 w-4" /> Rewards
             </Link>
             <Link
               to="/travel-planner"
@@ -207,6 +218,14 @@ export function DesktopHeader() {
                     className="text-lg font-medium flex items-center gap-2 hover:text-primary transition-colors"
                   >
                     <Trophy className="h-4 w-4" /> {t('nav.challenges')}
+                  </Link>
+                </SheetClose>
+                <SheetClose asChild>
+                  <Link
+                    to="/rewards"
+                    className="text-lg font-medium flex items-center gap-2 hover:text-primary transition-colors"
+                  >
+                    <Gift className="h-4 w-4" /> Rewards
                   </Link>
                 </SheetClose>
                 <SheetClose asChild>
