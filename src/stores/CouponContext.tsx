@@ -13,6 +13,7 @@ import {
   Advertisement,
   User,
   RewardActivity,
+  RewardItem,
 } from '@/lib/types'
 import {
   MOCK_COUPONS,
@@ -24,8 +25,10 @@ import {
   MOCK_COMPANIES,
   MOCK_ADS,
   MOCK_USERS,
+  MOCK_REWARDS,
 } from '@/lib/data'
 import { toast } from 'sonner'
+import { useNotification } from './NotificationContext'
 
 interface CouponContextType {
   coupons: Coupon[]
@@ -46,6 +49,9 @@ interface CouponContextType {
   abTests: ABTest[]
   downloadedIds: string[]
   itineraries: Itinerary[]
+  rewards: RewardItem[]
+  isFetchConnected: boolean
+  birthdayGiftAvailable: boolean
   toggleSave: (id: string) => void
   toggleTrip: (id: string) => void
   reserveCoupon: (id: string) => boolean
@@ -76,11 +82,16 @@ interface CouponContextType {
   createAd: (ad: Advertisement) => void
   deleteAd: (id: string) => void
   updateCampaign: (id: string, data: Partial<Coupon>) => void
+  connectFetch: () => void
+  importFetchPoints: (amount: number) => void
+  claimBirthdayGift: () => void
+  updateUserProfile: (data: Partial<User>) => void
 }
 
 const CouponContext = createContext<CouponContextType | undefined>(undefined)
 
 export function CouponProvider({ children }: { children: React.ReactNode }) {
+  const { addNotification } = useNotification()
   const [coupons, setCoupons] = useState<Coupon[]>(MOCK_COUPONS)
   const [companies, setCompanies] = useState<Company[]>(MOCK_COMPANIES)
   const [ads, setAds] = useState<Advertisement[]>(MOCK_ADS)
@@ -99,6 +110,10 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   const [abTests, setAbTests] = useState<ABTest[]>(MOCK_AB_TESTS)
   const [downloadedIds, setDownloadedIds] = useState<string[]>([])
   const [itineraries] = useState<Itinerary[]>(MOCK_ITINERARIES)
+  const [rewards] = useState<RewardItem[]>(MOCK_REWARDS)
+  const [isFetchConnected, setIsFetchConnected] = useState(false)
+  const [birthdayGiftAvailable, setBirthdayGiftAvailable] = useState(false)
+
   const [rewardHistory, setRewardHistory] = useState<RewardActivity[]>([
     {
       id: '1',
@@ -139,6 +154,9 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     const storedUser = localStorage.getItem('currentUser')
     if (storedUser) setUser(JSON.parse(storedUser))
 
+    const storedFetch = localStorage.getItem('isFetchConnected')
+    if (storedFetch) setIsFetchConnected(JSON.parse(storedFetch))
+
     setUploads([
       {
         id: 'u1',
@@ -155,6 +173,27 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       setIsLoadingLocation(false)
     }, 1500)
   }, [])
+
+  useEffect(() => {
+    // Check for birthday
+    if (user && user.birthday) {
+      const today = new Date()
+      const birthday = new Date(user.birthday)
+      if (
+        today.getDate() === birthday.getDate() &&
+        today.getMonth() === birthday.getMonth()
+      ) {
+        setBirthdayGiftAvailable(true)
+        addNotification({
+          title: 'Feliz Aniversário!',
+          message: 'Você tem um presente especial te esperando.',
+          type: 'gift',
+          priority: 'high',
+          category: 'smart',
+        })
+      }
+    }
+  }, [user, addNotification])
 
   useEffect(
     () => localStorage.setItem('savedCoupons', JSON.stringify(savedIds)),
@@ -181,7 +220,20 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user])
 
-  const addPoints = (amount: number, reason: string) => {
+  useEffect(
+    () =>
+      localStorage.setItem(
+        'isFetchConnected',
+        JSON.stringify(isFetchConnected),
+      ),
+    [isFetchConnected],
+  )
+
+  const addPoints = (
+    amount: number,
+    reason: string,
+    type: RewardActivity['type'] = 'earned',
+  ) => {
     setPoints((prev) => prev + amount)
     setRewardHistory((prev) => [
       {
@@ -189,7 +241,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         title: reason,
         points: amount,
         date: new Date().toISOString(),
-        type: 'earned',
+        type,
       },
       ...prev,
     ])
@@ -421,6 +473,39 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     toast.success('Campanha atualizada.')
   }
 
+  const connectFetch = () => {
+    setIsFetchConnected(true)
+    setFetchCredits((prev) => prev + 1500) // Simulate fetching points
+    toast.success('FETCH conectado com sucesso!', {
+      description: 'Seus pontos foram sincronizados.',
+    })
+  }
+
+  const importFetchPoints = (amount: number) => {
+    if (fetchCredits >= amount) {
+      setFetchCredits((prev) => prev - amount)
+      addPoints(amount, 'Importação FETCH', 'imported')
+      toast.success(`${amount} pontos importados com sucesso!`)
+    } else {
+      toast.error('Saldo FETCH insuficiente.')
+    }
+  }
+
+  const claimBirthdayGift = () => {
+    if (birthdayGiftAvailable) {
+      addPoints(1000, 'Presente de Aniversário')
+      setBirthdayGiftAvailable(false)
+      toast.success('Parabéns! Você ganhou 1000 pontos!')
+    }
+  }
+
+  const updateUserProfile = (data: Partial<User>) => {
+    if (user) {
+      setUser({ ...user, ...data })
+      toast.success('Perfil atualizado com sucesso!')
+    }
+  }
+
   const isSaved = (id: string) => savedIds.includes(id)
   const isReserved = (id: string) => reservedIds.includes(id)
   const isDownloaded = (id: string) => downloadedIds.includes(id)
@@ -448,6 +533,9 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         abTests,
         downloadedIds,
         itineraries,
+        rewards,
+        isFetchConnected,
+        birthdayGiftAvailable,
         toggleSave,
         toggleTrip,
         reserveCoupon,
@@ -475,6 +563,10 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         createAd,
         deleteAd,
         updateCampaign,
+        connectFetch,
+        importFetchPoints,
+        claimBirthdayGift,
+        updateUserProfile,
       },
     },
     children,

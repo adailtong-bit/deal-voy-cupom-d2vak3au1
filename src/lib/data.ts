@@ -9,6 +9,7 @@ import {
   Company,
   Advertisement,
   User,
+  RewardItem,
 } from './types'
 
 export const MOCK_USER_LOCATION = {
@@ -502,6 +503,7 @@ export const MOCK_USERS: User[] = [
     email: 'admin@dealvoy.com',
     role: 'admin',
     avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=male',
+    birthday: '1990-05-15',
   },
   {
     id: 'u2',
@@ -509,5 +511,45 @@ export const MOCK_USERS: User[] = [
     email: 'joao@email.com',
     role: 'user',
     avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=male',
+    birthday: '1995-10-20',
+  },
+]
+
+export const MOCK_REWARDS: RewardItem[] = [
+  {
+    id: 'r1',
+    title: 'Voucher R$ 20 iFood',
+    description: 'Vale presente para usar em qualquer pedido no iFood.',
+    cost: 1500,
+    image: 'https://img.usecurling.com/i?q=food&color=red&shape=fill',
+    category: 'coupon',
+    available: true,
+  },
+  {
+    id: 'r2',
+    title: 'Ingresso Cinema VIP',
+    description: 'Par de ingressos para qualquer sessão Cinemark.',
+    cost: 2500,
+    image: 'https://img.usecurling.com/i?q=cinema&color=blue&shape=fill',
+    category: 'experience',
+    available: true,
+  },
+  {
+    id: 'r3',
+    title: 'Café Grátis Starbucks',
+    description: 'Qualquer bebida tamanho Tall.',
+    cost: 500,
+    image: 'https://img.usecurling.com/i?q=coffee&color=green&shape=fill',
+    category: 'product',
+    available: true,
+  },
+  {
+    id: 'r4',
+    title: 'Desconto 50% Uber',
+    description: 'Válido para 2 corridas até R$ 20.',
+    cost: 1000,
+    image: 'https://img.usecurling.com/i?q=car&color=black&shape=fill',
+    category: 'coupon',
+    available: true,
   },
 ]

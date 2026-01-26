@@ -104,7 +104,7 @@ export interface Notification {
   id: string
   title: string
   message: string
-  type: 'deal' | 'alert' | 'system' | 'event'
+  type: 'deal' | 'alert' | 'system' | 'event' | 'gift'
   read: boolean
   date: string
   link?: string
@@ -158,7 +158,7 @@ export interface RewardActivity {
   title: string
   points: number
   date: string
-  type: 'earned' | 'redeemed'
+  type: 'earned' | 'redeemed' | 'imported'
 }
 
 export interface ABVariant {
@@ -202,6 +202,7 @@ export interface User {
   email: string
   role: UserRole
   avatar?: string
+  birthday?: string // YYYY-MM-DD
 }
 
 export interface Company {
@@ -239,4 +240,14 @@ export interface Advertisement {
   endDate: string
   image: string
   link: string
+}
+
+export interface RewardItem {
+  id: string
+  title: string
+  description: string
+  cost: number
+  image: string
+  category: 'coupon' | 'product' | 'experience'
+  available: boolean
 }
