@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -16,6 +16,7 @@ import {
   Check,
   Share2,
   CalendarDays,
+  AlertCircle,
 } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
 import { Badge } from '@/components/ui/badge'
@@ -23,9 +24,19 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import { SEASONAL_EVENTS } from '@/lib/data'
+import { GoogleMap, MapMarker } from '@/components/GoogleMap'
+
+// Known destinations for mock geocoding
+const DESTINATIONS: Record<string, { lat: number; lng: number }> = {
+  orlando: { lat: 28.5383, lng: -81.3792 },
+  'sao paulo': { lat: -23.55052, lng: -46.633308 },
+  miami: { lat: 25.7617, lng: -80.1918 },
+  nyc: { lat: 40.7128, lng: -74.006 },
+  paris: { lat: 48.8566, lng: 2.3522 },
+}
 
 export default function TravelPlanner() {
-  const { coupons, tripIds } = useCouponStore()
+  const { coupons, tripIds, userLocation } = useCouponStore()
   const { t } = useLanguage()
 
   // State for View Mode: GPS (Current) vs Planned (Destination)
@@ -35,17 +46,28 @@ export default function TravelPlanner() {
   const [viewType, setViewType] = useState<'list' | 'map'>('list')
   const [activeTab, setActiveTab] = useState<'explore' | 'itinerary'>('explore')
   const [showEvents, setShowEvents] = useState(true)
+  const [mapCenter, setMapCenter] = useState<{
+    lat: number
+    lng: number
+  } | null>(null)
+
+  // Determine current map center logic
+  const currentCenter = useMemo(() => {
+    if (navMode === 'planned' && mapCenter) return mapCenter
+    if (navMode === 'gps' && userLocation)
+      return { lat: userLocation.lat, lng: userLocation.lng }
+    return { lat: -23.55052, lng: -46.633308 } // Fallback default
+  }, [navMode, mapCenter, userLocation])
 
   // Mocking "Dynamic Offer Loading" based on destination
   // If destination includes "Orlando", we show specific coupons
-  const destinationCoupons = coupons.filter((c) => {
+  const destinationCoupons = useMemo(() => {
+    if (!destination) return []
     if (destination.toLowerCase().includes('orlando')) {
-      // Filter for mock Orlando items (ids starting with 'orl')
-      return c.id.startsWith('orl')
+      return coupons.filter((c) => c.id.startsWith('orl'))
     }
-    // Fallback: If planned mode but generic destination, show trending
-    return c.isTrending || c.isFeatured
-  })
+    return coupons.filter((c) => c.isTrending || c.isFeatured)
+  }, [destination, coupons])
 
   const displayedCoupons = navMode === 'gps' ? coupons : destinationCoupons
   const tripCoupons = coupons.filter((c) => tripIds.includes(c.id))
@@ -56,6 +78,22 @@ export default function TravelPlanner() {
       setNavMode('planned')
       setDestination(searchQuery)
       setActiveTab('explore')
+
+      // Simple mock geocoding
+      const key = Object.keys(DESTINATIONS).find((k) =>
+        searchQuery.toLowerCase().includes(k),
+      )
+      if (key) {
+        setMapCenter(DESTINATIONS[key])
+      } else {
+        // If unknown, just keep current but show toast (in real app, use Geocoding API)
+        toast.info(`Localizando ofertas em ${searchQuery}...`)
+        // Fallback to random nearby shift for demo
+        setMapCenter({
+          lat: -23.55052 + Math.random() * 0.1,
+          lng: -46.633308 + Math.random() * 0.1,
+        })
+      }
     }
   }
 
@@ -63,6 +101,7 @@ export default function TravelPlanner() {
     setNavMode('gps')
     setDestination('')
     setSearchQuery('')
+    setMapCenter(null)
   }
 
   const handleShare = async () => {
@@ -85,6 +124,78 @@ export default function TravelPlanner() {
       toast.success('Link copiado para a área de transferência!')
     }
   }
+
+  // Convert coupons and events to map markers
+  const mapMarkers: MapMarker[] = useMemo(() => {
+    const markers: MapMarker[] = []
+
+    displayedCoupons.forEach((coupon) => {
+      if (coupon.coordinates) {
+        markers.push({
+          id: coupon.id,
+          lat: coupon.coordinates.lat,
+          lng: coupon.coordinates.lng,
+          title: coupon.storeName,
+          category: coupon.category,
+          color: tripIds.includes(coupon.id) ? 'green' : 'orange',
+          data: coupon,
+        })
+      }
+    })
+
+    if (showEvents) {
+      SEASONAL_EVENTS.forEach((event) => {
+        if (event.coordinates) {
+          markers.push({
+            id: `event-${event.id}`,
+            lat: event.coordinates.lat,
+            lng: event.coordinates.lng,
+            title: event.title,
+            category: 'Evento',
+            color: 'blue',
+            data: event,
+          })
+        }
+      })
+    }
+
+    return markers
+  }, [displayedCoupons, showEvents, tripIds])
+
+  // Fallback content in case map fails (Static Image)
+  const FallbackMap = (
+    <div className="w-full h-full relative bg-slate-100">
+      <img
+        src={`https://img.usecurling.com/p/1200/800?q=map ${navMode === 'planned' ? destination : 'city'}&color=blue`}
+        className="w-full h-full object-cover grayscale opacity-50"
+        alt="Map"
+      />
+      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-2 rounded shadow-sm text-xs z-10 flex items-center gap-2">
+        <AlertCircle className="h-4 w-4" />
+        <span>Modo de visualização estática (Chave de API ausente)</span>
+      </div>
+      {/* Simulate markers on static image */}
+      {displayedCoupons.slice(0, 5).map((coupon, idx) => (
+        <div
+          key={coupon.id}
+          className="absolute transform -translate-x-1/2 -translate-y-1/2"
+          style={{
+            top: `${20 + ((idx * 15) % 60)}%`,
+            left: `${20 + ((idx * 20) % 60)}%`,
+          }}
+        >
+          <div
+            className={cn(
+              'p-1.5 rounded-full shadow-lg',
+              tripIds.includes(coupon.id) ? 'bg-green-500' : 'bg-orange-500',
+            )}
+          >
+            <div className="h-2 w-2 bg-white rounded-full" />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
 
   return (
     <div className="flex flex-col h-[calc(100vh-64px-64px)] md:h-[calc(100vh-64px)] overflow-hidden bg-slate-50">
@@ -128,7 +239,7 @@ export default function TravelPlanner() {
             </div>
           </div>
 
-          {/* Destination Search Bar - Visible when planning or usually available to switch */}
+          {/* Destination Search Bar */}
           <div
             className={cn(
               'relative transition-all duration-300',
@@ -239,7 +350,7 @@ export default function TravelPlanner() {
               {/* List View */}
               <div
                 className={cn(
-                  'w-full md:w-[400px] lg:w-[450px] bg-white flex flex-col absolute md:relative inset-0 z-10 transition-transform duration-300 md:translate-x-0 md:border-r',
+                  'w-full md:w-[400px] lg:w-[450px] bg-white flex flex-col absolute md:relative inset-0 z-10 transition-transform duration-300 md:translate-x-0 md:border-r shadow-lg md:shadow-none',
                   viewType === 'map' ? 'translate-x-[-100%]' : 'translate-x-0',
                 )}
               >
@@ -310,7 +421,7 @@ export default function TravelPlanner() {
                 </ScrollArea>
               </div>
 
-              {/* Map View */}
+              {/* Map View - Interactive Google Map */}
               <div
                 className={cn(
                   'flex-1 bg-slate-100 relative absolute md:relative inset-0 transition-transform duration-300 md:translate-x-0',
@@ -319,85 +430,13 @@ export default function TravelPlanner() {
                     : 'translate-x-0',
                 )}
               >
-                <div className="w-full h-full relative">
-                  <img
-                    src={`https://img.usecurling.com/p/1200/800?q=map ${navMode === 'planned' ? destination : 'city'}&color=blue`}
-                    className="w-full h-full object-cover grayscale opacity-50"
-                    alt="Map"
-                  />
-                  {/* Map Markers Simulation */}
-                  {displayedCoupons.map((coupon, idx) => (
-                    <div
-                      key={coupon.id}
-                      className="absolute transform -translate-x-1/2 -translate-y-1/2 group cursor-pointer hover:z-50"
-                      style={{
-                        top: `${20 + ((idx * 15) % 70)}%`,
-                        left: `${15 + ((idx * 20) % 75)}%`,
-                      }}
-                    >
-                      <div
-                        className={cn(
-                          'p-2 rounded-full shadow-lg hover:scale-110 transition-transform',
-                          tripIds.includes(coupon.id)
-                            ? 'bg-[#4CAF50] text-white'
-                            : 'bg-[#FF5722] text-white',
-                        )}
-                      >
-                        {tripIds.includes(coupon.id) ? (
-                          <Check className="h-4 w-4" />
-                        ) : (
-                          <div className="h-3 w-3 bg-white rounded-full" />
-                        )}
-                      </div>
-                      {/* Tooltip */}
-                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-40 bg-white rounded-lg shadow-xl p-2 hidden group-hover:block z-50 text-xs">
-                        <div className="w-full h-20 bg-slate-100 rounded mb-1 overflow-hidden">
-                          <img
-                            src={coupon.image}
-                            className="w-full h-full object-cover"
-                            alt=""
-                          />
-                        </div>
-                        <p className="font-bold truncate">{coupon.storeName}</p>
-                        <p className="text-[#FF5722] font-bold">
-                          {coupon.discount}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-
-                  {/* Event Markers */}
-                  {showEvents &&
-                    SEASONAL_EVENTS.filter((e) => e.coordinates).map(
-                      (event, idx) => (
-                        <div
-                          key={`map-event-${event.id}`}
-                          className="absolute transform -translate-x-1/2 -translate-y-1/2 group cursor-pointer hover:z-50"
-                          style={{
-                            top: `${40 + ((idx * 10) % 40)}%`,
-                            left: `${40 + ((idx * 10) % 40)}%`,
-                          }}
-                        >
-                          <div className="p-2 rounded-full shadow-lg hover:scale-110 transition-transform bg-purple-600 text-white border-2 border-white">
-                            <CalendarDays className="h-4 w-4" />
-                          </div>
-                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-32 bg-white rounded-lg shadow-xl p-2 hidden group-hover:block z-50 text-xs text-center">
-                            <p className="font-bold">{event.title}</p>
-                          </div>
-                        </div>
-                      ),
-                    )}
-
-                  {/* Center/User Pin */}
-                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                    <div
-                      className={cn(
-                        'h-6 w-6 rounded-full border-4 border-white shadow-xl animate-bounce',
-                        navMode === 'planned' ? 'bg-[#2196F3]' : 'bg-[#FF5722]',
-                      )}
-                    />
-                  </div>
-                </div>
+                <GoogleMap
+                  center={currentCenter}
+                  zoom={navMode === 'planned' ? 12 : 14}
+                  markers={mapMarkers}
+                  className="w-full h-full"
+                  fallback={FallbackMap}
+                />
               </div>
             </div>
           </TabsContent>
