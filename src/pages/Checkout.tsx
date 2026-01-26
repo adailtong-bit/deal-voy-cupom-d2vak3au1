@@ -68,7 +68,11 @@ export default function Checkout() {
     }
 
     try {
-      await processPayment({ couponId: coupon.id, amount: coupon.price || 0 })
+      await processPayment({
+        couponId: coupon.id,
+        amount: coupon.price || 0,
+        method: paymentMethod,
+      })
       setIsSuccess(true)
       toast.success(t('checkout.success'), {
         description: 'Recibo enviado para seu email.',

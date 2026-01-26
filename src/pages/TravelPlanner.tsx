@@ -18,6 +18,7 @@ import {
   Download,
   Check,
   MapPin,
+  Loader2,
 } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
 import { Badge } from '@/components/ui/badge'
@@ -26,6 +27,14 @@ import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import { SEASONAL_EVENTS } from '@/lib/data'
 import { GoogleMap, MapMarker } from '@/components/GoogleMap'
+import { Progress } from '@/components/ui/progress'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog'
 
 const DESTINATIONS: Record<string, { lat: number; lng: number }> = {
   orlando: { lat: 28.5383, lng: -81.3792 },
@@ -36,8 +45,15 @@ const DESTINATIONS: Record<string, { lat: number; lng: number }> = {
 }
 
 export default function TravelPlanner() {
-  const { coupons, tripIds, userLocation, downloadOffline, downloadedIds } =
-    useCouponStore()
+  const {
+    coupons,
+    tripIds,
+    userLocation,
+    downloadOffline,
+    downloadedIds,
+    isDownloading,
+    downloadProgress,
+  } = useCouponStore()
   const { t } = useLanguage()
 
   const [navMode, setNavMode] = useState<'gps' | 'planned'>('gps')
@@ -122,9 +138,6 @@ export default function TravelPlanner() {
   const handleDownloadOffline = () => {
     if (tripIds.length === 0) return
     downloadOffline(tripIds)
-    toast.success('Roteiro salvo para uso offline!', {
-      description: 'Você pode acessar seus cupons mesmo sem internet.',
-    })
   }
 
   const allTripDownloaded =
@@ -207,6 +220,23 @@ export default function TravelPlanner() {
 
   return (
     <div className="flex flex-col h-full bg-slate-50">
+      <Dialog open={isDownloading}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Salvando Offline</DialogTitle>
+            <DialogDescription>
+              Baixando mapas e imagens para acesso sem internet...
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-2">
+            <Progress value={downloadProgress} className="h-3" />
+            <p className="text-xs text-center text-muted-foreground">
+              {downloadProgress}% Completo
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <div className="bg-white border-b z-20 shadow-sm flex-shrink-0">
         <div className="container mx-auto px-4 py-4 space-y-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -467,10 +497,15 @@ export default function TravelPlanner() {
                           <Button
                             variant="outline"
                             onClick={handleDownloadOffline}
-                            disabled={allTripDownloaded}
+                            disabled={allTripDownloaded || isDownloading}
                             className="bg-white border-[#4CAF50]/30 text-[#2e7d32] hover:bg-[#4CAF50]/10 gap-2"
                           >
-                            {allTripDownloaded ? (
+                            {isDownloading ? (
+                              <>
+                                <Loader2 className="h-4 w-4 animate-spin" />{' '}
+                                Baixando
+                              </>
+                            ) : allTripDownloaded ? (
                               <>
                                 <Check className="h-4 w-4" /> Offline OK
                               </>

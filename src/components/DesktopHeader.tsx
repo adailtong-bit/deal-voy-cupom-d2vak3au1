@@ -29,6 +29,7 @@ import { useLanguage } from '@/stores/LanguageContext'
 import { LanguageSelector } from './LanguageSelector'
 import { useNotification } from '@/stores/NotificationContext'
 import { useCouponStore } from '@/stores/CouponContext'
+import { SyncStatus } from './SyncStatus'
 import logoImg from '@/assets/whatsapp-image-2026-01-25-at-5.40.56-am.jpeg'
 
 export function DesktopHeader() {
@@ -142,6 +143,7 @@ export function DesktopHeader() {
         </div>
 
         <div className="flex items-center gap-3">
+          <SyncStatus />
           <LanguageSelector />
 
           <Link to="/notifications">

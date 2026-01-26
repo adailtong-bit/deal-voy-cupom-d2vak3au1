@@ -251,3 +251,23 @@ export interface RewardItem {
   category: 'coupon' | 'product' | 'experience'
   available: boolean
 }
+
+export interface PaymentTransaction {
+  id: string
+  date: string
+  amount: number
+  storeName: string
+  couponTitle: string
+  method: 'card' | 'fetch' | 'points'
+  status: 'completed' | 'pending' | 'failed'
+}
+
+export interface ConnectedApp {
+  id: string
+  name: string
+  connected: boolean
+  points?: number
+  lastSync?: string
+  icon: string
+  color: string
+}

@@ -99,11 +99,12 @@ export default function Layout() {
     })
   }, [userLocation, savedIds, coupons, addNotification, t])
 
-  // Expiration Alert Logic
+  // Expiration Alert Logic (Updated to 24h as per user story)
   useEffect(() => {
     const savedCoupons = coupons.filter((c) => savedIds.includes(c.id))
 
     savedCoupons.forEach((coupon) => {
+      if (!coupon.expiryDate) return
       const hoursLeft = differenceInHours(
         parseISO(coupon.expiryDate),
         new Date(),
@@ -111,14 +112,15 @@ export default function Layout() {
 
       const expiryKey = `${coupon.id}-exp`
 
+      // Alert if expiring in less than 24 hours
       if (
         hoursLeft > 0 &&
-        hoursLeft < 48 &&
+        hoursLeft < 24 &&
         !notifiedCoupons.current.has(expiryKey)
       ) {
         addNotification({
           title: t('notification.alert'),
-          message: `Seu cupom da ${coupon.storeName} vence em menos de 48h.`,
+          message: `Seu cupom da ${coupon.storeName} vence em menos de 24h.`,
           type: 'alert',
           priority: 'high',
           category: 'system',

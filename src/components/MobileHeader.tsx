@@ -3,6 +3,7 @@ import { Bell } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useNotification } from '@/stores/NotificationContext'
+import { SyncStatus } from './SyncStatus'
 import logoImg from '@/assets/whatsapp-image-2026-01-25-at-5.40.56-am.jpeg'
 
 export function MobileHeader() {
@@ -21,23 +22,26 @@ export function MobileHeader() {
         </span>
       </Link>
 
-      <Link to="/notifications">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="relative hover:bg-secondary/10"
-        >
-          <Bell className="h-5 w-5" />
-          {unreadCount > 0 && (
-            <Badge
-              variant="destructive"
-              className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 rounded-full text-[10px]"
-            >
-              {unreadCount}
-            </Badge>
-          )}
-        </Button>
-      </Link>
+      <div className="flex items-center gap-3">
+        <SyncStatus />
+        <Link to="/notifications">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="relative hover:bg-secondary/10"
+          >
+            <Bell className="h-5 w-5" />
+            {unreadCount > 0 && (
+              <Badge
+                variant="destructive"
+                className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 rounded-full text-[10px]"
+              >
+                {unreadCount}
+              </Badge>
+            )}
+          </Button>
+        </Link>
+      </div>
     </header>
   )
 }

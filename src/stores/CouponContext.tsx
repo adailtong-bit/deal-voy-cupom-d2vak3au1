@@ -14,6 +14,8 @@ import {
   User,
   RewardActivity,
   RewardItem,
+  PaymentTransaction,
+  ConnectedApp,
 } from '@/lib/types'
 import {
   MOCK_COUPONS,
@@ -52,6 +54,10 @@ interface CouponContextType {
   rewards: RewardItem[]
   isFetchConnected: boolean
   birthdayGiftAvailable: boolean
+  transactions: PaymentTransaction[]
+  connectedApps: ConnectedApp[]
+  isDownloading: boolean
+  downloadProgress: number
   toggleSave: (id: string) => void
   toggleTrip: (id: string) => void
   reserveCoupon: (id: string) => boolean
@@ -72,6 +78,7 @@ interface CouponContextType {
   processPayment: (details: {
     couponId?: string
     amount: number
+    method?: 'card' | 'fetch'
   }) => Promise<boolean>
   isDownloaded: (id: string) => boolean
   joinChallenge: (id: string) => void
@@ -86,6 +93,7 @@ interface CouponContextType {
   importFetchPoints: (amount: number) => void
   claimBirthdayGift: () => void
   updateUserProfile: (data: Partial<User>) => void
+  connectApp: (id: string) => void
 }
 
 const CouponContext = createContext<CouponContextType | undefined>(undefined)
@@ -113,6 +121,45 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   const [rewards] = useState<RewardItem[]>(MOCK_REWARDS)
   const [isFetchConnected, setIsFetchConnected] = useState(false)
   const [birthdayGiftAvailable, setBirthdayGiftAvailable] = useState(false)
+  const [transactions, setTransactions] = useState<PaymentTransaction[]>([
+    {
+      id: 'tx1',
+      date: new Date(Date.now() - 86400000 * 5).toISOString(),
+      amount: 45.9,
+      storeName: 'Spa Relax',
+      couponTitle: 'Massagem Relaxante',
+      method: 'card',
+      status: 'completed',
+    },
+  ])
+  const [connectedApps, setConnectedApps] = useState<ConnectedApp[]>([
+    {
+      id: 'fetch',
+      name: 'FETCH',
+      connected: false,
+      points: 1500,
+      icon: 'dog',
+      color: 'yellow',
+    },
+    {
+      id: 'latam',
+      name: 'Latam Pass',
+      connected: false,
+      points: 4200,
+      icon: 'plane',
+      color: 'red',
+    },
+    {
+      id: 'dotz',
+      name: 'Dotz',
+      connected: false,
+      points: 850,
+      icon: 'coins',
+      color: 'orange',
+    },
+  ])
+  const [isDownloading, setIsDownloading] = useState(false)
+  const [downloadProgress, setDownloadProgress] = useState(0)
 
   const [rewardHistory, setRewardHistory] = useState<RewardActivity[]>([
     {
@@ -155,7 +202,15 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     if (storedUser) setUser(JSON.parse(storedUser))
 
     const storedFetch = localStorage.getItem('isFetchConnected')
-    if (storedFetch) setIsFetchConnected(JSON.parse(storedFetch))
+    if (storedFetch) {
+      const connected = JSON.parse(storedFetch)
+      setIsFetchConnected(connected)
+      setConnectedApps((prev) =>
+        prev.map((app) =>
+          app.id === 'fetch' ? { ...app, connected: connected } : app,
+        ),
+      )
+    }
 
     setUploads([
       {
@@ -258,11 +313,23 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       const exists = prev.includes(id)
       if (exists) {
         toast.info('Removido do roteiro de viagem.')
+        // Also update notification simulation
         return prev.filter((tid) => tid !== id)
       } else {
         toast.success('Salvo para sua viagem!', {
           description: 'Acesse na aba "Meu Roteiro" no Planejador.',
         })
+        // Simulate itinerary update notification
+        setTimeout(() => {
+          addNotification({
+            title: 'Roteiro Atualizado',
+            message: 'Novas ofertas foram adicionadas ao seu plano de viagem.',
+            type: 'system',
+            priority: 'medium',
+            category: 'smart',
+          })
+        }, 5000)
+
         return [...prev, id]
       }
     })
@@ -380,6 +447,14 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         },
         ...prev,
       ])
+      // Simulate Notification for new reward availability or usage
+      addNotification({
+        title: 'Recompensa Resgatada',
+        message: `Você usou ${amount} pontos com sucesso.`,
+        type: 'gift',
+        priority: 'medium',
+        category: 'system',
+      })
       return true
     } else {
       if (fetchCredits < amount) return false
@@ -391,23 +466,56 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   const addABTest = (test: ABTest) => setAbTests((prev) => [test, ...prev])
 
   const downloadOffline = (ids: string[]) => {
-    setDownloadedIds((prev) => Array.from(new Set([...prev, ...ids])))
-    toast.success('Itens baixados para acesso offline!')
+    setIsDownloading(true)
+    setDownloadProgress(0)
+    // Simulate download progress
+    const interval = setInterval(() => {
+      setDownloadProgress((prev) => {
+        if (prev >= 100) {
+          clearInterval(interval)
+          setDownloadedIds((prevIds) =>
+            Array.from(new Set([...prevIds, ...ids])),
+          )
+          setIsDownloading(false)
+          toast.success('Conteúdo salvo offline com sucesso!', {
+            description: 'Mapas, imagens e códigos disponíveis sem internet.',
+          })
+          return 100
+        }
+        return prev + 10
+      })
+    }, 200)
   }
 
   const processPayment = async (details: {
     couponId?: string
     amount: number
+    method?: 'card' | 'fetch'
   }) => {
     return new Promise((resolve) => {
       setTimeout(() => {
-        if (details.couponId) {
+        const coupon = details.couponId
+          ? coupons.find((c) => c.id === details.couponId)
+          : null
+
+        if (details.couponId && coupon) {
           setCoupons((prev) =>
             prev.map((c) =>
               c.id === details.couponId ? { ...c, isPaid: true } : c,
             ),
           )
           reserveCoupon(details.couponId)
+          // Add to transaction history
+          const newTx: PaymentTransaction = {
+            id: 'tx-' + Math.random().toString(36).substr(2, 9),
+            date: new Date().toISOString(),
+            amount: details.amount,
+            storeName: coupon.storeName,
+            couponTitle: coupon.title,
+            method: details.method || 'card',
+            status: 'completed',
+          }
+          setTransactions((prev) => [newTx, ...prev])
         }
         resolve(true)
       }, 1500)
@@ -476,9 +584,40 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   const connectFetch = () => {
     setIsFetchConnected(true)
     setFetchCredits((prev) => prev + 1500) // Simulate fetching points
+    setConnectedApps((prev) =>
+      prev.map((app) =>
+        app.id === 'fetch' ? { ...app, connected: true } : app,
+      ),
+    )
     toast.success('FETCH conectado com sucesso!', {
       description: 'Seus pontos foram sincronizados.',
     })
+  }
+
+  const connectApp = (id: string) => {
+    setConnectedApps((prev) =>
+      prev.map((app) =>
+        app.id === id ? { ...app, connected: !app.connected } : app,
+      ),
+    )
+    const app = connectedApps.find((a) => a.id === id)
+    if (app && !app.connected) {
+      toast.success(`${app.name} conectado!`, {
+        description: 'Pontos sincronizados.',
+      })
+      // Notify about new rewards availability logic (simulated)
+      if (app.points && app.points > 1000) {
+        addNotification({
+          title: 'Novas Recompensas Disponíveis',
+          message: `Seus pontos do ${app.name} desbloquearam novas ofertas.`,
+          type: 'gift',
+          priority: 'medium',
+          category: 'smart',
+        })
+      }
+    } else {
+      toast.info(`${app?.name} desconectado.`)
+    }
   }
 
   const importFetchPoints = (amount: number) => {
@@ -536,6 +675,10 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         rewards,
         isFetchConnected,
         birthdayGiftAvailable,
+        transactions,
+        connectedApps,
+        isDownloading,
+        downloadProgress,
         toggleSave,
         toggleTrip,
         reserveCoupon,
@@ -567,6 +710,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         importFetchPoints,
         claimBirthdayGift,
         updateUserProfile,
+        connectApp,
       },
     },
     children,

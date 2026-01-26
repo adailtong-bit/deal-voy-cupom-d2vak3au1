@@ -13,16 +13,30 @@ import {
   Download,
   CheckCircle,
   Wifi,
+  Loader2,
 } from 'lucide-react'
 import { CouponCard } from '@/components/CouponCard'
 import { toast } from 'sonner'
 import { useState } from 'react'
+import { Progress } from '@/components/ui/progress'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog'
 
 export default function ItineraryDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { itineraries, downloadOffline, downloadedIds } = useCouponStore()
-  const [isDownloading, setIsDownloading] = useState(false)
+  const {
+    itineraries,
+    downloadOffline,
+    downloadedIds,
+    isDownloading,
+    downloadProgress,
+  } = useCouponStore()
 
   const itinerary = itineraries.find((i) => i.id === id)
 
@@ -57,15 +71,28 @@ export default function ItineraryDetail() {
   }
 
   const handleDownload = () => {
-    setIsDownloading(true)
-    setTimeout(() => {
-      downloadOffline(itinerary.stops.map((s) => s.id))
-      setIsDownloading(false)
-    }, 1500)
+    downloadOffline(itinerary.stops.map((s) => s.id))
   }
 
   return (
     <div className="pb-20 bg-background min-h-screen">
+      <Dialog open={isDownloading}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Salvando Offline</DialogTitle>
+            <DialogDescription>
+              Baixando mapas e imagens para acesso sem internet...
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-2">
+            <Progress value={downloadProgress} className="h-3" />
+            <p className="text-xs text-center text-muted-foreground">
+              {downloadProgress}% Completo
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <div className="relative h-72 md:h-96 w-full">
         <img
           src={itinerary.image}
@@ -90,7 +117,7 @@ export default function ItineraryDetail() {
             disabled={isDownloaded || isDownloading}
           >
             {isDownloading ? (
-              <span className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
+              <Loader2 className="h-5 w-5 animate-spin" />
             ) : isDownloaded ? (
               <CheckCircle className="h-5 w-5 text-accent" />
             ) : (

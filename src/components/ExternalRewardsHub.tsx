@@ -2,12 +2,22 @@ import { useCouponStore } from '@/stores/CouponContext'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { useLanguage } from '@/stores/LanguageContext'
-import { ArrowRightLeft, Link2, CheckCircle2 } from 'lucide-react'
+import {
+  ArrowRightLeft,
+  Link2,
+  CheckCircle2,
+  XCircle,
+  Plane,
+  Coins,
+  Dog,
+} from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { useState } from 'react'
+import { cn } from '@/lib/utils'
+import * as Icons from 'lucide-react'
 
 export function ExternalRewardsHub() {
-  const { fetchCredits, isFetchConnected, connectFetch, importFetchPoints } =
+  const { fetchCredits, connectedApps, connectApp, importFetchPoints } =
     useCouponStore()
   const { t } = useLanguage()
   const [importAmount, setImportAmount] = useState('')
@@ -20,100 +30,115 @@ export function ExternalRewardsHub() {
     }
   }
 
+  const getIcon = (iconName: string) => {
+    // @ts-expect-error - Icons are dynamic
+    const Icon = Icons[iconName] || Link2
+    return <Icon className="h-6 w-6" />
+  }
+
   return (
     <div className="space-y-6">
-      <Card className="border-l-4 border-l-yellow-500 overflow-hidden">
-        <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
-          <img
-            src="https://img.usecurling.com/i?q=dog&color=yellow"
-            alt="Fetch"
-            className="w-32 h-32"
-          />
-        </div>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-xl">
-            <span className="bg-yellow-500 text-white p-1 rounded font-bold text-xs">
-              FETCH
-            </span>
-            Rewards Integration
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {!isFetchConnected ? (
-            <div className="flex flex-col items-center justify-center py-6 text-center space-y-4">
-              <div className="bg-yellow-100 p-4 rounded-full">
-                <Link2 className="h-8 w-8 text-yellow-600" />
-              </div>
-              <div>
-                <h3 className="font-bold text-lg">Conecte sua conta FETCH</h3>
-                <p className="text-muted-foreground max-w-sm mx-auto">
-                  Sincronize seus pontos e use-os para resgatar recompensas
-                  exclusivas no Deal Voy.
-                </p>
-              </div>
-              <Button
-                onClick={connectFetch}
-                className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold px-8"
-              >
-                {t('rewards.connect_fetch')}
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-                <div className="flex items-center gap-3">
-                  <div className="bg-green-100 p-1 rounded-full">
-                    <CheckCircle2 className="h-5 w-5 text-green-600" />
-                  </div>
-                  <div>
-                    <p className="font-bold text-sm text-yellow-800">
-                      {t('rewards.fetch_connected')}
-                    </p>
-                    <p className="text-xs text-yellow-600">ID: 8839-XXXX</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs text-muted-foreground uppercase">
-                    {t('rewards.fetch_balance')}
-                  </p>
-                  <p className="text-2xl font-bold text-yellow-600">
-                    {fetchCredits.toFixed(0)} pts
-                  </p>
-                </div>
-              </div>
-
-              <div className="bg-white p-4 rounded-lg border">
-                <h4 className="font-bold mb-4 flex items-center gap-2">
-                  <ArrowRightLeft className="h-4 w-4 text-primary" />
-                  {t('rewards.import_points')}
-                </h4>
-                <div className="flex gap-2">
-                  <Input
-                    type="number"
-                    placeholder="Quantidade"
-                    value={importAmount}
-                    onChange={(e) => setImportAmount(e.target.value)}
-                    className="flex-1"
-                  />
-                  <Button
-                    onClick={handleImport}
-                    disabled={
-                      !importAmount ||
-                      parseInt(importAmount) > fetchCredits ||
-                      parseInt(importAmount) <= 0
-                    }
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {connectedApps.map((app) => (
+          <Card
+            key={app.id}
+            className={cn(
+              'border-l-4 overflow-hidden transition-all',
+              app.connected
+                ? `border-l-${app.color}-500 shadow-md`
+                : 'border-l-slate-300 opacity-90',
+            )}
+            style={{
+              borderLeftColor: app.connected ? `var(--${app.color}-500)` : '',
+            }}
+          >
+            <CardHeader className="pb-2">
+              <div className="flex justify-between items-start">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <div
+                    className={cn(
+                      'p-2 rounded-full text-white',
+                      app.color === 'yellow'
+                        ? 'bg-yellow-500'
+                        : app.color === 'red'
+                          ? 'bg-red-600'
+                          : 'bg-orange-500',
+                    )}
                   >
-                    Importar
-                  </Button>
-                </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  Taxa de conversão: 1 FETCH = 1 Deal Voy Point
-                </p>
+                    {getIcon(
+                      app.icon.charAt(0).toUpperCase() + app.icon.slice(1),
+                    )}
+                  </div>
+                  {app.name}
+                </CardTitle>
+                <Button
+                  variant={app.connected ? 'outline' : 'default'}
+                  size="sm"
+                  onClick={() => connectApp(app.id)}
+                  className={
+                    app.connected
+                      ? 'text-red-500 hover:text-red-600 hover:bg-red-50'
+                      : 'bg-primary'
+                  }
+                >
+                  {app.connected ? 'Desconectar' : 'Conectar'}
+                </Button>
               </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            </CardHeader>
+            <CardContent>
+              {app.connected ? (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    Conectado • ID: 8839-XXXX
+                  </div>
+                  <div className="flex justify-between items-end border-t pt-2">
+                    <span className="text-xs uppercase text-muted-foreground font-bold">
+                      Saldo Disponível
+                    </span>
+                    <span className="text-xl font-bold">{app.points} pts</span>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground py-2">
+                  Conecte para sincronizar seus pontos e trocar por benefícios.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <div className="bg-white p-6 rounded-xl border shadow-sm">
+        <h4 className="font-bold mb-4 flex items-center gap-2 text-lg">
+          <ArrowRightLeft className="h-5 w-5 text-primary" />
+          {t('rewards.import_points')}
+        </h4>
+        <div className="flex flex-col md:flex-row gap-4">
+          <Input
+            type="number"
+            placeholder="Quantidade de pontos"
+            value={importAmount}
+            onChange={(e) => setImportAmount(e.target.value)}
+            className="flex-1"
+          />
+          <Button
+            onClick={handleImport}
+            disabled={
+              !importAmount ||
+              parseInt(importAmount) <= 0 ||
+              !connectedApps.some((a) => a.connected)
+            }
+            className="md:w-32 bg-primary hover:bg-primary/90"
+          >
+            Importar
+          </Button>
+        </div>
+        <p className="text-xs text-muted-foreground mt-3">
+          Selecione o programa parceiro automaticamente com base no saldo. Taxa
+          de conversão variável.
+        </p>
+      </div>
     </div>
   )
 }
