@@ -27,8 +27,8 @@ import Layout from './components/Layout'
 
 const App = () => (
   <LanguageProvider>
-    <CouponProvider>
-      <NotificationProvider>
+    <NotificationProvider>
+      <CouponProvider>
         <BrowserRouter
           future={{ v7_startTransition: false, v7_relativeSplatPath: false }}
         >
@@ -58,8 +58,8 @@ const App = () => (
             </Routes>
           </TooltipProvider>
         </BrowserRouter>
-      </NotificationProvider>
-    </CouponProvider>
+      </CouponProvider>
+    </NotificationProvider>
   </LanguageProvider>
 )
 
