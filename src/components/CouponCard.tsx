@@ -1,8 +1,17 @@
+import { useState } from 'react'
 import { Coupon } from '@/lib/types'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { MapPin, CheckCircle2, Globe, Plus, Check, Clock } from 'lucide-react'
+import {
+  MapPin,
+  CheckCircle2,
+  Globe,
+  Plus,
+  Check,
+  Clock,
+  ImageOff,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useCouponStore } from '@/stores/CouponContext'
 import { Link } from 'react-router-dom'
@@ -24,6 +33,8 @@ export function CouponCard({
   const { t } = useLanguage()
   const saved = isSaved(coupon.id)
   const inTrip = isInTrip(coupon.id)
+  const [imgError, setImgError] = useState(false)
+  const [logoError, setLogoError] = useState(false)
 
   const handleTripToggle = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -47,12 +58,20 @@ export function CouponCard({
           className,
         )}
       >
-        <div className="relative aspect-[4/3] overflow-hidden">
-          <img
-            src={coupon.image}
-            alt={coupon.title}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-          />
+        <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
+          {imgError ? (
+            <div className="w-full h-full flex items-center justify-center text-slate-400">
+              <ImageOff className="h-10 w-10 opacity-50" />
+            </div>
+          ) : (
+            <img
+              src={coupon.image}
+              alt={coupon.title}
+              onError={() => setImgError(true)}
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+          )}
+
           {/* Discount Badge - Rakuten Orange */}
           <div className="absolute top-0 left-0 bg-[#FF5722] text-white font-bold text-sm px-3 py-1.5 shadow-md rounded-br-lg z-10">
             {coupon.discount}
@@ -100,15 +119,16 @@ export function CouponCard({
           <div className="flex items-start justify-between mb-2">
             <div className="flex items-center gap-2">
               <div className="h-8 w-8 rounded-full border border-slate-100 overflow-hidden bg-white flex-shrink-0 p-0.5">
-                {coupon.logo ? (
+                {coupon.logo && !logoError ? (
                   <img
                     src={coupon.logo}
                     alt={coupon.storeName}
+                    onError={() => setLogoError(true)}
                     className="w-full h-full object-contain rounded-full"
                   />
                 ) : (
                   <div className="w-full h-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-muted-foreground">
-                    IMG
+                    {coupon.storeName.slice(0, 2).toUpperCase()}
                   </div>
                 )}
               </div>

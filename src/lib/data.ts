@@ -271,7 +271,7 @@ export const MOCK_COUPONS: Coupon[] = [
     distance: 1200,
     expiryDate: '2024-12-20',
     image: 'https://img.usecurling.com/p/600/400?q=spa%20massage',
-    logo: 'https://img.usecurling.com/i?q=lotus&shape=fill&color=purple',
+    logo: 'https://img.usecurling.com/i?q=lotus&shape=fill&color=violet',
     code: 'SPA-LUXO',
     isFeatured: true,
     isSpecial: true,
