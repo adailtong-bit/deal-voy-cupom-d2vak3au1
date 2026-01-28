@@ -28,12 +28,99 @@ import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { AdSpace } from '@/components/AdSpace'
+import { Advertisement } from '@/lib/types'
 
 export default function Index() {
-  const { coupons, isLoadingLocation, selectedRegion } = useCouponStore()
-  const { t } = useLanguage()
+  const { coupons, isLoadingLocation, selectedRegion, user, ads } =
+    useCouponStore()
+  const { t, language } = useLanguage()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
+
+  // Role Based View Logic
+  const isEndUser = !user || user.role === 'user'
+
+  if (!isEndUser) {
+    let relevantAds: Advertisement[] = []
+    let dashboardLink = '/'
+    let dashboardLabel = ''
+    let welcomeMessage =
+      language === 'pt' ? 'Painel de Gestão' : 'Management Dashboard'
+    const campaignsTitle =
+      language === 'pt' ? 'Suas Campanhas' : 'Your Campaigns'
+    const noCampaignsMessage =
+      language === 'pt'
+        ? 'Nenhuma campanha ativa encontrada.'
+        : 'No active campaigns found.'
+    const createAdLabel =
+      language === 'pt' ? 'Criar Campanha' : 'Create Campaign'
+
+    if (user?.role === 'shopkeeper') {
+      relevantAds = ads.filter((ad) => ad.companyId === user.companyId)
+      dashboardLink = '/vendor'
+      dashboardLabel = t('nav.vendor')
+    } else if (user?.role === 'franchisee') {
+      relevantAds = ads.filter((ad) => ad.region === user.region)
+      dashboardLink = '/admin'
+      dashboardLabel = t('nav.admin')
+    } else if (user?.role === 'super_admin') {
+      relevantAds = ads
+      dashboardLink = '/admin'
+      dashboardLabel = t('nav.admin')
+    } else if (user?.role === 'agency') {
+      relevantAds = []
+      dashboardLink = '/agency'
+      dashboardLabel = t('nav.agency')
+    }
+
+    return (
+      <div className="pb-20 md:pb-8 bg-slate-50 min-h-screen pt-10">
+        <div className="container mx-auto px-4 space-y-8">
+          <div className="text-center space-y-4">
+            <h1 className="text-3xl font-bold text-slate-900">
+              {t('common.welcome') || 'Welcome'}, {user?.name}
+            </h1>
+            <p className="text-muted-foreground text-lg">{welcomeMessage}</p>
+            <div className="flex justify-center">
+              <Link to={dashboardLink}>
+                <Button className="gap-2 h-12 px-8 text-base shadow-md">
+                  <LayoutGrid className="h-5 w-5" />
+                  {t('common.go_to') || 'Go to'} {dashboardLabel}
+                </Button>
+              </Link>
+            </div>
+          </div>
+
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <Zap className="h-5 w-5 text-yellow-500" />
+              {campaignsTitle}
+            </h2>
+
+            {relevantAds.length > 0 ? (
+              <div className="space-y-6">
+                <AdSpace position="top" customAds={relevantAds} />
+                {relevantAds.length > 1 && (
+                  <AdSpace position="bottom" customAds={relevantAds} />
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-16 bg-white rounded-xl border border-dashed shadow-sm">
+                <p className="text-muted-foreground mb-4">
+                  {noCampaignsMessage}
+                </p>
+                {user?.role === 'shopkeeper' && (
+                  <Link to="/vendor">
+                    <Button variant="outline">{createAdLabel}</Button>
+                  </Link>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   const filteredCoupons = coupons.filter((c) => {
     if (

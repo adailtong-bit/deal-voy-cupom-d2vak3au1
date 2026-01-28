@@ -2,17 +2,20 @@ import { useCouponStore } from '@/stores/CouponContext'
 import { cn } from '@/lib/utils'
 import { ExternalLink } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
+import { Advertisement } from '@/lib/types'
 
 interface AdSpaceProps {
   position?: 'top' | 'bottom'
   className?: string
+  customAds?: Advertisement[]
 }
 
-export function AdSpace({ position, className }: AdSpaceProps) {
-  const { ads } = useCouponStore()
+export function AdSpace({ position, className, customAds }: AdSpaceProps) {
+  const { ads: storeAds } = useCouponStore()
   const { t } = useLanguage()
 
-  const availableAds = ads.filter((ad) => ad.status === 'active')
+  const adsToUse = customAds || storeAds
+  const availableAds = adsToUse.filter((ad) => ad.status === 'active')
 
   if (availableAds.length === 0) return null
 
