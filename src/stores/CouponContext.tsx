@@ -30,7 +30,7 @@ import {
   MOCK_ITINERARIES,
   MOCK_COMPANIES,
   MOCK_ADS,
-  MOCK_USERS,
+  MOCK_USERS as ORIGINAL_MOCK_USERS,
   MOCK_REWARDS,
   MOCK_FRANCHISES,
   MOCK_TRAVEL_OFFERS,
@@ -38,6 +38,17 @@ import {
 } from '@/lib/data'
 import { toast } from 'sonner'
 import { useNotification } from './NotificationContext'
+
+// Extend Mock Users to include state
+const MOCK_USERS: User[] = ORIGINAL_MOCK_USERS.map((u) => ({
+  ...u,
+  state:
+    u.country === 'Brasil'
+      ? 'São Paulo'
+      : u.country === 'USA'
+        ? 'Florida'
+        : undefined,
+}))
 
 interface CouponContextType {
   coupons: Coupon[]

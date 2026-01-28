@@ -11,6 +11,9 @@ import {
   Gift,
   Plane,
   Building,
+  CreditCard,
+  Settings,
+  User,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -218,6 +221,31 @@ export function DesktopHeader() {
                     className="text-lg font-medium flex items-center gap-2 hover:text-primary transition-colors"
                   >
                     <ShoppingBag className="h-4 w-4" /> {t('nav.home')}
+                  </Link>
+                </SheetClose>
+                <SheetClose asChild>
+                  <Link
+                    to="/profile"
+                    className="text-lg font-medium flex items-center gap-2 hover:text-primary transition-colors"
+                  >
+                    <User className="h-4 w-4" /> {t('nav.profile')}
+                  </Link>
+                </SheetClose>
+                <SheetClose asChild>
+                  <Link
+                    to="/payment-methods"
+                    className="text-lg font-medium flex items-center gap-2 hover:text-primary transition-colors"
+                  >
+                    <CreditCard className="h-4 w-4" />{' '}
+                    {t('profile.payment_methods')}
+                  </Link>
+                </SheetClose>
+                <SheetClose asChild>
+                  <Link
+                    to="/settings"
+                    className="text-lg font-medium flex items-center gap-2 hover:text-primary transition-colors"
+                  >
+                    <Settings className="h-4 w-4" /> {t('profile.settings')}
                   </Link>
                 </SheetClose>
                 <SheetClose asChild>

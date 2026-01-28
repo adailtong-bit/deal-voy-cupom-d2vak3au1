@@ -7,15 +7,16 @@ import { Label } from '@/components/ui/label'
 import {
   Settings,
   LogOut,
-  User as UserIcon,
   Bell,
   CreditCard,
   ChevronRight,
   ShieldCheck,
+  Edit2,
+  MapPin,
 } from 'lucide-react'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { PhoneInput } from '@/components/PhoneInput'
 import { AdSpace } from '@/components/AdSpace'
@@ -26,27 +27,79 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { LOCATION_DATA, COUNTRIES } from '@/lib/locationData'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from '@/components/ui/dialog'
 
 export default function Profile() {
   const { user, updateUserProfile, logout } = useCouponStore()
   const { t } = useLanguage()
   const navigate = useNavigate()
 
-  // Onboarding States
-  const [onboardingData, setOnboardingData] = useState({
-    birthday: user?.birthday || '',
-    country: user?.country || '',
-    city: user?.city || '',
-    phone: user?.phone || '',
+  // State
+  const [isEditing, setIsEditing] = useState(false)
+
+  // Profile Data States
+  const [formData, setFormData] = useState({
+    birthday: '',
+    country: '',
+    state: '',
+    city: '',
+    phone: '',
   })
+
+  // Initialize form data when user loads
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        birthday: user.birthday || '',
+        country: user.country || '',
+        state: user.state || '',
+        city: user.city || '',
+        phone: user.phone || '',
+      })
+    }
+  }, [user])
 
   // Check if profile is complete (Onboarding Logic)
   const isProfileComplete =
-    user?.birthday && user?.country && user?.city && user?.phone
+    user?.birthday && user?.country && user?.state && user?.city && user?.phone
 
-  const handleOnboardingSubmit = (e: React.FormEvent) => {
+  // Handlers for Location Logic
+  const handleCountryChange = (val: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      country: val,
+      state: '',
+      city: '', // Reset state and city when country changes
+    }))
+  }
+
+  const handleStateChange = (val: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      state: val,
+      city: '', // Reset city when state changes
+    }))
+  }
+
+  const handleCityChange = (val: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      city: val,
+    }))
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    updateUserProfile(onboardingData)
+    updateUserProfile(formData)
+    setIsEditing(false)
   }
 
   const handleLogout = () => {
@@ -58,6 +111,108 @@ export default function Profile() {
     navigate('/login')
     return null
   }
+
+  const availableStates = formData.country
+    ? Object.keys(LOCATION_DATA[formData.country]?.states || {})
+    : []
+
+  const availableCities =
+    formData.country && formData.state
+      ? LOCATION_DATA[formData.country]?.states[formData.state] || []
+      : []
+
+  const LocationForm = () => (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Label>{t('profile.birthday')}</Label>
+        <Input
+          type="date"
+          required
+          value={formData.birthday}
+          onChange={(e) =>
+            setFormData({
+              ...formData,
+              birthday: e.target.value,
+            })
+          }
+        />
+      </div>
+
+      {/* Country Selection */}
+      <div className="space-y-2">
+        <Label>{t('profile.country')}</Label>
+        <Select value={formData.country} onValueChange={handleCountryChange}>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select Country" />
+          </SelectTrigger>
+          <SelectContent>
+            {COUNTRIES.map((country) => (
+              <SelectItem key={country} value={country}>
+                {country}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* State Selection */}
+      <div className="space-y-2">
+        <Label>State/Province</Label>
+        <Select
+          value={formData.state}
+          onValueChange={handleStateChange}
+          disabled={!formData.country}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select State" />
+          </SelectTrigger>
+          <SelectContent>
+            {availableStates.map((state) => (
+              <SelectItem key={state} value={state}>
+                {state}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* City Selection */}
+      <div className="space-y-2">
+        <Label>{t('profile.city')}</Label>
+        <Select
+          value={formData.city}
+          onValueChange={handleCityChange}
+          disabled={!formData.state}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select City" />
+          </SelectTrigger>
+          <SelectContent>
+            {availableCities.map((city) => (
+              <SelectItem key={city} value={city}>
+                {city}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-2">
+        <Label>{t('profile.phone')}</Label>
+        <PhoneInput
+          value={formData.phone}
+          onChange={(val) => setFormData({ ...formData, phone: val })}
+          defaultCountry={
+            formData.country === 'Brasil'
+              ? 'BR'
+              : formData.country === 'USA'
+                ? 'US'
+                : undefined
+          }
+        />
+      </div>
+    </div>
+  )
 
   // Onboarding View
   if (!isProfileComplete) {
@@ -77,70 +232,8 @@ export default function Profile() {
             </p>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleOnboardingSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label>{t('profile.birthday')}</Label>
-                <Input
-                  type="date"
-                  required
-                  value={onboardingData.birthday}
-                  onChange={(e) =>
-                    setOnboardingData({
-                      ...onboardingData,
-                      birthday: e.target.value,
-                    })
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>{t('profile.country')}</Label>
-                <Select
-                  value={onboardingData.country}
-                  onValueChange={(val) =>
-                    setOnboardingData({ ...onboardingData, country: val })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Country" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Brasil">Brasil</SelectItem>
-                    <SelectItem value="USA">USA</SelectItem>
-                    <SelectItem value="Portugal">Portugal</SelectItem>
-                    <SelectItem value="France">France</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>{t('profile.city')}</Label>
-                <Input
-                  required
-                  placeholder="Ex: São Paulo"
-                  value={onboardingData.city}
-                  onChange={(e) =>
-                    setOnboardingData({
-                      ...onboardingData,
-                      city: e.target.value,
-                    })
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>{t('profile.phone')}</Label>
-                <PhoneInput
-                  value={onboardingData.phone}
-                  onChange={(val) =>
-                    setOnboardingData({ ...onboardingData, phone: val })
-                  }
-                  defaultCountry={
-                    onboardingData.country === 'Brasil'
-                      ? 'BR'
-                      : onboardingData.country === 'USA'
-                        ? 'US'
-                        : undefined
-                  }
-                />
-              </div>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <LocationForm />
               <Button type="submit" className="w-full font-bold">
                 {t('profile.save')}
               </Button>
@@ -178,24 +271,50 @@ export default function Profile() {
             <ShieldCheck className="w-4 h-4" />
           </div>
         </div>
-        <h1 className="text-2xl font-bold">{user.name}</h1>
-        <p className="text-muted-foreground">{user.email}</p>
-        <p className="text-xs text-muted-foreground mt-1">
-          {user.city}, {user.country}
-        </p>
+        <div className="text-center space-y-1">
+          <h1 className="text-2xl font-bold">{user.name}</h1>
+          <p className="text-sm font-medium text-slate-600 bg-slate-100 px-3 py-1 rounded-full inline-block">
+            {user.email}
+          </p>
+          <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground mt-1">
+            <MapPin className="w-3 h-3" />
+            <p>
+              {user.city}, {user.state}, {user.country}
+            </p>
+          </div>
+        </div>
+
+        <Dialog open={isEditing} onOpenChange={setIsEditing}>
+          <DialogTrigger asChild>
+            <Button variant="link" className="mt-2 text-primary h-auto p-0">
+              <Edit2 className="w-3 h-3 mr-1" /> Edit Profile
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Profile</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <LocationForm />
+              <DialogFooter>
+                <Button type="submit">Save Changes</Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <div className="space-y-3">
         <Link to="/notifications">
           <Button
             variant="outline"
-            className="w-full justify-between h-14 bg-white hover:bg-slate-50 border-slate-200"
+            className="w-full justify-between h-14 bg-white hover:bg-slate-50 border-slate-200 group"
           >
             <div className="flex items-center gap-3">
-              <div className="bg-orange-100 p-2 rounded-full">
+              <div className="bg-orange-100 p-2 rounded-full group-hover:bg-orange-200 transition-colors">
                 <Bell className="h-5 w-5 text-orange-600" />
               </div>
-              <span className="font-semibold">
+              <span className="font-semibold text-slate-700">
                 {t('profile.notifications')}
               </span>
             </div>
@@ -206,13 +325,13 @@ export default function Profile() {
         <Link to="/payment-methods">
           <Button
             variant="outline"
-            className="w-full justify-between h-14 bg-white hover:bg-slate-50 border-slate-200"
+            className="w-full justify-between h-14 bg-white hover:bg-slate-50 border-slate-200 group"
           >
             <div className="flex items-center gap-3">
-              <div className="bg-blue-100 p-2 rounded-full">
+              <div className="bg-blue-100 p-2 rounded-full group-hover:bg-blue-200 transition-colors">
                 <CreditCard className="h-5 w-5 text-blue-600" />
               </div>
-              <span className="font-semibold">
+              <span className="font-semibold text-slate-700">
                 {t('profile.payment_methods')}
               </span>
             </div>
@@ -223,13 +342,15 @@ export default function Profile() {
         <Link to="/settings">
           <Button
             variant="outline"
-            className="w-full justify-between h-14 bg-white hover:bg-slate-50 border-slate-200"
+            className="w-full justify-between h-14 bg-white hover:bg-slate-50 border-slate-200 group"
           >
             <div className="flex items-center gap-3">
-              <div className="bg-green-100 p-2 rounded-full">
+              <div className="bg-green-100 p-2 rounded-full group-hover:bg-green-200 transition-colors">
                 <Settings className="h-5 w-5 text-green-600" />
               </div>
-              <span className="font-semibold">{t('profile.settings')}</span>
+              <span className="font-semibold text-slate-700">
+                {t('profile.settings')}
+              </span>
             </div>
             <ChevronRight className="h-4 w-4 text-slate-400" />
           </Button>

@@ -231,6 +231,7 @@ export interface User {
   region?: string // Assigned region for Franchisee
   companyId?: string // Assigned company for Merchant
   country?: string
+  state?: string
   city?: string
   phone?: string
   preferences?: {
