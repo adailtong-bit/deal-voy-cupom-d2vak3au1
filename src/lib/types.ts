@@ -18,6 +18,7 @@ export interface Review {
   comment: string
   date: string
   status?: 'pending' | 'approved' | 'rejected'
+  images?: string[]
 }
 
 export type Mood =
@@ -110,12 +111,12 @@ export interface Notification {
   id: string
   title: string
   message: string
-  type: 'deal' | 'alert' | 'system' | 'event' | 'gift' | 'mission'
+  type: 'deal' | 'alert' | 'system' | 'event' | 'gift' | 'mission' | 'chat'
   read: boolean
   date: string
   link?: string
   priority?: 'high' | 'medium' | 'low'
-  category?: 'smart' | 'system' | 'gamification'
+  category?: 'smart' | 'system' | 'gamification' | 'communication'
 }
 
 export interface UploadedDocument {
@@ -243,6 +244,7 @@ export interface UserPreferences {
   quietHoursEnd?: string
   emailAlerts?: boolean
   pushAlerts?: boolean
+  dashboardWidgets?: string[]
 }
 
 export interface User {
@@ -420,4 +422,21 @@ export interface ClientHistory {
   date: string
   amount: number
   status: 'completed' | 'pending'
+}
+
+export interface Message {
+  id: string
+  senderId: string
+  text: string
+  timestamp: string
+  isRead: boolean
+}
+
+export interface ChatThread {
+  id: string
+  participants: { id: string; name: string; avatar: string; role: UserRole }[]
+  messages: Message[]
+  lastMessage: string
+  lastUpdated: string
+  unreadCount: number
 }

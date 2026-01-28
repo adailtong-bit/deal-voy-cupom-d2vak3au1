@@ -5,6 +5,7 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 import { CouponProvider } from '@/stores/CouponContext'
 import { LanguageProvider } from '@/stores/LanguageContext'
 import { NotificationProvider } from '@/stores/NotificationContext'
+import { ChatProvider } from '@/stores/ChatContext'
 
 import Index from './pages/Index'
 import Explore from './pages/Explore'
@@ -29,47 +30,51 @@ import TravelHub from './pages/TravelHub'
 import Agencies from './pages/Agencies'
 import PaymentMethods from './pages/PaymentMethods'
 import Settings from './pages/Settings'
+import Messages from './pages/Messages'
 import Layout from './components/Layout'
 
 const App = () => (
   <LanguageProvider>
     <NotificationProvider>
       <CouponProvider>
-        <BrowserRouter
-          future={{ v7_startTransition: false, v7_relativeSplatPath: false }}
-        >
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <Routes>
-              <Route path="/admin/login" element={<AdminLogin />} />
-              <Route path="/login" element={<Login />} />
-              <Route element={<Layout />}>
-                <Route path="/" element={<Index />} />
-                <Route path="/explore" element={<Explore />} />
-                <Route path="/coupon/:id" element={<CouponDetail />} />
-                <Route path="/upload" element={<Upload />} />
-                <Route path="/saved" element={<Saved />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/payment-methods" element={<PaymentMethods />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/travel-planner" element={<TravelPlanner />} />
-                <Route path="/travel-hub" element={<TravelHub />} />
-                <Route path="/agencies" element={<Agencies />} />
-                <Route path="/vendor" element={<VendorDashboard />} />
-                <Route path="/admin" element={<AdminDashboard />} />
-                <Route path="/agency" element={<AgencyDashboard />} />
-                <Route path="/seasonal" element={<Seasonal />} />
-                <Route path="/notifications" element={<Notifications />} />
-                <Route path="/checkout" element={<Checkout />} />
-                <Route path="/challenges" element={<Challenges />} />
-                <Route path="/rewards" element={<Rewards />} />
-                <Route path="/itinerary/:id" element={<ItineraryDetail />} />
-              </Route>
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </TooltipProvider>
-        </BrowserRouter>
+        <ChatProvider>
+          <BrowserRouter
+            future={{ v7_startTransition: false, v7_relativeSplatPath: false }}
+          >
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <Routes>
+                <Route path="/admin/login" element={<AdminLogin />} />
+                <Route path="/login" element={<Login />} />
+                <Route element={<Layout />}>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/explore" element={<Explore />} />
+                  <Route path="/coupon/:id" element={<CouponDetail />} />
+                  <Route path="/upload" element={<Upload />} />
+                  <Route path="/saved" element={<Saved />} />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/payment-methods" element={<PaymentMethods />} />
+                  <Route path="/settings" element={<Settings />} />
+                  <Route path="/travel-planner" element={<TravelPlanner />} />
+                  <Route path="/travel-hub" element={<TravelHub />} />
+                  <Route path="/agencies" element={<Agencies />} />
+                  <Route path="/vendor" element={<VendorDashboard />} />
+                  <Route path="/admin" element={<AdminDashboard />} />
+                  <Route path="/agency" element={<AgencyDashboard />} />
+                  <Route path="/seasonal" element={<Seasonal />} />
+                  <Route path="/notifications" element={<Notifications />} />
+                  <Route path="/messages" element={<Messages />} />
+                  <Route path="/checkout" element={<Checkout />} />
+                  <Route path="/challenges" element={<Challenges />} />
+                  <Route path="/rewards" element={<Rewards />} />
+                  <Route path="/itinerary/:id" element={<ItineraryDetail />} />
+                </Route>
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </TooltipProvider>
+          </BrowserRouter>
+        </ChatProvider>
       </CouponProvider>
     </NotificationProvider>
   </LanguageProvider>

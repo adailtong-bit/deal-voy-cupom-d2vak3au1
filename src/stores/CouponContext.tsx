@@ -107,6 +107,7 @@ interface CouponContextType {
   reportCoupon: (id: string, issue: string) => void
   makeBooking: (booking: Omit<Booking, 'id' | 'status'>) => void
   redeemPoints: (amount: number, type: 'points' | 'fetch') => boolean
+  earnPoints: (amount: number, title: string) => void
   addABTest: (test: ABTest) => void
   downloadOffline: (ids: string[]) => void
   processPayment: (details: {
@@ -277,9 +278,27 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
 
   const addCoupon = (coupon: Coupon) => setCoupons((prev) => [coupon, ...prev])
 
-  const addReview = (id: string, review: any) => {
-    /* ... */
+  const addReview = (
+    id: string,
+    review: Omit<Review, 'id' | 'date'> & { images?: string[] },
+  ) => {
+    setCoupons((prev) =>
+      prev.map((c) => {
+        if (c.id === id) {
+          const newReview: Review = {
+            ...review,
+            id: Math.random().toString(),
+            date: new Date().toISOString(),
+            status: 'pending',
+          }
+          return { ...c, reviews: [...(c.reviews || []), newReview] }
+        }
+        return c
+      }),
+    )
+    earnPoints(100, 'Review Submission')
   }
+
   const addUpload = (doc: any) => {
     /* ... */
   }
@@ -314,6 +333,22 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       ...prev,
     ])
   }
+
+  const earnPoints = (amount: number, title: string) => {
+    setPoints((p) => p + amount)
+    setRewardHistory((prev) => [
+      {
+        id: Math.random().toString(),
+        title: title,
+        points: amount,
+        date: new Date().toISOString(),
+        type: 'earned',
+      },
+      ...prev,
+    ])
+    toast.success(`You earned ${amount} points!`)
+  }
+
   const redeemPoints = (amount: number, type: any) => {
     if (type === 'points') {
       if (points < amount) return false
@@ -613,6 +648,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         reportCoupon,
         makeBooking,
         redeemPoints,
+        earnPoints,
         addABTest,
         downloadOffline,
         processPayment,

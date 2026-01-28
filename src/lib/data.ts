@@ -17,6 +17,7 @@ import {
   CarRental,
   SystemLog,
   ClientHistory,
+  ChatThread,
 } from './types'
 
 export const MOCK_USER_LOCATION = {
@@ -349,6 +350,7 @@ export const MOCK_USERS: User[] = [
       emailAlerts: true,
       pushAlerts: true,
       categories: ['Alimentação', 'Moda'],
+      dashboardWidgets: ['featured', 'categories', 'tracked', 'all'],
     },
   },
 ]
@@ -402,7 +404,7 @@ export const MOCK_CAR_RENTALS: CarRental[] = Array.from({ length: 15 }).map(
     brand: i % 2 === 0 ? 'Toyota' : 'Ford',
     year: 2024,
     plate: `ABC-${100 + i}`,
-    category: i % 2 === 0 ? 'Economy' : 'Convertible',
+    category: i % 2 === 0 ? 'Economy' : 'SUV',
     pricePerDay: 100 + i * 5,
     status: i % 5 === 0 ? 'rented' : 'available',
     location: i % 2 === 0 ? 'São Paulo, SP' : 'Miami, FL',
@@ -447,3 +449,44 @@ export const MOCK_CLIENT_HISTORY: ClientHistory[] = Array.from({
   amount: 1500 + i * 100,
   status: 'completed',
 }))
+
+export const MOCK_CHATS: ChatThread[] = [
+  {
+    id: 'chat1',
+    participants: [
+      {
+        id: 'u_user',
+        name: 'End User',
+        avatar:
+          'https://img.usecurling.com/ppl/thumbnail?gender=female&seed=44',
+        role: 'user',
+      },
+      {
+        id: 'u_agency',
+        name: 'Travel Agency',
+        avatar:
+          'https://img.usecurling.com/ppl/thumbnail?gender=female&seed=66',
+        role: 'agency',
+      },
+    ],
+    messages: [
+      {
+        id: 'm1',
+        senderId: 'u_agency',
+        text: 'Hello! How can I help you with your itinerary?',
+        timestamp: new Date(Date.now() - 3600000).toISOString(),
+        isRead: true,
+      },
+      {
+        id: 'm2',
+        senderId: 'u_user',
+        text: 'I need to change the date of my flight.',
+        timestamp: new Date(Date.now() - 1800000).toISOString(),
+        isRead: true,
+      },
+    ],
+    lastMessage: 'I need to change the date of my flight.',
+    lastUpdated: new Date(Date.now() - 1800000).toISOString(),
+    unreadCount: 0,
+  },
+]

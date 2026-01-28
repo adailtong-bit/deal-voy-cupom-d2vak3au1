@@ -16,6 +16,7 @@ import {
   Share2,
   Globe,
   UploadCloud,
+  MessageSquare,
 } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -26,6 +27,8 @@ import { AdSpace } from '@/components/AdSpace'
 import { AggregatorFeed } from '@/components/AggregatorFeed'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
+import { useNavigate } from 'react-router-dom'
+import { useChat } from '@/stores/ChatContext'
 
 const DESTINATIONS: Record<string, { lat: number; lng: number }> = {
   orlando: { lat: 28.5383, lng: -81.3792 },
@@ -45,6 +48,8 @@ export default function TravelPlanner() {
     user,
   } = useCouponStore()
   const { t } = useLanguage()
+  const navigate = useNavigate()
+  const { startChat } = useChat()
 
   const [activeTab, setActiveTab] = useState<'planner' | 'saved' | 'community'>(
     'planner',
@@ -178,6 +183,12 @@ export default function TravelPlanner() {
       `${window.location.origin}/itinerary/${it.id}`,
     )
     toast.success(t('common.success'))
+  }
+
+  const handleContactAgent = () => {
+    const threadId = startChat('u_agency', 'Travel Agency')
+    navigate('/messages')
+    // In a real app we'd navigate to specific thread, e.g. /messages?threadId=${threadId}
   }
 
   const currentDayStops = useMemo(() => {
@@ -372,6 +383,14 @@ export default function TravelPlanner() {
                       {isAgentMode
                         ? t('travel.save_template')
                         : t('travel.save_itinerary')}
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      className="w-full gap-2"
+                      onClick={handleContactAgent}
+                    >
+                      <MessageSquare className="h-4 w-4" /> Contact Travel Agent
                     </Button>
                   </div>
                 </>

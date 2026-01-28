@@ -1,7 +1,7 @@
 import { Coupon } from '@/lib/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { MessageSquare, User } from 'lucide-react'
+import { MessageSquare, User, Upload, Image as ImageIcon } from 'lucide-react'
 import { StarRating } from './StarRating'
 import { useLanguage } from '@/stores/LanguageContext'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -18,6 +18,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useState } from 'react'
+import { toast } from 'sonner'
 
 export function CouponReviews({ coupon }: { coupon: Coupon }) {
   const { t } = useLanguage()
@@ -25,6 +26,7 @@ export function CouponReviews({ coupon }: { coupon: Coupon }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [rating, setRating] = useState(5)
   const [comment, setComment] = useState('')
+  const [hasImage, setHasImage] = useState(false)
 
   const reviews = coupon.reviews || []
 
@@ -34,8 +36,13 @@ export function CouponReviews({ coupon }: { coupon: Coupon }) {
       userName: 'Você',
       rating,
       comment,
+      images: hasImage
+        ? ['https://img.usecurling.com/p/200/200?q=review']
+        : undefined,
     })
+    toast.success('Review submitted! You earned 100 points.')
     setComment('')
+    setHasImage(false)
     setIsDialogOpen(false)
   }
 
@@ -81,6 +88,30 @@ export function CouponReviews({ coupon }: { coupon: Coupon }) {
                   placeholder="Conte sua experiência..."
                 />
               </div>
+              <div className="space-y-2">
+                <Label>Add Photos (Optional)</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="file"
+                    className="hidden"
+                    id="review-img"
+                    onChange={(e) => setHasImage(!!e.target.files?.length)}
+                  />
+                  <Label
+                    htmlFor="review-img"
+                    className="cursor-pointer border border-dashed p-4 rounded-md w-full flex flex-col items-center justify-center text-muted-foreground hover:bg-slate-50 transition-colors"
+                  >
+                    {hasImage ? (
+                      <ImageIcon className="h-6 w-6 text-green-500" />
+                    ) : (
+                      <Upload className="h-6 w-6" />
+                    )}
+                    <span className="text-xs mt-1">
+                      {hasImage ? 'Image Selected' : 'Click to upload'}
+                    </span>
+                  </Label>
+                </div>
+              </div>
             </div>
             <DialogFooter>
               <Button onClick={handleSubmit}>
@@ -116,6 +147,18 @@ export function CouponReviews({ coupon }: { coupon: Coupon }) {
                   </div>
                   <StarRating rating={review.rating} size={3} />
                   <p className="text-sm mt-1">{review.comment}</p>
+                  {review.images && review.images.length > 0 && (
+                    <div className="mt-2 flex gap-2">
+                      {review.images.map((img, i) => (
+                        <img
+                          key={i}
+                          src={img}
+                          alt="Review"
+                          className="h-16 w-16 object-cover rounded-md border"
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             ))

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Search,
   MapPin,
@@ -8,6 +8,9 @@ import {
   TrendingUp,
   LayoutGrid,
   Plane,
+  Edit,
+  Eye,
+  EyeOff,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -29,13 +32,57 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { AdSpace } from '@/components/AdSpace'
 import { Advertisement } from '@/lib/types'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Label } from '@/components/ui/label'
 
 export default function Index() {
-  const { coupons, isLoadingLocation, selectedRegion, user, ads } =
-    useCouponStore()
+  const {
+    coupons,
+    isLoadingLocation,
+    selectedRegion,
+    user,
+    ads,
+    updateUserPreferences,
+  } = useCouponStore()
   const { t, language } = useLanguage()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
+
+  const [widgets, setWidgets] = useState({
+    categories: true,
+    featured: true,
+    travel: true,
+    tracked: true,
+    all: true,
+  })
+
+  useEffect(() => {
+    if (user?.preferences?.dashboardWidgets) {
+      const w = user.preferences.dashboardWidgets
+      setWidgets({
+        categories: w.includes('categories'),
+        featured: w.includes('featured'),
+        travel: w.includes('travel'),
+        tracked: w.includes('tracked'),
+        all: w.includes('all'),
+      })
+    }
+  }, [user])
+
+  const toggleWidget = (key: keyof typeof widgets) => {
+    const newWidgets = { ...widgets, [key]: !widgets[key] }
+    setWidgets(newWidgets)
+    // Persist preference
+    const widgetList = Object.keys(newWidgets).filter(
+      (k) => newWidgets[k as keyof typeof widgets],
+    )
+    updateUserPreferences({ dashboardWidgets: widgetList })
+  }
 
   // Role Based View Logic
   const isEndUser = !user || user.role === 'user'
@@ -188,51 +235,109 @@ export default function Index() {
         </div>
       </section>
 
-      <section className="bg-white border-b py-2">
-        <div className="container mx-auto px-4">
-          <ScrollArea className="w-full whitespace-nowrap">
-            <div className="flex space-x-4 md:space-x-8 px-2 py-2 justify-start md:justify-center">
-              {CATEGORIES.map((cat) => {
-                const isActive = selectedCategory === cat.id
-                return (
-                  <button
-                    key={cat.id}
-                    className="flex flex-col items-center justify-center min-w-[72px] group"
-                    onClick={() => setSelectedCategory(cat.id)}
-                  >
-                    <div
-                      className={cn(
-                        'h-14 w-14 rounded-full border flex items-center justify-center transition-all duration-300',
-                        isActive
-                          ? 'bg-primary text-white border-primary shadow-lg scale-110'
-                          : 'bg-slate-50 border-slate-100 text-slate-500 group-hover:bg-primary/10 group-hover:text-primary group-hover:border-primary/20',
-                      )}
-                    >
-                      {getIcon(cat.icon)}
-                    </div>
-                    <span
-                      className={cn(
-                        'text-xs font-medium mt-2 transition-colors',
-                        isActive
-                          ? 'text-primary font-bold'
-                          : 'text-slate-600 group-hover:text-primary',
-                      )}
-                    >
-                      {t(cat.translationKey)}
-                    </span>
-                  </button>
-                )
-              })}
+      {/* Dashboard Customizer */}
+      <div className="container mx-auto px-4 pt-4 flex justify-end">
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="sm" className="gap-2 text-xs">
+              <Edit className="h-3 w-3" /> Customize Dashboard
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-56" align="end">
+            <div className="space-y-3">
+              <h4 className="font-bold text-sm">Visible Widgets</h4>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="w-cat">Categories</Label>
+                <Checkbox
+                  id="w-cat"
+                  checked={widgets.categories}
+                  onCheckedChange={() => toggleWidget('categories')}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="w-feat">Featured Deals</Label>
+                <Checkbox
+                  id="w-feat"
+                  checked={widgets.featured}
+                  onCheckedChange={() => toggleWidget('featured')}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="w-trav">Travel Hub</Label>
+                <Checkbox
+                  id="w-trav"
+                  checked={widgets.travel}
+                  onCheckedChange={() => toggleWidget('travel')}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="w-track">Tracked Deals</Label>
+                <Checkbox
+                  id="w-track"
+                  checked={widgets.tracked}
+                  onCheckedChange={() => toggleWidget('tracked')}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="w-all">All Offers</Label>
+                <Checkbox
+                  id="w-all"
+                  checked={widgets.all}
+                  onCheckedChange={() => toggleWidget('all')}
+                />
+              </div>
             </div>
-            <ScrollBar orientation="horizontal" className="invisible" />
-          </ScrollArea>
-        </div>
-      </section>
+          </PopoverContent>
+        </Popover>
+      </div>
+
+      {widgets.categories && (
+        <section className="bg-white border-b py-2">
+          <div className="container mx-auto px-4">
+            <ScrollArea className="w-full whitespace-nowrap">
+              <div className="flex space-x-4 md:space-x-8 px-2 py-2 justify-start md:justify-center">
+                {CATEGORIES.map((cat) => {
+                  const isActive = selectedCategory === cat.id
+                  return (
+                    <button
+                      key={cat.id}
+                      className="flex flex-col items-center justify-center min-w-[72px] group"
+                      onClick={() => setSelectedCategory(cat.id)}
+                    >
+                      <div
+                        className={cn(
+                          'h-14 w-14 rounded-full border flex items-center justify-center transition-all duration-300',
+                          isActive
+                            ? 'bg-primary text-white border-primary shadow-lg scale-110'
+                            : 'bg-slate-50 border-slate-100 text-slate-500 group-hover:bg-primary/10 group-hover:text-primary group-hover:border-primary/20',
+                        )}
+                      >
+                        {getIcon(cat.icon)}
+                      </div>
+                      <span
+                        className={cn(
+                          'text-xs font-medium mt-2 transition-colors',
+                          isActive
+                            ? 'text-primary font-bold'
+                            : 'text-slate-600 group-hover:text-primary',
+                        )}
+                      >
+                        {t(cat.translationKey)}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+              <ScrollBar orientation="horizontal" className="invisible" />
+            </ScrollArea>
+          </div>
+        </section>
+      )}
 
       <div className="container mx-auto px-4 py-8 space-y-10">
         <AdSpace position="top" />
 
-        {featuredCoupons.length > 0 && (
+        {widgets.featured && featuredCoupons.length > 0 && (
           <section>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold flex items-center gap-2 text-slate-800">
@@ -266,84 +371,90 @@ export default function Index() {
           </section>
         )}
 
-        <section className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-6 md:p-8 relative overflow-hidden text-white shadow-lg">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-          <div className="relative z-10 md:flex items-center justify-between">
-            <div className="mb-6 md:mb-0 md:w-1/2">
-              <Badge className="bg-white/20 text-white border-none mb-3 hover:bg-white/30">
-                {t('common.new')}: {t('hub.title')}
-              </Badge>
-              <h2 className="text-2xl md:text-3xl font-bold mb-2">
-                {t('hub.subtitle')}
-              </h2>
-              <p className="text-blue-100 mb-6 max-w-md">
-                {t('hub.promo_desc')}
-              </p>
-              <Link to="/travel-hub">
-                <Button className="bg-white text-blue-600 hover:bg-blue-50 font-bold rounded-full px-6 gap-2">
-                  <Plane className="h-4 w-4" /> {t('common.search')}
-                </Button>
-              </Link>
+        {widgets.travel && (
+          <section className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-6 md:p-8 relative overflow-hidden text-white shadow-lg">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+            <div className="relative z-10 md:flex items-center justify-between">
+              <div className="mb-6 md:mb-0 md:w-1/2">
+                <Badge className="bg-white/20 text-white border-none mb-3 hover:bg-white/30">
+                  {t('common.new')}: {t('hub.title')}
+                </Badge>
+                <h2 className="text-2xl md:text-3xl font-bold mb-2">
+                  {t('hub.subtitle')}
+                </h2>
+                <p className="text-blue-100 mb-6 max-w-md">
+                  {t('hub.promo_desc')}
+                </p>
+                <Link to="/travel-hub">
+                  <Button className="bg-white text-blue-600 hover:bg-blue-50 font-bold rounded-full px-6 gap-2">
+                    <Plane className="h-4 w-4" /> {t('common.search')}
+                  </Button>
+                </Link>
+              </div>
+              <div className="md:w-5/12 flex justify-center">
+                <Plane
+                  className="h-32 w-32 text-white/80 transform -rotate-12"
+                  strokeWidth={1}
+                />
+              </div>
             </div>
-            <div className="md:w-5/12 flex justify-center">
-              <Plane
-                className="h-32 w-32 text-white/80 transform -rotate-12"
-                strokeWidth={1}
-              />
-            </div>
-          </div>
-        </section>
+          </section>
+        )}
 
-        <section>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold flex items-center gap-2 text-slate-800">
-              <TrendingUp className="h-5 w-5 text-accent" />
-              {t('home.tracked_deals')}
-            </h2>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {aggregatedCoupons.length > 0
-              ? aggregatedCoupons.map((coupon) => (
-                  <CouponCard key={coupon.id} coupon={coupon} />
-                ))
-              : featuredCoupons.slice(0, 4).map((coupon) => (
-                  <div key={`fallback-${coupon.id}`} className="opacity-75">
-                    <CouponCard coupon={coupon} />
-                  </div>
-                ))}
-          </div>
-        </section>
+        {widgets.tracked && (
+          <section>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold flex items-center gap-2 text-slate-800">
+                <TrendingUp className="h-5 w-5 text-accent" />
+                {t('home.tracked_deals')}
+              </h2>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {aggregatedCoupons.length > 0
+                ? aggregatedCoupons.map((coupon) => (
+                    <CouponCard key={coupon.id} coupon={coupon} />
+                  ))
+                : featuredCoupons.slice(0, 4).map((coupon) => (
+                    <div key={`fallback-${coupon.id}`} className="opacity-75">
+                      <CouponCard coupon={coupon} />
+                    </div>
+                  ))}
+            </div>
+          </section>
+        )}
 
         <AdSpace position="bottom" />
 
-        <section>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold flex items-center gap-2 text-slate-800">
-              <Zap className="h-5 w-5 text-yellow-500" />
-              {selectedCategory === 'all'
-                ? t('home.all_offers')
-                : `${t('home.offers_of')} ${t(selectedCategoryLabel)}`}
-            </h2>
-          </div>
-          {filteredCoupons.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-              {filteredCoupons.map((coupon) => (
-                <CouponCard key={`all-${coupon.id}`} coupon={coupon} />
-              ))}
+        {widgets.all && (
+          <section>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold flex items-center gap-2 text-slate-800">
+                <Zap className="h-5 w-5 text-yellow-500" />
+                {selectedCategory === 'all'
+                  ? t('home.all_offers')
+                  : `${t('home.offers_of')} ${t(selectedCategoryLabel)}`}
+              </h2>
             </div>
-          ) : (
-            <div className="text-center py-12 text-muted-foreground bg-white rounded-lg border border-dashed">
-              {t('home.no_offers')}
-              <Button
-                variant="link"
-                className="text-primary"
-                onClick={() => setSelectedCategory('all')}
-              >
-                {t('common.view_all')}
-              </Button>
-            </div>
-          )}
-        </section>
+            {filteredCoupons.length > 0 ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                {filteredCoupons.map((coupon) => (
+                  <CouponCard key={`all-${coupon.id}`} coupon={coupon} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 text-muted-foreground bg-white rounded-lg border border-dashed">
+                {t('home.no_offers')}
+                <Button
+                  variant="link"
+                  className="text-primary"
+                  onClick={() => setSelectedCategory('all')}
+                >
+                  {t('common.view_all')}
+                </Button>
+              </div>
+            )}
+          </section>
+        )}
       </div>
     </div>
   )

@@ -15,6 +15,7 @@ import {
   Settings,
   User,
   LogOut,
+  MessageSquare,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -188,6 +189,18 @@ export function DesktopHeader() {
           <SyncStatus />
           <LanguageSelector />
 
+          {user && (
+            <Link to="/messages">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative hover:bg-secondary/10"
+              >
+                <MessageSquare className="h-5 w-5 text-foreground" />
+              </Button>
+            </Link>
+          )}
+
           <Link to="/notifications">
             <Button
               variant="ghost"
@@ -262,6 +275,14 @@ export function DesktopHeader() {
                     className="text-lg font-medium flex items-center gap-2 hover:text-primary transition-colors"
                   >
                     <User className="h-4 w-4" /> {t('nav.profile')}
+                  </Link>
+                </SheetClose>
+                <SheetClose asChild>
+                  <Link
+                    to="/messages"
+                    className="text-lg font-medium flex items-center gap-2 hover:text-primary transition-colors"
+                  >
+                    <MessageSquare className="h-4 w-4" /> {t('messages.title')}
                   </Link>
                 </SheetClose>
                 <SheetClose asChild>
