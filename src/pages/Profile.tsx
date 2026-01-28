@@ -62,6 +62,14 @@ export default function Profile() {
     address: '',
   })
 
+  // Redirect to login if user is not authenticated
+  // This side effect is moved to useEffect to prevent state updates during render
+  useEffect(() => {
+    if (!user) {
+      navigate('/login')
+    }
+  }, [user, navigate])
+
   useEffect(() => {
     if (user) {
       setFormData({
@@ -76,9 +84,6 @@ export default function Profile() {
     }
   }, [user])
 
-  const isProfileComplete =
-    user?.birthday && user?.country && user?.state && user?.city && user?.phone
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     updateUserProfile(formData)
@@ -90,10 +95,13 @@ export default function Profile() {
     navigate('/login')
   }
 
+  // Prevent rendering if user is missing (redirect happens in useEffect)
   if (!user) {
-    navigate('/login')
     return null
   }
+
+  const isProfileComplete =
+    user?.birthday && user?.country && user?.state && user?.city && user?.phone
 
   const LocationFields = () => (
     <div className="space-y-4">
@@ -151,6 +159,7 @@ export default function Profile() {
     </div>
   )
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const ScenarioCard = ({ title, icon: Icon, path, color }: any) => (
     <Link to={path}>
       <Card className="hover:shadow-md transition-shadow h-full">
