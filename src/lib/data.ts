@@ -209,6 +209,9 @@ const generateItineraries = (): Itinerary[] => {
       isTemplate: true,
       region: isUS ? 'US-FL' : 'BR-SP',
       agencyId: 'agency1',
+      status: i % 3 === 0 ? 'pending' : 'approved',
+      isPublic: i % 2 === 0,
+      authorName: isUS ? 'Travel Agency' : 'User Explorer',
     })
   }
   return itineraries
@@ -285,6 +288,10 @@ export const MOCK_USERS: User[] = [
     state: 'São Paulo',
     city: 'São Paulo',
     phone: '+55 11 99999-9999',
+    preferences: {
+      notifications: true,
+      emailAlerts: true,
+    },
   },
   // 2. Franchisee
   {
@@ -336,6 +343,13 @@ export const MOCK_USERS: User[] = [
     state: 'Florida',
     city: 'Miami',
     phone: '+1 305 555-9999',
+    preferences: {
+      notifications: true,
+      newsletter: true,
+      emailAlerts: true,
+      pushAlerts: true,
+      categories: ['Alimentação', 'Moda'],
+    },
   },
 ]
 

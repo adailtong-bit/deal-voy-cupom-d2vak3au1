@@ -17,6 +17,7 @@ export interface Review {
   rating: number
   comment: string
   date: string
+  status?: 'pending' | 'approved' | 'rejected'
 }
 
 export type Mood =
@@ -36,7 +37,7 @@ export interface LoyaltyProgram {
 export interface Coupon {
   id: string
   storeName: string
-  companyId?: string // Link to Company for settings
+  companyId?: string
   title: string
   description: string
   discount: string
@@ -49,7 +50,7 @@ export interface Coupon {
     | 'Outros'
     | 'Mercado'
     | 'Beleza'
-  distance: number // in meters
+  distance: number
   expiryDate: string
   startDate?: string
   endDate?: string
@@ -77,10 +78,10 @@ export interface Coupon {
   downvotes?: number
   status?: 'active' | 'expired' | 'issue' | 'validated'
   acceptsBooking?: boolean
-  price?: number // For premium coupons/reservations
+  price?: number
   isPaid?: boolean
   source?: 'partner' | 'aggregated'
-  region?: string // 'Country-State' format e.g. 'BR-SP', 'US-FL'
+  region?: string
 }
 
 export type CategoryType = Coupon['category']
@@ -133,8 +134,10 @@ export interface Booking {
   date: string
   time: string
   guests: number
-  status: 'confirmed' | 'cancelled' | 'paid'
+  status: 'confirmed' | 'cancelled' | 'paid' | 'pending'
   price?: number
+  userId?: string
+  userName?: string
 }
 
 export interface Challenge {
@@ -208,16 +211,20 @@ export interface Itinerary {
   id: string
   title: string
   description: string
-  stops: Coupon[] // Keeps compatibility with old structure for now, represents "All stops"
-  days?: DayPlan[] // New multi-day structure
+  stops: Coupon[]
+  days?: DayPlan[]
   totalSavings: number
   duration: string
   image: string
   tags: string[]
-  matchScore: number // 0-100
+  matchScore: number
   isTemplate?: boolean
   region?: string
   agencyId?: string
+  isPublic?: boolean
+  status?: 'draft' | 'pending' | 'approved' | 'rejected'
+  authorId?: string
+  authorName?: string
 }
 
 export type UserRole =
@@ -227,25 +234,32 @@ export type UserRole =
   | 'agency'
   | 'user'
 
+export interface UserPreferences {
+  notifications?: boolean
+  newsletter?: boolean
+  locationTracking?: boolean
+  categories?: string[]
+  quietHoursStart?: string
+  quietHoursEnd?: string
+  emailAlerts?: boolean
+  pushAlerts?: boolean
+}
+
 export interface User {
   id: string
   name: string
   email: string
   role: UserRole
   avatar?: string
-  birthday?: string // YYYY-MM-DD
-  region?: string // Assigned region for Franchisee
-  companyId?: string // Assigned company for Shopkeeper
-  agencyId?: string // Assigned agency
+  birthday?: string
+  region?: string
+  companyId?: string
+  agencyId?: string
   country?: string
   state?: string
   city?: string
   phone?: string
-  preferences?: {
-    notifications?: boolean
-    newsletter?: boolean
-    locationTracking?: boolean
-  }
+  preferences?: UserPreferences
 }
 
 export interface Company {
@@ -255,7 +269,7 @@ export interface Company {
   status: 'active' | 'pending' | 'rejected'
   registrationDate: string
   region: string
-  enableLoyalty: boolean // B2B Points Toggle
+  enableLoyalty: boolean
   ownerId?: string
 }
 
@@ -308,6 +322,7 @@ export interface PaymentTransaction {
   customerName?: string
   pointsAwarded?: number
   installments?: number
+  couponId?: string
 }
 
 export interface ConnectedApp {
@@ -323,7 +338,7 @@ export interface ConnectedApp {
 export interface Franchise {
   id: string
   name: string
-  region: string // 'Country-State'
+  region: string
   ownerId: string
   status: 'active' | 'inactive'
   licenseExpiry: string
@@ -342,7 +357,7 @@ export interface TravelOffer {
   image: string
   destination: string
   rating?: number
-  link: string // External link
+  link: string
   region?: string
   agencyId?: string
   availability?: number
@@ -352,7 +367,7 @@ export interface Region {
   id: string
   name: string
   country: string
-  code: string // e.g., US-FL, BR-SP
+  code: string
 }
 
 export interface PaymentMethod {
@@ -361,7 +376,7 @@ export interface PaymentMethod {
   last4?: string
   brand?: string
   expiry?: string
-  email?: string // For wallet
+  email?: string
   isDefault: boolean
 }
 

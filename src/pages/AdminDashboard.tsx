@@ -16,6 +16,8 @@ import {
   AlertTriangle,
   Globe,
   Lock,
+  CheckCircle,
+  XCircle,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -41,11 +43,18 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useForm } from 'react-hook-form'
 import { useLanguage } from '@/stores/LanguageContext'
-import { MOCK_SYSTEM_LOGS } from '@/lib/data'
 
 export default function AdminDashboard() {
-  const { user, companies, franchises, addFranchise, approveCompany } =
-    useCouponStore()
+  const {
+    user,
+    companies,
+    franchises,
+    addFranchise,
+    approveCompany,
+    itineraries,
+    moderateItinerary,
+    systemLogs,
+  } = useCouponStore()
   const navigate = useNavigate()
   const { t, formatDate, formatCurrency } = useLanguage()
   const [isFranchiseOpen, setIsFranchiseOpen] = useState(false)
@@ -85,6 +94,9 @@ export default function AdminDashboard() {
   const relevantCompanies = isSuperAdmin
     ? companies
     : companies.filter((c) => c.region === user.region)
+
+  // Pending Itineraries
+  const pendingItineraries = itineraries.filter((it) => it.status === 'pending')
 
   // Scenario Cards Helper
   const ScenarioCard = ({
@@ -148,7 +160,11 @@ export default function AdminDashboard() {
               icon={Building}
               value={relevantFranchises.length}
             />
-            <ScenarioCard title={t('admin.logs')} icon={FileText} value="15" />
+            <ScenarioCard
+              title={t('admin.logs')}
+              icon={FileText}
+              value={systemLogs.length}
+            />
             <ScenarioCard
               title={t('admin.ad_management')}
               icon={BarChart}
@@ -250,6 +266,7 @@ export default function AdminDashboard() {
             </TabsTrigger>
           )}
           <TabsTrigger value="merchants">{t('admin.merchants')}</TabsTrigger>
+          <TabsTrigger value="moderation">{t('admin.moderation')}</TabsTrigger>
           <TabsTrigger value="logs">{t('admin.logs')}</TabsTrigger>
           <TabsTrigger value="reports">{t('admin.reports')}</TabsTrigger>
         </TabsList>
@@ -389,10 +406,69 @@ export default function AdminDashboard() {
           </Card>
         </TabsContent>
 
+        <TabsContent value="moderation">
+          <Card>
+            <CardHeader>
+              <CardTitle>Content Moderation Queue</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Author</TableHead>
+                    <TableHead>Action</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {pendingItineraries.length === 0 && (
+                    <TableRow>
+                      <TableCell
+                        colSpan={4}
+                        className="text-center text-muted-foreground"
+                      >
+                        No pending content.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {pendingItineraries.map((it) => (
+                    <TableRow key={it.id}>
+                      <TableCell>
+                        <Badge variant="outline">Itinerary</Badge>
+                      </TableCell>
+                      <TableCell>{it.title}</TableCell>
+                      <TableCell>{it.authorName || 'Unknown'}</TableCell>
+                      <TableCell className="flex gap-2">
+                        <Button
+                          size="sm"
+                          className="bg-green-600 hover:bg-green-700"
+                          onClick={() => moderateItinerary(it.id, 'approved')}
+                        >
+                          <CheckCircle className="h-4 w-4 mr-1" />{' '}
+                          {t('common.approve')}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => moderateItinerary(it.id, 'rejected')}
+                        >
+                          <XCircle className="h-4 w-4 mr-1" />{' '}
+                          {t('common.reject')}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="logs">
           <Card>
             <CardHeader>
-              <CardTitle>System Logs</CardTitle>
+              <CardTitle>System Logs (Audit)</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
@@ -406,10 +482,10 @@ export default function AdminDashboard() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {MOCK_SYSTEM_LOGS.map((log) => (
+                  {systemLogs.map((log) => (
                     <TableRow key={log.id}>
                       <TableCell className="whitespace-nowrap">
-                        {formatDate(log.date)}
+                        {new Date(log.date).toLocaleString()}
                       </TableCell>
                       <TableCell>{log.action}</TableCell>
                       <TableCell

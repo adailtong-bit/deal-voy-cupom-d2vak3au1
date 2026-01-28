@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useCouponStore } from '@/stores/CouponContext'
-import { Coupon } from '@/lib/types'
+import { Coupon, TravelOffer } from '@/lib/types'
 import {
   CreditCard,
   Lock,
@@ -49,9 +49,11 @@ export default function Checkout() {
     formState: { errors },
   } = useForm()
 
-  const coupon = location.state?.coupon as Coupon
+  const item = (location.state?.coupon || location.state?.offer) as
+    | Coupon
+    | TravelOffer
 
-  if (!coupon) {
+  if (!item) {
     return (
       <div className="container mx-auto p-8 text-center">
         <h2 className="text-xl mb-4">{t('checkout.no_item')}</h2>
@@ -60,10 +62,22 @@ export default function Checkout() {
     )
   }
 
-  const canAffordWithCredits = fetchCredits >= (coupon.price || 0)
+  // Normalize item properties
+  const price = item.price || 0
+  const title = item.title
+  const image = item.image
+  const provider =
+    'storeName' in item
+      ? item.storeName
+      : 'provider' in item
+        ? item.provider
+        : ''
+  const isOffer = 'provider' in item
+
+  const canAffordWithCredits = fetchCredits >= price
+  const pointsToEarn = Math.floor(price)
 
   const onSubmit = async (data: any) => {
-    // Validate Email
     if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
       toast.error('Invalid email format')
       return
@@ -73,7 +87,7 @@ export default function Checkout() {
     await new Promise((resolve) => setTimeout(resolve, 2000))
 
     if (paymentMethod === 'fetch') {
-      if (!redeemPoints(coupon.price || 0, 'fetch')) {
+      if (!redeemPoints(price, 'fetch')) {
         toast.error('Insufficient Balance')
         setIsProcessing(false)
         return
@@ -82,18 +96,22 @@ export default function Checkout() {
 
     try {
       await processPayment({
-        couponId: coupon.id,
-        amount: coupon.price || 0,
+        couponId: item.id,
+        amount: price,
         method: paymentMethod,
         installments: parseInt(installments),
       })
       setIsSuccess(true)
       toast.success(t('checkout.success'), {
-        description: t('checkout.redirect'),
+        description: `Pagamento confirmado! Você ganhou +${pointsToEarn} pontos.`,
       })
       setTimeout(() => {
-        navigate(`/coupon/${coupon.id}`)
-      }, 1500)
+        if (isOffer) {
+          navigate('/agencies')
+        } else {
+          navigate(`/coupon/${item.id}`)
+        }
+      }, 2500)
     } catch (error) {
       toast.error(t('common.error'))
       setIsProcessing(false)
@@ -109,7 +127,12 @@ export default function Checkout() {
         <h1 className="text-3xl font-bold mb-2 text-green-800">
           {t('checkout.success')}
         </h1>
-        <p className="text-muted-foreground mb-8">{t('checkout.redirect')}</p>
+        <p className="text-muted-foreground mb-4">
+          Reserva confirmada para {title}
+        </p>
+        <div className="flex items-center gap-2 bg-yellow-50 text-yellow-700 px-4 py-2 rounded-full font-bold">
+          <Coins className="h-5 w-5" /> +{pointsToEarn} pontos ganhos!
+        </div>
       </div>
     )
   }
@@ -137,19 +160,19 @@ export default function Checkout() {
       <Card className="mb-6 border-l-4 border-l-[#FF5722] shadow-sm">
         <CardContent className="p-4 flex gap-4">
           <img
-            src={coupon.image}
+            src={image}
             alt="Thumb"
             className="h-20 w-20 rounded-md object-cover"
           />
           <div className="flex-1">
-            <h3 className="font-bold line-clamp-1">{coupon.title}</h3>
-            <p className="text-sm text-muted-foreground">{coupon.storeName}</p>
+            <h3 className="font-bold line-clamp-1">{title}</h3>
+            <p className="text-sm text-muted-foreground">{provider}</p>
             <div className="flex items-center justify-between mt-2">
               <span className="text-sm text-muted-foreground">
                 {t('checkout.total')}
               </span>
               <span className="text-xl font-bold text-[#FF5722]">
-                {formatCurrency(coupon.price || 0)}
+                {formatCurrency(price)}
               </span>
             </div>
           </div>
@@ -234,7 +257,7 @@ export default function Checkout() {
                             {Array.from({ length: 12 }, (_, i) => i + 1).map(
                               (i) => (
                                 <SelectItem key={i} value={i.toString()}>
-                                  {i}x {formatCurrency((coupon.price || 0) / i)}
+                                  {i}x {formatCurrency(price / i)}
                                 </SelectItem>
                               ),
                             )}
@@ -292,7 +315,7 @@ export default function Checkout() {
               </div>
             </RadioGroup>
           </CardContent>
-          <CardFooter className="bg-muted/30 p-6">
+          <CardFooter className="bg-muted/30 p-6 flex-col gap-2">
             <Button
               className="w-full h-14 text-lg font-bold shadow-md hover:shadow-lg transition-all bg-[#4CAF50] hover:bg-[#43A047]"
               type="submit"
@@ -303,8 +326,11 @@ export default function Checkout() {
             >
               {isProcessing
                 ? 'Processing...'
-                : `${t('checkout.pay')} ${formatCurrency(coupon.price || 0)}`}
+                : `${t('checkout.pay')} ${formatCurrency(price)}`}
             </Button>
+            <p className="text-xs text-muted-foreground text-center">
+              Ganhe {pointsToEarn} pontos com esta compra.
+            </p>
           </CardFooter>
         </Card>
       </form>

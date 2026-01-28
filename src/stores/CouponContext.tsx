@@ -22,6 +22,8 @@ import {
   Region,
   ValidationLog,
   CarRental,
+  SystemLog,
+  UserPreferences,
 } from '@/lib/types'
 import {
   MOCK_COUPONS,
@@ -39,6 +41,7 @@ import {
   MOCK_VALIDATION_LOGS,
   MOCK_CAR_RENTALS,
   REGIONS,
+  MOCK_SYSTEM_LOGS,
 } from '@/lib/data'
 import { toast } from 'sonner'
 import { useNotification } from './NotificationContext'
@@ -87,6 +90,7 @@ interface CouponContextType {
   regions: Region[]
   validationLogs: ValidationLog[]
   carRentals: CarRental[]
+  systemLogs: SystemLog[]
   setRegion: (regionCode: string) => void
   toggleSave: (id: string) => void
   toggleTrip: (id: string) => void
@@ -125,8 +129,11 @@ interface CouponContextType {
   importFetchPoints: (amount: number) => void
   claimBirthdayGift: () => void
   updateUserProfile: (data: Partial<User>) => void
+  updateUserPreferences: (prefs: UserPreferences) => void
   connectApp: (id: string) => void
   saveItinerary: (itinerary: Itinerary) => void
+  publishItinerary: (id: string) => void
+  moderateItinerary: (id: string, status: 'approved' | 'rejected') => void
   toggleLoyaltySystem: (companyId: string, enabled: boolean) => void
   addFranchise: (franchise: Franchise) => void
   validateCoupon: (code: string) => boolean
@@ -181,6 +188,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   const [validationLogs, setValidationLogs] =
     useState<ValidationLog[]>(MOCK_VALIDATION_LOGS)
   const [carRentals, setCarRentals] = useState<CarRental[]>(MOCK_CAR_RENTALS)
+  const [systemLogs, setSystemLogs] = useState<SystemLog[]>(MOCK_SYSTEM_LOGS)
 
   const [rewardHistory, setRewardHistory] = useState<RewardActivity[]>([])
 
@@ -197,6 +205,23 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       setIsLoadingLocation(false)
     }, 1500)
   }, [])
+
+  // Log action helper
+  const logSystemAction = (
+    action: string,
+    details: string,
+    status: 'success' | 'warning' | 'error' = 'success',
+  ) => {
+    const log: SystemLog = {
+      id: Math.random().toString(),
+      date: new Date().toISOString(),
+      action,
+      details,
+      user: user?.id || 'unknown',
+      status,
+    }
+    setSystemLogs((prev) => [log, ...prev])
+  }
 
   // Filter content based on selectedRegion
   const filteredCoupons =
@@ -246,6 +271,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
 
   const reserveCoupon = (id: string) => {
     setReservedIds((prev) => [...prev, id])
+    logSystemAction('Reserve Coupon', `Reserved coupon ${id}`)
     return true
   }
 
@@ -266,13 +292,43 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   const reportCoupon = (id: string, issue: string) => {
     /* ... */
   }
-  const makeBooking = (booking: any) => {
-    /* ... */
+  const makeBooking = (booking: Omit<Booking, 'id' | 'status'>) => {
+    const newBooking: Booking = {
+      ...booking,
+      id: Math.random().toString(),
+      status: 'pending',
+      userId: user?.id,
+      userName: user?.name,
+    }
+    setBookings((prev) => [newBooking, ...prev])
+    setPoints((prev) => prev + 50) // Points for booking
+    logSystemAction('New Booking', `Booking created for ${booking.storeName}`)
+    setRewardHistory((prev) => [
+      {
+        id: Math.random().toString(),
+        title: 'Reserva Realizada',
+        points: 50,
+        date: new Date().toISOString(),
+        type: 'earned',
+      },
+      ...prev,
+    ])
   }
   const redeemPoints = (amount: number, type: any) => {
     if (type === 'points') {
       if (points < amount) return false
       setPoints((p) => p - amount)
+      setRewardHistory((prev) => [
+        {
+          id: Math.random().toString(),
+          title: 'Resgate de Pontos',
+          points: amount,
+          date: new Date().toISOString(),
+          type: 'redeemed',
+        },
+        ...prev,
+      ])
+      logSystemAction('Points Redeemed', `Redeemed ${amount} points`)
       return true
     }
     return true
@@ -294,7 +350,39 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       }
     }, 200)
   }
-  const processPayment = async (d: any) => Promise.resolve(true)
+  const processPayment = async (d: any) => {
+    const transaction: PaymentTransaction = {
+      id: Math.random().toString(),
+      date: new Date().toISOString(),
+      amount: d.amount,
+      storeName: 'Deal Voy Platform',
+      couponTitle: 'Purchase',
+      method: d.method || 'card',
+      status: 'completed',
+      customerName: user?.name,
+      installments: d.installments,
+      couponId: d.couponId,
+    }
+    setTransactions((prev) => [transaction, ...prev])
+    // Award points for purchase (1pt per $1)
+    const pointsEarned = Math.floor(d.amount)
+    setPoints((prev) => prev + pointsEarned)
+    setRewardHistory((prev) => [
+      {
+        id: Math.random().toString(),
+        title: 'Compra Realizada',
+        points: pointsEarned,
+        date: new Date().toISOString(),
+        type: 'earned',
+      },
+      ...prev,
+    ])
+    logSystemAction(
+      'Payment Processed',
+      `Amount: ${d.amount}, Method: ${d.method}`,
+    )
+    return Promise.resolve(true)
+  }
   const isDownloaded = (id: string) => downloadedIds.includes(id)
   const joinChallenge = (id: string) => {
     /* ... */
@@ -310,6 +398,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       setUser(existingUser)
       if (existingUser.region) setSelectedRegion(existingUser.region)
       toast.success(`Bem-vindo, ${existingUser.name}!`)
+      logSystemAction('User Login', `User ${existingUser.email} logged in`)
     } else {
       // Fallback or generic logic
       const newUser: User = {
@@ -321,19 +410,25 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       }
       setUser(newUser)
       toast.success('Login realizado com sucesso!')
+      logSystemAction('User Login', `New user ${email} logged in`)
     }
   }
 
-  const logout = () => setUser(null)
+  const logout = () => {
+    logSystemAction('User Logout', `User ${user?.email} logged out`)
+    setUser(null)
+  }
   const approveCompany = (id: string) => {
     setCompanies((prev) =>
       prev.map((c) => (c.id === id ? { ...c, status: 'active' } : c)),
     )
+    logSystemAction('Company Approved', `Company ${id} approved`)
   }
   const rejectCompany = (id: string) => {
     setCompanies((prev) =>
       prev.map((c) => (c.id === id ? { ...c, status: 'rejected' } : c)),
     )
+    logSystemAction('Company Rejected', `Company ${id} rejected`)
   }
   const createAd = (ad: Advertisement) => setAds((prev) => [ad, ...prev])
   const deleteAd = (id: string) =>
@@ -355,16 +450,52 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     if (!user) return
     const updatedUser = { ...user, ...data }
     setUser(updatedUser)
-    // Update MOCK_USERS or persist to backend in real app
+    logSystemAction('Profile Updated', 'User updated profile details')
     toast.success('Perfil atualizado!')
+  }
+
+  const updateUserPreferences = (prefs: UserPreferences) => {
+    if (!user) return
+    const updatedUser = {
+      ...user,
+      preferences: { ...user.preferences, ...prefs },
+    }
+    setUser(updatedUser)
+    logSystemAction('Preferences Updated', 'User updated notification settings')
+    toast.success('Preferências salvas!')
   }
 
   const connectApp = (id: string) => {
     /* ... */
   }
   const saveItinerary = (it: Itinerary) => {
-    setItineraries((prev) => [it, ...prev])
+    const newItinerary = {
+      ...it,
+      status: 'draft' as const,
+      authorId: user?.id,
+      authorName: user?.name,
+    }
+    setItineraries((prev) => [newItinerary, ...prev])
+    logSystemAction('Itinerary Saved', `Itinerary ${it.title} saved`)
     toast.success('Itinerary Saved')
+  }
+
+  const publishItinerary = (id: string) => {
+    setItineraries((prev) =>
+      prev.map((it) =>
+        it.id === id ? { ...it, status: 'pending', isPublic: true } : it,
+      ),
+    )
+    logSystemAction('Itinerary Published', `Itinerary ${id} sent for approval`)
+    toast.success('Roteiro enviado para moderação!')
+  }
+
+  const moderateItinerary = (id: string, status: 'approved' | 'rejected') => {
+    setItineraries((prev) =>
+      prev.map((it) => (it.id === id ? { ...it, status } : it)),
+    )
+    logSystemAction('Moderation Action', `Itinerary ${id} ${status}`)
+    toast.success(`Roteiro ${status === 'approved' ? 'aprovado' : 'rejeitado'}`)
   }
 
   const toggleLoyaltySystem = (companyId: string, enabled: boolean) => {
@@ -382,6 +513,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
 
   const addFranchise = (franchise: Franchise) => {
     setFranchises((prev) => [...prev, franchise])
+    logSystemAction('Franchise Added', `Franchise ${franchise.name} created`)
     toast.success('Franquia criada com sucesso!')
   }
 
@@ -398,6 +530,22 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         shopkeeperId: user?.id || 'unknown',
       }
       setValidationLogs((prev) => [log, ...prev])
+      logSystemAction(
+        'Coupon Validated',
+        `Coupon ${coupon.id} validated via QR`,
+      )
+      // Award points for using coupon
+      setPoints((prev) => prev + 20)
+      setRewardHistory((prev) => [
+        {
+          id: Math.random().toString(),
+          title: 'Cupom Utilizado',
+          points: 20,
+          date: new Date().toISOString(),
+          type: 'earned',
+        },
+        ...prev,
+      ])
       return true
     }
     return false
@@ -448,6 +596,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         regions: REGIONS,
         validationLogs,
         carRentals,
+        systemLogs,
         setRegion,
         toggleSave,
         toggleTrip,
@@ -481,8 +630,11 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         importFetchPoints,
         claimBirthdayGift,
         updateUserProfile,
+        updateUserPreferences,
         connectApp,
         saveItinerary,
+        publishItinerary,
+        moderateItinerary,
         toggleLoyaltySystem,
         addFranchise,
         validateCoupon,

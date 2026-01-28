@@ -35,13 +35,16 @@ import {
   Bell,
   BarChart,
   Tag,
+  ShoppingBag,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { ItineraryCard } from '@/components/ItineraryCard'
 import { MOCK_CLIENT_HISTORY } from '@/lib/data'
+import { Badge } from '@/components/ui/badge'
 
 export default function AgencyDashboard() {
-  const { user, itineraries, carRentals, addCarRental } = useCouponStore()
+  const { user, itineraries, carRentals, addCarRental, bookings } =
+    useCouponStore()
   const { t, formatCurrency, formatDate } = useLanguage()
   const { register, handleSubmit, reset } = useForm()
   const [isCarDialogOpen, setIsCarDialogOpen] = useState(false)
@@ -57,6 +60,9 @@ export default function AgencyDashboard() {
   // Filter to ensure we have "my" items, falling back to all for demo volume
   const myItineraries = itineraries.length > 0 ? itineraries : []
   const myCars = carRentals.length > 0 ? carRentals : []
+
+  // Assuming bookings also include agency bookings in real app (mocked here)
+  const myBookings = bookings
 
   const onCarSubmit = (data: any) => {
     addCarRental({
@@ -160,6 +166,9 @@ export default function AgencyDashboard() {
           <TabsTrigger value="itineraries">
             <Map className="h-4 w-4 mr-2" /> {t('agency.itineraries')}
           </TabsTrigger>
+          <TabsTrigger value="bookings">
+            <ShoppingBag className="h-4 w-4 mr-2" /> {t('agencies.bookings')}
+          </TabsTrigger>
           <TabsTrigger value="cars">
             <Car className="h-4 w-4 mr-2" /> {t('agency.cars')}
           </TabsTrigger>
@@ -180,6 +189,48 @@ export default function AgencyDashboard() {
               <ItineraryCard key={it.id} itinerary={it} />
             ))}
           </div>
+        </TabsContent>
+
+        <TabsContent value="bookings">
+          <Card>
+            <CardHeader>
+              <CardTitle>Direct Bookings</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Item</TableHead>
+                    <TableHead>Customer</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {myBookings.length === 0 && (
+                    <TableRow>
+                      <TableCell
+                        colSpan={4}
+                        className="text-center text-muted-foreground"
+                      >
+                        No active bookings.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {myBookings.map((booking) => (
+                    <TableRow key={booking.id}>
+                      <TableCell>{formatDate(booking.date)}</TableCell>
+                      <TableCell>{booking.storeName}</TableCell>
+                      <TableCell>{booking.userName || 'Guest'}</TableCell>
+                      <TableCell>
+                        <Badge>{booking.status}</Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="cars" className="space-y-6">

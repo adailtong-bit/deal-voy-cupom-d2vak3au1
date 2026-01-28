@@ -35,6 +35,7 @@ import {
   Star,
   Package,
   Calendar,
+  ShoppingBag,
 } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useCouponStore } from '@/stores/CouponContext'
@@ -42,6 +43,7 @@ import { toast } from 'sonner'
 import { VendorAnalytics } from '@/components/VendorAnalytics'
 import { CouponValidation } from '@/components/CouponValidation'
 import { MOCK_VALIDATION_LOGS } from '@/lib/data'
+import { Badge } from '@/components/ui/badge'
 
 export default function VendorDashboard() {
   const { t, formatDate } = useLanguage()
@@ -51,6 +53,7 @@ export default function VendorDashboard() {
     coupons: allCoupons,
     addCoupon,
     toggleLoyaltySystem,
+    bookings,
   } = useCouponStore()
 
   const myCompany =
@@ -64,6 +67,8 @@ export default function VendorDashboard() {
         (c.companyId === myCompany.id || user?.role === 'super_admin'),
     )
     .slice(0, 15) // Show at least 10 items
+
+  const myOrders = bookings // In reality, filter by store name or ID
 
   const { register, handleSubmit, reset } = useForm()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -223,6 +228,9 @@ export default function VendorDashboard() {
       <Tabs defaultValue="overview">
         <TabsList>
           <TabsTrigger value="overview">{t('vendor.overview')}</TabsTrigger>
+          <TabsTrigger value="orders">
+            <ShoppingBag className="h-3 w-3 mr-1" /> {t('vendor.orders')}
+          </TabsTrigger>
           <TabsTrigger value="offers">{t('vendor.offers')}</TabsTrigger>
           <TabsTrigger value="validation">
             <Scan className="h-3 w-3 mr-1" /> {t('vendor.validation')}
@@ -237,6 +245,50 @@ export default function VendorDashboard() {
 
         <TabsContent value="overview">
           <VendorAnalytics />
+        </TabsContent>
+
+        <TabsContent value="orders">
+          <Card>
+            <CardHeader>
+              <CardTitle>Incoming Orders</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Customer</TableHead>
+                    <TableHead>Details</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {myOrders.length === 0 && (
+                    <TableRow>
+                      <TableCell
+                        colSpan={4}
+                        className="text-center text-muted-foreground"
+                      >
+                        No orders found.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {myOrders.map((order) => (
+                    <TableRow key={order.id}>
+                      <TableCell>{formatDate(order.date)}</TableCell>
+                      <TableCell>{order.userName || 'Guest'}</TableCell>
+                      <TableCell>
+                        {order.storeName} - {order.guests} guests
+                      </TableCell>
+                      <TableCell>
+                        <Badge>{order.status}</Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="offers">

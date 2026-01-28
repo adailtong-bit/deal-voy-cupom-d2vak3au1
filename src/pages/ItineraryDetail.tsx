@@ -14,6 +14,8 @@ import {
   CheckCircle,
   Loader2,
   Wifi,
+  Copy,
+  Plus,
 } from 'lucide-react'
 import { CouponCard } from '@/components/CouponCard'
 import { toast } from 'sonner'
@@ -36,6 +38,8 @@ export default function ItineraryDetail() {
     downloadedIds,
     isDownloading,
     downloadProgress,
+    saveItinerary,
+    user,
   } = useCouponStore()
   const { t, formatCurrency } = useLanguage()
 
@@ -53,6 +57,8 @@ export default function ItineraryDetail() {
   const isDownloaded = itinerary.stops.every((stop) =>
     downloadedIds.includes(stop.id),
   )
+
+  const isMyItinerary = itinerary.authorId === user?.id
 
   const handleShare = async () => {
     if (navigator.share) {
@@ -72,6 +78,19 @@ export default function ItineraryDetail() {
 
   const handleDownload = () => {
     downloadOffline(itinerary.stops.map((s) => s.id))
+  }
+
+  const handleClone = () => {
+    saveItinerary({
+      ...itinerary,
+      title: `Copy of ${itinerary.title}`,
+      id: Math.random().toString(),
+      authorId: user?.id,
+      authorName: user?.name,
+      isPublic: false,
+      status: 'draft',
+    })
+    navigate('/travel-planner')
   }
 
   return (
@@ -107,6 +126,17 @@ export default function ItineraryDetail() {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="absolute top-4 right-4 flex gap-2">
+          {!isMyItinerary && (
+            <Button
+              variant="secondary"
+              size="icon"
+              className="rounded-full bg-background/80 hover:bg-white"
+              onClick={handleClone}
+              title="Save to My Trips"
+            >
+              <Plus className="h-5 w-5" />
+            </Button>
+          )}
           <Button
             variant="secondary"
             size="icon"
@@ -146,6 +176,11 @@ export default function ItineraryDetail() {
               {isDownloaded && (
                 <Badge className="bg-accent text-accent-foreground border-0 gap-1">
                   <Wifi className="h-3 w-3" /> Offline Ready
+                </Badge>
+              )}
+              {itinerary.authorName && (
+                <Badge className="bg-blue-500/80 text-white border-0">
+                  By {itinerary.authorName}
                 </Badge>
               )}
             </div>

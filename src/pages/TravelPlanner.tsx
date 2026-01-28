@@ -14,6 +14,8 @@ import {
   Sun,
   MapPin,
   Share2,
+  Globe,
+  UploadCloud,
 } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -23,6 +25,7 @@ import { DayPlan, Itinerary, Coupon } from '@/lib/types'
 import { AdSpace } from '@/components/AdSpace'
 import { AggregatorFeed } from '@/components/AggregatorFeed'
 import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
 
 const DESTINATIONS: Record<string, { lat: number; lng: number }> = {
   orlando: { lat: 28.5383, lng: -81.3792 },
@@ -33,11 +36,19 @@ const DESTINATIONS: Record<string, { lat: number; lng: number }> = {
 }
 
 export default function TravelPlanner() {
-  const { coupons, userLocation, saveItinerary, itineraries, user } =
-    useCouponStore()
+  const {
+    coupons,
+    userLocation,
+    saveItinerary,
+    publishItinerary,
+    itineraries,
+    user,
+  } = useCouponStore()
   const { t } = useLanguage()
 
-  const [activeTab, setActiveTab] = useState<'planner' | 'saved'>('planner')
+  const [activeTab, setActiveTab] = useState<'planner' | 'saved' | 'community'>(
+    'planner',
+  )
   const [navMode, setNavMode] = useState<'gps' | 'planned'>('gps')
   const [origin, setOrigin] = useState('')
   const [destination, setDestination] = useState('')
@@ -67,6 +78,17 @@ export default function TravelPlanner() {
       return { lat: userLocation.lat, lng: userLocation.lng }
     return { lat: 28.5383, lng: -81.3792 }
   }, [navMode, mapCenter, userLocation])
+
+  // Filter My Itineraries
+  const myItineraries = itineraries.filter(
+    (it) =>
+      it.authorId === user?.id || (user?.role === 'agency' && it.agencyId),
+  )
+
+  // Filter Community Itineraries
+  const communityItineraries = itineraries.filter(
+    (it) => it.isPublic && it.status === 'approved',
+  )
 
   const handleRouteSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -141,9 +163,14 @@ export default function TravelPlanner() {
       tags: ['Custom'],
       matchScore: 100,
       isTemplate: isAgentMode,
+      authorId: user?.id,
+      authorName: user?.name,
+      status: 'draft',
+      isPublic: false,
     }
 
     saveItinerary(newItinerary)
+    setActiveTab('saved')
   }
 
   const handleShare = (it: Itinerary) => {
@@ -182,17 +209,25 @@ export default function TravelPlanner() {
                 variant={activeTab === 'planner' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setActiveTab('planner')}
-                className="flex-1 font-bold"
+                className="flex-1 font-bold text-xs"
               >
-                {t('common.save')}
+                {t('common.new')}
               </Button>
               <Button
                 variant={activeTab === 'saved' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setActiveTab('saved')}
-                className="flex-1 font-bold"
+                className="flex-1 font-bold text-xs"
               >
                 {t('travel.my_itineraries')}
+              </Button>
+              <Button
+                variant={activeTab === 'community' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setActiveTab('community')}
+                className="flex-1 font-bold text-xs"
+              >
+                {t('travel.community_trips')}
               </Button>
             </div>
           </div>
@@ -340,12 +375,87 @@ export default function TravelPlanner() {
                     </Button>
                   </div>
                 </>
-              ) : (
+              ) : activeTab === 'saved' ? (
                 <div className="space-y-4">
-                  {itineraries.map((it) => (
+                  {myItineraries.length === 0 && (
+                    <p className="text-center text-muted-foreground text-sm">
+                      No saved itineraries.
+                    </p>
+                  )}
+                  {myItineraries.map((it) => (
                     <Card
                       key={it.id}
                       className="cursor-pointer hover:shadow-md transition-all group relative"
+                    >
+                      <div className="absolute top-2 right-2 flex gap-1 z-10">
+                        {!it.isPublic && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8 bg-white/50 hover:bg-white text-blue-600"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              publishItinerary(it.id)
+                            }}
+                            title="Publish"
+                          >
+                            <UploadCloud className="h-4 w-4" />
+                          </Button>
+                        )}
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 bg-white/50 hover:bg-white text-primary"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleShare(it)
+                          }}
+                        >
+                          <Share2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <CardContent className="p-4 flex gap-4">
+                        <img
+                          src={it.image}
+                          className="w-20 h-20 rounded-md object-cover"
+                          alt=""
+                        />
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-bold group-hover:text-primary transition-colors truncate">
+                            {it.title}
+                          </h4>
+                          <div className="flex flex-wrap gap-2 text-xs text-muted-foreground mt-1">
+                            <span className="bg-primary/10 text-primary px-1.5 py-0.5 rounded font-medium">
+                              {it.duration}
+                            </span>
+                            {it.status && (
+                              <Badge
+                                variant="outline"
+                                className={`text-[10px] ${it.status === 'approved' ? 'text-green-600 bg-green-50' : it.status === 'pending' ? 'text-yellow-600 bg-yellow-50' : 'text-slate-500'}`}
+                              >
+                                {it.status}
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-xs mt-2 line-clamp-1">
+                            {it.description}
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {communityItineraries.length === 0 && (
+                    <p className="text-center text-muted-foreground text-sm">
+                      No community trips yet.
+                    </p>
+                  )}
+                  {communityItineraries.map((it) => (
+                    <Card
+                      key={it.id}
+                      className="cursor-pointer hover:shadow-md transition-all group relative border-l-4 border-l-purple-500"
                     >
                       <Button
                         size="icon"
@@ -356,7 +466,7 @@ export default function TravelPlanner() {
                           handleShare(it)
                         }}
                       >
-                        <Share2 className="h-4 w-4 text-primary" />
+                        <Share2 className="h-4 w-4 text-purple-600" />
                       </Button>
                       <CardContent className="p-4 flex gap-4">
                         <img
@@ -365,13 +475,12 @@ export default function TravelPlanner() {
                           alt=""
                         />
                         <div>
-                          <h4 className="font-bold group-hover:text-primary transition-colors">
+                          <h4 className="font-bold group-hover:text-purple-600 transition-colors">
                             {it.title}
                           </h4>
                           <div className="flex gap-2 text-xs text-muted-foreground mt-1">
-                            <span className="bg-primary/10 text-primary px-1.5 py-0.5 rounded font-medium">
-                              {it.duration}
-                            </span>
+                            <Globe className="h-3 w-3" />
+                            <span>by {it.authorName || 'User'}</span>
                           </div>
                           <p className="text-xs mt-2 line-clamp-2">
                             {it.description}

@@ -2,13 +2,22 @@ import { useCouponStore } from '@/stores/CouponContext'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Car, Briefcase, ExternalLink, Filter } from 'lucide-react'
+import {
+  Car,
+  Briefcase,
+  ExternalLink,
+  Filter,
+  ShoppingCart,
+} from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useLanguage } from '@/stores/LanguageContext'
+import { useNavigate } from 'react-router-dom'
+import { TravelOffer } from '@/lib/types'
 
 export default function Agencies() {
   const { travelOffers, selectedRegion } = useCouponStore()
   const { t, formatCurrency } = useLanguage()
+  const navigate = useNavigate()
 
   const packages = travelOffers.filter(
     (t) =>
@@ -21,6 +30,10 @@ export default function Agencies() {
       t.type === 'car_rental' &&
       (selectedRegion === 'Global' || !t.region || t.region === selectedRegion),
   )
+
+  const handleBook = (offer: TravelOffer) => {
+    navigate('/checkout', { state: { offer } })
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -90,16 +103,24 @@ export default function Agencies() {
                         {formatCurrency(pkg.price, pkg.currency)}
                       </span>
                     </div>
-                    <Button asChild>
-                      <a
-                        href={pkg.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" asChild>
+                        <a
+                          href={pkg.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </a>
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => handleBook(pkg)}
+                        className="bg-primary hover:bg-primary/90"
                       >
-                        {t('common.view')}{' '}
-                        <ExternalLink className="h-4 w-4 ml-2" />
-                      </a>
-                    </Button>
+                        <ShoppingCart className="h-4 w-4 mr-2" /> Book Now
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -138,14 +159,12 @@ export default function Agencies() {
                         {t('agencies.per_day')}
                       </span>
                     </span>
-                    <Button size="sm" variant="outline" asChild>
-                      <a
-                        href={car.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        {t('agencies.reserve')}
-                      </a>
+                    <Button
+                      size="sm"
+                      variant="default"
+                      onClick={() => handleBook(car)}
+                    >
+                      {t('agencies.reserve')}
                     </Button>
                   </div>
                 </CardContent>

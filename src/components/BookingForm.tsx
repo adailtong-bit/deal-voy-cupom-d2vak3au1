@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Coupon } from '@/lib/types'
 import { useCouponStore } from '@/stores/CouponContext'
-import { Calendar, Clock, Users } from 'lucide-react'
+import { Calendar, Clock, Users, Coins } from 'lucide-react'
 import { toast } from 'sonner'
 import { useLanguage } from '@/stores/LanguageContext'
 
@@ -33,7 +33,10 @@ export function BookingForm({ coupon }: { coupon: Coupon }) {
         time: data.time,
         guests: parseInt(data.guests),
       })
-      toast.success(t('common.success'))
+      toast.success(t('common.success'), {
+        description: 'Reserva confirmada! +50 pontos ganhos.',
+        icon: <Coins className="h-4 w-4 text-yellow-500" />,
+      })
       setIsLoading(false)
       reset()
     }, 1500)
@@ -43,7 +46,12 @@ export function BookingForm({ coupon }: { coupon: Coupon }) {
     <Card className="border-l-4 border-l-blue-500">
       <CardHeader>
         <CardTitle className="text-lg">{t('coupon.reserve')}</CardTitle>
-        <CardDescription>{t('coupon.reserved')}</CardDescription>
+        <CardDescription className="flex items-center gap-1">
+          {t('coupon.reserved')} •{' '}
+          <span className="text-yellow-600 font-bold flex items-center gap-1 text-xs">
+            <Coins className="h-3 w-3" /> Ganhe 50 pts
+          </span>
+        </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit(onSubmit)}>
         <CardContent className="space-y-4">
@@ -79,7 +87,7 @@ export function BookingForm({ coupon }: { coupon: Coupon }) {
         <CardFooter>
           <Button
             type="submit"
-            className="w-full bg-blue-500 hover:bg-blue-600"
+            className="w-full bg-blue-500 hover:bg-blue-600 font-bold"
             disabled={isLoading}
           >
             {isLoading ? t('common.loading') : t('coupon.reserve')}
