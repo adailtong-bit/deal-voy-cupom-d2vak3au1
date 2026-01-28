@@ -202,6 +202,17 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     const storedUser = localStorage.getItem('currentUser')
     if (storedUser) setUser(JSON.parse(storedUser))
 
+    const storedItineraries = localStorage.getItem('savedItineraries')
+    if (storedItineraries) {
+      // Merge stored with mock, preferring stored if duplicates exist
+      const parsed = JSON.parse(storedItineraries) as Itinerary[]
+      setItineraries((prev) => {
+        const newIds = parsed.map((i) => i.id)
+        const filteredPrev = prev.filter((i) => !newIds.includes(i.id))
+        return [...filteredPrev, ...parsed]
+      })
+    }
+
     const storedFetch = localStorage.getItem('isFetchConnected')
     if (storedFetch) {
       const connected = JSON.parse(storedFetch)
@@ -267,6 +278,10 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     () =>
       localStorage.setItem('downloadedCoupons', JSON.stringify(downloadedIds)),
     [downloadedIds],
+  )
+  useEffect(
+    () => localStorage.setItem('savedItineraries', JSON.stringify(itineraries)),
+    [itineraries],
   )
   useEffect(() => {
     if (user) {
@@ -648,13 +663,17 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
 
   const saveItinerary = (itinerary: Itinerary) => {
     setItineraries((prev) => {
+      // Check if updating existing by ID or adding new
+      // Here we append a timestamp to ID to allow saving "versions" or check if ID exists
       const exists = prev.find((i) => i.id === itinerary.id)
       if (exists) {
         return prev.map((i) => (i.id === itinerary.id ? itinerary : i))
       }
-      return [...prev, itinerary]
+      return [itinerary, ...prev]
     })
-    toast.success('Roteiro salvo com sucesso!')
+    toast.success('Roteiro salvo com sucesso!', {
+      description: 'Acesse na aba "Meus Roteiros"',
+    })
   }
 
   const isSaved = (id: string) => savedIds.includes(id)
