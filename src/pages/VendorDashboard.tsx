@@ -28,11 +28,12 @@ import {
   CardTitle,
   CardDescription,
 } from '@/components/ui/card'
-import { Plus, Briefcase, QrCode, Settings, Coins } from 'lucide-react'
+import { Plus, Briefcase, QrCode, Settings, Coins, Scan } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useCouponStore } from '@/stores/CouponContext'
 import { toast } from 'sonner'
 import { VendorAnalytics } from '@/components/VendorAnalytics'
+import { CouponValidation } from '@/components/CouponValidation'
 
 export default function VendorDashboard() {
   const { t, formatDate } = useLanguage()
@@ -150,6 +151,9 @@ export default function VendorDashboard() {
         <TabsList>
           <TabsTrigger value="overview">{t('vendor.overview')}</TabsTrigger>
           <TabsTrigger value="offers">{t('vendor.offers')}</TabsTrigger>
+          <TabsTrigger value="validation">
+            <Scan className="h-3 w-3 mr-1" /> {t('vendor.validation')}
+          </TabsTrigger>
           <TabsTrigger value="settings">
             <Settings className="h-3 w-3 mr-1" /> {t('vendor.settings')}
           </TabsTrigger>
@@ -187,6 +191,10 @@ export default function VendorDashboard() {
               </Table>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="validation">
+          <CouponValidation />
         </TabsContent>
 
         <TabsContent value="settings">

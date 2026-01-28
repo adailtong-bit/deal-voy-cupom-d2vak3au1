@@ -13,6 +13,8 @@ import {
   TravelOffer,
   Franchise,
   Region,
+  ValidationLog,
+  CarRental,
 } from './types'
 
 export const MOCK_USER_LOCATION = {
@@ -27,15 +29,6 @@ export const REGIONS: Region[] = [
   { id: 'us-fl', name: 'Florida', country: 'USA', code: 'US-FL' },
   { id: 'us-ny', name: 'New York', country: 'USA', code: 'US-NY' },
   { id: 'fr-idf', name: 'Île-de-France', country: 'France', code: 'FR-IDF' },
-]
-
-export const MOODS: { id: string; label: string; icon: string }[] = [
-  { id: 'Romantic', label: 'Romântico', icon: 'Heart' },
-  { id: 'Economic', label: 'Econômico', icon: 'PiggyBank' },
-  { id: 'Quick Bite', label: 'Rápido', icon: 'Zap' },
-  { id: 'Adventure', label: 'Aventura', icon: 'Compass' },
-  { id: 'Relaxing', label: 'Relax', icon: 'Coffee' },
-  { id: 'Family', label: 'Família', icon: 'Users' },
 ]
 
 export const CATEGORIES: {
@@ -172,100 +165,72 @@ export const MOCK_BADGES: Badge[] = [
   },
 ]
 
-export const MOCK_COUPONS: Coupon[] = [
-  {
-    id: '1',
-    storeName: 'Burger King',
-    companyId: 'c1',
-    title: '2 Whoppers por R$ 25,90',
-    description: 'Aproveite a oferta clássica de 2 sanduíches Whopper.',
-    discount: '40% OFF',
-    category: 'Alimentação',
-    distance: 300,
-    expiryDate: '2024-12-31',
-    image: 'https://img.usecurling.com/p/600/400?q=burger%20whopper',
-    logo: 'https://img.usecurling.com/i?q=burger%20king&shape=fill&color=orange',
-    code: 'BK-WHOP-2X',
-    isFeatured: true,
-    coordinates: { lat: -23.551, lng: -46.634 },
-    totalAvailable: 1000,
-    reservedCount: 450,
-    maxPerUser: 2,
-    averageRating: 4.5,
-    moods: ['Quick Bite', 'Family', 'Economic'],
-    loyaltyProgram: {
-      totalStamps: 5,
-      currentStamps: 3,
-      reward: '1 Combo Grátis',
-    },
-    status: 'active',
-    source: 'partner',
-    region: 'BR-SP',
-  },
-  {
-    id: 'orl1',
-    storeName: 'Orlando Theme Park',
-    companyId: 'c_us_1',
-    title: 'Fast Pass Universal',
-    description: 'Corte as filas nos melhores brinquedos da Universal.',
-    discount: '20% OFF',
-    category: 'Lazer',
-    distance: 0,
-    expiryDate: '2025-06-30',
-    image: 'https://img.usecurling.com/p/600/400?q=theme%20park',
-    logo: 'https://img.usecurling.com/i?q=globe&shape=fill&color=blue',
-    code: 'UNIV-FAST-20',
-    isFeatured: true,
-    coordinates: { lat: 28.5383, lng: -81.3792 },
-    totalAvailable: 500,
-    reservedCount: 150,
-    averageRating: 4.9,
-    source: 'partner',
-    region: 'US-FL',
-  },
-]
+// MOCK DATA GENERATION FOR 10+ ITEMS
+const generateCoupons = (): Coupon[] => {
+  const coupons: Coupon[] = []
+  const categories = [
+    'Alimentação',
+    'Moda',
+    'Lazer',
+    'Eletrônicos',
+    'Serviços',
+  ] as const
+  for (let i = 1; i <= 15; i++) {
+    coupons.push({
+      id: `cpn-${i}`,
+      storeName: i % 2 === 0 ? 'Burger King' : 'Local Shop ' + i,
+      companyId: i % 2 === 0 ? 'c1' : `c${i}`,
+      title: i % 2 === 0 ? 'Whopper Deal' : `Discount Offer ${i}`,
+      description: `Great deal number ${i} for everyone.`,
+      discount: `${10 + i}% OFF`,
+      category: categories[i % categories.length],
+      distance: 100 * i,
+      expiryDate: '2025-12-31',
+      image: `https://img.usecurling.com/p/600/400?q=${categories[i % categories.length]}`,
+      logo: `https://img.usecurling.com/i?q=shop&color=${i % 2 === 0 ? 'red' : 'blue'}`,
+      code: `CODE-${i}`,
+      coordinates: { lat: -23.55 + i * 0.001, lng: -46.63 + i * 0.001 },
+      totalAvailable: 100 * i,
+      reservedCount: 10 * i,
+      averageRating: 4.0 + (i % 10) / 10,
+      status: 'active',
+      source: i % 3 === 0 ? 'aggregated' : 'partner',
+      region: i % 2 === 0 ? 'BR-SP' : 'US-FL',
+    })
+  }
+  return coupons
+}
+
+export const MOCK_COUPONS: Coupon[] = generateCoupons()
 
 export const MOCK_AB_TESTS: ABTest[] = []
 
-export const MOCK_ITINERARIES: Itinerary[] = [
-  {
-    id: 'it1',
-    title: 'Tour Gastronômico SP',
-    description: 'Um passeio pelos sabores de São Paulo.',
-    stops: [MOCK_COUPONS[0]],
-    days: [
-      {
-        id: 'd1',
-        dayNumber: 1,
-        stops: [MOCK_COUPONS[0]],
-      },
-    ],
-    totalSavings: 60,
-    duration: '4h',
-    image: 'https://img.usecurling.com/p/600/300?q=food%20tour',
-    tags: ['Gastronomia', 'Econômico'],
-    matchScore: 95,
-    region: 'BR-SP',
-  },
-  {
-    id: 'template1',
-    title: 'Orlando 10 Dias',
-    description: 'Roteiro completo para curtir os parques em Orlando.',
-    stops: [MOCK_COUPONS[1]],
-    days: Array.from({ length: 10 }).map((_, i) => ({
-      id: `d${i + 1}`,
-      dayNumber: i + 1,
-      stops: i === 0 ? [MOCK_COUPONS[1]] : [],
-    })),
-    totalSavings: 450,
-    duration: '10 Dias',
-    image: 'https://img.usecurling.com/p/600/300?q=orlando%20park',
-    tags: ['Família', 'Internacional'],
-    matchScore: 100,
-    isTemplate: true,
-    region: 'US-FL',
-  },
-]
+const generateItineraries = (): Itinerary[] => {
+  const itineraries: Itinerary[] = []
+  for (let i = 1; i <= 10; i++) {
+    itineraries.push({
+      id: `it-${i}`,
+      title: `Roteiro Incrível ${i}`,
+      description: `Um roteiro de ${i + 2} dias explorando o melhor da região.`,
+      stops: [MOCK_COUPONS[0], MOCK_COUPONS[1]],
+      days: [
+        { id: `d1-${i}`, dayNumber: 1, stops: [MOCK_COUPONS[0]] },
+        { id: `d2-${i}`, dayNumber: 2, stops: [MOCK_COUPONS[1]] },
+      ],
+      totalSavings: 50 * i,
+      duration: `${i + 2} Dias`,
+      image: `https://img.usecurling.com/p/600/300?q=travel%20${i}`,
+      tags: i % 2 === 0 ? ['Gastronomia'] : ['Aventura'],
+      matchScore: 90 + (i % 10),
+      isTemplate: true,
+      region: i % 2 === 0 ? 'BR-SP' : 'US-FL',
+      agencyId: 'agency1',
+    })
+  }
+  return itineraries
+}
+
+export const MOCK_ITINERARIES: Itinerary[] = generateItineraries()
 
 export const MOCK_COMPANIES: Company[] = [
   {
@@ -278,14 +243,24 @@ export const MOCK_COMPANIES: Company[] = [
     enableLoyalty: true,
   },
   {
-    id: 'c_us_1',
-    name: 'Universal Resorts',
-    email: 'info@universal.com',
+    id: 'c2',
+    name: 'Shop Retail 1',
+    email: 'shop.retail@dealvoy.com',
     status: 'active',
-    registrationDate: '2024-03-01',
-    region: 'US-FL',
-    enableLoyalty: false,
+    registrationDate: '2024-02-01',
+    region: 'BR-SP',
+    enableLoyalty: true,
+    ownerId: 'u_shop',
   },
+  ...Array.from({ length: 8 }).map((_, i) => ({
+    id: `c${i + 3}`,
+    name: `Retail Store ${i + 3}`,
+    email: `store${i + 3}@example.com`,
+    status: 'active' as const,
+    registrationDate: '2024-03-01',
+    region: i % 2 === 0 ? 'BR-SP' : 'US-FL',
+    enableLoyalty: false,
+  })),
 ]
 
 export const MOCK_ADS: Advertisement[] = [
@@ -305,68 +280,79 @@ export const MOCK_ADS: Advertisement[] = [
     image: 'https://img.usecurling.com/p/800/200?q=burger%20ad',
     link: 'https://burgerking.com.br',
   },
-  {
-    id: 'ad_us',
-    title: 'Visit Florida',
-    companyId: 'admin',
-    region: 'US-FL',
-    category: 'Lazer',
-    billingType: 'fixed',
-    placement: 'bottom',
-    status: 'active',
-    views: 5000,
-    clicks: 120,
-    startDate: '2024-01-01',
-    endDate: '2025-12-31',
-    image: 'https://img.usecurling.com/p/800/200?q=florida%20beach',
-    link: 'https://visitflorida.com',
-  },
 ]
 
 export const MOCK_USERS: User[] = [
   {
-    id: 'u1',
-    name: 'Super Admin',
+    id: 'u_admin',
+    name: 'App Owner',
     email: 'admin@dealvoy.com',
     role: 'super_admin',
-    avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=male',
-    birthday: '1990-05-15',
+    avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=male&seed=1',
+    birthday: '1980-01-01',
     country: 'Brasil',
+    state: 'São Paulo',
     city: 'São Paulo',
     phone: '+55 11 99999-9999',
   },
   {
-    id: 'u2',
-    name: 'João da Silva',
-    email: 'joao@email.com',
-    role: 'user',
-    avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=male',
-    birthday: '1995-10-20',
+    id: 'u_fran_sp',
+    name: 'Franchise SP',
+    email: 'franquia.sp@dealvoy.com',
+    role: 'franchisee',
+    region: 'BR-SP',
+    avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=female&seed=2',
     country: 'Brasil',
-    city: 'Rio de Janeiro',
-    phone: '+55 21 98888-8888',
+    state: 'São Paulo',
+    city: 'Campinas',
+    phone: '+55 19 98888-8888',
   },
   {
-    id: 'u3',
-    name: 'Florida Franchise',
-    email: 'florida@dealvoy.com',
+    id: 'u_fran_fl',
+    name: 'Franchise FL',
+    email: 'franquia.fl@dealvoy.com',
     role: 'franchisee',
     region: 'US-FL',
-    avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=female',
+    avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=male&seed=3',
     country: 'USA',
+    state: 'Florida',
     city: 'Orlando',
     phone: '+1 407 555-0123',
   },
   {
-    id: 'u4',
-    name: 'Merchant User',
-    email: 'merchant@bk.com',
-    role: 'merchant',
-    companyId: 'c1',
-    avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=male',
+    id: 'u_agency',
+    name: 'Travel Agency',
+    email: 'agency.travel@dealvoy.com',
+    role: 'agency',
+    agencyId: 'agency1',
+    avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=female&seed=4',
     country: 'Brasil',
-    city: 'São Paulo',
-    phone: '+55 11 3333-3333',
+    state: 'Rio de Janeiro',
+    city: 'Rio de Janeiro',
+    phone: '+55 21 97777-7777',
+  },
+  {
+    id: 'u_shop',
+    name: 'Shop Keeper',
+    email: 'shop.retail@dealvoy.com',
+    role: 'shopkeeper',
+    companyId: 'c2',
+    avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=male&seed=5',
+    country: 'Brasil',
+    state: 'São Paulo',
+    city: 'Santos',
+    phone: '+55 13 96666-6666',
+  },
+  {
+    id: 'u_user',
+    name: 'End User',
+    email: 'user.test@dealvoy.com',
+    role: 'user',
+    avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=female&seed=6',
+    country: 'USA',
+    state: 'Florida',
+    city: 'Miami',
+    phone: '+1 305 555-9999',
   },
 ]
 
@@ -387,7 +373,7 @@ export const MOCK_FRANCHISES: Franchise[] = [
     id: 'f1',
     name: 'Deal Voy Brasil - SP',
     region: 'BR-SP',
-    ownerId: 'u_franchise_sp',
+    ownerId: 'u_fran_sp',
     status: 'active',
     licenseExpiry: '2030-01-01',
   },
@@ -395,10 +381,18 @@ export const MOCK_FRANCHISES: Franchise[] = [
     id: 'f2',
     name: 'Deal Voy USA - FL',
     region: 'US-FL',
-    ownerId: 'u3',
+    ownerId: 'u_fran_fl',
     status: 'active',
     licenseExpiry: '2028-06-15',
   },
+  ...Array.from({ length: 8 }).map((_, i) => ({
+    id: `f${i + 3}`,
+    name: `Franchise Region ${i + 3}`,
+    region: i % 2 === 0 ? 'BR-RJ' : 'US-NY',
+    ownerId: `u_fran_${i + 3}`,
+    status: 'active' as const,
+    licenseExpiry: '2029-01-01',
+  })),
 ]
 
 export const MOCK_TRAVEL_OFFERS: TravelOffer[] = [
@@ -416,46 +410,32 @@ export const MOCK_TRAVEL_OFFERS: TravelOffer[] = [
     link: 'https://google.com/flights',
     region: 'BR-SP',
   },
-  {
-    id: 't2',
-    type: 'hotel',
-    provider: 'Booking.com',
-    title: 'Universal Cabana Bay',
-    description: 'Resort temático com acesso antecipado aos parques.',
-    price: 850,
-    currency: 'USD',
-    image: 'https://img.usecurling.com/p/300/200?q=hotel%20resort',
-    destination: 'Orlando, FL',
-    rating: 4.8,
-    link: 'https://booking.com',
-    region: 'US-FL',
-  },
-  {
-    id: 't3',
-    type: 'package',
-    provider: 'CVC Viagens',
-    title: 'Disney Mágica - 7 Dias',
-    description: 'Aéreo + Hotel + Ingressos para 4 parques.',
-    price: 12000,
-    currency: 'BRL',
-    image: 'https://img.usecurling.com/p/300/200?q=disney%20castle',
-    destination: 'Orlando, FL',
-    rating: 4.9,
-    link: 'https://cvc.com.br',
-    region: 'BR-SP',
-  },
-  {
-    id: 't4',
-    type: 'car_rental',
-    provider: 'Hertz',
-    title: 'SUV Familiar - Dodge Journey',
-    description: 'Perfeito para família e compras. KM Livre.',
-    price: 250,
-    currency: 'USD',
-    image: 'https://img.usecurling.com/p/300/200?q=suv%20car',
-    destination: 'Miami, FL',
-    rating: 4.6,
-    link: 'https://hertz.com',
-    region: 'US-FL',
-  },
 ]
+
+export const MOCK_CAR_RENTALS: CarRental[] = Array.from({ length: 10 }).map(
+  (_, i) => ({
+    id: `car-${i}`,
+    model: i % 2 === 0 ? 'Corolla' : 'Mustang',
+    brand: i % 2 === 0 ? 'Toyota' : 'Ford',
+    year: 2024,
+    plate: `ABC-123${i}`,
+    category: i % 2 === 0 ? 'Economy' : 'Convertible',
+    pricePerDay: 100 + i * 10,
+    status: 'available',
+    location: i % 2 === 0 ? 'São Paulo, SP' : 'Miami, FL',
+    image: `https://img.usecurling.com/p/300/200?q=car%20${i % 2 === 0 ? 'sedan' : 'convertible'}`,
+    agencyId: 'agency1',
+  }),
+)
+
+export const MOCK_VALIDATION_LOGS: ValidationLog[] = Array.from({
+  length: 15,
+}).map((_, i) => ({
+  id: `vl-${i}`,
+  couponId: `cpn-${i}`,
+  couponTitle: `Discount Offer ${i}`,
+  customerName: `Customer ${i}`,
+  validatedAt: new Date(Date.now() - i * 86400000).toISOString(),
+  method: i % 2 === 0 ? 'qr' : 'manual',
+  shopkeeperId: 'u_shop',
+}))

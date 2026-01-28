@@ -15,6 +15,7 @@ import Profile from './pages/Profile'
 import TravelPlanner from './pages/TravelPlanner'
 import VendorDashboard from './pages/VendorDashboard'
 import AdminDashboard from './pages/AdminDashboard'
+import AgencyDashboard from './pages/AgencyDashboard'
 import AdminLogin from './pages/AdminLogin'
 import Login from './pages/Login'
 import Seasonal from './pages/Seasonal'
@@ -57,6 +58,7 @@ const App = () => (
                 <Route path="/agencies" element={<Agencies />} />
                 <Route path="/vendor" element={<VendorDashboard />} />
                 <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/agency" element={<AgencyDashboard />} />
                 <Route path="/seasonal" element={<Seasonal />} />
                 <Route path="/notifications" element={<Notifications />} />
                 <Route path="/checkout" element={<Checkout />} />

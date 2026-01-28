@@ -21,8 +21,13 @@ export default function Login() {
     e.preventDefault()
     setIsLoading(true)
     setTimeout(() => {
-      login(email, 'user')
-      navigate('/profile')
+      login(email)
+      // Redirect based on role inferred from email for demo or just go profile
+      if (email.includes('admin')) navigate('/admin')
+      else if (email.includes('franquia')) navigate('/admin')
+      else if (email.includes('shop')) navigate('/vendor')
+      else if (email.includes('agency')) navigate('/agency')
+      else navigate('/profile')
       setIsLoading(false)
     }, 1000)
   }
@@ -48,6 +53,17 @@ export default function Login() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="bg-blue-50 p-4 rounded-md text-xs text-blue-800 mb-4">
+            <p className="font-bold mb-1">Test Accounts:</p>
+            <ul className="list-disc pl-4 space-y-0.5">
+              <li>admin@dealvoy.com</li>
+              <li>franquia.sp@dealvoy.com</li>
+              <li>agency.travel@dealvoy.com</li>
+              <li>shop.retail@dealvoy.com</li>
+              <li>user.test@dealvoy.com</li>
+            </ul>
+          </div>
+
           <div className="space-y-3">
             <Button
               variant="outline"

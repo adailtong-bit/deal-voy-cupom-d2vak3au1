@@ -128,6 +128,30 @@ export function DesktopHeader() {
                 <ShieldCheck className="h-4 w-4" /> {t('nav.admin')}
               </Link>
             )}
+            {user?.role === 'agency' && (
+              <Link
+                to="/agency"
+                className={
+                  isActive('/agency')
+                    ? 'text-primary font-bold flex items-center gap-1'
+                    : 'text-muted-foreground hover:text-foreground flex items-center gap-1'
+                }
+              >
+                <Briefcase className="h-4 w-4" /> {t('nav.agency')}
+              </Link>
+            )}
+            {user?.role === 'shopkeeper' && (
+              <Link
+                to="/vendor"
+                className={
+                  isActive('/vendor')
+                    ? 'text-primary font-bold flex items-center gap-1'
+                    : 'text-muted-foreground hover:text-foreground flex items-center gap-1'
+                }
+              >
+                <Briefcase className="h-4 w-4" /> {t('nav.vendor')}
+              </Link>
+            )}
           </div>
         </div>
 
@@ -176,20 +200,6 @@ export function DesktopHeader() {
               )}
             </Button>
           </Link>
-
-          {(user?.role === 'merchant' ||
-            user?.role === 'super_admin' ||
-            user?.role === 'franchisee') && (
-            <Link to="/vendor">
-              <Button
-                variant="outline"
-                size="sm"
-                className="hidden lg:flex gap-2 text-xs"
-              >
-                <Briefcase className="h-3 w-3" /> {t('nav.vendor')}
-              </Button>
-            </Link>
-          )}
 
           <Link to={user ? '/profile' : '/login'}>
             <Avatar className="h-8 w-8 cursor-pointer hover:ring-2 hover:ring-secondary hover:ring-offset-2 transition-all">
@@ -288,6 +298,26 @@ export function DesktopHeader() {
                       className="text-lg font-medium flex items-center gap-2 hover:text-primary transition-colors"
                     >
                       <ShieldCheck className="h-4 w-4" /> {t('nav.admin')}
+                    </Link>
+                  </SheetClose>
+                )}
+                {user?.role === 'agency' && (
+                  <SheetClose asChild>
+                    <Link
+                      to="/agency"
+                      className="text-lg font-medium flex items-center gap-2 hover:text-primary transition-colors"
+                    >
+                      <Briefcase className="h-4 w-4" /> {t('nav.agency')}
+                    </Link>
+                  </SheetClose>
+                )}
+                {user?.role === 'shopkeeper' && (
+                  <SheetClose asChild>
+                    <Link
+                      to="/vendor"
+                      className="text-lg font-medium flex items-center gap-2 hover:text-primary transition-colors"
+                    >
+                      <Briefcase className="h-4 w-4" /> {t('nav.vendor')}
                     </Link>
                   </SheetClose>
                 )}

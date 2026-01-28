@@ -20,6 +20,8 @@ import {
   Franchise,
   TravelOffer,
   Region,
+  ValidationLog,
+  CarRental,
 } from '@/lib/types'
 import {
   MOCK_COUPONS,
@@ -34,6 +36,8 @@ import {
   MOCK_REWARDS,
   MOCK_FRANCHISES,
   MOCK_TRAVEL_OFFERS,
+  MOCK_VALIDATION_LOGS,
+  MOCK_CAR_RENTALS,
   REGIONS,
 } from '@/lib/data'
 import { toast } from 'sonner'
@@ -81,6 +85,8 @@ interface CouponContextType {
   travelOffers: TravelOffer[]
   selectedRegion: string
   regions: Region[]
+  validationLogs: ValidationLog[]
+  carRentals: CarRental[]
   setRegion: (regionCode: string) => void
   toggleSave: (id: string) => void
   toggleTrip: (id: string) => void
@@ -108,7 +114,7 @@ interface CouponContextType {
   isDownloaded: (id: string) => boolean
   joinChallenge: (id: string) => void
   completeMission: (id: string) => void
-  login: (email: string, role: User['role']) => void
+  login: (email: string, role?: User['role']) => void
   logout: () => void
   approveCompany: (id: string) => void
   rejectCompany: (id: string) => void
@@ -123,6 +129,8 @@ interface CouponContextType {
   saveItinerary: (itinerary: Itinerary) => void
   toggleLoyaltySystem: (companyId: string, enabled: boolean) => void
   addFranchise: (franchise: Franchise) => void
+  validateCoupon: (code: string) => boolean
+  addCarRental: (car: CarRental) => void
 }
 
 const CouponContext = createContext<CouponContextType | undefined>(undefined)
@@ -132,7 +140,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   const [coupons, setCoupons] = useState<Coupon[]>(MOCK_COUPONS)
   const [companies, setCompanies] = useState<Company[]>(MOCK_COMPANIES)
   const [ads, setAds] = useState<Advertisement[]>(MOCK_ADS)
-  const [user, setUser] = useState<User | null>(MOCK_USERS[1])
+  const [user, setUser] = useState<User | null>(MOCK_USERS[5]) // Default user
   const [savedIds, setSavedIds] = useState<string[]>([])
   const [reservedIds, setReservedIds] = useState<string[]>([])
   const [tripIds, setTripIds] = useState<string[]>([])
@@ -170,6 +178,9 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   const [travelOffers, setTravelOffers] =
     useState<TravelOffer[]>(MOCK_TRAVEL_OFFERS)
   const [selectedRegion, setSelectedRegion] = useState<string>('Global')
+  const [validationLogs, setValidationLogs] =
+    useState<ValidationLog[]>(MOCK_VALIDATION_LOGS)
+  const [carRentals, setCarRentals] = useState<CarRental[]>(MOCK_CAR_RENTALS)
 
   const [rewardHistory, setRewardHistory] = useState<RewardActivity[]>([])
 
@@ -269,10 +280,22 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
 
   const addABTest = (test: ABTest) => setAbTests((prev) => [test, ...prev])
   const downloadOffline = (ids: string[]) => {
-    /* ... */
+    setIsDownloading(true)
+    setDownloadProgress(0)
+    let progress = 0
+    const interval = setInterval(() => {
+      progress += 10
+      setDownloadProgress(progress)
+      if (progress >= 100) {
+        clearInterval(interval)
+        setDownloadedIds((prev) => [...new Set([...prev, ...ids])])
+        setIsDownloading(false)
+        toast.success('Download complete')
+      }
+    }, 200)
   }
   const processPayment = async (d: any) => Promise.resolve(true)
-  const isDownloaded = (id: string) => false
+  const isDownloaded = (id: string) => downloadedIds.includes(id)
   const joinChallenge = (id: string) => {
     /* ... */
   }
@@ -280,18 +303,20 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     /* ... */
   }
 
-  const login = (email: string, role: User['role']) => {
-    const user = MOCK_USERS.find((u) => u.email === email && u.role === role)
-    if (user) {
-      setUser(user)
-      if (user.region) setSelectedRegion(user.region)
-      toast.success(`Bem-vindo, ${user.name}!`)
+  const login = (email: string, role?: User['role']) => {
+    // Try to find an existing mock user first
+    const existingUser = MOCK_USERS.find((u) => u.email === email)
+    if (existingUser) {
+      setUser(existingUser)
+      if (existingUser.region) setSelectedRegion(existingUser.region)
+      toast.success(`Bem-vindo, ${existingUser.name}!`)
     } else {
+      // Fallback or generic logic
       const newUser: User = {
         id: Math.random().toString(),
         name: email.split('@')[0],
         email,
-        role,
+        role: role || 'user',
         avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=male',
       }
       setUser(newUser)
@@ -337,8 +362,9 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   const connectApp = (id: string) => {
     /* ... */
   }
-  const saveItinerary = (i: any) => {
-    /* ... */
+  const saveItinerary = (it: Itinerary) => {
+    setItineraries((prev) => [it, ...prev])
+    toast.success('Itinerary Saved')
   }
 
   const toggleLoyaltySystem = (companyId: string, enabled: boolean) => {
@@ -357,6 +383,29 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   const addFranchise = (franchise: Franchise) => {
     setFranchises((prev) => [...prev, franchise])
     toast.success('Franquia criada com sucesso!')
+  }
+
+  const validateCoupon = (code: string) => {
+    const coupon = coupons.find((c) => c.code === code)
+    if (coupon && coupon.status !== 'validated') {
+      const log: ValidationLog = {
+        id: Math.random().toString(),
+        couponId: coupon.id,
+        couponTitle: coupon.title,
+        customerName: 'Customer Walk-in',
+        validatedAt: new Date().toISOString(),
+        method: 'qr',
+        shopkeeperId: user?.id || 'unknown',
+      }
+      setValidationLogs((prev) => [log, ...prev])
+      return true
+    }
+    return false
+  }
+
+  const addCarRental = (car: CarRental) => {
+    setCarRentals((prev) => [car, ...prev])
+    toast.success('Car added successfully')
   }
 
   const isSaved = (id: string) => savedIds.includes(id)
@@ -397,6 +446,8 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         travelOffers: filteredTravelOffers,
         selectedRegion,
         regions: REGIONS,
+        validationLogs,
+        carRentals,
         setRegion,
         toggleSave,
         toggleTrip,
@@ -434,6 +485,8 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         saveItinerary,
         toggleLoyaltySystem,
         addFranchise,
+        validateCoupon,
+        addCarRental,
       },
     },
     children,

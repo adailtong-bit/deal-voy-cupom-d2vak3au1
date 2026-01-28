@@ -75,7 +75,7 @@ export interface Coupon {
   lastVerified?: string
   upvotes?: number
   downvotes?: number
-  status?: 'active' | 'expired' | 'issue'
+  status?: 'active' | 'expired' | 'issue' | 'validated'
   acceptsBooking?: boolean
   price?: number // For premium coupons/reservations
   isPaid?: boolean
@@ -217,9 +217,15 @@ export interface Itinerary {
   matchScore: number // 0-100
   isTemplate?: boolean
   region?: string
+  agencyId?: string
 }
 
-export type UserRole = 'super_admin' | 'franchisee' | 'merchant' | 'user'
+export type UserRole =
+  | 'super_admin'
+  | 'franchisee'
+  | 'shopkeeper'
+  | 'agency'
+  | 'user'
 
 export interface User {
   id: string
@@ -229,7 +235,8 @@ export interface User {
   avatar?: string
   birthday?: string // YYYY-MM-DD
   region?: string // Assigned region for Franchisee
-  companyId?: string // Assigned company for Merchant
+  companyId?: string // Assigned company for Shopkeeper
+  agencyId?: string // Assigned agency
   country?: string
   state?: string
   city?: string
@@ -249,6 +256,7 @@ export interface Company {
   registrationDate: string
   region: string
   enableLoyalty: boolean // B2B Points Toggle
+  ownerId?: string
 }
 
 export type AdBillingType = 'fixed' | 'ppc' | 'ticketing'
@@ -336,6 +344,8 @@ export interface TravelOffer {
   rating?: number
   link: string // External link
   region?: string
+  agencyId?: string
+  availability?: number
 }
 
 export interface Region {
@@ -353,4 +363,28 @@ export interface PaymentMethod {
   expiry?: string
   email?: string // For wallet
   isDefault: boolean
+}
+
+export interface ValidationLog {
+  id: string
+  couponId: string
+  couponTitle: string
+  customerName: string
+  validatedAt: string
+  method: 'qr' | 'manual'
+  shopkeeperId: string
+}
+
+export interface CarRental {
+  id: string
+  model: string
+  brand: string
+  year: number
+  plate: string
+  category: 'Economy' | 'SUV' | 'Luxury' | 'Convertible'
+  pricePerDay: number
+  status: 'available' | 'rented' | 'maintenance'
+  location: string
+  image: string
+  agencyId: string
 }
