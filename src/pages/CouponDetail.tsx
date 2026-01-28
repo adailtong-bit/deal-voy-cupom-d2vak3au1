@@ -30,7 +30,6 @@ import {
   AlertTriangle,
   Wallet,
   Download,
-  Navigation,
   ShoppingCart,
   Star,
 } from 'lucide-react'
@@ -102,13 +101,13 @@ export default function CouponDetail() {
       setTimeout(() => setShowConfetti(false), 3000)
       toast.success(t('coupon.reserved'))
     } else {
-      toast.error('Limit reached')
+      toast.error(t('toast.limit_reached'))
     }
   }
 
   const handleCopyCode = () => {
     navigator.clipboard.writeText(coupon.code)
-    toast.success('Code copied')
+    toast.success(t('toast.code_copied'))
   }
 
   const handleReport = () => {
@@ -122,7 +121,7 @@ export default function CouponDetail() {
       navigator.share({ title: coupon.title, url: window.location.href })
     } else {
       navigator.clipboard.writeText(window.location.href)
-      toast.success('Link copied')
+      toast.success(t('toast.link_copied'))
     }
   }
 
@@ -247,9 +246,12 @@ export default function CouponDetail() {
           {coupon.totalAvailable && (
             <div className="mb-6 bg-muted/50 p-3 rounded-lg border">
               <div className="flex justify-between text-xs mb-1 font-medium">
-                <span>{coupon.reservedCount} reserved</span>
                 <span>
-                  {coupon.totalAvailable - (coupon.reservedCount || 0)} left
+                  {coupon.reservedCount} {t('coupon.stock_reserved')}
+                </span>
+                <span>
+                  {coupon.totalAvailable - (coupon.reservedCount || 0)}{' '}
+                  {t('coupon.stock_left')}
                 </span>
               </div>
               <div className="h-2 w-full bg-secondary/20 rounded-full overflow-hidden">
@@ -366,7 +368,7 @@ export default function CouponDetail() {
                     </span>
                   </div>
                   <span className="text-xs font-bold text-primary">
-                    Balance: {formatCurrency(fetchCredits)}
+                    {t('coupon.balance')}: {formatCurrency(fetchCredits)}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">

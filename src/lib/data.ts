@@ -38,15 +38,66 @@ export const MOODS: { id: string; label: string; icon: string }[] = [
   { id: 'Family', label: 'Família', icon: 'Users' },
 ]
 
-export const CATEGORIES: { id: string; label: string; icon: string }[] = [
-  { id: 'all', label: 'Todos', icon: 'LayoutGrid' },
-  { id: 'Alimentação', label: 'Alimentação', icon: 'Utensils' },
-  { id: 'Moda', label: 'Moda', icon: 'Shirt' },
-  { id: 'Serviços', label: 'Serviços', icon: 'Briefcase' },
-  { id: 'Eletrônicos', label: 'Eletrônicos', icon: 'Smartphone' },
-  { id: 'Lazer', label: 'Lazer', icon: 'Ticket' },
-  { id: 'Mercado', label: 'Mercado', icon: 'ShoppingBasket' },
-  { id: 'Beleza', label: 'Beleza', icon: 'Sparkles' },
+export const CATEGORIES: {
+  id: string
+  label: string
+  translationKey: string
+  icon: string
+}[] = [
+  {
+    id: 'all',
+    label: 'Todos',
+    translationKey: 'category.all',
+    icon: 'LayoutGrid',
+  },
+  {
+    id: 'Alimentação',
+    label: 'Alimentação',
+    translationKey: 'category.food',
+    icon: 'Utensils',
+  },
+  {
+    id: 'Moda',
+    label: 'Moda',
+    translationKey: 'category.fashion',
+    icon: 'Shirt',
+  },
+  {
+    id: 'Serviços',
+    label: 'Serviços',
+    translationKey: 'category.services',
+    icon: 'Briefcase',
+  },
+  {
+    id: 'Eletrônicos',
+    label: 'Eletrônicos',
+    translationKey: 'category.electronics',
+    icon: 'Smartphone',
+  },
+  {
+    id: 'Lazer',
+    label: 'Lazer',
+    translationKey: 'category.leisure',
+    icon: 'Ticket',
+  },
+  {
+    id: 'Mercado',
+    label: 'Mercado',
+    translationKey: 'category.market',
+    icon: 'ShoppingBasket',
+  },
+  {
+    id: 'Beleza',
+    label: 'Beleza',
+    translationKey: 'category.beauty',
+    icon: 'Sparkles',
+  },
+  {
+    id: 'Outros',
+    label: 'Outros',
+    translationKey: 'category.others',
+    icon: 'CircleEllipsis',
+  },
 ]
 
 export const SEASONAL_EVENTS: SeasonalEvent[] = [

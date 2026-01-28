@@ -59,6 +59,10 @@ export default function Index() {
     return Icon ? <Icon className="h-5 w-5 mb-1" /> : null
   }
 
+  const selectedCategoryLabel =
+    CATEGORIES.find((c) => c.id === selectedCategory)?.translationKey ||
+    'category.all'
+
   return (
     <div className="pb-20 md:pb-8 bg-slate-50 min-h-screen">
       <section className="bg-white border-b sticky top-16 z-30 shadow-sm md:static">
@@ -126,9 +130,7 @@ export default function Index() {
                           : 'text-slate-600 group-hover:text-primary',
                       )}
                     >
-                      {cat.label === 'Todos' && t('home.all_offers')
-                        ? t('home.all_offers')
-                        : cat.label}
+                      {t(cat.translationKey)}
                     </span>
                   </button>
                 )
@@ -179,13 +181,13 @@ export default function Index() {
           <div className="relative z-10 md:flex items-center justify-between">
             <div className="mb-6 md:mb-0 md:w-1/2">
               <Badge className="bg-white/20 text-white border-none mb-3 hover:bg-white/30">
-                New: {t('hub.title')}
+                {t('common.new')}: {t('hub.title')}
               </Badge>
               <h2 className="text-2xl md:text-3xl font-bold mb-2">
                 {t('hub.subtitle')}
               </h2>
               <p className="text-blue-100 mb-6 max-w-md">
-                Find air tickets and hotels at best prices.
+                {t('hub.promo_desc')}
               </p>
               <Link to="/travel-hub">
                 <Button className="bg-white text-blue-600 hover:bg-blue-50 font-bold rounded-full px-6 gap-2">
@@ -257,7 +259,7 @@ export default function Index() {
               <Zap className="h-5 w-5 text-yellow-500" />
               {selectedCategory === 'all'
                 ? t('home.all_offers')
-                : `${t('home.offers_of')} ${selectedCategory}`}
+                : `${t('home.offers_of')} ${t(selectedCategoryLabel)}`}
             </h2>
           </div>
           {filteredCoupons.length > 0 ? (

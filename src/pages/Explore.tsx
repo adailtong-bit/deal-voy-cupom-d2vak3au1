@@ -19,6 +19,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { useLanguage } from '@/stores/LanguageContext'
+import { CATEGORIES } from '@/lib/data'
 
 export default function Explore() {
   const { coupons } = useCouponStore()
@@ -32,6 +33,9 @@ export default function Explore() {
     if (c.distance > maxDistance[0] * 1000) return false
     return true
   })
+
+  // Filter out 'all' from categories for filters
+  const filterCategories = CATEGORIES.filter((c) => c.id !== 'all')
 
   return (
     <div className="flex flex-col h-[calc(100vh-64px-64px)] md:h-[calc(100vh-64px)] overflow-hidden">
@@ -69,26 +73,20 @@ export default function Explore() {
                 <h3 className="font-medium text-sm">
                   {t('explore.categories')}
                 </h3>
-                {[
-                  'Alimentação',
-                  'Moda',
-                  'Serviços',
-                  'Eletrônicos',
-                  'Lazer',
-                ].map((cat) => (
-                  <div key={cat} className="flex items-center space-x-2">
+                {filterCategories.map((cat) => (
+                  <div key={cat.id} className="flex items-center space-x-2">
                     <Checkbox
-                      id={cat}
-                      checked={selectedCategory === cat}
+                      id={cat.id}
+                      checked={selectedCategory === cat.id}
                       onCheckedChange={(checked) =>
-                        setSelectedCategory(checked ? cat : null)
+                        setSelectedCategory(checked ? cat.id : null)
                       }
                     />
                     <label
-                      htmlFor={cat}
+                      htmlFor={cat.id}
                       className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                     >
-                      {cat}
+                      {t(cat.translationKey)}
                     </label>
                   </div>
                 ))}
@@ -103,16 +101,16 @@ export default function Explore() {
         </Sheet>
 
         <div className="flex gap-2">
-          {['Alimentação', 'Moda', 'Lazer'].map((cat) => (
+          {filterCategories.slice(0, 4).map((cat) => (
             <Badge
-              key={cat}
-              variant={selectedCategory === cat ? 'default' : 'outline'}
+              key={cat.id}
+              variant={selectedCategory === cat.id ? 'default' : 'outline'}
               className="cursor-pointer"
               onClick={() =>
-                setSelectedCategory(selectedCategory === cat ? null : cat)
+                setSelectedCategory(selectedCategory === cat.id ? null : cat.id)
               }
             >
-              {cat}
+              {t(cat.translationKey)}
             </Badge>
           ))}
         </div>

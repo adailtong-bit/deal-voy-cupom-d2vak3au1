@@ -107,7 +107,7 @@ export function CouponCard({
                   className="bg-black/50 text-white border-none backdrop-blur-sm gap-1"
                 >
                   <Globe className="h-3 w-3" />
-                  Tracked
+                  {t('coupon.tracked')}
                 </Badge>
               )}
             </div>
