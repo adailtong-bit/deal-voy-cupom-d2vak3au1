@@ -1,8 +1,8 @@
-import React, { createContext, useContext, useState } from 'react'
+import React, { createContext, useContext, useState, useEffect } from 'react'
 import { translations } from '@/lib/translations'
 import { formatDate, formatCurrency } from '@/lib/utils'
 
-type Language = 'pt' | 'en'
+export type Language = 'pt' | 'en' | 'es' | 'fr' | 'de' | 'it' | 'zh' | 'ja'
 
 interface LanguageContextType {
   language: Language
@@ -17,8 +17,31 @@ const LanguageContext = createContext<LanguageContextType | undefined>(
   undefined,
 )
 
+const LOCALE_MAP: Record<Language, string> = {
+  pt: 'pt-BR',
+  en: 'en-US',
+  es: 'es-ES',
+  fr: 'fr-FR',
+  de: 'de-DE',
+  it: 'it-IT',
+  zh: 'zh-CN',
+  ja: 'ja-JP',
+}
+
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguage] = useState<Language>('pt')
+  const [language, setLanguageState] = useState<Language>('pt')
+
+  useEffect(() => {
+    const storedLang = localStorage.getItem('language') as Language
+    if (storedLang && Object.keys(LOCALE_MAP).includes(storedLang)) {
+      setLanguageState(storedLang)
+    }
+  }, [])
+
+  const setLanguage = (lang: Language) => {
+    setLanguageState(lang)
+    localStorage.setItem('language', lang)
+  }
 
   const t = (key: string) => {
     const langObj = translations[language] || translations['pt']
@@ -26,7 +49,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     return langObj[key] || translations['pt'][key] || key
   }
 
-  const locale = language === 'pt' ? 'pt-BR' : 'en-US'
+  const locale = LOCALE_MAP[language] || 'en-US'
 
   const formattedDate = (date: string | Date | undefined) =>
     formatDate(date, locale)
