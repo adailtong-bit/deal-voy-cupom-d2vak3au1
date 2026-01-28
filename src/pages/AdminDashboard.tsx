@@ -8,14 +8,11 @@ import {
   ShieldAlert,
   Users,
   Building,
+  DollarSign,
+  Activity,
+  FileText,
 } from 'lucide-react'
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
@@ -39,12 +36,13 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useForm } from 'react-hook-form'
 import { useLanguage } from '@/stores/LanguageContext'
+import { MOCK_SYSTEM_LOGS } from '@/lib/data'
 
 export default function AdminDashboard() {
   const { user, companies, franchises, addFranchise, approveCompany } =
     useCouponStore()
   const navigate = useNavigate()
-  const { t, formatDate } = useLanguage()
+  const { t, formatDate, formatCurrency } = useLanguage()
   const [isFranchiseOpen, setIsFranchiseOpen] = useState(false)
   const { register, handleSubmit, reset } = useForm()
 
@@ -53,7 +51,7 @@ export default function AdminDashboard() {
       <div className="flex flex-col items-center justify-center h-screen gap-4">
         <ShieldAlert className="h-16 w-16 text-red-500" />
         <h1 className="text-2xl font-bold">{t('admin.access_denied')}</h1>
-        <Button onClick={() => navigate('/admin/login')}>
+        <Button onClick={() => navigate('/login')}>
           {t('admin.go_login')}
         </Button>
       </div>
@@ -75,9 +73,17 @@ export default function AdminDashboard() {
     reset()
   }
 
+  // Determine data based on role
+  const relevantFranchises = isSuperAdmin
+    ? franchises
+    : franchises.filter((f) => f.region === user.region)
+  const relevantCompanies = isSuperAdmin
+    ? companies
+    : companies.filter((c) => c.region === user.region)
+
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-slate-900">
             {isSuperAdmin
@@ -99,36 +105,49 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              {isSuperAdmin ? (
-                <Building className="h-4 w-4" />
-              ) : (
-                <Users className="h-4 w-4" />
-              )}
-              {isSuperAdmin
-                ? t('admin.active_franchises')
-                : t('admin.active_merchants')}
+              <Building className="h-4 w-4" /> {t('admin.active_franchises')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {isSuperAdmin
-                ? franchises.length
-                : companies.filter((c) => c.region === user.region).length}
+              {relevantFranchises.length}
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              {t('admin.revenue')}
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+              <Users className="h-4 w-4" /> {t('admin.active_merchants')}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">R$ 125.000</div>
+            <div className="text-2xl font-bold">{relevantCompanies.length}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+              <DollarSign className="h-4 w-4" /> {t('admin.revenue')}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">
+              {formatCurrency(125000 + relevantCompanies.length * 1500)}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+              <Activity className="h-4 w-4" /> System Load
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-600">98%</div>
           </CardContent>
         </Card>
       </div>
@@ -141,6 +160,7 @@ export default function AdminDashboard() {
             </TabsTrigger>
           )}
           <TabsTrigger value="merchants">{t('admin.merchants')}</TabsTrigger>
+          <TabsTrigger value="logs">{t('admin.logs')}</TabsTrigger>
           <TabsTrigger value="reports">{t('admin.reports')}</TabsTrigger>
         </TabsList>
 
@@ -232,40 +252,94 @@ export default function AdminDashboard() {
                   <TableRow>
                     <TableHead>Name</TableHead>
                     <TableHead>Region</TableHead>
+                    <TableHead>Joined</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {companies
-                    .filter((c) => isSuperAdmin || c.region === user.region)
-                    .map((company) => (
-                      <TableRow key={company.id}>
-                        <TableCell>{company.name}</TableCell>
-                        <TableCell>{company.region}</TableCell>
-                        <TableCell>
-                          <Badge
-                            variant={
-                              company.status === 'active'
-                                ? 'default'
-                                : 'secondary'
-                            }
+                  {relevantCompanies.map((company) => (
+                    <TableRow key={company.id}>
+                      <TableCell className="font-medium">
+                        {company.name}
+                        <div className="text-xs text-muted-foreground">
+                          {company.email}
+                        </div>
+                      </TableCell>
+                      <TableCell>{company.region}</TableCell>
+                      <TableCell>
+                        {formatDate(company.registrationDate)}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            company.status === 'active'
+                              ? 'default'
+                              : 'secondary'
+                          }
+                        >
+                          {company.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {company.status === 'pending' && (
+                          <Button
+                            size="sm"
+                            onClick={() => approveCompany(company.id)}
                           >
-                            {company.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {company.status === 'pending' && (
-                            <Button
-                              size="sm"
-                              onClick={() => approveCompany(company.id)}
-                            >
-                              Approve
-                            </Button>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                            Approve
+                          </Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="logs">
+          <Card>
+            <CardHeader>
+              <CardTitle>System Logs</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Action</TableHead>
+                    <TableHead>Details</TableHead>
+                    <TableHead>User</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {MOCK_SYSTEM_LOGS.map((log) => (
+                    <TableRow key={log.id}>
+                      <TableCell className="whitespace-nowrap">
+                        {formatDate(log.date)}
+                      </TableCell>
+                      <TableCell>{log.action}</TableCell>
+                      <TableCell
+                        className="max-w-[200px] truncate"
+                        title={log.details}
+                      >
+                        {log.details}
+                      </TableCell>
+                      <TableCell>{log.user}</TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            log.status === 'error' ? 'destructive' : 'outline'
+                          }
+                        >
+                          {log.status}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
                 </TableBody>
               </Table>
             </CardContent>

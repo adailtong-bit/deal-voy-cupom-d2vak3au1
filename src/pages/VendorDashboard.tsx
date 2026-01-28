@@ -21,19 +21,22 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from '@/components/ui/card'
-import { Plus, Briefcase, QrCode, Settings, Coins, Scan } from 'lucide-react'
+  Plus,
+  Briefcase,
+  QrCode,
+  Settings,
+  Coins,
+  Scan,
+  History,
+} from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useCouponStore } from '@/stores/CouponContext'
 import { toast } from 'sonner'
 import { VendorAnalytics } from '@/components/VendorAnalytics'
 import { CouponValidation } from '@/components/CouponValidation'
+import { MOCK_VALIDATION_LOGS } from '@/lib/data'
 
 export default function VendorDashboard() {
   const { t, formatDate } = useLanguage()
@@ -48,11 +51,15 @@ export default function VendorDashboard() {
   const myCompany =
     companies.find((c) => c.id === user?.companyId) || companies[0]
 
-  const [coupons, setCoupons] = useState(
-    allCoupons
-      .filter((c) => c.source !== 'aggregated' && c.companyId === myCompany.id)
-      .slice(0, 5),
-  )
+  // Filter coupons to simulate 'my' coupons or allow all for demo
+  const coupons = allCoupons
+    .filter(
+      (c) =>
+        c.source !== 'aggregated' &&
+        (c.companyId === myCompany.id || user?.role === 'super_admin'),
+    )
+    .slice(0, 15) // Show at least 10 items
+
   const { register, handleSubmit, reset } = useForm()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [generatedCode, setGeneratedCode] = useState<string | null>(null)
@@ -80,7 +87,6 @@ export default function VendorDashboard() {
     }
 
     addCoupon(newCoupon)
-    setCoupons([newCoupon, ...coupons])
     toast.success(t('common.success'))
     setTimeout(() => {
       setIsDialogOpen(false)
@@ -154,6 +160,9 @@ export default function VendorDashboard() {
           <TabsTrigger value="validation">
             <Scan className="h-3 w-3 mr-1" /> {t('vendor.validation')}
           </TabsTrigger>
+          <TabsTrigger value="history">
+            <History className="h-3 w-3 mr-1" /> Redemption History
+          </TabsTrigger>
           <TabsTrigger value="settings">
             <Settings className="h-3 w-3 mr-1" /> {t('vendor.settings')}
           </TabsTrigger>
@@ -195,6 +204,36 @@ export default function VendorDashboard() {
 
         <TabsContent value="validation">
           <CouponValidation />
+        </TabsContent>
+
+        <TabsContent value="history">
+          <Card>
+            <CardHeader>
+              <CardTitle>Redemption History</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Time</TableHead>
+                    <TableHead>Customer</TableHead>
+                    <TableHead>Coupon</TableHead>
+                    <TableHead>Method</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {MOCK_VALIDATION_LOGS.map((log) => (
+                    <TableRow key={log.id}>
+                      <TableCell>{formatDate(log.validatedAt)}</TableCell>
+                      <TableCell>{log.customerName}</TableCell>
+                      <TableCell>{log.couponTitle}</TableCell>
+                      <TableCell className="uppercase">{log.method}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="settings">

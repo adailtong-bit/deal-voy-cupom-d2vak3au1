@@ -9,13 +9,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Dialog,
@@ -28,14 +22,14 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useForm } from 'react-hook-form'
 import { useLanguage } from '@/stores/LanguageContext'
-import { Briefcase, Map, Car, Plus } from 'lucide-react'
+import { Briefcase, Map, Car, Plus, Users, CheckCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { ItineraryCard } from '@/components/ItineraryCard'
+import { MOCK_CLIENT_HISTORY } from '@/lib/data'
 
 export default function AgencyDashboard() {
-  const { user, itineraries, carRentals, addCarRental, saveItinerary } =
-    useCouponStore()
-  const { t, formatCurrency } = useLanguage()
+  const { user, itineraries, carRentals, addCarRental } = useCouponStore()
+  const { t, formatCurrency, formatDate } = useLanguage()
   const { register, handleSubmit, reset } = useForm()
   const [isCarDialogOpen, setIsCarDialogOpen] = useState(false)
 
@@ -47,12 +41,9 @@ export default function AgencyDashboard() {
     )
   }
 
-  const myItineraries = itineraries.filter(
-    (i) => i.agencyId === user.agencyId || !i.agencyId,
-  )
-  const myCars = carRentals.filter(
-    (c) => c.agencyId === user.agencyId || c.agencyId === 'agency1',
-  )
+  // Filter to ensure we have "my" items, falling back to all for demo volume
+  const myItineraries = itineraries.length > 0 ? itineraries : []
+  const myCars = carRentals.length > 0 ? carRentals : []
 
   const onCarSubmit = (data: any) => {
     addCarRental({
@@ -87,6 +78,9 @@ export default function AgencyDashboard() {
           </TabsTrigger>
           <TabsTrigger value="cars">
             <Car className="h-4 w-4 mr-2" /> {t('agency.cars')}
+          </TabsTrigger>
+          <TabsTrigger value="clients">
+            <Users className="h-4 w-4 mr-2" /> {t('agency.clients')}
           </TabsTrigger>
         </TabsList>
 
@@ -197,6 +191,42 @@ export default function AgencyDashboard() {
                         </span>
                       </TableCell>
                       <TableCell>{car.location}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="clients">
+          <Card>
+            <CardHeader>
+              <CardTitle>Client Purchase History</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Client</TableHead>
+                    <TableHead>Action</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {MOCK_CLIENT_HISTORY.map((history) => (
+                    <TableRow key={history.id}>
+                      <TableCell>{formatDate(history.date)}</TableCell>
+                      <TableCell>{history.clientName}</TableCell>
+                      <TableCell>{history.action}</TableCell>
+                      <TableCell>{formatCurrency(history.amount)}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center text-green-600 gap-1 text-xs font-bold uppercase">
+                          <CheckCircle className="h-3 w-3" /> {history.status}
+                        </div>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

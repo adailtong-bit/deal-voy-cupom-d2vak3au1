@@ -103,7 +103,7 @@ export default function Index() {
       <section className="bg-white border-b py-2">
         <div className="container mx-auto px-4">
           <ScrollArea className="w-full whitespace-nowrap">
-            <div className="flex space-x-6 px-2 py-2">
+            <div className="flex space-x-4 md:space-x-8 px-2 py-2 justify-start md:justify-center">
               {CATEGORIES.map((cat) => {
                 const isActive = selectedCategory === cat.id
                 return (
@@ -204,35 +204,6 @@ export default function Index() {
           </div>
         </section>
 
-        <section className="bg-secondary/10 rounded-2xl p-6 md:p-8 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-secondary/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-          <div className="relative z-10 md:flex items-center justify-between">
-            <div className="mb-6 md:mb-0 md:w-1/2">
-              <Badge className="bg-secondary text-white border-none mb-3">
-                {t('travel.title')}
-              </Badge>
-              <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">
-                {t('home.travel_card_title')}
-              </h2>
-              <p className="text-slate-600 mb-6 max-w-md">
-                {t('home.travel_card_desc')}
-              </p>
-              <Link to="/travel-planner">
-                <Button className="bg-secondary hover:bg-secondary/90 text-white font-bold rounded-full px-6">
-                  {t('home.plan_route')}
-                </Button>
-              </Link>
-            </div>
-            <div className="md:w-5/12">
-              <img
-                src="https://img.usecurling.com/p/600/400?q=road%20trip%20map&color=blue"
-                alt="Travel Map"
-                className="rounded-xl shadow-lg border-4 border-white transform rotate-1 hover:rotate-0 transition-transform duration-500"
-              />
-            </div>
-          </div>
-        </section>
-
         <section>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold flex items-center gap-2 text-slate-800">
@@ -277,17 +248,6 @@ export default function Index() {
                 onClick={() => setSelectedCategory('all')}
               >
                 {t('common.view_all')}
-              </Button>
-            </div>
-          )}
-          {filteredCoupons.length > 0 && (
-            <div className="mt-8 text-center">
-              <Button
-                variant="outline"
-                size="lg"
-                className="rounded-full px-8 border-primary text-primary hover:bg-primary/5"
-              >
-                {t('common.load_more')}
               </Button>
             </div>
           )}

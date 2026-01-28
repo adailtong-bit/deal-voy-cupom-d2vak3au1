@@ -33,13 +33,6 @@ export function AddressForm({
   const [zip, setZip] = useState('')
   const [address, setAddress] = useState('')
 
-  // Reset when country changes if current state/city invalid
-  useEffect(() => {
-    if (country && !LOCATION_DATA[country]) {
-      // Handle unknown country
-    }
-  }, [country])
-
   const availableStates = country
     ? Object.keys(LOCATION_DATA[country]?.states || {})
     : []
@@ -51,11 +44,10 @@ export function AddressForm({
     let val = e.target.value.replace(/\D/g, '')
     // Dynamic Masking
     if (country === 'Brasil') {
+      if (val.length > 8) val = val.slice(0, 8)
       val = val.replace(/^(\d{5})(\d{0,3})/, '$1-$2')
     } else if (country === 'USA') {
-      val = val.substring(0, 5)
-    } else if (country === 'Portugal') {
-      val = val.replace(/^(\d{4})(\d{0,3})/, '$1-$2')
+      if (val.length > 5) val = val.slice(0, 5)
     }
     setZip(val)
     onChange({ state, city, zip: val, address })
@@ -73,10 +65,9 @@ export function AddressForm({
               country === 'Brasil'
                 ? '00000-000'
                 : country === 'USA'
-                  ? '00000'
+                  ? '33101'
                   : '0000'
             }
-            maxLength={10}
           />
         </div>
         <div className="space-y-2">
@@ -130,7 +121,9 @@ export function AddressForm({
             setAddress(e.target.value)
             onChange({ state, city, zip, address: e.target.value })
           }}
-          placeholder="Rua Exemplo, 123"
+          placeholder={
+            country === 'Brasil' ? 'Rua Paulista, 1000' : '123 Ocean Drive'
+          }
         />
       </div>
     </div>

@@ -388,3 +388,21 @@ export interface CarRental {
   image: string
   agencyId: string
 }
+
+export interface SystemLog {
+  id: string
+  date: string
+  action: string
+  details: string
+  user: string
+  status: 'success' | 'warning' | 'error'
+}
+
+export interface ClientHistory {
+  id: string
+  clientName: string
+  action: string
+  date: string
+  amount: number
+  status: 'completed' | 'pending'
+}

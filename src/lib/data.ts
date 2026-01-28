@@ -15,6 +15,8 @@ import {
   Region,
   ValidationLog,
   CarRental,
+  SystemLog,
+  ClientHistory,
 } from './types'
 
 export const MOCK_USER_LOCATION = {
@@ -62,30 +64,6 @@ export const CATEGORIES: {
     icon: 'Briefcase',
   },
   {
-    id: 'Eletrônicos',
-    label: 'Eletrônicos',
-    translationKey: 'category.electronics',
-    icon: 'Smartphone',
-  },
-  {
-    id: 'Lazer',
-    label: 'Lazer',
-    translationKey: 'category.leisure',
-    icon: 'Ticket',
-  },
-  {
-    id: 'Mercado',
-    label: 'Mercado',
-    translationKey: 'category.market',
-    icon: 'ShoppingBasket',
-  },
-  {
-    id: 'Beleza',
-    label: 'Beleza',
-    translationKey: 'category.beauty',
-    icon: 'Sparkles',
-  },
-  {
     id: 'Outros',
     label: 'Outros',
     translationKey: 'category.others',
@@ -130,7 +108,7 @@ export const SEASONAL_EVENTS: SeasonalEvent[] = [
 export const MOCK_NOTIFICATIONS: Notification[] = [
   {
     id: '1',
-    title: 'Bem-vindo ao CupomGeo!',
+    title: 'Bem-vindo ao Deal Voy!',
     message: 'Explore as melhores ofertas ao seu redor.',
     type: 'system',
     read: false,
@@ -165,37 +143,41 @@ export const MOCK_BADGES: Badge[] = [
   },
 ]
 
-// MOCK DATA GENERATION FOR 10+ ITEMS
+// --- EXTENDED MOCK DATA GENERATION FOR 10+ ITEMS ---
+
+// Coupons (30 items)
 const generateCoupons = (): Coupon[] => {
   const coupons: Coupon[] = []
-  const categories = [
-    'Alimentação',
-    'Moda',
-    'Lazer',
-    'Eletrônicos',
-    'Serviços',
-  ] as const
-  for (let i = 1; i <= 15; i++) {
+  const categories = ['Alimentação', 'Moda', 'Serviços', 'Outros'] as const
+  const statuses = ['active', 'validated', 'expired'] as const
+
+  for (let i = 1; i <= 30; i++) {
+    const isUS = i % 2 !== 0 // Odd IDs for US, Even for BR
     coupons.push({
       id: `cpn-${i}`,
-      storeName: i % 2 === 0 ? 'Burger King' : 'Local Shop ' + i,
-      companyId: i % 2 === 0 ? 'c1' : `c${i}`,
-      title: i % 2 === 0 ? 'Whopper Deal' : `Discount Offer ${i}`,
-      description: `Great deal number ${i} for everyone.`,
-      discount: `${10 + i}% OFF`,
+      storeName: isUS ? `Store #${i} USA` : `Loja #${i} BR`,
+      companyId: isUS ? `c${i + 5}` : `c${i}`,
+      title: isUS ? `Super Deal ${i}` : `Oferta Imperdível ${i}`,
+      description: isUS
+        ? `Amazing discount on all items in section ${i}.`
+        : `Desconto incrível em todos os itens da seção ${i}.`,
+      discount: `${10 + (i % 50)}% OFF`,
       category: categories[i % categories.length],
       distance: 100 * i,
       expiryDate: '2025-12-31',
-      image: `https://img.usecurling.com/p/600/400?q=${categories[i % categories.length]}`,
-      logo: `https://img.usecurling.com/i?q=shop&color=${i % 2 === 0 ? 'red' : 'blue'}`,
-      code: `CODE-${i}`,
-      coordinates: { lat: -23.55 + i * 0.001, lng: -46.63 + i * 0.001 },
+      image: `https://img.usecurling.com/p/600/400?q=${categories[i % categories.length]}&seed=${i}`,
+      logo: `https://img.usecurling.com/i?q=logo&color=${i % 2 === 0 ? 'red' : 'blue'}&seed=${i}`,
+      code: `CODE-${i + 1000}`,
+      coordinates: isUS
+        ? { lat: 28.5383 + i * 0.001, lng: -81.3792 + i * 0.001 }
+        : { lat: -23.55 + i * 0.001, lng: -46.63 + i * 0.001 },
       totalAvailable: 100 * i,
       reservedCount: 10 * i,
       averageRating: 4.0 + (i % 10) / 10,
-      status: 'active',
+      status: statuses[i % 3],
       source: i % 3 === 0 ? 'aggregated' : 'partner',
-      region: i % 2 === 0 ? 'BR-SP' : 'US-FL',
+      region: isUS ? 'US-FL' : 'BR-SP',
+      price: i % 5 === 0 ? 50 + i : undefined,
     })
   }
   return coupons
@@ -205,25 +187,29 @@ export const MOCK_COUPONS: Coupon[] = generateCoupons()
 
 export const MOCK_AB_TESTS: ABTest[] = []
 
+// Itineraries (15 items)
 const generateItineraries = (): Itinerary[] => {
   const itineraries: Itinerary[] = []
-  for (let i = 1; i <= 10; i++) {
+  for (let i = 1; i <= 15; i++) {
+    const isUS = i % 2 !== 0
     itineraries.push({
       id: `it-${i}`,
-      title: `Roteiro Incrível ${i}`,
-      description: `Um roteiro de ${i + 2} dias explorando o melhor da região.`,
-      stops: [MOCK_COUPONS[0], MOCK_COUPONS[1]],
+      title: isUS ? `Florida Trip ${i}` : `Roteiro SP ${i}`,
+      description: isUS
+        ? `A ${i + 2} day trip exploring the best of Florida.`
+        : `Um roteiro de ${i + 2} dias explorando o melhor de São Paulo.`,
+      stops: [MOCK_COUPONS[0], MOCK_COUPONS[1], MOCK_COUPONS[2]],
       days: [
         { id: `d1-${i}`, dayNumber: 1, stops: [MOCK_COUPONS[0]] },
         { id: `d2-${i}`, dayNumber: 2, stops: [MOCK_COUPONS[1]] },
       ],
       totalSavings: 50 * i,
-      duration: `${i + 2} Dias`,
-      image: `https://img.usecurling.com/p/600/300?q=travel%20${i}`,
-      tags: i % 2 === 0 ? ['Gastronomia'] : ['Aventura'],
-      matchScore: 90 + (i % 10),
+      duration: `${i + 2} Days`,
+      image: `https://img.usecurling.com/p/600/300?q=travel&seed=${i}`,
+      tags: i % 2 === 0 ? ['Food', 'City'] : ['Adventure', 'Nature'],
+      matchScore: 80 + (i % 20),
       isTemplate: true,
-      region: i % 2 === 0 ? 'BR-SP' : 'US-FL',
+      region: isUS ? 'US-FL' : 'BR-SP',
       agencyId: 'agency1',
     })
   }
@@ -232,36 +218,25 @@ const generateItineraries = (): Itinerary[] => {
 
 export const MOCK_ITINERARIES: Itinerary[] = generateItineraries()
 
-export const MOCK_COMPANIES: Company[] = [
-  {
-    id: 'c1',
-    name: 'Burger King',
-    email: 'contact@bk.com',
-    status: 'active',
-    registrationDate: '2024-01-01',
-    region: 'BR-SP',
-    enableLoyalty: true,
-  },
-  {
-    id: 'c2',
-    name: 'Shop Retail 1',
-    email: 'shop.retail@dealvoy.com',
-    status: 'active',
-    registrationDate: '2024-02-01',
-    region: 'BR-SP',
-    enableLoyalty: true,
-    ownerId: 'u_shop',
-  },
-  ...Array.from({ length: 8 }).map((_, i) => ({
-    id: `c${i + 3}`,
-    name: `Retail Store ${i + 3}`,
-    email: `store${i + 3}@example.com`,
-    status: 'active' as const,
-    registrationDate: '2024-03-01',
-    region: i % 2 === 0 ? 'BR-SP' : 'US-FL',
-    enableLoyalty: false,
-  })),
-]
+// Companies (20 items)
+const generateCompanies = (): Company[] => {
+  const companies: Company[] = []
+  for (let i = 1; i <= 20; i++) {
+    const isUS = i % 2 !== 0
+    companies.push({
+      id: `c${i}`,
+      name: isUS ? `Merchant USA ${i}` : `Comércio BR ${i}`,
+      email: `merchant${i}@dealvoy.com`,
+      status: i % 10 === 0 ? 'pending' : 'active',
+      registrationDate: '2024-01-01',
+      region: isUS ? 'US-FL' : 'BR-SP',
+      enableLoyalty: i % 3 === 0,
+      ownerId: `u_shop_${i}`,
+    })
+  }
+  return companies
+}
+export const MOCK_COMPANIES: Company[] = generateCompanies()
 
 export const MOCK_ADS: Advertisement[] = [
   {
@@ -282,73 +257,80 @@ export const MOCK_ADS: Advertisement[] = [
   },
 ]
 
+// Users (Test Accounts for all roles)
 export const MOCK_USERS: User[] = [
+  // 1. App Owner
   {
     id: 'u_admin',
-    name: 'App Owner',
+    name: 'Super Admin',
     email: 'admin@dealvoy.com',
     role: 'super_admin',
-    avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=male&seed=1',
+    avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=male&seed=99',
     birthday: '1980-01-01',
     country: 'Brasil',
     state: 'São Paulo',
     city: 'São Paulo',
     phone: '+55 11 99999-9999',
   },
+  // 2. Franchisee (BR)
   {
     id: 'u_fran_sp',
     name: 'Franchise SP',
     email: 'franquia.sp@dealvoy.com',
     role: 'franchisee',
     region: 'BR-SP',
-    avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=female&seed=2',
+    avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=female&seed=88',
     country: 'Brasil',
     state: 'São Paulo',
     city: 'Campinas',
     phone: '+55 19 98888-8888',
   },
+  // 3. Franchisee (US)
   {
     id: 'u_fran_fl',
     name: 'Franchise FL',
     email: 'franquia.fl@dealvoy.com',
     role: 'franchisee',
     region: 'US-FL',
-    avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=male&seed=3',
+    avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=male&seed=77',
     country: 'USA',
     state: 'Florida',
     city: 'Orlando',
     phone: '+1 407 555-0123',
   },
+  // 4. Agency
   {
     id: 'u_agency',
     name: 'Travel Agency',
     email: 'agency.travel@dealvoy.com',
     role: 'agency',
     agencyId: 'agency1',
-    avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=female&seed=4',
+    avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=female&seed=66',
     country: 'Brasil',
     state: 'Rio de Janeiro',
     city: 'Rio de Janeiro',
     phone: '+55 21 97777-7777',
   },
+  // 5. Merchant (Shopkeeper)
   {
     id: 'u_shop',
     name: 'Shop Keeper',
     email: 'shop.retail@dealvoy.com',
     role: 'shopkeeper',
-    companyId: 'c2',
-    avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=male&seed=5',
+    companyId: 'c2', // Linked to a BR company usually
+    avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=male&seed=55',
     country: 'Brasil',
     state: 'São Paulo',
     city: 'Santos',
     phone: '+55 13 96666-6666',
   },
+  // 6. End User
   {
     id: 'u_user',
     name: 'End User',
     email: 'user.test@dealvoy.com',
     role: 'user',
-    avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=female&seed=6',
+    avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=female&seed=44',
     country: 'USA',
     state: 'Florida',
     city: 'Miami',
@@ -368,32 +350,17 @@ export const MOCK_REWARDS: RewardItem[] = [
   },
 ]
 
-export const MOCK_FRANCHISES: Franchise[] = [
-  {
-    id: 'f1',
-    name: 'Deal Voy Brasil - SP',
-    region: 'BR-SP',
-    ownerId: 'u_fran_sp',
+// Franchises (12 items)
+export const MOCK_FRANCHISES: Franchise[] = Array.from({ length: 12 }).map(
+  (_, i) => ({
+    id: `f${i + 1}`,
+    name: `Deal Voy Franchise ${i + 1}`,
+    region: i % 2 === 0 ? 'BR-SP' : 'US-FL',
+    ownerId: `u_fran_${i}`,
     status: 'active',
-    licenseExpiry: '2030-01-01',
-  },
-  {
-    id: 'f2',
-    name: 'Deal Voy USA - FL',
-    region: 'US-FL',
-    ownerId: 'u_fran_fl',
-    status: 'active',
-    licenseExpiry: '2028-06-15',
-  },
-  ...Array.from({ length: 8 }).map((_, i) => ({
-    id: `f${i + 3}`,
-    name: `Franchise Region ${i + 3}`,
-    region: i % 2 === 0 ? 'BR-RJ' : 'US-NY',
-    ownerId: `u_fran_${i + 3}`,
-    status: 'active' as const,
-    licenseExpiry: '2029-01-01',
-  })),
-]
+    licenseExpiry: `2030-0${(i % 9) + 1}-01`,
+  }),
+)
 
 export const MOCK_TRAVEL_OFFERS: TravelOffer[] = [
   {
@@ -412,30 +379,56 @@ export const MOCK_TRAVEL_OFFERS: TravelOffer[] = [
   },
 ]
 
-export const MOCK_CAR_RENTALS: CarRental[] = Array.from({ length: 10 }).map(
+// Car Rentals (15 items)
+export const MOCK_CAR_RENTALS: CarRental[] = Array.from({ length: 15 }).map(
   (_, i) => ({
     id: `car-${i}`,
     model: i % 2 === 0 ? 'Corolla' : 'Mustang',
     brand: i % 2 === 0 ? 'Toyota' : 'Ford',
     year: 2024,
-    plate: `ABC-123${i}`,
+    plate: `ABC-${100 + i}`,
     category: i % 2 === 0 ? 'Economy' : 'Convertible',
-    pricePerDay: 100 + i * 10,
-    status: 'available',
+    pricePerDay: 100 + i * 5,
+    status: i % 5 === 0 ? 'rented' : 'available',
     location: i % 2 === 0 ? 'São Paulo, SP' : 'Miami, FL',
-    image: `https://img.usecurling.com/p/300/200?q=car%20${i % 2 === 0 ? 'sedan' : 'convertible'}`,
+    image: `https://img.usecurling.com/p/300/200?q=car%20${i % 2 === 0 ? 'sedan' : 'convertible'}&seed=${i}`,
     agencyId: 'agency1',
   }),
 )
 
+// Validation Logs (20 items)
 export const MOCK_VALIDATION_LOGS: ValidationLog[] = Array.from({
-  length: 15,
+  length: 20,
 }).map((_, i) => ({
   id: `vl-${i}`,
   couponId: `cpn-${i}`,
-  couponTitle: `Discount Offer ${i}`,
+  couponTitle: `Coupon Offer ${i}`,
   customerName: `Customer ${i}`,
-  validatedAt: new Date(Date.now() - i * 86400000).toISOString(),
+  validatedAt: new Date(Date.now() - i * 3600000).toISOString(),
   method: i % 2 === 0 ? 'qr' : 'manual',
   shopkeeperId: 'u_shop',
+}))
+
+// System Logs (15 items)
+export const MOCK_SYSTEM_LOGS: SystemLog[] = Array.from({ length: 15 }).map(
+  (_, i) => ({
+    id: `log-${i}`,
+    date: new Date(Date.now() - i * 1800000).toISOString(),
+    action: i % 2 === 0 ? 'User Login' : 'System Backup',
+    details: i % 2 === 0 ? 'User logged in via mobile' : 'Backup successful',
+    user: i % 2 === 0 ? 'u_user' : 'system',
+    status: i % 10 === 0 ? 'error' : 'success',
+  }),
+)
+
+// Client History (15 items)
+export const MOCK_CLIENT_HISTORY: ClientHistory[] = Array.from({
+  length: 15,
+}).map((_, i) => ({
+  id: `ch-${i}`,
+  clientName: `Client ${i}`,
+  action: 'Booking Confirmed',
+  date: new Date(Date.now() - i * 86400000).toISOString(),
+  amount: 1500 + i * 100,
+  status: 'completed',
 }))

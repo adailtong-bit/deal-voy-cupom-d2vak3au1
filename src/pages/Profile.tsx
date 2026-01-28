@@ -13,6 +13,8 @@ import {
   ShieldCheck,
   Edit2,
   MapPin,
+  Wallet,
+  Plane,
 } from 'lucide-react'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
@@ -233,6 +235,40 @@ export default function Profile() {
       </div>
 
       <div className="space-y-3">
+        <Link to="/saved">
+          <Button
+            variant="outline"
+            className="w-full justify-between h-14 bg-white hover:bg-slate-50 border-slate-200 group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="bg-emerald-100 p-2 rounded-full group-hover:bg-emerald-200 transition-colors">
+                <Wallet className="h-5 w-5 text-emerald-600" />
+              </div>
+              <span className="font-semibold text-slate-700">
+                {t('profile.wallet')}
+              </span>
+            </div>
+            <ChevronRight className="h-4 w-4 text-slate-400" />
+          </Button>
+        </Link>
+
+        <Link to="/travel-planner">
+          <Button
+            variant="outline"
+            className="w-full justify-between h-14 bg-white hover:bg-slate-50 border-slate-200 group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="bg-indigo-100 p-2 rounded-full group-hover:bg-indigo-200 transition-colors">
+                <Plane className="h-5 w-5 text-indigo-600" />
+              </div>
+              <span className="font-semibold text-slate-700">
+                {t('profile.trips')}
+              </span>
+            </div>
+            <ChevronRight className="h-4 w-4 text-slate-400" />
+          </Button>
+        </Link>
+
         <Link to="/notifications">
           <Button
             variant="outline"
@@ -273,8 +309,8 @@ export default function Profile() {
             className="w-full justify-between h-14 bg-white hover:bg-slate-50 border-slate-200 group"
           >
             <div className="flex items-center gap-3">
-              <div className="bg-green-100 p-2 rounded-full group-hover:bg-green-200 transition-colors">
-                <Settings className="h-5 w-5 text-green-600" />
+              <div className="bg-gray-100 p-2 rounded-full group-hover:bg-gray-200 transition-colors">
+                <Settings className="h-5 w-5 text-gray-600" />
               </div>
               <span className="font-semibold text-slate-700">
                 {t('profile.settings')}

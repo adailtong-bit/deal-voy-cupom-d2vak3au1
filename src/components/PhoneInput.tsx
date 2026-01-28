@@ -13,7 +13,7 @@ import { useLanguage } from '@/stores/LanguageContext'
 interface PhoneInputProps {
   value: string
   onChange: (value: string) => void
-  countryCode?: string // e.g. 'Brasil', 'USA'
+  countryCode?: string
   className?: string
 }
 
@@ -35,15 +35,21 @@ export function PhoneInput({
   const [country, setCountry] = React.useState(COUNTRIES[0])
   const [phoneNumber, setPhoneNumber] = React.useState('')
 
-  // Sync with prop if provided
+  // Automatically adjust mask based on country prop
   useEffect(() => {
     if (countryCode) {
-      const found = COUNTRIES.find((c) => c.name === countryCode)
+      // Logic to map incoming country name to our COUNTRIES list
+      const found = COUNTRIES.find(
+        (c) =>
+          c.name === countryCode ||
+          c.code === countryCode ||
+          (countryCode === 'Brasil' && c.code === 'BR') ||
+          (countryCode === 'USA' && c.code === 'US'),
+      )
       if (found) setCountry(found)
     }
   }, [countryCode])
 
-  // Parse initial value
   useEffect(() => {
     if (value) {
       const cleanValue = value.replace(country.dial, '').trim()
@@ -51,38 +57,35 @@ export function PhoneInput({
     }
   }, [value, country.dial])
 
-  const applyMask = (val: string, mask: string) => {
-    let i = 0
-    const noMask = val.replace(/\D/g, '')
-    return mask.replace(/9/g, (_) => (noMask[i] ? noMask[i++] : ''))
-  }
-
   const handleCountryChange = (val: string) => {
     const newCountry = COUNTRIES.find((c) => c.code === val) || COUNTRIES[0]
     setCountry(newCountry)
+    // Re-trigger masked value update logic if needed or just clear
     onChange(`${newCountry.dial} ${phoneNumber}`)
   }
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value
-    // Simple mask application based on country mask
-    // Note: For robust masking, a library like react-input-mask is better,
-    // but here we implement basic "display" logic or just let user type if complex.
-    // For this user story, "Automatic adjustment of input masks" is requested.
-    // We'll filter digits and apply mask logic.
+    let val = e.target.value.replace(/\D/g, '')
+    let formatted = val
 
-    const digits = val.replace(/\D/g, '')
-    // We only apply mask if it matches length approx or just let it be loose for now to avoid UX issues
-    // without a library. But let's try a simple formatter.
-    let formatted = digits
+    // Specific Masking Logic
     if (country.code === 'BR') {
-      if (digits.length <= 10) {
-        formatted = digits.replace(/^(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3')
-      } else {
-        formatted = digits.replace(/^(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3')
+      if (val.length > 11) val = val.slice(0, 11)
+      if (val.length > 10) {
+        // (11) 99999-9999
+        formatted = val.replace(/^(\d{2})(\d{5})(\d{4})/, '($1) $2-$3')
+      } else if (val.length > 2) {
+        // (11) 9999-9999
+        formatted = val.replace(/^(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3')
       }
     } else if (country.code === 'US') {
-      formatted = digits.replace(/^(\d{3})(\d{3})(\d{0,4})/, '($1) $2-$3')
+      if (val.length > 10) val = val.slice(0, 10)
+      if (val.length > 6) {
+        // (999) 999-9999
+        formatted = val.replace(/^(\d{3})(\d{3})(\d{4})/, '($1) $2-$3')
+      } else if (val.length > 3) {
+        formatted = val.replace(/^(\d{3})(\d{0,3})/, '($1) $2')
+      }
     }
 
     setPhoneNumber(formatted)
@@ -98,7 +101,7 @@ export function PhoneInput({
         <SelectContent>
           {COUNTRIES.map((c) => (
             <SelectItem key={c.code} value={c.code}>
-              <span className="mr-1">{c.code}</span> {c.dial}
+              <span className="mr-1 font-bold">{c.code}</span> {c.dial}
             </SelectItem>
           ))}
         </SelectContent>
