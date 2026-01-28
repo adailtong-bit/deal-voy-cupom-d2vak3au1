@@ -23,6 +23,8 @@ import Challenges from './pages/Challenges'
 import ItineraryDetail from './pages/ItineraryDetail'
 import NotFound from './pages/NotFound'
 import Rewards from './pages/Rewards'
+import TravelHub from './pages/TravelHub'
+import Agencies from './pages/Agencies'
 import Layout from './components/Layout'
 
 const App = () => (
@@ -45,6 +47,8 @@ const App = () => (
                 <Route path="/saved" element={<Saved />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/travel-planner" element={<TravelPlanner />} />
+                <Route path="/travel-hub" element={<TravelHub />} />
+                <Route path="/agencies" element={<Agencies />} />
                 <Route path="/vendor" element={<VendorDashboard />} />
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/seasonal" element={<Seasonal />} />

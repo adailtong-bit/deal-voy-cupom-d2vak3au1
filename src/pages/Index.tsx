@@ -7,6 +7,7 @@ import {
   ShoppingBag,
   TrendingUp,
   LayoutGrid,
+  Plane,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -28,7 +29,7 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
 export default function Index() {
-  const { coupons, isLoadingLocation } = useCouponStore()
+  const { coupons, isLoadingLocation, selectedRegion } = useCouponStore()
   const { t } = useLanguage()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
@@ -86,7 +87,10 @@ export default function Index() {
             ) : (
               <>
                 <MapPin className="h-3 w-3" />
-                <span>{t('home.current_location')} São Paulo, SP</span>
+                <span>
+                  {t('home.current_location')}{' '}
+                  {selectedRegion === 'Global' ? 'Global' : selectedRegion}
+                </span>
               </>
             )}
           </div>
@@ -171,6 +175,36 @@ export default function Index() {
             </Carousel>
           </section>
         )}
+
+        {/* Travel Hub Highlight - New Section */}
+        <section className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-6 md:p-8 relative overflow-hidden text-white shadow-lg">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+          <div className="relative z-10 md:flex items-center justify-between">
+            <div className="mb-6 md:mb-0 md:w-1/2">
+              <Badge className="bg-white/20 text-white border-none mb-3 hover:bg-white/30">
+                Novo: Travel Hub
+              </Badge>
+              <h2 className="text-2xl md:text-3xl font-bold mb-2">
+                Explore o Mundo com Deal Voy
+              </h2>
+              <p className="text-blue-100 mb-6 max-w-md">
+                Encontre passagens aéreas e hotéis com os melhores preços do
+                mercado, tudo em um só lugar.
+              </p>
+              <Link to="/travel-hub">
+                <Button className="bg-white text-blue-600 hover:bg-blue-50 font-bold rounded-full px-6 gap-2">
+                  <Plane className="h-4 w-4" /> Buscar Viagens
+                </Button>
+              </Link>
+            </div>
+            <div className="md:w-5/12 flex justify-center">
+              <Plane
+                className="h-32 w-32 text-white/80 transform -rotate-12"
+                strokeWidth={1}
+              />
+            </div>
+          </div>
+        </section>
 
         {/* Travel Planner Highlight - Blue Theme */}
         <section className="bg-secondary/10 rounded-2xl p-6 md:p-8 relative overflow-hidden">

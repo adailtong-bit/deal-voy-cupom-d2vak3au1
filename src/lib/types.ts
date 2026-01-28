@@ -36,6 +36,7 @@ export interface LoyaltyProgram {
 export interface Coupon {
   id: string
   storeName: string
+  companyId?: string // Link to Company for settings
   title: string
   description: string
   discount: string
@@ -79,6 +80,7 @@ export interface Coupon {
   price?: number // For premium coupons/reservations
   isPaid?: boolean
   source?: 'partner' | 'aggregated'
+  region?: string // 'Country-State' format e.g. 'BR-SP', 'US-FL'
 }
 
 export type CategoryType = Coupon['category']
@@ -100,6 +102,7 @@ export interface SeasonalEvent {
     lng: number
   }
   image?: string
+  region?: string
 }
 
 export interface Notification {
@@ -213,9 +216,10 @@ export interface Itinerary {
   tags: string[]
   matchScore: number // 0-100
   isTemplate?: boolean
+  region?: string
 }
 
-export type UserRole = 'admin' | 'user' | 'company'
+export type UserRole = 'super_admin' | 'franchisee' | 'merchant' | 'user'
 
 export interface User {
   id: string
@@ -224,6 +228,8 @@ export interface User {
   role: UserRole
   avatar?: string
   birthday?: string // YYYY-MM-DD
+  region?: string // Assigned region for Franchisee
+  companyId?: string // Assigned company for Merchant
 }
 
 export interface Company {
@@ -233,6 +239,7 @@ export interface Company {
   status: 'active' | 'pending' | 'rejected'
   registrationDate: string
   region: string
+  enableLoyalty: boolean // B2B Points Toggle
 }
 
 export type AdBillingType = 'fixed' | 'ppc' | 'ticketing'
@@ -294,4 +301,39 @@ export interface ConnectedApp {
   lastSync?: string
   icon: string
   color: string
+}
+
+// New Types for Travel Hub and Multi-tenant features
+
+export interface Franchise {
+  id: string
+  name: string
+  region: string // 'Country-State'
+  ownerId: string
+  status: 'active' | 'inactive'
+  licenseExpiry: string
+}
+
+export type TravelOfferType = 'flight' | 'hotel' | 'package' | 'car_rental'
+
+export interface TravelOffer {
+  id: string
+  type: TravelOfferType
+  provider: string
+  title: string
+  description: string
+  price: number
+  currency: string
+  image: string
+  destination: string
+  rating?: number
+  link: string // External link
+  region?: string
+}
+
+export interface Region {
+  id: string
+  name: string
+  country: string
+  code: string // e.g., US-FL, BR-SP
 }

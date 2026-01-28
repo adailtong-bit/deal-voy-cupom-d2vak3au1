@@ -1,7 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
 import {
   Search,
-  MapPin,
   Menu,
   ShoppingBag,
   Calendar,
@@ -11,6 +10,8 @@ import {
   Briefcase,
   ShieldCheck,
   Gift,
+  Plane,
+  Building,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -30,13 +31,20 @@ import { LanguageSelector } from './LanguageSelector'
 import { useNotification } from '@/stores/NotificationContext'
 import { useCouponStore } from '@/stores/CouponContext'
 import { SyncStatus } from './SyncStatus'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import logoImg from '@/assets/whatsapp-image-2026-01-25-at-5.40.56-am.jpeg'
 
 export function DesktopHeader() {
   const location = useLocation()
   const { t } = useLanguage()
   const { unreadCount } = useNotification()
-  const { user } = useCouponStore()
+  const { user, selectedRegion, setRegion, regions } = useCouponStore()
 
   const isActive = (path: string) => location.pathname === path
 
@@ -67,24 +75,24 @@ export function DesktopHeader() {
               {t('nav.home')}
             </Link>
             <Link
-              to="/explore"
+              to="/travel-hub"
               className={
-                isActive('/explore')
-                  ? 'text-primary font-bold'
-                  : 'text-muted-foreground hover:text-foreground'
+                isActive('/travel-hub')
+                  ? 'text-primary font-bold flex items-center gap-1'
+                  : 'text-muted-foreground hover:text-foreground flex items-center gap-1'
               }
             >
-              {t('nav.explore')}
+              <Plane className="h-4 w-4" /> Travel Hub
             </Link>
             <Link
-              to="/challenges"
+              to="/agencies"
               className={
-                isActive('/challenges')
-                  ? 'text-primary font-bold'
-                  : 'text-muted-foreground hover:text-foreground'
+                isActive('/agencies')
+                  ? 'text-primary font-bold flex items-center gap-1'
+                  : 'text-muted-foreground hover:text-foreground flex items-center gap-1'
               }
             >
-              {t('nav.challenges')}
+              <Building className="h-4 w-4" /> Agências
             </Link>
             <Link
               to="/rewards"
@@ -106,17 +114,7 @@ export function DesktopHeader() {
             >
               {t('nav.travel')}
             </Link>
-            <Link
-              to="/seasonal"
-              className={
-                isActive('/seasonal')
-                  ? 'text-primary font-bold'
-                  : 'text-muted-foreground hover:text-foreground'
-              }
-            >
-              {t('nav.seasonal')}
-            </Link>
-            {user?.role === 'admin' && (
+            {(user?.role === 'super_admin' || user?.role === 'franchisee') && (
               <Link
                 to="/admin"
                 className={
@@ -143,6 +141,19 @@ export function DesktopHeader() {
         </div>
 
         <div className="flex items-center gap-3">
+          <Select value={selectedRegion} onValueChange={setRegion}>
+            <SelectTrigger className="w-[110px] h-8 text-xs bg-muted/50 border-none focus:ring-0 px-2 gap-1 rounded-full">
+              <SelectValue placeholder="Região" />
+            </SelectTrigger>
+            <SelectContent align="end">
+              {regions.map((r) => (
+                <SelectItem key={r.id} value={r.code}>
+                  {r.code}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
           <SyncStatus />
           <LanguageSelector />
 
@@ -164,15 +175,19 @@ export function DesktopHeader() {
             </Button>
           </Link>
 
-          <Link to="/vendor">
-            <Button
-              variant="outline"
-              size="sm"
-              className="hidden lg:flex gap-2 text-xs"
-            >
-              <Briefcase className="h-3 w-3" /> {t('nav.vendor')}
-            </Button>
-          </Link>
+          {(user?.role === 'merchant' ||
+            user?.role === 'super_admin' ||
+            user?.role === 'franchisee') && (
+            <Link to="/vendor">
+              <Button
+                variant="outline"
+                size="sm"
+                className="hidden lg:flex gap-2 text-xs"
+              >
+                <Briefcase className="h-3 w-3" /> {t('nav.vendor')}
+              </Button>
+            </Link>
+          )}
 
           <Link to={user ? '/profile' : '/admin/login'}>
             <Avatar className="h-8 w-8 cursor-pointer hover:ring-2 hover:ring-secondary hover:ring-offset-2 transition-all">
@@ -208,26 +223,18 @@ export function DesktopHeader() {
                 </SheetClose>
                 <SheetClose asChild>
                   <Link
-                    to="/explore"
+                    to="/travel-hub"
                     className="text-lg font-medium flex items-center gap-2 hover:text-primary transition-colors"
                   >
-                    <MapPin className="h-4 w-4" /> {t('nav.explore')}
+                    <Plane className="h-4 w-4" /> Travel Hub
                   </Link>
                 </SheetClose>
                 <SheetClose asChild>
                   <Link
-                    to="/challenges"
+                    to="/agencies"
                     className="text-lg font-medium flex items-center gap-2 hover:text-primary transition-colors"
                   >
-                    <Trophy className="h-4 w-4" /> {t('nav.challenges')}
-                  </Link>
-                </SheetClose>
-                <SheetClose asChild>
-                  <Link
-                    to="/rewards"
-                    className="text-lg font-medium flex items-center gap-2 hover:text-primary transition-colors"
-                  >
-                    <Gift className="h-4 w-4" /> Rewards
+                    <Building className="h-4 w-4" /> Agências
                   </Link>
                 </SheetClose>
                 <SheetClose asChild>
@@ -246,15 +253,8 @@ export function DesktopHeader() {
                     <Calendar className="h-4 w-4" /> {t('nav.seasonal')}
                   </Link>
                 </SheetClose>
-                <SheetClose asChild>
-                  <Link
-                    to="/vendor"
-                    className="text-lg font-medium flex items-center gap-2 hover:text-primary transition-colors"
-                  >
-                    <Briefcase className="h-4 w-4" /> {t('nav.vendor')}
-                  </Link>
-                </SheetClose>
-                {user?.role === 'admin' && (
+                {(user?.role === 'super_admin' ||
+                  user?.role === 'franchisee') && (
                   <SheetClose asChild>
                     <Link
                       to="/admin"

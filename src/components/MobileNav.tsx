@@ -1,5 +1,12 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Home, Map as MapIcon, User, Trophy, Gift } from 'lucide-react'
+import {
+  Home,
+  Map as MapIcon,
+  User,
+  Plane,
+  Building,
+  Briefcase,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useLanguage } from '@/stores/LanguageContext'
 
@@ -11,8 +18,8 @@ export function MobileNav() {
   const navItems = [
     { icon: Home, label: t('nav.home'), href: '/' },
     { icon: MapIcon, label: t('nav.explore'), href: '/explore' },
-    { icon: Trophy, label: t('nav.challenges'), href: '/challenges' },
-    { icon: Gift, label: 'Rewards', href: '/rewards' },
+    { icon: Plane, label: 'Travel Hub', href: '/travel-hub' },
+    { icon: Building, label: 'Agencies', href: '/agencies' },
     { icon: User, label: t('nav.profile'), href: '/profile' },
   ]
 
