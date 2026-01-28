@@ -402,6 +402,13 @@ export const MOCK_ITINERARIES: Itinerary[] = [
     description:
       'Um passeio pelos sabores da cidade sem gastar muito. Inclui almoço, lanche e jantar com descontos.',
     stops: [MOCK_COUPONS[0], MOCK_COUPONS[1]],
+    days: [
+      {
+        id: 'd1',
+        dayNumber: 1,
+        stops: [MOCK_COUPONS[0], MOCK_COUPONS[1]],
+      },
+    ],
     totalSavings: 60,
     duration: '4h',
     image: 'https://img.usecurling.com/p/600/300?q=food%20tour',
@@ -414,6 +421,13 @@ export const MOCK_ITINERARIES: Itinerary[] = [
     description:
       'Aproveite as melhores ofertas de moda e termine o dia com um spa relaxante.',
     stops: [MOCK_COUPONS[2], MOCK_COUPONS[3]],
+    days: [
+      {
+        id: 'd1',
+        dayNumber: 1,
+        stops: [MOCK_COUPONS[2], MOCK_COUPONS[3]],
+      },
+    ],
     totalSavings: 150,
     duration: '6h',
     image: 'https://img.usecurling.com/p/600/300?q=shopping%20bags',
@@ -426,11 +440,48 @@ export const MOCK_ITINERARIES: Itinerary[] = [
     description:
       'Conheça o centro histórico e aproveite descontos em cafés tradicionais.',
     stops: [MOCK_COUPONS[1]],
+    days: [
+      {
+        id: 'd1',
+        dayNumber: 1,
+        stops: [MOCK_COUPONS[1]],
+      },
+    ],
     totalSavings: 35,
     duration: '3h',
     image: 'https://img.usecurling.com/p/600/300?q=historic%20building',
     tags: ['Cultura', 'Turismo'],
     matchScore: 75,
+  },
+  {
+    id: 'template1',
+    title: 'Orlando 5 Dias Clássico',
+    description:
+      'Roteiro completo para curtir os parques e compras em Orlando.',
+    stops: [MOCK_COUPONS[5], MOCK_COUPONS[6], MOCK_COUPONS[7]],
+    days: [
+      {
+        id: 'd1',
+        dayNumber: 1,
+        stops: [MOCK_COUPONS[5]],
+      },
+      {
+        id: 'd2',
+        dayNumber: 2,
+        stops: [MOCK_COUPONS[6]],
+      },
+      {
+        id: 'd3',
+        dayNumber: 3,
+        stops: [MOCK_COUPONS[7]],
+      },
+    ],
+    totalSavings: 200,
+    duration: '5 Dias',
+    image: 'https://img.usecurling.com/p/600/300?q=orlando%20park',
+    tags: ['Família', 'Internacional', 'Template'],
+    matchScore: 100,
+    isTemplate: true,
   },
 ]
 

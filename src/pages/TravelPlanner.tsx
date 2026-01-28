@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -19,6 +19,10 @@ import {
   Check,
   MapPin,
   Loader2,
+  Plus,
+  Save,
+  Briefcase,
+  Search,
 } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
 import { Badge } from '@/components/ui/badge'
@@ -34,7 +38,11 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
 } from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
+import { DayPlan, Itinerary, Coupon } from '@/lib/types'
+import { AdSpace } from '@/components/AdSpace'
 
 const DESTINATIONS: Record<string, { lat: number; lng: number }> = {
   orlando: { lat: 28.5383, lng: -81.3792 },
@@ -47,25 +55,45 @@ const DESTINATIONS: Record<string, { lat: number; lng: number }> = {
 export default function TravelPlanner() {
   const {
     coupons,
-    tripIds,
     userLocation,
     downloadOffline,
-    downloadedIds,
     isDownloading,
     downloadProgress,
+    saveItinerary,
+    itineraries,
+    user,
   } = useCouponStore()
   const { t } = useLanguage()
 
   const [navMode, setNavMode] = useState<'gps' | 'planned'>('gps')
-  const [destination, setDestination] = useState('')
+  const [activeTab, setActiveTab] = useState<'planner' | 'saved'>('planner')
   const [searchQuery, setSearchQuery] = useState('')
-  const [viewType, setViewType] = useState<'list' | 'map'>('map')
-  const [activeTab, setActiveTab] = useState<'explore' | 'itinerary'>('explore')
-  const [showEvents, setShowEvents] = useState(true)
+
+  // Route State
+  const [origin, setOrigin] = useState('')
+  const [destination, setDestination] = useState('')
+  const [routeStops, setRouteStops] = useState<string[]>([])
+  const [showRoute, setShowRoute] = useState(false)
+
+  // Multi-day State
+  const [currentDay, setCurrentDay] = useState(1)
+  const [days, setDays] = useState<DayPlan[]>([
+    { id: 'day1', dayNumber: 1, stops: [] },
+  ])
+  const [planTitle, setPlanTitle] = useState('Minha Viagem')
+  const [isAgentMode, setIsAgentMode] = useState(false)
+  const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null)
+
+  // Map Center State
   const [mapCenter, setMapCenter] = useState<{
     lat: number
     lng: number
   } | null>(null)
+
+  // Time Sensitive Logic
+  const currentHour = new Date().getHours()
+  const isLunchTime = currentHour >= 11 && currentHour <= 14
+  const isDinnerTime = currentHour >= 18 && currentHour <= 21
 
   const currentCenter = useMemo(() => {
     if (navMode === 'planned' && mapCenter) return mapCenter
@@ -74,110 +102,123 @@ export default function TravelPlanner() {
     return { lat: -23.55052, lng: -46.633308 }
   }, [navMode, mapCenter, userLocation])
 
-  const destinationCoupons = useMemo(() => {
-    if (!destination) return []
+  // Mock "Along Route" filtering
+  // In a real app, calculate distance from polyline. Here, filter by bounding box of start/end or destination city
+  const filteredCoupons = useMemo(() => {
+    if (navMode === 'gps') return coupons
+
     if (destination.toLowerCase().includes('orlando')) {
       return coupons.filter((c) => c.id.startsWith('orl'))
     }
-    return coupons.filter((c) => c.isTrending || c.isFeatured)
-  }, [destination, coupons])
 
-  const displayedCoupons = navMode === 'gps' ? coupons : destinationCoupons
-  const tripCoupons = coupons.filter((c) => tripIds.includes(c.id))
+    // Fallback: show popular
+    return coupons.filter((c) => c.isFeatured || c.isTrending)
+  }, [navMode, destination, coupons])
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleRouteSearch = (e: React.FormEvent) => {
     e.preventDefault()
-    if (searchQuery) {
+    if (origin && destination) {
       setNavMode('planned')
-      setDestination(searchQuery)
-      setActiveTab('explore')
+      setShowRoute(true)
 
+      // Attempt to center map on destination
       const key = Object.keys(DESTINATIONS).find((k) =>
-        searchQuery.toLowerCase().includes(k),
+        destination.toLowerCase().includes(k),
       )
-      if (key) {
-        setMapCenter(DESTINATIONS[key])
-      } else {
-        toast.info(`${t('home.detecting_location')} ${searchQuery}...`)
-        setMapCenter({
-          lat: -23.55052 + Math.random() * 0.1,
-          lng: -46.633308 + Math.random() * 0.1,
-        })
-      }
+      if (key) setMapCenter(DESTINATIONS[key])
+
+      toast.info('Calculando rota otimizada...')
     }
   }
 
-  const clearDestination = () => {
-    setNavMode('gps')
-    setDestination('')
-    setSearchQuery('')
-    setMapCenter(null)
+  const addToDay = (coupon: Coupon) => {
+    setDays((prev) =>
+      prev.map((day) => {
+        if (day.dayNumber === currentDay) {
+          if (day.stops.find((s) => s.id === coupon.id)) return day
+          toast.success(`Adicionado ao Dia ${currentDay}`)
+          return { ...day, stops: [...day.stops, coupon] }
+        }
+        return day
+      }),
+    )
   }
 
-  const handleShare = async () => {
-    const shareText = `Confira meu roteiro de viagem no Deal Voy com ${tripCoupons.length} paradas econômicas!`
-    const shareUrl = window.location.href
+  const removeFromDay = (dayNum: number, couponId: string) => {
+    setDays((prev) =>
+      prev.map((day) => {
+        if (day.dayNumber === dayNum) {
+          return { ...day, stops: day.stops.filter((s) => s.id !== couponId) }
+        }
+        return day
+      }),
+    )
+  }
 
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: t('travel.itinerary_title'),
-          text: shareText,
-          url: shareUrl,
-        })
-        toast.success(t('common.share'))
-      } catch (err) {
-        console.error('Share failed:', err)
-      }
-    } else {
-      navigator.clipboard.writeText(`${shareText} ${shareUrl}`)
-      toast.success(t('common.share'))
+  const addNewDay = () => {
+    const nextDay = days.length + 1
+    setDays([...days, { id: `day${nextDay}`, dayNumber: nextDay, stops: [] }])
+    setCurrentDay(nextDay)
+  }
+
+  const handleSavePlan = () => {
+    const totalSavings = days.reduce(
+      (acc, day) =>
+        acc + day.stops.reduce((dAcc, s) => dAcc + (s.price || 10), 0), // Mock savings calc
+      0,
+    )
+
+    const newItinerary: Itinerary = {
+      id: Math.random().toString(),
+      title: planTitle,
+      description: `Roteiro de ${days.length} dias`,
+      stops: days.flatMap((d) => d.stops),
+      days: days,
+      totalSavings,
+      duration: `${days.length} Dias`,
+      image:
+        days[0]?.stops[0]?.image ||
+        'https://img.usecurling.com/p/600/300?q=travel',
+      tags: ['Personalizado'],
+      matchScore: 100,
+      isTemplate: isAgentMode,
     }
+
+    saveItinerary(newItinerary)
   }
 
-  const handleDownloadOffline = () => {
-    if (tripIds.length === 0) return
-    downloadOffline(tripIds)
+  const handleOfflineSave = () => {
+    const allIds = days.flatMap((d) => d.stops.map((s) => s.id))
+    if (allIds.length === 0) return toast.error('Adicione paradas primeiro')
+    downloadOffline(allIds)
   }
-
-  const allTripDownloaded =
-    tripIds.length > 0 && tripIds.every((id) => downloadedIds.includes(id))
 
   const mapMarkers: MapMarker[] = useMemo(() => {
     const markers: MapMarker[] = []
 
-    displayedCoupons.forEach((coupon) => {
+    filteredCoupons.forEach((coupon) => {
       if (coupon.coordinates) {
+        const isFood = coupon.category === 'Alimentação'
+        // Highlight based on time
+        const highlight = (isLunchTime || isDinnerTime) && isFood
+
         markers.push({
           id: coupon.id,
           lat: coupon.coordinates.lat,
           lng: coupon.coordinates.lng,
           title: coupon.storeName,
           category: coupon.category,
-          color: tripIds.includes(coupon.id) ? 'green' : 'orange',
+          color: days.some((d) => d.stops.some((s) => s.id === coupon.id))
+            ? 'green'
+            : 'orange',
           data: coupon,
+          highlight,
         })
       }
     })
 
-    if (showEvents) {
-      SEASONAL_EVENTS.forEach((event) => {
-        if (event.coordinates) {
-          markers.push({
-            id: `event-${event.id}`,
-            lat: event.coordinates.lat,
-            lng: event.coordinates.lng,
-            title: event.title,
-            category: 'Evento',
-            color: 'blue',
-            data: { ...event, image: event.image },
-          })
-        }
-      })
-    }
-
     return markers
-  }, [displayedCoupons, showEvents, tripIds])
+  }, [filteredCoupons, days, isLunchTime, isDinnerTime])
 
   const FallbackMap = (
     <div className="w-full h-full relative bg-slate-100 group overflow-hidden">
@@ -190,40 +231,15 @@ export default function TravelPlanner() {
         <AlertCircle className="h-4 w-4" />
         <span>Modo Visualização Simplificada (API Key ausente)</span>
       </div>
-      {displayedCoupons.slice(0, 8).map((coupon, idx) => (
-        <div
-          key={coupon.id}
-          className="absolute transform -translate-x-1/2 -translate-y-1/2 hover:z-50 group/pin"
-          style={{
-            top: `${20 + ((idx * 13) % 60)}%`,
-            left: `${20 + ((idx * 17) % 60)}%`,
-          }}
-        >
-          <div
-            className={cn(
-              'p-2 rounded-full shadow-lg transition-transform hover:scale-110 cursor-pointer',
-              tripIds.includes(coupon.id)
-                ? 'bg-[#4CAF50] text-white'
-                : 'bg-[#FF5722] text-white',
-            )}
-          >
-            <MapPin className="h-4 w-4" />
-          </div>
-          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-32 bg-white rounded-lg shadow-xl p-2 hidden group-hover/pin:block text-xs z-50">
-            <p className="font-bold truncate">{coupon.storeName}</p>
-            <p className="text-[#FF5722] font-bold">{coupon.discount}</p>
-          </div>
-        </div>
-      ))}
     </div>
   )
 
   return (
-    <div className="flex flex-col h-full bg-slate-50">
+    <div className="flex flex-col h-[calc(100vh-64px)] bg-slate-50">
       <Dialog open={isDownloading}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Salvando Offline</DialogTitle>
+            <DialogTitle>{t('travel.save_offline')}</DialogTitle>
             <DialogDescription>
               Baixando mapas e imagens para acesso sem internet...
             </DialogDescription>
@@ -237,325 +253,262 @@ export default function TravelPlanner() {
         </DialogContent>
       </Dialog>
 
-      <div className="bg-white border-b z-20 shadow-sm flex-shrink-0">
-        <div className="container mx-auto px-4 py-4 space-y-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-bold flex items-center gap-2 text-[#2196F3]">
-                <Plane className="h-6 w-6" /> {t('travel.title')}
-              </h1>
-              <p className="text-sm text-muted-foreground hidden md:block">
-                {t('travel.subtitle')}
-              </p>
-            </div>
-
-            <div className="bg-slate-100 p-1 rounded-lg inline-flex">
-              <button
-                onClick={clearDestination}
-                className={cn(
-                  'px-4 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-2',
-                  navMode === 'gps'
-                    ? 'bg-white text-primary shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground',
-                )}
-              >
-                <Navigation className="h-4 w-4" /> {t('travel.gps')}
-              </button>
-              <button
-                onClick={() => setNavMode('planned')}
-                className={cn(
-                  'px-4 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-2',
-                  navMode === 'planned'
-                    ? 'bg-[#2196F3] text-white shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground',
-                )}
-              >
-                <Globe className="h-4 w-4" /> {t('travel.plan_destination')}
-              </button>
-            </div>
-          </div>
-
-          <div
-            className={cn(
-              'relative transition-all duration-300',
-              navMode === 'planned'
-                ? 'opacity-100 translate-y-0'
-                : 'opacity-100',
-            )}
-          >
-            <form
-              onSubmit={handleSearch}
-              className="relative max-w-2xl mx-auto"
-            >
-              <MapPin className="absolute left-4 top-3.5 h-5 w-5 text-[#FF5722]" />
-              <Input
-                placeholder={t('travel.search_placeholder')}
-                className={cn(
-                  'pl-12 h-12 rounded-full text-base border-2 focus-visible:ring-offset-0',
-                  navMode === 'planned'
-                    ? 'border-[#2196F3] bg-blue-50/50'
-                    : 'border-slate-200',
-                )}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+      <div className="flex-1 flex overflow-hidden">
+        {/* Sidebar */}
+        <div className="w-full md:w-[400px] bg-white border-r flex flex-col z-10 shadow-xl overflow-hidden">
+          <div className="p-4 border-b bg-primary/5">
+            <h1 className="text-xl font-bold flex items-center gap-2 text-primary">
+              <Plane className="h-6 w-6" /> {t('travel.title')}
+            </h1>
+            <div className="flex gap-2 mt-3">
               <Button
-                type="submit"
-                className="absolute right-1.5 top-1.5 h-9 rounded-full bg-[#FF5722] hover:bg-[#F4511E] text-white font-bold px-6"
+                variant={activeTab === 'planner' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setActiveTab('planner')}
+                className="flex-1"
               >
-                {t('common.search')}
+                Planejar
               </Button>
-            </form>
-            {navMode === 'planned' && destination && (
-              <div className="flex justify-center mt-2">
-                <Badge
-                  variant="outline"
-                  className="gap-2 bg-blue-50 text-[#2196F3] border-blue-200 px-3 py-1"
-                >
-                  {t('travel.showing_offers_for')}{' '}
-                  <span className="font-bold">{destination}</span>
-                  <button
-                    onClick={clearDestination}
-                    className="ml-1 hover:text-red-500"
-                  >
-                    ✕
-                  </button>
-                </Badge>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div className="flex-1 overflow-hidden relative container mx-auto px-0 md:px-4 py-0 md:py-4">
-        <Tabs
-          value={activeTab}
-          onValueChange={(v) => setActiveTab(v as any)}
-          className="h-full flex flex-col"
-        >
-          <div className="px-4 py-2 bg-white md:bg-transparent md:p-0 flex justify-center flex-shrink-0">
-            <TabsList className="bg-slate-200 p-1">
-              <TabsTrigger
-                value="explore"
-                className="px-6 gap-2 data-[state=active]:bg-white data-[state=active]:text-[#2196F3]"
+              <Button
+                variant={activeTab === 'saved' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setActiveTab('saved')}
+                className="flex-1"
               >
-                <TentTree className="h-4 w-4" /> {t('travel.explore_offers')}
-              </TabsTrigger>
-              <TabsTrigger
-                value="itinerary"
-                className="px-6 gap-2 data-[state=active]:bg-white data-[state=active]:text-[#4CAF50]"
-              >
-                <LayoutList className="h-4 w-4" /> {t('travel.my_itinerary')} (
-                {tripIds.length})
-              </TabsTrigger>
-            </TabsList>
+                Meus Roteiros
+              </Button>
+            </div>
           </div>
 
-          <TabsContent
-            value="explore"
-            className="flex-1 overflow-hidden mt-0 data-[state=active]:flex flex-col"
-          >
-            <div className="flex items-center justify-between px-4 py-2 md:hidden bg-white border-b">
-              <span className="text-xs text-muted-foreground">
-                {displayedCoupons.length} {t('travel.offers_found')}
-              </span>
-              <div className="flex gap-1">
-                <Button
-                  variant={viewType === 'list' ? 'secondary' : 'ghost'}
-                  size="sm"
-                  onClick={() => setViewType('list')}
-                  className="h-8 w-8 p-0"
-                >
-                  <LayoutList className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant={viewType === 'map' ? 'secondary' : 'ghost'}
-                  size="sm"
-                  onClick={() => setViewType('map')}
-                  className="h-8 w-8 p-0"
-                >
-                  <MapIcon className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-
-            <div className="flex-1 relative flex overflow-hidden md:rounded-xl md:border md:shadow-sm md:bg-white">
-              <div
-                className={cn(
-                  'w-full md:w-[400px] lg:w-[450px] bg-white flex flex-col absolute md:relative inset-0 z-10 transition-transform duration-300 md:translate-x-0 md:border-r shadow-lg md:shadow-none',
-                  viewType === 'map'
-                    ? 'translate-x-[-100%] md:translate-x-0'
-                    : 'translate-x-0',
-                )}
-              >
-                <div className="p-2 border-b flex items-center justify-between bg-slate-50">
-                  <h3 className="font-semibold text-sm px-2">
-                    {t('travel.events')}
-                  </h3>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-xs h-7"
-                    onClick={() => setShowEvents(!showEvents)}
-                  >
-                    {showEvents ? t('common.hide') : t('common.show')}
-                  </Button>
-                </div>
-                <ScrollArea className="flex-1">
-                  <div className="p-4 space-y-4">
-                    {showEvents &&
-                      SEASONAL_EVENTS.filter((e) => e.coordinates).map(
-                        (event) => (
-                          <Card
-                            key={`event-${event.id}`}
-                            className="border-l-4 border-l-purple-500 bg-purple-50/30"
-                          >
-                            <CardContent className="p-3">
-                              <div className="flex gap-3">
-                                <div className="h-10 w-10 bg-purple-100 rounded-full flex items-center justify-center shrink-0">
-                                  <CalendarDays className="h-5 w-5 text-purple-600" />
-                                </div>
-                                <div>
-                                  <h4 className="font-bold text-sm">
-                                    {event.title}
-                                  </h4>
-                                  <p className="text-xs text-muted-foreground line-clamp-2">
-                                    {event.description}
-                                  </p>
-                                  <p className="text-xs font-medium text-purple-600 mt-1">
-                                    {event.date.toLocaleDateString()}
-                                  </p>
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ),
-                      )}
-
-                    {displayedCoupons.length > 0 ? (
-                      displayedCoupons.map((coupon) => (
-                        <CouponCard
-                          key={coupon.id}
-                          coupon={coupon}
-                          variant="horizontal"
-                          className="h-auto"
-                        />
-                      ))
-                    ) : (
-                      <div className="text-center py-12 text-muted-foreground">
-                        <p>{t('travel.no_offers')}</p>
-                        {navMode === 'planned' && (
-                          <Button variant="link" onClick={clearDestination}>
-                            {t('travel.back_to_gps')}
-                          </Button>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </ScrollArea>
-              </div>
-
-              <div
-                className={cn(
-                  'flex-1 bg-slate-100 relative transition-transform duration-300 md:translate-x-0',
-                  viewType === 'list'
-                    ? 'translate-x-[100%] md:translate-x-0'
-                    : 'translate-x-0',
-                )}
-              >
-                <GoogleMap
-                  center={currentCenter}
-                  zoom={navMode === 'planned' ? 12 : 14}
-                  markers={mapMarkers}
-                  className="w-full h-full"
-                  fallback={FallbackMap}
-                />
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent
-            value="itinerary"
-            className="flex-1 overflow-hidden mt-0 data-[state=active]:flex flex-col"
-          >
-            <div className="flex-1 container max-w-4xl mx-auto md:py-6">
-              <Card className="h-full flex flex-col shadow-none md:shadow-sm border-0 md:border bg-white">
-                <CardContent className="p-0 flex-1 flex flex-col">
-                  <div className="p-6 bg-[#4CAF50]/10 border-b border-[#4CAF50]/20 flex justify-between items-center">
-                    <div>
-                      <h2 className="text-xl font-bold flex items-center gap-2 text-[#2e7d32]">
-                        <LayoutList className="h-6 w-6" />{' '}
-                        {t('travel.itinerary_title')}
-                      </h2>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {tripCoupons.length} {t('travel.saved_coupons')}
-                      </p>
+          <ScrollArea className="flex-1">
+            <div className="p-4 space-y-6">
+              {activeTab === 'planner' ? (
+                <>
+                  {/* Route Input */}
+                  <div className="space-y-3 bg-slate-50 p-4 rounded-lg border">
+                    <Label className="text-xs uppercase text-muted-foreground font-bold">
+                      {t('travel.calculate_route')}
+                    </Label>
+                    <div className="relative">
+                      <MapPin className="absolute left-3 top-2.5 h-4 w-4 text-green-500" />
+                      <Input
+                        placeholder={t('travel.origin')}
+                        className="pl-9 bg-white"
+                        value={origin}
+                        onChange={(e) => setOrigin(e.target.value)}
+                      />
                     </div>
-                    <div className="flex gap-2">
-                      {tripCoupons.length > 0 && (
-                        <>
-                          <Button
-                            variant="outline"
-                            onClick={handleDownloadOffline}
-                            disabled={allTripDownloaded || isDownloading}
-                            className="bg-white border-[#4CAF50]/30 text-[#2e7d32] hover:bg-[#4CAF50]/10 gap-2"
-                          >
-                            {isDownloading ? (
-                              <>
-                                <Loader2 className="h-4 w-4 animate-spin" />{' '}
-                                Baixando
-                              </>
-                            ) : allTripDownloaded ? (
-                              <>
-                                <Check className="h-4 w-4" /> Offline OK
-                              </>
-                            ) : (
-                              <>
-                                <Download className="h-4 w-4" /> Salvar Offline
-                              </>
-                            )}
-                          </Button>
-                          <Button
-                            onClick={handleShare}
-                            className="bg-[#4CAF50] hover:bg-[#43A047] gap-2"
-                          >
-                            <Share2 className="h-4 w-4" /> {t('common.share')}
-                          </Button>
-                        </>
-                      )}
+                    <div className="relative">
+                      <MapPin className="absolute left-3 top-2.5 h-4 w-4 text-red-500" />
+                      <Input
+                        placeholder={t('travel.destination')}
+                        className="pl-9 bg-white"
+                        value={destination}
+                        onChange={(e) => setDestination(e.target.value)}
+                      />
                     </div>
+                    <Button
+                      onClick={handleRouteSearch}
+                      className="w-full gap-2"
+                    >
+                      <Search className="h-4 w-4" /> {t('travel.optimize')}
+                    </Button>
                   </div>
 
-                  <ScrollArea className="flex-1">
-                    <div className="p-4 md:p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {tripCoupons.length > 0 ? (
-                        tripCoupons.map((coupon) => (
-                          <CouponCard key={coupon.id} coupon={coupon} />
-                        ))
-                      ) : (
-                        <div className="col-span-full flex flex-col items-center justify-center py-20 text-center opacity-70">
-                          <TentTree className="h-16 w-16 text-slate-300 mb-4" />
-                          <h3 className="text-lg font-semibold mb-2">
-                            {t('travel.empty_itinerary')}
-                          </h3>
-                          <p className="text-sm text-muted-foreground max-w-xs mb-6">
-                            {t('travel.empty_desc')}
-                          </p>
-                          <Button
-                            onClick={() => setActiveTab('explore')}
-                            className="bg-[#FF5722] hover:bg-[#F4511E]"
-                          >
-                            {t('travel.explore_offers')}
-                          </Button>
+                  {/* Day Planner */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-bold flex items-center gap-2">
+                        <CalendarDays className="h-5 w-5 text-primary" /> Seu
+                        Roteiro
+                      </h3>
+                      {user?.role === 'admin' && (
+                        <div className="flex items-center gap-2">
+                          <Label htmlFor="agent-mode" className="text-xs">
+                            Agent Mode
+                          </Label>
+                          <input
+                            type="checkbox"
+                            id="agent-mode"
+                            checked={isAgentMode}
+                            onChange={(e) => setIsAgentMode(e.target.checked)}
+                          />
                         </div>
                       )}
                     </div>
-                  </ScrollArea>
-                </CardContent>
-              </Card>
+
+                    <Input
+                      value={planTitle}
+                      onChange={(e) => setPlanTitle(e.target.value)}
+                      className="font-bold text-lg border-none px-0 shadow-none focus-visible:ring-0"
+                    />
+
+                    <Tabs
+                      value={`day${currentDay}`}
+                      onValueChange={(v) =>
+                        setCurrentDay(parseInt(v.replace('day', '')))
+                      }
+                    >
+                      <ScrollArea className="w-full whitespace-nowrap pb-2">
+                        <TabsList>
+                          {days.map((d) => (
+                            <TabsTrigger key={d.id} value={d.id}>
+                              {t('travel.day')} {d.dayNumber}
+                            </TabsTrigger>
+                          ))}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={addNewDay}
+                            className="h-7 px-2 ml-1"
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </TabsList>
+                      </ScrollArea>
+
+                      {days.map((day) => (
+                        <TabsContent
+                          key={day.id}
+                          value={day.id}
+                          className="mt-2 space-y-3"
+                        >
+                          {day.stops.length === 0 ? (
+                            <div className="text-center py-8 border-2 border-dashed rounded-lg text-muted-foreground text-sm">
+                              Adicione paradas clicando no mapa
+                            </div>
+                          ) : (
+                            day.stops.map((stop, idx) => (
+                              <div
+                                key={`${stop.id}-${idx}`}
+                                className="relative group"
+                              >
+                                <div className="absolute left-[-12px] top-6 w-0.5 h-full bg-slate-200" />
+                                <div className="flex gap-2">
+                                  <div className="mt-1 bg-primary text-white text-[10px] h-5 w-5 rounded-full flex items-center justify-center font-bold z-10 ring-2 ring-white">
+                                    {idx + 1}
+                                  </div>
+                                  <div className="flex-1">
+                                    <CouponCard
+                                      coupon={stop}
+                                      variant="horizontal"
+                                      className="h-auto"
+                                    />
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="absolute top-2 right-2 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80"
+                                      onClick={() =>
+                                        removeFromDay(day.dayNumber, stop.id)
+                                      }
+                                    >
+                                      ✕
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
+                            ))
+                          )}
+                        </TabsContent>
+                      ))}
+                    </Tabs>
+
+                    <div className="flex gap-2 pt-4">
+                      <Button
+                        className="flex-1 gap-2"
+                        variant="outline"
+                        onClick={handleOfflineSave}
+                      >
+                        <Download className="h-4 w-4" /> Offline
+                      </Button>
+                      <Button
+                        className="flex-1 gap-2 bg-[#4CAF50] hover:bg-[#43A047]"
+                        onClick={handleSavePlan}
+                      >
+                        <Save className="h-4 w-4" />{' '}
+                        {isAgentMode ? t('travel.save_template') : 'Salvar'}
+                      </Button>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="space-y-4">
+                  {itineraries.map((it) => (
+                    <Card
+                      key={it.id}
+                      className="cursor-pointer hover:shadow-md transition-all"
+                    >
+                      <CardContent className="p-4 flex gap-4">
+                        <img
+                          src={it.image}
+                          className="w-20 h-20 rounded-md object-cover"
+                          alt=""
+                        />
+                        <div>
+                          <h4 className="font-bold">{it.title}</h4>
+                          <div className="flex gap-2 text-xs text-muted-foreground mt-1">
+                            <span className="bg-primary/10 text-primary px-1.5 py-0.5 rounded">
+                              {it.duration}
+                            </span>
+                            {it.isTemplate && (
+                              <span className="bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded">
+                                Template
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs mt-2 line-clamp-2">
+                            {it.description}
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
             </div>
-          </TabsContent>
-        </Tabs>
+
+            <AdSpace className="mt-4" />
+          </ScrollArea>
+        </div>
+
+        {/* Map Area */}
+        <div className="flex-1 relative hidden md:block">
+          <GoogleMap
+            center={currentCenter}
+            zoom={navMode === 'planned' ? 12 : 14}
+            markers={mapMarkers}
+            className="w-full h-full"
+            origin={showRoute ? origin : undefined}
+            destination={showRoute ? destination : undefined}
+            fallback={FallbackMap}
+            onMarkerClick={(m) => {
+              if (m.data) {
+                // In a real implementation this would open a side panel or modal
+                toast(m.title, {
+                  description: m.data.discount,
+                  action: {
+                    label: 'Adicionar',
+                    onClick: () => addToDay(m.data),
+                  },
+                })
+              }
+            }}
+          />
+
+          <div className="absolute top-4 right-4 bg-white/90 backdrop-blur p-2 rounded-lg shadow-lg max-w-xs z-10">
+            <h4 className="font-bold text-sm mb-2 flex items-center gap-2">
+              <TentTree className="h-4 w-4 text-green-600" /> Discovery
+            </h4>
+            <p className="text-xs text-muted-foreground mb-2">
+              Ofertas próximas à sua rota.
+              {(isLunchTime || isDinnerTime) && (
+                <span className="block text-orange-600 font-bold mt-1 animate-pulse">
+                  🍽 Hora de comer! Restaurantes destacados.
+                </span>
+              )}
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   )

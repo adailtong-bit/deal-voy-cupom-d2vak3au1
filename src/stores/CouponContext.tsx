@@ -94,6 +94,7 @@ interface CouponContextType {
   claimBirthdayGift: () => void
   updateUserProfile: (data: Partial<User>) => void
   connectApp: (id: string) => void
+  saveItinerary: (itinerary: Itinerary) => void
 }
 
 const CouponContext = createContext<CouponContextType | undefined>(undefined)
@@ -117,7 +118,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   const [badges] = useState<Badge[]>(MOCK_BADGES)
   const [abTests, setAbTests] = useState<ABTest[]>(MOCK_AB_TESTS)
   const [downloadedIds, setDownloadedIds] = useState<string[]>([])
-  const [itineraries] = useState<Itinerary[]>(MOCK_ITINERARIES)
+  const [itineraries, setItineraries] = useState<Itinerary[]>(MOCK_ITINERARIES)
   const [rewards] = useState<RewardItem[]>(MOCK_REWARDS)
   const [isFetchConnected, setIsFetchConnected] = useState(false)
   const [birthdayGiftAvailable, setBirthdayGiftAvailable] = useState(false)
@@ -317,7 +318,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         return prev.filter((tid) => tid !== id)
       } else {
         toast.success('Salvo para sua viagem!', {
-          description: 'Acesse na aba "Meu Roteiro" no Planejador.',
+          description: 'Acesse na aba "Planejador".',
         })
         // Simulate itinerary update notification
         setTimeout(() => {
@@ -645,6 +646,17 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  const saveItinerary = (itinerary: Itinerary) => {
+    setItineraries((prev) => {
+      const exists = prev.find((i) => i.id === itinerary.id)
+      if (exists) {
+        return prev.map((i) => (i.id === itinerary.id ? itinerary : i))
+      }
+      return [...prev, itinerary]
+    })
+    toast.success('Roteiro salvo com sucesso!')
+  }
+
   const isSaved = (id: string) => savedIds.includes(id)
   const isReserved = (id: string) => reservedIds.includes(id)
   const isDownloaded = (id: string) => downloadedIds.includes(id)
@@ -711,6 +723,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         claimBirthdayGift,
         updateUserProfile,
         connectApp,
+        saveItinerary,
       },
     },
     children,

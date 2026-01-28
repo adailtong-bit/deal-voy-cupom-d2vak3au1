@@ -182,16 +182,25 @@ export interface ABTest {
   variantB: ABVariant
 }
 
+export interface DayPlan {
+  id: string
+  dayNumber: number
+  stops: Coupon[]
+  date?: string
+}
+
 export interface Itinerary {
   id: string
   title: string
   description: string
-  stops: Coupon[]
+  stops: Coupon[] // Keeps compatibility with old structure for now, represents "All stops"
+  days?: DayPlan[] // New multi-day structure
   totalSavings: number
   duration: string
   image: string
   tags: string[]
   matchScore: number // 0-100
+  isTemplate?: boolean
 }
 
 export type UserRole = 'admin' | 'user' | 'company'

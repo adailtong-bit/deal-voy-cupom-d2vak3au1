@@ -20,6 +20,7 @@ export interface MapMarker {
   icon?: string
   content?: React.ReactNode
   data?: any
+  highlight?: boolean
 }
 
 interface GoogleMapProps {
@@ -30,6 +31,9 @@ interface GoogleMapProps {
   className?: string
   onMarkerClick?: (marker: MapMarker) => void
   fallback?: React.ReactNode
+  origin?: string
+  destination?: string
+  waypoints?: string[]
 }
 
 const DEFAULT_CENTER = { lat: -23.55052, lng: -46.633308 }
@@ -42,9 +46,13 @@ export function GoogleMap({
   className,
   onMarkerClick,
   fallback,
+  origin,
+  destination,
+  waypoints = [],
 }: GoogleMapProps) {
   const mapRef = useRef<HTMLDivElement>(null)
   const [mapInstance, setMapInstance] = useState<any>(null)
+  const [directionsRenderer, setDirectionsRenderer] = useState<any>(null)
   const [isLoaded, setIsLoaded] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const markersRef = useRef<any[]>([])
@@ -58,7 +66,6 @@ export function GoogleMap({
 
     const key = apiKey || import.meta.env.VITE_GOOGLE_MAPS_API_KEY
     if (!key) {
-      // Instead of failing, we immediately set error to trigger fallback
       console.warn('Google Maps API Key missing. Falling back to static image.')
       setError('Missing API Key')
       return
@@ -75,7 +82,7 @@ export function GoogleMap({
 
     const script = document.createElement('script')
     script.id = 'google-maps-script'
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${key}&libraries=places`
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${key}&libraries=places,geometry`
     script.async = true
     script.defer = true
     script.onload = () => setIsLoaded(true)
@@ -104,7 +111,17 @@ export function GoogleMap({
             },
           ],
         })
+        const renderer = new window.google.maps.DirectionsRenderer({
+          map: map,
+          suppressMarkers: true,
+          polylineOptions: {
+            strokeColor: '#2196F3',
+            strokeOpacity: 0.8,
+            strokeWeight: 5,
+          },
+        })
         setMapInstance(map)
+        setDirectionsRenderer(renderer)
       } catch (err) {
         console.error('Error initializing map:', err)
         setError('Error initializing map')
@@ -119,6 +136,35 @@ export function GoogleMap({
     }
   }, [mapInstance, center, zoom])
 
+  // Handle Directions
+  useEffect(() => {
+    if (
+      isLoaded &&
+      directionsRenderer &&
+      window.google &&
+      origin &&
+      destination
+    ) {
+      const directionsService = new window.google.maps.DirectionsService()
+
+      directionsService.route(
+        {
+          origin: origin,
+          destination: destination,
+          waypoints: waypoints.map((wp) => ({ location: wp, stopover: true })),
+          travelMode: window.google.maps.TravelMode.DRIVING,
+        },
+        (result: any, status: any) => {
+          if (status === window.google.maps.DirectionsStatus.OK) {
+            directionsRenderer.setDirections(result)
+          } else {
+            console.error(`error fetching directions ${result}`)
+          }
+        },
+      )
+    }
+  }, [isLoaded, directionsRenderer, origin, destination, waypoints])
+
   useEffect(() => {
     if (!mapInstance || !window.google) return
 
@@ -126,13 +172,20 @@ export function GoogleMap({
     markersRef.current = []
 
     markers.forEach((marker) => {
-      const pinColor =
+      let pinColor =
         marker.color === 'green'
           ? 'green'
           : marker.color === 'blue'
             ? 'blue'
             : 'orange'
-      // Using solid-black as a fallback shape if fill isn't available for the specific color/icon combo, but shape=fill is standard
+
+      let scale = 40
+      if (marker.highlight) {
+        // Highlight logic: maybe a different color or bigger size
+        pinColor = 'red'
+        scale = 55
+      }
+
       const iconUrl = `https://img.usecurling.com/i?q=map-pin&color=${pinColor}&shape=fill`
 
       const mapMarker = new window.google.maps.Marker({
@@ -141,9 +194,10 @@ export function GoogleMap({
         title: marker.title,
         icon: {
           url: iconUrl,
-          scaledSize: new window.google.maps.Size(40, 40),
+          scaledSize: new window.google.maps.Size(scale, scale),
         },
         animation: window.google.maps.Animation.DROP,
+        zIndex: marker.highlight ? 100 : 1,
       })
 
       if (marker.data) {
@@ -176,7 +230,6 @@ export function GoogleMap({
     })
   }, [mapInstance, markers, onMarkerClick, t])
 
-  // If we have an error (e.g., missing key), showing fallback immediately resolves the "could not load" UX
   if (error && fallback) {
     return <>{fallback}</>
   }
