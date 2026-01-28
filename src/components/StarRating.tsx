@@ -3,52 +3,27 @@ import { cn } from '@/lib/utils'
 
 interface StarRatingProps {
   rating: number
-  maxRating?: number
-  onRatingChange?: (rating: number) => void
-  readonly?: boolean
-  size?: 'sm' | 'md' | 'lg'
-  className?: string
+  max?: number
+  size?: number
 }
 
-export function StarRating({
-  rating,
-  maxRating = 5,
-  onRatingChange,
-  readonly = false,
-  size = 'md',
-  className,
-}: StarRatingProps) {
-  const stars = Array.from({ length: maxRating }, (_, i) => i + 1)
-
-  const sizeClasses = {
-    sm: 'w-3 h-3',
-    md: 'w-5 h-5',
-    lg: 'w-8 h-8',
-  }
-
+export function StarRating({ rating, max = 5, size = 4 }: StarRatingProps) {
   return (
-    <div className={cn('flex items-center gap-0.5', className)}>
-      {stars.map((star) => (
-        <button
-          key={star}
-          type="button"
-          disabled={readonly}
-          onClick={() => onRatingChange?.(star)}
+    <div className="flex items-center gap-0.5">
+      {Array.from({ length: max }).map((_, i) => (
+        <Star
+          key={i}
           className={cn(
-            'transition-colors focus:outline-none',
-            readonly ? 'cursor-default' : 'cursor-pointer hover:scale-110',
+            `h-${size} w-${size}`,
+            i < Math.floor(rating)
+              ? 'fill-yellow-400 text-yellow-400'
+              : 'fill-slate-200 text-slate-200',
           )}
-        >
-          <Star
-            className={cn(
-              sizeClasses[size],
-              star <= rating
-                ? 'fill-yellow-400 text-yellow-400'
-                : 'fill-muted text-muted-foreground',
-            )}
-          />
-        </button>
+        />
       ))}
+      <span className="ml-2 text-sm font-medium text-slate-600">
+        {rating.toFixed(1)}
+      </span>
     </div>
   )
 }

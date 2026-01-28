@@ -115,7 +115,11 @@ export default function Profile() {
                         R$ {tx.amount.toFixed(2)}
                       </p>
                       <Badge variant="outline" className="text-[10px] h-5">
-                        {tx.method === 'fetch' ? 'Points' : 'Cartão'}
+                        {tx.method === 'fetch'
+                          ? 'Points'
+                          : tx.method === 'wallet'
+                            ? 'Wallet'
+                            : 'Card'}
                       </Badge>
                     </div>
                   </div>

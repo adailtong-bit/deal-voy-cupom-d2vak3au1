@@ -37,6 +37,7 @@ import {
   Calendar as CalendarIcon,
   MessageSquare,
   Send,
+  FileBarChart,
 } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useCouponStore } from '@/stores/CouponContext'
@@ -45,6 +46,7 @@ import { VendorAnalytics } from '@/components/VendorAnalytics'
 import { TargetedOffers } from '@/components/TargetedOffers'
 import { ABTestCreator } from '@/components/ABTestCreator'
 import { ABTestResults } from '@/components/ABTestResults'
+import { MerchantReports } from '@/components/MerchantReports'
 
 export default function VendorDashboard() {
   const { t } = useLanguage()
@@ -276,6 +278,9 @@ export default function VendorDashboard() {
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList className="bg-white p-1 shadow-sm border w-full justify-start overflow-x-auto">
           <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+          <TabsTrigger value="reports">
+            <FileBarChart className="h-3 w-3 mr-1" /> Relatórios
+          </TabsTrigger>
           <TabsTrigger value="offers">Gerenciar Ofertas</TabsTrigger>
           <TabsTrigger value="abtesting">Testes A/B</TabsTrigger>
           <TabsTrigger value="marketing">Marketing Direto</TabsTrigger>
@@ -284,6 +289,10 @@ export default function VendorDashboard() {
 
         <TabsContent value="overview">
           <VendorAnalytics />
+        </TabsContent>
+
+        <TabsContent value="reports">
+          <MerchantReports />
         </TabsContent>
 
         <TabsContent value="offers">

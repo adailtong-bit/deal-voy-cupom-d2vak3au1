@@ -20,6 +20,7 @@ import {
   Moon,
   Sun,
   MapPin,
+  Share2,
 } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -166,6 +167,15 @@ export default function TravelPlanner() {
     }
 
     saveItinerary(newItinerary)
+  }
+
+  const handleShare = (it: Itinerary) => {
+    navigator.clipboard.writeText(
+      `${window.location.origin}/itinerary/${it.id}`,
+    )
+    toast.success('Link do roteiro copiado!', {
+      description: 'Envie para seus amigos para colaborarem.',
+    })
   }
 
   // Get current day's stops for map highlighting
@@ -369,8 +379,19 @@ export default function TravelPlanner() {
                   {itineraries.map((it) => (
                     <Card
                       key={it.id}
-                      className="cursor-pointer hover:shadow-md transition-all group"
+                      className="cursor-pointer hover:shadow-md transition-all group relative"
                     >
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="absolute top-2 right-2 h-8 w-8 bg-white/50 hover:bg-white z-10"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleShare(it)
+                        }}
+                      >
+                        <Share2 className="h-4 w-4 text-primary" />
+                      </Button>
                       <CardContent className="p-4 flex gap-4">
                         <img
                           src={it.image}

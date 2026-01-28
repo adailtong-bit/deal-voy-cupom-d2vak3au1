@@ -1,6 +1,10 @@
-import { useState } from 'react'
 import { Coupon } from '@/lib/types'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { MessageSquare, User } from 'lucide-react'
+import { StarRating } from './StarRating'
 import { useLanguage } from '@/stores/LanguageContext'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { useCouponStore } from '@/stores/CouponContext'
 import {
   Dialog,
@@ -10,48 +14,39 @@ import {
   DialogTrigger,
   DialogFooter,
 } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
+import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { StarRating } from '@/components/StarRating'
-import { MessageSquare } from 'lucide-react'
-import { toast } from 'sonner'
+import { useState } from 'react'
 
-interface CouponReviewsProps {
-  coupon: Coupon
-}
-
-export function CouponReviews({ coupon }: CouponReviewsProps) {
+export function CouponReviews({ coupon }: { coupon: Coupon }) {
   const { t } = useLanguage()
   const { addReview } = useCouponStore()
-  const [newRating, setNewRating] = useState(0)
-  const [newComment, setNewComment] = useState('')
-  const [isReviewOpen, setIsReviewOpen] = useState(false)
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [rating, setRating] = useState(5)
+  const [comment, setComment] = useState('')
 
-  const handleSubmitReview = () => {
-    if (newRating === 0) {
-      toast.error('Por favor, selecione uma nota.')
-      return
-    }
+  const reviews = coupon.reviews || []
+
+  const handleSubmit = () => {
     addReview(coupon.id, {
-      userId: 'currentUser',
+      userId: 'me',
       userName: 'Você',
-      rating: newRating,
-      comment: newComment,
+      rating,
+      comment,
     })
-    setIsReviewOpen(false)
-    setNewRating(0)
-    setNewComment('')
-    toast.success('Avaliação enviada!')
+    setComment('')
+    setIsDialogOpen(false)
   }
 
   return (
-    <div className="mt-8">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="font-semibold text-lg flex items-center gap-2">
-          <MessageSquare className="h-5 w-5" /> {t('coupon.reviews')}
-        </h3>
-        <Dialog open={isReviewOpen} onOpenChange={setIsReviewOpen}>
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="text-lg flex items-center gap-2">
+          <MessageSquare className="h-5 w-5" /> {t('coupon.reviews')} (
+          {reviews.length})
+        </CardTitle>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button variant="outline" size="sm">
               {t('coupon.add_review')}
@@ -59,61 +54,74 @@ export function CouponReviews({ coupon }: CouponReviewsProps) {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>{t('coupon.add_review')}</DialogTitle>
+              <DialogTitle>Avaliar {coupon.storeName}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
                 <Label>{t('coupon.rating')}</Label>
-                <StarRating
-                  rating={newRating}
-                  onRatingChange={setNewRating}
-                  size="lg"
-                  className="justify-center"
-                />
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map((num) => (
+                    <Button
+                      key={num}
+                      variant={rating === num ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setRating(num)}
+                      className="w-10 h-10 p-0"
+                    >
+                      {num}
+                    </Button>
+                  ))}
+                </div>
               </div>
               <div className="space-y-2">
                 <Label>{t('coupon.comment')}</Label>
                 <Textarea
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  placeholder="Conte sobre sua experiência..."
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  placeholder="Conte sua experiência..."
                 />
               </div>
             </div>
             <DialogFooter>
-              <Button onClick={handleSubmitReview}>
+              <Button onClick={handleSubmit}>
                 {t('coupon.submit_review')}
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      </div>
-
-      <div className="space-y-4">
-        {coupon.reviews && coupon.reviews.length > 0 ? (
-          coupon.reviews.map((review) => (
-            <div key={review.id} className="border-b pb-4 last:border-0">
-              <div className="flex justify-between items-center mb-1">
-                <span className="font-semibold text-sm">{review.userName}</span>
-                <span className="text-xs text-muted-foreground">
-                  {new Date(review.date).toLocaleDateString()}
-                </span>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {reviews.length === 0 ? (
+            <p className="text-muted-foreground text-sm text-center py-4">
+              Seja o primeiro a avaliar!
+            </p>
+          ) : (
+            reviews.map((review) => (
+              <div
+                key={review.id}
+                className="flex gap-3 border-b last:border-0 pb-4 last:pb-0"
+              >
+                <Avatar className="h-8 w-8">
+                  <AvatarFallback>
+                    <User className="h-4 w-4" />
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-bold text-sm">{review.userName}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(review.date).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <StarRating rating={review.rating} size={3} />
+                  <p className="text-sm mt-1">{review.comment}</p>
+                </div>
               </div>
-              <StarRating
-                rating={review.rating}
-                size="sm"
-                readonly
-                className="mb-2"
-              />
-              <p className="text-sm text-muted-foreground">{review.comment}</p>
-            </div>
-          ))
-        ) : (
-          <p className="text-sm text-muted-foreground italic">
-            Seja o primeiro a avaliar!
-          </p>
-        )}
-      </div>
-    </div>
+            ))
+          )}
+        </div>
+      </CardContent>
+    </Card>
   )
 }

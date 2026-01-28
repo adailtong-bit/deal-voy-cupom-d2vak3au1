@@ -12,6 +12,13 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { useCouponStore } from '@/stores/CouponContext'
 import { Coupon } from '@/lib/types'
 import {
@@ -21,6 +28,7 @@ import {
   Coins,
   Wallet,
   CheckCircle,
+  Smartphone,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useState } from 'react'
@@ -32,7 +40,10 @@ export default function Checkout() {
   const { processPayment, fetchCredits, redeemPoints } = useCouponStore()
   const [isProcessing, setIsProcessing] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
-  const [paymentMethod, setPaymentMethod] = useState<'card' | 'fetch'>('card')
+  const [paymentMethod, setPaymentMethod] = useState<
+    'card' | 'fetch' | 'wallet'
+  >('card')
+  const [installments, setInstallments] = useState('1')
   const { t } = useLanguage()
   const {
     register,
@@ -52,6 +63,7 @@ export default function Checkout() {
   }
 
   const canAffordWithCredits = fetchCredits >= (coupon.price || 0)
+  const installmentValue = (coupon.price || 0) / parseInt(installments)
 
   const onSubmit = async (data: any) => {
     setIsProcessing(true)
@@ -72,6 +84,7 @@ export default function Checkout() {
         couponId: coupon.id,
         amount: coupon.price || 0,
         method: paymentMethod,
+        installments: parseInt(installments),
       })
       setIsSuccess(true)
       toast.success(t('checkout.success'), {
@@ -195,8 +208,48 @@ export default function Checkout() {
                         <Label className="text-xs">Nome no Cartão</Label>
                         <Input placeholder="JOAO SILVA" {...register('name')} />
                       </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs">Parcelamento</Label>
+                        <Select
+                          value={installments}
+                          onValueChange={setInstallments}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="1x" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Array.from({ length: 12 }, (_, i) => i + 1).map(
+                              (i) => (
+                                <SelectItem key={i} value={i.toString()}>
+                                  {i}x de R${' '}
+                                  {((coupon.price || 0) / i).toFixed(2)}{' '}
+                                  {i === 1 ? '(sem juros)' : ''}
+                                </SelectItem>
+                              ),
+                            )}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
                   )}
+                </div>
+              </div>
+
+              <div
+                className={`flex items-start space-x-3 border p-4 rounded-lg cursor-pointer transition-colors ${paymentMethod === 'wallet' ? 'border-[#2196F3] bg-[#2196F3]/5' : ''}`}
+              >
+                <RadioGroupItem value="wallet" id="wallet" className="mt-1" />
+                <div className="flex-1">
+                  <Label
+                    htmlFor="wallet"
+                    className="font-bold cursor-pointer flex items-center gap-2"
+                  >
+                    <Smartphone className="h-4 w-4 text-blue-500" /> Carteira
+                    Digital
+                  </Label>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Apple Pay, Google Pay ou PayPal.
+                  </p>
                 </div>
               </div>
 

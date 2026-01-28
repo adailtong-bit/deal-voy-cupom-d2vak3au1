@@ -1,82 +1,40 @@
-import { useState } from 'react'
 import { Coupon } from '@/lib/types'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Utensils } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Separator } from '@/components/ui/separator'
-import { Utensils, Languages } from 'lucide-react'
 
-interface CouponMenuProps {
-  coupon: Coupon
-}
-
-export function CouponMenu({ coupon }: CouponMenuProps) {
-  const { t, language } = useLanguage()
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [menuLang, setMenuLang] = useState(language)
+export function CouponMenu({ coupon }: { coupon: Coupon }) {
+  const { t } = useLanguage()
 
   if (!coupon.menu || coupon.menu.length === 0) return null
 
   return (
-    <div className="mb-6">
-      <Dialog open={isMenuOpen} onOpenChange={setIsMenuOpen}>
-        <DialogTrigger asChild>
-          <Button
-            variant="outline"
-            className="w-full gap-2 border-primary/50 text-primary"
-          >
-            <Utensils className="h-4 w-4" /> {t('coupon.menu')}
-          </Button>
-        </DialogTrigger>
-        <DialogContent className="max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex justify-between items-center">
-              Menu: {coupon.storeName}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setMenuLang(menuLang === 'pt' ? language : 'pt')}
-              >
-                <Languages className="h-4 w-4 mr-2" />
-                {menuLang === 'pt' ? 'Original' : 'Traduzido'}
-              </Button>
-            </DialogTitle>
-            <DialogDescription>
-              Itens disponíveis nesta oferta
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            {coupon.menu.map((item, idx) => {
-              const translation =
-                menuLang !== 'pt' && item.translations?.[menuLang]
-                  ? item.translations[menuLang]
-                  : item
-              return (
-                <div
-                  key={idx}
-                  className="flex justify-between border-b pb-4 last:border-0"
-                >
-                  <div>
-                    <p className="font-bold">{translation.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {translation.description}
-                    </p>
-                  </div>
-                  <p className="font-medium ml-4">R$ {item.price.toFixed(2)}</p>
-                </div>
-              )
-            })}
-          </div>
-        </DialogContent>
-      </Dialog>
-      <Separator className="my-6" />
-    </div>
+    <Card className="mb-6">
+      <CardHeader>
+        <CardTitle className="text-lg flex items-center gap-2">
+          <Utensils className="h-5 w-5" /> Menu
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {coupon.menu.map((item, idx) => (
+            <div
+              key={idx}
+              className="flex justify-between items-start border-b last:border-0 pb-3 last:pb-0"
+            >
+              <div>
+                <h4 className="font-bold text-sm">{item.name}</h4>
+                <p className="text-xs text-muted-foreground">
+                  {item.description}
+                </p>
+              </div>
+              <span className="font-semibold text-sm">
+                R$ {item.price.toFixed(2)}
+              </span>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   )
 }

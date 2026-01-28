@@ -1,5 +1,5 @@
 import { useCouponStore } from '@/stores/CouponContext'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Trophy, Medal, Target } from 'lucide-react'
 import * as Icons from 'lucide-react'
@@ -9,7 +9,6 @@ export function GamificationSection() {
   const { challenges, badges, points } = useCouponStore()
   const { t } = useLanguage()
 
-  // Helper to dynamically get icon component
   const getIcon = (iconName: string) => {
     // @ts-expect-error - Icons are dynamic
     const Icon = Icons[iconName] || Target

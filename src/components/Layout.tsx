@@ -18,17 +18,15 @@ export default function Layout() {
   const location = useLocation()
   const { t } = useLanguage()
 
-  // Track notifications to avoid spam
   const notifiedCoupons = useRef<Set<string>>(new Set())
 
-  // Helper to calculate distance
   const calculateDistance = (
     lat1: number,
     lng1: number,
     lat2: number,
     lng2: number,
   ) => {
-    const R = 6371e3 // metres
+    const R = 6371e3
     const φ1 = (lat1 * Math.PI) / 180
     const φ2 = (lat2 * Math.PI) / 180
     const Δφ = ((lat2 - lat1) * Math.PI) / 180
@@ -41,11 +39,9 @@ export default function Layout() {
     return R * c
   }
 
-  // Geo-Fencing Logic (Smart Notifications)
   useEffect(() => {
     if (!userLocation) return
 
-    // Notify about saved coupons nearby
     const savedCoupons = coupons.filter((c) => savedIds.includes(c.id))
 
     savedCoupons.forEach((coupon) => {
@@ -58,7 +54,6 @@ export default function Layout() {
         coupon.coordinates.lng,
       )
 
-      // If close (e.g., 500m) and not notified yet
       if (distance < 500 && !notifiedCoupons.current.has(coupon.id)) {
         addNotification({
           title: t('notification.deal'),
@@ -72,7 +67,6 @@ export default function Layout() {
       }
     })
 
-    // Notify about local events nearby
     SEASONAL_EVENTS.forEach((event) => {
       if (!event.coordinates) return
 
@@ -99,7 +93,6 @@ export default function Layout() {
     })
   }, [userLocation, savedIds, coupons, addNotification, t])
 
-  // Expiration Alert Logic (Updated to 24h as per user story)
   useEffect(() => {
     const savedCoupons = coupons.filter((c) => savedIds.includes(c.id))
 
@@ -112,7 +105,6 @@ export default function Layout() {
 
       const expiryKey = `${coupon.id}-exp`
 
-      // Alert if expiring in less than 24 hours
       if (
         hoursLeft > 0 &&
         hoursLeft < 24 &&
@@ -144,7 +136,6 @@ export default function Layout() {
     }
   }, [])
 
-  // Avoid showing ads on login page or admin root if needed (but requirement says every screen)
   const isAuthPage = location.pathname.includes('/login')
 
   return (
@@ -154,14 +145,12 @@ export default function Layout() {
       <MobileHeader />
 
       <div className="flex-1 overflow-auto md:pb-0 flex flex-col">
-        {/* Top Ad Slot - Ad 1 of 2 */}
         {!isAuthPage && <AdSpace position="top" />}
 
         <div className="flex-1">
           <Outlet />
         </div>
 
-        {/* Bottom Ad Slot - Ad 2 of 2 */}
         {!isAuthPage && <AdSpace position="bottom" className="mb-0 border-t" />}
       </div>
 

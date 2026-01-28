@@ -46,6 +46,8 @@ export interface Coupon {
     | 'Eletrônicos'
     | 'Lazer'
     | 'Outros'
+    | 'Mercado'
+    | 'Beleza'
   distance: number // in meters
   expiryDate: string
   startDate?: string
@@ -104,12 +106,12 @@ export interface Notification {
   id: string
   title: string
   message: string
-  type: 'deal' | 'alert' | 'system' | 'event' | 'gift'
+  type: 'deal' | 'alert' | 'system' | 'event' | 'gift' | 'mission'
   read: boolean
   date: string
   link?: string
   priority?: 'high' | 'medium' | 'low'
-  category?: 'smart' | 'system'
+  category?: 'smart' | 'system' | 'gamification'
 }
 
 export interface UploadedDocument {
@@ -143,6 +145,16 @@ export interface Challenge {
   completed: boolean
   status: 'active' | 'completed' | 'available'
   type?: 'travel' | 'social' | 'collection'
+}
+
+export interface Mission {
+  id: string
+  title: string
+  description: string
+  rewardPoints: number
+  type: 'survey' | 'action'
+  completed: boolean
+  expiresAt?: string
 }
 
 export interface Badge {
@@ -267,8 +279,11 @@ export interface PaymentTransaction {
   amount: number
   storeName: string
   couponTitle: string
-  method: 'card' | 'fetch' | 'points'
+  method: 'card' | 'fetch' | 'points' | 'wallet'
   status: 'completed' | 'pending' | 'failed'
+  customerName?: string
+  pointsAwarded?: number
+  installments?: number
 }
 
 export interface ConnectedApp {

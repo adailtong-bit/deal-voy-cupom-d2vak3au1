@@ -1,67 +1,47 @@
+import { Cloud, RefreshCw, CheckCircle2 } from 'lucide-react'
 import { useState, useEffect } from 'react'
-import { Cloud, CloudOff, CloudDownload, RotateCw } from 'lucide-react'
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { useCouponStore } from '@/stores/CouponContext'
 import { cn } from '@/lib/utils'
 
 export function SyncStatus() {
-  const [isOffline, setIsOffline] = useState(!navigator.onLine)
-  const { isDownloading, downloadProgress } = useCouponStore()
+  const [status, setStatus] = useState<'idle' | 'syncing' | 'synced'>('idle')
 
   useEffect(() => {
-    const handleOnline = () => setIsOffline(false)
-    const handleOffline = () => setIsOffline(true)
-    window.addEventListener('online', handleOnline)
-    window.addEventListener('offline', handleOffline)
-    return () => {
-      window.removeEventListener('online', handleOnline)
-      window.removeEventListener('offline', handleOffline)
-    }
+    // Simulate periodic data linking logic (User Story requirement)
+    const interval = setInterval(() => {
+      setStatus('syncing')
+      setTimeout(() => setStatus('synced'), 2000)
+      setTimeout(() => setStatus('idle'), 5000)
+    }, 30000)
+
+    return () => clearInterval(interval)
   }, [])
-
-  if (isDownloading) {
-    return (
-      <div className="flex items-center gap-2 text-primary animate-pulse">
-        <CloudDownload className="h-5 w-5" />
-        <span className="text-xs font-bold hidden md:inline-block">
-          Syncing {downloadProgress}%
-        </span>
-      </div>
-    )
-  }
-
-  if (isOffline) {
-    return (
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <div className="flex items-center gap-2 text-muted-foreground opacity-70">
-            <CloudOff className="h-5 w-5" />
-            <span className="text-xs hidden md:inline-block">Pending</span>
-          </div>
-        </TooltipTrigger>
-        <TooltipContent>
-          <p>Offline - Data pending synchronization</p>
-        </TooltipContent>
-      </Tooltip>
-    )
-  }
 
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <div className="flex items-center gap-2 text-green-600">
-          <Cloud className="h-5 w-5" />
-          <div className="absolute -right-1 -top-1 bg-background rounded-full">
-            <RotateCw className="h-3 w-3 text-green-600" />
-          </div>
+        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-50 hover:bg-slate-100 cursor-help transition-colors">
+          {status === 'syncing' ? (
+            <RefreshCw className="h-4 w-4 text-blue-500 animate-spin" />
+          ) : status === 'synced' ? (
+            <CheckCircle2 className="h-4 w-4 text-green-500" />
+          ) : (
+            <Cloud className="h-4 w-4 text-slate-400" />
+          )}
         </div>
       </TooltipTrigger>
       <TooltipContent>
-        <p>All data synchronized</p>
+        <p>
+          {status === 'syncing'
+            ? 'Sincronizando dados com parceiros...'
+            : status === 'synced'
+              ? 'Dados atualizados e vinculados.'
+              : 'Conectado à nuvem Deal Voy.'}
+        </p>
       </TooltipContent>
     </Tooltip>
   )

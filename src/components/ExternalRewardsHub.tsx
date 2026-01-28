@@ -10,11 +10,19 @@ import {
   Plane,
   Coins,
   Dog,
+  Sparkles,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import * as Icons from 'lucide-react'
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from '@/components/ui/carousel'
 
 export function ExternalRewardsHub() {
   const { fetchCredits, connectedApps, connectApp, importFetchPoints } =
@@ -35,6 +43,31 @@ export function ExternalRewardsHub() {
     const Icon = Icons[iconName] || Link2
     return <Icon className="h-6 w-6" />
   }
+
+  // Recommended apps that are not connected yet
+  const recommendedApps = [
+    {
+      id: 'publix',
+      name: 'Publix Club',
+      icon: 'ShoppingBasket',
+      color: 'green',
+      reason: 'Baseado nas suas compras',
+    },
+    {
+      id: 'starbucks',
+      name: 'Starbucks Rewards',
+      icon: 'Coffee',
+      color: 'green',
+      reason: 'Você visitou cafeterias',
+    },
+    {
+      id: 'ulta',
+      name: 'Ulta Beauty',
+      icon: 'Sparkles',
+      color: 'orange',
+      reason: 'Popular na sua região',
+    },
+  ]
 
   return (
     <div className="space-y-6">
@@ -62,7 +95,9 @@ export function ExternalRewardsHub() {
                         ? 'bg-yellow-500'
                         : app.color === 'red'
                           ? 'bg-red-600'
-                          : 'bg-orange-500',
+                          : app.color === 'black'
+                            ? 'bg-black'
+                            : 'bg-orange-500',
                     )}
                   >
                     {getIcon(
@@ -138,6 +173,41 @@ export function ExternalRewardsHub() {
           Selecione o programa parceiro automaticamente com base no saldo. Taxa
           de conversão variável.
         </p>
+      </div>
+
+      <div className="space-y-3">
+        <h3 className="font-bold text-lg flex items-center gap-2">
+          <Sparkles className="h-5 w-5 text-yellow-500" /> Recomendado para Você
+        </h3>
+        <Carousel className="w-full">
+          <CarouselContent className="-ml-4">
+            {recommendedApps.map((app) => (
+              <CarouselItem
+                key={app.id}
+                className="pl-4 basis-1/2 md:basis-1/3"
+              >
+                <div className="border rounded-lg p-4 bg-slate-50 flex flex-col items-center text-center hover:bg-slate-100 transition-colors cursor-pointer">
+                  <div className="h-10 w-10 bg-white rounded-full flex items-center justify-center shadow-sm mb-2">
+                    {getIcon(app.icon)}
+                  </div>
+                  <h4 className="font-bold text-sm">{app.name}</h4>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {app.reason}
+                  </p>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="mt-2 text-[#2196F3]"
+                  >
+                    Conectar
+                  </Button>
+                </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious />
+          <CarouselNext />
+        </Carousel>
       </div>
     </div>
   )

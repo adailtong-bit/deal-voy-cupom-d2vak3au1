@@ -84,7 +84,7 @@ export default function CouponDetail() {
   const isOffline = !navigator.onLine
 
   const handleReserve = () => {
-    if (coupon.price && !coupon.isPaid) {
+    if (coupon.price && !coupon.isPaid && !reserved) {
       navigate('/checkout', { state: { coupon } })
       return
     }

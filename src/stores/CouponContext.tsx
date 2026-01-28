@@ -16,6 +16,7 @@ import {
   RewardItem,
   PaymentTransaction,
   ConnectedApp,
+  Mission,
 } from '@/lib/types'
 import {
   MOCK_COUPONS,
@@ -47,6 +48,7 @@ interface CouponContextType {
   rewardHistory: RewardActivity[]
   fetchCredits: number
   challenges: Challenge[]
+  missions: Mission[]
   badges: Badge[]
   abTests: ABTest[]
   downloadedIds: string[]
@@ -78,10 +80,12 @@ interface CouponContextType {
   processPayment: (details: {
     couponId?: string
     amount: number
-    method?: 'card' | 'fetch'
+    method?: 'card' | 'fetch' | 'wallet'
+    installments?: number
   }) => Promise<boolean>
   isDownloaded: (id: string) => boolean
   joinChallenge: (id: string) => void
+  completeMission: (id: string) => void
   login: (email: string, role: User['role']) => void
   logout: () => void
   approveCompany: (id: string) => void
@@ -115,6 +119,24 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   const [points, setPoints] = useState(1250)
   const [fetchCredits, setFetchCredits] = useState(50.0)
   const [challenges, setChallenges] = useState<Challenge[]>(MOCK_CHALLENGES)
+  const [missions, setMissions] = useState<Mission[]>([
+    {
+      id: 'm1',
+      title: 'Avalie sua visita ao Burger King',
+      description: 'Conta pra gente como foi sua experiência e ganhe pontos.',
+      rewardPoints: 100,
+      type: 'survey',
+      completed: false,
+    },
+    {
+      id: 'm2',
+      title: 'Compartilhe um roteiro',
+      description: 'Ajude outros viajantes compartilhando seus planos.',
+      rewardPoints: 50,
+      type: 'action',
+      completed: false,
+    },
+  ])
   const [badges] = useState<Badge[]>(MOCK_BADGES)
   const [abTests, setAbTests] = useState<ABTest[]>(MOCK_AB_TESTS)
   const [downloadedIds, setDownloadedIds] = useState<string[]>([])
@@ -131,6 +153,21 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       couponTitle: 'Massagem Relaxante',
       method: 'card',
       status: 'completed',
+      customerName: 'João da Silva',
+      pointsAwarded: 45,
+      installments: 1,
+    },
+    {
+      id: 'tx2',
+      date: new Date(Date.now() - 86400000 * 2).toISOString(),
+      amount: 25.9,
+      storeName: 'Burger King',
+      couponTitle: '2 Whoppers',
+      method: 'wallet',
+      status: 'completed',
+      customerName: 'Maria Oliveira',
+      pointsAwarded: 25,
+      installments: 1,
     },
   ])
   const [connectedApps, setConnectedApps] = useState<ConnectedApp[]>([
@@ -157,6 +194,14 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       points: 850,
       icon: 'coins',
       color: 'orange',
+    },
+    {
+      id: 'sephora',
+      name: 'Sephora Beauty',
+      connected: false,
+      points: 300,
+      icon: 'sparkles',
+      color: 'black',
     },
   ])
   const [isDownloading, setIsDownloading] = useState(false)
@@ -204,7 +249,6 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
 
     const storedItineraries = localStorage.getItem('savedItineraries')
     if (storedItineraries) {
-      // Merge stored with mock, preferring stored if duplicates exist
       const parsed = JSON.parse(storedItineraries) as Itinerary[]
       setItineraries((prev) => {
         const newIds = parsed.map((i) => i.id)
@@ -242,7 +286,6 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   useEffect(() => {
-    // Check for birthday
     if (user && user.birthday) {
       const today = new Date()
       const birthday = new Date(user.birthday)
@@ -329,13 +372,11 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       const exists = prev.includes(id)
       if (exists) {
         toast.info('Removido do roteiro de viagem.')
-        // Also update notification simulation
         return prev.filter((tid) => tid !== id)
       } else {
         toast.success('Salvo para sua viagem!', {
           description: 'Acesse na aba "Planejador".',
         })
-        // Simulate itinerary update notification
         setTimeout(() => {
           addNotification({
             title: 'Roteiro Atualizado',
@@ -463,7 +504,6 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         },
         ...prev,
       ])
-      // Simulate Notification for new reward availability or usage
       addNotification({
         title: 'Recompensa Resgatada',
         message: `Você usou ${amount} pontos com sucesso.`,
@@ -484,7 +524,6 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   const downloadOffline = (ids: string[]) => {
     setIsDownloading(true)
     setDownloadProgress(0)
-    // Simulate download progress
     const interval = setInterval(() => {
       setDownloadProgress((prev) => {
         if (prev >= 100) {
@@ -506,7 +545,8 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   const processPayment = async (details: {
     couponId?: string
     amount: number
-    method?: 'card' | 'fetch'
+    method?: 'card' | 'fetch' | 'wallet'
+    installments?: number
   }) => {
     return new Promise((resolve) => {
       setTimeout(() => {
@@ -521,7 +561,6 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
             ),
           )
           reserveCoupon(details.couponId)
-          // Add to transaction history
           const newTx: PaymentTransaction = {
             id: 'tx-' + Math.random().toString(36).substr(2, 9),
             date: new Date().toISOString(),
@@ -530,6 +569,9 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
             couponTitle: coupon.title,
             method: details.method || 'card',
             status: 'completed',
+            customerName: user?.name || 'Cliente',
+            pointsAwarded: Math.floor(details.amount),
+            installments: details.installments || 1,
           }
           setTransactions((prev) => [newTx, ...prev])
         }
@@ -543,6 +585,19 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       prev.map((c) => (c.id === id ? { ...c, status: 'active' } : c)),
     )
     toast.success('Desafio aceito! Boa sorte.')
+  }
+
+  const completeMission = (id: string) => {
+    const mission = missions.find((m) => m.id === id)
+    if (mission && !mission.completed) {
+      setMissions((prev) =>
+        prev.map((m) => (m.id === id ? { ...m, completed: true } : m)),
+      )
+      addPoints(mission.rewardPoints, `Missão Completa: ${mission.title}`)
+      toast.success(
+        `Missão completada! +${mission.rewardPoints} pontos ganhos.`,
+      )
+    }
   }
 
   const login = (email: string, role: User['role']) => {
@@ -599,7 +654,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
 
   const connectFetch = () => {
     setIsFetchConnected(true)
-    setFetchCredits((prev) => prev + 1500) // Simulate fetching points
+    setFetchCredits((prev) => prev + 1500)
     setConnectedApps((prev) =>
       prev.map((app) =>
         app.id === 'fetch' ? { ...app, connected: true } : app,
@@ -621,7 +676,6 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       toast.success(`${app.name} conectado!`, {
         description: 'Pontos sincronizados.',
       })
-      // Notify about new rewards availability logic (simulated)
       if (app.points && app.points > 1000) {
         addNotification({
           title: 'Novas Recompensas Disponíveis',
@@ -663,8 +717,6 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
 
   const saveItinerary = (itinerary: Itinerary) => {
     setItineraries((prev) => {
-      // Check if updating existing by ID or adding new
-      // Here we append a timestamp to ID to allow saving "versions" or check if ID exists
       const exists = prev.find((i) => i.id === itinerary.id)
       if (exists) {
         return prev.map((i) => (i.id === itinerary.id ? itinerary : i))
@@ -699,6 +751,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         rewardHistory,
         fetchCredits,
         challenges,
+        missions,
         badges,
         abTests,
         downloadedIds,
@@ -730,6 +783,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         processPayment,
         isDownloaded,
         joinChallenge,
+        completeMission,
         login,
         logout,
         approveCompany,

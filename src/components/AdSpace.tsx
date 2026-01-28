@@ -12,8 +12,6 @@ export function AdSpace({ position, className }: AdSpaceProps) {
   const { ads } = useCouponStore()
   const { t } = useLanguage()
 
-  // In a real app, this would filter based on current page/route context and user data
-  // For now, we randomize or pick based on position if available in mock data
   const availableAds = ads.filter((ad) => ad.status === 'active')
 
   if (availableAds.length === 0) return null
