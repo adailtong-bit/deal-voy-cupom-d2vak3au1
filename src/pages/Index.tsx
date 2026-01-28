@@ -27,6 +27,7 @@ import * as Icons from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { AdSpace } from '@/components/AdSpace'
 
 export default function Index() {
   const { coupons, isLoadingLocation, selectedRegion } = useCouponStore()
@@ -142,6 +143,8 @@ export default function Index() {
       </section>
 
       <div className="container mx-auto px-4 py-8 space-y-10">
+        <AdSpace position="top" />
+
         {featuredCoupons.length > 0 && (
           <section>
             <div className="flex items-center justify-between mb-4">
@@ -223,6 +226,8 @@ export default function Index() {
                 ))}
           </div>
         </section>
+
+        <AdSpace position="bottom" />
 
         <section>
           <div className="flex items-center justify-between mb-4">

@@ -14,6 +14,7 @@ import {
   CreditCard,
   Settings,
   User,
+  LogOut,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -46,9 +47,13 @@ export function DesktopHeader() {
   const location = useLocation()
   const { t } = useLanguage()
   const { unreadCount } = useNotification()
-  const { user, selectedRegion, setRegion, regions } = useCouponStore()
+  const { user, selectedRegion, setRegion, regions, logout } = useCouponStore()
 
   const isActive = (path: string) => location.pathname === path
+
+  const handleLogout = () => {
+    logout()
+  }
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 hidden md:block">
@@ -201,17 +206,35 @@ export function DesktopHeader() {
             </Button>
           </Link>
 
-          <Link to={user ? '/profile' : '/login'}>
-            <Avatar className="h-8 w-8 cursor-pointer hover:ring-2 hover:ring-secondary hover:ring-offset-2 transition-all">
-              <AvatarImage
-                src={
-                  user?.avatar ||
-                  'https://img.usecurling.com/ppl/thumbnail?gender=male'
-                }
-              />
-              <AvatarFallback>U</AvatarFallback>
-            </Avatar>
-          </Link>
+          {user ? (
+            <div className="flex items-center gap-2">
+              <Link to="/profile">
+                <Avatar className="h-8 w-8 cursor-pointer hover:ring-2 hover:ring-secondary hover:ring-offset-2 transition-all">
+                  <AvatarImage
+                    src={
+                      user?.avatar ||
+                      'https://img.usecurling.com/ppl/thumbnail?gender=male'
+                    }
+                  />
+                  <AvatarFallback>U</AvatarFallback>
+                </Avatar>
+              </Link>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleLogout}
+                title={t('profile.logout')}
+              >
+                <LogOut className="h-4 w-4 text-muted-foreground" />
+              </Button>
+            </div>
+          ) : (
+            <Link to="/login">
+              <Button size="sm" variant="outline">
+                {t('auth.login')}
+              </Button>
+            </Link>
+          )}
 
           <Sheet>
             <SheetTrigger asChild>
@@ -319,6 +342,17 @@ export function DesktopHeader() {
                     >
                       <Briefcase className="h-4 w-4" /> {t('nav.vendor')}
                     </Link>
+                  </SheetClose>
+                )}
+                {user && (
+                  <SheetClose asChild>
+                    <Button
+                      variant="ghost"
+                      className="justify-start px-0 text-red-500 hover:text-red-600 hover:bg-transparent"
+                      onClick={handleLogout}
+                    >
+                      <LogOut className="h-4 w-4 mr-2" /> {t('profile.logout')}
+                    </Button>
                   </SheetClose>
                 )}
               </div>

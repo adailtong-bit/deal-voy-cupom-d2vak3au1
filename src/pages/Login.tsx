@@ -28,20 +28,20 @@ export default function Login() {
     setIsLoading(true)
     setTimeout(() => {
       let role = 'user'
-      if (email.includes('admin')) role = 'super_admin'
-      else if (email.includes('franquia')) role = 'franchisee'
-      else if (email.includes('agency')) role = 'agency'
-      else if (email.includes('shop')) role = 'shopkeeper'
+      if (email === 'admin@dealvoy.com') role = 'super_admin'
+      else if (email === 'franchise@dealvoy.com') role = 'franchisee'
+      else if (email === 'agency@dealvoy.com') role = 'agency'
+      else if (email === 'shop@dealvoy.com') role = 'shopkeeper'
 
       // @ts-expect-error - role type casting
       login(email, role)
 
-      // Redirect based on role inferred from email for demo or just go profile
-      if (email.includes('admin') || email.includes('franquia'))
-        navigate('/admin')
-      else if (email.includes('shop')) navigate('/vendor')
-      else if (email.includes('agency')) navigate('/agency')
-      else navigate('/profile')
+      // Redirect based on role
+      if (role === 'super_admin' || role === 'franchisee') navigate('/admin')
+      else if (role === 'shopkeeper') navigate('/vendor')
+      else if (role === 'agency') navigate('/agency')
+      else navigate('/') // End Users go to Home
+
       setIsLoading(false)
     }, 1000)
   }
@@ -55,7 +55,7 @@ export default function Login() {
     setIsLoading(true)
     setTimeout(() => {
       login(`${provider}@user.com`, 'user')
-      navigate('/profile')
+      navigate('/')
       setIsLoading(false)
     }, 1000)
   }
@@ -79,7 +79,7 @@ export default function Login() {
           >
             <AccordionItem value="test-users" className="border-none px-4">
               <AccordionTrigger className="hover:no-underline py-3 text-sm font-semibold text-blue-700">
-                Click to view Test Credentials
+                Test Accounts (Click to open)
               </AccordionTrigger>
               <AccordionContent>
                 <div className="space-y-2 pb-2">
@@ -97,45 +97,45 @@ export default function Login() {
                   <Button
                     variant="ghost"
                     className="w-full justify-start h-auto py-2 text-xs"
-                    onClick={() => fillCredentials('franquia.sp@dealvoy.com')}
+                    onClick={() => fillCredentials('franchise@dealvoy.com')}
                   >
                     <Building className="mr-2 h-4 w-4 text-blue-600" />
                     <div className="text-left">
-                      <span className="font-bold block">Franchise (BR)</span>
-                      franquia.sp@dealvoy.com
+                      <span className="font-bold block">Franchise</span>
+                      franchise@dealvoy.com
                     </div>
                   </Button>
                   <Button
                     variant="ghost"
                     className="w-full justify-start h-auto py-2 text-xs"
-                    onClick={() => fillCredentials('agency.travel@dealvoy.com')}
+                    onClick={() => fillCredentials('agency@dealvoy.com')}
                   >
                     <Briefcase className="mr-2 h-4 w-4 text-orange-600" />
                     <div className="text-left">
                       <span className="font-bold block">Agency</span>
-                      agency.travel@dealvoy.com
+                      agency@dealvoy.com
                     </div>
                   </Button>
                   <Button
                     variant="ghost"
                     className="w-full justify-start h-auto py-2 text-xs"
-                    onClick={() => fillCredentials('shop.retail@dealvoy.com')}
+                    onClick={() => fillCredentials('shop@dealvoy.com')}
                   >
                     <Briefcase className="mr-2 h-4 w-4 text-green-600" />
                     <div className="text-left">
                       <span className="font-bold block">Merchant</span>
-                      shop.retail@dealvoy.com
+                      shop@dealvoy.com
                     </div>
                   </Button>
                   <Button
                     variant="ghost"
                     className="w-full justify-start h-auto py-2 text-xs"
-                    onClick={() => fillCredentials('user.test@dealvoy.com')}
+                    onClick={() => fillCredentials('user@dealvoy.com')}
                   >
                     <User className="mr-2 h-4 w-4 text-slate-600" />
                     <div className="text-left">
                       <span className="font-bold block">End User</span>
-                      user.test@dealvoy.com
+                      user@dealvoy.com
                     </div>
                   </Button>
                 </div>
@@ -149,7 +149,7 @@ export default function Login() {
               <Input
                 id="email"
                 type="email"
-                placeholder="hello@example.com"
+                placeholder="user@dealvoy.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required

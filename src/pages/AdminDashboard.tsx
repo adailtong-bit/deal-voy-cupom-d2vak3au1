@@ -11,6 +11,11 @@ import {
   DollarSign,
   Activity,
   FileText,
+  Map as MapIcon,
+  MessageCircle,
+  AlertTriangle,
+  Globe,
+  Lock,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -81,6 +86,24 @@ export default function AdminDashboard() {
     ? companies
     : companies.filter((c) => c.region === user.region)
 
+  // Scenario Cards Helper
+  const ScenarioCard = ({
+    title,
+    icon: Icon,
+    value,
+    color = 'text-blue-500',
+  }: any) => (
+    <Card className="hover:shadow-md transition-shadow">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">{title}</CardTitle>
+        <Icon className={`h-4 w-4 ${color}`} />
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold">{value}</div>
+      </CardContent>
+    </Card>
+  )
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
@@ -105,51 +128,118 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Building className="h-4 w-4" /> {t('admin.active_franchises')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {relevantFranchises.length}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Users className="h-4 w-4" /> {t('admin.active_merchants')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{relevantCompanies.length}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <DollarSign className="h-4 w-4" /> {t('admin.revenue')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {formatCurrency(125000 + relevantCompanies.length * 1500)}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Activity className="h-4 w-4" /> System Load
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">98%</div>
-          </CardContent>
-        </Card>
+      <h2 className="text-xl font-bold mb-4">{t('admin.scenarios')}</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+        {isSuperAdmin ? (
+          <>
+            <ScenarioCard
+              title={t('admin.active_users')}
+              icon={Users}
+              value="12,500"
+            />
+            <ScenarioCard
+              title={t('admin.revenue')}
+              icon={DollarSign}
+              value={formatCurrency(500000, 'USD', 'en-US')}
+              color="text-green-500"
+            />
+            <ScenarioCard
+              title={t('admin.active_franchises')}
+              icon={Building}
+              value={relevantFranchises.length}
+            />
+            <ScenarioCard title={t('admin.logs')} icon={FileText} value="15" />
+            <ScenarioCard
+              title={t('admin.ad_management')}
+              icon={BarChart}
+              value="2 Active"
+            />
+            <ScenarioCard
+              title={t('admin.user_reports')}
+              icon={AlertTriangle}
+              value="3 Pending"
+              color="text-red-500"
+            />
+            <ScenarioCard
+              title={t('admin.global_cats')}
+              icon={Settings}
+              value="8"
+            />
+            <ScenarioCard
+              title={t('admin.country_config')}
+              icon={Globe}
+              value="6 Regions"
+            />
+            <ScenarioCard
+              title={t('admin.security_alerts')}
+              icon={Lock}
+              value="0"
+              color="text-green-500"
+            />
+            <ScenarioCard
+              title={t('admin.platform_updates')}
+              icon={Activity}
+              value="v2.1.0"
+            />
+          </>
+        ) : (
+          <>
+            <ScenarioCard
+              title={t('admin.merchants')}
+              icon={Building}
+              value={relevantCompanies.length}
+            />
+            <ScenarioCard
+              title={t('franchise.regional_sales')}
+              icon={DollarSign}
+              value={formatCurrency(45000)}
+              color="text-green-500"
+            />
+            <ScenarioCard
+              title={t('vendor.active_campaigns')}
+              icon={Activity}
+              value="12"
+            />
+            <ScenarioCard
+              title={t('franchise.onboarding')}
+              icon={Users}
+              value="2 Pending"
+              color="text-orange-500"
+            />
+            <ScenarioCard
+              title={t('franchise.commission')}
+              icon={DollarSign}
+              value="5%"
+            />
+            <ScenarioCard
+              title={t('franchise.heatmaps')}
+              icon={MapIcon}
+              value="View"
+            />
+            <ScenarioCard
+              title={t('franchise.feedback')}
+              icon={MessageCircle}
+              value="4.8/5"
+            />
+            <ScenarioCard
+              title={t('franchise.tickets')}
+              icon={AlertTriangle}
+              value="1 Open"
+              color="text-red-500"
+            />
+            <ScenarioCard
+              title={t('vendor.settings')}
+              icon={Settings}
+              value="Config"
+            />
+            <ScenarioCard
+              title={t('franchise.goals')}
+              icon={BarChart}
+              value="85%"
+              color="text-purple-500"
+            />
+          </>
+        )}
       </div>
 
       <Tabs defaultValue={isSuperAdmin ? 'franchises' : 'merchants'}>

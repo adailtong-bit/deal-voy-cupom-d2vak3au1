@@ -22,7 +22,20 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useForm } from 'react-hook-form'
 import { useLanguage } from '@/stores/LanguageContext'
-import { Briefcase, Map, Car, Plus, Users, CheckCircle } from 'lucide-react'
+import {
+  Briefcase,
+  Map,
+  Car,
+  Plus,
+  Users,
+  CheckCircle,
+  Building,
+  Plane,
+  Settings,
+  Bell,
+  BarChart,
+  Tag,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { ItineraryCard } from '@/components/ItineraryCard'
 import { MOCK_CLIENT_HISTORY } from '@/lib/data'
@@ -59,6 +72,20 @@ export default function AgencyDashboard() {
     reset()
   }
 
+  const ScenarioCard = ({ title, icon: Icon, value, color }: any) => (
+    <Card className="hover:shadow-md transition-shadow">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-xs font-medium uppercase text-muted-foreground">
+          {title}
+        </CardTitle>
+        <Icon className={`h-4 w-4 ${color || 'text-muted-foreground'}`} />
+      </CardHeader>
+      <CardContent>
+        <div className="text-xl font-bold">{value}</div>
+      </CardContent>
+    </Card>
+  )
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-4 bg-white p-6 rounded-xl shadow-sm border">
@@ -69,6 +96,63 @@ export default function AgencyDashboard() {
           </h1>
           <p className="text-muted-foreground">{user.name} - Agency Portal</p>
         </div>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+        <ScenarioCard
+          title={t('agency.builder')}
+          icon={Map}
+          value="Go"
+          color="text-blue-500"
+        />
+        <ScenarioCard
+          title={t('agency.inventory')}
+          icon={Car}
+          value={myCars.length}
+        />
+        <ScenarioCard
+          title={t('agency.clients')}
+          icon={Users}
+          value={MOCK_CLIENT_HISTORY.length}
+        />
+        <ScenarioCard
+          title={t('agency.commission_data')}
+          icon={BarChart}
+          value="12%"
+          color="text-green-500"
+        />
+        <ScenarioCard
+          title={t('agency.partner_hotels')}
+          icon={Building}
+          value="45"
+        />
+        <ScenarioCard
+          title={t('agency.tour_packages')}
+          icon={Plane}
+          value="8"
+        />
+        <ScenarioCard
+          title={t('agency.preferences')}
+          icon={Settings}
+          value="Setup"
+        />
+        <ScenarioCard
+          title={t('agency.alerts')}
+          icon={Bell}
+          value="3"
+          color="text-red-500"
+        />
+        <ScenarioCard
+          title={t('agency.sales_reports')}
+          icon={BarChart}
+          value="View"
+        />
+        <ScenarioCard
+          title={t('agency.discounts')}
+          icon={Tag}
+          value="-15%"
+          color="text-orange-500"
+        />
       </div>
 
       <Tabs defaultValue="itineraries">

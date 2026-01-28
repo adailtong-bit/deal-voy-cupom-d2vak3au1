@@ -143,8 +143,6 @@ export const MOCK_BADGES: Badge[] = [
   },
 ]
 
-// --- EXTENDED MOCK DATA GENERATION FOR 10+ ITEMS ---
-
 // Coupons (30 items)
 const generateCoupons = (): Coupon[] => {
   const coupons: Coupon[] = []
@@ -255,6 +253,22 @@ export const MOCK_ADS: Advertisement[] = [
     image: 'https://img.usecurling.com/p/800/200?q=burger%20ad',
     link: 'https://burgerking.com.br',
   },
+  {
+    id: 'ad2',
+    title: 'Fashion Week Sale',
+    companyId: 'c2',
+    region: 'US-FL',
+    category: 'Moda',
+    billingType: 'ppc',
+    placement: 'bottom',
+    status: 'active',
+    views: 10000,
+    clicks: 1200,
+    startDate: '2024-12-01',
+    endDate: '2025-01-31',
+    image: 'https://img.usecurling.com/p/800/200?q=fashion%20sale',
+    link: 'https://fashionweek.com',
+  },
 ]
 
 // Users (Test Accounts for all roles)
@@ -262,7 +276,7 @@ export const MOCK_USERS: User[] = [
   // 1. App Owner
   {
     id: 'u_admin',
-    name: 'Super Admin',
+    name: 'App Owner',
     email: 'admin@dealvoy.com',
     role: 'super_admin',
     avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=male&seed=99',
@@ -272,11 +286,11 @@ export const MOCK_USERS: User[] = [
     city: 'São Paulo',
     phone: '+55 11 99999-9999',
   },
-  // 2. Franchisee (BR)
+  // 2. Franchisee
   {
-    id: 'u_fran_sp',
-    name: 'Franchise SP',
-    email: 'franquia.sp@dealvoy.com',
+    id: 'u_fran',
+    name: 'Franchise Partner',
+    email: 'franchise@dealvoy.com',
     role: 'franchisee',
     region: 'BR-SP',
     avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=female&seed=88',
@@ -285,24 +299,11 @@ export const MOCK_USERS: User[] = [
     city: 'Campinas',
     phone: '+55 19 98888-8888',
   },
-  // 3. Franchisee (US)
-  {
-    id: 'u_fran_fl',
-    name: 'Franchise FL',
-    email: 'franquia.fl@dealvoy.com',
-    role: 'franchisee',
-    region: 'US-FL',
-    avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=male&seed=77',
-    country: 'USA',
-    state: 'Florida',
-    city: 'Orlando',
-    phone: '+1 407 555-0123',
-  },
-  // 4. Agency
+  // 3. Agency
   {
     id: 'u_agency',
     name: 'Travel Agency',
-    email: 'agency.travel@dealvoy.com',
+    email: 'agency@dealvoy.com',
     role: 'agency',
     agencyId: 'agency1',
     avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=female&seed=66',
@@ -311,11 +312,11 @@ export const MOCK_USERS: User[] = [
     city: 'Rio de Janeiro',
     phone: '+55 21 97777-7777',
   },
-  // 5. Merchant (Shopkeeper)
+  // 4. Merchant (Shopkeeper)
   {
     id: 'u_shop',
-    name: 'Shop Keeper',
-    email: 'shop.retail@dealvoy.com',
+    name: 'Shop Merchant',
+    email: 'shop@dealvoy.com',
     role: 'shopkeeper',
     companyId: 'c2', // Linked to a BR company usually
     avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=male&seed=55',
@@ -324,11 +325,11 @@ export const MOCK_USERS: User[] = [
     city: 'Santos',
     phone: '+55 13 96666-6666',
   },
-  // 6. End User
+  // 5. End User
   {
     id: 'u_user',
     name: 'End User',
-    email: 'user.test@dealvoy.com',
+    email: 'user@dealvoy.com',
     role: 'user',
     avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=female&seed=44',
     country: 'USA',

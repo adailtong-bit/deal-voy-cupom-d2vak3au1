@@ -15,6 +15,12 @@ import {
   MapPin,
   Wallet,
   Plane,
+  Heart,
+  History,
+  Coins,
+  ThumbsUp,
+  Clock,
+  Car,
 } from 'lucide-react'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
@@ -145,6 +151,19 @@ export default function Profile() {
     </div>
   )
 
+  const ScenarioCard = ({ title, icon: Icon, path, color }: any) => (
+    <Link to={path}>
+      <Card className="hover:shadow-md transition-shadow h-full">
+        <CardContent className="p-4 flex flex-col items-center justify-center text-center gap-2">
+          <div className={`p-3 rounded-full bg-slate-50 ${color}`}>
+            <Icon className="h-6 w-6" />
+          </div>
+          <span className="text-xs font-semibold">{title}</span>
+        </CardContent>
+      </Card>
+    </Link>
+  )
+
   if (!isProfileComplete) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-md min-h-screen flex flex-col justify-center">
@@ -234,41 +253,69 @@ export default function Profile() {
         </Dialog>
       </div>
 
+      <div className="grid grid-cols-2 gap-4 mb-8">
+        <ScenarioCard
+          title={t('user.wallet')}
+          icon={Wallet}
+          path="/saved"
+          color="text-emerald-500"
+        />
+        <ScenarioCard
+          title={t('user.saved_itineraries')}
+          icon={Plane}
+          path="/travel-planner"
+          color="text-blue-500"
+        />
+        <ScenarioCard
+          title={t('user.favorites')}
+          icon={Heart}
+          path="/saved"
+          color="text-red-500"
+        />
+        <ScenarioCard
+          title={t('user.redemption_history')}
+          icon={History}
+          path="/rewards"
+          color="text-orange-500"
+        />
+        <ScenarioCard
+          title={t('user.nearby')}
+          icon={MapPin}
+          path="/explore"
+          color="text-purple-500"
+        />
+        <ScenarioCard
+          title={t('profile.settings')}
+          icon={Settings}
+          path="/settings"
+        />
+        <ScenarioCard
+          title={t('user.points')}
+          icon={Coins}
+          path="/rewards"
+          color="text-yellow-500"
+        />
+        <ScenarioCard
+          title={t('user.recommended')}
+          icon={ThumbsUp}
+          path="/"
+          color="text-indigo-500"
+        />
+        <ScenarioCard
+          title={t('user.expiring')}
+          icon={Clock}
+          path="/saved"
+          color="text-rose-500"
+        />
+        <ScenarioCard
+          title={t('user.car_rentals')}
+          icon={Car}
+          path="/agencies"
+          color="text-cyan-500"
+        />
+      </div>
+
       <div className="space-y-3">
-        <Link to="/saved">
-          <Button
-            variant="outline"
-            className="w-full justify-between h-14 bg-white hover:bg-slate-50 border-slate-200 group"
-          >
-            <div className="flex items-center gap-3">
-              <div className="bg-emerald-100 p-2 rounded-full group-hover:bg-emerald-200 transition-colors">
-                <Wallet className="h-5 w-5 text-emerald-600" />
-              </div>
-              <span className="font-semibold text-slate-700">
-                {t('profile.wallet')}
-              </span>
-            </div>
-            <ChevronRight className="h-4 w-4 text-slate-400" />
-          </Button>
-        </Link>
-
-        <Link to="/travel-planner">
-          <Button
-            variant="outline"
-            className="w-full justify-between h-14 bg-white hover:bg-slate-50 border-slate-200 group"
-          >
-            <div className="flex items-center gap-3">
-              <div className="bg-indigo-100 p-2 rounded-full group-hover:bg-indigo-200 transition-colors">
-                <Plane className="h-5 w-5 text-indigo-600" />
-              </div>
-              <span className="font-semibold text-slate-700">
-                {t('profile.trips')}
-              </span>
-            </div>
-            <ChevronRight className="h-4 w-4 text-slate-400" />
-          </Button>
-        </Link>
-
         <Link to="/notifications">
           <Button
             variant="outline"
@@ -297,23 +344,6 @@ export default function Profile() {
               </div>
               <span className="font-semibold text-slate-700">
                 {t('profile.payment_methods')}
-              </span>
-            </div>
-            <ChevronRight className="h-4 w-4 text-slate-400" />
-          </Button>
-        </Link>
-
-        <Link to="/settings">
-          <Button
-            variant="outline"
-            className="w-full justify-between h-14 bg-white hover:bg-slate-50 border-slate-200 group"
-          >
-            <div className="flex items-center gap-3">
-              <div className="bg-gray-100 p-2 rounded-full group-hover:bg-gray-200 transition-colors">
-                <Settings className="h-5 w-5 text-gray-600" />
-              </div>
-              <span className="font-semibold text-slate-700">
-                {t('profile.settings')}
               </span>
             </div>
             <ChevronRight className="h-4 w-4 text-slate-400" />
