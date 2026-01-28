@@ -26,7 +26,8 @@ export default function Settings() {
         <Card>
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
-              <Globe className="h-5 w-5 text-blue-500" /> Language & Region
+              <Globe className="h-5 w-5 text-blue-500" />{' '}
+              {t('settings.language')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -40,7 +41,8 @@ export default function Settings() {
         <Card>
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
-              <Shield className="h-5 w-5 text-green-500" /> Privacy & Security
+              <Shield className="h-5 w-5 text-green-500" />{' '}
+              {t('settings.privacy')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -77,7 +79,8 @@ export default function Settings() {
         <Card>
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
-              <Bell className="h-5 w-5 text-orange-500" /> Preferences
+              <Bell className="h-5 w-5 text-orange-500" />{' '}
+              {t('settings.preferences')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">

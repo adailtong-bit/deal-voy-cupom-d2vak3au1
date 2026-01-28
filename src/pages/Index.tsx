@@ -61,13 +61,12 @@ export default function Index() {
 
   return (
     <div className="pb-20 md:pb-8 bg-slate-50 min-h-screen">
-      {/* Search Header */}
       <section className="bg-white border-b sticky top-16 z-30 shadow-sm md:static">
         <div className="container mx-auto px-4 py-4">
           <div className="relative max-w-2xl mx-auto">
             <Search className="absolute left-4 top-3.5 h-5 w-5 text-slate-400" />
             <Input
-              placeholder={t('search.placeholder')}
+              placeholder={t('common.search')}
               className="pl-12 h-12 rounded-full bg-slate-100 border-transparent focus:bg-white focus:border-primary text-base"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -97,7 +96,6 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Categories Bar - Horizontal Scroll */}
       <section className="bg-white border-b py-2">
         <div className="container mx-auto px-4">
           <ScrollArea className="w-full whitespace-nowrap">
@@ -128,7 +126,9 @@ export default function Index() {
                           : 'text-slate-600 group-hover:text-primary',
                       )}
                     >
-                      {cat.label}
+                      {cat.label === 'Todos' && t('home.all_offers')
+                        ? t('home.all_offers')
+                        : cat.label}
                     </span>
                   </button>
                 )
@@ -139,9 +139,7 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Main Content Area */}
       <div className="container mx-auto px-4 py-8 space-y-10">
-        {/* Featured / Partners Section */}
         {featuredCoupons.length > 0 && (
           <section>
             <div className="flex items-center justify-between mb-4">
@@ -176,24 +174,22 @@ export default function Index() {
           </section>
         )}
 
-        {/* Travel Hub Highlight - New Section */}
         <section className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-6 md:p-8 relative overflow-hidden text-white shadow-lg">
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
           <div className="relative z-10 md:flex items-center justify-between">
             <div className="mb-6 md:mb-0 md:w-1/2">
               <Badge className="bg-white/20 text-white border-none mb-3 hover:bg-white/30">
-                Novo: Travel Hub
+                New: {t('hub.title')}
               </Badge>
               <h2 className="text-2xl md:text-3xl font-bold mb-2">
-                Explore o Mundo com Deal Voy
+                {t('hub.subtitle')}
               </h2>
               <p className="text-blue-100 mb-6 max-w-md">
-                Encontre passagens aéreas e hotéis com os melhores preços do
-                mercado, tudo em um só lugar.
+                Find air tickets and hotels at best prices.
               </p>
               <Link to="/travel-hub">
                 <Button className="bg-white text-blue-600 hover:bg-blue-50 font-bold rounded-full px-6 gap-2">
-                  <Plane className="h-4 w-4" /> Buscar Viagens
+                  <Plane className="h-4 w-4" /> {t('common.search')}
                 </Button>
               </Link>
             </div>
@@ -206,7 +202,6 @@ export default function Index() {
           </div>
         </section>
 
-        {/* Travel Planner Highlight - Blue Theme */}
         <section className="bg-secondary/10 rounded-2xl p-6 md:p-8 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-secondary/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
           <div className="relative z-10 md:flex items-center justify-between">
@@ -236,7 +231,6 @@ export default function Index() {
           </div>
         </section>
 
-        {/* Aggregated Deals - "Tracked" - Grid */}
         <section>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold flex items-center gap-2 text-slate-800">
@@ -257,7 +251,6 @@ export default function Index() {
           </div>
         </section>
 
-        {/* More Categories / Explore Grid */}
         <section>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold flex items-center gap-2 text-slate-800">

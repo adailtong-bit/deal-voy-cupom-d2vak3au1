@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Lock, Apple, Mail } from 'lucide-react'
+import { Lock, Apple } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 
 export default function Login() {
@@ -22,7 +22,7 @@ export default function Login() {
     setIsLoading(true)
     setTimeout(() => {
       login(email, 'user')
-      navigate('/profile') // Redirect to profile which will handle onboarding
+      navigate('/profile')
       setIsLoading(false)
     }, 1000)
   }
@@ -46,7 +46,6 @@ export default function Login() {
           <CardTitle className="text-3xl font-bold text-slate-900">
             {t('auth.login')}
           </CardTitle>
-          <p className="text-muted-foreground">Deal Voy</p>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-3">

@@ -3,17 +3,10 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useCouponStore } from '@/stores/CouponContext'
-import { CouponCard } from '@/components/CouponCard'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
-  Navigation,
-  Map as MapIcon,
-  TentTree,
   Plane,
-  CalendarDays,
-  Download,
   Search,
-  Plus,
   Save,
   Trash2,
   Utensils,
@@ -24,7 +17,6 @@ import {
 } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import { GoogleMap, MapMarker } from '@/components/GoogleMap'
 import { DayPlan, Itinerary, Coupon } from '@/lib/types'
@@ -47,13 +39,9 @@ export default function TravelPlanner() {
 
   const [activeTab, setActiveTab] = useState<'planner' | 'saved'>('planner')
   const [navMode, setNavMode] = useState<'gps' | 'planned'>('gps')
-
-  // Route State
   const [origin, setOrigin] = useState('')
   const [destination, setDestination] = useState('')
   const [showRoute, setShowRoute] = useState(false)
-
-  // Multi-day State
   const [currentDay, setCurrentDay] = useState(1)
   const [days, setDays] = useState<DayPlan[]>(
     Array.from({ length: 10 }).map((_, i) => ({
@@ -62,30 +50,21 @@ export default function TravelPlanner() {
       stops: [],
     })),
   )
-  const [planTitle, setPlanTitle] = useState('Minha Viagem - 10 Dias')
+  const [planTitle, setPlanTitle] = useState('My Trip')
   const [isAgentMode, setIsAgentMode] = useState(false)
-
-  // Map Center State
   const [mapCenter, setMapCenter] = useState<{
     lat: number
     lng: number
   } | null>(null)
 
-  // Time Sensitive Logic
   const currentHour = new Date().getHours()
   const isLunchTime = currentHour >= 11 && currentHour <= 14
   const isDinnerTime = currentHour >= 18 && currentHour <= 21
-
-  // Initialize with some mock data if empty for demo purposes
-  useEffect(() => {
-    // Optional: Load saved draft logic here
-  }, [])
 
   const currentCenter = useMemo(() => {
     if (navMode === 'planned' && mapCenter) return mapCenter
     if (navMode === 'gps' && userLocation)
       return { lat: userLocation.lat, lng: userLocation.lng }
-    // Default fallback (e.g. Orlando for demo)
     return { lat: 28.5383, lng: -81.3792 }
   }, [navMode, mapCenter, userLocation])
 
@@ -94,19 +73,15 @@ export default function TravelPlanner() {
     if (origin && destination) {
       setNavMode('planned')
       setShowRoute(true)
-
-      // Attempt to center map on destination
       const key = Object.keys(DESTINATIONS).find((k) =>
         destination.toLowerCase().includes(k),
       )
       if (key) {
         setMapCenter(DESTINATIONS[key])
       } else {
-        // Generic fallback for search demo
         setMapCenter({ lat: 28.5383, lng: -81.3792 })
       }
-
-      toast.info('Calculando rota otimizada...')
+      toast.info(t('common.loading'))
     }
   }
 
@@ -115,10 +90,12 @@ export default function TravelPlanner() {
       prev.map((day) => {
         if (day.dayNumber === currentDay) {
           if (day.stops.find((s) => s.id === coupon.id)) {
-            toast.info('Item já adicionado a este dia.')
+            toast.info(t('common.error'))
             return day
           }
-          toast.success(`Adicionado ao Dia ${currentDay}`)
+          toast.success(
+            `${t('common.success')} - ${t('travel.day')} ${currentDay}`,
+          )
           return { ...day, stops: [...day.stops, coupon] }
         }
         return day
@@ -140,28 +117,28 @@ export default function TravelPlanner() {
   const handleSavePlan = () => {
     const totalSavings = days.reduce(
       (acc, day) =>
-        acc + day.stops.reduce((dAcc, s) => dAcc + (s.price || 10), 0), // Mock savings calc
+        acc + day.stops.reduce((dAcc, s) => dAcc + (s.price || 10), 0),
       0,
     )
 
     const allStops = days.flatMap((d) => d.stops)
 
     if (allStops.length === 0) {
-      toast.error('Adicione pelo menos um item ao roteiro.')
+      toast.error(t('common.error'))
       return
     }
 
     const newItinerary: Itinerary = {
       id: Math.random().toString(),
       title: planTitle,
-      description: `Roteiro de ${days.length} dias com ${allStops.length} paradas.`,
+      description: `${days.length} days, ${allStops.length} stops.`,
       stops: allStops,
       days: days,
       totalSavings,
-      duration: `${days.length} Dias`,
+      duration: `${days.length} Days`,
       image:
         allStops[0]?.image || 'https://img.usecurling.com/p/600/300?q=travel',
-      tags: ['Personalizado'],
+      tags: ['Custom'],
       matchScore: 100,
       isTemplate: isAgentMode,
     }
@@ -173,17 +150,13 @@ export default function TravelPlanner() {
     navigator.clipboard.writeText(
       `${window.location.origin}/itinerary/${it.id}`,
     )
-    toast.success('Link do roteiro copiado!', {
-      description: 'Envie para seus amigos para colaborarem.',
-    })
+    toast.success(t('common.success'))
   }
 
-  // Get current day's stops for map highlighting
   const currentDayStops = useMemo(() => {
     return days.find((d) => d.dayNumber === currentDay)?.stops || []
   }, [days, currentDay])
 
-  // Generate markers for the map
   const mapMarkers: MapMarker[] = useMemo(() => {
     return currentDayStops.map((stop) => ({
       id: stop.id,
@@ -199,7 +172,6 @@ export default function TravelPlanner() {
   return (
     <div className="flex flex-col h-[calc(100vh-64px)] bg-slate-50">
       <div className="flex-1 flex overflow-hidden flex-col md:flex-row">
-        {/* Sidebar - Planner Controls */}
         <div className="w-full md:w-[380px] bg-white border-r flex flex-col z-20 shadow-xl overflow-hidden shrink-0">
           <div className="p-4 border-b bg-primary/5">
             <h1 className="text-xl font-bold flex items-center gap-2 text-primary">
@@ -212,7 +184,7 @@ export default function TravelPlanner() {
                 onClick={() => setActiveTab('planner')}
                 className="flex-1 font-bold"
               >
-                Planejar
+                {t('common.save')}
               </Button>
               <Button
                 variant={activeTab === 'saved' ? 'default' : 'outline'}
@@ -220,7 +192,7 @@ export default function TravelPlanner() {
                 onClick={() => setActiveTab('saved')}
                 className="flex-1 font-bold"
               >
-                Meus Roteiros
+                {t('travel.my_itineraries')}
               </Button>
             </div>
           </div>
@@ -229,7 +201,6 @@ export default function TravelPlanner() {
             <div className="p-4 space-y-6">
               {activeTab === 'planner' ? (
                 <>
-                  {/* Route Input */}
                   <div className="space-y-3 bg-slate-50 p-4 rounded-lg border">
                     <Label className="text-xs uppercase text-muted-foreground font-bold">
                       {t('travel.calculate_route')}
@@ -260,7 +231,6 @@ export default function TravelPlanner() {
                     </Button>
                   </div>
 
-                  {/* Day Planner */}
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <Input
@@ -316,10 +286,7 @@ export default function TravelPlanner() {
                           {day.stops.length === 0 ? (
                             <div className="text-center py-6 border-2 border-dashed rounded-lg text-muted-foreground text-sm bg-slate-50">
                               <p className="font-medium">
-                                Dia {day.dayNumber} Livre
-                              </p>
-                              <p className="text-xs mt-1">
-                                Adicione ofertas do feed ao lado.
+                                {t('travel.day')} {day.dayNumber}
                               </p>
                             </div>
                           ) : (
@@ -341,8 +308,7 @@ export default function TravelPlanner() {
                                   {stop.category === 'Alimentação' &&
                                     (isLunchTime || isDinnerTime) && (
                                       <span className="text-[10px] text-orange-600 font-bold flex items-center gap-1">
-                                        <Utensils className="h-3 w-3" /> Horário
-                                        de Comer!
+                                        <Utensils className="h-3 w-3" />
                                       </span>
                                     )}
                                 </div>
@@ -370,7 +336,7 @@ export default function TravelPlanner() {
                       <Save className="h-4 w-4" />{' '}
                       {isAgentMode
                         ? t('travel.save_template')
-                        : 'Salvar Roteiro'}
+                        : t('travel.save_itinerary')}
                     </Button>
                   </div>
                 </>
@@ -406,11 +372,6 @@ export default function TravelPlanner() {
                             <span className="bg-primary/10 text-primary px-1.5 py-0.5 rounded font-medium">
                               {it.duration}
                             </span>
-                            {it.isTemplate && (
-                              <span className="bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded font-medium">
-                                Oficial
-                              </span>
-                            )}
                           </div>
                           <p className="text-xs mt-2 line-clamp-2">
                             {it.description}
@@ -419,11 +380,6 @@ export default function TravelPlanner() {
                       </CardContent>
                     </Card>
                   ))}
-                  {itineraries.length === 0 && (
-                    <p className="text-center text-muted-foreground text-sm py-8">
-                      Nenhum roteiro salvo.
-                    </p>
-                  )}
                 </div>
               )}
             </div>
@@ -432,7 +388,6 @@ export default function TravelPlanner() {
           </ScrollArea>
         </div>
 
-        {/* Center - Map Area */}
         <div className="flex-1 relative flex flex-col min-h-[300px]">
           <GoogleMap
             center={currentCenter}
@@ -443,7 +398,6 @@ export default function TravelPlanner() {
             destination={showRoute ? destination : undefined}
           />
 
-          {/* Map Overlay Context */}
           <div className="absolute top-4 left-4 right-4 md:left-auto md:right-4 bg-white/95 backdrop-blur p-3 rounded-lg shadow-lg z-10 max-w-sm border-l-4 border-l-orange-500">
             <div className="flex items-center gap-2 mb-1">
               {currentHour >= 18 ? (
@@ -452,19 +406,12 @@ export default function TravelPlanner() {
                 <Sun className="h-4 w-4 text-orange-500" />
               )}
               <span className="font-bold text-sm">
-                {currentHour >= 18 ? 'Noite em' : 'Dia em'}{' '}
                 {destination || 'Orlando'}
               </span>
             </div>
-            <p className="text-xs text-slate-600">
-              {isLunchTime || isDinnerTime
-                ? 'Hora de comer! Confira as ofertas de restaurantes no feed.'
-                : 'Explore ofertas ao longo da sua rota no feed.'}
-            </p>
           </div>
         </div>
 
-        {/* Right Sidebar - Global Deal Aggregator Feed */}
         <div className="w-full md:w-[320px] bg-white border-l z-20 shadow-xl overflow-hidden shrink-0 h-1/2 md:h-full">
           <AggregatorFeed coupons={coupons} onAddToItinerary={addToDay} />
         </div>

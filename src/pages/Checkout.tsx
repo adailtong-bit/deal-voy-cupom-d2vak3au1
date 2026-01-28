@@ -6,7 +6,6 @@ import {
   CardHeader,
   CardTitle,
   CardFooter,
-  CardDescription,
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -26,9 +25,8 @@ import {
   Lock,
   ArrowLeft,
   Coins,
-  Wallet,
-  CheckCircle,
   Smartphone,
+  CheckCircle,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useState } from 'react'
@@ -44,7 +42,7 @@ export default function Checkout() {
     'card' | 'fetch' | 'wallet'
   >('card')
   const [installments, setInstallments] = useState('1')
-  const { t } = useLanguage()
+  const { t, formatCurrency } = useLanguage()
   const {
     register,
     handleSubmit,
@@ -56,24 +54,27 @@ export default function Checkout() {
   if (!coupon) {
     return (
       <div className="container mx-auto p-8 text-center">
-        <h2 className="text-xl mb-4">Nenhum item selecionado</h2>
-        <Button onClick={() => navigate('/')}>Voltar ao Início</Button>
+        <h2 className="text-xl mb-4">{t('checkout.no_item')}</h2>
+        <Button onClick={() => navigate('/')}>{t('common.back')}</Button>
       </div>
     )
   }
 
   const canAffordWithCredits = fetchCredits >= (coupon.price || 0)
-  const installmentValue = (coupon.price || 0) / parseInt(installments)
 
   const onSubmit = async (data: any) => {
-    setIsProcessing(true)
+    // Validate Email
+    if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+      toast.error('Invalid email format')
+      return
+    }
 
-    // Simulate payment processing delay
+    setIsProcessing(true)
     await new Promise((resolve) => setTimeout(resolve, 2000))
 
     if (paymentMethod === 'fetch') {
       if (!redeemPoints(coupon.price || 0, 'fetch')) {
-        toast.error('Saldo insuficiente.')
+        toast.error('Insufficient Balance')
         setIsProcessing(false)
         return
       }
@@ -88,14 +89,13 @@ export default function Checkout() {
       })
       setIsSuccess(true)
       toast.success(t('checkout.success'), {
-        description: 'Recibo enviado para seu email.',
+        description: t('checkout.redirect'),
       })
-      // Navigate after small delay to show success state
       setTimeout(() => {
         navigate(`/coupon/${coupon.id}`)
       }, 1500)
     } catch (error) {
-      toast.error('Erro no pagamento. Tente novamente.')
+      toast.error(t('common.error'))
       setIsProcessing(false)
     }
   }
@@ -146,10 +146,10 @@ export default function Checkout() {
             <p className="text-sm text-muted-foreground">{coupon.storeName}</p>
             <div className="flex items-center justify-between mt-2">
               <span className="text-sm text-muted-foreground">
-                Total a pagar:
+                {t('checkout.total')}
               </span>
               <span className="text-xl font-bold text-[#FF5722]">
-                R$ {coupon.price?.toFixed(2)}
+                {formatCurrency(coupon.price || 0)}
               </span>
             </div>
           </div>
@@ -159,9 +159,7 @@ export default function Checkout() {
       <form onSubmit={handleSubmit(onSubmit)}>
         <Card className="mb-6 overflow-hidden">
           <CardHeader className="bg-muted/30 pb-4">
-            <CardTitle className="text-lg">
-              {t('checkout.payment_method')}
-            </CardTitle>
+            <CardTitle className="text-lg">{t('checkout.method')}</CardTitle>
           </CardHeader>
           <CardContent className="p-6">
             <RadioGroup
@@ -178,12 +176,14 @@ export default function Checkout() {
                     htmlFor="card"
                     className="font-bold cursor-pointer flex items-center gap-2"
                   >
-                    <CreditCard className="h-4 w-4" /> Cartão de Crédito
+                    <CreditCard className="h-4 w-4" /> {t('checkout.card')}
                   </Label>
                   {paymentMethod === 'card' && (
                     <div className="mt-4 space-y-4 animate-in fade-in slide-in-from-top-2">
                       <div className="space-y-2">
-                        <Label className="text-xs">Número do Cartão</Label>
+                        <Label className="text-xs">
+                          {t('checkout.card_number')}
+                        </Label>
                         <Input
                           placeholder="0000 0000 0000 0000"
                           {...register('number')}
@@ -191,11 +191,13 @@ export default function Checkout() {
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label className="text-xs">Validade</Label>
+                          <Label className="text-xs">
+                            {t('checkout.expiry')}
+                          </Label>
                           <Input placeholder="MM/AA" {...register('expiry')} />
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-xs">CVV</Label>
+                          <Label className="text-xs">{t('checkout.cvc')}</Label>
                           <Input
                             placeholder="123"
                             type="password"
@@ -205,11 +207,22 @@ export default function Checkout() {
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-xs">Nome no Cartão</Label>
+                        <Label className="text-xs">{t('checkout.name')}</Label>
                         <Input placeholder="JOAO SILVA" {...register('name')} />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-xs">Parcelamento</Label>
+                        <Label className="text-xs">Email</Label>
+                        <Input
+                          type="email"
+                          placeholder="user@example.com"
+                          {...register('email')}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs">
+                          {t('checkout.installments')}
+                        </Label>
                         <Select
                           value={installments}
                           onValueChange={setInstallments}
@@ -221,9 +234,7 @@ export default function Checkout() {
                             {Array.from({ length: 12 }, (_, i) => i + 1).map(
                               (i) => (
                                 <SelectItem key={i} value={i.toString()}>
-                                  {i}x de R${' '}
-                                  {((coupon.price || 0) / i).toFixed(2)}{' '}
-                                  {i === 1 ? '(sem juros)' : ''}
+                                  {i}x {formatCurrency((coupon.price || 0) / i)}
                                 </SelectItem>
                               ),
                             )}
@@ -244,12 +255,9 @@ export default function Checkout() {
                     htmlFor="wallet"
                     className="font-bold cursor-pointer flex items-center gap-2"
                   >
-                    <Smartphone className="h-4 w-4 text-blue-500" /> Carteira
-                    Digital
+                    <Smartphone className="h-4 w-4 text-blue-500" />{' '}
+                    {t('checkout.wallet')}
                   </Label>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Apple Pay, Google Pay ou PayPal.
-                  </p>
                 </div>
               </div>
 
@@ -269,18 +277,15 @@ export default function Checkout() {
                   >
                     <div className="flex items-center gap-2">
                       <Coins className="h-4 w-4 text-yellow-500" />
-                      <span>Saldo Fetch / Pontos</span>
+                      <span>{t('checkout.fetch')}</span>
                     </div>
                     <span className="text-sm font-normal bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">
-                      Saldo: R$ {fetchCredits.toFixed(2)}
+                      {formatCurrency(fetchCredits)}
                     </span>
                   </Label>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Use seu saldo acumulado para pagar.
-                  </p>
                   {!canAffordWithCredits && (
                     <p className="text-xs text-red-500 mt-1 font-medium">
-                      Saldo insuficiente para esta compra.
+                      Insufficient Balance
                     </p>
                   )}
                 </div>
@@ -296,23 +301,13 @@ export default function Checkout() {
                 (paymentMethod === 'fetch' && !canAffordWithCredits)
               }
             >
-              {isProcessing ? (
-                <span className="flex items-center gap-2">Processando...</span>
-              ) : paymentMethod === 'fetch' ? (
-                `Usar Saldo (R$ ${coupon.price?.toFixed(2)})`
-              ) : (
-                `${t('checkout.pay')} R$ ${coupon.price?.toFixed(2)}`
-              )}
+              {isProcessing
+                ? 'Processing...'
+                : `${t('checkout.pay')} ${formatCurrency(coupon.price || 0)}`}
             </Button>
           </CardFooter>
         </Card>
       </form>
-
-      <div className="text-center">
-        <p className="text-xs text-muted-foreground">
-          Deal Voy Payments Process &bull; Termos e Condições
-        </p>
-      </div>
     </div>
   )
 }

@@ -1,15 +1,7 @@
 import { useState } from 'react'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useNavigate } from 'react-router-dom'
-import {
-  Users,
-  Building2,
-  Settings,
-  Globe,
-  Plus,
-  BarChart,
-  ShieldAlert,
-} from 'lucide-react'
+import { Settings, Plus, BarChart, ShieldAlert } from 'lucide-react'
 import {
   Card,
   CardContent,
@@ -39,11 +31,13 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useForm } from 'react-hook-form'
+import { useLanguage } from '@/stores/LanguageContext'
 
 export default function AdminDashboard() {
   const { user, companies, franchises, addFranchise, approveCompany } =
     useCouponStore()
   const navigate = useNavigate()
+  const { t, formatDate } = useLanguage()
   const [isFranchiseOpen, setIsFranchiseOpen] = useState(false)
   const { register, handleSubmit, reset } = useForm()
 
@@ -51,9 +45,10 @@ export default function AdminDashboard() {
     return (
       <div className="flex flex-col items-center justify-center h-screen gap-4">
         <ShieldAlert className="h-16 w-16 text-red-500" />
-        <h1 className="text-2xl font-bold">Acesso Negado</h1>
-        <p>Você precisa ser um administrador para ver esta página.</p>
-        <Button onClick={() => navigate('/admin/login')}>Ir para Login</Button>
+        <h1 className="text-2xl font-bold">{t('admin.access_denied')}</h1>
+        <Button onClick={() => navigate('/admin/login')}>
+          {t('admin.go_login')}
+        </Button>
       </div>
     )
   }
@@ -65,7 +60,7 @@ export default function AdminDashboard() {
       id: Math.random().toString(),
       name: data.name,
       region: data.region,
-      ownerId: 'new_owner', // simplified
+      ownerId: 'new_owner',
       status: 'active',
       licenseExpiry: data.expiry,
     })
@@ -79,19 +74,14 @@ export default function AdminDashboard() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-slate-900">
             {isSuperAdmin
-              ? 'Painel Super Admin (Dono)'
-              : `Painel de Franquia - ${user.region || 'Regional'}`}
+              ? t('admin.super_title')
+              : `${t('admin.franchise_title')} - ${user.region || ''}`}
           </h1>
-          <p className="text-muted-foreground">
-            {isSuperAdmin
-              ? 'Gerenciamento Global e Licenciamento'
-              : 'Gestão Regional de Lojistas e Performance'}
-          </p>
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="px-3 py-1 bg-white">
             <span className="w-2 h-2 rounded-full bg-green-500 mr-2" />
-            Sistema Operacional
+            System OK
           </Badge>
           <Button variant="ghost" size="icon">
             <Settings className="h-5 w-5" />
@@ -103,7 +93,9 @@ export default function AdminDashboard() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              {isSuperAdmin ? 'Franquias Ativas' : 'Lojistas Ativos'}
+              {isSuperAdmin
+                ? t('admin.active_franchises')
+                : t('admin.active_merchants')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -117,7 +109,7 @@ export default function AdminDashboard() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Receita Recorrente
+              {t('admin.revenue')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -129,10 +121,12 @@ export default function AdminDashboard() {
       <Tabs defaultValue={isSuperAdmin ? 'franchises' : 'merchants'}>
         <TabsList>
           {isSuperAdmin && (
-            <TabsTrigger value="franchises">Franquias</TabsTrigger>
+            <TabsTrigger value="franchises">
+              {t('admin.franchises')}
+            </TabsTrigger>
           )}
-          <TabsTrigger value="merchants">Lojistas (Merchants)</TabsTrigger>
-          <TabsTrigger value="reports">Relatórios</TabsTrigger>
+          <TabsTrigger value="merchants">{t('admin.merchants')}</TabsTrigger>
+          <TabsTrigger value="reports">{t('admin.reports')}</TabsTrigger>
         </TabsList>
 
         {isSuperAdmin && (
@@ -140,10 +134,7 @@ export default function AdminDashboard() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
-                  <CardTitle>Licenciamento de Regiões</CardTitle>
-                  <CardDescription>
-                    Gerencie os parceiros regionais e suas licenças.
-                  </CardDescription>
+                  <CardTitle>{t('admin.licensing')}</CardTitle>
                 </div>
                 <Dialog
                   open={isFranchiseOpen}
@@ -151,23 +142,23 @@ export default function AdminDashboard() {
                 >
                   <DialogTrigger asChild>
                     <Button className="gap-2">
-                      <Plus className="h-4 w-4" /> Nova Franquia
+                      <Plus className="h-4 w-4" /> {t('admin.new_franchise')}
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
-                      <DialogTitle>Adicionar Franquia</DialogTitle>
+                      <DialogTitle>{t('admin.new_franchise')}</DialogTitle>
                     </DialogHeader>
                     <form
                       onSubmit={handleSubmit(onSubmitFranchise)}
                       className="space-y-4"
                     >
                       <div className="space-y-2">
-                        <Label>Nome da Franquia</Label>
+                        <Label>Name</Label>
                         <Input {...register('name')} required />
                       </div>
                       <div className="space-y-2">
-                        <Label>Região (Código)</Label>
+                        <Label>Region</Label>
                         <Input
                           {...register('region')}
                           placeholder="Ex: BR-MG"
@@ -175,11 +166,11 @@ export default function AdminDashboard() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>Expiração da Licença</Label>
+                        <Label>Expiry</Label>
                         <Input type="date" {...register('expiry')} required />
                       </div>
                       <DialogFooter>
-                        <Button type="submit">Salvar</Button>
+                        <Button type="submit">{t('common.save')}</Button>
                       </DialogFooter>
                     </form>
                   </DialogContent>
@@ -189,9 +180,9 @@ export default function AdminDashboard() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Nome</TableHead>
-                      <TableHead>Região</TableHead>
-                      <TableHead>Validade</TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Region</TableHead>
+                      <TableHead>Expiry</TableHead>
                       <TableHead>Status</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -202,7 +193,7 @@ export default function AdminDashboard() {
                         <TableCell>
                           <Badge variant="outline">{f.region}</Badge>
                         </TableCell>
-                        <TableCell>{f.licenseExpiry}</TableCell>
+                        <TableCell>{formatDate(f.licenseExpiry)}</TableCell>
                         <TableCell>
                           <Badge className="bg-green-500">{f.status}</Badge>
                         </TableCell>
@@ -218,21 +209,16 @@ export default function AdminDashboard() {
         <TabsContent value="merchants">
           <Card>
             <CardHeader>
-              <CardTitle>Gestão de Lojistas</CardTitle>
-              <CardDescription>
-                Empresas cadastradas na plataforma
-                {!isSuperAdmin && ` em ${user.region}`}.
-              </CardDescription>
+              <CardTitle>{t('admin.active_merchants')}</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Empresa</TableHead>
-                    <TableHead>Região</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Region</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Pontos B2B</TableHead>
-                    <TableHead className="text-right">Ação</TableHead>
+                    <TableHead>Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -253,16 +239,13 @@ export default function AdminDashboard() {
                             {company.status}
                           </Badge>
                         </TableCell>
-                        <TableCell>
-                          {company.enableLoyalty ? 'Ativo' : 'Inativo'}
-                        </TableCell>
                         <TableCell className="text-right">
                           {company.status === 'pending' && (
                             <Button
                               size="sm"
                               onClick={() => approveCompany(company.id)}
                             >
-                              Aprovar
+                              Approve
                             </Button>
                           )}
                         </TableCell>
@@ -277,10 +260,7 @@ export default function AdminDashboard() {
         <TabsContent value="reports">
           <div className="p-10 text-center border rounded-lg bg-muted/20">
             <BarChart className="h-10 w-10 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium">Relatórios Regionais</h3>
-            <p className="text-muted-foreground">
-              Métricas de performance detalhadas estarão disponíveis em breve.
-            </p>
+            <h3 className="text-lg font-medium">{t('admin.reports')}</h3>
           </div>
         </TabsContent>
       </Tabs>

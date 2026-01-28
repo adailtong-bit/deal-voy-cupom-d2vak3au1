@@ -28,14 +28,14 @@ import {
   CardTitle,
   CardDescription,
 } from '@/components/ui/card'
-import { Plus, Target, Briefcase, QrCode, Settings, Coins } from 'lucide-react'
+import { Plus, Briefcase, QrCode, Settings, Coins } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useCouponStore } from '@/stores/CouponContext'
 import { toast } from 'sonner'
 import { VendorAnalytics } from '@/components/VendorAnalytics'
 
 export default function VendorDashboard() {
-  const { t } = useLanguage()
+  const { t, formatDate } = useLanguage()
   const {
     user,
     companies,
@@ -44,9 +44,8 @@ export default function VendorDashboard() {
     toggleLoyaltySystem,
   } = useCouponStore()
 
-  // Assuming logged in user is merchant and has companyId
   const myCompany =
-    companies.find((c) => c.id === user?.companyId) || companies[0] // Fallback for demo
+    companies.find((c) => c.id === user?.companyId) || companies[0]
 
   const [coupons, setCoupons] = useState(
     allCoupons
@@ -81,7 +80,7 @@ export default function VendorDashboard() {
 
     addCoupon(newCoupon)
     setCoupons([newCoupon, ...coupons])
-    toast.success('Campanha criada!')
+    toast.success(t('common.success'))
     setTimeout(() => {
       setIsDialogOpen(false)
       setGeneratedCode(null)
@@ -109,32 +108,31 @@ export default function VendorDashboard() {
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button className="gap-2 bg-primary hover:bg-primary/90 text-white shadow-md">
-                <Plus className="h-4 w-4" /> Nova Campanha
+                <Plus className="h-4 w-4" /> {t('vendor.new_campaign')}
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
-                <DialogTitle>Criar Nova Campanha</DialogTitle>
+                <DialogTitle>{t('vendor.new_campaign')}</DialogTitle>
               </DialogHeader>
               {!generatedCode ? (
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>Título</Label>
+                      <Label>{t('vendor.title')}</Label>
                       <Input {...register('title')} required />
                     </div>
                     <div className="space-y-2">
-                      <Label>Desconto</Label>
+                      <Label>{t('coupon.discount')}</Label>
                       <Input {...register('discount')} required />
                     </div>
                   </div>
-                  {/* ... other fields simplified for brevity */}
                   <div className="space-y-2">
-                    <Label>Validade</Label>
+                    <Label>{t('vendor.validity')}</Label>
                     <Input type="date" {...register('endDate')} required />
                   </div>
                   <DialogFooter>
-                    <Button type="submit">Lançar</Button>
+                    <Button type="submit">{t('common.save')}</Button>
                   </DialogFooter>
                 </form>
               ) : (
@@ -150,10 +148,10 @@ export default function VendorDashboard() {
 
       <Tabs defaultValue="overview">
         <TabsList>
-          <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-          <TabsTrigger value="offers">Ofertas</TabsTrigger>
+          <TabsTrigger value="overview">{t('vendor.overview')}</TabsTrigger>
+          <TabsTrigger value="offers">{t('vendor.offers')}</TabsTrigger>
           <TabsTrigger value="settings">
-            <Settings className="h-3 w-3 mr-1" /> Configurações
+            <Settings className="h-3 w-3 mr-1" /> {t('vendor.settings')}
           </TabsTrigger>
         </TabsList>
 
@@ -164,22 +162,22 @@ export default function VendorDashboard() {
         <TabsContent value="offers">
           <Card>
             <CardHeader>
-              <CardTitle>Campanhas Ativas</CardTitle>
+              <CardTitle>{t('vendor.active_campaigns')}</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Título</TableHead>
-                    <TableHead>Validade</TableHead>
-                    <TableHead>Estoque</TableHead>
+                    <TableHead>{t('vendor.title')}</TableHead>
+                    <TableHead>{t('vendor.validity')}</TableHead>
+                    <TableHead>{t('vendor.stock')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {coupons.map((coupon) => (
                     <TableRow key={coupon.id}>
                       <TableCell>{coupon.title}</TableCell>
-                      <TableCell>{coupon.expiryDate}</TableCell>
+                      <TableCell>{formatDate(coupon.expiryDate)}</TableCell>
                       <TableCell>
                         {coupon.reservedCount} / {coupon.totalAvailable}
                       </TableCell>
@@ -194,21 +192,17 @@ export default function VendorDashboard() {
         <TabsContent value="settings">
           <Card>
             <CardHeader>
-              <CardTitle>Parâmetros Operacionais</CardTitle>
-              <CardDescription>
-                Controle custos e funcionalidades da sua loja no app.
-              </CardDescription>
+              <CardTitle>{t('vendor.operational')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex items-center justify-between p-4 border rounded-lg bg-slate-50">
                 <div className="space-y-0.5">
                   <Label className="text-base flex items-center gap-2">
                     <Coins className="h-4 w-4 text-yellow-500" />
-                    Sistema de Pontos de Fidelidade
+                    {t('vendor.loyalty')}
                   </Label>
                   <p className="text-sm text-muted-foreground">
-                    Permitir que clientes acumulem e resgatem pontos B2B em sua
-                    loja. Desative para reduzir custos operacionais.
+                    {t('vendor.loyalty_desc')}
                   </p>
                 </div>
                 <Switch

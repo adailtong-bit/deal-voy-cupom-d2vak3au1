@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { CreditCard, Trash2, Plus, Wallet } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
@@ -32,7 +32,7 @@ export default function PaymentMethods() {
 
   const handleRemove = (id: string) => {
     setMethods(methods.filter((m) => m.id !== id))
-    toast.success('Payment method removed')
+    toast.success(t('common.success'))
   }
 
   const handleAdd = (e: React.FormEvent) => {
@@ -43,12 +43,12 @@ export default function PaymentMethods() {
         id: Math.random().toString(),
         type: 'card',
         brand: 'Visa',
-        last4: '0000', // Mock
+        last4: '0000',
         expiry: '12/28',
       },
     ])
     setIsDialogOpen(false)
-    toast.success('Card added successfully')
+    toast.success(t('common.success'))
   }
 
   return (
@@ -75,21 +75,21 @@ export default function PaymentMethods() {
             </DialogHeader>
             <form onSubmit={handleAdd} className="space-y-4">
               <div className="space-y-2">
-                <Label>Card Number</Label>
+                <Label>{t('checkout.card_number')}</Label>
                 <Input placeholder="0000 0000 0000 0000" required />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Expiry</Label>
+                  <Label>{t('checkout.expiry')}</Label>
                   <Input placeholder="MM/YY" required />
                 </div>
                 <div className="space-y-2">
-                  <Label>CVC</Label>
+                  <Label>{t('checkout.cvc')}</Label>
                   <Input placeholder="123" required />
                 </div>
               </div>
               <DialogFooter>
-                <Button type="submit">Add Card</Button>
+                <Button type="submit">{t('common.save')}</Button>
               </DialogFooter>
             </form>
           </DialogContent>
@@ -143,7 +143,7 @@ export default function PaymentMethods() {
                 Connected via device
               </p>
             </div>
-            <Button variant="link">Manage</Button>
+            <Button variant="link">{t('common.view')}</Button>
           </CardContent>
         </Card>
       </div>

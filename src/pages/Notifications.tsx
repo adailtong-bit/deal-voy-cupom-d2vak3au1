@@ -5,9 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Bell, Tag, Info, AlertTriangle, Zap } from 'lucide-react'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { cn } from '@/lib/utils'
-import { format } from 'date-fns'
-import { Link } from 'react-router-dom'
+import { cn, formatDate } from '@/lib/utils'
 import { AdSpace } from '@/components/AdSpace'
 import { Label } from '@/components/ui/label'
 
@@ -19,7 +17,7 @@ export default function Notifications() {
     smartAlertsEnabled,
     toggleSmartAlerts,
   } = useNotification()
-  const { t } = useLanguage()
+  const { t, locale } = useLanguage()
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -57,7 +55,9 @@ export default function Notifications() {
               <Zap className="h-5 w-5 text-purple-700" />
             </div>
             <div>
-              <Label className="font-semibold text-sm">Smart Alerts</Label>
+              <Label className="font-semibold text-sm">
+                {t('notifications.smart_alerts')}
+              </Label>
               <p className="text-xs text-muted-foreground">
                 Location based deals
               </p>
@@ -74,7 +74,9 @@ export default function Notifications() {
               <Tag className="h-5 w-5 text-orange-700" />
             </div>
             <div>
-              <Label className="font-semibold text-sm">Promotions</Label>
+              <Label className="font-semibold text-sm">
+                {t('notifications.promotions')}
+              </Label>
               <p className="text-xs text-muted-foreground">Partner offers</p>
             </div>
           </div>
@@ -112,7 +114,7 @@ export default function Notifications() {
                         {notification.title}
                       </CardTitle>
                       <p className="text-[10px] text-muted-foreground">
-                        {format(new Date(notification.date), 'dd/MM HH:mm')}
+                        {formatDate(notification.date, locale)}
                       </p>
                     </div>
                   </div>

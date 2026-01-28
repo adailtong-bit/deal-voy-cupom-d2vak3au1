@@ -16,7 +16,6 @@ export function AdSpace({ position, className }: AdSpaceProps) {
 
   if (availableAds.length === 0) return null
 
-  // Simple logic to show different ads for different slots
   const adIndex =
     position === 'top' ? 0 : position === 'bottom' ? 1 : 0 % availableAds.length
   const ad = availableAds[adIndex] || availableAds[0]
@@ -55,7 +54,7 @@ export function AdSpace({ position, className }: AdSpaceProps) {
                 {ad.title}
               </h4>
               <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
-                Oferta exclusiva para sua região. Clique para saber mais.
+                {t('coupon.details')}
               </p>
             </div>
           </a>

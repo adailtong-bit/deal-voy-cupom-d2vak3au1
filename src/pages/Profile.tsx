@@ -19,6 +19,7 @@ import { useLanguage } from '@/stores/LanguageContext'
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { PhoneInput } from '@/components/PhoneInput'
+import { AddressForm } from '@/components/AddressForm'
 import { AdSpace } from '@/components/AdSpace'
 import {
   Select,
@@ -27,7 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { LOCATION_DATA, COUNTRIES } from '@/lib/locationData'
+import { COUNTRIES } from '@/lib/locationData'
 import {
   Dialog,
   DialogContent,
@@ -39,22 +40,20 @@ import {
 
 export default function Profile() {
   const { user, updateUserProfile, logout } = useCouponStore()
-  const { t } = useLanguage()
+  const { t, formatDate } = useLanguage()
   const navigate = useNavigate()
 
-  // State
   const [isEditing, setIsEditing] = useState(false)
-
-  // Profile Data States
   const [formData, setFormData] = useState({
     birthday: '',
     country: '',
     state: '',
     city: '',
     phone: '',
+    zip: '',
+    address: '',
   })
 
-  // Initialize form data when user loads
   useEffect(() => {
     if (user) {
       setFormData({
@@ -63,38 +62,14 @@ export default function Profile() {
         state: user.state || '',
         city: user.city || '',
         phone: user.phone || '',
+        zip: '',
+        address: '',
       })
     }
   }, [user])
 
-  // Check if profile is complete (Onboarding Logic)
   const isProfileComplete =
     user?.birthday && user?.country && user?.state && user?.city && user?.phone
-
-  // Handlers for Location Logic
-  const handleCountryChange = (val: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      country: val,
-      state: '',
-      city: '', // Reset state and city when country changes
-    }))
-  }
-
-  const handleStateChange = (val: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      state: val,
-      city: '', // Reset city when state changes
-    }))
-  }
-
-  const handleCityChange = (val: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      city: val,
-    }))
-  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -112,19 +87,10 @@ export default function Profile() {
     return null
   }
 
-  const availableStates = formData.country
-    ? Object.keys(LOCATION_DATA[formData.country]?.states || {})
-    : []
-
-  const availableCities =
-    formData.country && formData.state
-      ? LOCATION_DATA[formData.country]?.states[formData.state] || []
-      : []
-
-  const LocationForm = () => (
+  const LocationFields = () => (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label>{t('profile.birthday')}</Label>
+        <Label>{t('hub.date')}</Label>
         <Input
           type="date"
           required
@@ -138,11 +104,15 @@ export default function Profile() {
         />
       </div>
 
-      {/* Country Selection */}
       <div className="space-y-2">
-        <Label>{t('profile.country')}</Label>
-        <Select value={formData.country} onValueChange={handleCountryChange}>
-          <SelectTrigger className="w-full">
+        <Label>{t('profile.address')}</Label>
+        <Select
+          value={formData.country}
+          onValueChange={(val) =>
+            setFormData({ ...formData, country: val, state: '', city: '' })
+          }
+        >
+          <SelectTrigger>
             <SelectValue placeholder="Select Country" />
           </SelectTrigger>
           <SelectContent>
@@ -155,66 +125,24 @@ export default function Profile() {
         </Select>
       </div>
 
-      {/* State Selection */}
-      <div className="space-y-2">
-        <Label>State/Province</Label>
-        <Select
-          value={formData.state}
-          onValueChange={handleStateChange}
-          disabled={!formData.country}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select State" />
-          </SelectTrigger>
-          <SelectContent>
-            {availableStates.map((state) => (
-              <SelectItem key={state} value={state}>
-                {state}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* City Selection */}
-      <div className="space-y-2">
-        <Label>{t('profile.city')}</Label>
-        <Select
-          value={formData.city}
-          onValueChange={handleCityChange}
-          disabled={!formData.state}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select City" />
-          </SelectTrigger>
-          <SelectContent>
-            {availableCities.map((city) => (
-              <SelectItem key={city} value={city}>
-                {city}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <AddressForm
+        country={formData.country}
+        state={formData.state}
+        city={formData.city}
+        onChange={(data) => setFormData({ ...formData, ...data })}
+      />
 
       <div className="space-y-2">
-        <Label>{t('profile.phone')}</Label>
+        <Label>{t('phone.label')}</Label>
         <PhoneInput
           value={formData.phone}
           onChange={(val) => setFormData({ ...formData, phone: val })}
-          defaultCountry={
-            formData.country === 'Brasil'
-              ? 'BR'
-              : formData.country === 'USA'
-                ? 'US'
-                : undefined
-          }
+          countryCode={formData.country}
         />
       </div>
     </div>
   )
 
-  // Onboarding View
   if (!isProfileComplete) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-md min-h-screen flex flex-col justify-center">
@@ -225,30 +153,25 @@ export default function Profile() {
         <Card className="shadow-lg border-t-4 border-t-primary">
           <CardHeader>
             <CardTitle className="text-2xl text-center text-primary">
-              {t('profile.onboarding_title')}
+              {t('profile.complete_title')}
             </CardTitle>
             <p className="text-center text-muted-foreground text-sm">
-              {t('profile.onboarding_desc')}
+              {t('profile.complete_desc')}
             </p>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <LocationForm />
+              <LocationFields />
               <Button type="submit" className="w-full font-bold">
                 {t('profile.save')}
               </Button>
             </form>
           </CardContent>
         </Card>
-        <AdSpace
-          position="bottom"
-          className="mt-8 rounded-lg border-none bg-transparent px-0"
-        />
       </div>
     )
   }
 
-  // Main Profile View
   return (
     <div className="container mx-auto px-4 py-8 max-w-lg">
       <AdSpace
@@ -265,7 +188,7 @@ export default function Profile() {
                 'https://img.usecurling.com/ppl/thumbnail?gender=male'
               }
             />
-            <AvatarFallback>JD</AvatarFallback>
+            <AvatarFallback>U</AvatarFallback>
           </Avatar>
           <div className="absolute bottom-4 right-0 bg-primary text-white p-1 rounded-full border-2 border-white">
             <ShieldCheck className="w-4 h-4" />
@@ -282,22 +205,27 @@ export default function Profile() {
               {user.city}, {user.state}, {user.country}
             </p>
           </div>
+          {user.birthday && (
+            <p className="text-xs text-muted-foreground">
+              {formatDate(user.birthday)}
+            </p>
+          )}
         </div>
 
         <Dialog open={isEditing} onOpenChange={setIsEditing}>
           <DialogTrigger asChild>
             <Button variant="link" className="mt-2 text-primary h-auto p-0">
-              <Edit2 className="w-3 h-3 mr-1" /> Edit Profile
+              <Edit2 className="w-3 h-3 mr-1" /> {t('profile.edit')}
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-h-[80vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Edit Profile</DialogTitle>
+              <DialogTitle>{t('profile.edit')}</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <LocationForm />
+              <LocationFields />
               <DialogFooter>
-                <Button type="submit">Save Changes</Button>
+                <Button type="submit">{t('common.save')}</Button>
               </DialogFooter>
             </form>
           </DialogContent>
@@ -364,14 +292,9 @@ export default function Profile() {
           size="lg"
           onClick={handleLogout}
         >
-          <LogOut className="h-5 w-5" /> Logout
+          <LogOut className="h-5 w-5" /> {t('profile.logout')}
         </Button>
       </div>
-
-      <AdSpace
-        position="bottom"
-        className="mt-8 rounded-lg border-none bg-transparent px-0"
-      />
     </div>
   )
 }

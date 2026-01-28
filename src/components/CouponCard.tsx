@@ -5,7 +5,6 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   MapPin,
-  CheckCircle2,
   Globe,
   Plus,
   Check,
@@ -32,7 +31,6 @@ export function CouponCard({
 }: CouponCardProps) {
   const { isSaved, toggleTrip, isInTrip } = useCouponStore()
   const { t } = useLanguage()
-  const saved = isSaved(coupon.id)
   const inTrip = isInTrip(coupon.id)
   const [imgError, setImgError] = useState(false)
   const [logoError, setLogoError] = useState(false)
@@ -83,7 +81,7 @@ export function CouponCard({
 
           {isExpiringSoon && (
             <div className="absolute top-0 right-0 bg-red-600 text-white font-bold text-[10px] uppercase px-2 py-1 shadow-md rounded-bl-lg z-10 flex items-center gap-1 animate-pulse">
-              <Clock className="h-3 w-3" /> Expira em breve
+              <Clock className="h-3 w-3" /> {t('coupon.expires')}
             </div>
           )}
 
@@ -101,7 +99,7 @@ export function CouponCard({
                   className="bg-[#2196F3] text-white hover:bg-[#1976D2] border-none backdrop-blur-sm gap-1 shadow-sm font-bold"
                 >
                   <ShieldCheck className="h-3 w-3 text-white" />
-                  Verificado
+                  {t('coupon.verify')}
                 </Badge>
               ) : (
                 <Badge
@@ -168,11 +166,11 @@ export function CouponCard({
             >
               {inTrip ? (
                 <>
-                  <Check className="h-3 w-3 mr-1" /> No Roteiro
+                  <Check className="h-3 w-3 mr-1" /> {t('coupon.reserved')}
                 </>
               ) : (
                 <>
-                  <Plus className="h-3 w-3 mr-1" /> Add Trip
+                  <Plus className="h-3 w-3 mr-1" /> {t('common.save')}
                 </>
               )}
             </Button>

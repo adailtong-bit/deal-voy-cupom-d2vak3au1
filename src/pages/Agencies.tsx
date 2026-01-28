@@ -4,9 +4,11 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Car, Briefcase, ExternalLink, Filter } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useLanguage } from '@/stores/LanguageContext'
 
 export default function Agencies() {
   const { travelOffers, selectedRegion } = useCouponStore()
+  const { t, formatCurrency } = useLanguage()
 
   const packages = travelOffers.filter(
     (t) =>
@@ -24,14 +26,12 @@ export default function Agencies() {
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Marketplace de Agências</h1>
-          <p className="text-muted-foreground">
-            Pacotes de viagens e aluguel de carros de parceiros certificados.
-          </p>
+          <h1 className="text-3xl font-bold mb-2">{t('agencies.title')}</h1>
+          <p className="text-muted-foreground">{t('agencies.subtitle')}</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" className="gap-2">
-            <Filter className="h-4 w-4" /> Filtrar
+            <Filter className="h-4 w-4" /> {t('explore.filters')}
           </Button>
         </div>
       </div>
@@ -42,13 +42,13 @@ export default function Agencies() {
             value="packages"
             className="data-[state=active]:bg-primary data-[state=active]:text-white px-6 py-2"
           >
-            <Briefcase className="h-4 w-4 mr-2" /> Pacotes de Viagem
+            <Briefcase className="h-4 w-4 mr-2" /> {t('agencies.packages')}
           </TabsTrigger>
           <TabsTrigger
             value="cars"
             className="data-[state=active]:bg-primary data-[state=active]:text-white px-6 py-2"
           >
-            <Car className="h-4 w-4 mr-2" /> Aluguel de Carros
+            <Car className="h-4 w-4 mr-2" /> {t('agencies.cars')}
           </TabsTrigger>
         </TabsList>
 
@@ -66,7 +66,7 @@ export default function Agencies() {
                     className="w-full h-full object-cover"
                   />
                   <Badge className="absolute top-2 left-2 bg-purple-600">
-                    Pacote
+                    Package
                   </Badge>
                 </div>
                 <CardContent className="flex-1 p-6 flex flex-col">
@@ -84,10 +84,10 @@ export default function Agencies() {
                   <div className="flex items-center justify-between mt-4 pt-4 border-t">
                     <div className="flex flex-col">
                       <span className="text-xs text-muted-foreground">
-                        Preço Total
+                        {t('agencies.total_price')}
                       </span>
                       <span className="text-xl font-bold text-primary">
-                        {pkg.currency} {pkg.price}
+                        {formatCurrency(pkg.price, pkg.currency)}
                       </span>
                     </div>
                     <Button asChild>
@@ -96,7 +96,8 @@ export default function Agencies() {
                         target="_blank"
                         rel="noopener noreferrer"
                       >
-                        Ver Detalhes <ExternalLink className="h-4 w-4 ml-2" />
+                        {t('common.view')}{' '}
+                        <ExternalLink className="h-4 w-4 ml-2" />
                       </a>
                     </Button>
                   </div>
@@ -105,7 +106,7 @@ export default function Agencies() {
             ))}
             {packages.length === 0 && (
               <div className="col-span-full py-12 text-center text-muted-foreground border border-dashed rounded-lg">
-                Nenhum pacote encontrado para esta região.
+                {t('home.no_offers')}
               </div>
             )}
           </div>
@@ -132,9 +133,9 @@ export default function Agencies() {
                   </p>
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-lg">
-                      {car.currency} {car.price}
+                      {formatCurrency(car.price, car.currency)}
                       <span className="text-xs font-normal text-muted-foreground">
-                        /dia
+                        {t('agencies.per_day')}
                       </span>
                     </span>
                     <Button size="sm" variant="outline" asChild>
@@ -143,7 +144,7 @@ export default function Agencies() {
                         target="_blank"
                         rel="noopener noreferrer"
                       >
-                        Reservar
+                        {t('agencies.reserve')}
                       </a>
                     </Button>
                   </div>
@@ -152,7 +153,7 @@ export default function Agencies() {
             ))}
             {cars.length === 0 && (
               <div className="col-span-full py-12 text-center text-muted-foreground border border-dashed rounded-lg">
-                Nenhum veículo disponível nesta região.
+                {t('home.no_offers')}
               </div>
             )}
           </div>

@@ -15,11 +15,13 @@ import { Coupon } from '@/lib/types'
 import { useCouponStore } from '@/stores/CouponContext'
 import { Calendar, Clock, Users } from 'lucide-react'
 import { toast } from 'sonner'
+import { useLanguage } from '@/stores/LanguageContext'
 
 export function BookingForm({ coupon }: { coupon: Coupon }) {
   const { makeBooking } = useCouponStore()
   const { register, handleSubmit, reset } = useForm()
   const [isLoading, setIsLoading] = useState(false)
+  const { t } = useLanguage()
 
   const onSubmit = (data: any) => {
     setIsLoading(true)
@@ -31,9 +33,7 @@ export function BookingForm({ coupon }: { coupon: Coupon }) {
         time: data.time,
         guests: parseInt(data.guests),
       })
-      toast.success('Reserva confirmada!', {
-        description: `Agendado para ${data.date} às ${data.time}`,
-      })
+      toast.success(t('common.success'))
       setIsLoading(false)
       reset()
     }, 1500)
@@ -42,30 +42,28 @@ export function BookingForm({ coupon }: { coupon: Coupon }) {
   return (
     <Card className="border-l-4 border-l-blue-500">
       <CardHeader>
-        <CardTitle className="text-lg">Fazer Reserva</CardTitle>
-        <CardDescription>
-          Garanta seu lugar e use o cupom no local.
-        </CardDescription>
+        <CardTitle className="text-lg">{t('coupon.reserve')}</CardTitle>
+        <CardDescription>{t('coupon.reserved')}</CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit(onSubmit)}>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="date" className="flex items-center gap-2">
-                <Calendar className="h-4 w-4" /> Data
+                <Calendar className="h-4 w-4" /> {t('hub.date')}
               </Label>
               <Input type="date" id="date" required {...register('date')} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="time" className="flex items-center gap-2">
-                <Clock className="h-4 w-4" /> Horário
+                <Clock className="h-4 w-4" /> Time
               </Label>
               <Input type="time" id="time" required {...register('time')} />
             </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="guests" className="flex items-center gap-2">
-              <Users className="h-4 w-4" /> Pessoas
+              <Users className="h-4 w-4" /> People
             </Label>
             <Input
               type="number"
@@ -84,7 +82,7 @@ export function BookingForm({ coupon }: { coupon: Coupon }) {
             className="w-full bg-blue-500 hover:bg-blue-600"
             disabled={isLoading}
           >
-            {isLoading ? 'Confirmando...' : 'Confirmar Reserva'}
+            {isLoading ? t('common.loading') : t('coupon.reserve')}
           </Button>
         </CardFooter>
       </form>

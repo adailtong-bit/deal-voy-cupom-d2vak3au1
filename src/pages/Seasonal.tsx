@@ -7,7 +7,7 @@ import { useLanguage } from '@/stores/LanguageContext'
 import { Calendar as CalendarIcon, Gift } from 'lucide-react'
 
 export default function Seasonal() {
-  const { t } = useLanguage()
+  const { t, formatDate } = useLanguage()
   const [date, setDate] = useState<Date | undefined>(new Date())
 
   const selectedEvent = SEASONAL_EVENTS.find(
@@ -26,7 +26,7 @@ export default function Seasonal() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <Card className="h-fit">
           <CardHeader>
-            <CardTitle>Próximos Eventos de Ofertas</CardTitle>
+            <CardTitle>{t('seasonal.title')}</CardTitle>
           </CardHeader>
           <CardContent>
             <Calendar
@@ -41,10 +41,6 @@ export default function Seasonal() {
                 event: 'bg-primary/20 font-bold text-primary',
               }}
             />
-            <div className="mt-4 text-sm text-center text-muted-foreground">
-              <span className="inline-block w-2 h-2 bg-primary/20 rounded-full mr-2" />
-              Dias com grandes promoções
-            </div>
           </CardContent>
         </Card>
 
@@ -63,7 +59,7 @@ export default function Seasonal() {
                 <p className="text-lg mb-4">{selectedEvent.description}</p>
                 <div className="flex items-center gap-2 font-medium">
                   <CalendarIcon className="h-5 w-5" />
-                  {selectedEvent.date.toLocaleDateString()}
+                  {formatDate(selectedEvent.date)}
                 </div>
               </CardContent>
             </Card>
@@ -71,16 +67,13 @@ export default function Seasonal() {
             <Card className="bg-muted/50 border-dashed">
               <CardContent className="flex flex-col items-center justify-center py-12 text-center">
                 <Gift className="h-12 w-12 text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">
-                  Selecione uma data marcada no calendário para ver os detalhes
-                  do evento.
-                </p>
+                <p className="text-muted-foreground">{t('seasonal.title')}</p>
               </CardContent>
             </Card>
           )}
 
           <div className="space-y-4">
-            <h3 className="font-bold text-lg">Próximos Eventos</h3>
+            <h3 className="font-bold text-lg">{t('seasonal.title')}</h3>
             {activeEvents.map((event) => (
               <div
                 key={event.id}
@@ -90,7 +83,7 @@ export default function Seasonal() {
                 <div className="flex-1">
                   <h4 className="font-bold">{event.title}</h4>
                   <p className="text-xs text-muted-foreground">
-                    {event.date.toLocaleDateString()}
+                    {formatDate(event.date)}
                   </p>
                 </div>
                 <Badge variant="outline">{event.type}</Badge>

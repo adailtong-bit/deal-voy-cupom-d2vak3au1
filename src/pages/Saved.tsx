@@ -3,14 +3,15 @@ import { CouponCard } from '@/components/CouponCard'
 import { Button } from '@/components/ui/button'
 import { useNavigate } from 'react-router-dom'
 import { HeartOff, Download, CheckCircle } from 'lucide-react'
+import { useLanguage } from '@/stores/LanguageContext'
 
 export default function Saved() {
   const { coupons, savedIds, downloadOffline, downloadedIds } = useCouponStore()
   const navigate = useNavigate()
+  const { t } = useLanguage()
 
   const savedCoupons = coupons.filter((c) => savedIds.includes(c.id))
 
-  // Check if all displayed coupons are already downloaded
   const allDownloaded =
     savedCoupons.length > 0 &&
     savedCoupons.every((c) => downloadedIds.includes(c.id))
@@ -23,9 +24,9 @@ export default function Saved() {
     <div className="container mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold flex items-center gap-2">
-          Meus Cupons Salvos
+          {t('saved.title')}
           <span className="text-sm font-normal text-muted-foreground bg-muted px-3 py-1 rounded-full">
-            {savedCoupons.length} itens
+            {savedCoupons.length}
           </span>
         </h1>
         {savedCoupons.length > 0 && (
@@ -36,11 +37,11 @@ export default function Saved() {
           >
             {allDownloaded ? (
               <>
-                <CheckCircle className="mr-2 h-4 w-4" /> Offline Pronto
+                <CheckCircle className="mr-2 h-4 w-4" /> {t('common.success')}
               </>
             ) : (
               <>
-                <Download className="mr-2 h-4 w-4" /> Baixar Tudo
+                <Download className="mr-2 h-4 w-4" /> {t('common.save')} Offline
               </>
             )}
           </Button>
@@ -58,15 +59,9 @@ export default function Saved() {
           <div className="bg-muted p-6 rounded-full mb-4">
             <HeartOff className="h-10 w-10 text-muted-foreground" />
           </div>
-          <h2 className="text-xl font-semibold mb-2">
-            Você ainda não salvou nada
-          </h2>
-          <p className="text-muted-foreground mb-6 max-w-sm">
-            Explore as ofertas no mapa ou na lista e salve seus favoritos para
-            ver depois.
-          </p>
+          <h2 className="text-xl font-semibold mb-2">{t('saved.empty')}</h2>
           <Button onClick={() => navigate('/explore')}>
-            Começar a Explorar
+            {t('nav.explore')}
           </Button>
         </div>
       )}

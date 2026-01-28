@@ -56,8 +56,8 @@ export default function Layout() {
 
       if (distance < 500 && !notifiedCoupons.current.has(coupon.id)) {
         addNotification({
-          title: t('notification.deal'),
-          message: `Você está perto de ${coupon.storeName}. Aproveite ${coupon.discount}!`,
+          title: t('notifications.title'),
+          message: `${t('coupon.distance')}: ${coupon.storeName}!`,
           type: 'deal',
           priority: 'high',
           category: 'smart',
@@ -81,8 +81,8 @@ export default function Layout() {
 
       if (distance < 1000 && !notifiedCoupons.current.has(eventKey)) {
         addNotification({
-          title: t('notification.event'),
-          message: `${event.title} está acontecendo perto de você!`,
+          title: t('seasonal.title'),
+          message: `${event.title}`,
           type: 'event',
           priority: 'medium',
           category: 'smart',
@@ -111,8 +111,8 @@ export default function Layout() {
         !notifiedCoupons.current.has(expiryKey)
       ) {
         addNotification({
-          title: t('notification.alert'),
-          message: `Seu cupom da ${coupon.storeName} vence em menos de 24h.`,
+          title: t('notifications.title'),
+          message: `${coupon.storeName}: ${t('coupon.expires')}`,
           type: 'alert',
           priority: 'high',
           category: 'system',

@@ -5,13 +5,6 @@ import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent } from '@/components/ui/card'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import {
   Plane,
   Hotel,
   Calendar,
@@ -21,18 +14,17 @@ import {
   ExternalLink,
 } from 'lucide-react'
 import { useCouponStore } from '@/stores/CouponContext'
+import { useLanguage } from '@/stores/LanguageContext'
 
 export default function TravelHub() {
   const { travelOffers, selectedRegion } = useCouponStore()
+  const { t, formatCurrency } = useLanguage()
   const [activeTab, setActiveTab] = useState('flights')
 
-  // Filter offers based on active tab and region
   const filteredOffers = travelOffers.filter((offer) => {
-    // Basic type filtering
     if (activeTab === 'flights' && offer.type !== 'flight') return false
     if (activeTab === 'hotels' && offer.type !== 'hotel') return false
 
-    // Simple regional logic: show offers relevant to selected region or global
     if (
       selectedRegion !== 'Global' &&
       offer.region &&
@@ -47,11 +39,10 @@ export default function TravelHub() {
     <div className="container mx-auto px-4 py-8">
       <div className="text-center mb-10">
         <h1 className="text-4xl font-bold mb-4 text-slate-900">
-          Travel <span className="text-primary">Hub</span>
+          {t('hub.title')}
         </h1>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          Encontre os melhores voos e hotéis para sua próxima aventura.
-          Comparação em tempo real.
+          {t('hub.subtitle')}
         </p>
       </div>
 
@@ -62,13 +53,13 @@ export default function TravelHub() {
               value="flights"
               className="flex-1 h-full text-base gap-2 data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
             >
-              <Plane className="h-5 w-5" /> Voos
+              <Plane className="h-5 w-5" /> {t('hub.flights')}
             </TabsTrigger>
             <TabsTrigger
               value="hotels"
               className="flex-1 h-full text-base gap-2 data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
             >
-              <Hotel className="h-5 w-5" /> Hotéis
+              <Hotel className="h-5 w-5" /> {t('hub.hotels')}
             </TabsTrigger>
           </TabsList>
 
@@ -76,23 +67,20 @@ export default function TravelHub() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
               <div className="md:col-span-1">
                 <Label className="mb-2 block text-xs uppercase font-bold text-muted-foreground">
-                  {activeTab === 'flights' ? 'Origem' : 'Destino'}
+                  {activeTab === 'flights'
+                    ? t('travel.origin')
+                    : t('travel.destination')}
                 </Label>
                 <div className="relative">
                   <MapPin className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                  <Input
-                    placeholder={
-                      activeTab === 'flights'
-                        ? 'São Paulo (GRU)'
-                        : 'Orlando, FL'
-                    }
-                    className="pl-9"
-                  />
+                  <Input className="pl-9" />
                 </div>
               </div>
               <div className="md:col-span-1">
                 <Label className="mb-2 block text-xs uppercase font-bold text-muted-foreground">
-                  {activeTab === 'flights' ? 'Destino' : 'Check-in'}
+                  {activeTab === 'flights'
+                    ? t('travel.destination')
+                    : t('hub.checkin')}
                 </Label>
                 <div className="relative">
                   {activeTab === 'flights' ? (
@@ -102,14 +90,13 @@ export default function TravelHub() {
                   )}
                   <Input
                     type={activeTab === 'hotels' ? 'date' : 'text'}
-                    placeholder={activeTab === 'flights' ? 'Orlando (MCO)' : ''}
-                    className={activeTab === 'flights' ? 'pl-9' : 'pl-9'}
+                    className="pl-9"
                   />
                 </div>
               </div>
               <div className="md:col-span-1">
                 <Label className="mb-2 block text-xs uppercase font-bold text-muted-foreground">
-                  Data
+                  {t('hub.date')}
                 </Label>
                 <div className="relative">
                   <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
@@ -118,7 +105,7 @@ export default function TravelHub() {
               </div>
               <div className="md:col-span-1">
                 <Button className="w-full h-10 font-bold gap-2">
-                  <Search className="h-4 w-4" /> Buscar
+                  <Search className="h-4 w-4" /> {t('common.search')}
                 </Button>
               </div>
             </div>
@@ -128,8 +115,8 @@ export default function TravelHub() {
 
       <div className="space-y-6">
         <h2 className="text-2xl font-bold">
-          Ofertas em Destaque{' '}
-          {selectedRegion !== 'Global' ? `em ${selectedRegion}` : ''}
+          {t('hub.featured')}
+          {selectedRegion !== 'Global' ? ` in ${selectedRegion}` : ''}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredOffers.length > 0 ? (
@@ -161,10 +148,10 @@ export default function TravelHub() {
                   <div className="flex items-center justify-between mt-4">
                     <div>
                       <span className="text-xs text-muted-foreground block">
-                        A partir de
+                        {t('hub.from')}
                       </span>
                       <span className="text-xl font-bold text-primary">
-                        {offer.currency} {offer.price}
+                        {formatCurrency(offer.price, offer.currency)}
                       </span>
                     </div>
                     <Button variant="outline" className="gap-2" asChild>
@@ -173,7 +160,8 @@ export default function TravelHub() {
                         target="_blank"
                         rel="noopener noreferrer"
                       >
-                        Ver Oferta <ExternalLink className="h-3 w-3" />
+                        {t('hub.view_offer')}{' '}
+                        <ExternalLink className="h-3 w-3" />
                       </a>
                     </Button>
                   </div>
@@ -182,7 +170,7 @@ export default function TravelHub() {
             ))
           ) : (
             <div className="col-span-full py-12 text-center text-muted-foreground bg-slate-50 rounded-lg">
-              Nenhuma oferta encontrada para sua região no momento.
+              {t('home.no_offers')}
             </div>
           )}
         </div>

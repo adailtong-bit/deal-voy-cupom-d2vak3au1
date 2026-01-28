@@ -6,9 +6,11 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Lock } from 'lucide-react'
+import { useLanguage } from '@/stores/LanguageContext'
 
 export default function AdminLogin() {
   const { login } = useCouponStore()
+  const { t } = useLanguage()
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -18,7 +20,6 @@ export default function AdminLogin() {
     e.preventDefault()
     setIsLoading(true)
     setTimeout(() => {
-      // Mock login logic - In reality, password would be checked
       if (email.includes('admin')) {
         login(email, 'admin')
         navigate('/admin')
@@ -37,14 +38,12 @@ export default function AdminLogin() {
           <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
             <Lock className="h-6 w-6 text-primary" />
           </div>
-          <CardTitle className="text-2xl font-bold">
-            Acesso Administrativo
-          </CardTitle>
+          <CardTitle className="text-2xl font-bold">{t('nav.admin')}</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t('auth.email')}</Label>
               <Input
                 id="email"
                 type="email"
@@ -55,7 +54,7 @@ export default function AdminLogin() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
+              <Label htmlFor="password">{t('auth.password')}</Label>
               <Input
                 id="password"
                 type="password"
@@ -65,12 +64,9 @@ export default function AdminLogin() {
               />
             </div>
             <Button className="w-full h-12 font-bold" disabled={isLoading}>
-              {isLoading ? 'Entrando...' : 'Entrar no Dashboard'}
+              {isLoading ? t('common.loading') : t('auth.login')}
             </Button>
           </form>
-          <div className="mt-4 text-center text-sm text-muted-foreground">
-            <p>Dica: Use um email com "admin" para acesso total.</p>
-          </div>
         </CardContent>
       </Card>
     </div>

@@ -12,13 +12,11 @@ import {
   Navigation,
   Download,
   CheckCircle,
-  Wifi,
   Loader2,
+  Wifi,
 } from 'lucide-react'
 import { CouponCard } from '@/components/CouponCard'
 import { toast } from 'sonner'
-import { useState } from 'react'
-import { Progress } from '@/components/ui/progress'
 import {
   Dialog,
   DialogContent,
@@ -26,6 +24,8 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog'
+import { useLanguage } from '@/stores/LanguageContext'
+import { Progress } from '@/components/ui/progress'
 
 export default function ItineraryDetail() {
   const { id } = useParams()
@@ -37,14 +37,15 @@ export default function ItineraryDetail() {
     isDownloading,
     downloadProgress,
   } = useCouponStore()
+  const { t, formatCurrency } = useLanguage()
 
   const itinerary = itineraries.find((i) => i.id === id)
 
   if (!itinerary) {
     return (
       <div className="p-8 text-center">
-        Roteiro não encontrado.{' '}
-        <Button onClick={() => navigate('/')}>Voltar</Button>
+        {t('common.error')}{' '}
+        <Button onClick={() => navigate('/')}>{t('common.back')}</Button>
       </div>
     )
   }
@@ -57,16 +58,15 @@ export default function ItineraryDetail() {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `Deal Voy Roteiro: ${itinerary.title}`,
-          text: `Confira este roteiro incrível e economize R$ ${itinerary.totalSavings}: ${itinerary.title}`,
+          title: `Deal Voy: ${itinerary.title}`,
           url: window.location.href,
         })
       } catch (err) {
-        console.error('Error sharing', err)
+        console.error(err)
       }
     } else {
       navigator.clipboard.writeText(window.location.href)
-      toast.success('Link do roteiro copiado!')
+      toast.success(t('common.success'))
     }
   }
 
@@ -79,15 +79,13 @@ export default function ItineraryDetail() {
       <Dialog open={isDownloading}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Salvando Offline</DialogTitle>
-            <DialogDescription>
-              Baixando mapas e imagens para acesso sem internet...
-            </DialogDescription>
+            <DialogTitle>Saving Offline</DialogTitle>
+            <DialogDescription>{t('common.loading')}</DialogDescription>
           </DialogHeader>
           <div className="py-4 space-y-2">
             <Progress value={downloadProgress} className="h-3" />
             <p className="text-xs text-center text-muted-foreground">
-              {downloadProgress}% Completo
+              {downloadProgress}%
             </p>
           </div>
         </DialogContent>
@@ -147,7 +145,7 @@ export default function ItineraryDetail() {
               ))}
               {isDownloaded && (
                 <Badge className="bg-accent text-accent-foreground border-0 gap-1">
-                  <Wifi className="h-3 w-3" /> Offline Pronto
+                  <Wifi className="h-3 w-3" /> Offline Ready
                 </Badge>
               )}
             </div>
@@ -161,11 +159,11 @@ export default function ItineraryDetail() {
               </div>
               <div className="flex items-center gap-2">
                 <MapPin className="h-5 w-5 text-primary" />{' '}
-                {itinerary.stops.length} Paradas
+                {itinerary.stops.length} Stops
               </div>
               <div className="flex items-center gap-2 text-accent-foreground bg-accent px-3 py-1 rounded-full">
-                <Wallet className="h-4 w-4" /> Economia de R${' '}
-                {itinerary.totalSavings}
+                <Wallet className="h-4 w-4" /> Save{' '}
+                {formatCurrency(itinerary.totalSavings)}
               </div>
             </div>
           </div>
@@ -175,7 +173,7 @@ export default function ItineraryDetail() {
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <Card className="mb-8 border-none shadow-elevation">
           <CardContent className="p-6">
-            <h3 className="font-bold text-lg mb-2">Sobre este roteiro</h3>
+            <h3 className="font-bold text-lg mb-2">{t('coupon.details')}</h3>
             <p className="text-muted-foreground leading-relaxed text-lg">
               {itinerary.description}
             </p>
@@ -185,7 +183,7 @@ export default function ItineraryDetail() {
         <div className="flex flex-col lg:flex-row gap-8">
           <div className="flex-1">
             <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-              <Navigation className="h-6 w-6 text-primary" /> Paradas do Roteiro
+              <Navigation className="h-6 w-6 text-primary" /> Route Stops
             </h2>
             <div className="space-y-8">
               {itinerary.stops.map((stop, index) => (
@@ -209,31 +207,24 @@ export default function ItineraryDetail() {
           <div className="w-full lg:w-80 space-y-6">
             <Card className="sticky top-24">
               <CardContent className="p-6">
-                <h3 className="font-bold text-xl mb-4">Resumo da Viagem</h3>
+                <h3 className="font-bold text-xl mb-4">Trip Summary</h3>
                 <ul className="space-y-3 text-sm mb-6">
                   <li className="flex justify-between border-b pb-2">
-                    <span className="text-muted-foreground">
-                      Cupons Válidos
-                    </span>
+                    <span className="text-muted-foreground">Valid Coupons</span>
                     <span className="font-bold">{itinerary.stops.length}</span>
                   </li>
                   <li className="flex justify-between border-b pb-2">
-                    <span className="text-muted-foreground">
-                      Tempo Estimado
-                    </span>
+                    <span className="text-muted-foreground">Est. Duration</span>
                     <span className="font-bold">{itinerary.duration}</span>
                   </li>
                   <li className="flex justify-between text-accent font-bold pt-1 text-lg">
-                    <span>Economia Total</span>
-                    <span>R$ {itinerary.totalSavings},00</span>
+                    <span>Total Savings</span>
+                    <span>{formatCurrency(itinerary.totalSavings)}</span>
                   </li>
                 </ul>
                 <Button className="w-full h-12 text-lg font-bold bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20">
-                  Iniciar Roteiro
+                  Start Route
                 </Button>
-                <p className="text-xs text-center mt-3 text-muted-foreground">
-                  Sincroniza automaticamente com o GPS
-                </p>
               </CardContent>
             </Card>
           </div>

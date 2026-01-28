@@ -27,7 +27,6 @@ export default function Explore() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [maxDistance, setMaxDistance] = useState([10]) // km
 
-  // Mock filtering
   const filteredCoupons = coupons.filter((c) => {
     if (selectedCategory && c.category !== selectedCategory) return false
     if (c.distance > maxDistance[0] * 1000) return false
@@ -36,7 +35,6 @@ export default function Explore() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-64px-64px)] md:h-[calc(100vh-64px)] overflow-hidden">
-      {/* Filters Bar */}
       <div className="px-4 py-3 bg-background border-b flex items-center gap-2 overflow-x-auto hide-scrollbar shrink-0 z-20">
         <Sheet>
           <SheetTrigger asChild>
@@ -121,7 +119,6 @@ export default function Explore() {
       </div>
 
       <div className="flex flex-1 overflow-hidden relative">
-        {/* List View */}
         <div
           className={cn(
             'w-full md:w-[400px] lg:w-[450px] bg-background border-r flex flex-col transition-transform duration-300 absolute inset-0 z-10 md:relative md:translate-x-0',
@@ -130,7 +127,7 @@ export default function Explore() {
         >
           <div className="p-4 border-b bg-muted/10">
             <p className="text-sm text-muted-foreground font-medium">
-              {filteredCoupons.length} {t('travel.offers_found')}
+              {filteredCoupons.length} {t('explore.offers_found')}
             </p>
           </div>
           <ScrollArea className="flex-1">
@@ -145,14 +142,13 @@ export default function Explore() {
               ))}
               {filteredCoupons.length === 0 && (
                 <div className="text-center py-10 text-muted-foreground">
-                  {t('travel.no_offers')}
+                  {t('home.no_offers')}
                 </div>
               )}
             </div>
           </ScrollArea>
         </div>
 
-        {/* Map View */}
         <div
           className={cn(
             'flex-1 bg-slate-100 relative transition-transform duration-300 absolute inset-0 md:relative md:translate-x-0',
@@ -161,7 +157,6 @@ export default function Explore() {
               : 'translate-x-0',
           )}
         >
-          {/* Simulated Map - In a real app we'd use GoogleMap here too */}
           <div className="w-full h-full relative overflow-hidden">
             <img
               src="https://img.usecurling.com/p/1200/800?q=map%20street%20view&color=gray"
@@ -169,7 +164,6 @@ export default function Explore() {
               alt="Map Background"
             />
 
-            {/* Map Pins */}
             {filteredCoupons.map((coupon, idx) => (
               <div
                 key={coupon.id}
@@ -182,7 +176,6 @@ export default function Explore() {
                 <div className="bg-primary text-white p-2 rounded-full shadow-lg hover:scale-110 transition-transform">
                   <div className="h-3 w-3 rounded-full bg-white" />
                 </div>
-                {/* Tooltip on hover */}
                 <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-32 bg-white rounded-lg shadow-xl p-2 hidden group-hover:block z-50 text-xs">
                   <p className="font-bold truncate">{coupon.storeName}</p>
                   <p className="text-emerald-600 font-bold">
@@ -192,7 +185,6 @@ export default function Explore() {
               </div>
             ))}
 
-            {/* User Location Pin */}
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
               <div className="h-4 w-4 bg-blue-500 rounded-full border-2 border-white shadow-lg animate-pulse" />
               <div className="h-16 w-16 bg-blue-500/20 rounded-full absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-ping" />
@@ -201,7 +193,6 @@ export default function Explore() {
         </div>
       </div>
 
-      {/* FAB Toggle for Mobile */}
       <div className="absolute bottom-6 right-6 md:hidden z-30">
         <Button
           size="lg"

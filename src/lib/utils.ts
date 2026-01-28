@@ -11,4 +11,23 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-// Add any other utility functions here
+export function formatDate(dateStr: string | Date | undefined, locale: string) {
+  if (!dateStr) return ''
+  const date = typeof dateStr === 'string' ? new Date(dateStr) : dateStr
+  return new Intl.DateTimeFormat(locale, {
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+  }).format(date)
+}
+
+export function formatCurrency(
+  amount: number,
+  currency: string = 'BRL',
+  locale: string = 'pt-BR',
+) {
+  return new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency: currency,
+  }).format(amount)
+}

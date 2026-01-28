@@ -1,24 +1,10 @@
 import { useCouponStore } from '@/stores/CouponContext'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardFooter,
-} from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
-import {
-  Trophy,
-  Target,
-  MapPin,
-  Camera,
-  Utensils,
-  CheckCircle,
-  Lock,
-} from 'lucide-react'
+import { Trophy, Target, CheckCircle } from 'lucide-react'
 import * as Icons from 'lucide-react'
 import { toast } from 'sonner'
 import { Challenge } from '@/lib/types'
@@ -35,14 +21,13 @@ import { useLanguage } from '@/stores/LanguageContext'
 
 export default function Challenges() {
   const { challenges, joinChallenge } = useCouponStore()
-  const { t } = useLanguage()
+  const { t, formatDate } = useLanguage()
   const [unlockedChallenge, setUnlockedChallenge] = useState<Challenge | null>(
     null,
   )
 
-  // Helper to dynamically get icon component
   const getIcon = (iconName: string) => {
-    // @ts-expect-error - Icons are dynamic
+    // @ts-expect-error - dynamic icon
     const Icon = Icons[iconName] || Target
     return <Icon className="h-5 w-5" />
   }
@@ -53,9 +38,7 @@ export default function Challenges() {
 
   const handleJoin = (id: string) => {
     joinChallenge(id)
-    toast.success('Desafio aceito!', {
-      description: "Verifique seu progresso na aba 'Ativos'.",
-    })
+    toast.success(t('common.success'))
   }
 
   const ChallengeCard = ({
@@ -118,8 +101,7 @@ export default function Challenges() {
                   className="h-2"
                 />
                 <p className="text-xs text-muted-foreground mt-2">
-                  Faltam {challenge.total - challenge.current} ações para
-                  completar
+                  {challenge.total - challenge.current} left
                 </p>
               </div>
             )}
@@ -135,8 +117,8 @@ export default function Challenges() {
 
             {type === 'completed' && (
               <div className="mt-4 p-2 bg-[#4CAF50]/10 text-green-800 text-sm rounded flex items-center gap-2 border border-[#4CAF50]/20">
-                <Trophy className="h-4 w-4 text-[#4CAF50]" /> Recompensa
-                resgatada em {new Date().toLocaleDateString()}
+                <Trophy className="h-4 w-4 text-[#4CAF50]" />
+                Completed on {formatDate(new Date())}
               </div>
             )}
           </div>
@@ -210,7 +192,6 @@ export default function Challenges() {
         </TabsContent>
       </Tabs>
 
-      {/* Badge Unlocked Modal Simulation */}
       <Dialog
         open={!!unlockedChallenge}
         onOpenChange={() => setUnlockedChallenge(null)}
@@ -218,10 +199,10 @@ export default function Challenges() {
         <DialogContent className="sm:max-w-md text-center">
           <DialogHeader>
             <DialogTitle className="text-2xl text-center text-[#FF5722]">
-              Badge Desbloqueada!
+              Badge Unlocked!
             </DialogTitle>
             <DialogDescription className="text-center">
-              Parabéns! Você completou um desafio.
+              Congratulations!
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-center py-6">
@@ -231,13 +212,12 @@ export default function Challenges() {
             </div>
           </div>
           <h3 className="text-xl font-bold">{unlockedChallenge?.title}</h3>
-          <p className="text-muted-foreground mb-4">+500 Pontos Deal Voy</p>
           <DialogFooter className="sm:justify-center">
             <Button
               onClick={() => setUnlockedChallenge(null)}
               className="w-full bg-[#4CAF50] hover:bg-[#43A047]"
             >
-              Coletar Recompensa
+              {t('common.close')}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -84,7 +84,7 @@ export function DesktopHeader() {
                   : 'text-muted-foreground hover:text-foreground flex items-center gap-1'
               }
             >
-              <Plane className="h-4 w-4" /> Travel Hub
+              <Plane className="h-4 w-4" /> {t('hub.title')}
             </Link>
             <Link
               to="/agencies"
@@ -94,7 +94,7 @@ export function DesktopHeader() {
                   : 'text-muted-foreground hover:text-foreground flex items-center gap-1'
               }
             >
-              <Building className="h-4 w-4" /> Agências
+              <Building className="h-4 w-4" /> {t('agencies.title')}
             </Link>
             <Link
               to="/rewards"
@@ -104,7 +104,7 @@ export function DesktopHeader() {
                   : 'text-muted-foreground hover:text-foreground flex items-center gap-1'
               }
             >
-              <Gift className="h-4 w-4" /> Rewards
+              <Gift className="h-4 w-4" /> {t('nav.rewards')}
             </Link>
             <Link
               to="/travel-planner"
@@ -136,7 +136,7 @@ export function DesktopHeader() {
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               type="search"
-              placeholder={t('search.placeholder')}
+              placeholder={t('common.search')}
               className="w-full bg-white border-2 border-slate-100 pl-9 rounded-full focus-visible:ring-primary h-9 focus-visible:border-primary/50 transition-colors"
             />
           </div>
@@ -145,7 +145,7 @@ export function DesktopHeader() {
         <div className="flex items-center gap-3">
           <Select value={selectedRegion} onValueChange={setRegion}>
             <SelectTrigger className="w-[110px] h-8 text-xs bg-muted/50 border-none focus:ring-0 px-2 gap-1 rounded-full">
-              <SelectValue placeholder="Região" />
+              <SelectValue placeholder="Region" />
             </SelectTrigger>
             <SelectContent align="end">
               {regions.map((r) => (
@@ -253,7 +253,7 @@ export function DesktopHeader() {
                     to="/travel-hub"
                     className="text-lg font-medium flex items-center gap-2 hover:text-primary transition-colors"
                   >
-                    <Plane className="h-4 w-4" /> Travel Hub
+                    <Plane className="h-4 w-4" /> {t('hub.title')}
                   </Link>
                 </SheetClose>
                 <SheetClose asChild>
@@ -261,7 +261,7 @@ export function DesktopHeader() {
                     to="/agencies"
                     className="text-lg font-medium flex items-center gap-2 hover:text-primary transition-colors"
                   >
-                    <Building className="h-4 w-4" /> Agências
+                    <Building className="h-4 w-4" /> {t('agencies.title')}
                   </Link>
                 </SheetClose>
                 <SheetClose asChild>
