@@ -141,14 +141,6 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       type: 'survey',
       completed: false,
     },
-    {
-      id: 'm2',
-      title: 'Compartilhe um roteiro',
-      description: 'Ajude outros viajantes compartilhando seus planos.',
-      rewardPoints: 50,
-      type: 'action',
-      completed: false,
-    },
   ])
   const [badges] = useState<Badge[]>(MOCK_BADGES)
   const [abTests, setAbTests] = useState<ABTest[]>(MOCK_AB_TESTS)
@@ -218,16 +210,6 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     toast.info(`Região alterada para: ${regionCode}`)
   }
 
-  // Existing methods... (Redacted some for brevity, assuming they exist as in the provided context)
-  const addPoints = (
-    amount: number,
-    reason: string,
-    type: RewardActivity['type'] = 'earned',
-  ) => {
-    setPoints((prev) => prev + amount)
-    // ...
-  }
-
   const toggleSave = (id: string) => {
     setSavedIds((prev) =>
       prev.includes(id) ? prev.filter((sid) => sid !== id) : [...prev, id],
@@ -241,7 +223,6 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   }
 
   const reserveCoupon = (id: string) => {
-    // Logic from context
     setReservedIds((prev) => [...prev, id])
     return true
   }
@@ -272,7 +253,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       setPoints((p) => p - amount)
       return true
     }
-    return true // mock
+    return true
   }
 
   const addABTest = (test: ABTest) => setAbTests((prev) => [test, ...prev])
@@ -292,10 +273,9 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     const user = MOCK_USERS.find((u) => u.email === email && u.role === role)
     if (user) {
       setUser(user)
-      if (user.region) setSelectedRegion(user.region) // Auto-set region for franchisee
+      if (user.region) setSelectedRegion(user.region)
       toast.success(`Bem-vindo, ${user.name}!`)
     } else {
-      // Create temp user for demo
       const newUser: User = {
         id: Math.random().toString(),
         name: email.split('@')[0],
@@ -334,9 +314,15 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   const claimBirthdayGift = () => {
     /* ... */
   }
-  const updateUserProfile = (d: any) => {
-    /* ... */
+
+  const updateUserProfile = (data: Partial<User>) => {
+    if (!user) return
+    const updatedUser = { ...user, ...data }
+    setUser(updatedUser)
+    // Update MOCK_USERS or persist to backend in real app
+    toast.success('Perfil atualizado!')
   }
+
   const connectApp = (id: string) => {
     /* ... */
   }
@@ -344,7 +330,6 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     /* ... */
   }
 
-  // New methods
   const toggleLoyaltySystem = (companyId: string, enabled: boolean) => {
     setCompanies((prev) =>
       prev.map((c) =>

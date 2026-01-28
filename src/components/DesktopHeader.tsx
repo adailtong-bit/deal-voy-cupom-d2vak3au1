@@ -6,7 +6,6 @@ import {
   Calendar,
   Map,
   Bell,
-  Trophy,
   Briefcase,
   ShieldCheck,
   Gift,
@@ -189,7 +188,7 @@ export function DesktopHeader() {
             </Link>
           )}
 
-          <Link to={user ? '/profile' : '/admin/login'}>
+          <Link to={user ? '/profile' : '/login'}>
             <Avatar className="h-8 w-8 cursor-pointer hover:ring-2 hover:ring-secondary hover:ring-offset-2 transition-all">
               <AvatarImage
                 src={

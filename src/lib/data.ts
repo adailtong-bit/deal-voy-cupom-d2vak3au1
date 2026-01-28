@@ -280,6 +280,9 @@ export const MOCK_USERS: User[] = [
     role: 'super_admin',
     avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=male',
     birthday: '1990-05-15',
+    country: 'Brasil',
+    city: 'São Paulo',
+    phone: '+55 11 99999-9999',
   },
   {
     id: 'u2',
@@ -288,6 +291,9 @@ export const MOCK_USERS: User[] = [
     role: 'user',
     avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=male',
     birthday: '1995-10-20',
+    country: 'Brasil',
+    city: 'Rio de Janeiro',
+    phone: '+55 21 98888-8888',
   },
   {
     id: 'u3',
@@ -296,6 +302,9 @@ export const MOCK_USERS: User[] = [
     role: 'franchisee',
     region: 'US-FL',
     avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=female',
+    country: 'USA',
+    city: 'Orlando',
+    phone: '+1 407 555-0123',
   },
   {
     id: 'u4',
@@ -304,6 +313,9 @@ export const MOCK_USERS: User[] = [
     role: 'merchant',
     companyId: 'c1',
     avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=male',
+    country: 'Brasil',
+    city: 'São Paulo',
+    phone: '+55 11 3333-3333',
   },
 ]
 

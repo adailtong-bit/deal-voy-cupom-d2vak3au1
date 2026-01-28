@@ -230,6 +230,14 @@ export interface User {
   birthday?: string // YYYY-MM-DD
   region?: string // Assigned region for Franchisee
   companyId?: string // Assigned company for Merchant
+  country?: string
+  city?: string
+  phone?: string
+  preferences?: {
+    notifications?: boolean
+    newsletter?: boolean
+    locationTracking?: boolean
+  }
 }
 
 export interface Company {
@@ -303,8 +311,6 @@ export interface ConnectedApp {
   color: string
 }
 
-// New Types for Travel Hub and Multi-tenant features
-
 export interface Franchise {
   id: string
   name: string
@@ -336,4 +342,14 @@ export interface Region {
   name: string
   country: string
   code: string // e.g., US-FL, BR-SP
+}
+
+export interface PaymentMethod {
+  id: string
+  type: 'card' | 'wallet'
+  last4?: string
+  brand?: string
+  expiry?: string
+  email?: string // For wallet
+  isDefault: boolean
 }

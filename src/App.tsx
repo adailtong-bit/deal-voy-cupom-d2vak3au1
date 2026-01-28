@@ -16,6 +16,7 @@ import TravelPlanner from './pages/TravelPlanner'
 import VendorDashboard from './pages/VendorDashboard'
 import AdminDashboard from './pages/AdminDashboard'
 import AdminLogin from './pages/AdminLogin'
+import Login from './pages/Login'
 import Seasonal from './pages/Seasonal'
 import Notifications from './pages/Notifications'
 import Checkout from './pages/Checkout'
@@ -25,6 +26,8 @@ import NotFound from './pages/NotFound'
 import Rewards from './pages/Rewards'
 import TravelHub from './pages/TravelHub'
 import Agencies from './pages/Agencies'
+import PaymentMethods from './pages/PaymentMethods'
+import Settings from './pages/Settings'
 import Layout from './components/Layout'
 
 const App = () => (
@@ -39,6 +42,7 @@ const App = () => (
             <Sonner />
             <Routes>
               <Route path="/admin/login" element={<AdminLogin />} />
+              <Route path="/login" element={<Login />} />
               <Route element={<Layout />}>
                 <Route path="/" element={<Index />} />
                 <Route path="/explore" element={<Explore />} />
@@ -46,6 +50,8 @@ const App = () => (
                 <Route path="/upload" element={<Upload />} />
                 <Route path="/saved" element={<Saved />} />
                 <Route path="/profile" element={<Profile />} />
+                <Route path="/payment-methods" element={<PaymentMethods />} />
+                <Route path="/settings" element={<Settings />} />
                 <Route path="/travel-planner" element={<TravelPlanner />} />
                 <Route path="/travel-hub" element={<TravelHub />} />
                 <Route path="/agencies" element={<Agencies />} />
