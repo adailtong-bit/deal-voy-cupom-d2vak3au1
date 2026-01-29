@@ -36,6 +36,7 @@ import {
   Package,
   Calendar,
   ShoppingBag,
+  Zap,
 } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useCouponStore } from '@/stores/CouponContext'
@@ -44,6 +45,13 @@ import { VendorAnalytics } from '@/components/VendorAnalytics'
 import { CouponValidation } from '@/components/CouponValidation'
 import { MOCK_VALIDATION_LOGS } from '@/lib/data'
 import { Badge } from '@/components/ui/badge'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 export default function VendorDashboard() {
   const { t, formatDate } = useLanguage()
@@ -54,6 +62,7 @@ export default function VendorDashboard() {
     addCoupon,
     toggleLoyaltySystem,
     bookings,
+    updateBehavioralTriggers,
   } = useCouponStore()
 
   const myCompany =
@@ -73,6 +82,14 @@ export default function VendorDashboard() {
   const { register, handleSubmit, reset } = useForm()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [generatedCode, setGeneratedCode] = useState<string | null>(null)
+
+  // Behavioral Promo State
+  const [selectedCouponId, setSelectedCouponId] = useState<string>(
+    coupons[0]?.id || '',
+  )
+  const [triggerType, setTriggerType] = useState<'visit' | 'share'>('visit')
+  const [triggerThreshold, setTriggerThreshold] = useState('5')
+  const [triggerReward, setTriggerReward] = useState('10% OFF')
 
   const onSubmit = (data: any) => {
     const code =
@@ -107,6 +124,22 @@ export default function VendorDashboard() {
 
   const handleLoyaltyToggle = (checked: boolean) => {
     toggleLoyaltySystem(myCompany.id, checked)
+  }
+
+  const handleAddTrigger = () => {
+    if (!selectedCouponId) return
+    const newTrigger = {
+      id: Math.random().toString(),
+      type: triggerType,
+      threshold: parseInt(triggerThreshold),
+      reward: triggerReward,
+      isActive: true,
+    }
+
+    // In a real app we would merge with existing, here we replace/add
+    const coupon = coupons.find((c) => c.id === selectedCouponId)
+    const existing = coupon?.behavioralTriggers || []
+    updateBehavioralTriggers(selectedCouponId, [...existing, newTrigger])
   }
 
   const ScenarioCard = ({ title, icon: Icon, value, color }: any) => (
@@ -232,6 +265,9 @@ export default function VendorDashboard() {
             <ShoppingBag className="h-3 w-3 mr-1" /> {t('vendor.orders')}
           </TabsTrigger>
           <TabsTrigger value="offers">{t('vendor.offers')}</TabsTrigger>
+          <TabsTrigger value="behavioral">
+            <Zap className="h-3 w-3 mr-1" /> {t('vendor.behavioral')}
+          </TabsTrigger>
           <TabsTrigger value="validation">
             <Scan className="h-3 w-3 mr-1" /> {t('vendor.validation')}
           </TabsTrigger>
@@ -317,6 +353,116 @@ export default function VendorDashboard() {
                   ))}
                 </TableBody>
               </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="behavioral">
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('vendor.behavioral')}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4 border p-4 rounded-lg">
+                  <h3 className="font-bold text-lg">Add New Trigger</h3>
+                  <div className="space-y-2">
+                    <Label>Select Campaign</Label>
+                    <Select
+                      value={selectedCouponId}
+                      onValueChange={setSelectedCouponId}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Campaign" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {coupons.map((c) => (
+                          <SelectItem key={c.id} value={c.id}>
+                            {c.title}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>{t('vendor.trigger_type')}</Label>
+                    <Select
+                      value={triggerType}
+                      onValueChange={(v: any) => setTriggerType(v)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="visit">Visits Count</SelectItem>
+                        <SelectItem value="share">Social Share</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {triggerType === 'visit' && (
+                    <div className="space-y-2">
+                      <Label>Threshold (Visits)</Label>
+                      <Input
+                        type="number"
+                        value={triggerThreshold}
+                        onChange={(e) => setTriggerThreshold(e.target.value)}
+                      />
+                    </div>
+                  )}
+                  <div className="space-y-2">
+                    <Label>{t('vendor.reward')}</Label>
+                    <Input
+                      placeholder="e.g. 20% OFF"
+                      value={triggerReward}
+                      onChange={(e) => setTriggerReward(e.target.value)}
+                    />
+                  </div>
+                  <Button onClick={handleAddTrigger} className="w-full">
+                    Add Trigger
+                  </Button>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="font-bold text-lg">Active Triggers</h3>
+                  {coupons.flatMap((c) =>
+                    (c.behavioralTriggers || []).map((t) => ({
+                      ...t,
+                      couponTitle: c.title,
+                    })),
+                  ).length === 0 && (
+                    <p className="text-muted-foreground">
+                      No triggers defined.
+                    </p>
+                  )}
+                  <div className="space-y-2">
+                    {coupons
+                      .flatMap((c) =>
+                        (c.behavioralTriggers || []).map((t) => ({
+                          ...t,
+                          couponTitle: c.title,
+                        })),
+                      )
+                      .map((trigger, i) => (
+                        <div
+                          key={i}
+                          className="flex justify-between items-center p-3 border rounded bg-slate-50"
+                        >
+                          <div>
+                            <p className="font-bold text-sm">
+                              {trigger.couponTitle}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {trigger.type === 'visit'
+                                ? `Visit ${trigger.threshold} times`
+                                : 'Share on Social'}
+                            </p>
+                          </div>
+                          <Badge>{trigger.reward}</Badge>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

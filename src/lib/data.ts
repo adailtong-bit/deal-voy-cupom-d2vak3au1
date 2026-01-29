@@ -18,6 +18,7 @@ import {
   SystemLog,
   ClientHistory,
   ChatThread,
+  Review,
 } from './types'
 
 export const MOCK_USER_LOCATION = {
@@ -152,6 +153,33 @@ const generateCoupons = (): Coupon[] => {
 
   for (let i = 1; i <= 30; i++) {
     const isUS = i % 2 !== 0 // Odd IDs for US, Even for BR
+
+    // Add dummy reviews for first few coupons
+    const reviews: Review[] = []
+    if (i <= 5) {
+      reviews.push({
+        id: `rev-${i}-1`,
+        userId: `u_user`,
+        userName: 'Happy Customer',
+        rating: 5,
+        comment: 'Great service and amazing food!',
+        date: new Date().toISOString(),
+        replies:
+          i === 1
+            ? [
+                {
+                  id: `rep-${i}-1`,
+                  userId: `u_shop`,
+                  userName: 'Store Owner',
+                  text: 'Thank you for your feedback! Hope to see you again.',
+                  date: new Date().toISOString(),
+                  role: 'vendor',
+                },
+              ]
+            : [],
+      })
+    }
+
     coupons.push({
       id: `cpn-${i}`,
       storeName: isUS ? `Store #${i} USA` : `Loja #${i} BR`,
@@ -177,6 +205,19 @@ const generateCoupons = (): Coupon[] => {
       source: i % 3 === 0 ? 'aggregated' : 'partner',
       region: isUS ? 'US-FL' : 'BR-SP',
       price: i % 5 === 0 ? 50 + i : undefined,
+      reviews: reviews,
+      behavioralTriggers:
+        i === 1
+          ? [
+              {
+                id: 'bt-1',
+                type: 'visit',
+                threshold: 3,
+                reward: 'Free Coffee',
+                isActive: true,
+              },
+            ]
+          : [],
     })
   }
   return coupons
@@ -326,7 +367,7 @@ export const MOCK_USERS: User[] = [
     name: 'Shop Merchant',
     email: 'shop@dealvoy.com',
     role: 'shopkeeper',
-    companyId: 'c2', // Linked to a BR company usually
+    companyId: 'c1', // Linked to Company 1 (likely BR)
     avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=male&seed=55',
     country: 'Brasil',
     state: 'São Paulo',

@@ -10,6 +10,15 @@ export interface MenuItem {
   }
 }
 
+export interface ReviewReply {
+  id: string
+  userId: string
+  userName: string
+  text: string
+  date: string
+  role: 'vendor' | 'admin'
+}
+
 export interface Review {
   id: string
   userId: string
@@ -19,6 +28,7 @@ export interface Review {
   date: string
   status?: 'pending' | 'approved' | 'rejected'
   images?: string[]
+  replies?: ReviewReply[]
 }
 
 export type Mood =
@@ -33,6 +43,14 @@ export interface LoyaltyProgram {
   totalStamps: number
   currentStamps: number
   reward: string
+}
+
+export interface BehavioralTrigger {
+  id: string
+  type: 'visit' | 'share'
+  threshold: number // e.g., 5 visits
+  reward: string // e.g., "20% OFF"
+  isActive: boolean
 }
 
 export interface Coupon {
@@ -83,6 +101,8 @@ export interface Coupon {
   isPaid?: boolean
   source?: 'partner' | 'aggregated'
   region?: string
+  behavioralTriggers?: BehavioralTrigger[]
+  visitCount?: number // Tracked locally for user context or mocked
 }
 
 export type CategoryType = Coupon['category']

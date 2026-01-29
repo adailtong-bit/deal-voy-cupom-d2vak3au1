@@ -40,6 +40,7 @@ export default function ItineraryDetail() {
     downloadProgress,
     saveItinerary,
     user,
+    trackShare,
   } = useCouponStore()
   const { t, formatCurrency } = useLanguage()
 
@@ -61,6 +62,7 @@ export default function ItineraryDetail() {
   const isMyItinerary = itinerary.authorId === user?.id
 
   const handleShare = async () => {
+    trackShare('route', itinerary.id)
     if (navigator.share) {
       try {
         await navigator.share({
@@ -154,11 +156,10 @@ export default function ItineraryDetail() {
           </Button>
           <Button
             variant="secondary"
-            size="icon"
-            className="rounded-full bg-background/80 hover:bg-white"
+            className="rounded-full bg-background/80 hover:bg-white gap-2 px-4"
             onClick={handleShare}
           >
-            <Share2 className="h-5 w-5" />
+            <Share2 className="h-4 w-4" /> {t('promos.share_earn')}
           </Button>
         </div>
 

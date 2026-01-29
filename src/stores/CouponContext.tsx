@@ -24,6 +24,8 @@ import {
   CarRental,
   SystemLog,
   UserPreferences,
+  ReviewReply,
+  BehavioralTrigger,
 } from '@/lib/types'
 import {
   MOCK_COUPONS,
@@ -101,6 +103,7 @@ interface CouponContextType {
   isInTrip: (id: string) => boolean
   isLoadingLocation: boolean
   addReview: (couponId: string, review: Omit<Review, 'id' | 'date'>) => void
+  replyToReview: (couponId: string, reviewId: string, text: string) => void
   addUpload: (doc: UploadedDocument) => void
   refreshCoupons: () => void
   voteCoupon: (id: string, type: 'up' | 'down') => void
@@ -139,6 +142,12 @@ interface CouponContextType {
   addFranchise: (franchise: Franchise) => void
   validateCoupon: (code: string) => boolean
   addCarRental: (car: CarRental) => void
+  trackVisit: (couponId: string) => void
+  trackShare: (type: 'route' | 'coupon', id: string) => void
+  updateBehavioralTriggers: (
+    couponId: string,
+    triggers: BehavioralTrigger[],
+  ) => void
 }
 
 const CouponContext = createContext<CouponContextType | undefined>(undefined)
@@ -273,6 +282,8 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   const reserveCoupon = (id: string) => {
     setReservedIds((prev) => [...prev, id])
     logSystemAction('Reserve Coupon', `Reserved coupon ${id}`)
+    // Increment visit count on reservation for demo purposes
+    trackVisit(id)
     return true
   }
 
@@ -290,6 +301,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
             id: Math.random().toString(),
             date: new Date().toISOString(),
             status: 'pending',
+            replies: [],
           }
           return { ...c, reviews: [...(c.reviews || []), newReview] }
         }
@@ -297,6 +309,90 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       }),
     )
     earnPoints(100, 'Review Submission')
+  }
+
+  const replyToReview = (couponId: string, reviewId: string, text: string) => {
+    setCoupons((prev) =>
+      prev.map((c) => {
+        if (c.id === couponId && c.reviews) {
+          return {
+            ...c,
+            reviews: c.reviews.map((r) => {
+              if (r.id === reviewId) {
+                const newReply: ReviewReply = {
+                  id: Math.random().toString(),
+                  userId: user?.id || 'admin',
+                  userName: user?.name || 'Vendor',
+                  text,
+                  date: new Date().toISOString(),
+                  role: 'vendor',
+                }
+                return { ...r, replies: [...(r.replies || []), newReply] }
+              }
+              return r
+            }),
+          }
+        }
+        return c
+      }),
+    )
+    toast.success('Reply submitted!')
+  }
+
+  const trackVisit = (couponId: string) => {
+    setCoupons((prev) =>
+      prev.map((c) => {
+        if (c.id === couponId) {
+          const newCount = (c.visitCount || 0) + 1
+          // Check for triggers
+          if (c.behavioralTriggers) {
+            c.behavioralTriggers.forEach((trigger) => {
+              if (
+                trigger.isActive &&
+                trigger.type === 'visit' &&
+                newCount % trigger.threshold === 0
+              ) {
+                toast.success(`Promo Unlocked! Reward: ${trigger.reward}`)
+                addNotification({
+                  title: 'Promo Unlocked!',
+                  message: `You earned ${trigger.reward} at ${c.storeName}!`,
+                  type: 'deal',
+                  category: 'smart',
+                })
+              }
+            })
+          }
+          return { ...c, visitCount: newCount }
+        }
+        return c
+      }),
+    )
+  }
+
+  const trackShare = (type: 'route' | 'coupon', id: string) => {
+    earnPoints(20, 'Sharing')
+    toast.success('Shared successfully! Earned 20 points.')
+
+    // Simulate finding a relevant coupon to trigger share reward
+    // In real app, we'd check if the shared item has a trigger
+    const relevantCoupon = coupons[0]
+    if (relevantCoupon && relevantCoupon.behavioralTriggers) {
+      // Mock share trigger check
+      // const trigger = relevantCoupon.behavioralTriggers.find(t => t.type === 'share')
+      // if (trigger) { ... }
+    }
+  }
+
+  const updateBehavioralTriggers = (
+    couponId: string,
+    triggers: BehavioralTrigger[],
+  ) => {
+    setCoupons((prev) =>
+      prev.map((c) =>
+        c.id === couponId ? { ...c, behavioralTriggers: triggers } : c,
+      ),
+    )
+    toast.success('Triggers updated')
   }
 
   const addUpload = (doc: any) => {
@@ -581,6 +677,8 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         },
         ...prev,
       ])
+      // Trigger behavioral logic for visit
+      trackVisit(coupon.id)
       return true
     }
     return false
@@ -642,6 +740,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         isInTrip,
         isLoadingLocation,
         addReview,
+        replyToReview,
         addUpload,
         refreshCoupons,
         voteCoupon,
@@ -675,6 +774,9 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         addFranchise,
         validateCoupon,
         addCarRental,
+        trackVisit,
+        trackShare,
+        updateBehavioralTriggers,
       },
     },
     children,

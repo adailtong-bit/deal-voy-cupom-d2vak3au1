@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Home, Map as MapIcon, User, Plane, Building } from 'lucide-react'
+import { Home, Map as MapIcon, User, Plane, Tag } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useLanguage } from '@/stores/LanguageContext'
 
@@ -11,8 +11,8 @@ export function MobileNav() {
   const navItems = [
     { icon: Home, label: t('nav.home'), href: '/' },
     { icon: MapIcon, label: t('nav.explore'), href: '/explore' },
-    { icon: Plane, label: t('hub.title'), href: '/travel-hub' },
-    { icon: Building, label: 'Agency', href: '/agencies' },
+    { icon: Tag, label: 'Coupons', href: '/saved' }, // Renamed from explore/hub to specific
+    { icon: Plane, label: t('nav.travel'), href: '/travel-planner' },
     { icon: User, label: t('nav.profile'), href: '/profile' },
   ]
 
@@ -28,7 +28,7 @@ export function MobileNav() {
               key={item.href}
               to={item.href}
               className={cn(
-                'flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors',
+                'flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors min-w-[44px] min-h-[44px]', // Touch target size
                 isActive
                   ? 'text-primary'
                   : 'text-slate-400 hover:text-slate-600',

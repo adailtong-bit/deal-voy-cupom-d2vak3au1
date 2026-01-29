@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useNotification } from '@/stores/NotificationContext'
 import { SyncStatus } from './SyncStatus'
+import { LanguageSelector } from './LanguageSelector'
 import logoImg from '@/assets/whatsapp-image-2026-01-25-at-5.40.56-am.jpeg'
 
 export function MobileHeader() {
@@ -22,7 +23,8 @@ export function MobileHeader() {
         </span>
       </Link>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
+        <LanguageSelector />
         <SyncStatus />
         <Link to="/notifications">
           <Button
