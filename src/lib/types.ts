@@ -95,7 +95,7 @@ export interface Coupon {
   lastVerified?: string
   upvotes?: number
   downvotes?: number
-  status?: 'active' | 'expired' | 'issue' | 'validated'
+  status?: 'active' | 'expired' | 'issue' | 'used'
   acceptsBooking?: boolean
   price?: number
   isPaid?: boolean

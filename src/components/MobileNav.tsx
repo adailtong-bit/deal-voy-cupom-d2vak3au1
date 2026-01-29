@@ -17,7 +17,7 @@ export function MobileNav() {
   ]
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 border-t bg-white/95 backdrop-blur-md pb-safe z-50 md:hidden shadow-[0_-2px_10px_rgba(0,0,0,0.03)]">
+    <div className="fixed bottom-0 left-0 right-0 border-t bg-white/95 backdrop-blur-md pb-safe z-50 md:hidden shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
       <nav className="flex items-center justify-around h-16 px-2">
         {navItems.map((item) => {
           const isActive = path === item.href
@@ -28,14 +28,17 @@ export function MobileNav() {
               key={item.href}
               to={item.href}
               className={cn(
-                'flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors min-w-[44px] min-h-[44px]',
+                'flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors min-w-[44px] min-h-[44px] active:scale-95 duration-100',
                 isActive
                   ? 'text-primary'
                   : 'text-slate-400 hover:text-slate-600',
               )}
             >
               <Icon
-                className={cn('h-6 w-6', isActive && 'fill-current opacity-20')}
+                className={cn(
+                  'h-6 w-6 transition-all',
+                  isActive && 'fill-current opacity-20 scale-110',
+                )}
                 strokeWidth={isActive ? 2.5 : 2}
               />
               <span className="text-[10px] font-medium">{item.label}</span>

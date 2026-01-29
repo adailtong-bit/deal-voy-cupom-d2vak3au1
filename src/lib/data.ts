@@ -187,7 +187,32 @@ export const MOCK_BADGES: Badge[] = [
 const generateCoupons = (): Coupon[] => {
   const coupons: Coupon[] = []
   const categories = ['Alimentação', 'Moda', 'Serviços', 'Outros'] as const
-  const statuses = ['active', 'validated', 'expired'] as const
+  const statuses = ['active', 'used', 'expired'] as const
+
+  // Add specific Nike Coupon
+  coupons.push({
+    id: 'nike-promo-50',
+    storeName: 'Nike Store',
+    companyId: 'c1',
+    title: '50% Nike',
+    description:
+      'Exclusive 50% discount on all running shoes. Single use only.',
+    discount: '50% OFF',
+    category: 'Moda',
+    distance: 150,
+    expiryDate: '2025-12-31',
+    image: 'https://img.usecurling.com/p/600/400?q=nike%20shoes',
+    logo: 'https://img.usecurling.com/i?q=nike&color=black&shape=fill',
+    code: 'NIKE-50-PROMO',
+    coordinates: { lat: -23.55052, lng: -46.633308 },
+    totalAvailable: 1000,
+    reservedCount: 50,
+    averageRating: 4.8,
+    status: 'active',
+    source: 'partner',
+    region: 'BR-SP',
+    visitCount: 0,
+  })
 
   for (let i = 1; i <= 30; i++) {
     const isUS = i % 2 !== 0 // Odd IDs for US, Even for BR
@@ -239,7 +264,7 @@ const generateCoupons = (): Coupon[] => {
       totalAvailable: 100 * i,
       reservedCount: 10 * i,
       averageRating: 4.0 + (i % 10) / 10,
-      status: statuses[i % 3],
+      status: statuses[i % 3], // Generic status
       source: i % 3 === 0 ? 'aggregated' : 'partner',
       region: isUS ? 'US-FL' : 'BR-SP',
       price: i % 5 === 0 ? 50 + i : undefined,

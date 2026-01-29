@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { QrCode, Scan, CheckCircle, XCircle } from 'lucide-react'
+import { QrCode, Scan, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useCouponStore } from '@/stores/CouponContext'
 import { toast } from 'sonner'
@@ -19,20 +19,35 @@ export function CouponValidation() {
   const { t, formatDate } = useLanguage()
   const { validateCoupon, validationLogs } = useCouponStore()
   const [code, setCode] = useState('')
-  const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle')
+  const [status, setStatus] = useState<
+    'idle' | 'success' | 'error' | 'already_used'
+  >('idle')
+  const [feedbackMessage, setFeedbackMessage] = useState('')
 
   const handleValidate = (e: React.FormEvent) => {
     e.preventDefault()
-    const isValid = validateCoupon(code)
-    if (isValid) {
+    const result = validateCoupon(code)
+
+    if (result.success) {
       setStatus('success')
+      setFeedbackMessage(result.message)
       toast.success(t('toast.validation_success'))
       setCode('')
     } else {
-      setStatus('error')
-      toast.error(t('toast.validation_error'))
+      if (result.message === 'Already used') {
+        setStatus('already_used')
+        setFeedbackMessage('This coupon has already been redeemed.')
+        toast.error('Coupon already used!')
+      } else {
+        setStatus('error')
+        setFeedbackMessage(result.message)
+        toast.error(t('toast.validation_error'))
+      }
     }
-    setTimeout(() => setStatus('idle'), 3000)
+    setTimeout(() => {
+      setStatus('idle')
+      setFeedbackMessage('')
+    }, 4000)
   }
 
   return (
@@ -61,13 +76,21 @@ export function CouponValidation() {
             <Button type="submit">{t('vendor.validate_btn')}</Button>
           </form>
           {status === 'success' && (
-            <div className="mt-4 p-4 bg-green-50 text-green-700 rounded-lg flex items-center gap-2">
-              <CheckCircle className="h-5 w-5" /> Validated!
+            <div className="mt-4 p-4 bg-green-50 text-green-700 rounded-lg flex items-center gap-2 border border-green-200 animate-in fade-in slide-in-from-top-2">
+              <CheckCircle className="h-5 w-5" />
+              <span className="font-bold">{feedbackMessage}</span>
+            </div>
+          )}
+          {status === 'already_used' && (
+            <div className="mt-4 p-4 bg-orange-50 text-orange-700 rounded-lg flex items-center gap-2 border border-orange-200 animate-in fade-in slide-in-from-top-2">
+              <AlertCircle className="h-5 w-5" />
+              <span className="font-bold">{feedbackMessage}</span>
             </div>
           )}
           {status === 'error' && (
-            <div className="mt-4 p-4 bg-red-50 text-red-700 rounded-lg flex items-center gap-2">
-              <XCircle className="h-5 w-5" /> Invalid or Used
+            <div className="mt-4 p-4 bg-red-50 text-red-700 rounded-lg flex items-center gap-2 border border-red-200 animate-in fade-in slide-in-from-top-2">
+              <XCircle className="h-5 w-5" />
+              <span className="font-bold">{feedbackMessage}</span>
             </div>
           )}
         </CardContent>

@@ -144,7 +144,7 @@ export default function Layout() {
       <DesktopHeader />
       <MobileHeader />
 
-      <div className="flex-1 overflow-auto md:pb-0 flex flex-col">
+      <div className="flex-1 overflow-auto flex flex-col pb-16 md:pb-0">
         {!isAuthPage && <AdSpace position="top" />}
 
         <div className="flex-1">

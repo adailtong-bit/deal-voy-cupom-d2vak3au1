@@ -140,7 +140,7 @@ interface CouponContextType {
   moderateItinerary: (id: string, status: 'approved' | 'rejected') => void
   toggleLoyaltySystem: (companyId: string, enabled: boolean) => void
   addFranchise: (franchise: Franchise) => void
-  validateCoupon: (code: string) => boolean
+  validateCoupon: (code: string) => { success: boolean; message: string }
   addCarRental: (car: CarRental) => void
   trackVisit: (couponId: string) => void
   trackShare: (type: 'route' | 'coupon', id: string) => void
@@ -268,9 +268,13 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   }
 
   const toggleSave = (id: string) => {
-    setSavedIds((prev) =>
-      prev.includes(id) ? prev.filter((sid) => sid !== id) : [...prev, id],
-    )
+    setSavedIds((prev) => {
+      const newSaved = prev.includes(id)
+        ? prev.filter((sid) => sid !== id)
+        : [...prev, id]
+      localStorage.setItem('savedCoupons', JSON.stringify(newSaved))
+      return newSaved
+    })
   }
 
   const toggleTrip = (id: string) => {
@@ -650,38 +654,57 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
 
   const validateCoupon = (code: string) => {
     const coupon = coupons.find((c) => c.code === code)
-    if (coupon && coupon.status !== 'validated') {
-      const log: ValidationLog = {
-        id: Math.random().toString(),
-        couponId: coupon.id,
-        couponTitle: coupon.title,
-        customerName: 'Customer Walk-in',
-        validatedAt: new Date().toISOString(),
-        method: 'qr',
-        shopkeeperId: user?.id || 'unknown',
-      }
-      setValidationLogs((prev) => [log, ...prev])
-      logSystemAction(
-        'Coupon Validated',
-        `Coupon ${coupon.id} validated via QR`,
-      )
-      // Award points for using coupon
-      setPoints((prev) => prev + 20)
-      setRewardHistory((prev) => [
-        {
-          id: Math.random().toString(),
-          title: 'Cupom Utilizado',
-          points: 20,
-          date: new Date().toISOString(),
-          type: 'earned',
-        },
-        ...prev,
-      ])
-      // Trigger behavioral logic for visit
-      trackVisit(coupon.id)
-      return true
+
+    if (!coupon) {
+      return { success: false, message: 'Invalid code' }
     }
-    return false
+
+    if (coupon.status === 'used') {
+      logSystemAction(
+        'Validation Failed',
+        `Attempted to use redeemed coupon ${coupon.id}`,
+        'warning',
+      )
+      return { success: false, message: 'Already used' }
+    }
+
+    if (coupon.status === 'expired') {
+      return { success: false, message: 'Coupon expired' }
+    }
+
+    // Update coupon status to used
+    setCoupons((prev) =>
+      prev.map((c) => (c.id === coupon.id ? { ...c, status: 'used' } : c)),
+    )
+
+    const log: ValidationLog = {
+      id: Math.random().toString(),
+      couponId: coupon.id,
+      couponTitle: coupon.title,
+      customerName: 'Customer Walk-in',
+      validatedAt: new Date().toISOString(),
+      method: 'qr',
+      shopkeeperId: user?.id || 'unknown',
+    }
+    setValidationLogs((prev) => [log, ...prev])
+    logSystemAction('Coupon Validated', `Coupon ${coupon.id} validated via QR`)
+
+    // Award points for using coupon
+    setPoints((prev) => prev + 20)
+    setRewardHistory((prev) => [
+      {
+        id: Math.random().toString(),
+        title: 'Cupom Utilizado',
+        points: 20,
+        date: new Date().toISOString(),
+        type: 'earned',
+      },
+      ...prev,
+    ])
+
+    // Trigger behavioral logic for visit
+    trackVisit(coupon.id)
+    return { success: true, message: 'Validated successfully' }
   }
 
   const addCarRental = (car: CarRental) => {
