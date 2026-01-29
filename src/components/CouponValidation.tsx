@@ -44,7 +44,9 @@ export function CouponValidation() {
         <CardContent>
           <div className="flex flex-col items-center justify-center p-8 bg-slate-50 border-2 border-dashed rounded-lg mb-6">
             <Scan className="h-16 w-16 text-slate-300 mb-2 animate-pulse" />
-            <p className="text-sm text-muted-foreground">Scan QR Code</p>
+            <p className="text-sm text-muted-foreground">
+              {t('vendor.scan_qr')}
+            </p>
           </div>
           <form onSubmit={handleValidate} className="flex gap-2">
             <div className="relative flex-1">

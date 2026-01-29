@@ -21,6 +21,44 @@ import {
   Review,
 } from './types'
 
+// Helper to map category strings to translation keys
+export const getCategoryTranslationKey = (category: string): string => {
+  switch (category.toLowerCase()) {
+    case 'alimentação':
+    case 'food':
+    case 'comida':
+      return 'category.food'
+    case 'moda':
+    case 'fashion':
+      return 'category.fashion'
+    case 'serviços':
+    case 'services':
+    case 'servicios':
+      return 'category.services'
+    case 'eletrônicos':
+    case 'electronics':
+    case 'electrónica':
+      return 'category.electronics'
+    case 'lazer':
+    case 'leisure':
+    case 'ocio':
+      return 'category.leisure'
+    case 'mercado':
+    case 'market':
+      return 'category.market'
+    case 'beleza':
+    case 'beauty':
+    case 'belleza':
+      return 'category.beauty'
+    case 'outros':
+    case 'others':
+    case 'otros':
+      return 'category.others'
+    default:
+      return 'category.others'
+  }
+}
+
 export const MOCK_USER_LOCATION = {
   lat: -23.55052,
   lng: -46.633308,

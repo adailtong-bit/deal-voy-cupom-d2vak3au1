@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils'
 import { ExternalLink } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
 import { Advertisement } from '@/lib/types'
+import { getCategoryTranslationKey } from '@/lib/data'
 
 interface AdSpaceProps {
   position?: 'top' | 'bottom'
@@ -49,7 +50,7 @@ export function AdSpace({ position, className, customAds }: AdSpaceProps) {
             <div className="flex-1 p-3 flex flex-col justify-center w-full">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-xs font-bold text-primary uppercase tracking-wider">
-                  {ad.category}
+                  {t(getCategoryTranslationKey(ad.category))}
                 </span>
                 <ExternalLink className="h-3 w-3 text-slate-400" />
               </div>

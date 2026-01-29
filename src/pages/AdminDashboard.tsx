@@ -485,7 +485,7 @@ export default function AdminDashboard() {
                   {systemLogs.map((log) => (
                     <TableRow key={log.id}>
                       <TableCell className="whitespace-nowrap">
-                        {new Date(log.date).toLocaleString()}
+                        {formatDate(log.date)}
                       </TableCell>
                       <TableCell>{log.action}</TableCell>
                       <TableCell

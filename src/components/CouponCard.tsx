@@ -29,9 +29,10 @@ export function CouponCard({
   variant = 'vertical',
   className,
 }: CouponCardProps) {
-  const { isSaved, toggleTrip, isInTrip } = useCouponStore()
+  const { isSaved, toggleTrip, isInTrip, toggleSave } = useCouponStore()
   const { t } = useLanguage()
   const inTrip = isInTrip(coupon.id)
+  const saved = isSaved(coupon.id)
   const [imgError, setImgError] = useState(false)
   const [logoError, setLogoError] = useState(false)
 
@@ -39,6 +40,12 @@ export function CouponCard({
     e.preventDefault()
     e.stopPropagation()
     toggleTrip(coupon.id)
+  }
+
+  const handleSaveToggle = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    toggleSave(coupon.id)
   }
 
   const isExpiringSoon =
@@ -156,15 +163,15 @@ export function CouponCard({
 
             <Button
               size="sm"
-              onClick={handleTripToggle}
+              onClick={handleSaveToggle}
               className={cn(
                 'font-bold text-xs h-8 px-4 rounded-full shadow-sm transition-colors',
-                inTrip
+                saved
                   ? 'bg-[#4CAF50] hover:bg-[#43A047] text-white'
                   : 'bg-[#FF5722] hover:bg-[#F4511E] text-white',
               )}
             >
-              {inTrip ? (
+              {saved ? (
                 <>
                   <Check className="h-3 w-3 mr-1" /> {t('coupon.reserved')}
                 </>
