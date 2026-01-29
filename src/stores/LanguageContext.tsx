@@ -44,9 +44,10 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   }
 
   const t = (key: string) => {
-    const langObj = translations[language] || translations['pt']
-    // @ts-expect-error - key indexing
-    return langObj[key] || translations['pt'][key] || key
+    // Fallback chain: Selected Language -> English -> Key
+    const langObj = translations[language] as Record<string, string>
+    const enObj = translations['en'] as Record<string, string>
+    return langObj[key] || enObj[key] || key
   }
 
   const locale = LOCALE_MAP[language] || 'en-US'

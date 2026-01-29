@@ -27,9 +27,11 @@ import {
 import { Button } from '@/components/ui/button'
 import { Download, Filter, Search } from 'lucide-react'
 import { format } from 'date-fns'
+import { useLanguage } from '@/stores/LanguageContext'
 
 export function MerchantReports() {
   const { transactions } = useCouponStore()
+  const { t, formatCurrency } = useLanguage()
   const [dateStart, setDateStart] = useState('')
   const [dateEnd, setDateEnd] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
@@ -71,7 +73,7 @@ export function MerchantReports() {
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 bg-white p-4 rounded-lg shadow-sm border">
         <div className="space-y-2">
-          <Label>Data Início</Label>
+          <Label>{t('reports.date_start')}</Label>
           <Input
             type="date"
             value={dateStart}
@@ -79,7 +81,7 @@ export function MerchantReports() {
           />
         </div>
         <div className="space-y-2">
-          <Label>Data Fim</Label>
+          <Label>{t('reports.date_end')}</Label>
           <Input
             type="date"
             value={dateEnd}
@@ -87,11 +89,11 @@ export function MerchantReports() {
           />
         </div>
         <div className="space-y-2">
-          <Label>Buscar</Label>
+          <Label>{t('common.search')}</Label>
           <div className="relative">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Cliente ou Cupom..."
+              placeholder={t('common.search')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9"
@@ -99,16 +101,16 @@ export function MerchantReports() {
           </div>
         </div>
         <div className="space-y-2">
-          <Label>Método</Label>
+          <Label>{t('reports.method')}</Label>
           <Select value={typeFilter} onValueChange={setTypeFilter}>
             <SelectTrigger>
-              <SelectValue placeholder="Todos" />
+              <SelectValue placeholder={t('reports.all')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="card">Cartão</SelectItem>
-              <SelectItem value="wallet">Carteira Digital</SelectItem>
-              <SelectItem value="fetch">Pontos Fetch</SelectItem>
+              <SelectItem value="all">{t('reports.all')}</SelectItem>
+              <SelectItem value="card">{t('reports.card')}</SelectItem>
+              <SelectItem value="wallet">{t('reports.wallet')}</SelectItem>
+              <SelectItem value="fetch">{t('reports.fetch')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -118,7 +120,7 @@ export function MerchantReports() {
         <Card className="border-l-4 border-l-[#4CAF50]">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Pontos Distribuídos
+              {t('reports.distributed_points')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -130,7 +132,7 @@ export function MerchantReports() {
         <Card className="border-l-4 border-l-[#2196F3]">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Transações Filtradas
+              {t('reports.filtered_transactions')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -142,12 +144,12 @@ export function MerchantReports() {
         <Card className="border-l-4 border-l-[#FF5722]">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Volume Financeiro
+              {t('reports.financial_volume')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-[#FF5722]">
-              R$ {totalRevenue.toFixed(2)}
+              {formatCurrency(totalRevenue)}
             </div>
           </CardContent>
         </Card>
@@ -156,13 +158,13 @@ export function MerchantReports() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle>Relatório de Transações</CardTitle>
+            <CardTitle>{t('reports.transaction_report')}</CardTitle>
             <CardDescription>
-              Detalhamento de consumo e pontuação por cliente.
+              {t('reports.detailed_consumption')}
             </CardDescription>
           </div>
           <Button variant="outline" className="gap-2">
-            <Download className="h-4 w-4" /> Exportar CSV
+            <Download className="h-4 w-4" /> {t('reports.export_csv')}
           </Button>
         </CardHeader>
         <CardContent>
@@ -185,7 +187,7 @@ export function MerchantReports() {
                     colSpan={7}
                     className="text-center py-8 text-muted-foreground"
                   >
-                    Nenhum dado encontrado para os filtros selecionados.
+                    {t('reports.no_data')}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -206,7 +208,7 @@ export function MerchantReports() {
                       +{tx.pointsAwarded || 0}
                     </TableCell>
                     <TableCell className="text-right font-bold">
-                      R$ {tx.amount.toFixed(2)}
+                      {formatCurrency(tx.amount)}
                     </TableCell>
                   </TableRow>
                 ))

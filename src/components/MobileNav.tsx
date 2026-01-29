@@ -11,7 +11,7 @@ export function MobileNav() {
   const navItems = [
     { icon: Home, label: t('nav.home'), href: '/' },
     { icon: MapIcon, label: t('nav.explore'), href: '/explore' },
-    { icon: Tag, label: 'Coupons', href: '/saved' }, // Renamed from explore/hub to specific
+    { icon: Tag, label: t('nav.coupons'), href: '/saved' },
     { icon: Plane, label: t('nav.travel'), href: '/travel-planner' },
     { icon: User, label: t('nav.profile'), href: '/profile' },
   ]
@@ -28,7 +28,7 @@ export function MobileNav() {
               key={item.href}
               to={item.href}
               className={cn(
-                'flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors min-w-[44px] min-h-[44px]', // Touch target size
+                'flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors min-w-[44px] min-h-[44px]',
                 isActive
                   ? 'text-primary'
                   : 'text-slate-400 hover:text-slate-600',

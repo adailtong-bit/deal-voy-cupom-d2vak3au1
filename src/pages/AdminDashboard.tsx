@@ -126,13 +126,13 @@ export default function AdminDashboard() {
               : `${t('admin.franchise_title')} - ${user.region || ''}`}
           </h1>
           <p className="text-muted-foreground">
-            {isSuperAdmin ? 'Global Management' : 'Regional Management'}
+            {isSuperAdmin ? t('admin.global_mgmt') : t('admin.regional_mgmt')}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="px-3 py-1 bg-white">
             <span className="w-2 h-2 rounded-full bg-green-500 mr-2" />
-            System OK
+            {t('admin.system_ok')}
           </Badge>
           <Button variant="ghost" size="icon">
             <Settings className="h-5 w-5" />
@@ -152,7 +152,7 @@ export default function AdminDashboard() {
             <ScenarioCard
               title={t('admin.revenue')}
               icon={DollarSign}
-              value={formatCurrency(500000, 'USD', 'en-US')}
+              value={formatCurrency(500000, 'USD')}
               color="text-green-500"
             />
             <ScenarioCard
@@ -230,7 +230,7 @@ export default function AdminDashboard() {
             <ScenarioCard
               title={t('franchise.heatmaps')}
               icon={MapIcon}
-              value="View"
+              value={t('common.view')}
             />
             <ScenarioCard
               title={t('franchise.feedback')}
@@ -394,7 +394,7 @@ export default function AdminDashboard() {
                             size="sm"
                             onClick={() => approveCompany(company.id)}
                           >
-                            Approve
+                            {t('common.approve')}
                           </Button>
                         )}
                       </TableCell>
@@ -409,7 +409,7 @@ export default function AdminDashboard() {
         <TabsContent value="moderation">
           <Card>
             <CardHeader>
-              <CardTitle>Content Moderation Queue</CardTitle>
+              <CardTitle>{t('admin.moderation_queue')}</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
@@ -428,7 +428,7 @@ export default function AdminDashboard() {
                         colSpan={4}
                         className="text-center text-muted-foreground"
                       >
-                        No pending content.
+                        {t('admin.no_pending')}
                       </TableCell>
                     </TableRow>
                   )}
@@ -468,7 +468,7 @@ export default function AdminDashboard() {
         <TabsContent value="logs">
           <Card>
             <CardHeader>
-              <CardTitle>System Logs (Audit)</CardTitle>
+              <CardTitle>{t('admin.logs')}</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>

@@ -9,8 +9,6 @@ import {
   LayoutGrid,
   Plane,
   Edit,
-  Eye,
-  EyeOff,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -49,7 +47,7 @@ export default function Index() {
     ads,
     updateUserPreferences,
   } = useCouponStore()
-  const { t, language } = useLanguage()
+  const { t } = useLanguage()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
 
@@ -91,16 +89,11 @@ export default function Index() {
     let relevantAds: Advertisement[] = []
     let dashboardLink = '/'
     let dashboardLabel = ''
-    let welcomeMessage =
-      language === 'pt' ? 'Painel de Gestão' : 'Management Dashboard'
-    const campaignsTitle =
-      language === 'pt' ? 'Suas Campanhas' : 'Your Campaigns'
-    const noCampaignsMessage =
-      language === 'pt'
-        ? 'Nenhuma campanha ativa encontrada.'
-        : 'No active campaigns found.'
-    const createAdLabel =
-      language === 'pt' ? 'Criar Campanha' : 'Create Campaign'
+    const welcomeMessage = t('common.welcome')
+    const managementPanel = t('dashboard.management_panel')
+    const campaignsTitle = t('dashboard.your_campaigns')
+    const noCampaignsMessage = t('dashboard.no_active_campaigns')
+    const createAdLabel = t('dashboard.create_campaign')
 
     if (user?.role === 'shopkeeper') {
       relevantAds = ads.filter((ad) => ad.companyId === user.companyId)
@@ -125,14 +118,14 @@ export default function Index() {
         <div className="container mx-auto px-4 space-y-8">
           <div className="text-center space-y-4">
             <h1 className="text-3xl font-bold text-slate-900">
-              {t('common.welcome') || 'Welcome'}, {user?.name}
+              {welcomeMessage}, {user?.name}
             </h1>
-            <p className="text-muted-foreground text-lg">{welcomeMessage}</p>
+            <p className="text-muted-foreground text-lg">{managementPanel}</p>
             <div className="flex justify-center">
               <Link to={dashboardLink}>
                 <Button className="gap-2 h-12 px-8 text-base shadow-md">
                   <LayoutGrid className="h-5 w-5" />
-                  {t('common.go_to') || 'Go to'} {dashboardLabel}
+                  {t('common.go_to')} {dashboardLabel}
                 </Button>
               </Link>
             </div>
@@ -240,14 +233,16 @@ export default function Index() {
         <Popover>
           <PopoverTrigger asChild>
             <Button variant="ghost" size="sm" className="gap-2 text-xs">
-              <Edit className="h-3 w-3" /> Customize Dashboard
+              <Edit className="h-3 w-3" /> {t('dashboard.customize')}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-56" align="end">
             <div className="space-y-3">
-              <h4 className="font-bold text-sm">Visible Widgets</h4>
+              <h4 className="font-bold text-sm">
+                {t('dashboard.visible_widgets')}
+              </h4>
               <div className="flex items-center justify-between">
-                <Label htmlFor="w-cat">Categories</Label>
+                <Label htmlFor="w-cat">{t('explore.categories')}</Label>
                 <Checkbox
                   id="w-cat"
                   checked={widgets.categories}
@@ -255,7 +250,7 @@ export default function Index() {
                 />
               </div>
               <div className="flex items-center justify-between">
-                <Label htmlFor="w-feat">Featured Deals</Label>
+                <Label htmlFor="w-feat">{t('home.featured_deals')}</Label>
                 <Checkbox
                   id="w-feat"
                   checked={widgets.featured}
@@ -263,7 +258,7 @@ export default function Index() {
                 />
               </div>
               <div className="flex items-center justify-between">
-                <Label htmlFor="w-trav">Travel Hub</Label>
+                <Label htmlFor="w-trav">{t('hub.title')}</Label>
                 <Checkbox
                   id="w-trav"
                   checked={widgets.travel}
@@ -271,7 +266,7 @@ export default function Index() {
                 />
               </div>
               <div className="flex items-center justify-between">
-                <Label htmlFor="w-track">Tracked Deals</Label>
+                <Label htmlFor="w-track">{t('home.tracked_deals')}</Label>
                 <Checkbox
                   id="w-track"
                   checked={widgets.tracked}
@@ -279,7 +274,7 @@ export default function Index() {
                 />
               </div>
               <div className="flex items-center justify-between">
-                <Label htmlFor="w-all">All Offers</Label>
+                <Label htmlFor="w-all">{t('home.all_offers')}</Label>
                 <Checkbox
                   id="w-all"
                   checked={widgets.all}

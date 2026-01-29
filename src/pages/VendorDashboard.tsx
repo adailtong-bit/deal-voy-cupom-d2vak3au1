@@ -214,7 +214,7 @@ export default function VendorDashboard() {
         <ScenarioCard
           title={t('vendor.qr_scanner')}
           icon={QrCode}
-          value="Scan"
+          value={t('vendor.scan_qr')}
         />
         <ScenarioCard
           title={t('vendor.barcode')}
@@ -272,7 +272,8 @@ export default function VendorDashboard() {
             <Scan className="h-3 w-3 mr-1" /> {t('vendor.validation')}
           </TabsTrigger>
           <TabsTrigger value="history">
-            <History className="h-3 w-3 mr-1" /> Redemption History
+            <History className="h-3 w-3 mr-1" />{' '}
+            {t('vendor.redemption_history')}
           </TabsTrigger>
           <TabsTrigger value="settings">
             <Settings className="h-3 w-3 mr-1" /> {t('vendor.settings')}
@@ -286,7 +287,7 @@ export default function VendorDashboard() {
         <TabsContent value="orders">
           <Card>
             <CardHeader>
-              <CardTitle>Incoming Orders</CardTitle>
+              <CardTitle>{t('vendor.incoming_orders')}</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
@@ -305,7 +306,7 @@ export default function VendorDashboard() {
                         colSpan={4}
                         className="text-center text-muted-foreground"
                       >
-                        No orders found.
+                        {t('vendor.no_orders')}
                       </TableCell>
                     </TableRow>
                   )}
@@ -365,15 +366,19 @@ export default function VendorDashboard() {
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4 border p-4 rounded-lg">
-                  <h3 className="font-bold text-lg">Add New Trigger</h3>
+                  <h3 className="font-bold text-lg">
+                    {t('vendor.add_trigger')}
+                  </h3>
                   <div className="space-y-2">
-                    <Label>Select Campaign</Label>
+                    <Label>{t('vendor.select_campaign')}</Label>
                     <Select
                       value={selectedCouponId}
                       onValueChange={setSelectedCouponId}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select Campaign" />
+                        <SelectValue
+                          placeholder={t('vendor.select_campaign')}
+                        />
                       </SelectTrigger>
                       <SelectContent>
                         {coupons.map((c) => (
@@ -394,14 +399,18 @@ export default function VendorDashboard() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="visit">Visits Count</SelectItem>
-                        <SelectItem value="share">Social Share</SelectItem>
+                        <SelectItem value="visit">
+                          {t('vendor.visits_count')}
+                        </SelectItem>
+                        <SelectItem value="share">
+                          {t('vendor.social_share')}
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   {triggerType === 'visit' && (
                     <div className="space-y-2">
-                      <Label>Threshold (Visits)</Label>
+                      <Label>{t('vendor.threshold_visits')}</Label>
                       <Input
                         type="number"
                         value={triggerThreshold}
@@ -418,12 +427,14 @@ export default function VendorDashboard() {
                     />
                   </div>
                   <Button onClick={handleAddTrigger} className="w-full">
-                    Add Trigger
+                    {t('vendor.add_trigger')}
                   </Button>
                 </div>
 
                 <div className="space-y-4">
-                  <h3 className="font-bold text-lg">Active Triggers</h3>
+                  <h3 className="font-bold text-lg">
+                    {t('vendor.active_triggers')}
+                  </h3>
                   {coupons.flatMap((c) =>
                     (c.behavioralTriggers || []).map((t) => ({
                       ...t,
@@ -431,7 +442,7 @@ export default function VendorDashboard() {
                     })),
                   ).length === 0 && (
                     <p className="text-muted-foreground">
-                      No triggers defined.
+                      {t('vendor.no_triggers')}
                     </p>
                   )}
                   <div className="space-y-2">
@@ -453,8 +464,8 @@ export default function VendorDashboard() {
                             </p>
                             <p className="text-xs text-muted-foreground">
                               {trigger.type === 'visit'
-                                ? `Visit ${trigger.threshold} times`
-                                : 'Share on Social'}
+                                ? `${t('vendor.visits_count')}: ${trigger.threshold}`
+                                : t('vendor.social_share')}
                             </p>
                           </div>
                           <Badge>{trigger.reward}</Badge>
@@ -474,7 +485,7 @@ export default function VendorDashboard() {
         <TabsContent value="history">
           <Card>
             <CardHeader>
-              <CardTitle>Redemption History</CardTitle>
+              <CardTitle>{t('vendor.redemption_history')}</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
