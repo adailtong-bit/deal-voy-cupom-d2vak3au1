@@ -13,7 +13,8 @@ import { useLanguage } from '@/stores/LanguageContext'
 
 export default function Layout() {
   const [isOffline, setIsOffline] = useState(!navigator.onLine)
-  const { userLocation, savedIds, coupons } = useCouponStore()
+  const { userLocation, savedIds, coupons, activeItineraryId, itineraries } =
+    useCouponStore()
   const { addNotification } = useNotification()
   const location = useLocation()
   const { t } = useLanguage()
@@ -39,12 +40,25 @@ export default function Layout() {
     return R * c
   }
 
+  // Effect for Proximity Alerts (Saved Coupons AND Active Route Stops)
   useEffect(() => {
     if (!userLocation) return
 
+    // 1. Check Saved Coupons
     const savedCoupons = coupons.filter((c) => savedIds.includes(c.id))
 
-    savedCoupons.forEach((coupon) => {
+    // 2. Check Active Route Stops (if any)
+    const activeRoute = itineraries.find((i) => i.id === activeItineraryId)
+    const activeStops = activeRoute ? activeRoute.stops : []
+
+    // Merge lists to check
+    const couponsToCheck = [...savedCoupons, ...activeStops]
+    // Deduplicate by ID
+    const uniqueCoupons = Array.from(
+      new Map(couponsToCheck.map((item) => [item.id, item])).values(),
+    )
+
+    uniqueCoupons.forEach((coupon) => {
       if (!coupon.coordinates) return
 
       const distance = calculateDistance(
@@ -54,11 +68,19 @@ export default function Layout() {
         coupon.coordinates.lng,
       )
 
+      // 500m radius
       if (distance < 500 && !notifiedCoupons.current.has(coupon.id)) {
+        const isRouteStop = activeStops.some((s) => s.id === coupon.id)
+        const message = isRouteStop
+          ? `${t('travel.stop_nearby')}: ${coupon.storeName}`
+          : `${t('coupon.distance')}: ${coupon.storeName}!`
+
         addNotification({
-          title: t('notifications.title'),
-          message: `${t('coupon.distance')}: ${coupon.storeName}!`,
-          type: 'deal',
+          title: isRouteStop
+            ? t('travel.route_alert')
+            : t('notifications.title'),
+          message: message,
+          type: isRouteStop ? 'alert' : 'deal',
           priority: 'high',
           category: 'smart',
           link: `/coupon/${coupon.id}`,
@@ -91,7 +113,15 @@ export default function Layout() {
         notifiedCoupons.current.add(eventKey)
       }
     })
-  }, [userLocation, savedIds, coupons, addNotification, t])
+  }, [
+    userLocation,
+    savedIds,
+    coupons,
+    activeItineraryId,
+    itineraries,
+    addNotification,
+    t,
+  ])
 
   useEffect(() => {
     const savedCoupons = coupons.filter((c) => savedIds.includes(c.id))
@@ -144,14 +174,18 @@ export default function Layout() {
       <DesktopHeader />
       <MobileHeader />
 
-      <div className="flex-1 overflow-auto flex flex-col pb-16 md:pb-0">
-        {!isAuthPage && <AdSpace position="top" />}
+      <div className="flex-1 overflow-hidden flex flex-col pb-16 md:pb-0 relative">
+        {!isAuthPage && location.pathname !== '/travel-planner' && (
+          <AdSpace position="top" />
+        )}
 
-        <div className="flex-1">
+        <div className="flex-1 overflow-auto">
           <Outlet />
         </div>
 
-        {!isAuthPage && <AdSpace position="bottom" className="mb-0 border-t" />}
+        {!isAuthPage && location.pathname !== '/travel-planner' && (
+          <AdSpace position="bottom" className="mb-0 border-t" />
+        )}
       </div>
 
       <MobileNav />

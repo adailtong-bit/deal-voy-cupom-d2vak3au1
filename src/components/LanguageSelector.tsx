@@ -1,30 +1,49 @@
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { useLanguage } from '@/stores/LanguageContext'
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Button } from '@/components/ui/button'
+import { Globe } from 'lucide-react'
+import { useLanguage, Language } from '@/stores/LanguageContext'
+
+const LANGUAGES: { code: Language; label: string }[] = [
+  { code: 'pt', label: 'Português' },
+  { code: 'en', label: 'English' },
+  { code: 'es', label: 'Español' },
+  { code: 'fr', label: 'Français' },
+  { code: 'de', label: 'Deutsch' },
+  { code: 'it', label: 'Italiano' },
+  { code: 'zh', label: '中文' },
+  { code: 'ja', label: '日本語' },
+]
 
 export function LanguageSelector() {
   const { language, setLanguage } = useLanguage()
 
   return (
-    <Select value={language} onValueChange={(val: any) => setLanguage(val)}>
-      <SelectTrigger className="w-[80px] h-8 text-xs bg-transparent border border-input focus:ring-0 px-2 gap-1 rounded-full">
-        <SelectValue placeholder="Lang" />
-      </SelectTrigger>
-      <SelectContent align="end">
-        <SelectItem value="pt">🇧🇷 PT</SelectItem>
-        <SelectItem value="en">🇺🇸 EN</SelectItem>
-        <SelectItem value="es">🇪🇸 ES</SelectItem>
-        <SelectItem value="fr">🇫🇷 FR</SelectItem>
-        <SelectItem value="de">🇩🇪 DE</SelectItem>
-        <SelectItem value="it">🇮🇹 IT</SelectItem>
-        <SelectItem value="zh">🇨🇳 ZH</SelectItem>
-        <SelectItem value="ja">🇯🇵 JA</SelectItem>
-      </SelectContent>
-    </Select>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="rounded-full hover:bg-slate-100"
+        >
+          <Globe className="h-5 w-5 text-slate-600" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {LANGUAGES.map((lang) => (
+          <DropdownMenuItem
+            key={lang.code}
+            onClick={() => setLanguage(lang.code)}
+            className={language === lang.code ? 'bg-slate-100 font-bold' : ''}
+          >
+            {lang.label}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }

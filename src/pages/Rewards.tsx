@@ -12,14 +12,31 @@ import {
   UserPlus,
 } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { useCouponStore } from '@/stores/CouponContext'
 import { toast } from 'sonner'
+import { useSearchParams } from 'react-router-dom'
+import { useEffect, useState } from 'react'
 
 export default function Rewards() {
   const { t } = useLanguage()
   const { earnPoints } = useCouponStore()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const initialTab = searchParams.get('tab') || 'dashboard'
+  const [currentTab, setCurrentTab] = useState(initialTab)
+
+  useEffect(() => {
+    const tab = searchParams.get('tab')
+    if (tab) {
+      setCurrentTab(tab)
+    }
+  }, [searchParams])
+
+  const handleTabChange = (value: string) => {
+    setCurrentTab(value)
+    setSearchParams({ tab: value })
+  }
 
   const handleShare = () => {
     earnPoints(10, 'Social Share')
@@ -92,7 +109,11 @@ export default function Rewards() {
         </Card>
       </div>
 
-      <Tabs defaultValue="dashboard" className="space-y-6">
+      <Tabs
+        value={currentTab}
+        onValueChange={handleTabChange}
+        className="space-y-6"
+      >
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="dashboard" className="gap-2">
             <LayoutDashboard className="h-4 w-4" /> Dashboard

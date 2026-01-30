@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -18,6 +18,9 @@ import {
   UploadCloud,
   MessageSquare,
   Edit,
+  PlayCircle,
+  PauseCircle,
+  Navigation,
 } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -30,14 +33,7 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { useNavigate } from 'react-router-dom'
 import { useChat } from '@/stores/ChatContext'
-
-const DESTINATIONS: Record<string, { lat: number; lng: number }> = {
-  orlando: { lat: 28.5383, lng: -81.3792 },
-  'sao paulo': { lat: -23.55052, lng: -46.633308 },
-  miami: { lat: 25.7617, lng: -80.1918 },
-  nyc: { lat: 40.7128, lng: -74.006 },
-  paris: { lat: 48.8566, lng: 2.3522 },
-}
+import { LocationInput } from '@/components/LocationInput'
 
 export default function TravelPlanner() {
   const {
@@ -49,6 +45,8 @@ export default function TravelPlanner() {
     publishItinerary,
     itineraries,
     user,
+    activeItineraryId,
+    setActiveItineraryId,
   } = useCouponStore()
   const { t } = useLanguage()
   const navigate = useNavigate()
@@ -58,8 +56,14 @@ export default function TravelPlanner() {
     'planner',
   )
   const [navMode, setNavMode] = useState<'gps' | 'planned'>('gps')
+
+  // New State for Local vs Travel Mode
+  const [planningMode, setPlanningMode] = useState<'travel' | 'local'>('travel')
+
   const [origin, setOrigin] = useState('')
   const [destination, setDestination] = useState('')
+  const [localLocation, setLocalLocation] = useState('')
+
   const [showRoute, setShowRoute] = useState(false)
   const [currentDay, setCurrentDay] = useState(1)
   const [days, setDays] = useState<DayPlan[]>(
@@ -99,19 +103,24 @@ export default function TravelPlanner() {
     (it) => it.isPublic && it.status === 'approved',
   )
 
-  const handleRouteSearch = (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleRouteSearch = (e?: React.FormEvent) => {
+    e?.preventDefault()
+
+    if (planningMode === 'local') {
+      if (localLocation && mapCenter) {
+        setNavMode('planned')
+        // Center map already set by input select
+        toast.info(t('common.loading'))
+      } else {
+        toast.error('Please select a location')
+      }
+      return
+    }
+
     if (origin && destination) {
       setNavMode('planned')
       setShowRoute(true)
-      const key = Object.keys(DESTINATIONS).find((k) =>
-        destination.toLowerCase().includes(k),
-      )
-      if (key) {
-        setMapCenter(DESTINATIONS[key])
-      } else {
-        setMapCenter({ lat: 28.5383, lng: -81.3792 })
-      }
+      // Logic handled by GoogleMap component via props
       toast.info(t('common.loading'))
     }
   }
@@ -169,7 +178,7 @@ export default function TravelPlanner() {
       duration: `${days.length} Days`,
       image:
         allStops[0]?.image || 'https://img.usecurling.com/p/600/300?q=travel',
-      tags: ['Custom'],
+      tags: [planningMode === 'local' ? 'Local' : 'Travel'],
       matchScore: 100,
       isTemplate: isAgentMode,
       authorId: user?.id,
@@ -203,8 +212,6 @@ export default function TravelPlanner() {
     if (it.days && it.days.length > 0) {
       setDays(it.days)
     } else {
-      // Reconstruct days from stops if days structure is missing (legacy)
-      // This is a basic reconstruction putting everything on day 1
       const newDays = Array.from({ length: 10 }).map((_, i) => ({
         id: `day${i + 1}`,
         dayNumber: i + 1,
@@ -218,6 +225,7 @@ export default function TravelPlanner() {
   const handleDelete = (id: string) => {
     if (window.confirm('Are you sure you want to delete this trip?')) {
       deleteItinerary(id)
+      if (activeItineraryId === id) setActiveItineraryId(null)
     }
   }
 
@@ -229,8 +237,18 @@ export default function TravelPlanner() {
   }
 
   const handleContactAgent = () => {
-    const threadId = startChat('u_agency', 'Travel Agency')
+    startChat('u_agency', 'Travel Agency')
     navigate('/messages')
+  }
+
+  const toggleActiveRoute = (id: string) => {
+    if (activeItineraryId === id) {
+      setActiveItineraryId(null)
+      toast.info('Route deactivated')
+    } else {
+      setActiveItineraryId(id)
+      toast.success('Route activated! Tracking nearby stops.')
+    }
   }
 
   const currentDayStops = useMemo(() => {
@@ -249,8 +267,13 @@ export default function TravelPlanner() {
     }))
   }, [currentDayStops])
 
+  const handleLocationSelect = (loc: { lat: number; lng: number }) => {
+    setMapCenter(loc)
+    setNavMode('planned')
+  }
+
   return (
-    <div className="flex flex-col h-[calc(100vh-64px)] bg-slate-50">
+    <div className="flex flex-col h-full bg-slate-50">
       <div className="flex-1 flex overflow-hidden flex-col md:flex-row">
         <div className="w-full md:w-[380px] bg-white border-r flex flex-col z-20 shadow-xl overflow-hidden shrink-0">
           <div className="p-4 border-b bg-primary/5">
@@ -290,27 +313,66 @@ export default function TravelPlanner() {
               {activeTab === 'planner' ? (
                 <>
                   <div className="space-y-3 bg-slate-50 p-4 rounded-lg border">
+                    <div className="flex bg-white rounded-md p-1 border mb-2">
+                      <Button
+                        variant={
+                          planningMode === 'travel' ? 'secondary' : 'ghost'
+                        }
+                        size="sm"
+                        className="flex-1 text-xs"
+                        onClick={() => setPlanningMode('travel')}
+                      >
+                        Trip Mode
+                      </Button>
+                      <Button
+                        variant={
+                          planningMode === 'local' ? 'secondary' : 'ghost'
+                        }
+                        size="sm"
+                        className="flex-1 text-xs"
+                        onClick={() => setPlanningMode('local')}
+                      >
+                        Local Mode
+                      </Button>
+                    </div>
+
                     <Label className="text-xs uppercase text-muted-foreground font-bold">
-                      {t('travel.calculate_route')}
+                      {planningMode === 'travel'
+                        ? t('travel.calculate_route')
+                        : 'Explore City'}
                     </Label>
-                    <div className="relative">
-                      <MapPin className="absolute left-3 top-2.5 h-4 w-4 text-green-500" />
-                      <Input
-                        placeholder={t('travel.origin')}
-                        className="pl-9 bg-white"
-                        value={origin}
-                        onChange={(e) => setOrigin(e.target.value)}
+
+                    {planningMode === 'travel' ? (
+                      <>
+                        <LocationInput
+                          value={origin}
+                          onChange={setOrigin}
+                          onSelect={(loc) => {
+                            // Optionally set map center to origin initially
+                          }}
+                          placeholder={t('travel.origin')}
+                          icon={<MapPin className="h-4 w-4 text-green-500" />}
+                        />
+                        <LocationInput
+                          value={destination}
+                          onChange={setDestination}
+                          onSelect={(loc) => {
+                            setMapCenter(loc)
+                          }}
+                          placeholder={t('travel.destination')}
+                          icon={<MapPin className="h-4 w-4 text-red-500" />}
+                        />
+                      </>
+                    ) : (
+                      <LocationInput
+                        value={localLocation}
+                        onChange={setLocalLocation}
+                        onSelect={handleLocationSelect}
+                        placeholder="Select City (e.g. Orlando)"
+                        icon={<Navigation className="h-4 w-4 text-blue-500" />}
                       />
-                    </div>
-                    <div className="relative">
-                      <MapPin className="absolute left-3 top-2.5 h-4 w-4 text-red-500" />
-                      <Input
-                        placeholder={t('travel.destination')}
-                        className="pl-9 bg-white"
-                        value={destination}
-                        onChange={(e) => setDestination(e.target.value)}
-                      />
-                    </div>
+                    )}
+
                     <Button
                       onClick={handleRouteSearch}
                       className="w-full gap-2 bg-blue-600 hover:bg-blue-700"
@@ -330,23 +392,6 @@ export default function TravelPlanner() {
                         <Badge variant="secondary" className="text-xs">
                           Editing
                         </Badge>
-                      )}
-                      {user?.role === 'admin' && (
-                        <div className="flex items-center gap-1 bg-purple-50 px-2 py-1 rounded border border-purple-100">
-                          <input
-                            type="checkbox"
-                            id="agent-mode"
-                            checked={isAgentMode}
-                            onChange={(e) => setIsAgentMode(e.target.checked)}
-                            className="accent-purple-600"
-                          />
-                          <Label
-                            htmlFor="agent-mode"
-                            className="text-[10px] text-purple-700 font-bold cursor-pointer"
-                          >
-                            Agent
-                          </Label>
-                        </div>
                       )}
                     </div>
 
@@ -469,9 +514,37 @@ export default function TravelPlanner() {
                   {myItineraries.map((it) => (
                     <Card
                       key={it.id}
-                      className="cursor-pointer hover:shadow-md transition-all group relative overflow-hidden"
+                      className={
+                        activeItineraryId === it.id
+                          ? 'border-green-500 border-2 relative cursor-pointer hover:shadow-md transition-all group overflow-hidden'
+                          : 'cursor-pointer hover:shadow-md transition-all group relative overflow-hidden'
+                      }
                     >
                       <div className="absolute top-2 right-2 flex gap-1 z-10">
+                        <Button
+                          size="icon"
+                          variant={
+                            activeItineraryId === it.id
+                              ? 'default'
+                              : 'secondary'
+                          }
+                          className={`h-8 w-8 shadow-sm ${activeItineraryId === it.id ? 'bg-green-500 hover:bg-green-600' : 'bg-white/80 hover:bg-white text-green-600'}`}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            toggleActiveRoute(it.id)
+                          }}
+                          title={
+                            activeItineraryId === it.id
+                              ? 'Pause Tracking'
+                              : 'Activate Route'
+                          }
+                        >
+                          {activeItineraryId === it.id ? (
+                            <PauseCircle className="h-4 w-4" />
+                          ) : (
+                            <PlayCircle className="h-4 w-4" />
+                          )}
+                        </Button>
                         <Button
                           size="icon"
                           variant="secondary"
@@ -500,7 +573,7 @@ export default function TravelPlanner() {
                           <Button
                             size="icon"
                             variant="secondary"
-                            className="h-8 w-8 bg-white/80 hover:bg-white text-green-600 shadow-sm"
+                            className="h-8 w-8 bg-white/80 hover:bg-white text-purple-600 shadow-sm"
                             onClick={(e) => {
                               e.stopPropagation()
                               publishItinerary(it.id)
@@ -529,7 +602,7 @@ export default function TravelPlanner() {
                           alt=""
                         />
                         <div className="flex-1 min-w-0 pt-1">
-                          <h4 className="font-bold group-hover:text-primary transition-colors truncate pr-16">
+                          <h4 className="font-bold group-hover:text-primary transition-colors truncate pr-24">
                             {it.title}
                           </h4>
                           <div className="flex flex-wrap gap-2 text-xs text-muted-foreground mt-1">
@@ -605,14 +678,20 @@ export default function TravelPlanner() {
           </ScrollArea>
         </div>
 
-        <div className="flex-1 relative flex flex-col min-h-[300px] min-w-0 overflow-hidden">
+        <div className="flex-1 relative flex flex-col min-h-[300px] min-w-0 overflow-hidden z-0">
           <GoogleMap
             center={currentCenter}
             zoom={navMode === 'planned' ? 12 : 14}
             markers={mapMarkers}
             className="flex-1 w-full h-full"
-            origin={showRoute ? origin : undefined}
-            destination={showRoute ? destination : undefined}
+            origin={showRoute && planningMode === 'travel' ? origin : undefined}
+            destination={
+              showRoute && planningMode === 'travel'
+                ? destination
+                : planningMode === 'local'
+                  ? localLocation
+                  : undefined
+            }
           />
 
           <div className="absolute top-4 left-4 right-4 md:left-auto md:right-4 bg-white/95 backdrop-blur p-3 rounded-lg shadow-lg z-10 max-w-sm border-l-4 border-l-orange-500">
@@ -623,7 +702,7 @@ export default function TravelPlanner() {
                 <Sun className="h-4 w-4 text-orange-500" />
               )}
               <span className="font-bold text-sm">
-                {destination || 'Orlando'}
+                {destination || localLocation || 'Current Location'}
               </span>
             </div>
           </div>

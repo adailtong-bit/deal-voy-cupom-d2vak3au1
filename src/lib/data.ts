@@ -64,6 +64,22 @@ export const MOCK_USER_LOCATION = {
   lng: -46.633308,
 }
 
+export const POPULAR_DESTINATIONS: Record<
+  string,
+  { lat: number; lng: number; label: string }
+> = {
+  orlando: { lat: 28.5383, lng: -81.3792, label: 'Orlando, FL' },
+  'sao paulo': { lat: -23.55052, lng: -46.633308, label: 'São Paulo, BR' },
+  miami: { lat: 25.7617, lng: -80.1918, label: 'Miami, FL' },
+  nyc: { lat: 40.7128, lng: -74.006, label: 'New York City, NY' },
+  paris: { lat: 48.8566, lng: 2.3522, label: 'Paris, FR' },
+  london: { lat: 51.5074, lng: -0.1278, label: 'London, UK' },
+  tokyo: { lat: 35.6762, lng: 139.6503, label: 'Tokyo, JP' },
+  rio: { lat: -22.9068, lng: -43.1729, label: 'Rio de Janeiro, BR' },
+  campinas: { lat: -22.9099, lng: -47.0626, label: 'Campinas, SP' },
+  santos: { lat: -23.9618, lng: -46.3322, label: 'Santos, SP' },
+}
+
 export const REGIONS: Region[] = [
   { id: 'global', name: 'Global', country: 'Global', code: 'Global' },
   { id: 'br-sp', name: 'São Paulo', country: 'Brasil', code: 'BR-SP' },

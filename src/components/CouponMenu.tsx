@@ -1,40 +1,35 @@
 import { Coupon } from '@/lib/types'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Utensils } from 'lucide-react'
+import { Card, CardContent } from '@/components/ui/card'
 import { useLanguage } from '@/stores/LanguageContext'
+import { Utensils } from 'lucide-react'
 
 export function CouponMenu({ coupon }: { coupon: Coupon }) {
-  const { t } = useLanguage()
+  const { formatCurrency } = useLanguage()
 
   if (!coupon.menu || coupon.menu.length === 0) return null
 
   return (
-    <Card className="mb-6">
-      <CardHeader>
-        <CardTitle className="text-lg flex items-center gap-2">
-          <Utensils className="h-5 w-5" /> Menu
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {coupon.menu.map((item, idx) => (
-            <div
-              key={idx}
-              className="flex justify-between items-start border-b last:border-0 pb-3 last:pb-0"
-            >
+    <div className="space-y-4 mb-6">
+      <h3 className="font-semibold text-lg flex items-center gap-2">
+        <Utensils className="h-5 w-5" /> Menu Highlights
+      </h3>
+      <div className="space-y-3">
+        {coupon.menu.map((item, idx) => (
+          <Card key={idx} className="bg-slate-50/50 border-slate-100">
+            <CardContent className="p-3 flex justify-between items-center">
               <div>
-                <h4 className="font-bold text-sm">{item.name}</h4>
+                <p className="font-bold text-sm">{item.name}</p>
                 <p className="text-xs text-muted-foreground">
                   {item.description}
                 </p>
               </div>
-              <span className="font-semibold text-sm">
-                R$ {item.price.toFixed(2)}
+              <span className="font-bold text-primary text-sm ml-4">
+                {formatCurrency(item.price)}
               </span>
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
   )
 }

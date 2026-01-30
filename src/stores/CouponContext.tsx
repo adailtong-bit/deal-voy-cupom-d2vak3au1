@@ -79,6 +79,8 @@ interface CouponContextType {
   abTests: ABTest[]
   downloadedIds: string[]
   itineraries: Itinerary[]
+  activeItineraryId: string | null
+  setActiveItineraryId: (id: string | null) => void
   rewards: RewardItem[]
   isFetchConnected: boolean
   birthdayGiftAvailable: boolean
@@ -184,6 +186,9 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   const [abTests, setAbTests] = useState<ABTest[]>(MOCK_AB_TESTS)
   const [downloadedIds, setDownloadedIds] = useState<string[]>([])
   const [itineraries, setItineraries] = useState<Itinerary[]>(MOCK_ITINERARIES)
+  const [activeItineraryId, setActiveItineraryId] = useState<string | null>(
+    null,
+  )
   const [rewards] = useState<RewardItem[]>(MOCK_REWARDS)
   const [isFetchConnected, setIsFetchConnected] = useState(false)
   const [birthdayGiftAvailable, setBirthdayGiftAvailable] = useState(false)
@@ -210,12 +215,23 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     if (storedSaved) setSavedIds(JSON.parse(storedSaved))
     const storedUser = localStorage.getItem('currentUser')
     if (storedUser) setUser(JSON.parse(storedUser))
+    const storedActiveItinerary = localStorage.getItem('activeItineraryId')
+    if (storedActiveItinerary) setActiveItineraryId(storedActiveItinerary)
 
     setTimeout(() => {
       setUserLocation(MOCK_USER_LOCATION)
       setIsLoadingLocation(false)
     }, 1500)
   }, [])
+
+  // Persist Active Itinerary
+  useEffect(() => {
+    if (activeItineraryId) {
+      localStorage.setItem('activeItineraryId', activeItineraryId)
+    } else {
+      localStorage.removeItem('activeItineraryId')
+    }
+  }, [activeItineraryId])
 
   // Log action helper
   const logSystemAction = (
@@ -377,12 +393,6 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   const trackShare = (type: 'route' | 'coupon', id: string) => {
     earnPoints(20, 'Sharing')
     toast.success('Shared successfully! Earned 20 points.')
-
-    // Simulate finding a relevant coupon to trigger share reward
-    const relevantCoupon = coupons[0]
-    if (relevantCoupon && relevantCoupon.behavioralTriggers) {
-      // Mock share trigger logic
-    }
   }
 
   const updateBehavioralTriggers = (
@@ -751,6 +761,8 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         abTests,
         downloadedIds,
         itineraries: filteredItineraries,
+        activeItineraryId,
+        setActiveItineraryId,
         rewards,
         isFetchConnected,
         birthdayGiftAvailable,

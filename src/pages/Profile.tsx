@@ -21,6 +21,7 @@ import {
   ThumbsUp,
   Clock,
   Car,
+  Gift,
 } from 'lucide-react'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
@@ -276,10 +277,10 @@ export default function Profile() {
           color="text-blue-500"
         />
         <ScenarioCard
-          title={t('user.favorites')}
-          icon={Heart}
-          path="/saved"
-          color="text-red-500"
+          title={t('rewards.external')}
+          icon={Gift}
+          path="/rewards?tab=external"
+          color="text-purple-600"
         />
         <ScenarioCard
           title={t('user.redemption_history')}
@@ -353,6 +354,23 @@ export default function Profile() {
               </div>
               <span className="font-semibold text-slate-700">
                 {t('profile.payment_methods')}
+              </span>
+            </div>
+            <ChevronRight className="h-4 w-4 text-slate-400" />
+          </Button>
+        </Link>
+
+        <Link to="/rewards?tab=external">
+          <Button
+            variant="outline"
+            className="w-full justify-between h-14 bg-white hover:bg-slate-50 border-slate-200 group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="bg-purple-100 p-2 rounded-full group-hover:bg-purple-200 transition-colors">
+                <Gift className="h-5 w-5 text-purple-600" />
+              </div>
+              <span className="font-semibold text-slate-700">
+                {t('rewards.import_points')}
               </span>
             </div>
             <ChevronRight className="h-4 w-4 text-slate-400" />
