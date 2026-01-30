@@ -1,6 +1,5 @@
 import React from 'react'
 import { cn } from '@/lib/utils'
-import { MapPinOff } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
 
 export interface MapMarker {
@@ -71,7 +70,10 @@ export function GoogleMap({
 
   return (
     <div
-      className={cn('relative bg-slate-100 overflow-hidden group', className)}
+      className={cn(
+        'relative bg-slate-100 overflow-hidden group w-full h-full',
+        className,
+      )}
     >
       <iframe
         width="100%"
@@ -82,7 +84,7 @@ export function GoogleMap({
         marginWidth={0}
         src={getEmbedUrl()}
         title="Google Map"
-        className="w-full h-full"
+        className="absolute inset-0 w-full h-full object-cover"
       />
 
       {/* Overlay to allow opening in new tab for real navigation */}

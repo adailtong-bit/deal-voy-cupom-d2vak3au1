@@ -17,6 +17,7 @@ import {
   Globe,
   UploadCloud,
   MessageSquare,
+  Edit,
 } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -43,6 +44,8 @@ export default function TravelPlanner() {
     coupons,
     userLocation,
     saveItinerary,
+    updateItinerary,
+    deleteItinerary,
     publishItinerary,
     itineraries,
     user,
@@ -68,6 +71,7 @@ export default function TravelPlanner() {
   )
   const [planTitle, setPlanTitle] = useState('My Trip')
   const [isAgentMode, setIsAgentMode] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [mapCenter, setMapCenter] = useState<{
     lat: number
     lng: number
@@ -155,8 +159,8 @@ export default function TravelPlanner() {
       return
     }
 
-    const newItinerary: Itinerary = {
-      id: Math.random().toString(),
+    const itineraryData: Itinerary = {
+      id: editingId || Math.random().toString(),
       title: planTitle,
       description: `${days.length} days, ${allStops.length} stops.`,
       stops: allStops,
@@ -174,8 +178,47 @@ export default function TravelPlanner() {
       isPublic: false,
     }
 
-    saveItinerary(newItinerary)
+    if (editingId) {
+      updateItinerary(itineraryData)
+      setEditingId(null)
+    } else {
+      saveItinerary(itineraryData)
+    }
+
+    // Reset state and go to list
+    setPlanTitle('My Trip')
+    setDays(
+      Array.from({ length: 10 }).map((_, i) => ({
+        id: `day${i + 1}`,
+        dayNumber: i + 1,
+        stops: [],
+      })),
+    )
     setActiveTab('saved')
+  }
+
+  const handleEdit = (it: Itinerary) => {
+    setEditingId(it.id)
+    setPlanTitle(it.title)
+    if (it.days && it.days.length > 0) {
+      setDays(it.days)
+    } else {
+      // Reconstruct days from stops if days structure is missing (legacy)
+      // This is a basic reconstruction putting everything on day 1
+      const newDays = Array.from({ length: 10 }).map((_, i) => ({
+        id: `day${i + 1}`,
+        dayNumber: i + 1,
+        stops: i === 0 ? it.stops : [],
+      }))
+      setDays(newDays)
+    }
+    setActiveTab('planner')
+  }
+
+  const handleDelete = (id: string) => {
+    if (window.confirm('Are you sure you want to delete this trip?')) {
+      deleteItinerary(id)
+    }
   }
 
   const handleShare = (it: Itinerary) => {
@@ -188,7 +231,6 @@ export default function TravelPlanner() {
   const handleContactAgent = () => {
     const threadId = startChat('u_agency', 'Travel Agency')
     navigate('/messages')
-    // In a real app we'd navigate to specific thread, e.g. /messages?threadId=${threadId}
   }
 
   const currentDayStops = useMemo(() => {
@@ -284,6 +326,11 @@ export default function TravelPlanner() {
                         onChange={(e) => setPlanTitle(e.target.value)}
                         className="font-bold text-lg border-none px-0 shadow-none focus-visible:ring-0 bg-transparent h-auto py-1"
                       />
+                      {editingId && (
+                        <Badge variant="secondary" className="text-xs">
+                          Editing
+                        </Badge>
+                      )}
                       {user?.role === 'admin' && (
                         <div className="flex items-center gap-1 bg-purple-50 px-2 py-1 rounded border border-purple-100">
                           <input
@@ -375,15 +422,33 @@ export default function TravelPlanner() {
                       ))}
                     </Tabs>
 
-                    <Button
-                      className="w-full gap-2 bg-[#4CAF50] hover:bg-[#43A047] font-bold"
-                      onClick={handleSavePlan}
-                    >
-                      <Save className="h-4 w-4" />{' '}
-                      {isAgentMode
-                        ? t('travel.save_template')
-                        : t('travel.save_itinerary')}
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        className="flex-1 gap-2 bg-[#4CAF50] hover:bg-[#43A047] font-bold"
+                        onClick={handleSavePlan}
+                      >
+                        <Save className="h-4 w-4" />{' '}
+                        {editingId ? 'Update Trip' : t('travel.save_itinerary')}
+                      </Button>
+                      {editingId && (
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setEditingId(null)
+                            setPlanTitle('My Trip')
+                            setDays(
+                              Array.from({ length: 10 }).map((_, i) => ({
+                                id: `day${i + 1}`,
+                                dayNumber: i + 1,
+                                stops: [],
+                              })),
+                            )
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                      )}
+                    </div>
 
                     <Button
                       variant="outline"
@@ -404,14 +469,38 @@ export default function TravelPlanner() {
                   {myItineraries.map((it) => (
                     <Card
                       key={it.id}
-                      className="cursor-pointer hover:shadow-md transition-all group relative"
+                      className="cursor-pointer hover:shadow-md transition-all group relative overflow-hidden"
                     >
                       <div className="absolute top-2 right-2 flex gap-1 z-10">
+                        <Button
+                          size="icon"
+                          variant="secondary"
+                          className="h-8 w-8 bg-white/80 hover:bg-white text-blue-600 shadow-sm"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleEdit(it)
+                          }}
+                          title="Edit"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="secondary"
+                          className="h-8 w-8 bg-white/80 hover:bg-white text-red-600 shadow-sm"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleDelete(it.id)
+                          }}
+                          title="Delete"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                         {!it.isPublic && (
                           <Button
                             size="icon"
-                            variant="ghost"
-                            className="h-8 w-8 bg-white/50 hover:bg-white text-blue-600"
+                            variant="secondary"
+                            className="h-8 w-8 bg-white/80 hover:bg-white text-green-600 shadow-sm"
                             onClick={(e) => {
                               e.stopPropagation()
                               publishItinerary(it.id)
@@ -423,8 +512,8 @@ export default function TravelPlanner() {
                         )}
                         <Button
                           size="icon"
-                          variant="ghost"
-                          className="h-8 w-8 bg-white/50 hover:bg-white text-primary"
+                          variant="secondary"
+                          className="h-8 w-8 bg-white/80 hover:bg-white text-primary shadow-sm"
                           onClick={(e) => {
                             e.stopPropagation()
                             handleShare(it)
@@ -439,8 +528,8 @@ export default function TravelPlanner() {
                           className="w-20 h-20 rounded-md object-cover"
                           alt=""
                         />
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-bold group-hover:text-primary transition-colors truncate">
+                        <div className="flex-1 min-w-0 pt-1">
+                          <h4 className="font-bold group-hover:text-primary transition-colors truncate pr-16">
                             {it.title}
                           </h4>
                           <div className="flex flex-wrap gap-2 text-xs text-muted-foreground mt-1">
@@ -516,12 +605,12 @@ export default function TravelPlanner() {
           </ScrollArea>
         </div>
 
-        <div className="flex-1 relative flex flex-col min-h-[300px]">
+        <div className="flex-1 relative flex flex-col min-h-[300px] min-w-0 overflow-hidden">
           <GoogleMap
             center={currentCenter}
             zoom={navMode === 'planned' ? 12 : 14}
             markers={mapMarkers}
-            className="flex-1"
+            className="flex-1 w-full h-full"
             origin={showRoute ? origin : undefined}
             destination={showRoute ? destination : undefined}
           />

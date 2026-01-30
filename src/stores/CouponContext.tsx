@@ -136,6 +136,8 @@ interface CouponContextType {
   updateUserPreferences: (prefs: UserPreferences) => void
   connectApp: (id: string) => void
   saveItinerary: (itinerary: Itinerary) => void
+  updateItinerary: (itinerary: Itinerary) => void
+  deleteItinerary: (id: string) => void
   publishItinerary: (id: string) => void
   moderateItinerary: (id: string, status: 'approved' | 'rejected') => void
   toggleLoyaltySystem: (companyId: string, enabled: boolean) => void
@@ -208,7 +210,6 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     if (storedSaved) setSavedIds(JSON.parse(storedSaved))
     const storedUser = localStorage.getItem('currentUser')
     if (storedUser) setUser(JSON.parse(storedUser))
-    // ... other initial loads
 
     setTimeout(() => {
       setUserLocation(MOCK_USER_LOCATION)
@@ -378,12 +379,9 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     toast.success('Shared successfully! Earned 20 points.')
 
     // Simulate finding a relevant coupon to trigger share reward
-    // In real app, we'd check if the shared item has a trigger
     const relevantCoupon = coupons[0]
     if (relevantCoupon && relevantCoupon.behavioralTriggers) {
-      // Mock share trigger check
-      // const trigger = relevantCoupon.behavioralTriggers.find(t => t.type === 'share')
-      // if (trigger) { ... }
+      // Mock share trigger logic
     }
   }
 
@@ -615,6 +613,20 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     toast.success('Itinerary Saved')
   }
 
+  const updateItinerary = (itinerary: Itinerary) => {
+    setItineraries((prev) =>
+      prev.map((it) => (it.id === itinerary.id ? itinerary : it)),
+    )
+    logSystemAction('Itinerary Updated', `Itinerary ${itinerary.title} updated`)
+    toast.success('Itinerary Updated')
+  }
+
+  const deleteItinerary = (id: string) => {
+    setItineraries((prev) => prev.filter((it) => it.id !== id))
+    logSystemAction('Itinerary Deleted', `Itinerary ${id} deleted`)
+    toast.success('Itinerary Deleted')
+  }
+
   const publishItinerary = (id: string) => {
     setItineraries((prev) =>
       prev.map((it) =>
@@ -791,6 +803,8 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         updateUserPreferences,
         connectApp,
         saveItinerary,
+        updateItinerary,
+        deleteItinerary,
         publishItinerary,
         moderateItinerary,
         toggleLoyaltySystem,

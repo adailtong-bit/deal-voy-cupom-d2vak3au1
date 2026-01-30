@@ -21,8 +21,12 @@ const COUNTRIES = [
   { name: 'Brasil', code: 'BR', dial: '+55', mask: '(99) 99999-9999' },
   { name: 'USA', code: 'US', dial: '+1', mask: '(999) 999-9999' },
   { name: 'Portugal', code: 'PT', dial: '+351', mask: '999 999 999' },
+  { name: 'Spain', code: 'ES', dial: '+34', mask: '999 99 99 99' },
   { name: 'France', code: 'FR', dial: '+33', mask: '9 99 99 99 99' },
   { name: 'Germany', code: 'DE', dial: '+49', mask: '9999 999999' },
+  { name: 'Italy', code: 'IT', dial: '+39', mask: '399 999 9999' },
+  { name: 'China', code: 'CN', dial: '+86', mask: '199 9999 9999' },
+  { name: 'Japan', code: 'JP', dial: '+81', mask: '090-9999-9999' },
 ]
 
 export function PhoneInput({
@@ -31,24 +35,37 @@ export function PhoneInput({
   countryCode,
   className,
 }: PhoneInputProps) {
-  const { t } = useLanguage()
+  const { language } = useLanguage()
   const [country, setCountry] = React.useState(COUNTRIES[0])
   const [phoneNumber, setPhoneNumber] = React.useState('')
 
-  // Automatically adjust mask based on country prop
+  // Automatically adjust default country based on Language Context or Prop
   useEffect(() => {
-    if (countryCode) {
-      // Logic to map incoming country name to our COUNTRIES list
+    let targetCode = countryCode
+
+    // If no explicit country code provided, guess based on language
+    if (!targetCode) {
+      if (language === 'pt') targetCode = 'BR'
+      else if (language === 'en') targetCode = 'US'
+      else if (language === 'es') targetCode = 'ES'
+      else if (language === 'fr') targetCode = 'FR'
+      else if (language === 'de') targetCode = 'DE'
+      else if (language === 'it') targetCode = 'IT'
+      else if (language === 'zh') targetCode = 'CN'
+      else if (language === 'ja') targetCode = 'JP'
+    }
+
+    if (targetCode) {
       const found = COUNTRIES.find(
         (c) =>
-          c.name === countryCode ||
-          c.code === countryCode ||
-          (countryCode === 'Brasil' && c.code === 'BR') ||
-          (countryCode === 'USA' && c.code === 'US'),
+          c.name === targetCode ||
+          c.code === targetCode ||
+          (targetCode === 'Brasil' && c.code === 'BR') ||
+          (targetCode === 'USA' && c.code === 'US'),
       )
       if (found) setCountry(found)
     }
-  }, [countryCode])
+  }, [countryCode, language])
 
   useEffect(() => {
     if (value) {
@@ -60,7 +77,6 @@ export function PhoneInput({
   const handleCountryChange = (val: string) => {
     const newCountry = COUNTRIES.find((c) => c.code === val) || COUNTRIES[0]
     setCountry(newCountry)
-    // Re-trigger masked value update logic if needed or just clear
     onChange(`${newCountry.dial} ${phoneNumber}`)
   }
 
@@ -68,25 +84,28 @@ export function PhoneInput({
     let val = e.target.value.replace(/\D/g, '')
     let formatted = val
 
-    // Specific Masking Logic
+    // Apply specific masks
     if (country.code === 'BR') {
       if (val.length > 11) val = val.slice(0, 11)
       if (val.length > 10) {
-        // (11) 99999-9999
         formatted = val.replace(/^(\d{2})(\d{5})(\d{4})/, '($1) $2-$3')
       } else if (val.length > 2) {
-        // (11) 9999-9999
         formatted = val.replace(/^(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3')
       }
     } else if (country.code === 'US') {
       if (val.length > 10) val = val.slice(0, 10)
       if (val.length > 6) {
-        // (999) 999-9999
         formatted = val.replace(/^(\d{3})(\d{3})(\d{4})/, '($1) $2-$3')
       } else if (val.length > 3) {
         formatted = val.replace(/^(\d{3})(\d{0,3})/, '($1) $2')
       }
+    } else if (country.code === 'JP') {
+      if (val.length > 11) val = val.slice(0, 11)
+      if (val.length > 7) {
+        formatted = val.replace(/^(\d{3})(\d{4})(\d{4})/, '$1-$2-$3')
+      }
     }
+    // Generic fallback for others if needed, though simple input works
 
     setPhoneNumber(formatted)
     onChange(`${country.dial} ${formatted}`)
@@ -95,7 +114,7 @@ export function PhoneInput({
   return (
     <div className={cn('flex gap-2', className)}>
       <Select value={country.code} onValueChange={handleCountryChange}>
-        <SelectTrigger className="w-[110px]">
+        <SelectTrigger className="w-[110px] shrink-0">
           <SelectValue placeholder="Code" />
         </SelectTrigger>
         <SelectContent>
