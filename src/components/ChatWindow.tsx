@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { useChat } from '@/stores/ChatContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -16,10 +16,13 @@ export function ChatWindow({ threadId }: { threadId: string }) {
 
   const thread = threads.find((t) => t.id === threadId)
   const otherParticipant = thread?.participants.find((p) => p.id !== user?.id)
+  const unreadCount = thread?.unreadCount || 0
 
   useEffect(() => {
-    if (threadId) markAsRead(threadId)
-  }, [threadId, markAsRead])
+    if (threadId && unreadCount > 0) {
+      markAsRead(threadId)
+    }
+  }, [threadId, unreadCount, markAsRead])
 
   useEffect(() => {
     // Scroll to bottom on new message

@@ -1,6 +1,5 @@
 import { useChat } from '@/stores/ChatContext'
 import { ChatWindow } from '@/components/ChatWindow'
-import { Card } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useCouponStore } from '@/stores/CouponContext'
@@ -75,7 +74,7 @@ export default function Messages() {
 
         <div className="flex-1 flex flex-col bg-slate-100 p-4">
           {activeThreadId ? (
-            <ChatWindow threadId={activeThreadId} />
+            <ChatWindow key={activeThreadId} threadId={activeThreadId} />
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground">
               <MessageSquare className="h-12 w-12 mb-4 opacity-20" />
