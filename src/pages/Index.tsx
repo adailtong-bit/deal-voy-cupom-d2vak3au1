@@ -25,7 +25,7 @@ import { useLanguage } from '@/stores/LanguageContext'
 import { CouponCard } from '@/components/CouponCard'
 import { CATEGORIES } from '@/lib/data'
 import * as Icons from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { AdSpace } from '@/components/AdSpace'
@@ -48,7 +48,12 @@ export default function Index() {
     updateUserPreferences,
   } = useCouponStore()
   const { t } = useLanguage()
-  const [searchQuery, setSearchQuery] = useState('')
+
+  // Use URL Params for search state to sync with MobileHeader
+  const [searchParams, setSearchParams] = useSearchParams()
+  const urlQuery = searchParams.get('q') || ''
+  const [searchQuery, setSearchQuery] = useState(urlQuery)
+
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
 
   const [widgets, setWidgets] = useState({
@@ -58,6 +63,24 @@ export default function Index() {
     tracked: true,
     all: true,
   })
+
+  // Sync local state with URL params
+  useEffect(() => {
+    setSearchQuery(urlQuery)
+  }, [urlQuery])
+
+  // Update URL params when local search changes (for desktop input)
+  const handleSearchChange = (val: string) => {
+    setSearchQuery(val)
+    setSearchParams(
+      (prev) => {
+        if (val) prev.set('q', val)
+        else prev.delete('q')
+        return prev
+      },
+      { replace: true },
+    )
+  }
 
   useEffect(() => {
     if (user?.preferences?.dashboardWidgets) {
@@ -193,7 +216,8 @@ export default function Index() {
 
   return (
     <div className="pb-20 md:pb-8 bg-slate-50 min-h-screen">
-      <section className="bg-white border-b sticky top-16 z-30 shadow-sm md:static">
+      {/* Hidden on mobile to use MobileHeader search instead */}
+      <section className="bg-white border-b hidden md:block sticky top-0 z-30 shadow-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="relative max-w-2xl mx-auto">
             <Search className="absolute left-4 top-3.5 h-5 w-5 text-slate-400" />
@@ -201,7 +225,7 @@ export default function Index() {
               placeholder={t('common.search')}
               className="pl-12 h-12 rounded-full bg-slate-100 border-transparent focus:bg-white focus:border-primary text-base"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
             />
             <Button
               size="sm"
@@ -228,6 +252,7 @@ export default function Index() {
         </div>
       </section>
 
+      {/* Mobile-only location hint if needed, keeping clutter free as per user story */}
       {/* Dashboard Customizer */}
       <div className="container mx-auto px-4 pt-4 flex justify-end">
         <Popover>
@@ -331,6 +356,43 @@ export default function Index() {
 
       <div className="container mx-auto px-4 py-8 space-y-10">
         <AdSpace position="top" />
+
+        {searchQuery && (
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">
+              Showing results for:
+            </span>
+            <Badge variant="secondary" className="gap-1 pl-1">
+              <span className="bg-white rounded-full p-0.5">
+                <Search className="h-3 w-3" />
+              </span>
+              {searchQuery}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-4 w-4 ml-1 hover:bg-transparent"
+                onClick={() => handleSearchChange('')}
+              >
+                <span className="sr-only">Clear</span>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="lucide lucide-x h-3 w-3"
+                >
+                  <path d="M18 6 6 18" />
+                  <path d="m6 6 12 12" />
+                </svg>
+              </Button>
+            </Badge>
+          </div>
+        )}
 
         {widgets.featured && featuredCoupons.length > 0 && (
           <section>
@@ -442,7 +504,10 @@ export default function Index() {
                 <Button
                   variant="link"
                   className="text-primary"
-                  onClick={() => setSelectedCategory('all')}
+                  onClick={() => {
+                    setSelectedCategory('all')
+                    handleSearchChange('')
+                  }}
                 >
                   {t('common.view_all')}
                 </Button>

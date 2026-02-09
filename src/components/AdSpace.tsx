@@ -25,7 +25,7 @@ export function AdSpace({ position, className, customAds }: AdSpaceProps) {
   const ad = availableAds[adIndex] || availableAds[0]
 
   return (
-    <div className={cn('w-full py-4 bg-slate-50', className)}>
+    <div className={cn('w-full py-2 md:py-4 bg-slate-50', className)}>
       <div className="container mx-auto px-4">
         <div className="relative group overflow-hidden rounded-lg border border-slate-200 shadow-sm bg-white">
           <div className="absolute top-0 right-0 bg-slate-200 text-slate-500 text-[10px] px-2 py-0.5 z-10 font-medium">
@@ -35,9 +35,9 @@ export function AdSpace({ position, className, customAds }: AdSpaceProps) {
             href={ad.link || '#'}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex flex-col md:flex-row items-center md:items-stretch h-full"
+            className="flex flex-row items-center md:items-stretch h-full"
           >
-            <div className="w-full md:w-1/3 h-32 md:h-24 relative overflow-hidden">
+            <div className="w-24 md:w-1/3 h-16 md:h-24 relative overflow-hidden shrink-0">
               <img
                 src={
                   ad.image ||
@@ -47,17 +47,17 @@ export function AdSpace({ position, className, customAds }: AdSpaceProps) {
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
               />
             </div>
-            <div className="flex-1 p-3 flex flex-col justify-center w-full">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-xs font-bold text-primary uppercase tracking-wider">
+            <div className="flex-1 p-2 md:p-3 flex flex-col justify-center w-full min-w-0">
+              <div className="flex items-center justify-between mb-0.5 md:mb-1">
+                <span className="text-[10px] md:text-xs font-bold text-primary uppercase tracking-wider truncate mr-2">
                   {t(getCategoryTranslationKey(ad.category))}
                 </span>
-                <ExternalLink className="h-3 w-3 text-slate-400" />
+                <ExternalLink className="h-3 w-3 text-slate-400 shrink-0" />
               </div>
-              <h4 className="font-bold text-sm md:text-base text-slate-800 line-clamp-1">
+              <h4 className="font-bold text-xs md:text-base text-slate-800 line-clamp-1">
                 {ad.title}
               </h4>
-              <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
+              <p className="text-[10px] md:text-xs text-muted-foreground line-clamp-1 md:line-clamp-2 mt-0.5 md:mt-1">
                 {t('coupon.details')}
               </p>
             </div>
