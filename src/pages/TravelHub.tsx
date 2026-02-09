@@ -4,6 +4,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Badge } from '@/components/ui/badge'
 import {
   Plane,
   Hotel,
@@ -12,6 +14,7 @@ import {
   MapPin,
   Star,
   ExternalLink,
+  DoorClosed,
 } from 'lucide-react'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
@@ -20,10 +23,15 @@ export default function TravelHub() {
   const { travelOffers, selectedRegion } = useCouponStore()
   const { t, formatCurrency } = useLanguage()
   const [activeTab, setActiveTab] = useState('flights')
+  const [privacyFilter, setPrivacyFilter] = useState(false)
 
   const filteredOffers = travelOffers.filter((offer) => {
     if (activeTab === 'flights' && offer.type !== 'flight') return false
     if (activeTab === 'hotels' && offer.type !== 'hotel') return false
+
+    if (activeTab === 'hotels' && privacyFilter && !offer.hasSeparatedRooms) {
+      return false
+    }
 
     if (
       selectedRegion !== 'Global' &&
@@ -109,6 +117,23 @@ export default function TravelHub() {
                 </Button>
               </div>
             </div>
+
+            {activeTab === 'hotels' && (
+              <div className="flex items-center space-x-2 mt-4 pt-4 border-t">
+                <Checkbox
+                  id="privacy"
+                  checked={privacyFilter}
+                  onCheckedChange={(c) => setPrivacyFilter(!!c)}
+                />
+                <Label
+                  htmlFor="privacy"
+                  className="flex items-center gap-2 cursor-pointer"
+                >
+                  <DoorClosed className="h-4 w-4" />
+                  Privacidade Garantida / Quartos Separados
+                </Label>
+              </div>
+            )}
           </div>
         </Tabs>
       </div>
@@ -134,6 +159,14 @@ export default function TravelHub() {
                   <div className="absolute top-2 right-2 bg-white/90 px-2 py-1 rounded text-xs font-bold shadow-sm">
                     {offer.provider}
                   </div>
+                  {offer.hasSeparatedRooms && (
+                    <Badge
+                      variant="secondary"
+                      className="absolute top-2 left-2 bg-green-100 text-green-800 border-green-200 gap-1 shadow-sm"
+                    >
+                      <DoorClosed className="h-3 w-3" /> Quartos Separados
+                    </Badge>
+                  )}
                 </div>
                 <CardContent className="p-5">
                   <div className="flex justify-between items-start mb-2">

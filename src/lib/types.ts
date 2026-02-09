@@ -383,6 +383,7 @@ export interface TravelOffer {
   region?: string
   agencyId?: string
   availability?: number
+  hasSeparatedRooms?: boolean
 }
 
 export interface Region {
