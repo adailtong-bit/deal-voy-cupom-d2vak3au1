@@ -54,7 +54,7 @@ import {
 } from '@/components/ui/select'
 
 export default function VendorDashboard() {
-  const { t, formatDate } = useLanguage()
+  const { t, formatDate, formatCurrency } = useLanguage()
   const {
     user,
     companies,
@@ -111,6 +111,7 @@ export default function VendorDashboard() {
       distance: 0,
       expiryDate: data.endDate,
       region: myCompany.region,
+      currency: myCompany.region === 'US-FL' ? 'USD' : 'BRL',
     }
 
     addCoupon(newCoupon)
@@ -250,7 +251,14 @@ export default function VendorDashboard() {
           value="3 Low"
           color="text-red-500"
         />
-        <ScenarioCard title={t('vendor.payouts')} icon={Coins} value="$1.2k" />
+        <ScenarioCard
+          title={t('vendor.payouts')}
+          icon={Coins}
+          value={formatCurrency(
+            1200,
+            myCompany.region === 'US-FL' ? 'USD' : 'BRL',
+          )}
+        />
         <ScenarioCard
           title={t('vendor.scheduler')}
           icon={Calendar}

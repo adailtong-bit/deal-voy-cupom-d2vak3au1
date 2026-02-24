@@ -212,7 +212,7 @@ export default function CouponDetail() {
                 </Badge>
                 {coupon.price && !coupon.isPaid && (
                   <Badge className="bg-emerald-600">
-                    {formatCurrency(coupon.price)}
+                    {formatCurrency(coupon.price, coupon.currency)}
                   </Badge>
                 )}
                 <div className="flex items-center gap-1 text-sm font-medium text-yellow-600 bg-yellow-50 px-2 py-1 rounded-md border border-yellow-200">
@@ -416,7 +416,8 @@ export default function CouponDetail() {
                 ) : needsPayment ? (
                   <>
                     <ShoppingCart className="mr-2 h-4 w-4" />{' '}
-                    {t('checkout.pay')} - {formatCurrency(coupon.price || 0)}
+                    {t('checkout.pay')} -{' '}
+                    {formatCurrency(coupon.price || 0, coupon.currency)}
                   </>
                 ) : (
                   t('coupon.reserve')

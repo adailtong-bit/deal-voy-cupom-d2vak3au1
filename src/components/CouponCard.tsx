@@ -60,7 +60,7 @@ export function CouponCard({
                 </div>
                 {coupon.price && !coupon.isPaid && (
                   <span className="font-bold text-green-600 text-sm">
-                    {formatCurrency(coupon.price)}
+                    {formatCurrency(coupon.price, coupon.currency)}
                   </span>
                 )}
               </div>

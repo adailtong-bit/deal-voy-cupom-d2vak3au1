@@ -13,7 +13,7 @@ interface AdSpaceProps {
 
 export function AdSpace({ position, className, customAds }: AdSpaceProps) {
   const { ads: storeAds } = useCouponStore()
-  const { t } = useLanguage()
+  const { t, formatCurrency } = useLanguage()
 
   const adsToUse = customAds || storeAds
   const availableAds = adsToUse.filter((ad) => ad.status === 'active')
@@ -57,9 +57,16 @@ export function AdSpace({ position, className, customAds }: AdSpaceProps) {
               <h4 className="font-bold text-xs md:text-base text-slate-800 line-clamp-1">
                 {ad.title}
               </h4>
-              <p className="text-[10px] md:text-xs text-muted-foreground line-clamp-1 md:line-clamp-2 mt-0.5 md:mt-1">
-                {t('coupon.details')}
-              </p>
+              <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-2 mt-0.5 md:mt-1">
+                {ad.price && (
+                  <span className="font-bold text-green-600 text-xs">
+                    {formatCurrency(ad.price, ad.currency)}
+                  </span>
+                )}
+                <p className="text-[10px] md:text-xs text-muted-foreground line-clamp-1 md:line-clamp-2">
+                  {t('coupon.details')}
+                </p>
+              </div>
             </div>
           </a>
         </div>

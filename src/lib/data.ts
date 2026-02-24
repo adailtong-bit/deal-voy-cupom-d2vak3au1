@@ -228,6 +228,8 @@ const generateCoupons = (): Coupon[] => {
     source: 'partner',
     region: 'BR-SP',
     visitCount: 0,
+    price: 199.99,
+    currency: 'BRL',
   })
 
   for (let i = 1; i <= 30; i++) {
@@ -284,6 +286,7 @@ const generateCoupons = (): Coupon[] => {
       source: i % 3 === 0 ? 'aggregated' : 'partner',
       region: isUS ? 'US-FL' : 'BR-SP',
       price: i % 5 === 0 ? 50 + i : undefined,
+      currency: isUS ? 'USD' : 'BRL',
       reviews: reviews,
       behavioralTriggers:
         i === 1
@@ -376,6 +379,8 @@ export const MOCK_ADS: Advertisement[] = [
     endDate: '2025-01-31',
     image: 'https://img.usecurling.com/p/800/200?q=burger%20ad',
     link: 'https://burgerking.com.br',
+    price: 29.9,
+    currency: 'BRL',
   },
   {
     id: 'ad2',
@@ -392,6 +397,8 @@ export const MOCK_ADS: Advertisement[] = [
     endDate: '2025-01-31',
     image: 'https://img.usecurling.com/p/800/200?q=fashion%20sale',
     link: 'https://fashionweek.com',
+    price: 49.99,
+    currency: 'USD',
   },
 ]
 

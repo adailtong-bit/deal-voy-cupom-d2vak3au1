@@ -208,7 +208,10 @@ export default function AdminDashboard() {
             <ScenarioCard
               title={t('franchise.regional_sales')}
               icon={DollarSign}
-              value={formatCurrency(45000)}
+              value={formatCurrency(
+                45000,
+                user.region === 'US-FL' ? 'USD' : 'BRL',
+              )}
               color="text-green-500"
             />
             <ScenarioCard

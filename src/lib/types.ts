@@ -98,6 +98,7 @@ export interface Coupon {
   status?: 'active' | 'expired' | 'issue' | 'used'
   acceptsBooking?: boolean
   price?: number
+  currency?: string
   isPaid?: boolean
   source?: 'partner' | 'aggregated'
   region?: string
@@ -321,6 +322,8 @@ export interface Advertisement {
   endDate: string
   image: string
   link: string
+  price?: number
+  currency?: string
 }
 
 export interface RewardItem {

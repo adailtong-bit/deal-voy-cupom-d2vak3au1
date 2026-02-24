@@ -24,7 +24,7 @@ export function CouponMenu({ coupon }: { coupon: Coupon }) {
                 </p>
               </div>
               <span className="font-bold text-primary text-sm ml-4">
-                {formatCurrency(item.price)}
+                {formatCurrency(item.price, coupon.currency)}
               </span>
             </CardContent>
           </Card>
