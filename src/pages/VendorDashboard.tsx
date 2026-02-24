@@ -219,7 +219,7 @@ export default function VendorDashboard() {
         <ScenarioCard
           title={t('vendor.barcode')}
           icon={Barcode}
-          value="Enter"
+          value={t('vendor.barcode')}
         />
         <ScenarioCard
           title={t('vendor.redemption_history')}
@@ -242,7 +242,7 @@ export default function VendorDashboard() {
         <ScenarioCard
           title={t('vendor.store_profile')}
           icon={Settings}
-          value="Edit"
+          value={t('common.edit')}
         />
         <ScenarioCard
           title={t('vendor.inventory_alerts')}
@@ -254,7 +254,7 @@ export default function VendorDashboard() {
         <ScenarioCard
           title={t('vendor.scheduler')}
           icon={Calendar}
-          value="Plan"
+          value={t('vendor.scheduler')}
         />
       </div>
 

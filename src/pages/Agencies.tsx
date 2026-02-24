@@ -79,7 +79,7 @@ export default function Agencies() {
                     className="w-full h-full object-cover"
                   />
                   <Badge className="absolute top-2 left-2 bg-purple-600">
-                    Package
+                    {t('agencies.packages')}
                   </Badge>
                 </div>
                 <CardContent className="flex-1 p-6 flex flex-col">
@@ -118,7 +118,8 @@ export default function Agencies() {
                         onClick={() => handleBook(pkg)}
                         className="bg-primary hover:bg-primary/90"
                       >
-                        <ShoppingCart className="h-4 w-4 mr-2" /> Book Now
+                        <ShoppingCart className="h-4 w-4 mr-2" />{' '}
+                        {t('agencies.reserve')}
                       </Button>
                     </div>
                   </div>

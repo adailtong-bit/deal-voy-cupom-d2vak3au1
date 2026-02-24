@@ -59,7 +59,7 @@ export default function Notifications() {
                 {t('notifications.smart_alerts')}
               </Label>
               <p className="text-xs text-muted-foreground">
-                Location based deals
+                {t('notifications.location_based')}
               </p>
             </div>
           </div>
@@ -77,7 +77,9 @@ export default function Notifications() {
               <Label className="font-semibold text-sm">
                 {t('notifications.promotions')}
               </Label>
-              <p className="text-xs text-muted-foreground">Partner offers</p>
+              <p className="text-xs text-muted-foreground">
+                {t('notifications.partner_offers')}
+              </p>
             </div>
           </div>
           <Switch defaultChecked />

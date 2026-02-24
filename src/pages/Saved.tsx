@@ -129,7 +129,7 @@ export default function Saved() {
                           {coupon.code}
                         </code>
                         <p className="text-xs text-red-500 mt-4 font-semibold">
-                          Single Use Only
+                          {t('coupon.single_use_only')}
                         </p>
                       </div>
                     </DialogContent>

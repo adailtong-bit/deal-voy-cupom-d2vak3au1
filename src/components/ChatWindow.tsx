@@ -7,10 +7,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { useCouponStore } from '@/stores/CouponContext'
 import { cn } from '@/lib/utils'
+import { useLanguage } from '@/stores/LanguageContext'
 
 export function ChatWindow({ threadId }: { threadId: string }) {
   const { threads, sendMessage, markAsRead } = useChat()
   const { user } = useCouponStore()
+  const { t } = useLanguage()
   const [text, setText] = useState('')
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -104,7 +106,7 @@ export function ChatWindow({ threadId }: { threadId: string }) {
         <Input
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Type a message..."
+          placeholder={t('messages.type_message')}
           className="flex-1"
         />
         <Button type="submit" size="icon" disabled={!text.trim()}>

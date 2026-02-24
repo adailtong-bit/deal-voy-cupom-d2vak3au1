@@ -9,6 +9,7 @@ import React, {
 import { ChatThread, Message } from '@/lib/types'
 import { MOCK_CHATS } from '@/lib/data'
 import { useCouponStore } from './CouponContext'
+import { useLanguage } from './LanguageContext'
 import { toast } from 'sonner'
 
 interface ChatContextType {
@@ -24,12 +25,11 @@ const ChatContext = createContext<ChatContextType | undefined>(undefined)
 
 export function ChatProvider({ children }: { children: React.ReactNode }) {
   const { user } = useCouponStore()
+  const { t } = useLanguage()
   const [threads, setThreads] = useState<ChatThread[]>([])
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null)
 
   useEffect(() => {
-    // Load mock chats for current user
-    // In a real app, this would filter based on authenticated user ID
     if (user) {
       setThreads(MOCK_CHATS)
     } else {
@@ -68,7 +68,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         const responseMessage: Message = {
           id: Math.random().toString(),
           senderId: 'system',
-          text: 'This is an automated response. An agent will be with you shortly.',
+          text: t('messages.automated_response'),
           timestamp: new Date().toISOString(),
           isRead: false,
         }
@@ -86,12 +86,12 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
             return thread
           }),
         )
-        toast('New message received', {
-          description: 'You have a new message from Agent',
+        toast(t('messages.new_message'), {
+          description: t('messages.new_message_desc'),
         })
       }, 1000)
     },
-    [user],
+    [user, t],
   )
 
   const startChat = useCallback(
@@ -137,7 +137,6 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const markAsRead = useCallback((threadId: string) => {
     setThreads((prev) =>
       prev.map((thread) => {
-        // Only update if there are unread messages to avoid unnecessary state updates
         if (thread.id === threadId && thread.unreadCount > 0) {
           return { ...thread, unreadCount: 0 }
         }

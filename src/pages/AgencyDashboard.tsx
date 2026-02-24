@@ -180,7 +180,7 @@ export default function AgencyDashboard() {
         <TabsContent value="itineraries" className="space-y-6">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-bold">{t('agency.itineraries')}</h2>
-            <Button onClick={() => toast.info('Use Travel Planner to create')}>
+            <Button onClick={() => toast.info(t('agency.use_planner'))}>
               <Plus className="h-4 w-4 mr-2" /> {t('agency.new_itinerary')}
             </Button>
           </div>
@@ -194,7 +194,7 @@ export default function AgencyDashboard() {
         <TabsContent value="bookings">
           <Card>
             <CardHeader>
-              <CardTitle>Direct Bookings</CardTitle>
+              <CardTitle>{t('agency.direct_bookings')}</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
@@ -213,7 +213,7 @@ export default function AgencyDashboard() {
                         colSpan={4}
                         className="text-center text-muted-foreground"
                       >
-                        No active bookings.
+                        {t('agencies.no_bookings')}
                       </TableCell>
                     </TableRow>
                   )}
@@ -337,7 +337,7 @@ export default function AgencyDashboard() {
         <TabsContent value="clients">
           <Card>
             <CardHeader>
-              <CardTitle>Client Purchase History</CardTitle>
+              <CardTitle>{t('agency.client_history')}</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>

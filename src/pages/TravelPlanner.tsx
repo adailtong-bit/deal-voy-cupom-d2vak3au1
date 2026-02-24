@@ -112,7 +112,7 @@ export default function TravelPlanner() {
         // Center map already set by input select
         toast.info(t('common.loading'))
       } else {
-        toast.error('Please select a location')
+        toast.error(t('travel.select_location_error'))
       }
       return
     }
@@ -223,7 +223,7 @@ export default function TravelPlanner() {
   }
 
   const handleDelete = (id: string) => {
-    if (window.confirm('Are you sure you want to delete this trip?')) {
+    if (window.confirm(t('travel.delete_confirm'))) {
       deleteItinerary(id)
       if (activeItineraryId === id) setActiveItineraryId(null)
     }
@@ -244,10 +244,10 @@ export default function TravelPlanner() {
   const toggleActiveRoute = (id: string) => {
     if (activeItineraryId === id) {
       setActiveItineraryId(null)
-      toast.info('Route deactivated')
+      toast.info(t('travel.route_deactivated'))
     } else {
       setActiveItineraryId(id)
-      toast.success('Route activated! Tracking nearby stops.')
+      toast.success(t('travel.route_activated'))
     }
   }
 
@@ -322,7 +322,7 @@ export default function TravelPlanner() {
                         className="flex-1 text-xs"
                         onClick={() => setPlanningMode('travel')}
                       >
-                        Trip Mode
+                        {t('travel.trip_mode')}
                       </Button>
                       <Button
                         variant={
@@ -332,14 +332,14 @@ export default function TravelPlanner() {
                         className="flex-1 text-xs"
                         onClick={() => setPlanningMode('local')}
                       >
-                        Local Mode
+                        {t('travel.local_mode')}
                       </Button>
                     </div>
 
                     <Label className="text-xs uppercase text-muted-foreground font-bold">
                       {planningMode === 'travel'
                         ? t('travel.calculate_route')
-                        : 'Explore City'}
+                        : t('travel.explore_city')}
                     </Label>
 
                     {planningMode === 'travel' ? (
@@ -368,7 +368,7 @@ export default function TravelPlanner() {
                         value={localLocation}
                         onChange={setLocalLocation}
                         onSelect={handleLocationSelect}
-                        placeholder="Select City (e.g. Orlando)"
+                        placeholder={t('travel.select_city')}
                         icon={<Navigation className="h-4 w-4 text-blue-500" />}
                       />
                     )}
@@ -390,7 +390,7 @@ export default function TravelPlanner() {
                       />
                       {editingId && (
                         <Badge variant="secondary" className="text-xs">
-                          Editing
+                          {t('travel.editing')}
                         </Badge>
                       )}
                     </div>
@@ -473,7 +473,9 @@ export default function TravelPlanner() {
                         onClick={handleSavePlan}
                       >
                         <Save className="h-4 w-4" />{' '}
-                        {editingId ? 'Update Trip' : t('travel.save_itinerary')}
+                        {editingId
+                          ? t('travel.update_trip')
+                          : t('travel.save_itinerary')}
                       </Button>
                       {editingId && (
                         <Button
@@ -490,7 +492,7 @@ export default function TravelPlanner() {
                             )
                           }}
                         >
-                          Cancel
+                          {t('common.cancel')}
                         </Button>
                       )}
                     </div>
@@ -500,7 +502,8 @@ export default function TravelPlanner() {
                       className="w-full gap-2"
                       onClick={handleContactAgent}
                     >
-                      <MessageSquare className="h-4 w-4" /> Contact Travel Agent
+                      <MessageSquare className="h-4 w-4" />{' '}
+                      {t('travel.contact_agent')}
                     </Button>
                   </div>
                 </>
@@ -508,7 +511,7 @@ export default function TravelPlanner() {
                 <div className="space-y-4">
                   {myItineraries.length === 0 && (
                     <p className="text-center text-muted-foreground text-sm">
-                      No saved itineraries.
+                      {t('travel.no_saved_itineraries')}
                     </p>
                   )}
                   {myItineraries.map((it) => (
@@ -535,8 +538,8 @@ export default function TravelPlanner() {
                           }}
                           title={
                             activeItineraryId === it.id
-                              ? 'Pause Tracking'
-                              : 'Activate Route'
+                              ? t('travel.pause_tracking')
+                              : t('travel.activate_route')
                           }
                         >
                           {activeItineraryId === it.id ? (
@@ -553,7 +556,7 @@ export default function TravelPlanner() {
                             e.stopPropagation()
                             handleEdit(it)
                           }}
-                          title="Edit"
+                          title={t('common.edit')}
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
@@ -565,7 +568,7 @@ export default function TravelPlanner() {
                             e.stopPropagation()
                             handleDelete(it.id)
                           }}
-                          title="Delete"
+                          title={t('common.delete')}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -578,7 +581,7 @@ export default function TravelPlanner() {
                               e.stopPropagation()
                               publishItinerary(it.id)
                             }}
-                            title="Publish"
+                            title={t('common.publish')}
                           >
                             <UploadCloud className="h-4 w-4" />
                           </Button>
@@ -630,7 +633,7 @@ export default function TravelPlanner() {
                 <div className="space-y-4">
                   {communityItineraries.length === 0 && (
                     <p className="text-center text-muted-foreground text-sm">
-                      No community trips yet.
+                      {t('travel.no_community_trips')}
                     </p>
                   )}
                   {communityItineraries.map((it) => (
@@ -661,7 +664,9 @@ export default function TravelPlanner() {
                           </h4>
                           <div className="flex gap-2 text-xs text-muted-foreground mt-1">
                             <Globe className="h-3 w-3" />
-                            <span>by {it.authorName || 'User'}</span>
+                            <span>
+                              {t('travel.by')} {it.authorName || 'User'}
+                            </span>
                           </div>
                           <p className="text-xs mt-2 line-clamp-2">
                             {it.description}

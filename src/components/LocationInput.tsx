@@ -16,6 +16,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { POPULAR_DESTINATIONS } from '@/lib/data'
+import { useLanguage } from '@/stores/LanguageContext'
 
 interface LocationInputProps {
   value: string
@@ -30,11 +31,14 @@ export function LocationInput({
   value,
   onChange,
   onSelect,
-  placeholder = 'Select location...',
+  placeholder,
   className,
   icon,
 }: LocationInputProps) {
   const [open, setOpen] = React.useState(false)
+  const { t } = useLanguage()
+
+  const defaultPlaceholder = placeholder || t('explore.select_location')
 
   // Flatten locations into a searchable list
   const locations = Object.entries(POPULAR_DESTINATIONS).map(([key, data]) => ({
@@ -73,20 +77,20 @@ export function LocationInput({
               className,
             )}
           >
-            {value || placeholder}
+            {value || defaultPlaceholder}
           </Button>
         </div>
       </PopoverTrigger>
       <PopoverContent className="w-[300px] p-0" align="start">
         <Command>
           <CommandInput
-            placeholder={placeholder}
+            placeholder={defaultPlaceholder}
             onValueChange={(val) => onChange(val)}
             value={value}
           />
           <CommandList>
-            <CommandEmpty>No location found.</CommandEmpty>
-            <CommandGroup heading="Popular Destinations">
+            <CommandEmpty>{t('explore.no_location')}</CommandEmpty>
+            <CommandGroup heading={t('explore.popular_destinations')}>
               {locations.map((item) => (
                 <CommandItem
                   key={item.value}

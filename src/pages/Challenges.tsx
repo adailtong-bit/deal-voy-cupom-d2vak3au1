@@ -118,7 +118,10 @@ export default function Challenges() {
             {type === 'completed' && (
               <div className="mt-4 p-2 bg-[#4CAF50]/10 text-green-800 text-sm rounded flex items-center gap-2 border border-[#4CAF50]/20">
                 <Trophy className="h-4 w-4 text-[#4CAF50]" />
-                Completed on {formatDate(new Date())}
+                {t('challenges.completed_on').replace(
+                  '{date}',
+                  formatDate(new Date()),
+                )}
               </div>
             )}
           </div>
@@ -199,10 +202,10 @@ export default function Challenges() {
         <DialogContent className="sm:max-w-md text-center">
           <DialogHeader>
             <DialogTitle className="text-2xl text-center text-[#FF5722]">
-              Badge Unlocked!
+              {t('challenges.badge_unlocked')}
             </DialogTitle>
             <DialogDescription className="text-center">
-              Congratulations!
+              {t('challenges.congrats')}
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-center py-6">

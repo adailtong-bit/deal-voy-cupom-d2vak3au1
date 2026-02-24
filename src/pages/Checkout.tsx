@@ -79,7 +79,7 @@ export default function Checkout() {
 
   const onSubmit = async (data: any) => {
     if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
-      toast.error('Invalid email format')
+      toast.error(t('common.error'))
       return
     }
 
@@ -88,7 +88,7 @@ export default function Checkout() {
 
     if (paymentMethod === 'fetch') {
       if (!redeemPoints(price, 'fetch')) {
-        toast.error('Insufficient Balance')
+        toast.error(t('common.error'))
         setIsProcessing(false)
         return
       }
@@ -103,7 +103,10 @@ export default function Checkout() {
       })
       setIsSuccess(true)
       toast.success(t('checkout.success'), {
-        description: `Pagamento confirmado! Você ganhou +${pointsToEarn} pontos.`,
+        description: t('checkout.payment_confirmed').replace(
+          '{points}',
+          pointsToEarn.toString(),
+        ),
       })
       setTimeout(() => {
         if (isOffer) {
@@ -308,7 +311,7 @@ export default function Checkout() {
                   </Label>
                   {!canAffordWithCredits && (
                     <p className="text-xs text-red-500 mt-1 font-medium">
-                      Insufficient Balance
+                      {t('common.error')}
                     </p>
                   )}
                 </div>
@@ -325,11 +328,14 @@ export default function Checkout() {
               }
             >
               {isProcessing
-                ? 'Processing...'
+                ? t('common.loading')
                 : `${t('checkout.pay')} ${formatCurrency(price)}`}
             </Button>
             <p className="text-xs text-muted-foreground text-center">
-              Ganhe {pointsToEarn} pontos com esta compra.
+              {t('checkout.earn_points').replace(
+                '{points}',
+                pointsToEarn.toString(),
+              )}
             </p>
           </CardFooter>
         </Card>

@@ -100,7 +100,7 @@ export default function ItineraryDetail() {
       <Dialog open={isDownloading}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Saving Offline</DialogTitle>
+            <DialogTitle>{t('travel.saving_offline')}</DialogTitle>
             <DialogDescription>{t('common.loading')}</DialogDescription>
           </DialogHeader>
           <div className="py-4 space-y-2">
@@ -134,7 +134,7 @@ export default function ItineraryDetail() {
               size="icon"
               className="rounded-full bg-background/80 hover:bg-white"
               onClick={handleClone}
-              title="Save to My Trips"
+              title={t('travel.save_to_my_trips')}
             >
               <Plus className="h-5 w-5" />
             </Button>
@@ -159,7 +159,7 @@ export default function ItineraryDetail() {
             className="rounded-full bg-background/80 hover:bg-white gap-2 px-4"
             onClick={handleShare}
           >
-            <Share2 className="h-4 w-4" /> {t('promos.share_earn')}
+            <Share2 className="h-4 w-4" /> {t('promos.share_earn') || 'Share'}
           </Button>
         </div>
 
@@ -176,12 +176,12 @@ export default function ItineraryDetail() {
               ))}
               {isDownloaded && (
                 <Badge className="bg-accent text-accent-foreground border-0 gap-1">
-                  <Wifi className="h-3 w-3" /> Offline Ready
+                  <Wifi className="h-3 w-3" /> {t('travel.offline_ready')}
                 </Badge>
               )}
               {itinerary.authorName && (
                 <Badge className="bg-blue-500/80 text-white border-0">
-                  By {itinerary.authorName}
+                  {t('travel.by')} {itinerary.authorName}
                 </Badge>
               )}
             </div>
@@ -219,7 +219,8 @@ export default function ItineraryDetail() {
         <div className="flex flex-col lg:flex-row gap-8">
           <div className="flex-1">
             <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-              <Navigation className="h-6 w-6 text-primary" /> Route Stops
+              <Navigation className="h-6 w-6 text-primary" />{' '}
+              {t('travel.route_stops')}
             </h2>
             <div className="space-y-8">
               {itinerary.stops.map((stop, index) => (
@@ -243,23 +244,29 @@ export default function ItineraryDetail() {
           <div className="w-full lg:w-80 space-y-6">
             <Card className="sticky top-24">
               <CardContent className="p-6">
-                <h3 className="font-bold text-xl mb-4">Trip Summary</h3>
+                <h3 className="font-bold text-xl mb-4">
+                  {t('travel.trip_summary')}
+                </h3>
                 <ul className="space-y-3 text-sm mb-6">
                   <li className="flex justify-between border-b pb-2">
-                    <span className="text-muted-foreground">Valid Coupons</span>
+                    <span className="text-muted-foreground">
+                      {t('travel.valid_coupons')}
+                    </span>
                     <span className="font-bold">{itinerary.stops.length}</span>
                   </li>
                   <li className="flex justify-between border-b pb-2">
-                    <span className="text-muted-foreground">Est. Duration</span>
+                    <span className="text-muted-foreground">
+                      {t('travel.est_duration')}
+                    </span>
                     <span className="font-bold">{itinerary.duration}</span>
                   </li>
                   <li className="flex justify-between text-accent font-bold pt-1 text-lg">
-                    <span>Total Savings</span>
+                    <span>{t('travel.total_savings')}</span>
                     <span>{formatCurrency(itinerary.totalSavings)}</span>
                   </li>
                 </ul>
                 <Button className="w-full h-12 text-lg font-bold bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20">
-                  Start Route
+                  {t('travel.start_route')}
                 </Button>
               </CardContent>
             </Card>

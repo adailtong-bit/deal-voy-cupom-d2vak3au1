@@ -130,7 +130,7 @@ export default function TravelHub() {
                   className="flex items-center gap-2 cursor-pointer"
                 >
                   <DoorClosed className="h-4 w-4" />
-                  Privacidade Garantida / Quartos Separados
+                  {t('hub.privacy_guaranteed')}
                 </Label>
               </div>
             )}
@@ -164,7 +164,8 @@ export default function TravelHub() {
                       variant="secondary"
                       className="absolute top-2 left-2 bg-green-100 text-green-800 border-green-200 gap-1 shadow-sm"
                     >
-                      <DoorClosed className="h-3 w-3" /> Quartos Separados
+                      <DoorClosed className="h-3 w-3" />{' '}
+                      {t('hub.separated_rooms')}
                     </Badge>
                   )}
                 </div>

@@ -70,7 +70,7 @@ export default function CouponDetail() {
   if (!coupon) {
     return (
       <div className="flex flex-col items-center justify-center h-screen p-4 text-center">
-        <h1 className="text-2xl font-bold mb-2">Not Found</h1>
+        <h1 className="text-2xl font-bold mb-2">{t('common.error')}</h1>
         <Button onClick={() => navigate('/')}>{t('common.back')}</Button>
       </div>
     )
@@ -101,13 +101,13 @@ export default function CouponDetail() {
       setTimeout(() => setShowConfetti(false), 3000)
       toast.success(t('coupon.reserved'))
     } else {
-      toast.error(t('toast.limit_reached'))
+      toast.error(t('common.error'))
     }
   }
 
   const handleCopyCode = () => {
     navigator.clipboard.writeText(coupon.code)
-    toast.success(t('toast.code_copied'))
+    toast.success(t('common.success'))
   }
 
   const handleReport = () => {
@@ -121,7 +121,7 @@ export default function CouponDetail() {
       navigator.share({ title: coupon.title, url: window.location.href })
     } else {
       navigator.clipboard.writeText(window.location.href)
-      toast.success(t('toast.link_copied'))
+      toast.success(t('common.success'))
     }
   }
 

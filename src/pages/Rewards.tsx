@@ -40,12 +40,12 @@ export default function Rewards() {
 
   const handleShare = () => {
     earnPoints(10, 'Social Share')
-    toast.success('Shared on social media!')
+    toast.success(t('rewards.shared_social'))
   }
 
   const handleInvite = () => {
     earnPoints(50, 'Friend Referral')
-    toast.success('Invite sent! You will earn points when they join.')
+    toast.success(t('rewards.invite_sent'))
   }
 
   return (
@@ -68,16 +68,18 @@ export default function Rewards() {
         <Card className="bg-blue-50 border-blue-100">
           <CardContent className="p-6 flex items-center justify-between">
             <div>
-              <h3 className="font-bold text-blue-900 mb-1">Invite Friends</h3>
+              <h3 className="font-bold text-blue-900 mb-1">
+                {t('rewards.invite_friends')}
+              </h3>
               <p className="text-sm text-blue-700 mb-3">
-                Earn 50 pts per friend
+                {t('rewards.earn_per_friend')}
               </p>
               <Button
                 size="sm"
                 className="bg-blue-600 hover:bg-blue-700"
                 onClick={handleInvite}
               >
-                <UserPlus className="h-4 w-4 mr-2" /> Invite Now
+                <UserPlus className="h-4 w-4 mr-2" /> {t('rewards.invite_now')}
               </Button>
             </div>
             <div className="bg-white p-3 rounded-full">
@@ -89,17 +91,17 @@ export default function Rewards() {
           <CardContent className="p-6 flex items-center justify-between">
             <div>
               <h3 className="font-bold text-purple-900 mb-1">
-                Share on Social
+                {t('rewards.share_social')}
               </h3>
               <p className="text-sm text-purple-700 mb-3">
-                Earn 10 pts per share
+                {t('rewards.earn_per_share')}
               </p>
               <Button
                 size="sm"
                 className="bg-purple-600 hover:bg-purple-700"
                 onClick={handleShare}
               >
-                <Share2 className="h-4 w-4 mr-2" /> Share App
+                <Share2 className="h-4 w-4 mr-2" /> {t('rewards.share_app')}
               </Button>
             </div>
             <div className="bg-white p-3 rounded-full">

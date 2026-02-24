@@ -43,12 +43,15 @@ export function NotificationProvider({
   }
 
   const toggleSmartAlerts = () => {
-    setSmartAlertsEnabled((prev) => !prev)
-    toast.success(
-      smartAlertsEnabled
-        ? 'Notificações inteligentes desativadas'
-        : 'Notificações inteligentes ativadas',
-    )
+    setSmartAlertsEnabled((prev) => {
+      const next = !prev
+      toast.success(
+        next
+          ? t('notifications.smart_alerts_on')
+          : t('notifications.smart_alerts_off'),
+      )
+      return next
+    })
   }
 
   const addNotification = (

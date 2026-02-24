@@ -16,13 +16,13 @@ export default function Messages() {
     <div className="container mx-auto px-4 py-8 h-[calc(100vh-64px)] flex flex-col">
       <h1 className="text-2xl font-bold mb-6 flex items-center gap-2">
         <MessageSquare className="h-6 w-6 text-primary" />
-        {t('messages.title') || 'Messages'}
+        {t('messages.title')}
       </h1>
 
       <div className="flex flex-1 gap-4 overflow-hidden border rounded-xl bg-slate-50">
         <div className="w-1/3 min-w-[250px] border-r bg-white flex flex-col">
           <div className="p-4 border-b font-semibold text-sm text-muted-foreground">
-            {threads.length} Conversation{threads.length !== 1 ? 's' : ''}
+            {threads.length} {t('messages.conversations')}
           </div>
           <ScrollArea className="flex-1">
             {threads.map((thread) => {
@@ -66,7 +66,7 @@ export default function Messages() {
             })}
             {threads.length === 0 && (
               <div className="p-8 text-center text-muted-foreground text-sm">
-                No messages yet.
+                {t('messages.no_messages')}
               </div>
             )}
           </ScrollArea>
@@ -78,7 +78,7 @@ export default function Messages() {
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground">
               <MessageSquare className="h-12 w-12 mb-4 opacity-20" />
-              <p>Select a conversation to start chatting</p>
+              <p>{t('messages.select_conversation')}</p>
             </div>
           )}
         </div>
