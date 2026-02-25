@@ -1,7 +1,8 @@
+import { useState } from 'react'
 import { Coupon } from '@/lib/types'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Star, MapPin, Clock } from 'lucide-react'
+import { Star, MapPin, Clock, ImageOff } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { useLanguage } from '@/stores/LanguageContext'
@@ -18,6 +19,7 @@ export function CouponCard({
   className,
 }: CouponCardProps) {
   const { t, formatCurrency } = useLanguage()
+  const [imgError, setImgError] = useState(false)
 
   if (variant === 'horizontal') {
     return (
@@ -29,13 +31,19 @@ export function CouponCard({
           )}
         >
           <div className="flex h-full">
-            <div className="w-28 sm:w-40 relative bg-slate-100 flex-shrink-0">
-              <img
-                src={coupon.image}
-                alt={coupon.title}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-              />
-              <Badge className="absolute top-1.5 left-1.5 bg-white/95 text-black hover:bg-white shadow-sm font-bold backdrop-blur-sm text-[10px] h-5 px-1.5 py-0">
+            <div className="w-28 sm:w-40 relative bg-slate-100 flex-shrink-0 flex items-center justify-center overflow-hidden">
+              {!imgError ? (
+                <img
+                  src={coupon.image}
+                  alt={coupon.title}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  crossOrigin="anonymous"
+                  onError={() => setImgError(true)}
+                />
+              ) : (
+                <ImageOff className="h-6 w-6 text-slate-300" />
+              )}
+              <Badge className="absolute top-1.5 left-1.5 bg-white/95 text-black hover:bg-white shadow-sm font-bold backdrop-blur-sm text-[10px] h-5 px-1.5 py-0 z-10">
                 {coupon.discount}
               </Badge>
             </div>
@@ -93,13 +101,19 @@ export function CouponCard({
           className,
         )}
       >
-        <div className="relative h-24 sm:h-28 overflow-hidden bg-slate-100">
-          <img
-            src={coupon.image}
-            alt={coupon.title}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-          />
-          <div className="absolute top-1.5 left-1.5 flex gap-1">
+        <div className="relative h-24 sm:h-28 overflow-hidden bg-slate-100 flex items-center justify-center">
+          {!imgError ? (
+            <img
+              src={coupon.image}
+              alt={coupon.title}
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              crossOrigin="anonymous"
+              onError={() => setImgError(true)}
+            />
+          ) : (
+            <ImageOff className="h-8 w-8 text-slate-300" />
+          )}
+          <div className="absolute top-1.5 left-1.5 flex gap-1 z-10">
             <Badge className="bg-white/95 text-black hover:bg-white shadow-sm font-bold backdrop-blur-sm text-[9px] sm:text-[10px] h-4 sm:h-5 px-1.5 py-0">
               {coupon.discount}
             </Badge>
@@ -107,7 +121,7 @@ export function CouponCard({
           {coupon.isFeatured && (
             <Badge
               variant="secondary"
-              className="absolute top-1.5 right-1.5 text-[8px] sm:text-[9px] px-1.5 h-4 sm:h-5 bg-yellow-400 text-yellow-900 border-none"
+              className="absolute top-1.5 right-1.5 text-[8px] sm:text-[9px] px-1.5 h-4 sm:h-5 bg-yellow-400 text-yellow-900 border-none z-10"
             >
               Featured
             </Badge>

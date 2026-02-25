@@ -32,6 +32,7 @@ import {
   Download,
   ShoppingCart,
   Star,
+  ImageOff,
 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
@@ -64,6 +65,8 @@ export default function CouponDetail() {
   const [reportIssue, setReportIssue] = useState('')
   const [isReportOpen, setIsReportOpen] = useState(false)
   const [useFetchCredits, setUseFetchCredits] = useState(false)
+  const [imgError, setImgError] = useState(false)
+  const [logoError, setLogoError] = useState(false)
 
   const coupon = coupons.find((c) => c.id === id)
 
@@ -144,22 +147,28 @@ export default function CouponDetail() {
         </div>
       )}
 
-      <div className="relative h-64 md:h-80 w-full">
-        <img
-          src={coupon.image}
-          alt={coupon.title}
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
+      <div className="relative h-64 md:h-80 w-full bg-slate-100 flex items-center justify-center overflow-hidden">
+        {!imgError ? (
+          <img
+            src={coupon.image}
+            alt={coupon.title}
+            className="w-full h-full object-cover"
+            crossOrigin="anonymous"
+            onError={() => setImgError(true)}
+          />
+        ) : (
+          <ImageOff className="h-12 w-12 text-slate-300" />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent pointer-events-none" />
         <Button
           variant="secondary"
           size="icon"
-          className="absolute top-4 left-4 rounded-full bg-background/80"
+          className="absolute top-4 left-4 rounded-full bg-background/80 z-10"
           onClick={() => navigate(-1)}
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <div className="absolute top-4 right-4 flex gap-2">
+        <div className="absolute top-4 right-4 flex gap-2 z-10">
           <Button
             variant="secondary"
             size="icon"
@@ -189,12 +198,19 @@ export default function CouponDetail() {
           <div className="flex justify-between items-start mb-4">
             <div>
               <div className="flex items-center gap-2 mb-2">
-                {coupon.logo && (
+                {coupon.logo && !logoError && (
                   <img
                     src={coupon.logo}
                     alt="Logo"
-                    className="w-8 h-8 rounded-full border"
+                    className="w-8 h-8 rounded-full border bg-white object-cover"
+                    crossOrigin="anonymous"
+                    onError={() => setLogoError(true)}
                   />
+                )}
+                {coupon.logo && logoError && (
+                  <div className="w-8 h-8 rounded-full border bg-slate-100 flex items-center justify-center">
+                    <ImageOff className="h-4 w-4 text-slate-400" />
+                  </div>
                 )}
                 <span className="text-sm font-medium text-muted-foreground">
                   {coupon.storeName}
