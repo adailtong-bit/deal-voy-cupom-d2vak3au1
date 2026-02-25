@@ -24,41 +24,56 @@ export function CouponCard({
       <Link to={`/coupon/${coupon.id}`} className="block">
         <Card
           className={cn(
-            'overflow-hidden hover:shadow-sm transition-all group h-20',
+            'overflow-hidden hover:shadow-sm transition-all group h-28 sm:h-32',
             className,
           )}
         >
           <div className="flex h-full">
-            <div className="w-20 relative bg-slate-100 flex-shrink-0">
+            <div className="w-28 sm:w-40 relative bg-slate-100 flex-shrink-0">
               <img
                 src={coupon.image}
                 alt={coupon.title}
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
               />
-              <Badge className="absolute top-1 left-1 text-[9px] px-1 py-0 h-4">
+              <Badge className="absolute top-1.5 left-1.5 bg-white/95 text-black hover:bg-white shadow-sm font-bold backdrop-blur-sm text-[10px] h-5 px-1.5 py-0">
                 {coupon.discount}
               </Badge>
             </div>
-            <div className="flex-1 p-2 flex flex-col justify-between min-w-0">
+            <div className="flex-1 p-3 flex flex-col justify-between min-w-0">
               <div>
-                <h4 className="font-semibold text-xs truncate leading-tight">
-                  {coupon.title}
-                </h4>
-                <p className="text-[10px] text-muted-foreground truncate">
+                <div className="flex justify-between items-start mb-1">
+                  <h4 className="font-semibold text-sm sm:text-base truncate leading-tight flex-1 mr-2">
+                    {coupon.title}
+                  </h4>
+                  {coupon.averageRating && (
+                    <div className="flex items-center gap-0.5 text-[10px] sm:text-xs font-bold text-orange-500 bg-orange-50 px-1.5 py-0.5 rounded shrink-0">
+                      <Star className="h-3 w-3 fill-current" />
+                      {coupon.averageRating.toFixed(1)}
+                    </div>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground truncate">
                   {coupon.storeName}
                 </p>
+                <p className="text-[11px] sm:text-xs text-slate-500 mt-1 line-clamp-2">
+                  {coupon.description}
+                </p>
               </div>
-              <div className="flex items-center justify-between mt-1">
-                <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                  <span className="flex items-center gap-0.5">
-                    <MapPin className="h-2.5 w-2.5" />{' '}
+              <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
+                <div className="flex items-center gap-2 text-[10px] sm:text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <MapPin className="h-3 w-3" />{' '}
                     {coupon.distance > 1000
                       ? `${(coupon.distance / 1000).toFixed(1)}km`
                       : `${coupon.distance}m`}
                   </span>
+                  <span className="flex items-center gap-1 text-orange-600 font-medium">
+                    <Clock className="h-3 w-3" />
+                    Exp.
+                  </span>
                 </div>
-                {coupon.price && !coupon.isPaid && (
-                  <span className="font-bold text-green-600 text-[11px]">
+                {coupon.price !== undefined && !coupon.isPaid && (
+                  <span className="font-bold text-green-600 text-xs sm:text-sm">
                     {formatCurrency(coupon.price, coupon.currency)}
                   </span>
                 )}

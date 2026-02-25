@@ -261,15 +261,23 @@ const generateCoupons = (): Coupon[] => {
       })
     }
 
+    const discountTypes = ['percentage', 'fixed', 'free_shipping'] as const
+    const type = discountTypes[i % 3]
+    let discountStr = ''
+    if (type === 'percentage') discountStr = `${10 + (i % 50)}% OFF`
+    else if (type === 'fixed')
+      discountStr = isUS ? `$${5 + (i % 20)} OFF` : `R$ ${10 + (i % 30)} OFF`
+    else discountStr = isUS ? 'Free Shipping' : 'Frete Grátis'
+
     coupons.push({
       id: `cpn-${i}`,
       storeName: isUS ? `Store #${i} USA` : `Loja #${i} BR`,
       companyId: isUS ? `c${i + 5}` : `c${i}`,
       title: isUS ? `Super Deal ${i}` : `Oferta Imperdível ${i}`,
       description: isUS
-        ? `Amazing discount on all items in section ${i}.`
-        : `Desconto incrível em todos os itens da seção ${i}.`,
-      discount: `${10 + (i % 50)}% OFF`,
+        ? `Amazing discount on all items in section ${i}. Explore more!`
+        : `Desconto incrível em todos os itens da seção ${i}. Venha conferir!`,
+      discount: discountStr,
       category: categories[i % categories.length],
       distance: 100 * i,
       expiryDate: '2025-12-31',
@@ -285,7 +293,7 @@ const generateCoupons = (): Coupon[] => {
       status: statuses[i % 3], // Generic status
       source: i % 3 === 0 ? 'aggregated' : 'partner',
       region: isUS ? 'US-FL' : 'BR-SP',
-      price: i % 5 === 0 ? 50 + i : undefined,
+      price: i % 2 === 0 ? 50 + i * 10 : undefined,
       currency: isUS ? 'USD' : 'BRL',
       reviews: reviews,
       behavioralTriggers:

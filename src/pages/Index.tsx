@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   Search,
   MapPin,
@@ -9,6 +9,9 @@ import {
   LayoutGrid,
   Plane,
   Edit,
+  SlidersHorizontal,
+  List,
+  Loader2,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -37,6 +40,15 @@ import {
 } from '@/components/ui/popover'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Slider } from '@/components/ui/slider'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 
 export default function Index() {
   const {
@@ -47,14 +59,28 @@ export default function Index() {
     ads,
     updateUserPreferences,
   } = useCouponStore()
-  const { t } = useLanguage()
+  const { t, formatCurrency } = useLanguage()
 
-  // Use URL Params for search state to sync with MobileHeader
+  // Helper to fallback safely if translation is missing
+  const tFallback = (key: string, fallback: string) => {
+    const res = t(key)
+    return res === key ? fallback : res
+  }
+
+  // Search & Filter State
   const [searchParams, setSearchParams] = useSearchParams()
   const urlQuery = searchParams.get('q') || ''
   const [searchQuery, setSearchQuery] = useState(urlQuery)
-
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
+  const [maxPrice, setMaxPrice] = useState<number[]>([1000])
+  const [discountType, setDiscountType] = useState<string>('all')
+
+  // View Mode & Infinite Scroll State
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => {
+    return (localStorage.getItem('viewMode') as 'grid' | 'list') || 'grid'
+  })
+  const [visibleCount, setVisibleCount] = useState(12)
+  const loaderRef = useRef<HTMLDivElement>(null)
 
   const [widgets, setWidgets] = useState({
     categories: true,
@@ -64,12 +90,33 @@ export default function Index() {
     all: true,
   })
 
-  // Sync local state with URL params
   useEffect(() => {
     setSearchQuery(urlQuery)
   }, [urlQuery])
 
-  // Update URL params when local search changes (for desktop input)
+  useEffect(() => {
+    localStorage.setItem('viewMode', viewMode)
+  }, [viewMode])
+
+  useEffect(() => {
+    setVisibleCount(12)
+  }, [searchQuery, selectedCategory, maxPrice, discountType])
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setVisibleCount((prev) => prev + 12)
+        }
+      },
+      { threshold: 0.1, rootMargin: '100px' },
+    )
+    if (loaderRef.current) {
+      observer.observe(loaderRef.current)
+    }
+    return () => observer.disconnect()
+  }, [])
+
   const handleSearchChange = (val: string) => {
     setSearchQuery(val)
     setSearchParams(
@@ -98,7 +145,6 @@ export default function Index() {
   const toggleWidget = (key: keyof typeof widgets) => {
     const newWidgets = { ...widgets, [key]: !widgets[key] }
     setWidgets(newWidgets)
-    // Persist preference
     const widgetList = Object.keys(newWidgets).filter(
       (k) => newWidgets[k as keyof typeof widgets],
     )
@@ -196,6 +242,28 @@ export default function Index() {
       return false
     if (selectedCategory !== 'all' && c.category !== selectedCategory)
       return false
+
+    if (c.price !== undefined && c.price > maxPrice[0]) return false
+
+    if (discountType !== 'all') {
+      const d = c.discount.toLowerCase()
+      if (discountType === 'percentage' && !d.includes('%')) return false
+      if (
+        discountType === 'fixed' &&
+        !d.includes('$') &&
+        !d.includes('r$') &&
+        d.includes('%')
+      )
+        return false
+      if (
+        discountType === 'free_shipping' &&
+        !d.includes('frete') &&
+        !d.includes('shipping') &&
+        !d.includes('grátis')
+      )
+        return false
+    }
+
     return true
   })
 
@@ -410,36 +478,39 @@ export default function Index() {
         )}
 
         {widgets.featured && featuredCoupons.length > 0 && (
-          <section>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-base md:text-lg font-bold flex items-center gap-1.5 text-slate-800">
-                <ShoppingBag className="h-4 w-4 text-primary" />
-                {t('home.featured_deals')}
-              </h2>
-              <Link
-                to="/explore"
-                className="text-[11px] md:text-xs font-medium text-primary hover:underline flex items-center"
-              >
-                {t('common.view_all')} <ArrowRight className="h-3 w-3 ml-1" />
-              </Link>
-            </div>
-
-            <Carousel className="w-full">
-              <CarouselContent className="-ml-3">
-                {featuredCoupons.map((coupon) => (
-                  <CarouselItem
-                    key={coupon.id}
-                    className="pl-3 basis-[45%] sm:basis-[30%] md:basis-1/4 lg:basis-1/5 xl:basis-1/6"
-                  >
-                    <CouponCard coupon={coupon} />
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              <div className="hidden md:block">
-                <CarouselPrevious className="h-8 w-8 -left-4" />
-                <CarouselNext className="h-8 w-8 -right-4" />
+          <section className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 rounded-xl p-4 md:p-6 border border-amber-100 dark:border-amber-900/30 shadow-sm relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-amber-200/30 dark:bg-amber-800/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-base md:text-lg font-bold flex items-center gap-1.5 text-amber-900 dark:text-amber-500">
+                  <Zap className="h-4 w-4 text-amber-500" fill="currentColor" />
+                  {t('home.featured_deals')}
+                </h2>
+                <Link
+                  to="/explore"
+                  className="text-[11px] md:text-xs font-medium text-amber-700 hover:text-amber-800 hover:underline flex items-center"
+                >
+                  {t('common.view_all')} <ArrowRight className="h-3 w-3 ml-1" />
+                </Link>
               </div>
-            </Carousel>
+
+              <Carousel className="w-full">
+                <CarouselContent className="-ml-3">
+                  {featuredCoupons.map((coupon) => (
+                    <CarouselItem
+                      key={coupon.id}
+                      className="pl-3 basis-[45%] sm:basis-[30%] md:basis-1/4 lg:basis-1/5 xl:basis-1/6"
+                    >
+                      <CouponCard coupon={coupon} />
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <div className="hidden md:block">
+                  <CarouselPrevious className="h-8 w-8 -left-4" />
+                  <CarouselNext className="h-8 w-8 -right-4" />
+                </div>
+              </Carousel>
+            </div>
           </section>
         )}
 
@@ -504,20 +575,181 @@ export default function Index() {
 
         {widgets.all && (
           <section>
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
               <h2 className="text-base md:text-lg font-bold flex items-center gap-1.5 text-slate-800">
-                <Zap className="h-4 w-4 text-yellow-500" />
+                <ShoppingBag className="h-4 w-4 text-primary" />
                 {selectedCategory === 'all'
                   ? t('home.all_offers')
                   : `${t('home.offers_of')} ${t(selectedCategoryLabel)}`}
               </h2>
-            </div>
-            {filteredCoupons.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-                {filteredCoupons.map((coupon) => (
-                  <CouponCard key={`all-${coupon.id}`} coupon={coupon} />
-                ))}
+
+              <div className="flex items-center gap-2 self-end sm:self-auto">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 gap-1.5 text-xs relative pr-3"
+                    >
+                      <SlidersHorizontal className="h-3.5 w-3.5" />
+                      {tFallback('common.filters', 'Filters')}
+                      {(maxPrice[0] < 1000 || discountType !== 'all') && (
+                        <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-primary" />
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-72 md:w-80" align="end">
+                    <div className="space-y-4">
+                      <h4 className="font-semibold text-sm">
+                        {tFallback('filters.advanced', 'Advanced Filters')}
+                      </h4>
+
+                      <div className="space-y-2">
+                        <Label className="text-xs">
+                          {t('explore.categories')}
+                        </Label>
+                        <Select
+                          value={selectedCategory}
+                          onValueChange={setSelectedCategory}
+                        >
+                          <SelectTrigger className="h-8 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {CATEGORIES.map((cat) => (
+                              <SelectItem key={cat.id} value={cat.id}>
+                                {t(cat.translationKey)}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-3 pt-2">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs">
+                            {tFallback('filters.max_price', 'Max Price')}
+                          </Label>
+                          <span className="text-xs font-medium text-primary">
+                            {maxPrice[0] >= 1000
+                              ? tFallback('common.any', 'Any')
+                              : formatCurrency(maxPrice[0])}
+                          </span>
+                        </div>
+                        <Slider
+                          max={1000}
+                          step={50}
+                          value={maxPrice}
+                          onValueChange={setMaxPrice}
+                        />
+                      </div>
+
+                      <div className="space-y-2 pt-2">
+                        <Label className="text-xs">
+                          {tFallback('filters.discount_type', 'Discount Type')}
+                        </Label>
+                        <Select
+                          value={discountType}
+                          onValueChange={setDiscountType}
+                        >
+                          <SelectTrigger className="h-8 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">
+                              {tFallback('common.all', 'All Types')}
+                            </SelectItem>
+                            <SelectItem value="percentage">
+                              {tFallback(
+                                'filters.percentage',
+                                'Percentage (%)',
+                              )}
+                            </SelectItem>
+                            <SelectItem value="fixed">
+                              {tFallback('filters.fixed', 'Fixed Amount')}
+                            </SelectItem>
+                            <SelectItem value="free_shipping">
+                              {tFallback(
+                                'filters.free_shipping',
+                                'Free Shipping',
+                              )}
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="pt-2">
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="w-full text-xs h-8"
+                          onClick={() => {
+                            setSelectedCategory('all')
+                            setMaxPrice([1000])
+                            setDiscountType('all')
+                          }}
+                        >
+                          {tFallback('common.clear', 'Clear Filters')}
+                        </Button>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+
+                <ToggleGroup
+                  type="single"
+                  value={viewMode}
+                  onValueChange={(val) => {
+                    if (val) setViewMode(val as 'grid' | 'list')
+                  }}
+                  className="bg-white border rounded-md h-8 p-0.5"
+                >
+                  <ToggleGroupItem
+                    value="grid"
+                    aria-label="Grid view"
+                    className="h-full w-8 p-0 data-[state=on]:bg-slate-100"
+                  >
+                    <LayoutGrid className="h-3.5 w-3.5" />
+                  </ToggleGroupItem>
+                  <ToggleGroupItem
+                    value="list"
+                    aria-label="List view"
+                    className="h-full w-8 p-0 data-[state=on]:bg-slate-100"
+                  >
+                    <List className="h-3.5 w-3.5" />
+                  </ToggleGroupItem>
+                </ToggleGroup>
               </div>
+            </div>
+
+            {filteredCoupons.length > 0 ? (
+              <>
+                <div
+                  className={cn(
+                    'gap-3',
+                    viewMode === 'grid'
+                      ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6'
+                      : 'flex flex-col space-y-3',
+                  )}
+                >
+                  {filteredCoupons.slice(0, visibleCount).map((coupon) => (
+                    <CouponCard
+                      key={`all-${coupon.id}`}
+                      coupon={coupon}
+                      variant={viewMode === 'grid' ? 'vertical' : 'horizontal'}
+                    />
+                  ))}
+                </div>
+
+                {visibleCount < filteredCoupons.length && (
+                  <div
+                    ref={loaderRef}
+                    className="py-8 flex justify-center items-center"
+                  >
+                    <Loader2 className="h-6 w-6 text-primary/60 animate-spin" />
+                  </div>
+                )}
+              </>
             ) : (
               <div className="text-center py-10 text-muted-foreground bg-white rounded-lg border border-dashed">
                 <p className="text-sm mb-2">{t('home.no_offers')}</p>
@@ -527,10 +759,12 @@ export default function Index() {
                   className="text-primary h-auto py-0"
                   onClick={() => {
                     setSelectedCategory('all')
+                    setMaxPrice([1000])
+                    setDiscountType('all')
                     handleSearchChange('')
                   }}
                 >
-                  {t('common.view_all')}
+                  {tFallback('common.clear', 'Clear Filters')}
                 </Button>
               </div>
             )}
