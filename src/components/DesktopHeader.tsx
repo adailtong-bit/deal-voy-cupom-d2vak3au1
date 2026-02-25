@@ -175,7 +175,7 @@ export function DesktopHeader() {
         <div className="flex items-center gap-3">
           <Select value={selectedRegion} onValueChange={setRegion}>
             <SelectTrigger className="w-[110px] h-8 text-xs bg-muted/50 border-none focus:ring-0 px-2 gap-1 rounded-full">
-              <SelectValue placeholder="Region" />
+              <SelectValue placeholder={t('admin.region')} />
             </SelectTrigger>
             <SelectContent align="end">
               {regions.map((r) => (
@@ -257,8 +257,8 @@ export function DesktopHeader() {
             </SheetTrigger>
             <SheetContent side="right">
               <SheetHeader>
-                <SheetTitle>Menu Deal Voy</SheetTitle>
-                <SheetDescription>Deal Voy App</SheetDescription>
+                <SheetTitle>{t('nav.menu_title')}</SheetTitle>
+                <SheetDescription>{t('nav.menu_desc')}</SheetDescription>
               </SheetHeader>
               <div className="flex flex-col gap-4 mt-6">
                 <SheetClose asChild>

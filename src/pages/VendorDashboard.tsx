@@ -301,10 +301,10 @@ export default function VendorDashboard() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Customer</TableHead>
-                    <TableHead>Details</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead>{t('vendor.date')}</TableHead>
+                    <TableHead>{t('vendor.customer')}</TableHead>
+                    <TableHead>{t('vendor.details')}</TableHead>
+                    <TableHead>{t('vendor.status')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -499,10 +499,10 @@ export default function VendorDashboard() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Time</TableHead>
-                    <TableHead>Customer</TableHead>
-                    <TableHead>Coupon</TableHead>
-                    <TableHead>Method</TableHead>
+                    <TableHead>{t('vendor.time')}</TableHead>
+                    <TableHead>{t('vendor.customer')}</TableHead>
+                    <TableHead>{t('vendor.coupon')}</TableHead>
+                    <TableHead>{t('vendor.method')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

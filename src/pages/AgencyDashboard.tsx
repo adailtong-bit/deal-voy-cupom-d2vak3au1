@@ -100,7 +100,9 @@ export default function AgencyDashboard() {
             <Briefcase className="h-8 w-8 text-primary" />
             {t('agency.dashboard')}
           </h1>
-          <p className="text-muted-foreground">{user.name} - Agency Portal</p>
+          <p className="text-muted-foreground">
+            {user.name} - {t('agency.portal')}
+          </p>
         </div>
       </div>
 
@@ -200,10 +202,10 @@ export default function AgencyDashboard() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Item</TableHead>
-                    <TableHead>Customer</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead>{t('agency.date')}</TableHead>
+                    <TableHead>{t('agency.item')}</TableHead>
+                    <TableHead>{t('agency.customer')}</TableHead>
+                    <TableHead>{t('agency.status')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -252,17 +254,17 @@ export default function AgencyDashboard() {
                 >
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>Model</Label>
+                      <Label>{t('agency.model')}</Label>
                       <Input {...register('model')} required />
                     </div>
                     <div className="space-y-2">
-                      <Label>Brand</Label>
+                      <Label>{t('agency.brand')}</Label>
                       <Input {...register('brand')} required />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>Year</Label>
+                      <Label>{t('agency.year')}</Label>
                       <Input
                         type="number"
                         {...register('year')}
@@ -271,7 +273,7 @@ export default function AgencyDashboard() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Price/Day</Label>
+                      <Label>{t('agency.price_day')}</Label>
                       <Input
                         type="number"
                         {...register('pricePerDay')}
@@ -280,11 +282,11 @@ export default function AgencyDashboard() {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label>Plate</Label>
+                    <Label>{t('agency.plate')}</Label>
                     <Input {...register('plate')} required />
                   </div>
                   <div className="space-y-2">
-                    <Label>Location</Label>
+                    <Label>{t('agency.location')}</Label>
                     <Input {...register('location')} required />
                   </div>
                   <Button type="submit" className="w-full">
@@ -300,11 +302,11 @@ export default function AgencyDashboard() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Vehicle</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Price/Day</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Location</TableHead>
+                    <TableHead>{t('agency.vehicle')}</TableHead>
+                    <TableHead>{t('agency.category')}</TableHead>
+                    <TableHead>{t('agency.price_day')}</TableHead>
+                    <TableHead>{t('agency.status')}</TableHead>
+                    <TableHead>{t('agency.location')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -343,11 +345,11 @@ export default function AgencyDashboard() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Client</TableHead>
-                    <TableHead>Action</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead>{t('agency.date')}</TableHead>
+                    <TableHead>{t('agency.client')}</TableHead>
+                    <TableHead>{t('agency.action')}</TableHead>
+                    <TableHead>{t('agency.amount')}</TableHead>
+                    <TableHead>{t('agency.status')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

@@ -90,7 +90,9 @@ export default function Settings() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex items-center justify-between">
-                <Label className="text-base">Enable Notifications</Label>
+                <Label className="text-base">
+                  {t('settings.enable_notifications')}
+                </Label>
                 <Switch
                   checked={notifications}
                   onCheckedChange={setNotifications}
@@ -99,7 +101,7 @@ export default function Settings() {
 
               <div className="space-y-4 pt-4 border-t">
                 <div className="flex items-center justify-between">
-                  <Label>Email Alerts</Label>
+                  <Label>{t('settings.email_alerts')}</Label>
                   <Switch
                     checked={emailAlerts}
                     onCheckedChange={setEmailAlerts}
@@ -107,7 +109,7 @@ export default function Settings() {
                   />
                 </div>
                 <div className="flex items-center justify-between">
-                  <Label>Push Notifications</Label>
+                  <Label>{t('settings.push_notifications')}</Label>
                   <Switch
                     checked={pushAlerts}
                     onCheckedChange={setPushAlerts}
@@ -118,11 +120,11 @@ export default function Settings() {
 
               <div className="space-y-4 pt-4 border-t">
                 <Label className="text-base font-semibold block mb-2">
-                  Quiet Hours
+                  {t('settings.quiet_hours')}
                 </Label>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Start</Label>
+                    <Label>{t('settings.start')}</Label>
                     <Input
                       type="time"
                       value={quietStart}
@@ -131,7 +133,7 @@ export default function Settings() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>End</Label>
+                    <Label>{t('settings.end')}</Label>
                     <Input
                       type="time"
                       value={quietEnd}
@@ -183,27 +185,27 @@ export default function Settings() {
             <CardContent className="space-y-6">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label>Two-Factor Authentication</Label>
+                  <Label>{t('settings.2fa')}</Label>
                   <p className="text-sm text-muted-foreground">
-                    Add extra security
+                    {t('settings.2fa_desc')}
                   </p>
                 </div>
                 <Switch />
               </div>
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label>Location Tracking</Label>
+                  <Label>{t('settings.location')}</Label>
                   <p className="text-sm text-muted-foreground">
-                    Allow app to use location
+                    {t('settings.location_desc')}
                   </p>
                 </div>
                 <Switch defaultChecked />
               </div>
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label>Profile Visibility</Label>
+                  <Label>{t('settings.profile_visibility')}</Label>
                   <p className="text-sm text-muted-foreground">
-                    Make profile public
+                    {t('settings.profile_visibility_desc')}
                   </p>
                 </div>
                 <Switch />
@@ -211,7 +213,7 @@ export default function Settings() {
             </CardContent>
           </Card>
           <Button variant="destructive" className="w-full">
-            Delete Account
+            {t('settings.delete_account')}
           </Button>
         </TabsContent>
 
@@ -225,7 +227,7 @@ export default function Settings() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
-                <Label>App Language</Label>
+                <Label>{t('settings.app_language')}</Label>
                 <LanguageSelector />
               </div>
             </CardContent>

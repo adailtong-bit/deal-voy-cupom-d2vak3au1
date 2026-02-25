@@ -81,7 +81,10 @@ export default function PaymentMethods() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>{t('checkout.expiry')}</Label>
-                  <Input placeholder="MM/YY" required />
+                  <Input
+                    placeholder={t('payment.expiry_placeholder')}
+                    required
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>{t('checkout.cvc')}</Label>
@@ -116,7 +119,7 @@ export default function PaymentMethods() {
                     {method.brand} •••• {method.last4}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Expires {method.expiry}
+                    {t('payment.expires')} {method.expiry}
                   </p>
                 </div>
               </div>
@@ -138,9 +141,9 @@ export default function PaymentMethods() {
               <Wallet className="h-6 w-6 text-blue-500" />
             </div>
             <div className="flex-1">
-              <p className="font-medium">Apple Pay / Google Pay</p>
+              <p className="font-medium">{t('payment.apple_google_pay')}</p>
               <p className="text-xs text-muted-foreground">
-                Connected via device
+                {t('payment.connected_device')}
               </p>
             </div>
             <Button variant="link">{t('common.view')}</Button>

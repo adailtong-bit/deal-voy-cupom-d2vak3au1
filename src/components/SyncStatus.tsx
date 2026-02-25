@@ -5,9 +5,11 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { useLanguage } from '@/stores/LanguageContext'
 
 export function SyncStatus() {
   const [status, setStatus] = useState<'synced' | 'syncing'>('synced')
+  const { t } = useLanguage()
 
   useEffect(() => {
     // Simulate periodic background sync
@@ -33,10 +35,10 @@ export function SyncStatus() {
         <div className="flex items-center gap-2 text-xs">
           {status === 'synced' ? (
             <>
-              <Check className="h-3 w-3 text-green-500" /> Data Synced
+              <Check className="h-3 w-3 text-green-500" /> {t('sync.synced')}
             </>
           ) : (
-            'Syncing...'
+            t('sync.syncing')
           )}
         </div>
       </TooltipContent>

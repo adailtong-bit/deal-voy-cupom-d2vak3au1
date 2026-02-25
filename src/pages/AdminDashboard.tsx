@@ -299,11 +299,11 @@ export default function AdminDashboard() {
                       className="space-y-4"
                     >
                       <div className="space-y-2">
-                        <Label>Name</Label>
+                        <Label>{t('admin.name')}</Label>
                         <Input {...register('name')} required />
                       </div>
                       <div className="space-y-2">
-                        <Label>Region</Label>
+                        <Label>{t('admin.region')}</Label>
                         <Input
                           {...register('region')}
                           placeholder="Ex: BR-MG"
@@ -311,7 +311,7 @@ export default function AdminDashboard() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>Expiry</Label>
+                        <Label>{t('admin.expiry')}</Label>
                         <Input type="date" {...register('expiry')} required />
                       </div>
                       <DialogFooter>
@@ -325,10 +325,10 @@ export default function AdminDashboard() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Region</TableHead>
-                      <TableHead>Expiry</TableHead>
-                      <TableHead>Status</TableHead>
+                      <TableHead>{t('admin.name')}</TableHead>
+                      <TableHead>{t('admin.region')}</TableHead>
+                      <TableHead>{t('admin.expiry')}</TableHead>
+                      <TableHead>{t('admin.status')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -360,11 +360,11 @@ export default function AdminDashboard() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Region</TableHead>
-                    <TableHead>Joined</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Action</TableHead>
+                    <TableHead>{t('admin.name')}</TableHead>
+                    <TableHead>{t('admin.region')}</TableHead>
+                    <TableHead>{t('admin.joined')}</TableHead>
+                    <TableHead>{t('admin.status')}</TableHead>
+                    <TableHead>{t('admin.action')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -418,10 +418,10 @@ export default function AdminDashboard() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Author</TableHead>
-                    <TableHead>Action</TableHead>
+                    <TableHead>{t('admin.type')}</TableHead>
+                    <TableHead>{t('admin.title')}</TableHead>
+                    <TableHead>{t('admin.author')}</TableHead>
+                    <TableHead>{t('admin.action')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -477,11 +477,11 @@ export default function AdminDashboard() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Action</TableHead>
-                    <TableHead>Details</TableHead>
-                    <TableHead>User</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead>{t('admin.date')}</TableHead>
+                    <TableHead>{t('admin.action')}</TableHead>
+                    <TableHead>{t('admin.details')}</TableHead>
+                    <TableHead>{t('admin.user')}</TableHead>
+                    <TableHead>{t('admin.status')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -520,7 +520,7 @@ export default function AdminDashboard() {
             <BarChart className="h-10 w-10 mx-auto text-muted-foreground mb-4" />
             <h3 className="text-lg font-medium">{t('admin.reports')}</h3>
             <p className="text-sm text-muted-foreground">
-              Detailed analytics unavailable in demo.
+              {t('admin.analytics_unavailable')}
             </p>
           </div>
         </TabsContent>
