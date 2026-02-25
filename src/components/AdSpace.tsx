@@ -1,9 +1,10 @@
 import { useCouponStore } from '@/stores/CouponContext'
 import { cn } from '@/lib/utils'
-import { ExternalLink } from 'lucide-react'
+import { ExternalLink, ImageOff } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
 import { Advertisement } from '@/lib/types'
 import { getCategoryTranslationKey } from '@/lib/data'
+import { useState, useEffect } from 'react'
 
 interface AdSpaceProps {
   position?: 'top' | 'bottom'
@@ -14,15 +15,20 @@ interface AdSpaceProps {
 export function AdSpace({ position, className, customAds }: AdSpaceProps) {
   const { ads: storeAds } = useCouponStore()
   const { t, formatCurrency } = useLanguage()
+  const [imgError, setImgError] = useState(false)
 
   const adsToUse = customAds || storeAds
   const availableAds = adsToUse.filter((ad) => ad.status === 'active')
 
-  if (availableAds.length === 0) return null
-
   const adIndex =
     position === 'top' ? 0 : position === 'bottom' ? 1 : 0 % availableAds.length
   const ad = availableAds[adIndex] || availableAds[0]
+
+  useEffect(() => {
+    setImgError(false)
+  }, [ad?.id])
+
+  if (!ad) return null
 
   return (
     <div className={cn('w-full py-2 md:py-4 bg-slate-50', className)}>
@@ -37,15 +43,21 @@ export function AdSpace({ position, className, customAds }: AdSpaceProps) {
             rel="noopener noreferrer"
             className="flex flex-row items-center md:items-stretch h-full"
           >
-            <div className="w-24 md:w-1/3 h-16 md:h-24 relative overflow-hidden shrink-0">
-              <img
-                src={
-                  ad.image ||
-                  `https://img.usecurling.com/p/600/200?q=${ad.category}`
-                }
-                alt={ad.title}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-              />
+            <div className="w-24 md:w-1/3 h-16 md:h-24 relative overflow-hidden shrink-0 bg-slate-100 flex items-center justify-center">
+              {!imgError ? (
+                <img
+                  src={
+                    ad.image ||
+                    `https://img.usecurling.com/p/600/200?q=${ad.category}`
+                  }
+                  alt={ad.title}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  crossOrigin="anonymous"
+                  onError={() => setImgError(true)}
+                />
+              ) : (
+                <ImageOff className="h-6 w-6 text-slate-300" />
+              )}
             </div>
             <div className="flex-1 p-2 md:p-3 flex flex-col justify-center w-full min-w-0">
               <div className="flex items-center justify-between mb-0.5 md:mb-1">
