@@ -14,6 +14,9 @@ import {
   Luggage,
   MoreVertical,
   ImageOff,
+  QrCode,
+  CalendarDays,
+  Info,
 } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
@@ -457,8 +460,8 @@ export default function TravelPlanner() {
                         className="flex gap-4 group"
                       >
                         {/* Time Column */}
-                        <div className="w-20 shrink-0 flex flex-col items-center pt-4">
-                          <span className="text-sm font-bold text-slate-700 text-center leading-tight">
+                        <div className="w-16 sm:w-20 shrink-0 flex flex-col items-center pt-4">
+                          <span className="text-xs sm:text-sm font-bold text-slate-700 text-center leading-tight">
                             {getMockTime(idx).replace(' ', '\n')}
                           </span>
                           <div className="flex-1 w-px bg-slate-200 mt-2 group-last:hidden" />
@@ -467,7 +470,7 @@ export default function TravelPlanner() {
                         {/* Activity Card */}
                         <Card className="flex-1 overflow-hidden hover:shadow-md transition-shadow bg-white border-slate-200">
                           <div className="flex flex-col sm:flex-row">
-                            <div className="w-full sm:w-40 h-32 sm:h-auto shrink-0 relative bg-slate-100 flex items-center justify-center">
+                            <div className="w-full sm:w-48 h-40 sm:h-auto shrink-0 relative bg-slate-100 flex items-center justify-center">
                               {stop.image ? (
                                 <img
                                   src={stop.image}
@@ -484,17 +487,14 @@ export default function TravelPlanner() {
                                 {stop.category}
                               </Badge>
                             </div>
-                            <CardContent className="p-4 sm:p-5 flex-1 flex flex-col justify-center">
-                              <div className="flex justify-between items-start gap-4">
+                            <CardContent className="p-4 sm:p-5 flex-1 flex flex-col">
+                              <div className="flex justify-between items-start gap-4 mb-2">
                                 <div>
                                   <h4 className="text-lg font-bold text-slate-900 leading-tight mb-1">
                                     {stop.storeName}
                                   </h4>
-                                  <p className="text-sm text-primary font-medium mb-2">
+                                  <p className="text-sm text-primary font-medium">
                                     {stop.title}
-                                  </p>
-                                  <p className="text-sm text-slate-600 line-clamp-2">
-                                    {stop.description}
                                   </p>
                                 </div>
                                 <Button
@@ -508,6 +508,55 @@ export default function TravelPlanner() {
                                 >
                                   <Trash2 className="h-5 w-5" />
                                 </Button>
+                              </div>
+
+                              <p className="text-sm text-slate-600 line-clamp-2 mb-4">
+                                {stop.description}
+                              </p>
+
+                              {/* Address and Validity */}
+                              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-5">
+                                <div className="flex items-start sm:items-center gap-1.5 text-xs text-slate-600">
+                                  <MapPin className="h-3.5 w-3.5 text-slate-400 shrink-0 mt-0.5 sm:mt-0" />
+                                  <span className="line-clamp-1">
+                                    {stop.address || 'Address unavailable'}
+                                  </span>
+                                </div>
+                                <div className="hidden sm:block w-1 h-1 rounded-full bg-slate-300" />
+                                <div className="flex items-center gap-1.5 text-xs text-slate-600">
+                                  <CalendarDays className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                                  <span>
+                                    Valid until:{' '}
+                                    {stop.expiryDate
+                                      ? new Date(
+                                          stop.expiryDate,
+                                        ).toLocaleDateString()
+                                      : 'N/A'}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Instructions and QR block */}
+                              <div className="mt-auto bg-slate-50 rounded-lg border border-slate-100 p-3 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                                <div className="flex-1 space-y-1.5">
+                                  <h5 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                                    <Info className="h-3.5 w-3.5 text-primary" />
+                                    How to Use
+                                  </h5>
+                                  <p className="text-xs text-slate-600 leading-relaxed">
+                                    {stop.instructions ||
+                                      'Present this screen at the counter. Ensure the code is clearly visible to claim your benefit.'}
+                                  </p>
+                                </div>
+                                <div className="shrink-0 bg-white border border-slate-200 rounded p-2 flex flex-col items-center justify-center min-w-[110px] w-full sm:w-auto shadow-sm">
+                                  <QrCode
+                                    className="h-10 w-10 text-slate-800 mb-1"
+                                    strokeWidth={1.5}
+                                  />
+                                  <span className="text-[10px] font-mono font-bold text-slate-500 tracking-widest uppercase text-center w-full truncate px-1">
+                                    {stop.code || 'NO-CODE'}
+                                  </span>
+                                </div>
                               </div>
                             </CardContent>
                           </div>

@@ -80,6 +80,8 @@ export interface Coupon {
   isTrending?: boolean
   isSpecial?: boolean
   terms?: string
+  address?: string
+  instructions?: string
   coordinates: {
     lat: number
     lng: number

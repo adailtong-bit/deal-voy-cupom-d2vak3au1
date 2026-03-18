@@ -230,6 +230,9 @@ const generateCoupons = (): Coupon[] => {
     visitCount: 0,
     price: 199.99,
     currency: 'BRL',
+    address: 'Av. Paulista, 1230, São Paulo, SP',
+    instructions:
+      'Apresente este código no caixa da loja para aplicar o desconto. Válido apenas para itens selecionados.',
   })
 
   for (let i = 1; i <= 30; i++) {
@@ -296,6 +299,10 @@ const generateCoupons = (): Coupon[] => {
       price: i % 2 === 0 ? 50 + i * 10 : undefined,
       currency: isUS ? 'USD' : 'BRL',
       reviews: reviews,
+      address: isUS
+        ? `${1000 + i} Ocean Drive, Miami, FL`
+        : `Av. Paulista, ${1000 + i}, São Paulo, SP`,
+      instructions: `Apresente este código no caixa do ${isUS ? 'estabelecimento' : 'estabelecimento'} para resgatar sua oferta. Certifique-se de que o código esteja visível.`,
       behavioralTriggers:
         i === 1
           ? [
