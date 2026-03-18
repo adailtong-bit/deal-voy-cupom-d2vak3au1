@@ -161,7 +161,22 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   const [coupons, setCoupons] = useState<Coupon[]>(MOCK_COUPONS)
   const [companies, setCompanies] = useState<Company[]>(MOCK_COMPANIES)
   const [ads, setAds] = useState<Advertisement[]>(MOCK_ADS)
-  const [user, setUser] = useState<User | null>(MOCK_USERS[5]) // Default user
+
+  const [user, setUser] = useState<User | null>(() => {
+    const storedUser = localStorage.getItem('currentUser')
+    if (storedUser) {
+      try {
+        return JSON.parse(storedUser)
+      } catch {
+        // ignore parsing error
+      }
+    }
+    // Initialize developer with super_admin role by default granting full access
+    const defaultDevUser =
+      MOCK_USERS.find((u) => u.role === 'super_admin') || MOCK_USERS[0]
+    return defaultDevUser
+  })
+
   const [savedIds, setSavedIds] = useState<string[]>([])
   const [reservedIds, setReservedIds] = useState<string[]>([])
   const [tripIds, setTripIds] = useState<string[]>([])
@@ -210,11 +225,22 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   const [rewardHistory, setRewardHistory] = useState<RewardActivity[]>([])
 
   useEffect(() => {
-    // Initial Load Logic
+    if (user) {
+      localStorage.setItem('currentUser', JSON.stringify(user))
+    } else {
+      localStorage.removeItem('currentUser')
+    }
+  }, [user])
+
+  useEffect(() => {
     const storedSaved = localStorage.getItem('savedCoupons')
-    if (storedSaved) setSavedIds(JSON.parse(storedSaved))
-    const storedUser = localStorage.getItem('currentUser')
-    if (storedUser) setUser(JSON.parse(storedUser))
+    if (storedSaved) {
+      try {
+        setSavedIds(JSON.parse(storedSaved))
+      } catch {
+        // ignore
+      }
+    }
     const storedActiveItinerary = localStorage.getItem('activeItineraryId')
     if (storedActiveItinerary) setActiveItineraryId(storedActiveItinerary)
 
@@ -224,7 +250,6 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     }, 1500)
   }, [])
 
-  // Persist Active Itinerary
   useEffect(() => {
     if (activeItineraryId) {
       localStorage.setItem('activeItineraryId', activeItineraryId)
@@ -303,7 +328,6 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   const reserveCoupon = (id: string) => {
     setReservedIds((prev) => [...prev, id])
     logSystemAction('Reserve Coupon', `Reserved coupon ${id}`)
-    // Increment visit count on reservation for demo purposes
     trackVisit(id)
     return true
   }
@@ -365,7 +389,6 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       prev.map((c) => {
         if (c.id === couponId) {
           const newCount = (c.visitCount || 0) + 1
-          // Check for triggers
           if (c.behavioralTriggers) {
             c.behavioralTriggers.forEach((trigger) => {
               if (
@@ -428,7 +451,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       userName: user?.name,
     }
     setBookings((prev) => [newBooking, ...prev])
-    setPoints((prev) => prev + 50) // Points for booking
+    setPoints((prev) => prev + 50)
     logSystemAction('New Booking', `Booking created for ${booking.storeName}`)
     setRewardHistory((prev) => [
       {
@@ -507,7 +530,6 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       couponId: d.couponId,
     }
     setTransactions((prev) => [transaction, ...prev])
-    // Award points for purchase (1pt per $1)
     const pointsEarned = Math.floor(d.amount)
     setPoints((prev) => prev + pointsEarned)
     setRewardHistory((prev) => [
@@ -535,7 +557,6 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   }
 
   const login = (email: string, role?: User['role']) => {
-    // Try to find an existing mock user first
     const existingUser = MOCK_USERS.find((u) => u.email === email)
     if (existingUser) {
       setUser(existingUser)
@@ -543,7 +564,6 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       toast.success(`Bem-vindo, ${existingUser.name}!`)
       logSystemAction('User Login', `User ${existingUser.email} logged in`)
     } else {
-      // Fallback or generic logic
       const newUser: User = {
         id: Math.random().toString(),
         name: email.split('@')[0],
@@ -561,6 +581,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     logSystemAction('User Logout', `User ${user?.email} logged out`)
     setUser(null)
   }
+
   const approveCompany = (id: string) => {
     setCompanies((prev) =>
       prev.map((c) => (c.id === id ? { ...c, status: 'active' } : c)),
@@ -611,6 +632,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   const connectApp = (id: string) => {
     /* ... */
   }
+
   const saveItinerary = (it: Itinerary) => {
     const newItinerary = {
       ...it,
@@ -694,7 +716,6 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       return { success: false, message: 'Coupon expired' }
     }
 
-    // Update coupon status to used
     setCoupons((prev) =>
       prev.map((c) => (c.id === coupon.id ? { ...c, status: 'used' } : c)),
     )
@@ -711,7 +732,6 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     setValidationLogs((prev) => [log, ...prev])
     logSystemAction('Coupon Validated', `Coupon ${coupon.id} validated via QR`)
 
-    // Award points for using coupon
     setPoints((prev) => prev + 20)
     setRewardHistory((prev) => [
       {
@@ -724,7 +744,6 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       ...prev,
     ])
 
-    // Trigger behavioral logic for visit
     trackVisit(coupon.id)
     return { success: true, message: 'Validated successfully' }
   }

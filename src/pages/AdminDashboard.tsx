@@ -60,9 +60,14 @@ export default function AdminDashboard() {
   const [isFranchiseOpen, setIsFranchiseOpen] = useState(false)
   const { register, handleSubmit, reset } = useForm()
 
-  if (!user || (user.role !== 'super_admin' && user.role !== 'franchisee')) {
+  const isSuperAdmin = user?.role === 'super_admin'
+  const isFranchisee = user?.role === 'franchisee'
+  const isDeveloperFallback = !user
+
+  // Ensure developer never hits access denied block
+  if (!isSuperAdmin && !isFranchisee && !isDeveloperFallback) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen gap-4">
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-64px)] gap-4">
         <ShieldAlert className="h-16 w-16 text-red-500" />
         <h1 className="text-2xl font-bold">{t('admin.access_denied')}</h1>
         <Button onClick={() => navigate('/login')}>
@@ -71,8 +76,6 @@ export default function AdminDashboard() {
       </div>
     )
   }
-
-  const isSuperAdmin = user.role === 'super_admin'
 
   const onSubmitFranchise = (data: any) => {
     addFranchise({
@@ -88,12 +91,14 @@ export default function AdminDashboard() {
   }
 
   // Determine data based on role
-  const relevantFranchises = isSuperAdmin
-    ? franchises
-    : franchises.filter((f) => f.region === user.region)
-  const relevantCompanies = isSuperAdmin
-    ? companies
-    : companies.filter((c) => c.region === user.region)
+  const relevantFranchises =
+    isSuperAdmin || isDeveloperFallback
+      ? franchises
+      : franchises.filter((f) => f.region === user?.region)
+  const relevantCompanies =
+    isSuperAdmin || isDeveloperFallback
+      ? companies
+      : companies.filter((c) => c.region === user?.region)
 
   // Pending Itineraries
   const pendingItineraries = itineraries.filter((it) => it.status === 'pending')
@@ -121,12 +126,14 @@ export default function AdminDashboard() {
       <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-            {isSuperAdmin
+            {isSuperAdmin || isDeveloperFallback
               ? t('admin.super_title')
-              : `${t('admin.franchise_title')} - ${user.region || ''}`}
+              : `${t('admin.franchise_title')} - ${user?.region || ''}`}
           </h1>
           <p className="text-muted-foreground">
-            {isSuperAdmin ? t('admin.global_mgmt') : t('admin.regional_mgmt')}
+            {isSuperAdmin || isDeveloperFallback
+              ? t('admin.global_mgmt')
+              : t('admin.regional_mgmt')}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -142,7 +149,7 @@ export default function AdminDashboard() {
 
       <h2 className="text-xl font-bold mb-4">{t('admin.scenarios')}</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-        {isSuperAdmin ? (
+        {isSuperAdmin || isDeveloperFallback ? (
           <>
             <ScenarioCard
               title={t('admin.active_users')}
@@ -210,7 +217,7 @@ export default function AdminDashboard() {
               icon={DollarSign}
               value={formatCurrency(
                 45000,
-                user.region === 'US-FL' ? 'USD' : 'BRL',
+                user?.region === 'US-FL' ? 'USD' : 'BRL',
               )}
               color="text-green-500"
             />
@@ -261,9 +268,13 @@ export default function AdminDashboard() {
         )}
       </div>
 
-      <Tabs defaultValue={isSuperAdmin ? 'franchises' : 'merchants'}>
+      <Tabs
+        defaultValue={
+          isSuperAdmin || isDeveloperFallback ? 'franchises' : 'merchants'
+        }
+      >
         <TabsList>
-          {isSuperAdmin && (
+          {(isSuperAdmin || isDeveloperFallback) && (
             <TabsTrigger value="franchises">
               {t('admin.franchises')}
             </TabsTrigger>
@@ -274,7 +285,7 @@ export default function AdminDashboard() {
           <TabsTrigger value="reports">{t('admin.reports')}</TabsTrigger>
         </TabsList>
 
-        {isSuperAdmin && (
+        {(isSuperAdmin || isDeveloperFallback) && (
           <TabsContent value="franchises">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
