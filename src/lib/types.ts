@@ -105,7 +105,8 @@ export interface Coupon {
   source?: 'partner' | 'aggregated'
   region?: string
   behavioralTriggers?: BehavioralTrigger[]
-  visitCount?: number // Tracked locally for user context or mocked
+  visitCount?: number
+  targetAudience?: 'all' | 'preferred'
 }
 
 export type CategoryType = Coupon['category']
@@ -296,6 +297,7 @@ export interface Company {
   region: string
   enableLoyalty: boolean
   ownerId?: string
+  preferredCustomers?: string[]
 }
 
 export type AdBillingType = 'fixed' | 'ppc' | 'ticketing'
@@ -416,6 +418,7 @@ export interface ValidationLog {
   validatedAt: string
   method: 'qr' | 'manual'
   shopkeeperId: string
+  userId?: string
 }
 
 export interface CarRental {

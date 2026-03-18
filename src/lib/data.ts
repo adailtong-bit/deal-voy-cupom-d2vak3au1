@@ -233,6 +233,7 @@ const generateCoupons = (): Coupon[] => {
     address: 'Av. Paulista, 1230, São Paulo, SP',
     instructions:
       'Apresente este código no caixa da loja para aplicar o desconto. Válido apenas para itens selecionados.',
+    targetAudience: 'all',
   })
 
   for (let i = 1; i <= 30; i++) {
@@ -303,6 +304,7 @@ const generateCoupons = (): Coupon[] => {
         ? `${1000 + i} Ocean Drive, Miami, FL`
         : `Av. Paulista, ${1000 + i}, São Paulo, SP`,
       instructions: `Apresente este código no caixa do ${isUS ? 'estabelecimento' : 'estabelecimento'} para resgatar sua oferta. Certifique-se de que o código esteja visível.`,
+      targetAudience: i % 5 === 0 ? 'preferred' : 'all',
       behavioralTriggers:
         i === 1
           ? [
@@ -372,6 +374,7 @@ const generateCompanies = (): Company[] => {
       region: isUS ? 'US-FL' : 'BR-SP',
       enableLoyalty: i % 3 === 0,
       ownerId: `u_shop_${i}`,
+      preferredCustomers: i === 1 ? ['u_user'] : [],
     })
   }
   return companies
@@ -622,12 +625,13 @@ export const MOCK_VALIDATION_LOGS: ValidationLog[] = Array.from({
   length: 20,
 }).map((_, i) => ({
   id: `vl-${i}`,
-  couponId: `cpn-${i}`,
-  couponTitle: `Coupon Offer ${i}`,
+  couponId: `cpn-${(i % 5) + 1}`,
+  couponTitle: `Coupon Offer ${(i % 5) + 1}`,
   customerName: `Customer ${i}`,
   validatedAt: new Date(Date.now() - i * 3600000).toISOString(),
   method: i % 2 === 0 ? 'qr' : 'manual',
   shopkeeperId: 'u_shop',
+  userId: i % 3 === 0 ? 'u_user' : 'u_agency',
 }))
 
 // System Logs (15 items)

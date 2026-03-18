@@ -11,6 +11,14 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
 import { Plus, QrCode } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useCouponStore } from '@/stores/CouponContext'
@@ -23,6 +31,11 @@ export function CreateCampaignDialog({ company }: { company: Company }) {
   const { register, handleSubmit, reset } = useForm()
   const [isOpen, setIsOpen] = useState(false)
   const [generatedCode, setGeneratedCode] = useState<string | null>(null)
+
+  const [targetAudience, setTargetAudience] = useState<'all' | 'preferred'>(
+    'all',
+  )
+  const [notifyPreferred, setNotifyPreferred] = useState(false)
 
   const onSubmit = (data: any) => {
     const code =
@@ -46,12 +59,22 @@ export function CreateCampaignDialog({ company }: { company: Company }) {
       expiryDate: data.endDate,
       region: company.region,
       currency: company.region === 'US-FL' ? 'USD' : 'BRL',
+      targetAudience,
     })
 
-    toast.success(t('common.success'))
+    if (notifyPreferred) {
+      toast.success(
+        'Offer successfully communicated to your preferred customers.',
+      )
+    } else {
+      toast.success(t('common.success'))
+    }
+
     setTimeout(() => {
       setIsOpen(false)
       setGeneratedCode(null)
+      setTargetAudience('all')
+      setNotifyPreferred(false)
       reset()
     }, 2000)
   }
@@ -97,8 +120,42 @@ export function CreateCampaignDialog({ company }: { company: Company }) {
                 </p>
               </div>
             </div>
+
+            <div className="space-y-2">
+              <Label>Target Audience</Label>
+              <Select
+                value={targetAudience}
+                onValueChange={(v: any) => setTargetAudience(v)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Users</SelectItem>
+                  <SelectItem value="preferred">
+                    Preferred Customers Only
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-center justify-between p-3 border rounded-md bg-slate-50">
+              <div className="space-y-0.5">
+                <Label>Notify Preferred Customers</Label>
+                <p className="text-xs text-muted-foreground">
+                  Send an alert about this new offer to your preferred segment.
+                </p>
+              </div>
+              <Switch
+                checked={notifyPreferred}
+                onCheckedChange={setNotifyPreferred}
+              />
+            </div>
+
             <DialogFooter>
-              <Button type="submit">{t('common.save')}</Button>
+              <Button type="submit" className="w-full">
+                {t('common.save')}
+              </Button>
             </DialogFooter>
           </form>
         ) : (

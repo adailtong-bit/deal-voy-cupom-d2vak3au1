@@ -63,6 +63,7 @@ interface CouponContextType {
   coupons: Coupon[]
   companies: Company[]
   ads: Advertisement[]
+  users: User[]
   user: User | null
   savedIds: string[]
   reservedIds: string[]
@@ -144,7 +145,10 @@ interface CouponContextType {
   moderateItinerary: (id: string, status: 'approved' | 'rejected') => void
   toggleLoyaltySystem: (companyId: string, enabled: boolean) => void
   addFranchise: (franchise: Franchise) => void
-  validateCoupon: (code: string) => { success: boolean; message: string }
+  validateCoupon: (
+    code: string,
+    customerEmail?: string,
+  ) => { success: boolean; message: string }
   addCarRental: (car: CarRental) => void
   trackVisit: (couponId: string) => void
   trackShare: (type: 'route' | 'coupon', id: string) => void
@@ -152,6 +156,7 @@ interface CouponContextType {
     couponId: string,
     triggers: BehavioralTrigger[],
   ) => void
+  togglePreferredCustomer: (companyId: string, userId: string) => void
 }
 
 const CouponContext = createContext<CouponContextType | undefined>(undefined)
@@ -161,6 +166,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   const [coupons, setCoupons] = useState<Coupon[]>(MOCK_COUPONS)
   const [companies, setCompanies] = useState<Company[]>(MOCK_COMPANIES)
   const [ads, setAds] = useState<Advertisement[]>(MOCK_ADS)
+  const [users, setUsers] = useState<User[]>(MOCK_USERS)
 
   const [user, setUser] = useState<User | null>(() => {
     const storedUser = localStorage.getItem('currentUser')
@@ -275,13 +281,27 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     setSystemLogs((prev) => [log, ...prev])
   }
 
-  // Filter content based on selectedRegion
-  const filteredCoupons =
-    selectedRegion === 'Global'
-      ? coupons
-      : coupons.filter(
-          (c) => !c.region || c.region === selectedRegion || c.region === '',
-        )
+  // Filter content based on selectedRegion and targetAudience
+  const filteredCoupons = coupons.filter((c) => {
+    const regionMatch =
+      selectedRegion === 'Global' ||
+      !c.region ||
+      c.region === selectedRegion ||
+      c.region === ''
+
+    let audienceMatch = true
+    if (c.targetAudience === 'preferred') {
+      const company = companies.find((comp) => comp.id === c.companyId)
+      const isMerchant =
+        user?.role === 'super_admin' ||
+        user?.role === 'shopkeeper' ||
+        user?.companyId === c.companyId
+      const isPreferred = company?.preferredCustomers?.includes(user?.id || '')
+      audienceMatch = isMerchant || !!isPreferred
+    }
+
+    return regionMatch && audienceMatch
+  })
 
   const filteredAds =
     selectedRegion === 'Global'
@@ -430,6 +450,24 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     toast.success('Triggers updated')
   }
 
+  const togglePreferredCustomer = (companyId: string, userId: string) => {
+    setCompanies((prev) =>
+      prev.map((c) => {
+        if (c.id === companyId) {
+          const preferred = c.preferredCustomers || []
+          const isPref = preferred.includes(userId)
+          return {
+            ...c,
+            preferredCustomers: isPref
+              ? preferred.filter((id) => id !== userId)
+              : [...preferred, userId],
+          }
+        }
+        return c
+      }),
+    )
+  }
+
   const addUpload = (doc: any) => {
     /* ... */
   }
@@ -557,7 +595,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   }
 
   const login = (email: string, role?: User['role']) => {
-    const existingUser = MOCK_USERS.find((u) => u.email === email)
+    const existingUser = users.find((u) => u.email === email)
     if (existingUser) {
       setUser(existingUser)
       if (existingUser.region) setSelectedRegion(existingUser.region)
@@ -696,7 +734,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     toast.success('Franquia criada com sucesso!')
   }
 
-  const validateCoupon = (code: string) => {
+  const validateCoupon = (code: string, customerEmail?: string) => {
     const coupon = coupons.find((c) => c.code === code)
 
     if (!coupon) {
@@ -716,6 +754,22 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       return { success: false, message: 'Coupon expired' }
     }
 
+    const customer = users.find((u) => u.email === customerEmail)
+    const customerId = customer?.id || (customerEmail ? 'walk-in' : 'u_user')
+
+    // Check maxPerUser limit
+    if (coupon.maxPerUser) {
+      const userRedemptions = validationLogs.filter(
+        (log) => log.couponId === coupon.id && log.userId === customerId,
+      ).length
+      if (userRedemptions >= coupon.maxPerUser) {
+        return {
+          success: false,
+          message: `Limit reached. Customer has used this coupon ${userRedemptions} times.`,
+        }
+      }
+    }
+
     setCoupons((prev) =>
       prev.map((c) => (c.id === coupon.id ? { ...c, status: 'used' } : c)),
     )
@@ -724,10 +778,11 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       id: Math.random().toString(),
       couponId: coupon.id,
       couponTitle: coupon.title,
-      customerName: 'Customer Walk-in',
+      customerName: customer?.name || customerEmail || 'Customer Walk-in',
       validatedAt: new Date().toISOString(),
       method: 'qr',
       shopkeeperId: user?.id || 'unknown',
+      userId: customerId,
     }
     setValidationLogs((prev) => [log, ...prev])
     logSystemAction('Coupon Validated', `Coupon ${coupon.id} validated via QR`)
@@ -764,6 +819,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         coupons: filteredCoupons,
         companies,
         ads: filteredAds,
+        users,
         user,
         savedIds,
         reservedIds,
@@ -845,6 +901,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         trackVisit,
         trackShare,
         updateBehavioralTriggers,
+        togglePreferredCustomer,
       },
     },
     children,

@@ -6,6 +6,7 @@ import {
   Scan,
   History,
   Settings,
+  Users,
 } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useCouponStore } from '@/stores/CouponContext'
@@ -20,6 +21,7 @@ import {
 } from '@/components/vendor/VendorTables'
 import { BehavioralTriggersTab } from '@/components/vendor/BehavioralTriggersTab'
 import { VendorSettingsTab } from '@/components/vendor/VendorSettingsTab'
+import { VendorCustomersTab } from '@/components/vendor/VendorCustomersTab'
 
 export default function VendorDashboard() {
   const { t } = useLanguage()
@@ -59,6 +61,10 @@ export default function VendorDashboard() {
             <ShoppingBag className="h-3 w-3 mr-1" /> {t('vendor.orders')}
           </TabsTrigger>
           <TabsTrigger value="offers">{t('vendor.offers')}</TabsTrigger>
+          <TabsTrigger value="customers">
+            <Users className="h-3 w-3 mr-1" />{' '}
+            {t('vendor.customers', 'Customers')}
+          </TabsTrigger>
           <TabsTrigger value="behavioral">
             <Zap className="h-3 w-3 mr-1" /> {t('vendor.behavioral')}
           </TabsTrigger>
@@ -82,6 +88,9 @@ export default function VendorDashboard() {
         </TabsContent>
         <TabsContent value="offers">
           <OffersTable offers={coupons} />
+        </TabsContent>
+        <TabsContent value="customers">
+          <VendorCustomersTab company={myCompany} />
         </TabsContent>
         <TabsContent value="behavioral">
           <BehavioralTriggersTab coupons={coupons} />

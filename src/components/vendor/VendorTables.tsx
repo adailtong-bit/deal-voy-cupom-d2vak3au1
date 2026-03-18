@@ -71,6 +71,7 @@ export function OffersTable({ offers }: { offers: Coupon[] }) {
           <TableHeader>
             <TableRow>
               <TableHead>{t('vendor.title')}</TableHead>
+              <TableHead>Audience</TableHead>
               <TableHead>{t('vendor.validity')}</TableHead>
               <TableHead>{t('vendor.stock')}</TableHead>
             </TableRow>
@@ -78,10 +79,21 @@ export function OffersTable({ offers }: { offers: Coupon[] }) {
           <TableBody>
             {offers.map((c) => (
               <TableRow key={c.id}>
-                <TableCell>{c.title}</TableCell>
+                <TableCell className="font-medium">{c.title}</TableCell>
+                <TableCell>
+                  <Badge
+                    variant={
+                      c.targetAudience === 'preferred' ? 'secondary' : 'outline'
+                    }
+                  >
+                    {c.targetAudience === 'preferred'
+                      ? 'Preferred'
+                      : 'All Users'}
+                  </Badge>
+                </TableCell>
                 <TableCell>{formatDate(c.expiryDate)}</TableCell>
                 <TableCell>
-                  {c.reservedCount} / {c.totalAvailable}
+                  {c.reservedCount} / {c.totalAvailable || '∞'}
                 </TableCell>
               </TableRow>
             ))}
