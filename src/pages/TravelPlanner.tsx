@@ -1,32 +1,47 @@
 import { useState, useMemo } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { useCouponStore } from '@/stores/CouponContext'
 import {
-  Compass,
   Search,
-  Save,
   Trash2,
   MapPin,
-  Globe,
-  Edit,
   Clock,
-  Navigation,
   Calendar,
   Plus,
-  CheckCircle,
-  Map as MapIcon,
-  X,
+  ArrowLeft,
   Luggage,
+  MoreVertical,
+  ImageOff,
 } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
-import { ScrollArea } from '@/components/ui/scroll-area'
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { toast } from 'sonner'
-import { Itinerary, Coupon } from '@/lib/types'
+import { Itinerary, Coupon, DayPlan } from '@/lib/types'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
-import { Separator } from '@/components/ui/separator'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 export default function TravelPlanner() {
   const {
@@ -37,52 +52,34 @@ export default function TravelPlanner() {
     itineraries,
     user,
   } = useCouponStore()
-  const { formatCurrency } = useLanguage()
+  const { t } = useLanguage()
 
-  // Navigation State
-  const [activeNav, setActiveNav] = useState<
-    'planned' | 'current' | 'past' | 'community'
-  >('planned')
-
-  // Selection & Edit State
+  // Views: 'dashboard' | 'detail'
+  const [view, setView] = useState<'dashboard' | 'detail'>('dashboard')
   const [selectedTripId, setSelectedTripId] = useState<string | null>(null)
-  const [isEditing, setIsEditing] = useState(false)
-  const [activeDayIndex, setActiveDayIndex] = useState(0)
+  const [activeDayId, setActiveDayId] = useState<string>('')
 
-  // Draft State for Editing
-  const [draftTrip, setDraftTrip] = useState<Partial<Itinerary> | null>(null)
+  // Create Trip State
+  const [isCreateOpen, setIsCreateOpen] = useState(false)
+  const [newTripTitle, setNewTripTitle] = useState('')
+  const [newTripDays, setNewTripDays] = useState('3')
 
-  // Discovery Search State
+  // Add Activity State
+  const [isAddSheetOpen, setIsAddSheetOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
 
-  // Filter Itineraries based on activeNav
-  const filteredItineraries = useMemo(() => {
-    const myIts = itineraries.filter(
-      (it) =>
-        it.authorId === user?.id || (user?.role === 'agency' && it.agencyId),
-    )
-    switch (activeNav) {
-      case 'planned':
-        return myIts.filter((it) => it.status === 'draft')
-      case 'current':
-        return myIts.filter(
-          (it) => it.status === 'approved' || it.status === 'pending',
-        )
-      case 'past':
-        // Mocking past trips
-        return myIts.filter((it) => it.status === 'rejected')
-      case 'community':
-        return itineraries.filter(
-          (it) => it.isPublic && it.status === 'approved',
-        )
-      default:
-        return myIts
-    }
-  }, [itineraries, activeNav, user])
+  // Filter Itineraries
+  const myTrips = useMemo(() => {
+    return itineraries.filter((it) => it.authorId === user?.id)
+  }, [itineraries, user])
+
+  const activeTrip = useMemo(() => {
+    return itineraries.find((i) => i.id === selectedTripId) || null
+  }, [itineraries, selectedTripId])
 
   // Filter Discovery Coupons
   const discoveryCoupons = useMemo(() => {
-    if (!searchQuery) return coupons.slice(0, 20)
+    if (!searchQuery) return coupons.slice(0, 30)
     const lowerQ = searchQuery.toLowerCase()
     return coupons.filter(
       (c) =>
@@ -92,635 +89,507 @@ export default function TravelPlanner() {
     )
   }, [coupons, searchQuery])
 
-  const handleSelectTrip = (itinerary: Itinerary) => {
-    setSelectedTripId(itinerary.id)
-    setIsEditing(false)
-    setDraftTrip(null)
+  // Navigation
+  const handleSelectTrip = (trip: Itinerary) => {
+    setSelectedTripId(trip.id)
+    if (trip.days && trip.days.length > 0) {
+      setActiveDayId(trip.days[0].id)
+    }
+    setView('detail')
   }
 
-  const handleCreateNew = () => {
+  const handleBackToDashboard = () => {
+    setView('dashboard')
     setSelectedTripId(null)
-    setIsEditing(true)
-    setDraftTrip({
-      id: Math.random().toString(),
-      title: 'My New Trip',
-      description: 'A brand new adventure.',
-      stops: [],
-      days: [
-        { id: 'day1', dayNumber: 1, stops: [] },
-        { id: 'day2', dayNumber: 2, stops: [] },
-        { id: 'day3', dayNumber: 3, stops: [] },
-      ],
-      tags: ['New'],
-      duration: '3 Days',
-      totalSavings: 0,
-      image: 'https://img.usecurling.com/p/800/400?q=travel%20vacation',
-    })
-    setActiveDayIndex(0)
   }
 
-  const handleEdit = () => {
-    const it = itineraries.find((i) => i.id === selectedTripId)
-    if (it) {
-      setDraftTrip(JSON.parse(JSON.stringify(it))) // Deep copy
-      setIsEditing(true)
-      setActiveDayIndex(0)
-    }
-  }
-
-  const handleCancelEdit = () => {
-    setIsEditing(false)
-    setDraftTrip(null)
-    if (!selectedTripId) {
-      setSelectedTripId(null)
-    }
-  }
-
-  const handleSave = () => {
-    if (!draftTrip || !draftTrip.title) {
-      toast.error('Title is required')
+  // Create Trip
+  const handleCreateTrip = () => {
+    if (!newTripTitle.trim()) {
+      toast.error('Trip title is required')
       return
     }
 
-    const allStops = draftTrip.days?.flatMap((d) => d.stops) || []
-    const totalSavings = draftTrip.days?.reduce(
-      (acc, day) =>
-        acc + day.stops.reduce((dAcc, s) => dAcc + (s.price || 10), 0),
-      0,
-    )
+    const numDays = parseInt(newTripDays) || 1
+    const days: DayPlan[] = Array.from({ length: numDays }).map((_, i) => ({
+      id: `day-${Math.random().toString(36).substring(2, 9)}`,
+      dayNumber: i + 1,
+      stops: [],
+    }))
 
-    const finalItinerary: Itinerary = {
-      ...(draftTrip as Itinerary),
-      stops: allStops,
-      totalSavings: totalSavings || 0,
-      duration: `${draftTrip.days?.length || 0} Days`,
-      status: draftTrip.status || 'draft',
+    const newTrip: Itinerary = {
+      id: Math.random().toString(36).substring(2, 9),
+      title: newTripTitle,
+      description: 'A new adventure awaits.',
+      stops: [],
+      days: days,
+      tags: ['New'],
+      duration: `${numDays} Days`,
+      totalSavings: 0,
+      image: `https://img.usecurling.com/p/800/400?q=${encodeURIComponent(newTripTitle)}&fallback=travel`,
+      status: 'draft',
       authorId: user?.id,
       authorName: user?.name,
-      isPublic: draftTrip.isPublic || false,
+      matchScore: 100,
     }
 
-    if (itineraries.some((i) => i.id === finalItinerary.id)) {
-      updateItinerary(finalItinerary)
-      toast.success('Trip updated successfully')
-    } else {
-      saveItinerary(finalItinerary)
-      toast.success('Trip created successfully')
-      setActiveNav('planned')
+    saveItinerary(newTrip)
+    setIsCreateOpen(false)
+    setNewTripTitle('')
+    setNewTripDays('3')
+    toast.success('Trip created successfully!')
+    handleSelectTrip(newTrip)
+  }
+
+  const handleDeleteTrip = (id: string) => {
+    deleteItinerary(id)
+    if (selectedTripId === id) {
+      handleBackToDashboard()
     }
-
-    setSelectedTripId(finalItinerary.id)
-    setIsEditing(false)
-    setDraftTrip(null)
+    toast.success('Trip deleted')
   }
 
-  const handleDelete = () => {
-    if (
-      selectedTripId &&
-      window.confirm('Are you sure you want to delete this trip?')
-    ) {
-      deleteItinerary(selectedTripId)
-      setSelectedTripId(null)
-      setIsEditing(false)
-      toast.success('Trip deleted')
-    }
+  // Activity Management
+  const handleAddActivity = (coupon: Coupon) => {
+    if (!activeTrip || !activeTrip.days) return
+
+    const updatedDays = activeTrip.days.map((day) => {
+      if (day.id === activeDayId) {
+        if (day.stops.find((s) => s.id === coupon.id)) {
+          toast.info('Activity already added to this day')
+          return day
+        }
+        return { ...day, stops: [...day.stops, coupon] }
+      }
+      return day
+    })
+
+    const allStops = updatedDays.flatMap((d) => d.stops)
+    const updatedTrip = { ...activeTrip, days: updatedDays, stops: allStops }
+
+    updateItinerary(updatedTrip)
+    toast.success('Activity added to day')
+    setIsAddSheetOpen(false)
   }
 
-  const addActivityToDay = (coupon: Coupon) => {
-    if (!draftTrip || !draftTrip.days) return
+  const handleRemoveActivity = (dayId: string, stopId: string) => {
+    if (!activeTrip || !activeTrip.days) return
 
-    const updatedDays = [...draftTrip.days]
-    const currentDay = updatedDays[activeDayIndex]
+    const updatedDays = activeTrip.days.map((day) => {
+      if (day.id === dayId) {
+        return { ...day, stops: day.stops.filter((s) => s.id !== stopId) }
+      }
+      return day
+    })
 
-    if (currentDay.stops.find((s) => s.id === coupon.id)) {
-      toast.info('Activity already added to this day')
-      return
-    }
+    const allStops = updatedDays.flatMap((d) => d.stops)
+    const updatedTrip = { ...activeTrip, days: updatedDays, stops: allStops }
 
-    currentDay.stops.push(coupon)
-    setDraftTrip({ ...draftTrip, days: updatedDays })
-    toast.success(`Added ${coupon.storeName} to Day ${currentDay.dayNumber}`)
+    updateItinerary(updatedTrip)
+    toast.success('Activity removed')
   }
 
-  const removeActivityFromDay = (dayIndex: number, stopId: string) => {
-    if (!draftTrip || !draftTrip.days) return
-    const updatedDays = [...draftTrip.days]
-    updatedDays[dayIndex].stops = updatedDays[dayIndex].stops.filter(
-      (s) => s.id !== stopId,
-    )
-    setDraftTrip({ ...draftTrip, days: updatedDays })
-  }
-
-  const addDay = () => {
-    if (!draftTrip || !draftTrip.days) return
-    const newDayNumber = draftTrip.days.length + 1
-    const updatedDays = [
-      ...draftTrip.days,
-      { id: `day${newDayNumber}`, dayNumber: newDayNumber, stops: [] },
-    ]
-    setDraftTrip({ ...draftTrip, days: updatedDays })
-    setActiveDayIndex(updatedDays.length - 1)
-  }
-
-  // Get active viewing itinerary
-  const viewingItinerary =
-    isEditing && draftTrip
-      ? (draftTrip as Itinerary)
-      : itineraries.find((i) => i.id === selectedTripId)
-
-  // Generate mock time based on index
+  // Helper
   const getMockTime = (index: number) => {
     const startHour = 9
     const hour = startHour + index * 2
     return `${hour > 12 ? hour - 12 : hour}:00 ${hour >= 12 ? 'PM' : 'AM'}`
   }
 
-  return (
-    <div className="flex flex-col h-[calc(100vh-64px)] bg-slate-50/50 md:flex-row overflow-hidden">
-      {/* LEFT SIDEBAR: Navigation */}
-      <div className="w-full md:w-[280px] bg-white border-r flex flex-col shrink-0 z-20 shadow-sm h-full">
-        <div className="p-4 border-b">
-          <h1 className="text-xl font-bold flex items-center gap-2 text-slate-800">
-            <Luggage className="h-6 w-6 text-primary" /> Trips
-          </h1>
-          <Button
-            className="w-full mt-4 gap-2 bg-primary hover:bg-primary/90 shadow-sm"
-            onClick={handleCreateNew}
-          >
-            <Plus className="h-4 w-4" /> New Trip
-          </Button>
-        </div>
-
-        <div className="flex flex-col p-2 gap-1 border-b">
-          <Button
-            variant={activeNav === 'planned' ? 'secondary' : 'ghost'}
-            className="justify-start gap-3 h-10"
-            onClick={() => setActiveNav('planned')}
-          >
-            <Calendar className="h-4 w-4 text-blue-500" /> Planned Trips
-          </Button>
-          <Button
-            variant={activeNav === 'current' ? 'secondary' : 'ghost'}
-            className="justify-start gap-3 h-10"
-            onClick={() => setActiveNav('current')}
-          >
-            <Navigation className="h-4 w-4 text-green-500" /> Current Trips
-          </Button>
-          <Button
-            variant={activeNav === 'past' ? 'secondary' : 'ghost'}
-            className="justify-start gap-3 h-10"
-            onClick={() => setActiveNav('past')}
-          >
-            <CheckCircle className="h-4 w-4 text-slate-500" /> Past Trips
-          </Button>
-          <Separator className="my-1" />
-          <Button
-            variant={activeNav === 'community' ? 'secondary' : 'ghost'}
-            className="justify-start gap-3 h-10"
-            onClick={() => setActiveNav('community')}
-          >
-            <Globe className="h-4 w-4 text-purple-500" /> Community Trips
-          </Button>
-        </div>
-
-        <ScrollArea className="flex-1">
-          <div className="p-3 space-y-2">
-            <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 px-2">
-              {activeNav} ({filteredItineraries.length})
-            </div>
-            {filteredItineraries.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground text-sm border border-dashed rounded-lg bg-slate-50 mx-2">
-                No trips found
-              </div>
-            ) : (
-              filteredItineraries.map((it) => (
-                <div
-                  key={it.id}
-                  onClick={() => handleSelectTrip(it)}
-                  className={cn(
-                    'p-3 rounded-lg cursor-pointer transition-all border',
-                    selectedTripId === it.id && !isEditing
-                      ? 'bg-primary/5 border-primary/30 shadow-sm'
-                      : 'bg-white hover:bg-slate-50 border-transparent hover:border-slate-200',
-                  )}
-                >
-                  <h4 className="font-bold text-sm text-slate-800 line-clamp-1">
-                    {it.title}
-                  </h4>
-                  <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <Clock className="h-3 w-3" /> {it.duration}
-                    </span>
-                    <span>•</span>
-                    <span>{it.stops.length} stops</span>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </ScrollArea>
-      </div>
-
-      {/* CENTRAL AREA: Itinerary Builder / Details */}
-      <div className="flex-1 flex flex-col min-w-0 bg-slate-50 relative h-full">
-        {!viewingItinerary ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
-            <div className="bg-white p-6 rounded-full shadow-sm mb-6 border">
-              <MapIcon className="h-12 w-12 text-slate-300" />
-            </div>
-            <h2 className="text-2xl font-bold text-slate-800 mb-2">
-              Your Travel Dashboard
-            </h2>
-            <p className="text-muted-foreground max-w-md mb-6">
-              Select a trip from the sidebar to view its details, or create a
-              new itinerary to start planning your next adventure.
+  if (view === 'dashboard') {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-6xl min-h-[calc(100vh-64px)]">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+          <div>
+            <h1 className="text-3xl font-extrabold text-slate-900 flex items-center gap-3">
+              <Luggage className="h-8 w-8 text-primary" />
+              My Travel Plans
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Organize your upcoming trips and adventures.
             </p>
-            <Button onClick={handleCreateNew} className="gap-2">
-              <Plus className="h-4 w-4" /> Start Planning
+          </div>
+          <Button
+            size="lg"
+            className="font-bold shadow-sm"
+            onClick={() => setIsCreateOpen(true)}
+          >
+            <Plus className="h-5 w-5 mr-2" /> New Trip
+          </Button>
+        </div>
+
+        {myTrips.length === 0 ? (
+          <div className="text-center py-20 bg-slate-50 rounded-2xl border border-dashed">
+            <Luggage className="h-16 w-16 mx-auto text-slate-300 mb-4" />
+            <h3 className="text-xl font-bold text-slate-700 mb-2">
+              No trips planned yet
+            </h3>
+            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+              Start planning your next vacation, weekend getaway, or business
+              trip right here.
+            </p>
+            <Button onClick={() => setIsCreateOpen(true)}>
+              Create Your First Trip
             </Button>
           </div>
         ) : (
-          <ScrollArea className="flex-1">
-            <div className="max-w-3xl mx-auto w-full pb-20">
-              {/* Cover Image & Header */}
-              <div className="relative h-48 sm:h-64 w-full bg-slate-200">
-                <img
-                  src={viewingItinerary.image}
-                  alt="Cover"
-                  className="w-full h-full object-cover"
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {myTrips.map((trip) => (
+              <Card
+                key={trip.id}
+                className="overflow-hidden hover:shadow-lg transition-all cursor-pointer group flex flex-col"
+                onClick={() => handleSelectTrip(trip)}
+              >
+                <div className="h-40 relative bg-slate-200 overflow-hidden">
+                  <img
+                    src={trip.image}
+                    alt={trip.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                  <div className="absolute bottom-3 left-3 text-white">
+                    <h3 className="font-bold text-lg leading-tight">
+                      {trip.title}
+                    </h3>
+                  </div>
+                  <div className="absolute top-3 right-3">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="secondary"
+                          size="icon"
+                          className="h-8 w-8 bg-white/90 hover:bg-white text-slate-800 rounded-full"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          className="text-red-600 focus:text-red-700"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleDeleteTrip(trip.id)
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" /> Delete Trip
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
+                <CardContent className="p-4 flex-1 flex flex-col justify-between">
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
+                    <span className="flex items-center gap-1.5">
+                      <Calendar className="h-4 w-4" />
+                      {trip.duration}
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <MapPin className="h-4 w-4" />
+                      {trip.stops.length} Activities
+                    </span>
+                  </div>
+                  <Button variant="outline" className="w-full bg-slate-50">
+                    View Itinerary
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-xl">Create New Trip</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-5 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="tripTitle">Destination or Trip Name</Label>
+                <Input
+                  id="tripTitle"
+                  placeholder="e.g. Summer in Paris"
+                  value={newTripTitle}
+                  onChange={(e) => setNewTripTitle(e.target.value)}
+                  autoFocus
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent" />
-
-                {/* Action Buttons Top Right */}
-                <div className="absolute top-4 right-4 flex gap-2">
-                  {!isEditing && viewingItinerary.authorId === user?.id && (
-                    <>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        className="bg-white/90 hover:bg-white text-slate-800"
-                        onClick={handleEdit}
-                      >
-                        <Edit className="h-4 w-4 mr-2" /> Edit Trip
-                      </Button>
-                      <Button
-                        variant="secondary"
-                        size="icon"
-                        className="bg-white/90 hover:bg-white text-red-600"
-                        onClick={handleDelete}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </>
-                  )}
-                  {isEditing && (
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      className="bg-red-500/90 hover:bg-red-600 text-white border-0"
-                      onClick={handleCancelEdit}
-                    >
-                      <X className="h-4 w-4 mr-2" /> Cancel
-                    </Button>
-                  )}
-                </div>
-
-                <div className="absolute bottom-6 left-6 right-6 text-white">
-                  {isEditing ? (
-                    <div className="space-y-3 max-w-xl">
-                      <Input
-                        value={draftTrip?.title || ''}
-                        onChange={(e) =>
-                          setDraftTrip({ ...draftTrip, title: e.target.value })
-                        }
-                        className="text-2xl sm:text-4xl font-extrabold bg-black/40 border-0 text-white placeholder:text-white/50 h-auto py-2 focus-visible:ring-1 focus-visible:ring-white"
-                        placeholder="Trip Title"
-                      />
-                      <Input
-                        value={draftTrip?.description || ''}
-                        onChange={(e) =>
-                          setDraftTrip({
-                            ...draftTrip,
-                            description: e.target.value,
-                          })
-                        }
-                        className="text-sm bg-black/40 border-0 text-white/90 placeholder:text-white/50 h-auto py-1.5 focus-visible:ring-1 focus-visible:ring-white"
-                        placeholder="Short description..."
-                      />
-                    </div>
-                  ) : (
-                    <>
-                      <h1 className="text-3xl sm:text-4xl font-extrabold mb-2 leading-tight">
-                        {viewingItinerary.title}
-                      </h1>
-                      <p className="text-white/90 text-sm max-w-2xl line-clamp-2">
-                        {viewingItinerary.description}
-                      </p>
-                    </>
-                  )}
-                </div>
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="tripDays">Duration (Days)</Label>
+                <Input
+                  id="tripDays"
+                  type="number"
+                  min="1"
+                  max="30"
+                  value={newTripDays}
+                  onChange={(e) => setNewTripDays(e.target.value)}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleCreateTrip}>Start Planning</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+    )
+  }
 
-              {/* Day Breakdown Builder */}
-              <div className="p-4 sm:p-6 space-y-6">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-bold text-slate-800">
-                    Itinerary
-                  </h2>
-                  {isEditing && (
+  // Detail View
+  if (!activeTrip) return null
+
+  return (
+    <div className="bg-slate-50 min-h-[calc(100vh-64px)] pb-20">
+      {/* Header */}
+      <div className="bg-white border-b sticky top-0 z-20 shadow-sm">
+        <div className="container mx-auto px-4 max-w-4xl py-3 flex items-center justify-between">
+          <Button
+            variant="ghost"
+            onClick={handleBackToDashboard}
+            className="gap-2 -ml-3 text-slate-600 hover:text-slate-900"
+          >
+            <ArrowLeft className="h-4 w-4" /> Back to Trips
+          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-red-600 hover:bg-red-50 hover:text-red-700"
+              onClick={() => handleDeleteTrip(activeTrip.id)}
+            >
+              <Trash2 className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Delete</span>
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <div className="container mx-auto px-4 max-w-4xl py-8">
+        <div className="mb-8 text-center sm:text-left flex flex-col sm:flex-row items-center gap-6">
+          <div className="h-24 w-24 sm:h-32 sm:w-32 rounded-2xl overflow-hidden shrink-0 shadow-md">
+            <img
+              src={activeTrip.image}
+              alt={activeTrip.title}
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <div>
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 mb-2">
+              {activeTrip.title}
+            </h1>
+            <div className="flex flex-wrap justify-center sm:justify-start items-center gap-4 text-slate-600 font-medium">
+              <span className="flex items-center gap-1.5 bg-white px-3 py-1 rounded-full shadow-sm border">
+                <Calendar className="h-4 w-4 text-primary" />
+                {activeTrip.duration}
+              </span>
+              <span className="flex items-center gap-1.5 bg-white px-3 py-1 rounded-full shadow-sm border">
+                <MapPin className="h-4 w-4 text-orange-500" />
+                {activeTrip.stops.length} Total Activities
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Tabbed Day Navigation */}
+        <div className="bg-white rounded-2xl shadow-sm border p-4 sm:p-6">
+          <Tabs
+            value={activeDayId}
+            onValueChange={setActiveDayId}
+            className="w-full"
+          >
+            <ScrollArea className="w-full mb-6">
+              <TabsList className="inline-flex w-max min-w-full h-12 bg-slate-100 p-1 rounded-xl">
+                {activeTrip.days?.map((day) => (
+                  <TabsTrigger
+                    key={day.id}
+                    value={day.id}
+                    className="rounded-lg px-6 font-semibold data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all flex-1"
+                  >
+                    Day {day.dayNumber}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+              <ScrollBar orientation="horizontal" className="invisible" />
+            </ScrollArea>
+
+            {activeTrip.days?.map((day) => (
+              <TabsContent
+                key={day.id}
+                value={day.id}
+                className="mt-0 outline-none animate-in fade-in-50 duration-500"
+              >
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-xl font-bold text-slate-800">
+                    Activities for Day {day.dayNumber}
+                  </h3>
+                  <Button
+                    onClick={() => setIsAddSheetOpen(true)}
+                    className="gap-2 bg-primary hover:bg-primary/90"
+                  >
+                    <Plus className="h-4 w-4" /> Add Activity
+                  </Button>
+                </div>
+
+                {day.stops.length === 0 ? (
+                  <div className="text-center py-16 bg-slate-50 border-2 border-dashed rounded-xl">
+                    <MapPin className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+                    <p className="text-lg font-medium text-slate-700">
+                      Your day is empty
+                    </p>
+                    <p className="text-slate-500 mb-6">
+                      Add places to visit, restaurants, or events.
+                    </p>
                     <Button
                       variant="outline"
-                      size="sm"
-                      onClick={addDay}
-                      className="gap-2"
+                      onClick={() => setIsAddSheetOpen(true)}
                     >
-                      <Plus className="h-4 w-4" /> Add Day
+                      Browse Discoveries
                     </Button>
-                  )}
-                </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {day.stops.map((stop, idx) => (
+                      <div
+                        key={`${stop.id}-${idx}`}
+                        className="flex gap-4 group"
+                      >
+                        {/* Time Column */}
+                        <div className="w-20 shrink-0 flex flex-col items-center pt-4">
+                          <span className="text-sm font-bold text-slate-700 text-center leading-tight">
+                            {getMockTime(idx).replace(' ', '\n')}
+                          </span>
+                          <div className="flex-1 w-px bg-slate-200 mt-2 group-last:hidden" />
+                        </div>
 
-                <div className="space-y-6">
-                  {viewingItinerary.days?.map((day, dIdx) => (
-                    <Card
-                      key={day.id}
-                      className={cn(
-                        'overflow-hidden transition-all duration-300',
-                        isEditing && activeDayIndex === dIdx
-                          ? 'ring-2 ring-primary shadow-md'
-                          : 'shadow-sm hover:shadow-md',
-                      )}
-                    >
-                      <CardHeader className="bg-slate-50 border-b py-3 px-4 flex flex-row items-center justify-between space-y-0">
-                        <CardTitle className="text-base font-bold flex items-center gap-2">
-                          <div className="bg-primary/10 text-primary h-8 w-8 rounded-full flex items-center justify-center text-sm">
-                            {day.dayNumber}
-                          </div>
-                          Day {day.dayNumber}
-                        </CardTitle>
-                        {isEditing && activeDayIndex !== dIdx && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-primary hover:bg-primary/10 h-8"
-                            onClick={() => setActiveDayIndex(dIdx)}
-                          >
-                            Edit this day
-                          </Button>
-                        )}
-                      </CardHeader>
-                      <CardContent className="p-0">
-                        {day.stops.length === 0 ? (
-                          <div className="p-8 text-center text-muted-foreground text-sm">
-                            <Compass className="h-8 w-8 mx-auto mb-3 text-slate-300" />
-                            <p>No activities planned for this day yet.</p>
-                          </div>
-                        ) : (
-                          <div className="divide-y">
-                            {day.stops.map((stop, sIdx) => (
-                              <div
-                                key={`${stop.id}-${sIdx}`}
-                                className="p-4 flex gap-4 hover:bg-slate-50/50 transition-colors group"
-                              >
-                                <div className="flex flex-col items-center min-w-[60px] text-center pt-1">
-                                  <span className="text-xs font-bold text-slate-800">
-                                    {getMockTime(sIdx)}
-                                  </span>
-                                  <div className="h-full w-px bg-slate-200 my-2 group-last:hidden" />
-                                </div>
-                                <div className="flex-1 min-w-0 bg-white border rounded-lg p-3 shadow-sm flex gap-3 relative overflow-hidden">
-                                  <div className="w-16 h-16 rounded-md bg-slate-100 overflow-hidden shrink-0 hidden sm:block">
-                                    <img
-                                      src={stop.image}
-                                      alt={stop.storeName}
-                                      className="w-full h-full object-cover"
-                                    />
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <h4 className="font-bold text-sm text-slate-900 truncate pr-6">
-                                      {stop.storeName}
-                                    </h4>
-                                    <p className="text-xs text-muted-foreground line-clamp-1 mb-2">
-                                      {stop.title}
-                                    </p>
-                                    <Badge
-                                      variant="secondary"
-                                      className="text-[10px] bg-slate-100 text-slate-600 font-medium"
-                                    >
-                                      {stop.category}
-                                    </Badge>
-                                  </div>
-
-                                  {isEditing && (
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="absolute top-2 right-2 h-6 w-6 text-slate-400 hover:text-red-500 hover:bg-red-50"
-                                      onClick={() =>
-                                        removeActivityFromDay(dIdx, stop.id)
-                                      }
-                                    >
-                                      <Trash2 className="h-3 w-3" />
-                                    </Button>
-                                  )}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-
-                        {isEditing && activeDayIndex === dIdx && (
-                          <div className="p-4 bg-primary/5 border-t border-primary/10">
-                            <div className="flex items-center justify-between bg-white p-3 rounded-lg border border-dashed border-primary/30">
-                              <span className="text-sm font-medium text-primary flex items-center gap-2">
-                                <Search className="h-4 w-4" />
-                                Browse offers in the right panel to add
-                              </span>
-                              <div className="h-2 w-2 rounded-full bg-primary animate-ping" />
+                        {/* Activity Card */}
+                        <Card className="flex-1 overflow-hidden hover:shadow-md transition-shadow bg-white border-slate-200">
+                          <div className="flex flex-col sm:flex-row">
+                            <div className="w-full sm:w-40 h-32 sm:h-auto shrink-0 relative bg-slate-100 flex items-center justify-center">
+                              {stop.image ? (
+                                <img
+                                  src={stop.image}
+                                  alt={stop.storeName}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) =>
+                                    (e.currentTarget.style.display = 'none')
+                                  }
+                                />
+                              ) : (
+                                <ImageOff className="h-8 w-8 text-slate-400" />
+                              )}
+                              <Badge className="absolute top-2 left-2 bg-white/90 text-slate-900 border-none shadow-sm">
+                                {stop.category}
+                              </Badge>
                             </div>
+                            <CardContent className="p-4 sm:p-5 flex-1 flex flex-col justify-center">
+                              <div className="flex justify-between items-start gap-4">
+                                <div>
+                                  <h4 className="text-lg font-bold text-slate-900 leading-tight mb-1">
+                                    {stop.storeName}
+                                  </h4>
+                                  <p className="text-sm text-primary font-medium mb-2">
+                                    {stop.title}
+                                  </p>
+                                  <p className="text-sm text-slate-600 line-clamp-2">
+                                    {stop.description}
+                                  </p>
+                                </div>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="text-slate-400 hover:text-red-600 hover:bg-red-50 shrink-0 -mr-2 -mt-2"
+                                  onClick={() =>
+                                    handleRemoveActivity(day.id, stop.id)
+                                  }
+                                  title="Remove activity"
+                                >
+                                  <Trash2 className="h-5 w-5" />
+                                </Button>
+                              </div>
+                            </CardContent>
                           </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </ScrollArea>
-        )}
-
-        {/* Floating Save Button in Edit Mode */}
-        {isEditing && (
-          <div className="absolute bottom-6 right-6 md:hidden z-30">
-            <Button
-              size="lg"
-              className="rounded-full shadow-lg h-14 px-8 font-bold gap-2"
-              onClick={handleSave}
-            >
-              <Save className="h-5 w-5" /> Save Trip
-            </Button>
-          </div>
-        )}
+                        </Card>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+            ))}
+          </Tabs>
+        </div>
       </div>
 
-      {/* RIGHT PANEL: Discovery / Summary */}
-      <div className="w-full md:w-[320px] lg:w-[380px] bg-white border-l flex flex-col shrink-0 z-20 shadow-sm h-[50vh] md:h-full hidden md:flex">
-        {isEditing ? (
-          <>
-            <div className="p-4 border-b bg-slate-50">
-              <h3 className="font-bold text-lg mb-1 flex items-center gap-2">
-                <Search className="h-5 w-5 text-primary" /> Discover
-              </h3>
-              <p className="text-xs text-muted-foreground mb-4">
-                Adding to{' '}
-                <strong className="text-primary">
-                  Day {activeDayIndex + 1}
-                </strong>
-              </p>
-              <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
-                <Input
-                  placeholder="Search activities, food..."
-                  className="pl-9 bg-white"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
+      {/* Add Activity Sheet */}
+      <Sheet open={isAddSheetOpen} onOpenChange={setIsAddSheetOpen}>
+        <SheetContent
+          side="right"
+          className="w-full sm:max-w-md p-0 flex flex-col bg-slate-50"
+        >
+          <SheetHeader className="p-6 bg-white border-b">
+            <SheetTitle className="text-xl">Discover Activities</SheetTitle>
+            <div className="relative mt-4">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Input
+                placeholder="Search restaurants, places, events..."
+                className="pl-9 bg-slate-50 border-transparent focus-visible:ring-primary/50"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
-            <ScrollArea className="flex-1">
-              <div className="p-4 space-y-3">
-                {discoveryCoupons.length === 0 ? (
-                  <p className="text-center text-sm text-muted-foreground py-8">
-                    No results found
-                  </p>
-                ) : (
-                  discoveryCoupons.map((coupon) => (
-                    <Card
-                      key={coupon.id}
-                      className="overflow-hidden hover:border-primary/50 transition-colors group"
-                    >
-                      <div className="h-24 relative">
+          </SheetHeader>
+          <ScrollArea className="flex-1 p-4">
+            <div className="space-y-4">
+              {discoveryCoupons.length === 0 ? (
+                <div className="text-center py-12 text-slate-500">
+                  No activities found.
+                </div>
+              ) : (
+                discoveryCoupons.map((coupon) => (
+                  <Card key={coupon.id} className="overflow-hidden bg-white">
+                    <div className="flex h-28">
+                      <div className="w-28 shrink-0 relative bg-slate-200">
                         <img
                           src={coupon.image}
-                          alt={coupon.storeName}
+                          alt={coupon.title}
                           className="w-full h-full object-cover"
                         />
-                        <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors" />
-                        <Badge className="absolute top-2 left-2 text-[10px] bg-white/90 text-slate-800 border-0">
-                          {coupon.category}
-                        </Badge>
                       </div>
-                      <CardContent className="p-3">
-                        <h4 className="font-bold text-sm truncate">
-                          {coupon.storeName}
-                        </h4>
-                        <p className="text-xs text-muted-foreground line-clamp-1 mb-3">
-                          {coupon.title}
-                        </p>
-                        <div className="flex justify-between items-center mt-auto">
-                          <span className="text-xs font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded">
+                      <div className="flex-1 p-3 flex flex-col justify-between min-w-0">
+                        <div>
+                          <h4 className="font-bold text-sm truncate">
+                            {coupon.storeName}
+                          </h4>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {coupon.title}
+                          </p>
+                        </div>
+                        <div className="flex items-center justify-between mt-2">
+                          <Badge
+                            variant="secondary"
+                            className="text-[10px] bg-green-50 text-green-700 hover:bg-green-50"
+                          >
                             {coupon.discount}
-                          </span>
+                          </Badge>
                           <Button
                             size="sm"
-                            className="h-7 text-xs gap-1"
-                            onClick={() => addActivityToDay(coupon)}
+                            className="h-7 text-xs px-3"
+                            onClick={() => handleAddActivity(coupon)}
                           >
-                            <Plus className="h-3 w-3" /> Add
+                            Add
                           </Button>
                         </div>
-                      </CardContent>
-                    </Card>
-                  ))
-                )}
-              </div>
-            </ScrollArea>
-            <div className="p-4 border-t bg-white">
-              <Button
-                className="w-full h-12 font-bold shadow-md"
-                onClick={handleSave}
-              >
-                <Save className="h-4 w-4 mr-2" /> Save Full Itinerary
-              </Button>
+                      </div>
+                    </div>
+                  </Card>
+                ))
+              )}
             </div>
-          </>
-        ) : viewingItinerary ? (
-          <>
-            <div className="p-6 border-b bg-primary/5">
-              <h3 className="font-bold text-xl mb-2 text-primary">
-                Trip Summary
-              </h3>
-              <p className="text-sm text-slate-600">
-                Quick overview of your selected adventure.
-              </p>
-            </div>
-            <ScrollArea className="flex-1 p-6">
-              <div className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex flex-col items-center justify-center text-center">
-                    <Clock className="h-6 w-6 text-blue-500 mb-2" />
-                    <span className="text-xs text-muted-foreground">
-                      Duration
-                    </span>
-                    <span className="font-bold text-lg">
-                      {viewingItinerary.duration}
-                    </span>
-                  </div>
-                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex flex-col items-center justify-center text-center">
-                    <MapPin className="h-6 w-6 text-orange-500 mb-2" />
-                    <span className="text-xs text-muted-foreground">Stops</span>
-                    <span className="font-bold text-lg">
-                      {viewingItinerary.stops?.length || 0}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="bg-green-50 p-5 rounded-xl border border-green-100 text-center">
-                  <span className="text-sm text-green-800 font-medium block mb-1">
-                    Estimated Savings
-                  </span>
-                  <span className="text-3xl font-extrabold text-green-600">
-                    {formatCurrency(viewingItinerary.totalSavings || 0)}
-                  </span>
-                </div>
-
-                <div>
-                  <h4 className="font-semibold text-sm mb-3 text-slate-800">
-                    Trip Tags
-                  </h4>
-                  <div className="flex flex-wrap gap-2">
-                    {viewingItinerary.tags?.map((tag) => (
-                      <Badge
-                        key={tag}
-                        variant="secondary"
-                        className="bg-slate-100 text-slate-700 hover:bg-slate-200"
-                      >
-                        {tag}
-                      </Badge>
-                    ))}
-                    {(!viewingItinerary.tags ||
-                      viewingItinerary.tags.length === 0) && (
-                      <span className="text-xs text-muted-foreground">
-                        No tags added.
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {viewingItinerary.authorId !== user?.id && (
-                  <Button className="w-full gap-2 mt-4" variant="outline">
-                    <Save className="h-4 w-4" /> Save to My Trips
-                  </Button>
-                )}
-              </div>
-            </ScrollArea>
-          </>
-        ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground p-8 text-center bg-slate-50">
-            <Compass className="h-16 w-16 mb-4 opacity-20" />
-            <p>Your journey details will appear here.</p>
-          </div>
-        )}
-      </div>
+          </ScrollArea>
+        </SheetContent>
+      </Sheet>
     </div>
   )
 }
