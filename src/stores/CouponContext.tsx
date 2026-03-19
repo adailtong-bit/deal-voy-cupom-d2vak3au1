@@ -26,6 +26,8 @@ import {
   UserPreferences,
   ReviewReply,
   BehavioralTrigger,
+  CrawlerSource,
+  DiscoveredPromotion,
 } from '@/lib/types'
 import {
   MOCK_COUPONS,
@@ -44,6 +46,8 @@ import {
   MOCK_CAR_RENTALS,
   REGIONS,
   MOCK_SYSTEM_LOGS,
+  MOCK_CRAWLER_SOURCES,
+  MOCK_DISCOVERED_PROMOTIONS,
 } from '@/lib/data'
 import { toast } from 'sonner'
 import { useNotification } from './NotificationContext'
@@ -96,6 +100,8 @@ interface CouponContextType {
   validationLogs: ValidationLog[]
   carRentals: CarRental[]
   systemLogs: SystemLog[]
+  crawlerSources: CrawlerSource[]
+  discoveredPromotions: DiscoveredPromotion[]
   setRegion: (regionCode: string) => void
   toggleSave: (id: string) => void
   toggleTrip: (id: string) => void
@@ -157,6 +163,10 @@ interface CouponContextType {
     triggers: BehavioralTrigger[],
   ) => void
   togglePreferredCustomer: (companyId: string, userId: string) => void
+  addCrawlerSource: (source: CrawlerSource) => void
+  importPromotion: (id: string, customCategory?: string) => void
+  ignorePromotion: (id: string) => void
+  triggerScan: (sourceId: string) => void
 }
 
 const CouponContext = createContext<CouponContextType | undefined>(undefined)
@@ -177,7 +187,6 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         // ignore parsing error
       }
     }
-    // Initialize developer with super_admin role by default granting full access
     const defaultDevUser =
       MOCK_USERS.find((u) => u.role === 'super_admin') || MOCK_USERS[0]
     return defaultDevUser
@@ -218,7 +227,6 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   const [isDownloading, setIsDownloading] = useState(false)
   const [downloadProgress, setDownloadProgress] = useState(0)
 
-  // New State for Multi-tenant/Travel
   const [franchises, setFranchises] = useState<Franchise[]>(MOCK_FRANCHISES)
   const [travelOffers, setTravelOffers] =
     useState<TravelOffer[]>(MOCK_TRAVEL_OFFERS)
@@ -229,6 +237,12 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   const [systemLogs, setSystemLogs] = useState<SystemLog[]>(MOCK_SYSTEM_LOGS)
 
   const [rewardHistory, setRewardHistory] = useState<RewardActivity[]>([])
+
+  const [crawlerSources, setCrawlerSources] =
+    useState<CrawlerSource[]>(MOCK_CRAWLER_SOURCES)
+  const [discoveredPromotions, setDiscoveredPromotions] = useState<
+    DiscoveredPromotion[]
+  >(MOCK_DISCOVERED_PROMOTIONS)
 
   useEffect(() => {
     if (user) {
@@ -264,7 +278,6 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     }
   }, [activeItineraryId])
 
-  // Log action helper
   const logSystemAction = (
     action: string,
     details: string,
@@ -281,7 +294,6 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     setSystemLogs((prev) => [log, ...prev])
   }
 
-  // Filter content based on selectedRegion and targetAudience
   const filteredCoupons = coupons.filter((c) => {
     const regionMatch =
       selectedRegion === 'Global' ||
@@ -757,7 +769,6 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     const customer = users.find((u) => u.email === customerEmail)
     const customerId = customer?.id || (customerEmail ? 'walk-in' : 'u_user')
 
-    // Check maxPerUser limit
     if (coupon.maxPerUser) {
       const userRedemptions = validationLogs.filter(
         (log) => log.couponId === coupon.id && log.userId === customerId,
@@ -812,6 +823,64 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   const isReserved = (id: string) => reservedIds.includes(id)
   const isInTrip = (id: string) => tripIds.includes(id)
 
+  const addCrawlerSource = (source: CrawlerSource) => {
+    setCrawlerSources((prev) => [...prev, source])
+    logSystemAction('Crawler Source Added', `Added source ${source.name}`)
+    toast.success('Source added successfully')
+  }
+
+  const importPromotion = (id: string, customCategory?: string) => {
+    const promo = discoveredPromotions.find((p) => p.id === id)
+    if (!promo) return
+
+    setDiscoveredPromotions((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, status: 'imported' } : p)),
+    )
+
+    const newCoupon: Coupon = {
+      id: Math.random().toString(),
+      storeName: promo.storeName,
+      title: promo.title,
+      description: promo.description,
+      discount: promo.discount,
+      category: (customCategory || promo.category || 'Outros') as any,
+      distance: 50,
+      expiryDate: promo.expiryDate,
+      image: promo.image,
+      code: `IMPORT-${Math.floor(Math.random() * 10000)}`,
+      coordinates: { lat: -23.55052, lng: -46.633308 },
+      status: 'active',
+      source: 'aggregated',
+      region: promo.region,
+      price: promo.price,
+      currency: promo.currency,
+      companyId: companies[0]?.id,
+    }
+    addCoupon(newCoupon)
+    logSystemAction('Promotion Imported', `Imported ${promo.title}`)
+    toast.success('Promotion imported successfully')
+  }
+
+  const ignorePromotion = (id: string) => {
+    setDiscoveredPromotions((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, status: 'ignored' } : p)),
+    )
+    logSystemAction('Promotion Ignored', `Ignored discovered promo ${id}`)
+    toast.info('Promotion ignored')
+  }
+
+  const triggerScan = (sourceId: string) => {
+    toast.info('Scanning source...')
+    setTimeout(() => {
+      setCrawlerSources((prev) =>
+        prev.map((s) =>
+          s.id === sourceId ? { ...s, lastScan: new Date().toISOString() } : s,
+        ),
+      )
+      toast.success('Scan completed. 0 new promotions found.')
+    }, 2000)
+  }
+
   return React.createElement(
     CouponContext.Provider,
     {
@@ -852,6 +921,8 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         validationLogs,
         carRentals,
         systemLogs,
+        crawlerSources,
+        discoveredPromotions,
         setRegion,
         toggleSave,
         toggleTrip,
@@ -902,6 +973,10 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         trackShare,
         updateBehavioralTriggers,
         togglePreferredCustomer,
+        addCrawlerSource,
+        importPromotion,
+        ignorePromotion,
+        triggerScan,
       },
     },
     children,

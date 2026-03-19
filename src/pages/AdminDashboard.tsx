@@ -44,6 +44,7 @@ import { Label } from '@/components/ui/label'
 import { useForm } from 'react-hook-form'
 import { useLanguage } from '@/stores/LanguageContext'
 import { AdminCRM } from '@/components/admin/AdminCRM'
+import { PromotionCrawler } from '@/components/admin/PromotionCrawler'
 
 export default function AdminDashboard() {
   const {
@@ -65,7 +66,6 @@ export default function AdminDashboard() {
   const isFranchisee = user?.role === 'franchisee'
   const isDeveloperFallback = !user
 
-  // Ensure developer never hits access denied block
   if (!isSuperAdmin && !isFranchisee && !isDeveloperFallback) {
     return (
       <div className="flex flex-col items-center justify-center h-[calc(100vh-64px)] gap-4">
@@ -91,7 +91,6 @@ export default function AdminDashboard() {
     reset()
   }
 
-  // Determine data based on role
   const relevantFranchises =
     isSuperAdmin || isDeveloperFallback
       ? franchises
@@ -101,10 +100,8 @@ export default function AdminDashboard() {
       ? companies
       : companies.filter((c) => c.region === user?.region)
 
-  // Pending Itineraries
   const pendingItineraries = itineraries.filter((it) => it.status === 'pending')
 
-  // Scenario Cards Helper
   const ScenarioCard = ({
     title,
     icon: Icon,
@@ -284,6 +281,9 @@ export default function AdminDashboard() {
             </TabsTrigger>
           )}
           <TabsTrigger value="merchants">{t('admin.merchants')}</TabsTrigger>
+          <TabsTrigger value="crawler">
+            <Globe className="h-4 w-4 mr-2" /> Crawler
+          </TabsTrigger>
           <TabsTrigger value="moderation">{t('admin.moderation')}</TabsTrigger>
           <TabsTrigger value="logs">{t('admin.logs')}</TabsTrigger>
           <TabsTrigger value="reports">{t('admin.reports')}</TabsTrigger>
@@ -428,6 +428,10 @@ export default function AdminDashboard() {
               </Table>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="crawler">
+          <PromotionCrawler />
         </TabsContent>
 
         <TabsContent value="moderation">

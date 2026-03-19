@@ -48,8 +48,8 @@ export interface LoyaltyProgram {
 export interface BehavioralTrigger {
   id: string
   type: 'visit' | 'share'
-  threshold: number // e.g., 5 visits
-  reward: string // e.g., "20% OFF"
+  threshold: number
+  reward: string
   isActive: boolean
 }
 
@@ -468,4 +468,32 @@ export interface ChatThread {
   lastMessage: string
   lastUpdated: string
   unreadCount: number
+}
+
+export interface CrawlerSource {
+  id: string
+  name: string
+  url: string
+  type: 'api' | 'web' | 'app'
+  region: string
+  scanRadius: number
+  lastScan?: string
+  status: 'active' | 'paused'
+}
+
+export interface DiscoveredPromotion {
+  id: string
+  sourceId: string
+  originalUrl?: string
+  title: string
+  discount: string
+  description: string
+  price?: number
+  currency?: string
+  expiryDate: string
+  image: string
+  storeName: string
+  status: 'pending' | 'imported' | 'ignored'
+  region: string
+  category: string
 }

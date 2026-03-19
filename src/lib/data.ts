@@ -19,9 +19,10 @@ import {
   ClientHistory,
   ChatThread,
   Review,
+  CrawlerSource,
+  DiscoveredPromotion,
 } from './types'
 
-// Helper to map category strings to translation keys
 export const getCategoryTranslationKey = (category: string): string => {
   switch (category.toLowerCase()) {
     case 'alimentação':
@@ -199,13 +200,11 @@ export const MOCK_BADGES: Badge[] = [
   },
 ]
 
-// Coupons (30 items)
 const generateCoupons = (): Coupon[] => {
   const coupons: Coupon[] = []
   const categories = ['Alimentação', 'Moda', 'Serviços', 'Outros'] as const
   const statuses = ['active', 'used', 'expired'] as const
 
-  // Add specific Nike Coupon
   coupons.push({
     id: 'nike-promo-50',
     storeName: 'Nike Store',
@@ -237,9 +236,8 @@ const generateCoupons = (): Coupon[] => {
   })
 
   for (let i = 1; i <= 30; i++) {
-    const isUS = i % 2 !== 0 // Odd IDs for US, Even for BR
+    const isUS = i % 2 !== 0
 
-    // Add dummy reviews for first few coupons
     const reviews: Review[] = []
     if (i <= 5) {
       reviews.push({
@@ -294,7 +292,7 @@ const generateCoupons = (): Coupon[] => {
       totalAvailable: 100 * i,
       reservedCount: 10 * i,
       averageRating: 4.0 + (i % 10) / 10,
-      status: statuses[i % 3], // Generic status
+      status: statuses[i % 3],
       source: i % 3 === 0 ? 'aggregated' : 'partner',
       region: isUS ? 'US-FL' : 'BR-SP',
       price: i % 2 === 0 ? 50 + i * 10 : undefined,
@@ -326,7 +324,6 @@ export const MOCK_COUPONS: Coupon[] = generateCoupons()
 
 export const MOCK_AB_TESTS: ABTest[] = []
 
-// Itineraries (15 items)
 const generateItineraries = (): Itinerary[] => {
   const itineraries: Itinerary[] = []
   for (let i = 1; i <= 15; i++) {
@@ -360,7 +357,6 @@ const generateItineraries = (): Itinerary[] => {
 
 export const MOCK_ITINERARIES: Itinerary[] = generateItineraries()
 
-// Companies (20 items)
 const generateCompanies = (): Company[] => {
   const companies: Company[] = []
   for (let i = 1; i <= 20; i++) {
@@ -420,9 +416,7 @@ export const MOCK_ADS: Advertisement[] = [
   },
 ]
 
-// Users (Test Accounts for all roles)
 export const MOCK_USERS: User[] = [
-  // 1. App Owner
   {
     id: 'u_admin',
     name: 'App Owner',
@@ -439,7 +433,6 @@ export const MOCK_USERS: User[] = [
       emailAlerts: true,
     },
   },
-  // 2. Franchisee
   {
     id: 'u_fran',
     name: 'Franchise Partner',
@@ -452,7 +445,6 @@ export const MOCK_USERS: User[] = [
     city: 'Campinas',
     phone: '+55 19 98888-8888',
   },
-  // 3. Agency
   {
     id: 'u_agency',
     name: 'Travel Agency',
@@ -465,20 +457,18 @@ export const MOCK_USERS: User[] = [
     city: 'Rio de Janeiro',
     phone: '+55 21 97777-7777',
   },
-  // 4. Merchant (Shopkeeper)
   {
     id: 'u_shop',
     name: 'Shop Merchant',
     email: 'shop@dealvoy.com',
     role: 'shopkeeper',
-    companyId: 'c1', // Linked to Company 1 (likely BR)
+    companyId: 'c1',
     avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=male&seed=55',
     country: 'Brasil',
     state: 'São Paulo',
     city: 'Santos',
     phone: '+55 13 96666-6666',
   },
-  // 5. End User
   {
     id: 'u_user',
     name: 'End User',
@@ -512,7 +502,6 @@ export const MOCK_REWARDS: RewardItem[] = [
   },
 ]
 
-// Franchises (12 items)
 export const MOCK_FRANCHISES: Franchise[] = Array.from({ length: 12 }).map(
   (_, i) => ({
     id: `f${i + 1}`,
@@ -603,7 +592,6 @@ export const MOCK_TRAVEL_OFFERS: TravelOffer[] = [
   },
 ]
 
-// Car Rentals (15 items)
 export const MOCK_CAR_RENTALS: CarRental[] = Array.from({ length: 15 }).map(
   (_, i) => ({
     id: `car-${i}`,
@@ -620,7 +608,6 @@ export const MOCK_CAR_RENTALS: CarRental[] = Array.from({ length: 15 }).map(
   }),
 )
 
-// Validation Logs (20 items)
 export const MOCK_VALIDATION_LOGS: ValidationLog[] = Array.from({
   length: 20,
 }).map((_, i) => ({
@@ -634,7 +621,6 @@ export const MOCK_VALIDATION_LOGS: ValidationLog[] = Array.from({
   userId: i % 3 === 0 ? 'u_user' : 'u_agency',
 }))
 
-// System Logs (15 items)
 export const MOCK_SYSTEM_LOGS: SystemLog[] = Array.from({ length: 15 }).map(
   (_, i) => ({
     id: `log-${i}`,
@@ -646,7 +632,6 @@ export const MOCK_SYSTEM_LOGS: SystemLog[] = Array.from({ length: 15 }).map(
   }),
 )
 
-// Client History (15 items)
 export const MOCK_CLIENT_HISTORY: ClientHistory[] = Array.from({
   length: 15,
 }).map((_, i) => ({
@@ -696,5 +681,57 @@ export const MOCK_CHATS: ChatThread[] = [
     lastMessage: 'I need to change the date of my flight.',
     lastUpdated: new Date(Date.now() - 1800000).toISOString(),
     unreadCount: 0,
+  },
+]
+
+export const MOCK_CRAWLER_SOURCES: CrawlerSource[] = [
+  {
+    id: 'cs1',
+    name: 'Local Deals API',
+    url: 'https://api.localdeals.com',
+    type: 'api',
+    region: 'BR-SP',
+    scanRadius: 50,
+    status: 'active',
+    lastScan: new Date().toISOString(),
+  },
+  {
+    id: 'cs2',
+    name: 'Florida Coupons Web',
+    url: 'https://flcoupons.com',
+    type: 'web',
+    region: 'US-FL',
+    scanRadius: 100,
+    status: 'active',
+  },
+]
+
+export const MOCK_DISCOVERED_PROMOTIONS: DiscoveredPromotion[] = [
+  {
+    id: 'dp1',
+    sourceId: 'cs1',
+    title: 'Pizza 50% Off',
+    discount: '50% OFF',
+    description:
+      'Half price on all family sized pizzas. Enjoy this local deal!',
+    expiryDate: '2025-12-31',
+    image: 'https://img.usecurling.com/p/300/200?q=pizza',
+    storeName: 'Papa Johns',
+    status: 'pending',
+    region: 'BR-SP',
+    category: 'Alimentação',
+  },
+  {
+    id: 'dp2',
+    sourceId: 'cs2',
+    title: 'Theme Park Tickets',
+    discount: '$20 OFF',
+    description: 'Discounted tickets for the whole family.',
+    expiryDate: '2025-10-31',
+    image: 'https://img.usecurling.com/p/300/200?q=theme%20park',
+    storeName: 'Orlando Parks',
+    status: 'pending',
+    region: 'US-FL',
+    category: 'Lazer',
   },
 ]
