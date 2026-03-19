@@ -21,6 +21,9 @@ import {
   Review,
   CrawlerSource,
   DiscoveredPromotion,
+  AdPricing,
+  Advertiser,
+  AdInvoice,
 } from './types'
 
 export const getCategoryTranslationKey = (category: string): string => {
@@ -406,6 +409,8 @@ export const MOCK_ADS: Advertisement[] = [
     link: 'https://burgerking.com.br',
     price: 29.9,
     currency: 'BRL',
+    advertiserId: 'adv1',
+    durationDays: 30,
   },
   {
     id: 'ad2',
@@ -758,5 +763,39 @@ export const MOCK_DISCOVERED_PROMOTIONS: DiscoveredPromotion[] = [
       source_link: 'https://flcoupons.com/deal/orlando-parks',
       scraped_images: ['url1', 'url2'],
     },
+  },
+]
+
+export const MOCK_AD_PRICING: AdPricing[] = [
+  { id: 'ap1', placement: 'top', durationDays: 7, price: 150 },
+  { id: 'ap2', placement: 'bottom', durationDays: 30, price: 400 },
+  { id: 'ap3', placement: 'search', durationDays: 15, price: 200 },
+]
+
+export const MOCK_ADVERTISERS: Advertiser[] = [
+  {
+    id: 'adv1',
+    companyName: 'Local Burger Co.',
+    taxId: '12.345.678/0001-90',
+    email: 'marketing@localburger.com',
+    phone: '11 98888-7777',
+    address: {
+      street: 'Av. Paulista',
+      number: '1000',
+      city: 'São Paulo',
+      state: 'SP',
+      zip: '01310-100',
+    },
+  },
+]
+
+export const MOCK_AD_INVOICES: AdInvoice[] = [
+  {
+    id: 'inv1',
+    adId: 'ad1',
+    advertiserId: 'adv1',
+    amount: 150,
+    issueDate: new Date().toISOString(),
+    status: 'paid',
   },
 ]

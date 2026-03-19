@@ -7,22 +7,26 @@ import { getCategoryTranslationKey } from '@/lib/data'
 import { useState, useEffect } from 'react'
 
 interface AdSpaceProps {
-  position?: 'top' | 'bottom'
+  position?: 'top' | 'bottom' | 'sidebar' | 'search'
   className?: string
   customAds?: Advertisement[]
 }
 
-export function AdSpace({ position, className, customAds }: AdSpaceProps) {
+export function AdSpace({
+  position = 'top',
+  className,
+  customAds,
+}: AdSpaceProps) {
   const { ads: storeAds } = useCouponStore()
-  const { t, formatCurrency } = useLanguage()
+  const { t } = useLanguage()
   const [imgError, setImgError] = useState(false)
 
   const adsToUse = customAds || storeAds
-  const availableAds = adsToUse.filter((ad) => ad.status === 'active')
+  const availableAds = adsToUse.filter(
+    (ad) => ad.status === 'active' && ad.placement === position,
+  )
 
-  const adIndex =
-    position === 'top' ? 0 : position === 'bottom' ? 1 : 0 % availableAds.length
-  const ad = availableAds[adIndex] || availableAds[0]
+  const ad = availableAds[0]
 
   useEffect(() => {
     setImgError(false)
@@ -35,7 +39,7 @@ export function AdSpace({ position, className, customAds }: AdSpaceProps) {
       <div className="container mx-auto px-4">
         <div className="relative group overflow-hidden rounded-md border border-slate-200 shadow-sm bg-white hover:border-primary/30 transition-colors">
           <div className="absolute top-0 right-0 bg-slate-100 text-slate-400 text-[8px] px-1.5 py-0.5 z-10 font-medium rounded-bl-sm uppercase tracking-wider">
-            {t('ad.sponsored')}
+            {t('ad.sponsored', 'Patrocinado')}
           </div>
           <a
             href={ad.link || '#'}
@@ -48,7 +52,7 @@ export function AdSpace({ position, className, customAds }: AdSpaceProps) {
                 <img
                   src={
                     ad.image ||
-                    `https://img.usecurling.com/p/400/100?q=${ad.category}`
+                    `https://img.usecurling.com/p/400/100?q=${ad.category || 'ad'}`
                   }
                   alt={ad.title}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
@@ -62,18 +66,15 @@ export function AdSpace({ position, className, customAds }: AdSpaceProps) {
             <div className="flex-1 px-3 py-1 flex flex-col justify-center min-w-0 h-full">
               <div className="flex items-center justify-between mb-0.5">
                 <span className="text-[9px] md:text-[10px] font-bold text-primary uppercase tracking-wider truncate mr-2">
-                  {t(getCategoryTranslationKey(ad.category))}
+                  {ad.category
+                    ? t(getCategoryTranslationKey(ad.category))
+                    : 'Publicidade'}
                 </span>
               </div>
               <div className="flex items-center justify-between gap-2">
                 <h4 className="font-semibold text-xs md:text-sm text-slate-800 line-clamp-1 flex-1">
                   {ad.title}
                 </h4>
-                {ad.price && (
-                  <span className="font-bold text-green-600 text-xs shrink-0 hidden sm:block">
-                    {formatCurrency(ad.price, ad.currency)}
-                  </span>
-                )}
               </div>
             </div>
           </a>

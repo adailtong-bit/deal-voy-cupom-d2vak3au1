@@ -305,6 +305,16 @@ export interface Company {
 
 export type AdBillingType = 'fixed' | 'ppc' | 'ticketing'
 
+export type AdPlacement =
+  | 'home_hero'
+  | 'sidebar'
+  | 'feed'
+  | 'footer'
+  | 'content'
+  | 'top'
+  | 'bottom'
+  | 'search'
+
 export interface Advertisement {
   id: string
   title: string
@@ -312,14 +322,7 @@ export interface Advertisement {
   region: string
   category: string
   billingType: AdBillingType
-  placement:
-    | 'home_hero'
-    | 'sidebar'
-    | 'feed'
-    | 'footer'
-    | 'content'
-    | 'top'
-    | 'bottom'
+  placement: AdPlacement
   status: 'active' | 'paused' | 'ended'
   budget?: number
   costPerClick?: number
@@ -331,6 +334,39 @@ export interface Advertisement {
   link: string
   price?: number
   currency?: string
+  advertiserId?: string
+  durationDays?: number
+}
+
+export interface AdPricing {
+  id: string
+  placement: string
+  durationDays: number
+  price: number
+}
+
+export interface Advertiser {
+  id: string
+  companyName: string
+  taxId: string
+  email: string
+  phone: string
+  address: {
+    street: string
+    number: string
+    city: string
+    state: string
+    zip: string
+  }
+}
+
+export interface AdInvoice {
+  id: string
+  adId: string
+  advertiserId: string
+  amount: number
+  issueDate: string
+  status: 'pending' | 'paid' | 'canceled'
 }
 
 export interface RewardItem {

@@ -28,6 +28,9 @@ import {
   BehavioralTrigger,
   CrawlerSource,
   DiscoveredPromotion,
+  AdPricing,
+  Advertiser,
+  AdInvoice,
 } from '@/lib/types'
 import {
   MOCK_COUPONS,
@@ -48,6 +51,9 @@ import {
   MOCK_SYSTEM_LOGS,
   MOCK_CRAWLER_SOURCES,
   MOCK_DISCOVERED_PROMOTIONS,
+  MOCK_AD_PRICING,
+  MOCK_ADVERTISERS,
+  MOCK_AD_INVOICES,
 } from '@/lib/data'
 import { toast } from 'sonner'
 import { useNotification } from './NotificationContext'
@@ -102,6 +108,9 @@ interface CouponContextType {
   systemLogs: SystemLog[]
   crawlerSources: CrawlerSource[]
   discoveredPromotions: DiscoveredPromotion[]
+  adPricing: AdPricing[]
+  advertisers: Advertiser[]
+  adInvoices: AdInvoice[]
   setRegion: (regionCode: string) => void
   toggleSave: (id: string) => void
   toggleTrip: (id: string) => void
@@ -169,6 +178,10 @@ interface CouponContextType {
   importPromotion: (id: string, customCategory?: string) => void
   ignorePromotion: (id: string) => void
   triggerScan: (sourceId: string) => void
+  addAdPricing: (pricing: AdPricing) => void
+  addAdvertiser: (advertiser: Advertiser) => void
+  createAdCampaign: (ad: Advertisement, invoice: AdInvoice) => void
+  updateInvoiceStatus: (id: string, status: AdInvoice['status']) => void
 }
 
 const CouponContext = createContext<CouponContextType | undefined>(undefined)
@@ -245,6 +258,10 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   const [discoveredPromotions, setDiscoveredPromotions] = useState<
     DiscoveredPromotion[]
   >(MOCK_DISCOVERED_PROMOTIONS)
+
+  const [adPricing, setAdPricing] = useState<AdPricing[]>(MOCK_AD_PRICING)
+  const [advertisers, setAdvertisers] = useState<Advertiser[]>(MOCK_ADVERTISERS)
+  const [adInvoices, setAdInvoices] = useState<AdInvoice[]>(MOCK_AD_INVOICES)
 
   useEffect(() => {
     if (user) {
@@ -988,6 +1005,29 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     }, 2500)
   }
 
+  const addAdPricing = (pricing: AdPricing) => {
+    setAdPricing((prev) => [...prev, pricing])
+    toast.success('Regra de preço adicionada')
+  }
+
+  const addAdvertiser = (advertiser: Advertiser) => {
+    setAdvertisers((prev) => [...prev, advertiser])
+    toast.success('Anunciante cadastrado')
+  }
+
+  const createAdCampaign = (ad: Advertisement, invoice: AdInvoice) => {
+    setAds((prev) => [ad, ...prev])
+    setAdInvoices((prev) => [invoice, ...prev])
+    toast.success('Campanha e cobrança geradas com sucesso')
+  }
+
+  const updateInvoiceStatus = (id: string, status: AdInvoice['status']) => {
+    setAdInvoices((prev) =>
+      prev.map((inv) => (inv.id === id ? { ...inv, status } : inv)),
+    )
+    toast.success('Status da cobrança atualizado')
+  }
+
   return React.createElement(
     CouponContext.Provider,
     {
@@ -1031,6 +1071,9 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         systemLogs,
         crawlerSources,
         discoveredPromotions,
+        adPricing,
+        advertisers,
+        adInvoices,
         setRegion,
         toggleSave,
         toggleTrip,
@@ -1087,6 +1130,10 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         importPromotion,
         ignorePromotion,
         triggerScan,
+        addAdPricing,
+        addAdvertiser,
+        createAdCampaign,
+        updateInvoiceStatus,
       },
     },
     children,

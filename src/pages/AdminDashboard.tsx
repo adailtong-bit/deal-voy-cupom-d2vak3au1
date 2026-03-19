@@ -18,6 +18,7 @@ import {
   Lock,
   CheckCircle,
   XCircle,
+  Megaphone,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -45,6 +46,7 @@ import { useForm } from 'react-hook-form'
 import { useLanguage } from '@/stores/LanguageContext'
 import { AdminCRM } from '@/components/admin/AdminCRM'
 import { PromotionCrawler } from '@/components/admin/PromotionCrawler'
+import { AdminAdsManager } from '@/components/admin/ads/AdminAdsManager'
 
 export default function AdminDashboard() {
   const {
@@ -284,6 +286,12 @@ export default function AdminDashboard() {
           <TabsTrigger value="crawler">
             <Globe className="h-4 w-4 mr-2" /> Crawler
           </TabsTrigger>
+          {(isSuperAdmin || isDeveloperFallback) && (
+            <TabsTrigger value="advertising">
+              <Megaphone className="h-4 w-4 mr-2" />{' '}
+              {t('admin.advertising', 'Publicidade')}
+            </TabsTrigger>
+          )}
           <TabsTrigger value="moderation">{t('admin.moderation')}</TabsTrigger>
           <TabsTrigger value="logs">{t('admin.logs')}</TabsTrigger>
           <TabsTrigger value="reports">{t('admin.reports')}</TabsTrigger>
@@ -433,6 +441,12 @@ export default function AdminDashboard() {
         <TabsContent value="crawler">
           <PromotionCrawler />
         </TabsContent>
+
+        {(isSuperAdmin || isDeveloperFallback) && (
+          <TabsContent value="advertising">
+            <AdminAdsManager />
+          </TabsContent>
+        )}
 
         <TabsContent value="moderation">
           <Card>
