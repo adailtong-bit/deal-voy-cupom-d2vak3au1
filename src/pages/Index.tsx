@@ -12,7 +12,6 @@ import {
   SlidersHorizontal,
   List,
   Loader2,
-  Info,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -138,8 +137,7 @@ export default function Index() {
     return () => observer.disconnect()
   }, [])
 
-  const executeSearch = (e?: React.FormEvent) => {
-    e?.preventDefault()
+  const executeSearch = () => {
     setSearchQuery(searchInput)
     setSearchParams(
       (prev) => {
@@ -155,6 +153,12 @@ export default function Index() {
     setFilterCountry(tempCountry)
     setFilterState(tempState)
     setFilterCity(tempCity)
+  }
+
+  const handleSearchSubmit = (e?: React.FormEvent) => {
+    e?.preventDefault()
+    executeSearch()
+    executeLocationSearch()
   }
 
   const clearSearch = () => {
@@ -324,70 +328,15 @@ export default function Index() {
     return true
   })
 
-  // Hierarchical Location Priority Fallback Logic
+  // Strict Hierarchical Location Filter Logic
   let finalCoupons = rawFilteredCoupons
-  let newFallbackMsg = ''
 
   if (filterCountry !== 'all') {
-    const byCountry = rawFilteredCoupons.filter(
-      (c) => c.country === filterCountry,
-    )
-    const byState =
-      filterState !== 'all'
-        ? byCountry.filter((c) => c.state === filterState)
-        : byCountry
-    const byCity =
-      filterCity !== 'all'
-        ? byState.filter((c) => c.city === filterCity)
-        : byState
-
-    if (filterCity !== 'all') {
-      if (byCity.length > 0) {
-        finalCoupons = byCity
-      } else if (byState.length > 0) {
-        finalCoupons = byState
-        newFallbackMsg = tFallback(
-          'fallback.city',
-          `Não há anúncios em ${filterCity}. Exibindo anúncios de ${filterState}.`,
-        )
-      } else if (byCountry.length > 0) {
-        finalCoupons = byCountry
-        newFallbackMsg = tFallback(
-          'fallback.state',
-          `Não há anúncios em ${filterCity} ou ${filterState}. Exibindo anúncios de ${filterCountry}.`,
-        )
-      } else {
-        finalCoupons = rawFilteredCoupons
-        newFallbackMsg = tFallback(
-          'fallback.country',
-          `Não há anúncios na região selecionada. Exibindo anúncios globais.`,
-        )
-      }
-    } else if (filterState !== 'all') {
-      if (byState.length > 0) {
-        finalCoupons = byState
-      } else if (byCountry.length > 0) {
-        finalCoupons = byCountry
-        newFallbackMsg = tFallback(
-          'fallback.state',
-          `Não há anúncios em ${filterState}. Exibindo anúncios de ${filterCountry}.`,
-        )
-      } else {
-        finalCoupons = rawFilteredCoupons
-        newFallbackMsg = tFallback(
-          'fallback.country',
-          `Não há anúncios na região selecionada. Exibindo anúncios globais.`,
-        )
-      }
-    } else {
-      if (byCountry.length > 0) {
-        finalCoupons = byCountry
-      } else {
-        finalCoupons = rawFilteredCoupons
-        newFallbackMsg = tFallback(
-          'fallback.country',
-          `Não há anúncios em ${filterCountry}. Exibindo anúncios globais.`,
-        )
+    finalCoupons = finalCoupons.filter((c) => c.country === filterCountry)
+    if (filterState !== 'all') {
+      finalCoupons = finalCoupons.filter((c) => c.state === filterState)
+      if (filterCity !== 'all') {
+        finalCoupons = finalCoupons.filter((c) => c.city === filterCity)
       }
     }
   }
@@ -411,37 +360,28 @@ export default function Index() {
 
   return (
     <div className="pb-20 md:pb-8 bg-slate-50/50 min-h-screen">
-      <section className="bg-white border-b sticky top-0 md:top-0 z-30 shadow-sm">
-        <div className="container mx-auto px-4 py-2">
-          {/* Desktop Search Bar (Hidden on Mobile) */}
-          <div className="hidden md:flex relative max-w-lg mx-auto items-center mb-2.5">
-            <form
-              onSubmit={executeSearch}
-              className="w-full relative flex items-center"
-            >
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+      <section className="bg-white border-b sticky top-0 md:top-0 z-30 shadow-sm py-2">
+        <div className="container mx-auto px-2 md:px-4">
+          <form
+            onSubmit={handleSearchSubmit}
+            className="flex flex-col lg:flex-row items-center justify-center gap-2 md:gap-3 w-full max-w-5xl mx-auto"
+          >
+            {/* Text Search */}
+            <div className="relative w-full lg:w-80 flex items-center shrink-0">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
               <Input
                 placeholder={t('common.search')}
-                className="pl-9 pr-24 h-9 rounded-full bg-slate-50 border-transparent focus:bg-white focus:border-primary/50 focus:ring-1 focus:ring-primary/50 text-sm transition-all w-full"
+                className="pl-9 pr-4 h-9 lg:h-8 text-xs rounded-full bg-slate-50 border-slate-200 focus:bg-white focus:border-primary/50 focus:ring-1 focus:ring-primary/50 w-full shadow-sm"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
               />
-              <Button
-                type="submit"
-                size="sm"
-                className="absolute right-1 top-1 h-7 rounded-full bg-primary hover:bg-primary/90 text-white font-semibold px-4 text-xs"
-              >
-                {t('common.search')}
-              </Button>
-            </form>
-          </div>
+            </div>
 
-          {/* Location Hierarchical Filters */}
-          <div className="flex flex-col md:flex-row items-center justify-center gap-2 text-xs w-full max-w-3xl mx-auto">
-            <div className="flex items-center w-full md:w-auto flex-1 gap-1.5">
-              <MapPin className="h-3.5 w-3.5 md:h-4 md:w-4 text-slate-400 shrink-0 hidden md:block" />
+            {/* Location Hierarchical Filters */}
+            <div className="flex items-center w-full lg:w-auto flex-1 gap-1.5">
+              <MapPin className="h-3.5 w-3.5 text-slate-400 shrink-0 hidden lg:block ml-1" />
               <Select value={tempCountry} onValueChange={handleCountryChange}>
-                <SelectTrigger className="h-8 text-xs bg-slate-50 border-transparent focus:ring-1 focus:ring-primary/50 rounded-full w-1/3 truncate px-2.5">
+                <SelectTrigger className="h-9 lg:h-8 text-xs bg-slate-50 border-slate-200 rounded-full w-1/3 truncate px-2.5 shadow-sm">
                   <SelectValue placeholder="País" />
                 </SelectTrigger>
                 <SelectContent>
@@ -459,7 +399,7 @@ export default function Index() {
                 onValueChange={handleStateChange}
                 disabled={tempCountry === 'all'}
               >
-                <SelectTrigger className="h-8 text-xs bg-slate-50 border-transparent focus:ring-1 focus:ring-primary/50 rounded-full w-1/3 truncate px-2.5 disabled:opacity-50">
+                <SelectTrigger className="h-9 lg:h-8 text-xs bg-slate-50 border-slate-200 rounded-full w-1/3 truncate px-2.5 shadow-sm disabled:opacity-50">
                   <SelectValue placeholder="Estado" />
                 </SelectTrigger>
                 <SelectContent>
@@ -477,7 +417,7 @@ export default function Index() {
                 onValueChange={setTempCity}
                 disabled={tempState === 'all'}
               >
-                <SelectTrigger className="h-8 text-xs bg-slate-50 border-transparent focus:ring-1 focus:ring-primary/50 rounded-full w-1/3 truncate px-2.5 disabled:opacity-50">
+                <SelectTrigger className="h-9 lg:h-8 text-xs bg-slate-50 border-slate-200 rounded-full w-1/3 truncate px-2.5 shadow-sm disabled:opacity-50">
                   <SelectValue placeholder="Cidade" />
                 </SelectTrigger>
                 <SelectContent>
@@ -492,16 +432,16 @@ export default function Index() {
             </div>
 
             <Button
-              onClick={executeLocationSearch}
+              type="submit"
               size="sm"
-              className="h-8 rounded-full bg-primary hover:bg-primary/90 text-white font-semibold px-5 text-xs w-full md:w-auto shrink-0 shadow-sm"
+              className="h-9 lg:h-8 rounded-full bg-primary hover:bg-primary/90 text-white font-semibold px-6 text-xs w-full lg:w-auto shrink-0 shadow-sm"
             >
-              <Search className="h-3.5 w-3.5 mr-1.5" />
+              <Search className="h-3.5 w-3.5 mr-1.5 lg:hidden" />
               {tFallback('common.search', 'Buscar')}
             </Button>
-          </div>
+          </form>
 
-          <div className="mt-2 flex items-center justify-center text-[10px] text-slate-400 gap-1.5 hidden md:flex">
+          <div className="mt-2 hidden lg:flex items-center justify-center text-[10px] text-slate-400 gap-1.5">
             {isLoadingLocation ? (
               <span className="animate-pulse">
                 {t('home.detecting_location')}
@@ -637,13 +577,6 @@ export default function Index() {
       <div className="container mx-auto px-3 md:px-4 py-4 md:py-6 space-y-6 md:space-y-8">
         <AdSpace position="top" className="py-0 md:py-0" />
 
-        {newFallbackMsg && (
-          <div className="bg-blue-50 text-blue-800 text-xs md:text-sm px-4 py-3 rounded-lg border border-blue-200 flex items-center gap-2 shadow-sm animate-in fade-in slide-in-from-top-2">
-            <Info className="h-4 w-4 shrink-0 text-blue-500" />
-            <span className="font-medium">{newFallbackMsg}</span>
-          </div>
-        )}
-
         {searchQuery && (
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground">
@@ -751,7 +684,7 @@ export default function Index() {
           </section>
         )}
 
-        {widgets.tracked && (
+        {widgets.tracked && finalCoupons.length > 0 && (
           <section>
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-base md:text-lg font-bold flex items-center gap-1.5 text-slate-800">

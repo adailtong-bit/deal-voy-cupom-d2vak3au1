@@ -49,24 +49,25 @@ export function DesktopHeader() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 hidden md:block">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4 lg:px-6">
-        <div className="flex items-center gap-2 lg:gap-4">
+      <div className="container mx-auto flex h-14 items-center justify-between px-3 lg:px-4">
+        <div className="flex items-center gap-2 lg:gap-3">
           <Link
             to="/"
             reloadDocument
             className="flex items-center gap-1.5 hover:opacity-90 transition-opacity"
+            title={t('nav.home')}
           >
             <img
               src={logoImg}
               alt="Deal Voy Logo"
-              className="h-9 w-9 rounded-md object-contain"
+              className="h-8 w-8 rounded-md object-contain"
             />
             <span className="font-bold text-lg tracking-tight text-foreground">
               Deal <span className="text-primary">Voy</span>
             </span>
           </Link>
 
-          <div className="hidden xl:flex items-center gap-2.5 text-sm font-medium">
+          <div className="hidden xl:flex items-center gap-2 text-sm font-medium ml-2">
             <Link
               to="/"
               className={
@@ -156,7 +157,7 @@ export function DesktopHeader() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <SyncStatus />
           <LanguageSelector />
 
@@ -165,9 +166,9 @@ export function DesktopHeader() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="relative hover:bg-secondary/10"
+                className="relative hover:bg-secondary/10 h-9 w-9"
               >
-                <MessageSquare className="h-5 w-5 text-foreground" />
+                <MessageSquare className="h-4 w-4 text-foreground" />
               </Button>
             </Link>
           )}
@@ -176,13 +177,13 @@ export function DesktopHeader() {
             <Button
               variant="ghost"
               size="icon"
-              className="relative hover:bg-secondary/10"
+              className="relative hover:bg-secondary/10 h-9 w-9"
             >
-              <Bell className="h-5 w-5 text-foreground" />
+              <Bell className="h-4 w-4 text-foreground" />
               {unreadCount > 0 && (
                 <Badge
                   variant="destructive"
-                  className="absolute -top-1 -right-1 h-4 w-4 flex items-center justify-center p-0 rounded-full text-[10px]"
+                  className="absolute -top-1 -right-1 h-3.5 w-3.5 flex items-center justify-center p-0 rounded-full text-[9px]"
                 >
                   {unreadCount}
                 </Badge>
@@ -191,9 +192,9 @@ export function DesktopHeader() {
           </Link>
 
           {user ? (
-            <div className="flex items-center gap-2 pl-2 border-l">
+            <div className="flex items-center gap-2 pl-2 border-l ml-1">
               <Link to="/profile">
-                <Avatar className="h-8 w-8 cursor-pointer hover:ring-2 hover:ring-secondary hover:ring-offset-2 transition-all">
+                <Avatar className="h-7 w-7 cursor-pointer hover:ring-2 hover:ring-secondary hover:ring-offset-2 transition-all">
                   <AvatarImage
                     src={
                       user?.avatar ||
@@ -206,6 +207,7 @@ export function DesktopHeader() {
               <Button
                 variant="ghost"
                 size="icon"
+                className="h-9 w-9"
                 onClick={handleLogout}
                 title={t('profile.logout')}
               >
@@ -214,7 +216,7 @@ export function DesktopHeader() {
             </div>
           ) : (
             <Link to="/login" className="ml-2">
-              <Button size="sm" variant="outline">
+              <Button size="sm" variant="outline" className="h-8 text-xs">
                 {t('auth.login')}
               </Button>
             </Link>
@@ -222,8 +224,12 @@ export function DesktopHeader() {
 
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="xl:hidden">
-                <Menu className="h-5 w-5" />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="xl:hidden h-9 w-9 ml-1"
+              >
+                <Menu className="h-4 w-4" />
               </Button>
             </SheetTrigger>
             <SheetContent side="right">
