@@ -19,12 +19,11 @@ export function MobileHeader() {
   const { unreadCount } = useNotification()
   const { t } = useLanguage()
   const [isSearchOpen, setIsSearchOpen] = useState(false)
-  const [searchParams, setSearchParams] = useSearchParams()
+  const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const location = useLocation()
   const inputRef = useRef<HTMLInputElement>(null)
 
-  // Initialize search value from URL if available
   const [searchValue, setSearchValue] = useState(searchParams.get('q') || '')
 
   useEffect(() => {
@@ -38,39 +37,18 @@ export function MobileHeader() {
   }, [isSearchOpen])
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value
-    setSearchValue(val)
-
-    // Determine if we need to navigate to Index or just update params
-    if (location.pathname !== '/') {
-      // If typing on another page, don't update URL immediately to avoid navigation flicker
-      // Navigation happens on enter or blur usually, but for live search:
-      // We might want to wait for user to stop typing or press enter.
-      // For simplicity in this mobile context, we navigate on Enter or let user click button.
-    } else {
-      setSearchParams(
-        (prev) => {
-          if (val) prev.set('q', val)
-          else prev.delete('q')
-          return prev
-        },
-        { replace: true },
-      )
-    }
+    setSearchValue(e.target.value)
   }
 
   const handleSearchSubmit = (e?: React.FormEvent) => {
     e?.preventDefault()
-    if (location.pathname !== '/') {
-      navigate(`/?q=${encodeURIComponent(searchValue)}`)
-    }
+    navigate(`/?q=${encodeURIComponent(searchValue)}`)
     inputRef.current?.blur()
   }
 
   const toggleSearch = () => {
     if (isSearchOpen) {
       setIsSearchOpen(false)
-      // Optional: Clear search when closing? No, keep context.
     } else {
       setIsSearchOpen(true)
     }
@@ -108,6 +86,9 @@ export function MobileHeader() {
                 value={searchValue}
                 onChange={handleSearchChange}
               />
+              <button type="submit" className="sr-only">
+                Search
+              </button>
             </div>
           </form>
         )}

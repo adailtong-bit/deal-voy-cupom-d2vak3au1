@@ -226,6 +226,9 @@ const generateCoupons = (): Coupon[] => {
     status: 'active',
     source: 'partner',
     region: 'BR-SP',
+    country: 'Brasil',
+    state: 'São Paulo',
+    city: 'São Paulo',
     visitCount: 0,
     price: 199.99,
     currency: 'BRL',
@@ -237,6 +240,11 @@ const generateCoupons = (): Coupon[] => {
 
   for (let i = 1; i <= 30; i++) {
     const isUS = i % 2 !== 0
+    const cityBR = i % 2 === 0 ? 'São Paulo' : 'Campinas'
+    const cityUS = i % 2 === 0 ? 'Miami' : 'Orlando'
+    const country = isUS ? 'USA' : 'Brasil'
+    const state = isUS ? 'Florida' : 'São Paulo'
+    const city = isUS ? cityUS : cityBR
 
     const reviews: Review[] = []
     if (i <= 5) {
@@ -268,7 +276,7 @@ const generateCoupons = (): Coupon[] => {
     let discountStr = ''
     if (type === 'percentage') discountStr = `${10 + (i % 50)}% OFF`
     else if (type === 'fixed')
-      discountStr = isUS ? `$${5 + (i % 20)} OFF` : `R$ ${10 + (i % 30)} OFF`
+      discountStr = isUS ? `${5 + (i % 20)} OFF` : `R$ ${10 + (i % 30)} OFF`
     else discountStr = isUS ? 'Free Shipping' : 'Frete Grátis'
 
     coupons.push({
@@ -295,6 +303,9 @@ const generateCoupons = (): Coupon[] => {
       status: statuses[i % 3],
       source: i % 3 === 0 ? 'aggregated' : 'partner',
       region: isUS ? 'US-FL' : 'BR-SP',
+      country,
+      state,
+      city,
       price: i % 2 === 0 ? 50 + i * 10 : undefined,
       currency: isUS ? 'USD' : 'BRL',
       reviews: reviews,

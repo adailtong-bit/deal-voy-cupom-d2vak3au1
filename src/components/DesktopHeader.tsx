@@ -1,4 +1,10 @@
-import { Link, useLocation } from 'react-router-dom'
+import {
+  Link,
+  useLocation,
+  useNavigate,
+  useSearchParams,
+} from 'react-router-dom'
+import { useState, useEffect } from 'react'
 import {
   Search,
   Menu,
@@ -46,14 +52,27 @@ import logoImg from '@/assets/whatsapp-image-2026-01-25-at-5.40.56-am.jpeg'
 
 export function DesktopHeader() {
   const location = useLocation()
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { t } = useLanguage()
   const { unreadCount } = useNotification()
   const { user, selectedRegion, setRegion, regions, logout } = useCouponStore()
+
+  const [searchValue, setSearchValue] = useState(searchParams.get('q') || '')
+
+  useEffect(() => {
+    setSearchValue(searchParams.get('q') || '')
+  }, [searchParams])
 
   const isActive = (path: string) => location.pathname === path
 
   const handleLogout = () => {
     logout()
+  }
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    navigate(`/?q=${encodeURIComponent(searchValue)}`)
   }
 
   return (
@@ -162,14 +181,19 @@ export function DesktopHeader() {
         </div>
 
         <div className="flex flex-1 items-center justify-center max-w-sm mx-4">
-          <div className="relative w-full">
+          <form onSubmit={handleSearchSubmit} className="relative w-full">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               type="search"
               placeholder={t('common.search')}
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
               className="w-full bg-white border-2 border-slate-100 pl-9 rounded-full focus-visible:ring-primary h-9 focus-visible:border-primary/50 transition-colors"
             />
-          </div>
+            <button type="submit" className="sr-only">
+              Search
+            </button>
+          </form>
         </div>
 
         <div className="flex items-center gap-3">

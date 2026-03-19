@@ -104,6 +104,9 @@ export interface Coupon {
   isPaid?: boolean
   source?: 'partner' | 'aggregated'
   region?: string
+  country?: string
+  state?: string
+  city?: string
   behavioralTriggers?: BehavioralTrigger[]
   visitCount?: number
   targetAudience?: 'all' | 'preferred'

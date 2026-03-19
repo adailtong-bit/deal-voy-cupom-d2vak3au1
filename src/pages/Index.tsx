@@ -12,6 +12,7 @@ import {
   SlidersHorizontal,
   List,
   Loader2,
+  Info,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -27,6 +28,7 @@ import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
 import { CouponCard } from '@/components/CouponCard'
 import { CATEGORIES } from '@/lib/data'
+import { LOCATION_DATA, COUNTRIES } from '@/lib/locationData'
 import * as Icons from 'lucide-react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
@@ -52,7 +54,7 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 
 export default function Index() {
   const {
-    coupons,
+    allCoupons,
     isLoadingLocation,
     selectedRegion,
     user,
@@ -61,7 +63,6 @@ export default function Index() {
   } = useCouponStore()
   const { t, formatCurrency } = useLanguage()
 
-  // Helper to fallback safely if translation is missing
   const tFallback = (key: string, fallback: string) => {
     const res = t(key)
     return res === key ? fallback : res
@@ -71,9 +72,15 @@ export default function Index() {
   const [searchParams, setSearchParams] = useSearchParams()
   const urlQuery = searchParams.get('q') || ''
   const [searchQuery, setSearchQuery] = useState(urlQuery)
+  const [searchInput, setSearchInput] = useState(urlQuery)
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [maxPrice, setMaxPrice] = useState<number[]>([1000])
   const [discountType, setDiscountType] = useState<string>('all')
+
+  // Hierarchical Location State
+  const [filterCountry, setFilterCountry] = useState<string>('all')
+  const [filterState, setFilterState] = useState<string>('all')
+  const [filterCity, setFilterCity] = useState<string>('all')
 
   // View Mode & Infinite Scroll State
   const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => {
@@ -92,6 +99,7 @@ export default function Index() {
 
   useEffect(() => {
     setSearchQuery(urlQuery)
+    setSearchInput(urlQuery)
   }, [urlQuery])
 
   useEffect(() => {
@@ -100,7 +108,15 @@ export default function Index() {
 
   useEffect(() => {
     setVisibleCount(12)
-  }, [searchQuery, selectedCategory, maxPrice, discountType])
+  }, [
+    searchQuery,
+    selectedCategory,
+    maxPrice,
+    discountType,
+    filterCountry,
+    filterState,
+    filterCity,
+  ])
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -117,16 +133,40 @@ export default function Index() {
     return () => observer.disconnect()
   }, [])
 
-  const handleSearchChange = (val: string) => {
-    setSearchQuery(val)
+  const executeSearch = (e?: React.FormEvent) => {
+    e?.preventDefault()
+    setSearchQuery(searchInput)
     setSearchParams(
       (prev) => {
-        if (val) prev.set('q', val)
+        if (searchInput) prev.set('q', searchInput)
         else prev.delete('q')
         return prev
       },
       { replace: true },
     )
+  }
+
+  const clearSearch = () => {
+    setSearchInput('')
+    setSearchQuery('')
+    setSearchParams(
+      (prev) => {
+        prev.delete('q')
+        return prev
+      },
+      { replace: true },
+    )
+  }
+
+  const handleCountryChange = (val: string) => {
+    setFilterCountry(val)
+    setFilterState('all')
+    setFilterCity('all')
+  }
+
+  const handleStateChange = (val: string) => {
+    setFilterState(val)
+    setFilterCity('all')
   }
 
   useEffect(() => {
@@ -151,7 +191,15 @@ export default function Index() {
     updateUserPreferences({ dashboardWidgets: widgetList })
   }
 
-  // Role Based View Logic
+  const availableStates =
+    filterCountry !== 'all'
+      ? Object.keys(LOCATION_DATA[filterCountry]?.states || {})
+      : []
+  const availableCities =
+    filterCountry !== 'all' && filterState !== 'all'
+      ? LOCATION_DATA[filterCountry]?.states[filterState] || []
+      : []
+
   const isEndUser = !user || user.role === 'user'
 
   if (!isEndUser) {
@@ -233,7 +281,8 @@ export default function Index() {
     )
   }
 
-  const filteredCoupons = coupons.filter((c) => {
+  // Base filtering (Search & Basic Filters)
+  const rawFilteredCoupons = allCoupons.filter((c) => {
     if (
       searchQuery &&
       !c.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
@@ -242,9 +291,7 @@ export default function Index() {
       return false
     if (selectedCategory !== 'all' && c.category !== selectedCategory)
       return false
-
     if (c.price !== undefined && c.price > maxPrice[0]) return false
-
     if (discountType !== 'all') {
       const d = c.discount.toLowerCase()
       if (discountType === 'percentage' && !d.includes('%')) return false
@@ -263,14 +310,78 @@ export default function Index() {
       )
         return false
     }
-
     return true
   })
 
-  const featuredCoupons = filteredCoupons.filter(
+  // Hierarchical Location Priority Fallback Logic
+  let finalCoupons = rawFilteredCoupons
+  let newFallbackMsg = ''
+
+  if (filterCountry !== 'all') {
+    const byCountry = rawFilteredCoupons.filter(
+      (c) => c.country === filterCountry,
+    )
+
+    if (filterState !== 'all') {
+      const byState = byCountry.filter((c) => c.state === filterState)
+
+      if (filterCity !== 'all') {
+        const byCity = byState.filter((c) => c.city === filterCity)
+        if (byCity.length > 0) {
+          finalCoupons = byCity
+        } else if (byState.length > 0) {
+          finalCoupons = byState
+          newFallbackMsg = tFallback(
+            'fallback.city',
+            `Nenhuma oferta encontrada em ${filterCity}. Exibindo ofertas de ${filterState}.`,
+          )
+        } else if (byCountry.length > 0) {
+          finalCoupons = byCountry
+          newFallbackMsg = tFallback(
+            'fallback.state',
+            `Nenhuma oferta encontrada em ${filterCity} ou ${filterState}. Exibindo ofertas de ${filterCountry}.`,
+          )
+        } else {
+          finalCoupons = rawFilteredCoupons
+          newFallbackMsg = tFallback(
+            'fallback.country',
+            `Nenhuma oferta na região selecionada. Exibindo ofertas globais.`,
+          )
+        }
+      } else {
+        if (byState.length > 0) {
+          finalCoupons = byState
+        } else if (byCountry.length > 0) {
+          finalCoupons = byCountry
+          newFallbackMsg = tFallback(
+            'fallback.state',
+            `Nenhuma oferta encontrada em ${filterState}. Exibindo ofertas de ${filterCountry}.`,
+          )
+        } else {
+          finalCoupons = rawFilteredCoupons
+          newFallbackMsg = tFallback(
+            'fallback.country',
+            `Nenhuma oferta na região selecionada. Exibindo ofertas globais.`,
+          )
+        }
+      }
+    } else {
+      if (byCountry.length > 0) {
+        finalCoupons = byCountry
+      } else {
+        finalCoupons = rawFilteredCoupons
+        newFallbackMsg = tFallback(
+          'fallback.country',
+          `Nenhuma oferta encontrada em ${filterCountry}. Exibindo ofertas globais.`,
+        )
+      }
+    }
+  }
+
+  const featuredCoupons = finalCoupons.filter(
     (c) => c.isFeatured || c.source === 'partner',
   )
-  const aggregatedCoupons = filteredCoupons.filter(
+  const aggregatedCoupons = finalCoupons.filter(
     (c) => c.source === 'aggregated',
   )
 
@@ -286,25 +397,86 @@ export default function Index() {
 
   return (
     <div className="pb-20 md:pb-8 bg-slate-50/50 min-h-screen">
-      {/* Hidden on mobile to use MobileHeader search instead */}
-      <section className="bg-white border-b hidden md:block sticky top-0 z-30 shadow-sm">
+      <section className="bg-white border-b sticky top-0 md:top-0 z-30 shadow-sm">
         <div className="container mx-auto px-4 py-2">
-          <div className="relative max-w-lg mx-auto flex items-center">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <Input
-              placeholder={t('common.search')}
-              className="pl-9 pr-24 h-9 rounded-full bg-slate-50 border-transparent focus:bg-white focus:border-primary/50 focus:ring-1 focus:ring-primary/50 text-sm transition-all"
-              value={searchQuery}
-              onChange={(e) => handleSearchChange(e.target.value)}
-            />
-            <Button
-              size="sm"
-              className="absolute right-1 top-1 h-7 rounded-full bg-primary hover:bg-primary/90 text-white font-semibold px-4 text-xs"
+          {/* Desktop Search Bar (Hidden on Mobile) */}
+          <div className="hidden md:flex relative max-w-lg mx-auto items-center mb-2.5">
+            <form
+              onSubmit={executeSearch}
+              className="w-full relative flex items-center"
             >
-              {t('common.search')}
-            </Button>
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Input
+                placeholder={t('common.search')}
+                className="pl-9 pr-24 h-9 rounded-full bg-slate-50 border-transparent focus:bg-white focus:border-primary/50 focus:ring-1 focus:ring-primary/50 text-sm transition-all w-full"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+              />
+              <Button
+                type="submit"
+                size="sm"
+                className="absolute right-1 top-1 h-7 rounded-full bg-primary hover:bg-primary/90 text-white font-semibold px-4 text-xs"
+              >
+                {t('common.search')}
+              </Button>
+            </form>
           </div>
-          <div className="mt-1.5 flex items-center justify-center text-[10px] text-slate-400 gap-1.5">
+
+          {/* Location Hierarchical Filters */}
+          <div className="flex items-center justify-center gap-1.5 md:gap-2 text-xs w-full max-w-2xl mx-auto">
+            <MapPin className="h-3.5 w-3.5 md:h-4 md:w-4 text-slate-400 shrink-0" />
+            <Select value={filterCountry} onValueChange={handleCountryChange}>
+              <SelectTrigger className="h-8 text-xs bg-slate-50 border-transparent focus:ring-1 focus:ring-primary/50 rounded-full w-1/3 truncate px-2.5">
+                <SelectValue placeholder="País" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">País (Todos)</SelectItem>
+                {COUNTRIES.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {c}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={filterState}
+              onValueChange={handleStateChange}
+              disabled={filterCountry === 'all'}
+            >
+              <SelectTrigger className="h-8 text-xs bg-slate-50 border-transparent focus:ring-1 focus:ring-primary/50 rounded-full w-1/3 truncate px-2.5 disabled:opacity-50">
+                <SelectValue placeholder="Estado" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Estado (Todos)</SelectItem>
+                {availableStates.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {s}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={filterCity}
+              onValueChange={setFilterCity}
+              disabled={filterState === 'all'}
+            >
+              <SelectTrigger className="h-8 text-xs bg-slate-50 border-transparent focus:ring-1 focus:ring-primary/50 rounded-full w-1/3 truncate px-2.5 disabled:opacity-50">
+                <SelectValue placeholder="Cidade" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Cidade (Todas)</SelectItem>
+                {availableCities.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {c}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="mt-2 flex items-center justify-center text-[10px] text-slate-400 gap-1.5 hidden md:flex">
             {isLoadingLocation ? (
               <span className="animate-pulse">
                 {t('home.detecting_location')}
@@ -440,6 +612,13 @@ export default function Index() {
       <div className="container mx-auto px-3 md:px-4 py-4 md:py-6 space-y-6 md:space-y-8">
         <AdSpace position="top" className="py-0 md:py-0" />
 
+        {newFallbackMsg && (
+          <div className="bg-blue-50 text-blue-800 text-xs md:text-sm px-4 py-3 rounded-lg border border-blue-200 flex items-center gap-2 shadow-sm animate-in fade-in slide-in-from-top-2">
+            <Info className="h-4 w-4 shrink-0 text-blue-500" />
+            <span className="font-medium">{newFallbackMsg}</span>
+          </div>
+        )}
+
         {searchQuery && (
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground">
@@ -454,7 +633,7 @@ export default function Index() {
                 variant="ghost"
                 size="icon"
                 className="h-4 w-4 ml-0.5 hover:bg-transparent"
-                onClick={() => handleSearchChange('')}
+                onClick={clearSearch}
               >
                 <span className="sr-only">Clear</span>
                 <svg
@@ -722,7 +901,7 @@ export default function Index() {
               </div>
             </div>
 
-            {filteredCoupons.length > 0 ? (
+            {finalCoupons.length > 0 ? (
               <>
                 <div
                   className={cn(
@@ -732,7 +911,7 @@ export default function Index() {
                       : 'flex flex-col space-y-3',
                   )}
                 >
-                  {filteredCoupons.slice(0, visibleCount).map((coupon) => (
+                  {finalCoupons.slice(0, visibleCount).map((coupon) => (
                     <CouponCard
                       key={`all-${coupon.id}`}
                       coupon={coupon}
@@ -741,7 +920,7 @@ export default function Index() {
                   ))}
                 </div>
 
-                {visibleCount < filteredCoupons.length && (
+                {visibleCount < finalCoupons.length && (
                   <div
                     ref={loaderRef}
                     className="py-8 flex justify-center items-center"
@@ -761,7 +940,10 @@ export default function Index() {
                     setSelectedCategory('all')
                     setMaxPrice([1000])
                     setDiscountType('all')
-                    handleSearchChange('')
+                    clearSearch()
+                    setFilterCountry('all')
+                    setFilterState('all')
+                    setFilterCity('all')
                   }}
                 >
                   {tFallback('common.clear', 'Clear Filters')}

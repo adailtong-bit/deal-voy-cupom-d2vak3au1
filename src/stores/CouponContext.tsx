@@ -63,6 +63,7 @@ const MOCK_USERS: User[] = ORIGINAL_MOCK_USERS.map((u) => ({
 }))
 
 interface CouponContextType {
+  allCoupons: Coupon[]
   coupons: Coupon[]
   companies: Company[]
   ads: Advertisement[]
@@ -295,13 +296,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     setSystemLogs((prev) => [log, ...prev])
   }
 
-  const filteredCoupons = coupons.filter((c) => {
-    const regionMatch =
-      selectedRegion === 'Global' ||
-      !c.region ||
-      c.region === selectedRegion ||
-      c.region === ''
-
+  const allAudienceCoupons = coupons.filter((c) => {
     let audienceMatch = true
     if (c.targetAudience === 'preferred') {
       const company = companies.find((comp) => comp.id === c.companyId)
@@ -312,8 +307,16 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       const isPreferred = company?.preferredCustomers?.includes(user?.id || '')
       audienceMatch = isMerchant || !!isPreferred
     }
+    return audienceMatch
+  })
 
-    return regionMatch && audienceMatch
+  const filteredCoupons = allAudienceCoupons.filter((c) => {
+    const regionMatch =
+      selectedRegion === 'Global' ||
+      !c.region ||
+      c.region === selectedRegion ||
+      c.region === ''
+    return regionMatch
   })
 
   const filteredAds =
@@ -989,6 +992,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     CouponContext.Provider,
     {
       value: {
+        allCoupons: allAudienceCoupons,
         coupons: filteredCoupons,
         companies,
         ads: filteredAds,
