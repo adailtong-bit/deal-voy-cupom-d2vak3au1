@@ -15,7 +15,6 @@ import {
   MapPin,
   Wallet,
   Plane,
-  Heart,
   History,
   Coins,
   ThumbsUp,
@@ -46,6 +45,7 @@ import {
   DialogTrigger,
   DialogFooter,
 } from '@/components/ui/dialog'
+import { cn } from '@/lib/utils'
 
 export default function Profile() {
   const { user, updateUserProfile, logout } = useCouponStore()
@@ -104,7 +104,9 @@ export default function Profile() {
   const isProfileComplete =
     user?.birthday && user?.country && user?.state && user?.city && user?.phone
 
-  const LocationFields = () => (
+  // Defined as a regular function returning JSX to prevent component re-mounting and
+  // infinite setRef/effect loops with nested Radix primitives when re-rendering
+  const renderLocationFields = () => (
     <div className="space-y-4">
       <div className="space-y-2">
         <Label>{t('hub.date')}</Label>
@@ -113,10 +115,10 @@ export default function Profile() {
           required
           value={formData.birthday}
           onChange={(e) =>
-            setFormData({
-              ...formData,
+            setFormData((prev) => ({
+              ...prev,
               birthday: e.target.value,
-            })
+            }))
           }
         />
       </div>
@@ -126,7 +128,12 @@ export default function Profile() {
         <Select
           value={formData.country}
           onValueChange={(val) =>
-            setFormData({ ...formData, country: val, state: '', city: '' })
+            setFormData((prev) => ({
+              ...prev,
+              country: val,
+              state: '',
+              city: '',
+            }))
           }
         >
           <SelectTrigger>
@@ -146,26 +153,31 @@ export default function Profile() {
         country={formData.country}
         state={formData.state}
         city={formData.city}
-        onChange={(data) => setFormData({ ...formData, ...data })}
+        onChange={(data) => setFormData((prev) => ({ ...prev, ...data }))}
       />
 
       <div className="space-y-2">
         <Label>{t('phone.label')}</Label>
         <PhoneInput
           value={formData.phone}
-          onChange={(val) => setFormData({ ...formData, phone: val })}
+          onChange={(val) => setFormData((prev) => ({ ...prev, phone: val }))}
           countryCode={formData.country}
         />
       </div>
     </div>
   )
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const ScenarioCard = ({ title, icon: Icon, path, color }: any) => (
-    <Link to={path}>
+  // Defined as a function returning JSX to prevent unnecessary component unmounts/remounts
+  const renderScenarioCard = (
+    title: string,
+    Icon: React.ElementType,
+    path: string,
+    color: string,
+  ) => (
+    <Link to={path} key={title}>
       <Card className="hover:shadow-md transition-shadow h-full">
         <CardContent className="p-4 flex flex-col items-center justify-center text-center gap-2">
-          <div className={`p-3 rounded-full bg-slate-50 ${color}`}>
+          <div className={cn('p-3 rounded-full bg-slate-50', color)}>
             <Icon className="h-6 w-6" />
           </div>
           <span className="text-xs font-semibold">{title}</span>
@@ -192,7 +204,7 @@ export default function Profile() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <LocationFields />
+              {renderLocationFields()}
               <Button type="submit" className="w-full font-bold">
                 {t('profile.save')}
               </Button>
@@ -254,7 +266,7 @@ export default function Profile() {
               <DialogTitle>{t('profile.edit')}</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <LocationFields />
+              {renderLocationFields()}
               <DialogFooter>
                 <Button type="submit">{t('common.save')}</Button>
               </DialogFooter>
@@ -264,65 +276,61 @@ export default function Profile() {
       </div>
 
       <div className="grid grid-cols-2 gap-4 mb-8">
-        <ScenarioCard
-          title={t('user.wallet')}
-          icon={Wallet}
-          path="/saved"
-          color="text-emerald-500"
-        />
-        <ScenarioCard
-          title={t('user.saved_itineraries')}
-          icon={Plane}
-          path="/travel-planner"
-          color="text-blue-500"
-        />
-        <ScenarioCard
-          title={t('rewards.external')}
-          icon={Gift}
-          path="/rewards?tab=external"
-          color="text-purple-600"
-        />
-        <ScenarioCard
-          title={t('user.redemption_history')}
-          icon={History}
-          path="/rewards"
-          color="text-orange-500"
-        />
-        <ScenarioCard
-          title={t('user.nearby')}
-          icon={MapPin}
-          path="/explore"
-          color="text-purple-500"
-        />
-        <ScenarioCard
-          title={t('profile.settings')}
-          icon={Settings}
-          path="/settings"
-        />
-        <ScenarioCard
-          title={t('user.points')}
-          icon={Coins}
-          path="/rewards"
-          color="text-yellow-500"
-        />
-        <ScenarioCard
-          title={t('user.recommended')}
-          icon={ThumbsUp}
-          path="/"
-          color="text-indigo-500"
-        />
-        <ScenarioCard
-          title={t('user.expiring')}
-          icon={Clock}
-          path="/saved"
-          color="text-rose-500"
-        />
-        <ScenarioCard
-          title={t('user.car_rentals')}
-          icon={Car}
-          path="/agencies"
-          color="text-cyan-500"
-        />
+        {renderScenarioCard(
+          t('user.wallet'),
+          Wallet,
+          '/saved',
+          'text-emerald-500',
+        )}
+        {renderScenarioCard(
+          t('user.saved_itineraries'),
+          Plane,
+          '/travel-planner',
+          'text-blue-500',
+        )}
+        {renderScenarioCard(
+          t('rewards.external'),
+          Gift,
+          '/rewards?tab=external',
+          'text-purple-600',
+        )}
+        {renderScenarioCard(
+          t('user.redemption_history'),
+          History,
+          '/rewards',
+          'text-orange-500',
+        )}
+        {renderScenarioCard(
+          t('user.nearby'),
+          MapPin,
+          '/explore',
+          'text-purple-500',
+        )}
+        {renderScenarioCard(t('profile.settings'), Settings, '/settings', '')}
+        {renderScenarioCard(
+          t('user.points'),
+          Coins,
+          '/rewards',
+          'text-yellow-500',
+        )}
+        {renderScenarioCard(
+          t('user.recommended'),
+          ThumbsUp,
+          '/',
+          'text-indigo-500',
+        )}
+        {renderScenarioCard(
+          t('user.expiring'),
+          Clock,
+          '/saved',
+          'text-rose-500',
+        )}
+        {renderScenarioCard(
+          t('user.car_rentals'),
+          Car,
+          '/agencies',
+          'text-cyan-500',
+        )}
       </div>
 
       <div className="space-y-3">
