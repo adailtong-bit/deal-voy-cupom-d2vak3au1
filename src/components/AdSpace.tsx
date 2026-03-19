@@ -10,12 +10,14 @@ interface AdSpaceProps {
   position?: 'top' | 'bottom' | 'sidebar' | 'search'
   className?: string
   customAds?: Advertisement[]
+  categoryContext?: string
 }
 
 export function AdSpace({
   position = 'top',
   className,
   customAds,
+  categoryContext,
 }: AdSpaceProps) {
   const { ads: storeAds } = useCouponStore()
   const { t } = useLanguage()
@@ -23,7 +25,13 @@ export function AdSpace({
 
   const adsToUse = customAds || storeAds
   const availableAds = adsToUse.filter(
-    (ad) => ad.status === 'active' && ad.placement === position,
+    (ad) =>
+      ad.status === 'active' &&
+      ad.placement === position &&
+      (!categoryContext ||
+        categoryContext === 'all' ||
+        ad.category === 'all' ||
+        ad.category === categoryContext),
   )
 
   const ad = availableAds[0]
@@ -66,7 +74,7 @@ export function AdSpace({
             <div className="flex-1 px-3 py-1 flex flex-col justify-center min-w-0 h-full">
               <div className="flex items-center justify-between mb-0.5">
                 <span className="text-[9px] md:text-[10px] font-bold text-primary uppercase tracking-wider truncate mr-2">
-                  {ad.category
+                  {ad.category && ad.category !== 'all'
                     ? t(getCategoryTranslationKey(ad.category))
                     : 'Publicidade'}
                 </span>

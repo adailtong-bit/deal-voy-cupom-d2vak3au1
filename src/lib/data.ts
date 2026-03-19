@@ -792,10 +792,12 @@ export const MOCK_ADVERTISERS: Advertiser[] = [
 export const MOCK_AD_INVOICES: AdInvoice[] = [
   {
     id: 'inv1',
+    referenceNumber: 'INV-2024-AD1',
     adId: 'ad1',
     advertiserId: 'adv1',
     amount: 150,
     issueDate: new Date().toISOString(),
+    dueDate: new Date(Date.now() + 15 * 86400000).toISOString(),
     status: 'paid',
   },
 ]

@@ -30,6 +30,7 @@ import {
 import { useForm } from 'react-hook-form'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
+import { CATEGORIES } from '@/lib/data'
 
 export function AdCampaignsTab() {
   const { ads, advertisers, adPricing, createAdCampaign } = useCouponStore()
@@ -64,6 +65,11 @@ export function AdCampaignsTab() {
     const endDate = new Date()
     endDate.setDate(now.getDate() + parseInt(data.durationDays))
 
+    const dueDate = new Date()
+    dueDate.setDate(now.getDate() + 15) // Vencimento padrão de 15 dias
+
+    const refNumber = `INV-${now.getFullYear()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`
+
     createAdCampaign(
       {
         id: adId,
@@ -71,7 +77,7 @@ export function AdCampaignsTab() {
         companyId: 'admin_created',
         advertiserId: data.advertiserId,
         region: 'Global',
-        category: 'Outros',
+        category: data.category || 'all',
         billingType: 'fixed',
         placement: data.placement,
         status: 'active',
@@ -87,11 +93,13 @@ export function AdCampaignsTab() {
       },
       {
         id: Math.random().toString(),
+        referenceNumber: refNumber,
         adId,
         advertiserId: data.advertiserId,
         amount: calculatedPrice,
         issueDate: now.toISOString(),
-        status: 'pending',
+        dueDate: dueDate.toISOString(),
+        status: 'draft',
       },
     )
 
@@ -134,9 +142,9 @@ export function AdCampaignsTab() {
                 <Label>Título do Anúncio</Label>
                 <Input {...register('title')} required />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label>Local (Placement)</Label>
+                  <Label>Localização</Label>
                   <Select
                     onValueChange={(v) => setValue('placement', v)}
                     required
@@ -171,6 +179,25 @@ export function AdCampaignsTab() {
                     </SelectContent>
                   </Select>
                 </div>
+                <div className="space-y-2">
+                  <Label>Categoria Alvo</Label>
+                  <Select
+                    onValueChange={(v) => setValue('category', v)}
+                    defaultValue="all"
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Todas" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todas as Categorias</SelectItem>
+                      {CATEGORIES.filter((c) => c.id !== 'all').map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <div className="p-4 bg-muted rounded-md text-center">
                 <span className="text-sm text-muted-foreground block mb-1">
@@ -181,15 +208,30 @@ export function AdCampaignsTab() {
                 </span>
               </div>
               <div className="space-y-2">
-                <Label>URL da Imagem</Label>
-                <Input
-                  {...register('image')}
-                  placeholder="https://..."
-                  required
-                />
+                <Label>Banner da Campanha</Label>
+                <div className="flex flex-col gap-2">
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        const mockUrl = `https://img.usecurling.com/p/800/200?q=${encodeURIComponent(e.target.files[0].name.split('.')[0] || 'banner')}`
+                        setValue('image', mockUrl)
+                      }
+                    }}
+                  />
+                  <span className="text-xs text-muted-foreground text-center">
+                    ou cole a URL direta da imagem:
+                  </span>
+                  <Input
+                    {...register('image')}
+                    placeholder="https://..."
+                    required
+                  />
+                </div>
               </div>
               <div className="space-y-2">
-                <Label>Link de Destino</Label>
+                <Label>Link de Destino (Redirect URL)</Label>
                 <Input
                   {...register('link')}
                   placeholder="https://..."
@@ -208,7 +250,7 @@ export function AdCampaignsTab() {
           <TableHeader>
             <TableRow>
               <TableHead>Campanha</TableHead>
-              <TableHead>Anunciante</TableHead>
+              <TableHead>Categoria</TableHead>
               <TableHead>Local</TableHead>
               <TableHead>Duração</TableHead>
               <TableHead>Status</TableHead>
@@ -219,8 +261,15 @@ export function AdCampaignsTab() {
               const adv = advertisers.find((ad) => ad.id === a.advertiserId)
               return (
                 <TableRow key={a.id}>
-                  <TableCell className="font-bold">{a.title}</TableCell>
-                  <TableCell>{adv?.companyName || 'N/A'}</TableCell>
+                  <TableCell>
+                    <span className="font-bold block">{a.title}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {adv?.companyName || 'N/A'}
+                    </span>
+                  </TableCell>
+                  <TableCell className="capitalize">
+                    {a.category === 'all' ? 'Todas' : a.category}
+                  </TableCell>
                   <TableCell className="capitalize">{a.placement}</TableCell>
                   <TableCell>
                     {a.durationDays ? `${a.durationDays} dias` : 'N/A'}

@@ -362,11 +362,14 @@ export interface Advertiser {
 
 export interface AdInvoice {
   id: string
+  referenceNumber: string
   adId: string
   advertiserId: string
   amount: number
   issueDate: string
-  status: 'pending' | 'paid' | 'canceled'
+  dueDate: string
+  sentAt?: string
+  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'canceled'
 }
 
 export interface RewardItem {

@@ -1023,9 +1023,16 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
 
   const updateInvoiceStatus = (id: string, status: AdInvoice['status']) => {
     setAdInvoices((prev) =>
-      prev.map((inv) => (inv.id === id ? { ...inv, status } : inv)),
+      prev.map((inv) => {
+        if (inv.id === id) {
+          const updates: Partial<AdInvoice> = { status }
+          if (status === 'sent') updates.sentAt = new Date().toISOString()
+          return { ...inv, ...updates }
+        }
+        return inv
+      }),
     )
-    toast.success('Status da cobrança atualizado')
+    toast.success(`Fatura atualizada para o status: ${status}`)
   }
 
   return React.createElement(
