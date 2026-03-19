@@ -916,6 +916,14 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
             status: 'pending',
             region: source.region,
             category: 'Outros',
+            capturedAt: new Date().toISOString(),
+            rawData: {
+              html_title: 'Groupon Exclusive Deal - 60% Off!',
+              original_price: '$100.00',
+              discount_price: '$40.00',
+              merchant: 'Groupon Partner LLC',
+              scraped_url: url,
+            },
           },
           {
             id: `dp-grp-${Math.random()}`,
@@ -929,6 +937,15 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
             status: 'pending',
             region: source.region,
             category: 'Beleza',
+            capturedAt: new Date().toISOString(),
+            rawData: {
+              html_title: 'Spa Day Package for Two',
+              original_price: '$200.00',
+              discount_price: '$120.00',
+              merchant: 'Groupon Partner LLC',
+              scraped_url: url,
+              extracted_images: 3,
+            },
           },
         ]
         newMsg = `Success! ${newPromos.length} new promotions extracted from Groupon (${source.region}).`

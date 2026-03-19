@@ -720,6 +720,13 @@ export const MOCK_DISCOVERED_PROMOTIONS: DiscoveredPromotion[] = [
     status: 'pending',
     region: 'BR-SP',
     category: 'Alimentação',
+    capturedAt: new Date(Date.now() - 3600000).toISOString(),
+    rawData: {
+      original_title: 'Papa Johns Special 50%',
+      price_info: '50% Off Regular Price',
+      vendor: 'Papa Johns Local',
+      api_timestamp: new Date(Date.now() - 3600000).toISOString(),
+    },
   },
   {
     id: 'dp2',
@@ -733,5 +740,12 @@ export const MOCK_DISCOVERED_PROMOTIONS: DiscoveredPromotion[] = [
     status: 'pending',
     region: 'US-FL',
     category: 'Lazer',
+    capturedAt: new Date(Date.now() - 86400000).toISOString(),
+    rawData: {
+      headline: 'Orlando Parks - Save Big!',
+      discount_value: '$20',
+      source_link: 'https://flcoupons.com/deal/orlando-parks',
+      scraped_images: ['url1', 'url2'],
+    },
   },
 ]

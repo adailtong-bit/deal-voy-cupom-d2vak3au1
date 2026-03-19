@@ -498,4 +498,6 @@ export interface DiscoveredPromotion {
   status: 'pending' | 'imported' | 'ignored'
   region: string
   category: string
+  capturedAt?: string
+  rawData?: Record<string, any>
 }
