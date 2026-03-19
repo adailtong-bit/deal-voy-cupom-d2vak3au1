@@ -57,14 +57,13 @@ export default function VendorDashboard() {
       <Tabs defaultValue="overview">
         <TabsList className="mb-4 flex flex-wrap h-auto p-1 bg-slate-100/50">
           <TabsTrigger value="overview">{t('vendor.overview')}</TabsTrigger>
+          <TabsTrigger value="customers">
+            <Users className="h-3 w-3 mr-1" /> CRM / Prospects
+          </TabsTrigger>
           <TabsTrigger value="orders">
             <ShoppingBag className="h-3 w-3 mr-1" /> {t('vendor.orders')}
           </TabsTrigger>
           <TabsTrigger value="offers">{t('vendor.offers')}</TabsTrigger>
-          <TabsTrigger value="customers">
-            <Users className="h-3 w-3 mr-1" />{' '}
-            {t('vendor.customers', 'Customers')}
-          </TabsTrigger>
           <TabsTrigger value="behavioral">
             <Zap className="h-3 w-3 mr-1" /> {t('vendor.behavioral')}
           </TabsTrigger>
@@ -83,14 +82,14 @@ export default function VendorDashboard() {
         <TabsContent value="overview">
           <VendorAnalytics />
         </TabsContent>
+        <TabsContent value="customers">
+          <VendorCustomersTab company={myCompany} />
+        </TabsContent>
         <TabsContent value="orders">
           <OrdersTable orders={bookings} />
         </TabsContent>
         <TabsContent value="offers">
           <OffersTable offers={coupons} />
-        </TabsContent>
-        <TabsContent value="customers">
-          <VendorCustomersTab company={myCompany} />
         </TabsContent>
         <TabsContent value="behavioral">
           <BehavioralTriggersTab coupons={coupons} />

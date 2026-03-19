@@ -9,6 +9,7 @@ import {
   MapPin,
   MoreVertical,
   Trash2,
+  Users,
 } from 'lucide-react'
 import {
   DropdownMenu,
@@ -16,6 +17,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import { CreateTripWizard } from './CreateTripWizard'
 
@@ -32,6 +35,9 @@ export function TravelDashboard({
     [itineraries, user],
   )
 
+  const isMerchantOrAdmin =
+    user?.role === 'shopkeeper' || user?.role === 'super_admin'
+
   const handleDeleteTrip = (id: string) => {
     deleteItinerary(id)
     toast.success('Trip deleted')
@@ -39,6 +45,30 @@ export function TravelDashboard({
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl min-h-[calc(100vh-64px)] animate-in fade-in duration-500">
+      {isMerchantOrAdmin && (
+        <Alert className="mb-6 bg-blue-50 border-blue-200">
+          <Users className="h-4 w-4 text-blue-600" />
+          <AlertTitle className="text-blue-800 font-bold">
+            Merchant Prospecting Tool
+          </AlertTitle>
+          <AlertDescription className="text-blue-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-2">
+            <span>
+              Discover potential customers traveling to your region and view
+              market trends.
+            </span>
+            <Link to={user.role === 'super_admin' ? '/admin' : '/vendor'}>
+              <Button
+                size="sm"
+                variant="outline"
+                className="bg-white border-blue-200 hover:bg-blue-100"
+              >
+                Access CRM
+              </Button>
+            </Link>
+          </AlertDescription>
+        </Alert>
+      )}
+
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
         <div>
           <h1 className="text-3xl font-extrabold text-slate-900 flex items-center gap-3">

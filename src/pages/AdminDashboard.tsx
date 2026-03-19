@@ -43,6 +43,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useForm } from 'react-hook-form'
 import { useLanguage } from '@/stores/LanguageContext'
+import { AdminCRM } from '@/components/admin/AdminCRM'
 
 export default function AdminDashboard() {
   const {
@@ -269,11 +270,14 @@ export default function AdminDashboard() {
       </div>
 
       <Tabs
-        defaultValue={
-          isSuperAdmin || isDeveloperFallback ? 'franchises' : 'merchants'
-        }
+        defaultValue={isSuperAdmin || isDeveloperFallback ? 'crm' : 'merchants'}
       >
-        <TabsList>
+        <TabsList className="flex flex-wrap h-auto">
+          {(isSuperAdmin || isDeveloperFallback) && (
+            <TabsTrigger value="crm">
+              <Users className="h-4 w-4 mr-2" /> User CRM
+            </TabsTrigger>
+          )}
           {(isSuperAdmin || isDeveloperFallback) && (
             <TabsTrigger value="franchises">
               {t('admin.franchises')}
@@ -284,6 +288,12 @@ export default function AdminDashboard() {
           <TabsTrigger value="logs">{t('admin.logs')}</TabsTrigger>
           <TabsTrigger value="reports">{t('admin.reports')}</TabsTrigger>
         </TabsList>
+
+        {(isSuperAdmin || isDeveloperFallback) && (
+          <TabsContent value="crm">
+            <AdminCRM />
+          </TabsContent>
+        )}
 
         {(isSuperAdmin || isDeveloperFallback) && (
           <TabsContent value="franchises">
