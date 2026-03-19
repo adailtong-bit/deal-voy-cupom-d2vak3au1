@@ -1,54 +1,40 @@
-import { Link } from 'react-router-dom'
-import { Bell } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { Link, useLocation } from 'react-router-dom'
+import { Bell, Trophy } from 'lucide-react'
 import { useNotification } from '@/stores/NotificationContext'
-import { SyncStatus } from './SyncStatus'
-import { LanguageSelector } from './LanguageSelector'
-import logoImg from '@/assets/whatsapp-image-2026-01-25-at-5.40.56-am.jpeg'
+import { useCouponStore } from '@/stores/CouponContext'
 
 export function MobileHeader() {
+  const location = useLocation()
   const { unreadCount } = useNotification()
+  const { user } = useCouponStore()
+
+  if (
+    location.pathname.includes('/login') ||
+    location.pathname === '/travel-planner'
+  )
+    return null
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:hidden flex flex-col justify-center px-4 transition-all duration-300">
-      <div className="flex items-center justify-between h-14 w-full">
-        <Link
-          to="/"
-          reloadDocument
-          className="flex items-center gap-1.5 hover:opacity-90 transition-opacity animate-in fade-in slide-in-from-left-2 duration-300"
-        >
-          <img
-            src={logoImg}
-            alt="Deal Voy Logo"
-            className="h-8 w-8 rounded-md object-contain"
-          />
-          <span className="font-bold text-lg tracking-tight text-foreground">
-            Deal <span className="text-primary">Voy</span>
-          </span>
-        </Link>
-
-        <div className="flex items-center gap-1">
-          <LanguageSelector />
-          <SyncStatus />
-          <Link to="/notifications">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="relative hover:bg-secondary/10"
-            >
-              <Bell className="h-5 w-5" />
-              {unreadCount > 0 && (
-                <Badge
-                  variant="destructive"
-                  className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 rounded-full text-[10px]"
-                >
-                  {unreadCount}
-                </Badge>
-              )}
-            </Button>
-          </Link>
+    <header className="md:hidden flex items-center justify-between px-4 h-14 bg-background border-b sticky top-0 z-50">
+      <Link
+        className="font-extrabold text-xl tracking-tight text-primary flex items-center gap-2"
+        to="/"
+      >
+        <div className="h-7 w-7 bg-primary rounded-lg flex items-center justify-center">
+          <span className="text-white font-bold text-lg leading-none">D</span>
         </div>
+        Deal Voy
+      </Link>
+      <div className="flex items-center gap-1">
+        <Link to="/rewards" className="p-2 relative text-amber-500">
+          <Trophy className="h-5 w-5" />
+        </Link>
+        <Link to="/notifications" className="p-2 relative text-slate-600">
+          <Bell className="h-5 w-5" />
+          {unreadCount > 0 && (
+            <span className="absolute top-2 right-2 h-2.5 w-2.5 bg-destructive rounded-full border-2 border-background" />
+          )}
+        </Link>
       </div>
     </header>
   )

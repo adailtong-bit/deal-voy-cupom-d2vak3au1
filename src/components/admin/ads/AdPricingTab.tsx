@@ -29,17 +29,22 @@ import {
 } from '@/components/ui/select'
 import { useForm } from 'react-hook-form'
 import { formatCurrency } from '@/lib/utils'
+import { AdBillingType } from '@/lib/types'
 
 export function AdPricingTab() {
   const { adPricing, addAdPricing } = useCouponStore()
   const [isOpen, setIsOpen] = useState(false)
-  const { register, handleSubmit, reset, setValue } = useForm()
+  const { register, handleSubmit, reset, watch, setValue } = useForm()
+
+  const watchBillingType = watch('billingType')
 
   const onSubmit = (data: any) => {
     addAdPricing({
       id: Math.random().toString(),
       placement: data.placement,
-      durationDays: parseInt(data.durationDays),
+      billingType: data.billingType as AdBillingType,
+      durationDays:
+        data.billingType === 'fixed' ? parseInt(data.durationDays) : undefined,
       price: parseFloat(data.price),
     })
     setIsOpen(false)
@@ -73,15 +78,48 @@ export function AdPricingTab() {
                     <SelectItem value="bottom">Bottom Banner</SelectItem>
                     <SelectItem value="sidebar">Sidebar</SelectItem>
                     <SelectItem value="search">Search Results</SelectItem>
+                    <SelectItem value="offer_of_the_day">
+                      Offer of the Day
+                    </SelectItem>
+                    <SelectItem value="top_ranking">Top Ranking</SelectItem>
+                    <SelectItem value="sponsored_push">
+                      Sponsored Push
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Duração (Dias)</Label>
-                <Input type="number" {...register('durationDays')} required />
+                <Label>Modelo de Cobrança</Label>
+                <Select
+                  onValueChange={(v) => setValue('billingType', v)}
+                  required
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="fixed">Fixo (Por Período)</SelectItem>
+                    <SelectItem value="cpc">CPC (Custo por Clique)</SelectItem>
+                    <SelectItem value="cpa">
+                      CPA (Custo por Venda/Ação)
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
+
+              {watchBillingType === 'fixed' && (
+                <div className="space-y-2">
+                  <Label>Duração (Dias)</Label>
+                  <Input
+                    type="number"
+                    {...register('durationDays')}
+                    required={watchBillingType === 'fixed'}
+                  />
+                </div>
+              )}
+
               <div className="space-y-2">
-                <Label>Preço (R$)</Label>
+                <Label>Valor Base (R$)</Label>
                 <Input
                   type="number"
                   step="0.01"
@@ -101,6 +139,7 @@ export function AdPricingTab() {
           <TableHeader>
             <TableRow>
               <TableHead>Local</TableHead>
+              <TableHead>Modelo</TableHead>
               <TableHead>Duração</TableHead>
               <TableHead>Preço</TableHead>
             </TableRow>
@@ -108,15 +147,25 @@ export function AdPricingTab() {
           <TableBody>
             {adPricing.map((p) => (
               <TableRow key={p.id}>
-                <TableCell className="capitalize">{p.placement}</TableCell>
-                <TableCell>{p.durationDays} dias</TableCell>
-                <TableCell>{formatCurrency(p.price, 'BRL')}</TableCell>
+                <TableCell className="capitalize">
+                  {p.placement.replace(/_/g, ' ')}
+                </TableCell>
+                <TableCell className="uppercase">{p.billingType}</TableCell>
+                <TableCell>
+                  {p.billingType === 'fixed'
+                    ? `${p.durationDays} dias`
+                    : 'Contínuo'}
+                </TableCell>
+                <TableCell>
+                  {formatCurrency(p.price, 'BRL')}{' '}
+                  {p.billingType !== 'fixed' && `/ ${p.billingType}`}
+                </TableCell>
               </TableRow>
             ))}
             {adPricing.length === 0 && (
               <TableRow>
                 <TableCell
-                  colSpan={3}
+                  colSpan={4}
                   className="text-center text-muted-foreground"
                 >
                   Nenhuma regra cadastrada.

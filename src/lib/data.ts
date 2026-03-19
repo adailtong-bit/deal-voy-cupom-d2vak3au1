@@ -24,6 +24,7 @@ import {
   AdPricing,
   Advertiser,
   AdInvoice,
+  PlatformSettings,
 } from './types'
 
 export const getCategoryTranslationKey = (category: string): string => {
@@ -414,21 +415,21 @@ export const MOCK_ADS: Advertisement[] = [
   },
   {
     id: 'ad2',
-    title: 'Fashion Week Sale',
+    title: 'Oferta do Dia: Smartwatch',
     companyId: 'c2',
-    region: 'US-FL',
-    category: 'Moda',
-    billingType: 'ppc',
-    placement: 'bottom',
+    region: 'Global',
+    category: 'Eletrônicos',
+    billingType: 'cpc',
+    placement: 'offer_of_the_day',
     status: 'active',
-    views: 10000,
-    clicks: 1200,
+    views: 5000,
+    clicks: 800,
     startDate: '2024-12-01',
     endDate: '2025-01-31',
-    image: 'https://img.usecurling.com/p/800/200?q=fashion%20sale',
-    link: 'https://fashionweek.com',
-    price: 49.99,
-    currency: 'USD',
+    image: 'https://img.usecurling.com/p/800/400?q=smartwatch',
+    link: 'https://electronics.com',
+    price: 0.5,
+    currency: 'BRL',
   },
 ]
 
@@ -490,6 +491,7 @@ export const MOCK_USERS: User[] = [
     name: 'End User',
     email: 'user@dealvoy.com',
     role: 'user',
+    subscriptionTier: 'free',
     avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=female&seed=44',
     country: 'USA',
     state: 'Florida',
@@ -502,6 +504,7 @@ export const MOCK_USERS: User[] = [
       pushAlerts: true,
       categories: ['Alimentação', 'Moda'],
       dashboardWidgets: ['featured', 'categories', 'tracked', 'all'],
+      travelMode: false,
     },
   },
 ]
@@ -635,6 +638,8 @@ export const MOCK_VALIDATION_LOGS: ValidationLog[] = Array.from({
   method: i % 2 === 0 ? 'qr' : 'manual',
   shopkeeperId: 'u_shop',
   userId: i % 3 === 0 ? 'u_user' : 'u_agency',
+  commissionAmount: 5.0,
+  cashbackAmount: 2.0,
 }))
 
 export const MOCK_SYSTEM_LOGS: SystemLog[] = Array.from({ length: 15 }).map(
@@ -767,9 +772,36 @@ export const MOCK_DISCOVERED_PROMOTIONS: DiscoveredPromotion[] = [
 ]
 
 export const MOCK_AD_PRICING: AdPricing[] = [
-  { id: 'ap1', placement: 'top', durationDays: 7, price: 150 },
-  { id: 'ap2', placement: 'bottom', durationDays: 30, price: 400 },
-  { id: 'ap3', placement: 'search', durationDays: 15, price: 200 },
+  {
+    id: 'ap1',
+    placement: 'top',
+    billingType: 'fixed',
+    durationDays: 7,
+    price: 150,
+  },
+  {
+    id: 'ap2',
+    placement: 'bottom',
+    billingType: 'fixed',
+    durationDays: 30,
+    price: 400,
+  },
+  {
+    id: 'ap3',
+    placement: 'search',
+    billingType: 'fixed',
+    durationDays: 15,
+    price: 200,
+  },
+  { id: 'ap4', placement: 'offer_of_the_day', billingType: 'cpc', price: 0.5 },
+  { id: 'ap5', placement: 'top_ranking', billingType: 'cpa', price: 5.0 },
+  {
+    id: 'ap6',
+    placement: 'sponsored_push',
+    billingType: 'fixed',
+    durationDays: 1,
+    price: 500,
+  },
 ]
 
 export const MOCK_ADVERTISERS: Advertiser[] = [
@@ -801,3 +833,28 @@ export const MOCK_AD_INVOICES: AdInvoice[] = [
     status: 'paid',
   },
 ]
+
+export const DEFAULT_PLATFORM_SETTINGS: PlatformSettings = {
+  commissionRate: 10,
+  cashbackSplitUser: 40,
+  cashbackSplitPlatform: 60,
+  travelMargins: {
+    hotels: 12,
+    flights: 3,
+    cars: 8,
+    insurance: 25,
+  },
+  subscriptionPricing: {
+    premium: 4.99,
+    vip: 14.99,
+  },
+  withdrawal: {
+    minAmount: 25,
+    instantFee: 1.5,
+  },
+  referral: {
+    fixedReward: 5.0,
+    friendCashbackPercentage: 10,
+    durationDays: 30,
+  },
+}

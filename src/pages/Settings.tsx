@@ -1,5 +1,12 @@
 import { useLanguage } from '@/stores/LanguageContext'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardFooter,
+} from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
@@ -10,6 +17,9 @@ import {
   Bell,
   Globe,
   Tag,
+  MapPin,
+  Crown,
+  CheckCircle2,
 } from 'lucide-react'
 import { LanguageSelector } from '@/components/LanguageSelector'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -21,7 +31,8 @@ import { useState, useEffect } from 'react'
 
 export default function Settings() {
   const { t } = useLanguage()
-  const { user, updateUserPreferences } = useCouponStore()
+  const { user, updateUserPreferences, upgradeSubscription, platformSettings } =
+    useCouponStore()
 
   // Local state for settings form
   const [notifications, setNotifications] = useState(true)
@@ -30,6 +41,7 @@ export default function Settings() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
   const [quietStart, setQuietStart] = useState('22:00')
   const [quietEnd, setQuietEnd] = useState('08:00')
+  const [travelMode, setTravelMode] = useState(false)
 
   useEffect(() => {
     if (user?.preferences) {
@@ -39,6 +51,7 @@ export default function Settings() {
       setSelectedCategories(user.preferences.categories ?? [])
       setQuietStart(user.preferences.quietHoursStart ?? '22:00')
       setQuietEnd(user.preferences.quietHoursEnd ?? '08:00')
+      setTravelMode(user.preferences.travelMode ?? false)
     }
   }, [user])
 
@@ -50,6 +63,7 @@ export default function Settings() {
       categories: selectedCategories,
       quietHoursStart: quietStart,
       quietHoursEnd: quietEnd,
+      travelMode,
     })
   }
 
@@ -71,14 +85,143 @@ export default function Settings() {
         {t('settings.title')}
       </h1>
 
-      <Tabs defaultValue="notifications" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="notifications">
+      <Tabs defaultValue="subscription" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-4 flex-wrap h-auto">
+          <TabsTrigger value="subscription" className="py-2">
+            Assinatura
+          </TabsTrigger>
+          <TabsTrigger value="notifications" className="py-2">
             {t('profile.notifications')}
           </TabsTrigger>
-          <TabsTrigger value="privacy">{t('settings.privacy')}</TabsTrigger>
-          <TabsTrigger value="general">{t('settings.title')}</TabsTrigger>
+          <TabsTrigger value="travel" className="py-2">
+            Viagem
+          </TabsTrigger>
+          <TabsTrigger value="general" className="py-2">
+            Geral
+          </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="subscription" className="space-y-6">
+          <Card className="border-2 border-primary/20">
+            <CardHeader className="text-center pb-2">
+              <Crown className="w-12 h-12 mx-auto text-primary mb-2" />
+              <CardTitle>
+                Plano Atual:{' '}
+                <span className="uppercase text-primary">
+                  {user?.subscriptionTier || 'FREE'}
+                </span>
+              </CardTitle>
+              <CardDescription>
+                Faça upgrade para obter mais cashback e benefícios exclusivos.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div
+                  className={`border p-4 rounded-xl relative ${user?.subscriptionTier === 'premium' ? 'border-primary bg-primary/5' : ''}`}
+                >
+                  {user?.subscriptionTier === 'premium' && (
+                    <div className="absolute top-2 right-2">
+                      <CheckCircle2 className="text-primary w-5 h-5" />
+                    </div>
+                  )}
+                  <h3 className="font-bold text-lg mb-1">Premium</h3>
+                  <p className="text-2xl font-extrabold mb-2">
+                    ${platformSettings.subscriptionPricing.premium}
+                    <span className="text-sm font-normal text-muted-foreground">
+                      /mo
+                    </span>
+                  </p>
+                  <ul className="text-sm space-y-2 mb-4 text-muted-foreground">
+                    <li>• 3% - 10% Cashback</li>
+                    <li>• Ofertas exclusivas (Voos/Hotéis)</li>
+                    <li>• Saques prioritários</li>
+                  </ul>
+                  <Button
+                    variant={
+                      user?.subscriptionTier === 'premium'
+                        ? 'secondary'
+                        : 'default'
+                    }
+                    className="w-full"
+                    disabled={user?.subscriptionTier === 'premium'}
+                    onClick={() => upgradeSubscription('premium')}
+                  >
+                    {user?.subscriptionTier === 'premium'
+                      ? 'Plano Atual'
+                      : 'Assinar Premium'}
+                  </Button>
+                </div>
+                <div
+                  className={`border p-4 rounded-xl relative ${user?.subscriptionTier === 'vip' ? 'border-purple-500 bg-purple-50' : 'border-purple-200'}`}
+                >
+                  {user?.subscriptionTier === 'vip' && (
+                    <div className="absolute top-2 right-2">
+                      <CheckCircle2 className="text-purple-500 w-5 h-5" />
+                    </div>
+                  )}
+                  <h3 className="font-bold text-lg mb-1 text-purple-700">
+                    VIP Traveler
+                  </h3>
+                  <p className="text-2xl font-extrabold mb-2">
+                    ${platformSettings.subscriptionPricing.vip}
+                    <span className="text-sm font-normal text-muted-foreground">
+                      /mo
+                    </span>
+                  </p>
+                  <ul className="text-sm space-y-2 mb-4 text-muted-foreground">
+                    <li>• Cashback Máximo</li>
+                    <li>• Acesso antecipado a promos</li>
+                    <li>• Concierge 24/7</li>
+                  </ul>
+                  <Button
+                    className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+                    disabled={user?.subscriptionTier === 'vip'}
+                    onClick={() => upgradeSubscription('vip')}
+                  >
+                    {user?.subscriptionTier === 'vip'
+                      ? 'Plano Atual'
+                      : 'Assinar VIP'}
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="travel" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MapPin className="h-5 w-5 text-blue-500" /> Modo Viagem
+              </CardTitle>
+              <CardDescription>
+                Ative o Modo Viagem para priorizar cupons e restaurantes
+                baseados na sua localização atual de viagem, ocultando ofertas
+                da sua cidade natal.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between p-4 border rounded-lg bg-blue-50/50">
+                <div className="space-y-0.5">
+                  <Label className="text-base font-bold text-blue-900">
+                    Ativar Modo Viagem
+                  </Label>
+                  <p className="text-sm text-blue-700">
+                    Geolocalização dinâmica ativada.
+                  </p>
+                </div>
+                <Switch
+                  checked={travelMode}
+                  onCheckedChange={(v) => {
+                    setTravelMode(v)
+                    handleSave()
+                  }}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="notifications" className="space-y-6">
           <Card>
@@ -174,7 +317,21 @@ export default function Settings() {
           </Button>
         </TabsContent>
 
-        <TabsContent value="privacy" className="space-y-6">
+        <TabsContent value="general" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Globe className="h-5 w-5 text-blue-500" />{' '}
+                {t('settings.language')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label>{t('settings.app_language')}</Label>
+                <LanguageSelector />
+              </div>
+            </CardContent>
+          </Card>
           <Card>
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
@@ -201,37 +358,11 @@ export default function Settings() {
                 </div>
                 <Switch defaultChecked />
               </div>
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>{t('settings.profile_visibility')}</Label>
-                  <p className="text-sm text-muted-foreground">
-                    {t('settings.profile_visibility_desc')}
-                  </p>
-                </div>
-                <Switch />
-              </div>
             </CardContent>
           </Card>
           <Button variant="destructive" className="w-full">
             {t('settings.delete_account')}
           </Button>
-        </TabsContent>
-
-        <TabsContent value="general" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Globe className="h-5 w-5 text-blue-500" />{' '}
-                {t('settings.language')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label>{t('settings.app_language')}</Label>
-                <LanguageSelector />
-              </div>
-            </CardContent>
-          </Card>
         </TabsContent>
       </Tabs>
 

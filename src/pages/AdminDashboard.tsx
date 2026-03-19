@@ -47,6 +47,8 @@ import { useLanguage } from '@/stores/LanguageContext'
 import { AdminCRM } from '@/components/admin/AdminCRM'
 import { PromotionCrawler } from '@/components/admin/PromotionCrawler'
 import { AdminAdsManager } from '@/components/admin/ads/AdminAdsManager'
+import { AdminMonetizationTab } from '@/components/admin/AdminMonetizationTab'
+import { DataInsightsTab } from '@/components/admin/DataInsightsTab'
 
 export default function AdminDashboard() {
   const {
@@ -269,17 +271,24 @@ export default function AdminDashboard() {
       </div>
 
       <Tabs
-        defaultValue={isSuperAdmin || isDeveloperFallback ? 'crm' : 'merchants'}
+        defaultValue={
+          isSuperAdmin || isDeveloperFallback ? 'insights' : 'merchants'
+        }
       >
         <TabsList className="flex flex-wrap h-auto">
           {(isSuperAdmin || isDeveloperFallback) && (
-            <TabsTrigger value="crm">
-              <Users className="h-4 w-4 mr-2" /> User CRM
+            <TabsTrigger value="insights">
+              <BarChart className="h-4 w-4 mr-2" /> Insights
             </TabsTrigger>
           )}
           {(isSuperAdmin || isDeveloperFallback) && (
-            <TabsTrigger value="franchises">
-              {t('admin.franchises')}
+            <TabsTrigger value="monetization">
+              <DollarSign className="h-4 w-4 mr-2" /> Monetization
+            </TabsTrigger>
+          )}
+          {(isSuperAdmin || isDeveloperFallback) && (
+            <TabsTrigger value="crm">
+              <Users className="h-4 w-4 mr-2" /> User CRM
             </TabsTrigger>
           )}
           <TabsTrigger value="merchants">{t('admin.merchants')}</TabsTrigger>
@@ -288,14 +297,29 @@ export default function AdminDashboard() {
           </TabsTrigger>
           {(isSuperAdmin || isDeveloperFallback) && (
             <TabsTrigger value="advertising">
-              <Megaphone className="h-4 w-4 mr-2" />{' '}
-              {t('admin.advertising', 'Publicidade')}
+              <Megaphone className="h-4 w-4 mr-2" /> Ads Manager
+            </TabsTrigger>
+          )}
+          {(isSuperAdmin || isDeveloperFallback) && (
+            <TabsTrigger value="franchises">
+              {t('admin.franchises')}
             </TabsTrigger>
           )}
           <TabsTrigger value="moderation">{t('admin.moderation')}</TabsTrigger>
           <TabsTrigger value="logs">{t('admin.logs')}</TabsTrigger>
-          <TabsTrigger value="reports">{t('admin.reports')}</TabsTrigger>
         </TabsList>
+
+        {(isSuperAdmin || isDeveloperFallback) && (
+          <TabsContent value="insights">
+            <DataInsightsTab />
+          </TabsContent>
+        )}
+
+        {(isSuperAdmin || isDeveloperFallback) && (
+          <TabsContent value="monetization">
+            <AdminMonetizationTab />
+          </TabsContent>
+        )}
 
         {(isSuperAdmin || isDeveloperFallback) && (
           <TabsContent value="crm">
@@ -552,16 +576,6 @@ export default function AdminDashboard() {
               </Table>
             </CardContent>
           </Card>
-        </TabsContent>
-
-        <TabsContent value="reports">
-          <div className="p-10 text-center border rounded-lg bg-muted/20">
-            <BarChart className="h-10 w-10 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium">{t('admin.reports')}</h3>
-            <p className="text-sm text-muted-foreground">
-              {t('admin.analytics_unavailable')}
-            </p>
-          </div>
         </TabsContent>
       </Tabs>
     </div>

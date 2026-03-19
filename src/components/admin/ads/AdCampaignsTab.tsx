@@ -39,34 +39,46 @@ export function AdCampaignsTab() {
 
   const watchPlacement = watch('placement')
   const watchDuration = watch('durationDays')
+  const watchBudget = watch('budget')
 
-  const availableDurations = useMemo(() => {
+  const availableRules = useMemo(() => {
     if (!watchPlacement) return []
-    return adPricing
-      .filter((p) => p.placement === watchPlacement)
-      .map((p) => p.durationDays)
+    return adPricing.filter((p) => p.placement === watchPlacement)
   }, [watchPlacement, adPricing])
 
+  const selectedRule = useMemo(() => {
+    if (availableRules.length === 0) return null
+    if (availableRules[0].billingType === 'fixed' && watchDuration) {
+      return availableRules.find(
+        (r) => r.durationDays === parseInt(watchDuration),
+      )
+    }
+    return availableRules[0] // For CPC/CPA usually one rule per placement
+  }, [availableRules, watchDuration])
+
   const calculatedPrice = useMemo(() => {
-    if (!watchPlacement || !watchDuration) return 0
-    const rule = adPricing.find(
-      (p) =>
-        p.placement === watchPlacement &&
-        p.durationDays === parseInt(watchDuration),
-    )
-    return rule ? rule.price : 0
-  }, [watchPlacement, watchDuration, adPricing])
+    if (!selectedRule) return 0
+    if (selectedRule.billingType === 'fixed') return selectedRule.price
+    // For CPC/CPA, the invoice amount is based on budget
+    return watchBudget ? parseFloat(watchBudget) : 0
+  }, [selectedRule, watchBudget])
 
   const onSubmit = (data: any) => {
-    if (calculatedPrice === 0) return alert('Regra de preço não encontrada!')
+    if (!selectedRule) return alert('Regra de preço não encontrada!')
+    if (selectedRule.billingType !== 'fixed' && !data.budget)
+      return alert('Orçamento obrigatório para campanhas de performance.')
 
     const adId = Math.random().toString()
     const now = new Date()
     const endDate = new Date()
-    endDate.setDate(now.getDate() + parseInt(data.durationDays))
+    if (selectedRule.billingType === 'fixed') {
+      endDate.setDate(now.getDate() + (selectedRule.durationDays || 30))
+    } else {
+      endDate.setDate(now.getDate() + 30) // Default 30 days for performance
+    }
 
     const dueDate = new Date()
-    dueDate.setDate(now.getDate() + 15) // Vencimento padrão de 15 dias
+    dueDate.setDate(now.getDate() + 15)
 
     const refNumber = `INV-${now.getFullYear()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`
 
@@ -78,7 +90,7 @@ export function AdCampaignsTab() {
         advertiserId: data.advertiserId,
         region: 'Global',
         category: data.category || 'all',
-        billingType: 'fixed',
+        billingType: selectedRule.billingType,
         placement: data.placement,
         status: 'active',
         views: 0,
@@ -87,9 +99,16 @@ export function AdCampaignsTab() {
         endDate: endDate.toISOString(),
         image: data.image,
         link: data.link,
-        price: calculatedPrice,
+        price:
+          selectedRule.billingType === 'fixed' ? calculatedPrice : undefined,
+        budget:
+          selectedRule.billingType !== 'fixed'
+            ? parseFloat(data.budget)
+            : undefined,
+        costPerClick:
+          selectedRule.billingType === 'cpc' ? selectedRule.price : undefined,
         currency: 'BRL',
-        durationDays: parseInt(data.durationDays),
+        durationDays: selectedRule.durationDays,
       },
       {
         id: Math.random().toString(),
@@ -115,7 +134,7 @@ export function AdCampaignsTab() {
           <DialogTrigger asChild>
             <Button>Criar Campanha</Button>
           </DialogTrigger>
-          <DialogContent className="max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-h-[90vh] overflow-y-auto max-w-2xl">
             <DialogHeader>
               <DialogTitle>Nova Campanha</DialogTitle>
             </DialogHeader>
@@ -142,7 +161,7 @@ export function AdCampaignsTab() {
                 <Label>Título do Anúncio</Label>
                 <Input {...register('title')} required />
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Localização</Label>
                   <Select
@@ -157,25 +176,13 @@ export function AdCampaignsTab() {
                       <SelectItem value="bottom">Bottom Banner</SelectItem>
                       <SelectItem value="sidebar">Sidebar</SelectItem>
                       <SelectItem value="search">Search Results</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Duração</Label>
-                  <Select
-                    onValueChange={(v) => setValue('durationDays', v)}
-                    disabled={!watchPlacement}
-                    required
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableDurations.map((d) => (
-                        <SelectItem key={d} value={d.toString()}>
-                          {d} dias
-                        </SelectItem>
-                      ))}
+                      <SelectItem value="offer_of_the_day">
+                        Offer of the Day
+                      </SelectItem>
+                      <SelectItem value="top_ranking">Top Ranking</SelectItem>
+                      <SelectItem value="sponsored_push">
+                        Sponsored Push
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -199,9 +206,52 @@ export function AdCampaignsTab() {
                   </Select>
                 </div>
               </div>
+
+              {availableRules.length > 0 &&
+                availableRules[0].billingType === 'fixed' && (
+                  <div className="space-y-2">
+                    <Label>Duração (Modelo Fixo)</Label>
+                    <Select
+                      onValueChange={(v) => setValue('durationDays', v)}
+                      required
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableRules.map((r) => (
+                          <SelectItem
+                            key={r.id}
+                            value={r.durationDays?.toString() || ''}
+                          >
+                            {r.durationDays} dias - {formatCurrency(r.price)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+              {availableRules.length > 0 &&
+                availableRules[0].billingType !== 'fixed' && (
+                  <div className="space-y-2">
+                    <Label>Orçamento (Budget Total)</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      {...register('budget')}
+                      placeholder="Ex: 1000.00"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Taxa aplicada: {formatCurrency(availableRules[0].price)}{' '}
+                      por {availableRules[0].billingType.toUpperCase()}
+                    </p>
+                  </div>
+                )}
+
               <div className="p-4 bg-muted rounded-md text-center">
                 <span className="text-sm text-muted-foreground block mb-1">
-                  Custo Total (calculado)
+                  Valor a Faturar
                 </span>
                 <span className="text-2xl font-bold text-primary">
                   {formatCurrency(calculatedPrice, 'BRL')}
@@ -239,7 +289,9 @@ export function AdCampaignsTab() {
                 />
               </div>
               <DialogFooter>
-                <Button type="submit">Salvar e Gerar Cobrança</Button>
+                <Button type="submit" disabled={calculatedPrice === 0}>
+                  Salvar e Gerar Cobrança
+                </Button>
               </DialogFooter>
             </form>
           </DialogContent>
@@ -250,9 +302,8 @@ export function AdCampaignsTab() {
           <TableHeader>
             <TableRow>
               <TableHead>Campanha</TableHead>
-              <TableHead>Categoria</TableHead>
-              <TableHead>Local</TableHead>
-              <TableHead>Duração</TableHead>
+              <TableHead>Local / Modelo</TableHead>
+              <TableHead>Performance</TableHead>
               <TableHead>Status</TableHead>
             </TableRow>
           </TableHeader>
@@ -268,15 +319,20 @@ export function AdCampaignsTab() {
                     </span>
                   </TableCell>
                   <TableCell className="capitalize">
-                    {a.category === 'all' ? 'Todas' : a.category}
+                    {a.placement.replace(/_/g, ' ')}
+                    <Badge variant="outline" className="ml-2 uppercase">
+                      {a.billingType}
+                    </Badge>
                   </TableCell>
-                  <TableCell className="capitalize">{a.placement}</TableCell>
                   <TableCell>
-                    {a.durationDays ? `${a.durationDays} dias` : 'N/A'}
-                    <br />
-                    <span className="text-xs text-muted-foreground">
-                      Até {formatDate(a.endDate, 'pt-BR')}
-                    </span>
+                    <div className="text-sm">
+                      V: {a.views} | C: {a.clicks}
+                    </div>
+                    {a.budget && (
+                      <div className="text-xs text-muted-foreground">
+                        Budget: {formatCurrency(a.budget)}
+                      </div>
+                    )}
                   </TableCell>
                   <TableCell>
                     <Badge>{a.status}</Badge>

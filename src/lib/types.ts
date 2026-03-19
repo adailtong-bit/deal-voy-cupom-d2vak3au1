@@ -262,6 +262,8 @@ export type UserRole =
   | 'agency'
   | 'user'
 
+export type SubscriptionTier = 'free' | 'premium' | 'vip'
+
 export interface UserPreferences {
   notifications?: boolean
   newsletter?: boolean
@@ -272,6 +274,7 @@ export interface UserPreferences {
   emailAlerts?: boolean
   pushAlerts?: boolean
   dashboardWidgets?: string[]
+  travelMode?: boolean
 }
 
 export interface User {
@@ -279,6 +282,7 @@ export interface User {
   name: string
   email: string
   role: UserRole
+  subscriptionTier?: SubscriptionTier
   avatar?: string
   birthday?: string
   region?: string
@@ -303,7 +307,7 @@ export interface Company {
   preferredCustomers?: string[]
 }
 
-export type AdBillingType = 'fixed' | 'ppc' | 'ticketing'
+export type AdBillingType = 'fixed' | 'cpc' | 'cpa'
 
 export type AdPlacement =
   | 'home_hero'
@@ -314,6 +318,9 @@ export type AdPlacement =
   | 'top'
   | 'bottom'
   | 'search'
+  | 'offer_of_the_day'
+  | 'top_ranking'
+  | 'sponsored_push'
 
 export interface Advertisement {
   id: string
@@ -341,8 +348,9 @@ export interface Advertisement {
 export interface AdPricing {
   id: string
   placement: string
-  durationDays: number
-  price: number
+  billingType: AdBillingType
+  durationDays?: number
+  price: number // Can be fixed price, CPC, or CPA value
 }
 
 export interface Advertiser {
@@ -369,7 +377,14 @@ export interface AdInvoice {
   issueDate: string
   dueDate: string
   sentAt?: string
-  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'canceled'
+  status:
+    | 'draft'
+    | 'pending'
+    | 'invoiced'
+    | 'sent'
+    | 'paid'
+    | 'overdue'
+    | 'canceled'
 }
 
 export interface RewardItem {
@@ -415,7 +430,12 @@ export interface Franchise {
   licenseExpiry: string
 }
 
-export type TravelOfferType = 'flight' | 'hotel' | 'package' | 'car_rental'
+export type TravelOfferType =
+  | 'flight'
+  | 'hotel'
+  | 'package'
+  | 'car_rental'
+  | 'insurance'
 
 export interface TravelOffer {
   id: string
@@ -461,6 +481,8 @@ export interface ValidationLog {
   method: 'qr' | 'manual'
   shopkeeperId: string
   userId?: string
+  commissionAmount?: number
+  cashbackAmount?: number
 }
 
 export interface CarRental {
@@ -542,4 +564,29 @@ export interface DiscoveredPromotion {
   category: string
   capturedAt?: string
   rawData?: Record<string, any>
+}
+
+export interface PlatformSettings {
+  commissionRate: number
+  cashbackSplitUser: number
+  cashbackSplitPlatform: number
+  travelMargins: {
+    hotels: number
+    flights: number
+    cars: number
+    insurance: number
+  }
+  subscriptionPricing: {
+    premium: number
+    vip: number
+  }
+  withdrawal: {
+    minAmount: number
+    instantFee: number
+  }
+  referral: {
+    fixedReward: number
+    friendCashbackPercentage: number
+    durationDays: number
+  }
 }

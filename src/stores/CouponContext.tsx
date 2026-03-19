@@ -31,6 +31,8 @@ import {
   AdPricing,
   Advertiser,
   AdInvoice,
+  PlatformSettings,
+  SubscriptionTier,
 } from '@/lib/types'
 import {
   MOCK_COUPONS,
@@ -54,6 +56,7 @@ import {
   MOCK_AD_PRICING,
   MOCK_ADVERTISERS,
   MOCK_AD_INVOICES,
+  DEFAULT_PLATFORM_SETTINGS,
 } from '@/lib/data'
 import { toast } from 'sonner'
 import { useNotification } from './NotificationContext'
@@ -111,6 +114,7 @@ interface CouponContextType {
   adPricing: AdPricing[]
   advertisers: Advertiser[]
   adInvoices: AdInvoice[]
+  platformSettings: PlatformSettings
   setRegion: (regionCode: string) => void
   toggleSave: (id: string) => void
   toggleTrip: (id: string) => void
@@ -151,7 +155,8 @@ interface CouponContextType {
   importFetchPoints: (amount: number) => void
   claimBirthdayGift: () => void
   updateUserProfile: (data: Partial<User>) => void
-  updateUserPreferences: (prefs: UserPreferences) => void
+  updateUserPreferences: (prefs: Partial<UserPreferences>) => void
+  upgradeSubscription: (tier: SubscriptionTier) => void
   connectApp: (id: string) => void
   saveItinerary: (itinerary: Itinerary) => void
   updateItinerary: (itinerary: Itinerary) => void
@@ -182,6 +187,7 @@ interface CouponContextType {
   addAdvertiser: (advertiser: Advertiser) => void
   createAdCampaign: (ad: Advertisement, invoice: AdInvoice) => void
   updateInvoiceStatus: (id: string, status: AdInvoice['status']) => void
+  updatePlatformSettings: (settings: Partial<PlatformSettings>) => void
 }
 
 const CouponContext = createContext<CouponContextType | undefined>(undefined)
@@ -263,6 +269,10 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   const [advertisers, setAdvertisers] = useState<Advertiser[]>(MOCK_ADVERTISERS)
   const [adInvoices, setAdInvoices] = useState<AdInvoice[]>(MOCK_AD_INVOICES)
 
+  const [platformSettings, setPlatformSettings] = useState<PlatformSettings>(
+    DEFAULT_PLATFORM_SETTINGS,
+  )
+
   useEffect(() => {
     if (user) {
       localStorage.setItem('currentUser', JSON.stringify(user))
@@ -340,7 +350,11 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     selectedRegion === 'Global'
       ? ads
       : ads.filter(
-          (a) => !a.region || a.region === selectedRegion || a.region === '',
+          (a) =>
+            !a.region ||
+            a.region === selectedRegion ||
+            a.region === '' ||
+            a.region === 'Global',
         )
 
   const filteredItineraries =
@@ -640,6 +654,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         name: email.split('@')[0],
         email,
         role: role || 'user',
+        subscriptionTier: 'free',
         avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=male',
       }
       setUser(newUser)
@@ -689,7 +704,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     toast.success('Perfil atualizado!')
   }
 
-  const updateUserPreferences = (prefs: UserPreferences) => {
+  const updateUserPreferences = (prefs: Partial<UserPreferences>) => {
     if (!user) return
     const updatedUser = {
       ...user,
@@ -698,6 +713,13 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     setUser(updatedUser)
     logSystemAction('Preferences Updated', 'User updated notification settings')
     toast.success('Preferências salvas!')
+  }
+
+  const upgradeSubscription = (tier: SubscriptionTier) => {
+    if (!user) return
+    setUser({ ...user, subscriptionTier: tier })
+    logSystemAction('Subscription Upgrade', `User upgraded to ${tier}`)
+    toast.success(`Parabéns! Você agora é ${tier.toUpperCase()}`)
   }
 
   const connectApp = (id: string) => {
@@ -806,6 +828,11 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       prev.map((c) => (c.id === coupon.id ? { ...c, status: 'used' } : c)),
     )
 
+    // Calculate simulated commission and cashback based on platform settings
+    const estValue = coupon.price || 50
+    const commission = (estValue * platformSettings.commissionRate) / 100
+    const cashback = (commission * platformSettings.cashbackSplitUser) / 100
+
     const log: ValidationLog = {
       id: Math.random().toString(),
       couponId: coupon.id,
@@ -815,6 +842,8 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       method: 'qr',
       shopkeeperId: user?.id || 'unknown',
       userId: customerId,
+      commissionAmount: commission,
+      cashbackAmount: cashback,
     }
     setValidationLogs((prev) => [log, ...prev])
     logSystemAction('Coupon Validated', `Coupon ${coupon.id} validated via QR`)
@@ -832,7 +861,10 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     ])
 
     trackVisit(coupon.id)
-    return { success: true, message: 'Validated successfully' }
+    return {
+      success: true,
+      message: `Validated successfully! Cashback calculated: ${cashback.toFixed(2)}`,
+    }
   }
 
   const addCarRental = (car: CarRental) => {
@@ -1035,6 +1067,15 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     toast.success(`Fatura atualizada para o status: ${status}`)
   }
 
+  const updatePlatformSettings = (settings: Partial<PlatformSettings>) => {
+    setPlatformSettings((prev) => ({ ...prev, ...settings }))
+    toast.success('Platform settings updated successfully')
+    logSystemAction(
+      'Platform Settings Updated',
+      'Admin updated platform monetization settings',
+    )
+  }
+
   return React.createElement(
     CouponContext.Provider,
     {
@@ -1081,6 +1122,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         adPricing,
         advertisers,
         adInvoices,
+        platformSettings,
         setRegion,
         toggleSave,
         toggleTrip,
@@ -1117,6 +1159,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         claimBirthdayGift,
         updateUserProfile,
         updateUserPreferences,
+        upgradeSubscription,
         connectApp,
         saveItinerary,
         updateItinerary,
@@ -1141,6 +1184,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         addAdvertiser,
         createAdCampaign,
         updateInvoiceStatus,
+        updatePlatformSettings,
       },
     },
     children,

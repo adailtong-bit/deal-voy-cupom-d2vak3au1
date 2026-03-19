@@ -12,6 +12,7 @@ import {
   SlidersHorizontal,
   List,
   Loader2,
+  Map as MapIcon,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -341,6 +342,13 @@ export default function Index() {
     }
   }
 
+  const travelModeActive = user?.preferences?.travelMode
+
+  // If Travel Mode is active, prioritize near coupons
+  if (travelModeActive) {
+    finalCoupons = finalCoupons.sort((a, b) => a.distance - b.distance)
+  }
+
   const featuredCoupons = finalCoupons.filter(
     (c) => c.isFeatured || c.source === 'partner',
   )
@@ -360,6 +368,13 @@ export default function Index() {
 
   return (
     <div className="pb-20 md:pb-8 bg-slate-50/50 min-h-screen">
+      {travelModeActive && (
+        <div className="bg-blue-600 text-white p-2 text-center text-xs font-bold flex items-center justify-center gap-2">
+          <Plane className="h-4 w-4" /> Modo Viagem Ativo: Priorizando as
+          melhores ofertas perto de você.
+        </div>
+      )}
+
       <section className="bg-white border-b sticky top-0 md:top-0 z-30 shadow-sm py-2">
         <div className="container mx-auto px-2 md:px-4">
           <form
@@ -620,8 +635,17 @@ export default function Index() {
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-base md:text-lg font-bold flex items-center gap-1.5 text-amber-900 dark:text-amber-500">
-                  <Zap className="h-4 w-4 text-amber-500" fill="currentColor" />
-                  {t('home.featured_deals')}
+                  {travelModeActive ? (
+                    <MapIcon className="h-4 w-4 text-blue-500" />
+                  ) : (
+                    <Zap
+                      className="h-4 w-4 text-amber-500"
+                      fill="currentColor"
+                    />
+                  )}
+                  {travelModeActive
+                    ? 'Destaques Perto de Você'
+                    : t('home.featured_deals')}
                 </h2>
                 <Link
                   to="/explore"
