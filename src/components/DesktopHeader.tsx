@@ -50,9 +50,10 @@ export function DesktopHeader() {
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 hidden md:block">
       <div className="container mx-auto flex h-16 items-center justify-between px-4 lg:px-6">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 lg:gap-4">
           <Link
             to="/"
+            reloadDocument
             className="flex items-center gap-1.5 hover:opacity-90 transition-opacity"
           >
             <img
@@ -65,7 +66,7 @@ export function DesktopHeader() {
             </span>
           </Link>
 
-          <div className="hidden xl:flex items-center gap-4 ml-2 text-sm font-medium">
+          <div className="hidden xl:flex items-center gap-2.5 text-sm font-medium">
             <Link
               to="/"
               className={

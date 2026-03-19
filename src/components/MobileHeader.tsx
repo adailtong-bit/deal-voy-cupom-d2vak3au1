@@ -15,6 +15,7 @@ export function MobileHeader() {
       <div className="flex items-center justify-between h-14 w-full">
         <Link
           to="/"
+          reloadDocument
           className="flex items-center gap-1.5 hover:opacity-90 transition-opacity animate-in fade-in slide-in-from-left-2 duration-300"
         >
           <img

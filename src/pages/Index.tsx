@@ -77,7 +77,12 @@ export default function Index() {
   const [maxPrice, setMaxPrice] = useState<number[]>([1000])
   const [discountType, setDiscountType] = useState<string>('all')
 
-  // Hierarchical Location State
+  // Hierarchical Location State - Temporary UI State
+  const [tempCountry, setTempCountry] = useState<string>('all')
+  const [tempState, setTempState] = useState<string>('all')
+  const [tempCity, setTempCity] = useState<string>('all')
+
+  // Hierarchical Location State - Applied Filter State
   const [filterCountry, setFilterCountry] = useState<string>('all')
   const [filterState, setFilterState] = useState<string>('all')
   const [filterCity, setFilterCity] = useState<string>('all')
@@ -146,6 +151,12 @@ export default function Index() {
     )
   }
 
+  const executeLocationSearch = () => {
+    setFilterCountry(tempCountry)
+    setFilterState(tempState)
+    setFilterCity(tempCity)
+  }
+
   const clearSearch = () => {
     setSearchInput('')
     setSearchQuery('')
@@ -159,14 +170,14 @@ export default function Index() {
   }
 
   const handleCountryChange = (val: string) => {
-    setFilterCountry(val)
-    setFilterState('all')
-    setFilterCity('all')
+    setTempCountry(val)
+    setTempState('all')
+    setTempCity('all')
   }
 
   const handleStateChange = (val: string) => {
-    setFilterState(val)
-    setFilterCity('all')
+    setTempState(val)
+    setTempCity('all')
   }
 
   useEffect(() => {
@@ -192,12 +203,12 @@ export default function Index() {
   }
 
   const availableStates =
-    filterCountry !== 'all'
-      ? Object.keys(LOCATION_DATA[filterCountry]?.states || {})
+    tempCountry !== 'all'
+      ? Object.keys(LOCATION_DATA[tempCountry]?.states || {})
       : []
   const availableCities =
-    filterCountry !== 'all' && filterState !== 'all'
-      ? LOCATION_DATA[filterCountry]?.states[filterState] || []
+    tempCountry !== 'all' && tempState !== 'all'
+      ? LOCATION_DATA[tempCountry]?.states[tempState] || []
       : []
 
   const isEndUser = !user || user.role === 'user'
@@ -426,57 +437,68 @@ export default function Index() {
           </div>
 
           {/* Location Hierarchical Filters */}
-          <div className="flex items-center justify-center gap-1.5 md:gap-2 text-xs w-full max-w-2xl mx-auto">
-            <MapPin className="h-3.5 w-3.5 md:h-4 md:w-4 text-slate-400 shrink-0" />
-            <Select value={filterCountry} onValueChange={handleCountryChange}>
-              <SelectTrigger className="h-8 text-xs bg-slate-50 border-transparent focus:ring-1 focus:ring-primary/50 rounded-full w-1/3 truncate px-2.5">
-                <SelectValue placeholder="País" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">País (Todos)</SelectItem>
-                {COUNTRIES.map((c) => (
-                  <SelectItem key={c} value={c}>
-                    {c}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="flex flex-col md:flex-row items-center justify-center gap-2 text-xs w-full max-w-3xl mx-auto">
+            <div className="flex items-center w-full md:w-auto flex-1 gap-1.5">
+              <MapPin className="h-3.5 w-3.5 md:h-4 md:w-4 text-slate-400 shrink-0 hidden md:block" />
+              <Select value={tempCountry} onValueChange={handleCountryChange}>
+                <SelectTrigger className="h-8 text-xs bg-slate-50 border-transparent focus:ring-1 focus:ring-primary/50 rounded-full w-1/3 truncate px-2.5">
+                  <SelectValue placeholder="País" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">País (Todos)</SelectItem>
+                  {COUNTRIES.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-            <Select
-              value={filterState}
-              onValueChange={handleStateChange}
-              disabled={filterCountry === 'all'}
-            >
-              <SelectTrigger className="h-8 text-xs bg-slate-50 border-transparent focus:ring-1 focus:ring-primary/50 rounded-full w-1/3 truncate px-2.5 disabled:opacity-50">
-                <SelectValue placeholder="Estado" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Estado (Todos)</SelectItem>
-                {availableStates.map((s) => (
-                  <SelectItem key={s} value={s}>
-                    {s}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              <Select
+                value={tempState}
+                onValueChange={handleStateChange}
+                disabled={tempCountry === 'all'}
+              >
+                <SelectTrigger className="h-8 text-xs bg-slate-50 border-transparent focus:ring-1 focus:ring-primary/50 rounded-full w-1/3 truncate px-2.5 disabled:opacity-50">
+                  <SelectValue placeholder="Estado" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Estado (Todos)</SelectItem>
+                  {availableStates.map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {s}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-            <Select
-              value={filterCity}
-              onValueChange={setFilterCity}
-              disabled={filterState === 'all'}
+              <Select
+                value={tempCity}
+                onValueChange={setTempCity}
+                disabled={tempState === 'all'}
+              >
+                <SelectTrigger className="h-8 text-xs bg-slate-50 border-transparent focus:ring-1 focus:ring-primary/50 rounded-full w-1/3 truncate px-2.5 disabled:opacity-50">
+                  <SelectValue placeholder="Cidade" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Cidade (Todas)</SelectItem>
+                  {availableCities.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Button
+              onClick={executeLocationSearch}
+              size="sm"
+              className="h-8 rounded-full bg-primary hover:bg-primary/90 text-white font-semibold px-5 text-xs w-full md:w-auto shrink-0 shadow-sm"
             >
-              <SelectTrigger className="h-8 text-xs bg-slate-50 border-transparent focus:ring-1 focus:ring-primary/50 rounded-full w-1/3 truncate px-2.5 disabled:opacity-50">
-                <SelectValue placeholder="Cidade" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Cidade (Todas)</SelectItem>
-                {availableCities.map((c) => (
-                  <SelectItem key={c} value={c}>
-                    {c}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              <Search className="h-3.5 w-3.5 mr-1.5" />
+              {tFallback('common.search', 'Buscar')}
+            </Button>
           </div>
 
           <div className="mt-2 flex items-center justify-center text-[10px] text-slate-400 gap-1.5 hidden md:flex">
@@ -951,6 +973,9 @@ export default function Index() {
                     setMaxPrice([1000])
                     setDiscountType('all')
                     clearSearch()
+                    setTempCountry('all')
+                    setTempState('all')
+                    setTempCity('all')
                     setFilterCountry('all')
                     setFilterState('all')
                     setFilterCity('all')
