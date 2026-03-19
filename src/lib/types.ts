@@ -479,6 +479,8 @@ export interface CrawlerSource {
   scanRadius: number
   lastScan?: string
   status: 'active' | 'paused'
+  lastStatus?: 'success' | 'warning' | 'error' | 'scanning'
+  lastErrorMessage?: string
 }
 
 export interface DiscoveredPromotion {

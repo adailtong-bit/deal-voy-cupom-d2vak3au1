@@ -52,7 +52,6 @@ import {
 import { toast } from 'sonner'
 import { useNotification } from './NotificationContext'
 
-// Extend Mock Users to include state
 const MOCK_USERS: User[] = ORIGINAL_MOCK_USERS.map((u) => ({
   ...u,
   state:
@@ -164,6 +163,8 @@ interface CouponContextType {
   ) => void
   togglePreferredCustomer: (companyId: string, userId: string) => void
   addCrawlerSource: (source: CrawlerSource) => void
+  updateCrawlerSource: (id: string, data: Partial<CrawlerSource>) => void
+  deleteCrawlerSource: (id: string) => void
   importPromotion: (id: string, customCategory?: string) => void
   ignorePromotion: (id: string) => void
   triggerScan: (sourceId: string) => void
@@ -829,6 +830,20 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     toast.success('Source added successfully')
   }
 
+  const updateCrawlerSource = (id: string, data: Partial<CrawlerSource>) => {
+    setCrawlerSources((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, ...data } : s)),
+    )
+    logSystemAction('Crawler Source Updated', `Updated source ${id}`)
+    toast.success('Source updated successfully')
+  }
+
+  const deleteCrawlerSource = (id: string) => {
+    setCrawlerSources((prev) => prev.filter((s) => s.id !== id))
+    logSystemAction('Crawler Source Deleted', `Deleted source ${id}`)
+    toast.success('Source deleted successfully')
+  }
+
   const importPromotion = (id: string, customCategory?: string) => {
     const promo = discoveredPromotions.find((p) => p.id === id)
     if (!promo) return
@@ -870,15 +885,87 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   }
 
   const triggerScan = (sourceId: string) => {
-    toast.info('Scanning source...')
+    toast.info('Scanning source... Please wait.')
+    setCrawlerSources((prev) =>
+      prev.map((s) =>
+        s.id === sourceId ? { ...s, lastStatus: 'scanning' as any } : s,
+      ),
+    )
+
     setTimeout(() => {
+      const source = crawlerSources.find((s) => s.id === sourceId)
+      if (!source) return
+
+      let newStatus: 'success' | 'error' | 'warning' = 'success'
+      let newMsg = ''
+      let newPromos: DiscoveredPromotion[] = []
+
+      const url = source.url.toLowerCase()
+
+      if (url.includes('groupon')) {
+        newPromos = [
+          {
+            id: `dp-grp-${Math.random()}`,
+            sourceId: source.id,
+            title: 'Groupon Exclusive Deal',
+            discount: '60% OFF',
+            description: 'Imported special deal from Groupon.',
+            expiryDate: '2025-12-31',
+            image: 'https://img.usecurling.com/p/300/200?q=deal',
+            storeName: 'Groupon Partner',
+            status: 'pending',
+            region: source.region,
+            category: 'Outros',
+          },
+          {
+            id: `dp-grp-${Math.random()}`,
+            sourceId: source.id,
+            title: 'Spa Day Package',
+            discount: '40% OFF',
+            description: 'Relaxing spa day for two.',
+            expiryDate: '2025-10-15',
+            image: 'https://img.usecurling.com/p/300/200?q=spa',
+            storeName: 'Groupon Partner',
+            status: 'pending',
+            region: source.region,
+            category: 'Beleza',
+          },
+        ]
+        newMsg = `Success! ${newPromos.length} new promotions extracted from Groupon (${source.region}).`
+      } else if (url.includes('timeout') || url.includes('error')) {
+        newStatus = 'error'
+        newMsg =
+          'Connection timeout. Access denied by source or invalid structure.'
+      } else {
+        newStatus = 'warning'
+        newMsg = `No promotions found in the selected region (${source.region}).`
+      }
+
       setCrawlerSources((prev) =>
         prev.map((s) =>
-          s.id === sourceId ? { ...s, lastScan: new Date().toISOString() } : s,
+          s.id === sourceId
+            ? {
+                ...s,
+                lastScan: new Date().toISOString(),
+                lastStatus: newStatus,
+                lastErrorMessage: newMsg,
+              }
+            : s,
         ),
       )
-      toast.success('Scan completed. 0 new promotions found.')
-    }, 2000)
+
+      if (newPromos.length > 0) {
+        setDiscoveredPromotions((prev) => [...newPromos, ...prev])
+        toast.success(newMsg)
+        logSystemAction('Crawler Success', newMsg)
+      } else if (newStatus === 'error') {
+        toast.error(newMsg)
+        logSystemAction('Crawler Error', newMsg, 'error')
+      } else {
+        toast.warning(newMsg)
+        logSystemAction('Crawler Warning', newMsg, 'warning')
+      }
+    }, 2500)
   }
 
   return React.createElement(
@@ -974,6 +1061,8 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         updateBehavioralTriggers,
         togglePreferredCustomer,
         addCrawlerSource,
+        updateCrawlerSource,
+        deleteCrawlerSource,
         importPromotion,
         ignorePromotion,
         triggerScan,

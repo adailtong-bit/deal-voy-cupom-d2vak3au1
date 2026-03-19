@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useCouponStore } from '@/stores/CouponContext'
 import {
   Card,
@@ -26,6 +26,16 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import {
   Table,
   TableBody,
   TableCell,
@@ -43,9 +53,12 @@ import {
   CheckCircle,
   XCircle,
   Box,
+  Edit,
+  Trash2,
+  AlertCircle,
 } from 'lucide-react'
 import { REGIONS, CATEGORIES } from '@/lib/data'
-import { toast } from 'sonner'
+import { CrawlerSource } from '@/lib/types'
 
 export function PromotionCrawler() {
   const {
@@ -53,19 +66,25 @@ export function PromotionCrawler() {
     crawlerSources,
     discoveredPromotions,
     addCrawlerSource,
+    updateCrawlerSource,
+    deleteCrawlerSource,
     importPromotion,
     ignorePromotion,
     triggerScan,
   } = useCouponStore()
 
-  const [isSourceOpen, setIsSourceOpen] = useState(false)
-  const [newSource, setNewSource] = useState({
+  const [isAddOpen, setIsAddOpen] = useState(false)
+  const [editingSource, setEditingSource] = useState<CrawlerSource | null>(null)
+  const [deletingSourceId, setDeletingSourceId] = useState<string | null>(null)
+
+  const [formData, setFormData] = useState({
     name: '',
     url: '',
     type: 'web',
     region: user?.region || 'Global',
     scanRadius: 50,
   })
+
   const [importCategory, setImportCategory] = useState<string>('all')
 
   const isFranchisee = user?.role === 'franchisee'
@@ -77,16 +96,128 @@ export function PromotionCrawler() {
     ? discoveredPromotions.filter((p) => p.region === user?.region)
     : discoveredPromotions
 
-  const handleAddSource = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (editingSource) {
+      setFormData({
+        name: editingSource.name,
+        url: editingSource.url,
+        type: editingSource.type,
+        region: editingSource.region,
+        scanRadius: editingSource.scanRadius,
+      })
+    } else {
+      setFormData({
+        name: '',
+        url: '',
+        type: 'web',
+        region: user?.region || 'Global',
+        scanRadius: 50,
+      })
+    }
+  }, [editingSource, user])
+
+  const handleSaveSource = (e: React.FormEvent) => {
     e.preventDefault()
-    addCrawlerSource({
-      id: Math.random().toString(),
-      ...newSource,
-      type: newSource.type as any,
-      status: 'active',
-    })
-    setIsSourceOpen(false)
+    if (editingSource) {
+      updateCrawlerSource(editingSource.id, {
+        ...formData,
+        type: formData.type as any,
+      })
+      setEditingSource(null)
+    } else {
+      addCrawlerSource({
+        id: Math.random().toString(),
+        ...formData,
+        type: formData.type as any,
+        status: 'active',
+      })
+      setIsAddOpen(false)
+    }
   }
+
+  const handleDeleteSource = () => {
+    if (deletingSourceId) {
+      deleteCrawlerSource(deletingSourceId)
+      setDeletingSourceId(null)
+    }
+  }
+
+  const SourceForm = () => (
+    <form onSubmit={handleSaveSource} className="space-y-4">
+      <div className="space-y-2">
+        <Label>Source Name</Label>
+        <Input
+          value={formData.name}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          required
+          placeholder="e.g. Local City Deals"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label>URL / Endpoint</Label>
+        <Input
+          value={formData.url}
+          onChange={(e) => setFormData({ ...formData, url: e.target.value })}
+          required
+          placeholder="https://"
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Source Type</Label>
+          <Select
+            value={formData.type}
+            onValueChange={(v) => setFormData({ ...formData, type: v })}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="web">Website Scraper</SelectItem>
+              <SelectItem value="api">JSON API</SelectItem>
+              <SelectItem value="app">Mobile App Link</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label>Target Region</Label>
+          <Select
+            disabled={isFranchisee}
+            value={formData.region}
+            onValueChange={(v) => setFormData({ ...formData, region: v })}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {REGIONS.map((r) => (
+                <SelectItem key={r.code} value={r.code}>
+                  {r.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      <div className="space-y-2">
+        <Label>Scan Radius (km)</Label>
+        <Input
+          type="number"
+          value={formData.scanRadius}
+          onChange={(e) =>
+            setFormData({
+              ...formData,
+              scanRadius: Number(e.target.value),
+            })
+          }
+          min={1}
+        />
+      </div>
+      <DialogFooter>
+        <Button type="submit">Save Configuration</Button>
+      </DialogFooter>
+    </form>
+  )
 
   return (
     <div className="space-y-6">
@@ -117,7 +248,7 @@ export function PromotionCrawler() {
             <TabsContent value="sources">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-semibold">Active Scrapers</h3>
-                <Dialog open={isSourceOpen} onOpenChange={setIsSourceOpen}>
+                <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
                   <DialogTrigger asChild>
                     <Button className="gap-2">
                       <Plus className="h-4 w-4" /> Add Source
@@ -127,102 +258,55 @@ export function PromotionCrawler() {
                     <DialogHeader>
                       <DialogTitle>Register New Source</DialogTitle>
                     </DialogHeader>
-                    <form onSubmit={handleAddSource} className="space-y-4">
-                      <div className="space-y-2">
-                        <Label>Source Name</Label>
-                        <Input
-                          value={newSource.name}
-                          onChange={(e) =>
-                            setNewSource({ ...newSource, name: e.target.value })
-                          }
-                          required
-                          placeholder="e.g. Local City Deals"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>URL / Endpoint</Label>
-                        <Input
-                          value={newSource.url}
-                          onChange={(e) =>
-                            setNewSource({ ...newSource, url: e.target.value })
-                          }
-                          required
-                          placeholder="https://"
-                        />
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label>Source Type</Label>
-                          <Select
-                            value={newSource.type}
-                            onValueChange={(v) =>
-                              setNewSource({ ...newSource, type: v })
-                            }
-                          >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="web">
-                                Website Scraper
-                              </SelectItem>
-                              <SelectItem value="api">JSON API</SelectItem>
-                              <SelectItem value="app">
-                                Mobile App Link
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Target Region</Label>
-                          <Select
-                            disabled={isFranchisee}
-                            value={newSource.region}
-                            onValueChange={(v) =>
-                              setNewSource({ ...newSource, region: v })
-                            }
-                          >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {REGIONS.map((r) => (
-                                <SelectItem key={r.code} value={r.code}>
-                                  {r.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Scan Radius (km)</Label>
-                        <Input
-                          type="number"
-                          value={newSource.scanRadius}
-                          onChange={(e) =>
-                            setNewSource({
-                              ...newSource,
-                              scanRadius: Number(e.target.value),
-                            })
-                          }
-                          min={1}
-                        />
-                      </div>
-                      <DialogFooter>
-                        <Button type="submit">Save Configuration</Button>
-                      </DialogFooter>
-                    </form>
+                    <SourceForm />
                   </DialogContent>
                 </Dialog>
               </div>
+
+              <Dialog
+                open={!!editingSource}
+                onOpenChange={(open) => !open && setEditingSource(null)}
+              >
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Edit Source</DialogTitle>
+                  </DialogHeader>
+                  <SourceForm />
+                </DialogContent>
+              </Dialog>
+
+              <AlertDialog
+                open={!!deletingSourceId}
+                onOpenChange={(open) => !open && setDeletingSourceId(null)}
+              >
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>
+                      Are you absolutely sure?
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will permanently delete the crawler source
+                      configuration and stop future scans from this origin.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDeleteSource}
+                      className="bg-red-600 hover:bg-red-700"
+                    >
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
 
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Source</TableHead>
                     <TableHead>Region & Radius</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead>Status & Logs</TableHead>
                     <TableHead>Last Scan</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -232,7 +316,7 @@ export function PromotionCrawler() {
                     <TableRow key={s.id}>
                       <TableCell>
                         <div className="font-medium">{s.name}</div>
-                        <div className="text-xs text-muted-foreground">
+                        <div className="text-xs text-muted-foreground truncate max-w-[200px]">
                           {s.url}
                         </div>
                         <Badge
@@ -252,15 +336,60 @@ export function PromotionCrawler() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge
-                          className={
-                            s.status === 'active'
-                              ? 'bg-green-500 hover:bg-green-600'
-                              : 'bg-slate-500'
-                          }
-                        >
-                          {s.status}
-                        </Badge>
+                        <div className="flex items-center gap-2 mb-1">
+                          <Badge
+                            className={
+                              s.status === 'active'
+                                ? 'bg-green-500 hover:bg-green-600'
+                                : 'bg-slate-500'
+                            }
+                          >
+                            {s.status}
+                          </Badge>
+                          {s.lastStatus === 'error' && (
+                            <Badge variant="destructive">Error</Badge>
+                          )}
+                          {s.lastStatus === 'warning' && (
+                            <Badge
+                              variant="secondary"
+                              className="text-orange-500 border-orange-200"
+                            >
+                              Warning
+                            </Badge>
+                          )}
+                          {s.lastStatus === 'success' && (
+                            <Badge
+                              variant="outline"
+                              className="border-green-500 text-green-600"
+                            >
+                              OK
+                            </Badge>
+                          )}
+                          {s.lastStatus === 'scanning' && (
+                            <Badge
+                              variant="outline"
+                              className="animate-pulse border-blue-500 text-blue-600"
+                            >
+                              Scanning...
+                            </Badge>
+                          )}
+                        </div>
+                        {s.lastErrorMessage && s.lastStatus !== 'success' && (
+                          <div className="text-xs text-red-500 flex items-start gap-1 max-w-[250px] bg-red-50 p-1 rounded">
+                            <AlertCircle className="h-3 w-3 shrink-0 mt-0.5" />
+                            <span className="leading-tight">
+                              {s.lastErrorMessage}
+                            </span>
+                          </div>
+                        )}
+                        {s.lastErrorMessage && s.lastStatus === 'success' && (
+                          <div className="text-xs text-green-600 flex items-start gap-1 max-w-[250px]">
+                            <CheckCircle className="h-3 w-3 shrink-0 mt-0.5" />
+                            <span className="leading-tight">
+                              {s.lastErrorMessage}
+                            </span>
+                          </div>
+                        )}
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {s.lastScan
@@ -268,13 +397,33 @@ export function PromotionCrawler() {
                           : 'Never'}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => triggerScan(s.id)}
-                        >
-                          <Play className="h-4 w-4 text-blue-500" />
-                        </Button>
+                        <div className="flex justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => triggerScan(s.id)}
+                            disabled={s.lastStatus === 'scanning'}
+                            title="Force Scan"
+                          >
+                            <Play className="h-4 w-4 text-blue-500" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setEditingSource(s)}
+                            title="Edit Source"
+                          >
+                            <Edit className="h-4 w-4 text-slate-500" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setDeletingSourceId(s.id)}
+                            title="Delete Source"
+                          >
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -297,7 +446,7 @@ export function PromotionCrawler() {
                 {relevantPromotions.map((promo) => (
                   <Card key={promo.id} className="overflow-hidden">
                     <div className="flex flex-col md:flex-row">
-                      <div className="w-full md:w-48 h-32 md:h-auto relative bg-slate-100">
+                      <div className="w-full md:w-48 h-32 md:h-auto relative bg-slate-100 shrink-0">
                         <img
                           src={promo.image}
                           alt={promo.title}
@@ -328,7 +477,7 @@ export function PromotionCrawler() {
                               }
                               className={
                                 promo.status === 'imported'
-                                  ? 'bg-green-500 hover:bg-green-600'
+                                  ? 'bg-green-500 hover:bg-green-600 text-white'
                                   : ''
                               }
                             >
@@ -338,12 +487,13 @@ export function PromotionCrawler() {
                           <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
                             {promo.description}
                           </p>
-                          <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
+                          <div className="flex flex-wrap gap-4 mt-2 text-xs text-muted-foreground">
                             <span>
                               Expires:{' '}
                               {new Date(promo.expiryDate).toLocaleDateString()}
                             </span>
                             <span>Region: {promo.region}</span>
+                            <span>Category: {promo.category}</span>
                           </div>
                         </div>
                         {promo.status === 'pending' && (
