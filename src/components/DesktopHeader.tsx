@@ -49,20 +49,23 @@ export function DesktopHeader() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 hidden md:block">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <div className="flex items-center gap-6">
-          <Link to="/" className="flex items-center gap-2">
+      <div className="container mx-auto flex h-16 items-center justify-between px-4 lg:px-6">
+        <div className="flex items-center gap-4">
+          <Link
+            to="/"
+            className="flex items-center gap-1.5 hover:opacity-90 transition-opacity"
+          >
             <img
               src={logoImg}
               alt="Deal Voy Logo"
-              className="h-10 w-10 rounded-md object-contain"
+              className="h-9 w-9 rounded-md object-contain"
             />
-            <span className="font-bold text-xl tracking-tight text-foreground">
+            <span className="font-bold text-lg tracking-tight text-foreground">
               Deal <span className="text-primary">Voy</span>
             </span>
           </Link>
 
-          <div className="hidden xl:flex items-center space-x-6 text-sm font-medium">
+          <div className="hidden xl:flex items-center gap-4 ml-2 text-sm font-medium">
             <Link
               to="/"
               className={
@@ -187,7 +190,7 @@ export function DesktopHeader() {
           </Link>
 
           {user ? (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 pl-2 border-l">
               <Link to="/profile">
                 <Avatar className="h-8 w-8 cursor-pointer hover:ring-2 hover:ring-secondary hover:ring-offset-2 transition-all">
                   <AvatarImage
@@ -209,7 +212,7 @@ export function DesktopHeader() {
               </Button>
             </div>
           ) : (
-            <Link to="/login">
+            <Link to="/login" className="ml-2">
               <Button size="sm" variant="outline">
                 {t('auth.login')}
               </Button>
@@ -336,7 +339,7 @@ export function DesktopHeader() {
                   <SheetClose asChild>
                     <Button
                       variant="ghost"
-                      className="justify-start px-0 text-red-500 hover:text-red-600 hover:bg-transparent"
+                      className="justify-start px-0 text-red-500 hover:text-red-600 hover:bg-transparent mt-4"
                       onClick={handleLogout}
                     >
                       <LogOut className="h-4 w-4 mr-2" /> {t('profile.logout')}

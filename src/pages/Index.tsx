@@ -321,49 +321,52 @@ export default function Index() {
     const byCountry = rawFilteredCoupons.filter(
       (c) => c.country === filterCountry,
     )
+    const byState =
+      filterState !== 'all'
+        ? byCountry.filter((c) => c.state === filterState)
+        : byCountry
+    const byCity =
+      filterCity !== 'all'
+        ? byState.filter((c) => c.city === filterCity)
+        : byState
 
-    if (filterState !== 'all') {
-      const byState = byCountry.filter((c) => c.state === filterState)
-
-      if (filterCity !== 'all') {
-        const byCity = byState.filter((c) => c.city === filterCity)
-        if (byCity.length > 0) {
-          finalCoupons = byCity
-        } else if (byState.length > 0) {
-          finalCoupons = byState
-          newFallbackMsg = tFallback(
-            'fallback.city',
-            `Nenhuma oferta encontrada em ${filterCity}. Exibindo ofertas de ${filterState}.`,
-          )
-        } else if (byCountry.length > 0) {
-          finalCoupons = byCountry
-          newFallbackMsg = tFallback(
-            'fallback.state',
-            `Nenhuma oferta encontrada em ${filterCity} ou ${filterState}. Exibindo ofertas de ${filterCountry}.`,
-          )
-        } else {
-          finalCoupons = rawFilteredCoupons
-          newFallbackMsg = tFallback(
-            'fallback.country',
-            `Nenhuma oferta na região selecionada. Exibindo ofertas globais.`,
-          )
-        }
+    if (filterCity !== 'all') {
+      if (byCity.length > 0) {
+        finalCoupons = byCity
+      } else if (byState.length > 0) {
+        finalCoupons = byState
+        newFallbackMsg = tFallback(
+          'fallback.city',
+          `Não há anúncios em ${filterCity}. Exibindo anúncios de ${filterState}.`,
+        )
+      } else if (byCountry.length > 0) {
+        finalCoupons = byCountry
+        newFallbackMsg = tFallback(
+          'fallback.state',
+          `Não há anúncios em ${filterCity} ou ${filterState}. Exibindo anúncios de ${filterCountry}.`,
+        )
       } else {
-        if (byState.length > 0) {
-          finalCoupons = byState
-        } else if (byCountry.length > 0) {
-          finalCoupons = byCountry
-          newFallbackMsg = tFallback(
-            'fallback.state',
-            `Nenhuma oferta encontrada em ${filterState}. Exibindo ofertas de ${filterCountry}.`,
-          )
-        } else {
-          finalCoupons = rawFilteredCoupons
-          newFallbackMsg = tFallback(
-            'fallback.country',
-            `Nenhuma oferta na região selecionada. Exibindo ofertas globais.`,
-          )
-        }
+        finalCoupons = rawFilteredCoupons
+        newFallbackMsg = tFallback(
+          'fallback.country',
+          `Não há anúncios na região selecionada. Exibindo anúncios globais.`,
+        )
+      }
+    } else if (filterState !== 'all') {
+      if (byState.length > 0) {
+        finalCoupons = byState
+      } else if (byCountry.length > 0) {
+        finalCoupons = byCountry
+        newFallbackMsg = tFallback(
+          'fallback.state',
+          `Não há anúncios em ${filterState}. Exibindo anúncios de ${filterCountry}.`,
+        )
+      } else {
+        finalCoupons = rawFilteredCoupons
+        newFallbackMsg = tFallback(
+          'fallback.country',
+          `Não há anúncios na região selecionada. Exibindo anúncios globais.`,
+        )
       }
     } else {
       if (byCountry.length > 0) {
@@ -372,7 +375,7 @@ export default function Index() {
         finalCoupons = rawFilteredCoupons
         newFallbackMsg = tFallback(
           'fallback.country',
-          `Nenhuma oferta encontrada em ${filterCountry}. Exibindo ofertas globais.`,
+          `Não há anúncios em ${filterCountry}. Exibindo anúncios globais.`,
         )
       }
     }
@@ -930,12 +933,19 @@ export default function Index() {
                 )}
               </>
             ) : (
-              <div className="text-center py-10 text-muted-foreground bg-white rounded-lg border border-dashed">
-                <p className="text-sm mb-2">{t('home.no_offers')}</p>
+              <div className="text-center py-12 text-muted-foreground bg-white rounded-lg border border-dashed shadow-sm">
+                <div className="flex justify-center mb-3">
+                  <ShoppingBag className="h-10 w-10 text-slate-300" />
+                </div>
+                <p className="text-base font-semibold text-slate-700 mb-2">
+                  Não há anúncios nesta localidade
+                </p>
+                <p className="text-sm text-slate-500 mb-4">
+                  Tente ajustar os filtros de localização ou limpar a busca.
+                </p>
                 <Button
-                  variant="link"
+                  variant="outline"
                   size="sm"
-                  className="text-primary h-auto py-0"
                   onClick={() => {
                     setSelectedCategory('all')
                     setMaxPrice([1000])
@@ -946,7 +956,7 @@ export default function Index() {
                     setFilterCity('all')
                   }}
                 >
-                  {tFallback('common.clear', 'Clear Filters')}
+                  {tFallback('common.clear', 'Limpar Filtros')}
                 </Button>
               </div>
             )}
