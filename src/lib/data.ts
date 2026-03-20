@@ -866,8 +866,10 @@ export const MOCK_PARTNER_POLICIES: PartnerPolicy[] = [
   {
     id: 'pol-1',
     companyId: 'c1',
+    billingModel: 'CPA',
     commissionRate: 15,
     cashbackRate: 5,
+    cpcValue: 0,
     fixedFee: 0,
     billingCycle: 'monthly',
     taxId: '11.222.333/0001-44',
@@ -884,10 +886,10 @@ export const MOCK_PARTNER_INVOICES: PartnerInvoice[] = [
     periodEnd: '2024-10-31T23:59:59.000Z',
     totalSales: 5000,
     totalCommission: 750,
-    status: 'pending',
+    totalCashback: 250,
+    status: 'paid',
     dueDate: '2024-11-15T00:00:00.000Z',
     issueDate: '2024-11-01T10:00:00.000Z',
     transactionCount: 45,
   },
 ]
-

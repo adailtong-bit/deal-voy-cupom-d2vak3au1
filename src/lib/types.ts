@@ -595,8 +595,10 @@ export interface PlatformSettings {
 export interface PartnerPolicy {
   id: string
   companyId: string
+  billingModel: 'CPA' | 'CPC' | 'monthly' | 'global'
   commissionRate: number
   cashbackRate: number
+  cpcValue: number
   fixedFee: number
   billingCycle: string
   taxId: string
@@ -611,10 +613,16 @@ export interface PartnerInvoice {
   periodEnd: string
   totalSales: number
   totalCommission: number
-  status: 'pending' | 'invoiced' | 'sent' | 'paid'
+  totalCashback: number
+  status:
+    | 'draft'
+    | 'pending'
+    | 'invoiced'
+    | 'sent'
+    | 'paid'
+    | 'overdue'
+    | 'canceled'
   dueDate: string
   issueDate: string
   transactionCount: number
 }
-
-

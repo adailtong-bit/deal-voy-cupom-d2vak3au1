@@ -11,10 +11,20 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Percent, Plane, Wallet, Users, DollarSign } from 'lucide-react'
+import {
+  Percent,
+  Plane,
+  Wallet,
+  Users,
+  DollarSign,
+  Building,
+  FileText,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { PlatformSettings } from '@/lib/types'
 import { useLanguage } from '@/stores/LanguageContext'
+import { PartnerPoliciesTab } from './PartnerPoliciesTab'
+import { PartnerBillingTab } from './PartnerBillingTab'
 
 export function AdminMonetizationTab() {
   const { platformSettings, updatePlatformSettings } = useCouponStore()
@@ -63,6 +73,13 @@ export function AdminMonetizationTab() {
               <TabsTrigger value="commission" className="py-2 px-4">
                 <Percent className="h-4 w-4 mr-2" /> {t('admin.core_engine')}
               </TabsTrigger>
+              <TabsTrigger value="partner_policies" className="py-2 px-4">
+                <Building className="h-4 w-4 mr-2" />{' '}
+                {t('admin.partner_policies')}
+              </TabsTrigger>
+              <TabsTrigger value="partner_billing" className="py-2 px-4">
+                <FileText className="h-4 w-4 mr-2" /> {t('admin.b2b_billing')}
+              </TabsTrigger>
               <TabsTrigger value="subscriptions" className="py-2 px-4">
                 <Users className="h-4 w-4 mr-2" /> {t('admin.subscriptions')}
               </TabsTrigger>
@@ -75,7 +92,24 @@ export function AdminMonetizationTab() {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="commission" className="space-y-4">
+            <TabsContent
+              value="partner_policies"
+              className="space-y-4 animate-in fade-in-50"
+            >
+              <PartnerPoliciesTab />
+            </TabsContent>
+
+            <TabsContent
+              value="partner_billing"
+              className="space-y-4 animate-in fade-in-50"
+            >
+              <PartnerBillingTab />
+            </TabsContent>
+
+            <TabsContent
+              value="commission"
+              className="space-y-4 animate-in fade-in-50"
+            >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4 p-4 border rounded-lg bg-slate-50">
                   <h3 className="font-bold text-lg">
@@ -129,9 +163,17 @@ export function AdminMonetizationTab() {
                   </p>
                 </div>
               </div>
+              <div className="mt-6 flex justify-end">
+                <Button onClick={handleSave} size="lg">
+                  {t('admin.save_config')}
+                </Button>
+              </div>
             </TabsContent>
 
-            <TabsContent value="subscriptions" className="space-y-4">
+            <TabsContent
+              value="subscriptions"
+              className="space-y-4 animate-in fade-in-50"
+            >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4 p-4 border rounded-lg border-blue-200 bg-blue-50/50">
                   <h3 className="font-bold text-lg text-blue-800">
@@ -180,9 +222,17 @@ export function AdminMonetizationTab() {
                   </div>
                 </div>
               </div>
+              <div className="mt-6 flex justify-end">
+                <Button onClick={handleSave} size="lg">
+                  {t('admin.save_config')}
+                </Button>
+              </div>
             </TabsContent>
 
-            <TabsContent value="travel" className="space-y-4">
+            <TabsContent
+              value="travel"
+              className="space-y-4 animate-in fade-in-50"
+            >
               <div className="p-4 border rounded-lg bg-slate-50">
                 <h3 className="font-bold text-lg mb-4">
                   {t('admin.travel_margins')}
@@ -237,9 +287,17 @@ export function AdminMonetizationTab() {
                   </div>
                 </div>
               </div>
+              <div className="mt-6 flex justify-end">
+                <Button onClick={handleSave} size="lg">
+                  {t('admin.save_config')}
+                </Button>
+              </div>
             </TabsContent>
 
-            <TabsContent value="finance" className="space-y-4">
+            <TabsContent
+              value="finance"
+              className="space-y-4 animate-in fade-in-50"
+            >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4 p-4 border rounded-lg bg-slate-50">
                   <h3 className="font-bold text-lg">
@@ -308,13 +366,12 @@ export function AdminMonetizationTab() {
                   </div>
                 </div>
               </div>
+              <div className="mt-6 flex justify-end">
+                <Button onClick={handleSave} size="lg">
+                  {t('admin.save_config')}
+                </Button>
+              </div>
             </TabsContent>
-
-            <div className="mt-6 flex justify-end">
-              <Button onClick={handleSave} size="lg">
-                {t('admin.save_config')}
-              </Button>
-            </div>
           </Tabs>
         </CardContent>
       </Card>
