@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Star, MapPin, Clock, ImageOff } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { cn } from '@/lib/utils'
+import { cn, formatCurrency } from '@/lib/utils'
 import { useLanguage } from '@/stores/LanguageContext'
 
 interface CouponCardProps {
@@ -18,7 +18,7 @@ export function CouponCard({
   variant = 'vertical',
   className,
 }: CouponCardProps) {
-  const { t, formatCurrency } = useLanguage()
+  const { t } = useLanguage()
   const [imgError, setImgError] = useState(false)
 
   if (variant === 'horizontal') {
