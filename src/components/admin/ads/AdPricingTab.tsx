@@ -30,11 +30,13 @@ import {
 import { useForm } from 'react-hook-form'
 import { formatCurrency } from '@/lib/utils'
 import { AdBillingType } from '@/lib/types'
+import { useLanguage } from '@/stores/LanguageContext'
 
 export function AdPricingTab() {
   const { adPricing, addAdPricing } = useCouponStore()
   const [isOpen, setIsOpen] = useState(false)
   const { register, handleSubmit, reset, watch, setValue } = useForm()
+  const { t } = useLanguage()
 
   const watchBillingType = watch('billingType')
 
@@ -54,24 +56,24 @@ export function AdPricingTab() {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Tabela de Preços</CardTitle>
+        <CardTitle>{t('ads.pricing_table')}</CardTitle>
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>
-            <Button>Nova Regra de Preço</Button>
+            <Button>{t('ads.new_pricing_rule')}</Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Adicionar Preço</DialogTitle>
+              <DialogTitle>{t('ads.add_pricing')}</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
-                <Label>Local (Placement)</Label>
+                <Label>{t('ads.placement')}</Label>
                 <Select
                   onValueChange={(v) => setValue('placement', v)}
                   required
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione..." />
+                    <SelectValue placeholder={t('common.select')} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="top">Top Banner</SelectItem>
@@ -89,27 +91,27 @@ export function AdPricingTab() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Modelo de Cobrança</Label>
+                <Label>{t('ads.billing_model')}</Label>
                 <Select
                   onValueChange={(v) => setValue('billingType', v)}
                   required
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione..." />
+                    <SelectValue placeholder={t('common.select')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="fixed">Fixo (Por Período)</SelectItem>
-                    <SelectItem value="cpc">CPC (Custo por Clique)</SelectItem>
-                    <SelectItem value="cpa">
-                      CPA (Custo por Venda/Ação)
+                    <SelectItem value="fixed">
+                      {t('ads.fixed_period')}
                     </SelectItem>
+                    <SelectItem value="cpc">{t('ads.cpc')}</SelectItem>
+                    <SelectItem value="cpa">{t('ads.cpa')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               {watchBillingType === 'fixed' && (
                 <div className="space-y-2">
-                  <Label>Duração (Dias)</Label>
+                  <Label>{t('ads.duration_days')}</Label>
                   <Input
                     type="number"
                     {...register('durationDays')}
@@ -119,7 +121,7 @@ export function AdPricingTab() {
               )}
 
               <div className="space-y-2">
-                <Label>Valor Base (R$)</Label>
+                <Label>{t('ads.base_value')}</Label>
                 <Input
                   type="number"
                   step="0.01"
@@ -128,7 +130,7 @@ export function AdPricingTab() {
                 />
               </div>
               <DialogFooter>
-                <Button type="submit">Salvar</Button>
+                <Button type="submit">{t('common.save')}</Button>
               </DialogFooter>
             </form>
           </DialogContent>
@@ -138,10 +140,10 @@ export function AdPricingTab() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Local</TableHead>
-              <TableHead>Modelo</TableHead>
-              <TableHead>Duração</TableHead>
-              <TableHead>Preço</TableHead>
+              <TableHead>{t('ads.location')}</TableHead>
+              <TableHead>{t('ads.model')}</TableHead>
+              <TableHead>{t('ads.duration')}</TableHead>
+              <TableHead>{t('ads.price')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -153,8 +155,8 @@ export function AdPricingTab() {
                 <TableCell className="uppercase">{p.billingType}</TableCell>
                 <TableCell>
                   {p.billingType === 'fixed'
-                    ? `${p.durationDays} dias`
-                    : 'Contínuo'}
+                    ? `${p.durationDays} ${t('ads.days')}`
+                    : t('ads.continuous')}
                 </TableCell>
                 <TableCell>
                   {formatCurrency(p.price, 'BRL')}{' '}
@@ -168,7 +170,7 @@ export function AdPricingTab() {
                   colSpan={4}
                   className="text-center text-muted-foreground"
                 >
-                  Nenhuma regra cadastrada.
+                  {t('ads.no_rules')}
                 </TableCell>
               </TableRow>
             )}

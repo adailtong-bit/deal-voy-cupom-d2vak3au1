@@ -12,7 +12,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion'
-import { Lock, Apple, User, Briefcase, Building, Shield } from 'lucide-react'
+import { Apple, User, Briefcase, Building, Shield } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 
 export default function Login() {
@@ -64,8 +64,10 @@ export default function Login() {
     <div className="flex items-center justify-center min-h-screen bg-slate-50 p-4">
       <Card className="w-full max-w-md shadow-lg border-t-4 border-t-primary">
         <CardHeader className="text-center">
-          <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-            <Lock className="h-8 w-8 text-primary" />
+          <div className="mx-auto w-16 h-16 bg-primary rounded-xl flex items-center justify-center mb-4 shadow-lg">
+            <span className="text-white font-bold text-4xl leading-none">
+              D
+            </span>
           </div>
           <CardTitle className="text-3xl font-bold text-slate-900">
             {t('auth.login')}

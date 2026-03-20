@@ -5,7 +5,6 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-  CardFooter,
 } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
@@ -88,16 +87,16 @@ export default function Settings() {
       <Tabs defaultValue="subscription" className="space-y-6">
         <TabsList className="grid w-full grid-cols-4 flex-wrap h-auto">
           <TabsTrigger value="subscription" className="py-2">
-            Assinatura
+            {t('settings.subscription')}
           </TabsTrigger>
           <TabsTrigger value="notifications" className="py-2">
             {t('profile.notifications')}
           </TabsTrigger>
           <TabsTrigger value="travel" className="py-2">
-            Viagem
+            {t('settings.travel_tab')}
           </TabsTrigger>
           <TabsTrigger value="general" className="py-2">
-            Geral
+            {t('settings.general')}
           </TabsTrigger>
         </TabsList>
 
@@ -106,14 +105,12 @@ export default function Settings() {
             <CardHeader className="text-center pb-2">
               <Crown className="w-12 h-12 mx-auto text-primary mb-2" />
               <CardTitle>
-                Plano Atual:{' '}
+                {t('settings.current_plan')}:{' '}
                 <span className="uppercase text-primary">
                   {user?.subscriptionTier || 'FREE'}
                 </span>
               </CardTitle>
-              <CardDescription>
-                Faça upgrade para obter mais cashback e benefícios exclusivos.
-              </CardDescription>
+              <CardDescription>{t('settings.upgrade_desc')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -133,9 +130,9 @@ export default function Settings() {
                     </span>
                   </p>
                   <ul className="text-sm space-y-2 mb-4 text-muted-foreground">
-                    <li>• 3% - 10% Cashback</li>
-                    <li>• Ofertas exclusivas (Voos/Hotéis)</li>
-                    <li>• Saques prioritários</li>
+                    <li>{t('settings.premium_benefits_1')}</li>
+                    <li>{t('settings.premium_benefits_2')}</li>
+                    <li>{t('settings.premium_benefits_3')}</li>
                   </ul>
                   <Button
                     variant={
@@ -148,8 +145,8 @@ export default function Settings() {
                     onClick={() => upgradeSubscription('premium')}
                   >
                     {user?.subscriptionTier === 'premium'
-                      ? 'Plano Atual'
-                      : 'Assinar Premium'}
+                      ? t('settings.current_plan')
+                      : t('settings.subscribe_premium')}
                   </Button>
                 </div>
                 <div
@@ -170,9 +167,9 @@ export default function Settings() {
                     </span>
                   </p>
                   <ul className="text-sm space-y-2 mb-4 text-muted-foreground">
-                    <li>• Cashback Máximo</li>
-                    <li>• Acesso antecipado a promos</li>
-                    <li>• Concierge 24/7</li>
+                    <li>{t('settings.vip_benefits_1')}</li>
+                    <li>{t('settings.vip_benefits_2')}</li>
+                    <li>{t('settings.vip_benefits_3')}</li>
                   </ul>
                   <Button
                     className="w-full bg-purple-600 hover:bg-purple-700 text-white"
@@ -180,8 +177,8 @@ export default function Settings() {
                     onClick={() => upgradeSubscription('vip')}
                   >
                     {user?.subscriptionTier === 'vip'
-                      ? 'Plano Atual'
-                      : 'Assinar VIP'}
+                      ? t('settings.current_plan')
+                      : t('settings.subscribe_vip')}
                   </Button>
                 </div>
               </div>
@@ -193,22 +190,21 @@ export default function Settings() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <MapPin className="h-5 w-5 text-blue-500" /> Modo Viagem
+                <MapPin className="h-5 w-5 text-blue-500" />{' '}
+                {t('settings.travel_mode')}
               </CardTitle>
               <CardDescription>
-                Ative o Modo Viagem para priorizar cupons e restaurantes
-                baseados na sua localização atual de viagem, ocultando ofertas
-                da sua cidade natal.
+                {t('settings.travel_mode_desc')}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between p-4 border rounded-lg bg-blue-50/50">
                 <div className="space-y-0.5">
                   <Label className="text-base font-bold text-blue-900">
-                    Ativar Modo Viagem
+                    {t('settings.enable_travel_mode')}
                   </Label>
                   <p className="text-sm text-blue-700">
-                    Geolocalização dinâmica ativada.
+                    {t('settings.dynamic_geo_enabled')}
                   </p>
                 </div>
                 <Switch

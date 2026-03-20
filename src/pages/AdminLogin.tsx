@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Lock } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
 
 export default function AdminLogin() {
@@ -35,8 +34,10 @@ export default function AdminLogin() {
     <div className="flex items-center justify-center min-h-screen bg-slate-50 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-            <Lock className="h-6 w-6 text-primary" />
+          <div className="mx-auto w-14 h-14 bg-primary rounded-xl flex items-center justify-center mb-4 shadow-lg">
+            <span className="text-white font-bold text-3xl leading-none">
+              D
+            </span>
           </div>
           <CardTitle className="text-2xl font-bold">{t('nav.admin')}</CardTitle>
         </CardHeader>

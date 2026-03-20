@@ -23,9 +23,11 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { AdInvoice, Advertiser } from '@/lib/types'
+import { useLanguage } from '@/stores/LanguageContext'
 
 export function AdBillingTab() {
   const { adInvoices, advertisers, updateInvoiceStatus } = useCouponStore()
+  const { t } = useLanguage()
   const [selectedInvoice, setSelectedInvoice] = useState<{
     inv: AdInvoice
     adv: Advertiser | undefined
@@ -36,18 +38,18 @@ export function AdBillingTab() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Cobranças e Faturamento</CardTitle>
+        <CardTitle>{t('ads.billing_invoicing')}</CardTitle>
       </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Referência / Data</TableHead>
-              <TableHead>Anunciante</TableHead>
-              <TableHead>Valor</TableHead>
-              <TableHead>Vencimento</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
+              <TableHead>{t('ads.ref_date')}</TableHead>
+              <TableHead>{t('ads.advertiser')}</TableHead>
+              <TableHead>{t('ads.amount')}</TableHead>
+              <TableHead>{t('ads.due_date')}</TableHead>
+              <TableHead>{t('admin.status')}</TableHead>
+              <TableHead className="text-right">{t('admin.action')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -58,7 +60,8 @@ export function AdBillingTab() {
                   <TableCell>
                     <div className="font-medium">{inv.referenceNumber}</div>
                     <div className="text-xs text-muted-foreground">
-                      Emissão: {formatDate(inv.issueDate, 'pt-BR')}
+                      {t('ads.issue_date')}:{' '}
+                      {formatDate(inv.issueDate, 'pt-BR')}
                     </div>
                   </TableCell>
                   <TableCell className="font-medium">
@@ -83,11 +86,11 @@ export function AdBillingTab() {
                       }
                       className={inv.status === 'paid' ? 'bg-green-500' : ''}
                     >
-                      {inv.status === 'draft' && 'Rascunho'}
-                      {inv.status === 'sent' && 'Enviado'}
-                      {inv.status === 'paid' && 'Pago'}
-                      {inv.status === 'overdue' && 'Vencido'}
-                      {inv.status === 'canceled' && 'Cancelado'}
+                      {inv.status === 'draft' && t('ads.draft')}
+                      {inv.status === 'sent' && t('ads.sent')}
+                      {inv.status === 'paid' && t('ads.paid')}
+                      {inv.status === 'overdue' && t('ads.overdue')}
+                      {inv.status === 'canceled' && t('ads.canceled')}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
@@ -98,7 +101,7 @@ export function AdBillingTab() {
                           size="sm"
                           onClick={() => updateInvoiceStatus(inv.id, 'sent')}
                         >
-                          Enviar Fatura
+                          {t('ads.send_invoice')}
                         </Button>
                       )}
 
@@ -120,21 +123,20 @@ export function AdBillingTab() {
                               size="sm"
                               className="text-green-600 border-green-200 hover:bg-green-50"
                             >
-                              Registrar Pagto
+                              {t('ads.register_payment')}
                             </Button>
                           </DialogTrigger>
                           <DialogContent>
                             <DialogHeader>
-                              <DialogTitle>Confirmar Pagamento</DialogTitle>
+                              <DialogTitle>
+                                {t('ads.confirm_payment')}
+                              </DialogTitle>
                             </DialogHeader>
                             <div className="space-y-4 py-4">
                               <p className="text-sm text-muted-foreground">
-                                Para realizar a conciliação, digite o código de
-                                referência{' '}
-                                <strong>{inv.referenceNumber}</strong> para
-                                confirmar que o valor foi recebido.
+                                {t('ads.reconciliation_desc')}
                               </p>
-                              <Label>Código de Referência</Label>
+                              <Label>{t('ads.ref_code')}</Label>
                               <Input
                                 placeholder="Ex: INV-2024-..."
                                 value={refInput}
@@ -150,7 +152,7 @@ export function AdBillingTab() {
                                   setRefInput('')
                                 }}
                               >
-                                Confirmar Recebimento
+                                {t('ads.confirm_receipt')}
                               </Button>
                             </DialogFooter>
                           </DialogContent>
@@ -164,13 +166,13 @@ export function AdBillingTab() {
                             size="sm"
                             onClick={() => setSelectedInvoice({ inv, adv })}
                           >
-                            Detalhes
+                            {t('common.details')}
                           </Button>
                         </DialogTrigger>
                         <DialogContent>
                           <DialogHeader>
                             <DialogTitle>
-                              Dados da Fatura (
+                              {t('ads.invoice_data')} (
                               {selectedInvoice?.inv.referenceNumber})
                             </DialogTitle>
                           </DialogHeader>
@@ -181,27 +183,30 @@ export function AdBillingTab() {
                                   {selectedInvoice.adv.companyName}
                                 </p>
                                 <p className="text-sm text-muted-foreground">
-                                  CNPJ: {selectedInvoice.adv.taxId}
+                                  {t('ads.tax_id_abbr')}:{' '}
+                                  {selectedInvoice.adv.taxId}
                                 </p>
                               </div>
                               <div className="text-sm">
                                 <p>
-                                  Endereço: {selectedInvoice.adv.address.street}
-                                  , {selectedInvoice.adv.address.number}
+                                  {t('profile.address')}:{' '}
+                                  {selectedInvoice.adv.address.street},{' '}
+                                  {selectedInvoice.adv.address.number}
                                 </p>
                                 <p>
                                   {selectedInvoice.adv.address.city} -{' '}
-                                  {selectedInvoice.adv.address.state}, CEP:{' '}
+                                  {selectedInvoice.adv.address.state},{' '}
+                                  {t('address.zip')}:{' '}
                                   {selectedInvoice.adv.address.zip}
                                 </p>
                               </div>
                               <div className="bg-muted p-4 rounded-md flex justify-between items-center">
                                 <div>
                                   <span className="font-bold block">
-                                    Total Faturado
+                                    {t('ads.total_billed')}
                                   </span>
                                   <span className="text-xs text-muted-foreground">
-                                    Vencimento:{' '}
+                                    {t('ads.due_date')}:{' '}
                                     {formatDate(
                                       selectedInvoice.inv.dueDate,
                                       'pt-BR',
@@ -227,7 +232,7 @@ export function AdBillingTab() {
                                         )
                                       }
                                     >
-                                      Cancelar
+                                      {t('common.cancel')}
                                     </Button>
                                   )}
                               </div>

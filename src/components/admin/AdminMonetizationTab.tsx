@@ -14,10 +14,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Percent, Plane, Wallet, Users, DollarSign } from 'lucide-react'
 import { toast } from 'sonner'
 import { PlatformSettings } from '@/lib/types'
+import { useLanguage } from '@/stores/LanguageContext'
 
 export function AdminMonetizationTab() {
   const { platformSettings, updatePlatformSettings } = useCouponStore()
   const [settings, setSettings] = useState<PlatformSettings>(platformSettings)
+  const { t } = useLanguage()
 
   const handleSave = () => {
     updatePlatformSettings(settings)
@@ -50,37 +52,37 @@ export function AdminMonetizationTab() {
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl flex items-center gap-2">
-            <DollarSign className="h-6 w-6 text-green-600" /> Monetization &
-            Financial Policies
+            <DollarSign className="h-6 w-6 text-green-600" />{' '}
+            {t('admin.monetization_title')}
           </CardTitle>
-          <CardDescription>
-            Configure global commission rates, cashback splits, subscription
-            pricing, and referral rewards.
-          </CardDescription>
+          <CardDescription>{t('admin.monetization_desc')}</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="commission" className="w-full">
             <TabsList className="mb-6 w-full justify-start h-auto p-1 bg-slate-100 flex-wrap">
               <TabsTrigger value="commission" className="py-2 px-4">
-                <Percent className="h-4 w-4 mr-2" /> Core Engine
+                <Percent className="h-4 w-4 mr-2" /> {t('admin.core_engine')}
               </TabsTrigger>
               <TabsTrigger value="subscriptions" className="py-2 px-4">
-                <Users className="h-4 w-4 mr-2" /> Subscriptions
+                <Users className="h-4 w-4 mr-2" /> {t('admin.subscriptions')}
               </TabsTrigger>
               <TabsTrigger value="travel" className="py-2 px-4">
-                <Plane className="h-4 w-4 mr-2" /> Travel Vertical
+                <Plane className="h-4 w-4 mr-2" /> {t('admin.travel_vertical')}
               </TabsTrigger>
               <TabsTrigger value="finance" className="py-2 px-4">
-                <Wallet className="h-4 w-4 mr-2" /> Withdrawals & Referrals
+                <Wallet className="h-4 w-4 mr-2" />{' '}
+                {t('admin.finance_referrals')}
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="commission" className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4 p-4 border rounded-lg bg-slate-50">
-                  <h3 className="font-bold text-lg">Global Commission Base</h3>
+                  <h3 className="font-bold text-lg">
+                    {t('admin.global_commission')}
+                  </h3>
                   <div className="space-y-2">
-                    <Label>Standard Platform Commission Rate (%)</Label>
+                    <Label>{t('admin.standard_commission')}</Label>
                     <Input
                       type="number"
                       value={settings.commissionRate}
@@ -89,15 +91,17 @@ export function AdminMonetizationTab() {
                       }
                     />
                     <p className="text-xs text-muted-foreground">
-                      Default rate charged to merchants per sale.
+                      {t('admin.standard_commission_desc')}
                     </p>
                   </div>
                 </div>
                 <div className="space-y-4 p-4 border rounded-lg bg-slate-50">
-                  <h3 className="font-bold text-lg">Cashback Split</h3>
+                  <h3 className="font-bold text-lg">
+                    {t('admin.cashback_split')}
+                  </h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>User Share (%)</Label>
+                      <Label>{t('admin.user_share')}</Label>
                       <Input
                         type="number"
                         value={settings.cashbackSplitUser}
@@ -107,7 +111,7 @@ export function AdminMonetizationTab() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Platform Profit (%)</Label>
+                      <Label>{t('admin.platform_profit')}</Label>
                       <Input
                         type="number"
                         value={settings.cashbackSplitPlatform}
@@ -121,7 +125,7 @@ export function AdminMonetizationTab() {
                     </div>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    How the collected commission is divided. Must total 100%.
+                    {t('admin.cashback_split_desc')}
                   </p>
                 </div>
               </div>
@@ -131,10 +135,10 @@ export function AdminMonetizationTab() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4 p-4 border rounded-lg border-blue-200 bg-blue-50/50">
                   <h3 className="font-bold text-lg text-blue-800">
-                    Premium Tier
+                    {t('admin.premium_tier')}
                   </h3>
                   <div className="space-y-2">
-                    <Label>Monthly Price ($)</Label>
+                    <Label>{t('admin.monthly_price')}</Label>
                     <Input
                       type="number"
                       step="0.01"
@@ -148,16 +152,16 @@ export function AdminMonetizationTab() {
                       }
                     />
                     <p className="text-xs text-muted-foreground">
-                      Benefits: 3-10% cashback, priority withdrawals.
+                      {t('admin.premium_benefits_desc')}
                     </p>
                   </div>
                 </div>
                 <div className="space-y-4 p-4 border rounded-lg border-purple-200 bg-purple-50/50">
                   <h3 className="font-bold text-lg text-purple-800">
-                    VIP / Traveler Tier
+                    {t('admin.vip_tier')}
                   </h3>
                   <div className="space-y-2">
-                    <Label>Monthly Price ($)</Label>
+                    <Label>{t('admin.monthly_price')}</Label>
                     <Input
                       type="number"
                       step="0.01"
@@ -171,7 +175,7 @@ export function AdminMonetizationTab() {
                       }
                     />
                     <p className="text-xs text-muted-foreground">
-                      Benefits: Max cashback, early access, concierge.
+                      {t('admin.vip_benefits_desc')}
                     </p>
                   </div>
                 </div>
@@ -181,15 +185,14 @@ export function AdminMonetizationTab() {
             <TabsContent value="travel" className="space-y-4">
               <div className="p-4 border rounded-lg bg-slate-50">
                 <h3 className="font-bold text-lg mb-4">
-                  Travel Vertical Margins
+                  {t('admin.travel_margins')}
                 </h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Set specific commission rates for high-value travel
-                  categories. These override the global commission rate.
+                  {t('admin.travel_margins_desc')}
                 </p>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="space-y-2">
-                    <Label>Hotels (%)</Label>
+                    <Label>{t('admin.hotels_margin')}</Label>
                     <Input
                       type="number"
                       value={settings.travelMargins.hotels}
@@ -199,7 +202,7 @@ export function AdminMonetizationTab() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Flights (%)</Label>
+                    <Label>{t('admin.flights_margin')}</Label>
                     <Input
                       type="number"
                       value={settings.travelMargins.flights}
@@ -209,7 +212,7 @@ export function AdminMonetizationTab() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Car Rentals (%)</Label>
+                    <Label>{t('admin.cars_margin')}</Label>
                     <Input
                       type="number"
                       value={settings.travelMargins.cars}
@@ -219,7 +222,7 @@ export function AdminMonetizationTab() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Insurance (%)</Label>
+                    <Label>{t('admin.insurance_margin')}</Label>
                     <Input
                       type="number"
                       value={settings.travelMargins.insurance}
@@ -239,9 +242,11 @@ export function AdminMonetizationTab() {
             <TabsContent value="finance" className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4 p-4 border rounded-lg bg-slate-50">
-                  <h3 className="font-bold text-lg">Withdrawal Rules</h3>
+                  <h3 className="font-bold text-lg">
+                    {t('admin.withdrawal_rules')}
+                  </h3>
                   <div className="space-y-2">
-                    <Label>Minimum Withdrawal Amount ($)</Label>
+                    <Label>{t('admin.min_withdrawal')}</Label>
                     <Input
                       type="number"
                       value={settings.withdrawal.minAmount}
@@ -251,7 +256,7 @@ export function AdminMonetizationTab() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Instant Withdrawal Fee ($)</Label>
+                    <Label>{t('admin.instant_fee')}</Label>
                     <Input
                       type="number"
                       step="0.01"
@@ -263,9 +268,11 @@ export function AdminMonetizationTab() {
                   </div>
                 </div>
                 <div className="space-y-4 p-4 border rounded-lg bg-slate-50">
-                  <h3 className="font-bold text-lg">Referral Program</h3>
+                  <h3 className="font-bold text-lg">
+                    {t('admin.referral_program')}
+                  </h3>
                   <div className="space-y-2">
-                    <Label>Fixed Reward on 1st Purchase ($)</Label>
+                    <Label>{t('admin.fixed_reward')}</Label>
                     <Input
                       type="number"
                       step="0.01"
@@ -276,7 +283,7 @@ export function AdminMonetizationTab() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Friend's Cashback Share (%)</Label>
+                    <Label>{t('admin.friend_share')}</Label>
                     <Input
                       type="number"
                       value={settings.referral.friendCashbackPercentage}
@@ -290,7 +297,7 @@ export function AdminMonetizationTab() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Share Duration (Days)</Label>
+                    <Label>{t('admin.share_duration')}</Label>
                     <Input
                       type="number"
                       value={settings.referral.durationDays}
@@ -305,7 +312,7 @@ export function AdminMonetizationTab() {
 
             <div className="mt-6 flex justify-end">
               <Button onClick={handleSave} size="lg">
-                Save Configuration
+                {t('admin.save_config')}
               </Button>
             </div>
           </Tabs>

@@ -21,11 +21,13 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { useForm } from 'react-hook-form'
+import { useLanguage } from '@/stores/LanguageContext'
 
 export function AdvertisersTab() {
   const { advertisers, addAdvertiser } = useCouponStore()
   const [isOpen, setIsOpen] = useState(false)
   const { register, handleSubmit, reset } = useForm()
+  const { t } = useLanguage()
 
   const onSubmit = (data: any) => {
     addAdvertiser({
@@ -49,36 +51,36 @@ export function AdvertisersTab() {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Empresas Anunciantes</CardTitle>
+        <CardTitle>{t('ads.advertisers_companies')}</CardTitle>
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>
-            <Button>Novo Anunciante</Button>
+            <Button>{t('ads.new_advertiser')}</Button>
           </DialogTrigger>
           <DialogContent className="max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Cadastrar Anunciante</DialogTitle>
+              <DialogTitle>{t('ads.register_advertiser')}</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
-                <Label>Razão Social</Label>
+                <Label>{t('ads.company_name')}</Label>
                 <Input {...register('companyName')} required />
               </div>
               <div className="space-y-2">
-                <Label>CNPJ/CPF</Label>
+                <Label>{t('ads.tax_id')}</Label>
                 <Input {...register('taxId')} required />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Email</Label>
+                  <Label>{t('auth.email')}</Label>
                   <Input type="email" {...register('email')} required />
                 </div>
                 <div className="space-y-2">
-                  <Label>Telefone</Label>
+                  <Label>{t('phone.label')}</Label>
                   <Input {...register('phone')} required />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>Rua</Label>
+                <Label>{t('address.street')}</Label>
                 <Input {...register('street')} required />
               </div>
               <div className="grid grid-cols-3 gap-4">
@@ -87,20 +89,20 @@ export function AdvertisersTab() {
                   <Input {...register('number')} required />
                 </div>
                 <div className="space-y-2">
-                  <Label>Cidade</Label>
+                  <Label>{t('address.city')}</Label>
                   <Input {...register('city')} required />
                 </div>
                 <div className="space-y-2">
-                  <Label>Estado</Label>
+                  <Label>{t('address.state')}</Label>
                   <Input {...register('state')} required />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>CEP</Label>
+                <Label>{t('address.zip')}</Label>
                 <Input {...register('zip')} required />
               </div>
               <DialogFooter>
-                <Button type="submit">Salvar</Button>
+                <Button type="submit">{t('common.save')}</Button>
               </DialogFooter>
             </form>
           </DialogContent>
@@ -110,10 +112,10 @@ export function AdvertisersTab() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Empresa</TableHead>
-              <TableHead>CNPJ/CPF</TableHead>
-              <TableHead>Contato</TableHead>
-              <TableHead>Localidade</TableHead>
+              <TableHead>{t('ads.company')}</TableHead>
+              <TableHead>{t('ads.tax_id')}</TableHead>
+              <TableHead>{t('ads.contact')}</TableHead>
+              <TableHead>{t('ads.locality')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -139,7 +141,7 @@ export function AdvertisersTab() {
                   colSpan={4}
                   className="text-center text-muted-foreground"
                 >
-                  Nenhum anunciante cadastrado.
+                  {t('ads.no_advertisers')}
                 </TableCell>
               </TableRow>
             )}

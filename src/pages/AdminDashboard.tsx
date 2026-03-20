@@ -278,26 +278,26 @@ export default function AdminDashboard() {
         <TabsList className="flex flex-wrap h-auto">
           {(isSuperAdmin || isDeveloperFallback) && (
             <TabsTrigger value="insights">
-              <BarChart className="h-4 w-4 mr-2" /> Insights
+              <BarChart className="h-4 w-4 mr-2" /> {t('admin.insights')}
             </TabsTrigger>
           )}
           {(isSuperAdmin || isDeveloperFallback) && (
             <TabsTrigger value="monetization">
-              <DollarSign className="h-4 w-4 mr-2" /> Monetization
+              <DollarSign className="h-4 w-4 mr-2" /> {t('admin.monetization')}
             </TabsTrigger>
           )}
           {(isSuperAdmin || isDeveloperFallback) && (
             <TabsTrigger value="crm">
-              <Users className="h-4 w-4 mr-2" /> User CRM
+              <Users className="h-4 w-4 mr-2" /> {t('admin.user_crm')}
             </TabsTrigger>
           )}
           <TabsTrigger value="merchants">{t('admin.merchants')}</TabsTrigger>
           <TabsTrigger value="crawler">
-            <Globe className="h-4 w-4 mr-2" /> Crawler
+            <Globe className="h-4 w-4 mr-2" /> {t('admin.crawler')}
           </TabsTrigger>
           {(isSuperAdmin || isDeveloperFallback) && (
             <TabsTrigger value="advertising">
-              <Megaphone className="h-4 w-4 mr-2" /> Ads Manager
+              <Megaphone className="h-4 w-4 mr-2" /> {t('admin.ads_manager')}
             </TabsTrigger>
           )}
           {(isSuperAdmin || isDeveloperFallback) && (

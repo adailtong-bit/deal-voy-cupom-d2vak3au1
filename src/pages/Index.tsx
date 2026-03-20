@@ -370,8 +370,7 @@ export default function Index() {
     <div className="pb-20 md:pb-8 bg-slate-50/50 min-h-screen">
       {travelModeActive && (
         <div className="bg-blue-600 text-white p-2 text-center text-xs font-bold flex items-center justify-center gap-2">
-          <Plane className="h-4 w-4" /> Modo Viagem Ativo: Priorizando as
-          melhores ofertas perto de você.
+          <Plane className="h-4 w-4" /> {t('home.travel_mode_active')}
         </div>
       )}
 
@@ -397,10 +396,10 @@ export default function Index() {
               <MapPin className="h-3.5 w-3.5 text-slate-400 shrink-0 hidden lg:block ml-1" />
               <Select value={tempCountry} onValueChange={handleCountryChange}>
                 <SelectTrigger className="h-9 lg:h-8 text-xs bg-slate-50 border-slate-200 rounded-full w-1/3 truncate px-2.5 shadow-sm">
-                  <SelectValue placeholder="País" />
+                  <SelectValue placeholder={t('home.country')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">País (Todos)</SelectItem>
+                  <SelectItem value="all">{t('home.country_all')}</SelectItem>
                   {COUNTRIES.map((c) => (
                     <SelectItem key={c} value={c}>
                       {c}
@@ -415,10 +414,10 @@ export default function Index() {
                 disabled={tempCountry === 'all'}
               >
                 <SelectTrigger className="h-9 lg:h-8 text-xs bg-slate-50 border-slate-200 rounded-full w-1/3 truncate px-2.5 shadow-sm disabled:opacity-50">
-                  <SelectValue placeholder="Estado" />
+                  <SelectValue placeholder={t('home.state')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Estado (Todos)</SelectItem>
+                  <SelectItem value="all">{t('home.state_all')}</SelectItem>
                   {availableStates.map((s) => (
                     <SelectItem key={s} value={s}>
                       {s}
@@ -433,10 +432,10 @@ export default function Index() {
                 disabled={tempState === 'all'}
               >
                 <SelectTrigger className="h-9 lg:h-8 text-xs bg-slate-50 border-slate-200 rounded-full w-1/3 truncate px-2.5 shadow-sm disabled:opacity-50">
-                  <SelectValue placeholder="Cidade" />
+                  <SelectValue placeholder={t('home.city')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Cidade (Todas)</SelectItem>
+                  <SelectItem value="all">{t('home.city_all')}</SelectItem>
                   {availableCities.map((c) => (
                     <SelectItem key={c} value={c}>
                       {c}
@@ -595,7 +594,7 @@ export default function Index() {
         {searchQuery && (
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground">
-              Showing results for:
+              {t('home.showing_results')}:
             </span>
             <Badge variant="secondary" className="gap-1 pl-1 text-[10px] h-5">
               <span className="bg-white rounded-full p-0.5">
@@ -644,7 +643,7 @@ export default function Index() {
                     />
                   )}
                   {travelModeActive
-                    ? 'Destaques Perto de Você'
+                    ? t('home.highlights_near_you')
                     : t('home.featured_deals')}
                 </h2>
                 <Link
@@ -917,10 +916,10 @@ export default function Index() {
                   <ShoppingBag className="h-10 w-10 text-slate-300" />
                 </div>
                 <p className="text-base font-semibold text-slate-700 mb-2">
-                  Não há anúncios nesta localidade
+                  {t('home.no_ads_location')}
                 </p>
                 <p className="text-sm text-slate-500 mb-4">
-                  Tente ajustar os filtros de localização ou limpar a busca.
+                  {t('home.adjust_filters')}
                 </p>
                 <Button
                   variant="outline"
