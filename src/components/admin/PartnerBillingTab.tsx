@@ -1,13 +1,8 @@
-import { useState, useMemo } from 'react'
-import { useCouponStore } from '@/stores/CouponContext'
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from '@/components/ui/card'
+import { useState } from 'react'
+import { FileText, Plus, CheckCircle, Clock, Send } from 'lucide-react'
+import { format } from 'date-fns'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Table,
   TableBody,
@@ -16,8 +11,14 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
 import {
   Select,
   SelectContent,
@@ -25,257 +26,302 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Badge } from '@/components/ui/badge'
+import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
 import { useLanguage } from '@/stores/LanguageContext'
-import { Activity, DollarSign, Receipt, Settings } from 'lucide-react'
+
+type InvoiceStatus = 'Draft' | 'Sent' | 'Paid'
+
+type Invoice = {
+  id: string
+  partner: string
+  periodStart: string
+  periodEnd: string
+  amount: number
+  status: InvoiceStatus
+}
+
+const initialInvoices: Invoice[] = [
+  {
+    id: 'INV-001',
+    partner: 'Restaurante Sabor',
+    periodStart: '2026-09-01',
+    periodEnd: '2026-09-30',
+    amount: 1250.0,
+    status: 'Paid',
+  },
+  {
+    id: 'INV-002',
+    partner: 'Hotel Paraíso',
+    periodStart: '2026-10-01',
+    periodEnd: '2026-10-31',
+    amount: 3400.5,
+    status: 'Sent',
+  },
+  {
+    id: 'INV-003',
+    partner: 'Passeio Radical',
+    periodStart: '2026-11-01',
+    periodEnd: '2026-11-30',
+    amount: 890.0,
+    status: 'Draft',
+  },
+]
 
 export function PartnerBillingTab() {
-  const {
-    validationLogs,
-    companies,
-    partnerInvoices,
-    generatePartnerInvoice,
-    updatePartnerInvoiceStatus,
-    reconcilePartnerInvoice,
-    coupons,
-    partnerPolicies,
-  } = useCouponStore()
-  const { t, formatCurrency, formatDate } = useLanguage()
+  const { t } = useLanguage()
+  const [invoices, setInvoices] = useState<Invoice[]>(initialInvoices)
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [newInvoice, setNewInvoice] = useState<Partial<Invoice>>({
+    partner: '',
+    periodStart: '',
+    periodEnd: '',
+    status: 'Draft',
+  })
 
-  const [selectedCompany, setSelectedCompany] = useState<string>('all')
-  const [startDate, setStartDate] = useState<string>('')
-  const [endDate, setEndDate] = useState<string>('')
+  const calculateAmount = () => {
+    if (!newInvoice.partner) return 0
+    return Math.floor(Math.random() * 5000) + 500
+  }
 
-  const stats = useMemo(() => {
-    let logs = validationLogs
-    if (selectedCompany !== 'all') {
-      logs = logs.filter((l) => l.companyId === selectedCompany)
+  const handleCreate = () => {
+    const amount = calculateAmount()
+    const invoice: Invoice = {
+      id: `INV-00${invoices.length + 1}`,
+      partner: newInvoice.partner || 'Desconhecido',
+      periodStart:
+        newInvoice.periodStart || new Date().toISOString().split('T')[0],
+      periodEnd: newInvoice.periodEnd || new Date().toISOString().split('T')[0],
+      amount,
+      status: 'Draft',
     }
-    if (startDate) {
-      logs = logs.filter((l) => new Date(l.validatedAt) >= new Date(startDate))
-    }
-    if (endDate) {
-      logs = logs.filter((l) => new Date(l.validatedAt) <= new Date(endDate))
-    }
+    setInvoices([invoice, ...invoices])
+    setIsDialogOpen(false)
+    setNewInvoice({
+      partner: '',
+      periodStart: '',
+      periodEnd: '',
+      status: 'Draft',
+    })
+  }
 
-    const totalSales = logs.reduce(
-      (sum, l) => sum + (coupons.find((c) => c.id === l.couponId)?.price || 50),
-      0,
+  const updateStatus = (id: string, newStatus: InvoiceStatus) => {
+    setInvoices(
+      invoices.map((inv) =>
+        inv.id === id ? { ...inv, status: newStatus } : inv,
+      ),
     )
+  }
 
-    let totalCommission = logs.reduce(
-      (sum, l) => sum + (l.commissionAmount || 0),
-      0,
-    )
-
-    if (selectedCompany !== 'all') {
-      const policy = partnerPolicies.find(
-        (p) => p.companyId === selectedCompany,
-      )
-      if (policy?.billingModel === 'monthly') {
-        totalCommission += policy.fixedFee
-      }
+  const getStatusBadge = (status: InvoiceStatus) => {
+    switch (status) {
+      case 'Paid':
+        return (
+          <Badge className="bg-green-500 hover:bg-green-600">
+            <CheckCircle className="mr-1 h-3 w-3" /> {t('admin.paid')}
+          </Badge>
+        )
+      case 'Sent':
+        return (
+          <Badge className="bg-blue-500 hover:bg-blue-600">
+            <Send className="mr-1 h-3 w-3" /> {t('admin.sent')}
+          </Badge>
+        )
+      case 'Draft':
+        return (
+          <Badge variant="secondary">
+            <Clock className="mr-1 h-3 w-3" /> {t('admin.draft')}
+          </Badge>
+        )
     }
-
-    const totalCashback = logs.reduce(
-      (sum, l) => sum + (l.cashbackAmount || 0),
-      0,
-    )
-
-    return { count: logs.length, totalSales, totalCommission, totalCashback }
-  }, [
-    validationLogs,
-    selectedCompany,
-    startDate,
-    endDate,
-    coupons,
-    partnerPolicies,
-  ])
-
-  const handleGenerateInvoice = () => {
-    if (selectedCompany === 'all') return
-    if (!startDate || !endDate) return
-    generatePartnerInvoice(selectedCompany, startDate, endDate)
   }
 
   return (
-    <div className="space-y-6">
-      <Card className="border-l-4 border-l-blue-500">
-        <CardHeader>
-          <CardTitle className="text-xl flex items-center gap-2">
-            <Activity className="h-5 w-5 text-blue-600" />
-            {t('admin.live_dashboard')}
-          </CardTitle>
-          <CardDescription>{t('admin.close_period')}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+    <div className="space-y-6 animate-fade-in-up">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-semibold tracking-tight">
+          {t('admin.invoices')}
+        </h2>
+        <Button onClick={() => setIsDialogOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          {t('admin.createInvoice')}
+        </Button>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              {t('admin.paid')}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">R$ 1.250,00</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              {t('admin.sent')}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-600">R$ 3.400,50</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              {t('admin.draft')}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-muted-foreground">
+              R$ 890,00
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="rounded-md border bg-card overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>ID</TableHead>
+              <TableHead>{t('admin.partner')}</TableHead>
+              <TableHead>{t('admin.period')}</TableHead>
+              <TableHead>{t('admin.amount')}</TableHead>
+              <TableHead>{t('admin.status')}</TableHead>
+              <TableHead className="text-right">{t('admin.action')}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {invoices.map((invoice) => (
+              <TableRow key={invoice.id}>
+                <TableCell className="font-medium">{invoice.id}</TableCell>
+                <TableCell>{invoice.partner}</TableCell>
+                <TableCell>
+                  {format(new Date(invoice.periodStart), 'dd/MM')} -{' '}
+                  {format(new Date(invoice.periodEnd), 'dd/MM')}
+                </TableCell>
+                <TableCell>R$ {invoice.amount.toFixed(2)}</TableCell>
+                <TableCell>{getStatusBadge(invoice.status)}</TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end gap-2">
+                    {invoice.status === 'Draft' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => updateStatus(invoice.id, 'Sent')}
+                      >
+                        {t('admin.sent')}
+                      </Button>
+                    )}
+                    {invoice.status === 'Sent' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => updateStatus(invoice.id, 'Paid')}
+                      >
+                        {t('admin.paid')}
+                      </Button>
+                    )}
+                    <Button variant="ghost" size="icon">
+                      <FileText className="h-4 w-4 text-muted-foreground" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('admin.createInvoice')}</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
             <div className="space-y-2">
-              <Label>{t('ads.company')}</Label>
+              <Label>{t('admin.partner')}</Label>
               <Select
-                value={selectedCompany}
-                onValueChange={setSelectedCompany}
+                onValueChange={(v) =>
+                  setNewInvoice({ ...newInvoice, partner: v })
+                }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={t('common.select')} />
+                  <SelectValue placeholder={t('admin.partner')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Partners</SelectItem>
-                  {companies.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.name}
-                    </SelectItem>
-                  ))}
+                  <SelectItem value="Restaurante Sabor">
+                    Restaurante Sabor
+                  </SelectItem>
+                  <SelectItem value="Hotel Paraíso">Hotel Paraíso</SelectItem>
+                  <SelectItem value="Passeio Radical">
+                    Passeio Radical
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label>{t('admin.period_start')}</Label>
-              <Input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Início</Label>
+                <Input
+                  type="date"
+                  value={newInvoice.periodStart}
+                  onChange={(e) =>
+                    setNewInvoice({
+                      ...newInvoice,
+                      periodStart: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Fim</Label>
+                <Input
+                  type="date"
+                  value={newInvoice.periodEnd}
+                  onChange={(e) =>
+                    setNewInvoice({ ...newInvoice, periodEnd: e.target.value })
+                  }
+                />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label>{t('admin.period_end')}</Label>
-              <Input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-              />
-            </div>
-            <div className="flex items-end">
-              <Button
-                className="w-full"
-                disabled={selectedCompany === 'all' || !startDate || !endDate}
-                onClick={handleGenerateInvoice}
-              >
-                <Receipt className="h-4 w-4 mr-2" />
-                {t('admin.generate_invoice')}
-              </Button>
-            </div>
+            {newInvoice.partner &&
+              newInvoice.periodStart &&
+              newInvoice.periodEnd && (
+                <div className="rounded-lg bg-muted p-4 mt-2">
+                  <div className="text-sm text-muted-foreground mb-1">
+                    {t('admin.calculate')}
+                  </div>
+                  <div className="text-2xl font-bold">
+                    R$ {calculateAmount().toFixed(2)}
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    Baseado em políticas ativas
+                  </div>
+                </div>
+              )}
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="p-4 bg-slate-50 rounded-lg border">
-              <p className="text-sm font-medium text-muted-foreground">
-                {t('admin.transactions')}
-              </p>
-              <h3 className="text-2xl font-bold">{stats.count}</h3>
-            </div>
-            <div className="p-4 bg-slate-50 rounded-lg border">
-              <p className="text-sm font-medium text-muted-foreground">
-                {t('admin.total_sales')}
-              </p>
-              <h3 className="text-2xl font-bold text-green-600">
-                {formatCurrency(stats.totalSales)}
-              </h3>
-            </div>
-            <div className="p-4 bg-slate-50 rounded-lg border border-blue-100">
-              <p className="text-sm font-medium text-muted-foreground">
-                {t('admin.total_commission')}
-              </p>
-              <h3 className="text-2xl font-bold text-blue-600">
-                {formatCurrency(stats.totalCommission)}
-              </h3>
-            </div>
-            <div className="p-4 bg-slate-50 rounded-lg border border-purple-100">
-              <p className="text-sm font-medium text-muted-foreground">
-                {t('admin.total_cashback')}
-              </p>
-              <h3 className="text-2xl font-bold text-purple-600">
-                {formatCurrency(stats.totalCashback)}
-              </h3>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('admin.invoices')}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Ref</TableHead>
-                <TableHead>{t('ads.company')}</TableHead>
-                <TableHead>Period</TableHead>
-                <TableHead>{t('admin.total_commission')}</TableHead>
-                <TableHead>{t('admin.status')}</TableHead>
-                <TableHead className="text-right">
-                  {t('admin.action')}
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {partnerInvoices.map((inv) => {
-                const comp = companies.find((c) => c.id === inv.companyId)
-                return (
-                  <TableRow key={inv.id}>
-                    <TableCell className="font-medium">
-                      {inv.referenceNumber}
-                      <div className="text-xs text-muted-foreground">
-                        Due: {formatDate(inv.dueDate)}
-                      </div>
-                    </TableCell>
-                    <TableCell>{comp?.name}</TableCell>
-                    <TableCell>
-                      <div className="text-sm">
-                        {formatDate(inv.periodStart)} -{' '}
-                        {formatDate(inv.periodEnd)}
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-bold">
-                      {formatCurrency(inv.totalCommission)}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          inv.status === 'paid'
-                            ? 'default'
-                            : inv.status === 'sent'
-                              ? 'secondary'
-                              : 'outline'
-                        }
-                        className={inv.status === 'paid' ? 'bg-green-500' : ''}
-                      >
-                        {inv.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right flex gap-2 justify-end">
-                      {inv.status === 'draft' && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() =>
-                            updatePartnerInvoiceStatus(inv.id, 'sent')
-                          }
-                        >
-                          Send
-                        </Button>
-                      )}
-                      {inv.status === 'sent' && (
-                        <Button
-                          size="sm"
-                          className="bg-green-600 hover:bg-green-700"
-                          onClick={() =>
-                            reconcilePartnerInvoice(inv.referenceNumber)
-                          }
-                        >
-                          {t('admin.reconcile')}
-                        </Button>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+              {t('admin.cancel')}
+            </Button>
+            <Button
+              onClick={handleCreate}
+              disabled={
+                !newInvoice.partner ||
+                !newInvoice.periodStart ||
+                !newInvoice.periodEnd
+              }
+            >
+              {t('admin.save')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

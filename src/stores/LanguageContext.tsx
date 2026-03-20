@@ -1,83 +1,42 @@
-import React, { createContext, useContext, useState, useEffect } from 'react'
-import { translations } from '@/lib/translations'
-import { formatDate, formatCurrency } from '@/lib/utils'
+import React, { createContext, useContext, useState, ReactNode } from 'react'
+import { translations, Language } from '@/lib/translations'
 
-export type Language = 'pt' | 'en' | 'es' | 'fr' | 'de' | 'it' | 'zh' | 'ja'
-
-interface LanguageContextType {
+type LanguageContextType = {
   language: Language
   setLanguage: (lang: Language) => void
-  t: (key: string) => string
-  formatDate: (date: string | Date | undefined) => string
-  formatCurrency: (amount: number, currency?: string) => string
-  locale: string
+  t: (path: string) => string
 }
 
-const LanguageContext = createContext<LanguageContextType | undefined>(
+export const LanguageContext = createContext<LanguageContextType | undefined>(
   undefined,
 )
 
-const LOCALE_MAP: Record<Language, string> = {
-  pt: 'pt-BR',
-  en: 'en-US',
-  es: 'es-ES',
-  fr: 'fr-FR',
-  de: 'de-DE',
-  it: 'it-IT',
-  zh: 'zh-CN',
-  ja: 'ja-JP',
-}
+export function LanguageProvider({ children }: { children: ReactNode }) {
+  const [language, setLanguage] = useState<Language>('pt')
 
-export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguageState] = useState<Language>('pt')
-
-  useEffect(() => {
-    const storedLang = localStorage.getItem('language') as Language
-    if (storedLang && Object.keys(LOCALE_MAP).includes(storedLang)) {
-      setLanguageState(storedLang)
+  const t = (path: string): string => {
+    const keys = path.split('.')
+    let current: any = translations[language]
+    for (const key of keys) {
+      if (!current || current[key] === undefined) {
+        return path // Fallback to path string if not found
+      }
+      current = current[key]
     }
-  }, [])
-
-  const setLanguage = (lang: Language) => {
-    setLanguageState(lang)
-    localStorage.setItem('language', lang)
+    return current
   }
 
-  const t = (key: string) => {
-    // Fallback chain: Selected Language -> English -> Key
-    const langObj = translations[language] as Record<string, string>
-    const enObj = translations['en'] as Record<string, string>
-    return langObj[key] || enObj[key] || key
-  }
-
-  const locale = LOCALE_MAP[language] || 'en-US'
-
-  const formattedDate = (date: string | Date | undefined) =>
-    formatDate(date, locale)
-
-  const formattedCurrency = (amount: number, currency: string = 'BRL') =>
-    formatCurrency(amount, currency, locale)
-
-  return React.createElement(
-    LanguageContext.Provider,
-    {
-      value: {
-        language,
-        setLanguage,
-        t,
-        formatDate: formattedDate,
-        formatCurrency: formattedCurrency,
-        locale,
-      },
-    },
-    children,
+  return (
+    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+      {children}
+    </LanguageContext.Provider>
   )
 }
 
 export function useLanguage() {
   const context = useContext(LanguageContext)
-  if (context === undefined) {
-    throw new Error('useLanguage must be used within a LanguageProvider')
+  if (!context) {
+    return { language: 'pt', setLanguage: () => {}, t: (k: string) => k }
   }
   return context
 }

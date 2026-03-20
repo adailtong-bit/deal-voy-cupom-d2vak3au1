@@ -1,380 +1,208 @@
-import { useState } from 'react'
-import { useCouponStore } from '@/stores/CouponContext'
+import { useMemo } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Button } from '@/components/ui/button'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+  Bar,
+  BarChart,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  ResponsiveContainer,
+  Line,
+  LineChart,
+} from 'recharts'
 import {
-  Percent,
-  Plane,
-  Wallet,
-  Users,
-  DollarSign,
-  Building,
-  FileText,
-} from 'lucide-react'
-import { toast } from 'sonner'
-import { PlatformSettings } from '@/lib/types'
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from '@/components/ui/chart'
+import { DollarSign, TrendingUp, Users, Activity } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
-import { PartnerPoliciesTab } from './PartnerPoliciesTab'
-import { PartnerBillingTab } from './PartnerBillingTab'
+
+const dummyData = [
+  { partner: 'Sabor', coupons: 145, credits: 1250, margin: 350 },
+  { partner: 'Paraíso', coupons: 89, credits: 3400, margin: 850 },
+  { partner: 'Radical', coupons: 210, credits: 1890, margin: 420 },
+  { partner: 'Café', coupons: 340, credits: 850, margin: 170 },
+]
+
+const timelineData = [
+  { date: '01/10', revenue: 450, coupons: 120 },
+  { date: '05/10', revenue: 680, coupons: 180 },
+  { date: '10/10', revenue: 850, coupons: 240 },
+  { date: '15/10', revenue: 1200, coupons: 310 },
+  { date: '20/10', revenue: 1450, coupons: 420 },
+  { date: '25/10', revenue: 1890, coupons: 580 },
+]
 
 export function AdminMonetizationTab() {
-  const { platformSettings, updatePlatformSettings } = useCouponStore()
-  const [settings, setSettings] = useState<PlatformSettings>(platformSettings)
   const { t } = useLanguage()
-
-  const handleSave = () => {
-    updatePlatformSettings(settings)
-  }
-
-  const handleChange = (
-    category: keyof PlatformSettings,
-    field: string,
-    value: string,
-  ) => {
-    const numValue = parseFloat(value) || 0
-    setSettings((prev: any) => {
-      if (typeof prev[category] === 'object') {
-        return {
-          ...prev,
-          [category]: { ...prev[category], [field]: numValue },
-        }
-      } else {
-        return { ...prev, [category]: numValue }
-      }
-    })
-  }
-
-  const handleFlatChange = (field: keyof PlatformSettings, value: string) => {
-    setSettings((prev) => ({ ...prev, [field]: parseFloat(value) || 0 }))
-  }
+  const totals = useMemo(() => {
+    return dummyData.reduce(
+      (acc, curr) => ({
+        coupons: acc.coupons + curr.coupons,
+        credits: acc.credits + curr.credits,
+        margin: acc.margin + curr.margin,
+      }),
+      { coupons: 0, credits: 0, margin: 0 },
+    )
+  }, [])
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl flex items-center gap-2">
-            <DollarSign className="h-6 w-6 text-green-600" />{' '}
-            {t('admin.monetization_title')}
-          </CardTitle>
-          <CardDescription>{t('admin.monetization_desc')}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="commission" className="w-full">
-            <TabsList className="mb-6 w-full justify-start h-auto p-1 bg-slate-100 flex-wrap">
-              <TabsTrigger value="commission" className="py-2 px-4">
-                <Percent className="h-4 w-4 mr-2" /> {t('admin.core_engine')}
-              </TabsTrigger>
-              <TabsTrigger value="partner_policies" className="py-2 px-4">
-                <Building className="h-4 w-4 mr-2" />{' '}
-                {t('admin.partner_policies')}
-              </TabsTrigger>
-              <TabsTrigger value="partner_billing" className="py-2 px-4">
-                <FileText className="h-4 w-4 mr-2" /> {t('admin.b2b_billing')}
-              </TabsTrigger>
-              <TabsTrigger value="subscriptions" className="py-2 px-4">
-                <Users className="h-4 w-4 mr-2" /> {t('admin.subscriptions')}
-              </TabsTrigger>
-              <TabsTrigger value="travel" className="py-2 px-4">
-                <Plane className="h-4 w-4 mr-2" /> {t('admin.travel_vertical')}
-              </TabsTrigger>
-              <TabsTrigger value="finance" className="py-2 px-4">
-                <Wallet className="h-4 w-4 mr-2" />{' '}
-                {t('admin.finance_referrals')}
-              </TabsTrigger>
-            </TabsList>
+    <div className="space-y-6 animate-fade-in-up">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              {t('admin.margins')}
+            </CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              R$ {totals.margin.toLocaleString()}
+            </div>
+            <p className="text-xs text-muted-foreground">+12%</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              {t('admin.totalCredits')}
+            </CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              R$ {totals.credits.toLocaleString()}
+            </div>
+            <p className="text-xs text-muted-foreground">+8%</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              {t('admin.volume')}
+            </CardTitle>
+            <Activity className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totals.coupons}</div>
+            <p className="text-xs text-muted-foreground">+24%</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              {t('admin.partnerStores')}
+            </CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{dummyData.length}</div>
+            <p className="text-xs text-muted-foreground">Ativos</p>
+          </CardContent>
+        </Card>
+      </div>
 
-            <TabsContent
-              value="partner_policies"
-              className="space-y-4 animate-in fade-in-50"
-            >
-              <PartnerPoliciesTab />
-            </TabsContent>
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Desempenho por Parceiro</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[300px] w-full">
+              <ChartContainer
+                config={{
+                  margin: {
+                    label: t('admin.margins'),
+                    color: 'hsl(var(--primary))',
+                  },
+                  credits: {
+                    label: t('admin.totalCredits'),
+                    color: 'hsl(var(--secondary))',
+                  },
+                }}
+              >
+                <BarChart data={dummyData}>
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    vertical={false}
+                    className="stroke-muted"
+                  />
+                  <XAxis dataKey="partner" tickLine={false} axisLine={false} />
+                  <YAxis tickLine={false} axisLine={false} />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Bar
+                    dataKey="credits"
+                    fill="var(--color-credits)"
+                    radius={[4, 4, 0, 0]}
+                  />
+                  <Bar
+                    dataKey="margin"
+                    fill="var(--color-margin)"
+                    radius={[4, 4, 0, 0]}
+                  />
+                </BarChart>
+              </ChartContainer>
+            </div>
+          </CardContent>
+        </Card>
 
-            <TabsContent
-              value="partner_billing"
-              className="space-y-4 animate-in fade-in-50"
-            >
-              <PartnerBillingTab />
-            </TabsContent>
-
-            <TabsContent
-              value="commission"
-              className="space-y-4 animate-in fade-in-50"
-            >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4 p-4 border rounded-lg bg-slate-50">
-                  <h3 className="font-bold text-lg">
-                    {t('admin.global_commission')}
-                  </h3>
-                  <div className="space-y-2">
-                    <Label>{t('admin.standard_commission')}</Label>
-                    <Input
-                      type="number"
-                      value={settings.commissionRate}
-                      onChange={(e) =>
-                        handleFlatChange('commissionRate', e.target.value)
-                      }
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      {t('admin.standard_commission_desc')}
-                    </p>
-                  </div>
-                </div>
-                <div className="space-y-4 p-4 border rounded-lg bg-slate-50">
-                  <h3 className="font-bold text-lg">
-                    {t('admin.cashback_split')}
-                  </h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>{t('admin.user_share')}</Label>
-                      <Input
-                        type="number"
-                        value={settings.cashbackSplitUser}
-                        onChange={(e) =>
-                          handleFlatChange('cashbackSplitUser', e.target.value)
-                        }
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>{t('admin.platform_profit')}</Label>
-                      <Input
-                        type="number"
-                        value={settings.cashbackSplitPlatform}
-                        onChange={(e) =>
-                          handleFlatChange(
-                            'cashbackSplitPlatform',
-                            e.target.value,
-                          )
-                        }
-                      />
-                    </div>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {t('admin.cashback_split_desc')}
-                  </p>
-                </div>
-              </div>
-              <div className="mt-6 flex justify-end">
-                <Button onClick={handleSave} size="lg">
-                  {t('admin.save_config')}
-                </Button>
-              </div>
-            </TabsContent>
-
-            <TabsContent
-              value="subscriptions"
-              className="space-y-4 animate-in fade-in-50"
-            >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4 p-4 border rounded-lg border-blue-200 bg-blue-50/50">
-                  <h3 className="font-bold text-lg text-blue-800">
-                    {t('admin.premium_tier')}
-                  </h3>
-                  <div className="space-y-2">
-                    <Label>{t('admin.monthly_price')}</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={settings.subscriptionPricing.premium}
-                      onChange={(e) =>
-                        handleChange(
-                          'subscriptionPricing',
-                          'premium',
-                          e.target.value,
-                        )
-                      }
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      {t('admin.premium_benefits_desc')}
-                    </p>
-                  </div>
-                </div>
-                <div className="space-y-4 p-4 border rounded-lg border-purple-200 bg-purple-50/50">
-                  <h3 className="font-bold text-lg text-purple-800">
-                    {t('admin.vip_tier')}
-                  </h3>
-                  <div className="space-y-2">
-                    <Label>{t('admin.monthly_price')}</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={settings.subscriptionPricing.vip}
-                      onChange={(e) =>
-                        handleChange(
-                          'subscriptionPricing',
-                          'vip',
-                          e.target.value,
-                        )
-                      }
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      {t('admin.vip_benefits_desc')}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="mt-6 flex justify-end">
-                <Button onClick={handleSave} size="lg">
-                  {t('admin.save_config')}
-                </Button>
-              </div>
-            </TabsContent>
-
-            <TabsContent
-              value="travel"
-              className="space-y-4 animate-in fade-in-50"
-            >
-              <div className="p-4 border rounded-lg bg-slate-50">
-                <h3 className="font-bold text-lg mb-4">
-                  {t('admin.travel_margins')}
-                </h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  {t('admin.travel_margins_desc')}
-                </p>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="space-y-2">
-                    <Label>{t('admin.hotels_margin')}</Label>
-                    <Input
-                      type="number"
-                      value={settings.travelMargins.hotels}
-                      onChange={(e) =>
-                        handleChange('travelMargins', 'hotels', e.target.value)
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>{t('admin.flights_margin')}</Label>
-                    <Input
-                      type="number"
-                      value={settings.travelMargins.flights}
-                      onChange={(e) =>
-                        handleChange('travelMargins', 'flights', e.target.value)
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>{t('admin.cars_margin')}</Label>
-                    <Input
-                      type="number"
-                      value={settings.travelMargins.cars}
-                      onChange={(e) =>
-                        handleChange('travelMargins', 'cars', e.target.value)
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>{t('admin.insurance_margin')}</Label>
-                    <Input
-                      type="number"
-                      value={settings.travelMargins.insurance}
-                      onChange={(e) =>
-                        handleChange(
-                          'travelMargins',
-                          'insurance',
-                          e.target.value,
-                        )
-                      }
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="mt-6 flex justify-end">
-                <Button onClick={handleSave} size="lg">
-                  {t('admin.save_config')}
-                </Button>
-              </div>
-            </TabsContent>
-
-            <TabsContent
-              value="finance"
-              className="space-y-4 animate-in fade-in-50"
-            >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4 p-4 border rounded-lg bg-slate-50">
-                  <h3 className="font-bold text-lg">
-                    {t('admin.withdrawal_rules')}
-                  </h3>
-                  <div className="space-y-2">
-                    <Label>{t('admin.min_withdrawal')}</Label>
-                    <Input
-                      type="number"
-                      value={settings.withdrawal.minAmount}
-                      onChange={(e) =>
-                        handleChange('withdrawal', 'minAmount', e.target.value)
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>{t('admin.instant_fee')}</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={settings.withdrawal.instantFee}
-                      onChange={(e) =>
-                        handleChange('withdrawal', 'instantFee', e.target.value)
-                      }
-                    />
-                  </div>
-                </div>
-                <div className="space-y-4 p-4 border rounded-lg bg-slate-50">
-                  <h3 className="font-bold text-lg">
-                    {t('admin.referral_program')}
-                  </h3>
-                  <div className="space-y-2">
-                    <Label>{t('admin.fixed_reward')}</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={settings.referral.fixedReward}
-                      onChange={(e) =>
-                        handleChange('referral', 'fixedReward', e.target.value)
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>{t('admin.friend_share')}</Label>
-                    <Input
-                      type="number"
-                      value={settings.referral.friendCashbackPercentage}
-                      onChange={(e) =>
-                        handleChange(
-                          'referral',
-                          'friendCashbackPercentage',
-                          e.target.value,
-                        )
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>{t('admin.share_duration')}</Label>
-                    <Input
-                      type="number"
-                      value={settings.referral.durationDays}
-                      onChange={(e) =>
-                        handleChange('referral', 'durationDays', e.target.value)
-                      }
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="mt-6 flex justify-end">
-                <Button onClick={handleSave} size="lg">
-                  {t('admin.save_config')}
-                </Button>
-              </div>
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Evolução de Uso e Receita</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[300px] w-full">
+              <ChartContainer
+                config={{
+                  revenue: {
+                    label: t('admin.estRevenue'),
+                    color: 'hsl(var(--primary))',
+                  },
+                  coupons: {
+                    label: t('admin.volume'),
+                    color: 'hsl(var(--destructive))',
+                  },
+                }}
+              >
+                <LineChart data={timelineData}>
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    vertical={false}
+                    className="stroke-muted"
+                  />
+                  <XAxis dataKey="date" tickLine={false} axisLine={false} />
+                  <YAxis yAxisId="left" tickLine={false} axisLine={false} />
+                  <YAxis
+                    yAxisId="right"
+                    orientation="right"
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Line
+                    yAxisId="left"
+                    type="monotone"
+                    dataKey="revenue"
+                    stroke="var(--color-revenue)"
+                    strokeWidth={2}
+                    dot={{ r: 4 }}
+                  />
+                  <Line
+                    yAxisId="right"
+                    type="monotone"
+                    dataKey="coupons"
+                    stroke="var(--color-coupons)"
+                    strokeWidth={2}
+                    dot={{ r: 4 }}
+                  />
+                </LineChart>
+              </ChartContainer>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }

@@ -1,75 +1,44 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Compass, Heart, LayoutGrid, User, Briefcase, Map } from 'lucide-react'
+import { Home, Compass, Map, User, Settings } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { useLanguage } from '@/stores/LanguageContext'
-import { useCouponStore } from '@/stores/CouponContext'
 
 export function MobileNav() {
   const location = useLocation()
   const { t } = useLanguage()
-  const { user } = useCouponStore()
-
-  if (
-    location.pathname.includes('/login') ||
-    location.pathname === '/travel-planner'
-  )
-    return null
-
-  const isMerchant = user?.role === 'shopkeeper'
-  const isAdmin = user?.role === 'super_admin' || user?.role === 'franchisee'
-  const isAgency = user?.role === 'agency'
 
   const navItems = [
-    { icon: LayoutGrid, label: t('nav.home'), path: '/' },
+    { icon: Home, label: t('nav.home'), path: '/' },
     { icon: Compass, label: t('nav.explore'), path: '/explore' },
-    { icon: Map, label: t('nav.travel'), path: '/travel-hub' },
-    { icon: Heart, label: t('nav.saved'), path: '/saved' },
+    { icon: Map, label: t('nav.planner'), path: '/travel-planner' },
+    { icon: Settings, label: 'Admin', path: '/admin' },
     { icon: User, label: t('nav.profile'), path: '/profile' },
   ]
 
-  if (isMerchant) {
-    navItems[1] = { icon: Briefcase, label: t('nav.vendor'), path: '/vendor' }
-  } else if (isAdmin) {
-    navItems[1] = { icon: Briefcase, label: t('nav.admin'), path: '/admin' }
-  } else if (isAgency) {
-    navItems[1] = { icon: Briefcase, label: t('nav.agency'), path: '/agency' }
-  }
-
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-background border-t border-border/50 pb-safe z-50 md:hidden">
-      <ul className="flex items-center justify-around h-16 px-2">
+    <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:hidden">
+      <nav className="flex h-16 items-center justify-around px-4 pb-safe">
         {navItems.map((item) => {
-          const Icon = item.icon
-          const isActive = location.pathname === item.path
+          const isActive =
+            location.pathname === item.path ||
+            (item.path === '/admin' && location.pathname.startsWith('/admin'))
           return (
-            <li key={item.path} className="flex-1">
-              <Link
-                to={item.path}
-                className={`flex flex-col items-center justify-center h-full w-full space-y-1 transition-colors ${
-                  isActive
-                    ? 'text-primary'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <div
-                  className={`relative p-1 rounded-xl transition-all duration-300 ${isActive ? 'bg-primary/10 scale-110' : ''}`}
-                >
-                  <Icon
-                    className={`h-5 w-5 ${isActive ? 'fill-primary/20' : ''}`}
-                  />
-                  {isActive && (
-                    <span className="absolute -bottom-1 left-1/2 w-1 h-1 bg-primary rounded-full transform -translate-x-1/2" />
-                  )}
-                </div>
-                <span
-                  className={`text-[10px] font-medium tracking-wide ${isActive ? 'font-bold' : ''}`}
-                >
-                  {item.label}
-                </span>
-              </Link>
-            </li>
+            <Link
+              key={item.path}
+              to={item.path}
+              className={cn(
+                'flex flex-col items-center justify-center gap-1 min-w-[4rem] text-muted-foreground transition-colors hover:text-primary',
+                isActive && 'text-primary',
+              )}
+            >
+              <item.icon
+                className={cn('h-5 w-5', isActive && 'fill-primary/20')}
+              />
+              <span className="text-[10px] font-medium">{item.label}</span>
+            </Link>
           )
         })}
-      </ul>
-    </nav>
+      </nav>
+    </div>
   )
 }

@@ -1,581 +1,122 @@
-import { useState } from 'react'
-import { useCouponStore } from '@/stores/CouponContext'
-import { useNavigate } from 'react-router-dom'
-import {
-  Settings,
-  Plus,
-  BarChart,
-  ShieldAlert,
-  Users,
-  Building,
-  DollarSign,
-  Activity,
-  FileText,
-  Map as MapIcon,
-  MessageCircle,
-  AlertTriangle,
-  Globe,
-  Lock,
-  CheckCircle,
-  XCircle,
-  Megaphone,
-} from 'lucide-react'
+import { Activity, Users, Store, DollarSign } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { useForm } from 'react-hook-form'
-import { useLanguage } from '@/stores/LanguageContext'
 import { AdminCRM } from '@/components/admin/AdminCRM'
 import { PromotionCrawler } from '@/components/admin/PromotionCrawler'
 import { AdminAdsManager } from '@/components/admin/ads/AdminAdsManager'
-import { AdminMonetizationTab } from '@/components/admin/AdminMonetizationTab'
 import { DataInsightsTab } from '@/components/admin/DataInsightsTab'
+import { AdminMonetizationTab } from '@/components/admin/AdminMonetizationTab'
+import { PartnerPoliciesTab } from '@/components/admin/PartnerPoliciesTab'
+import { PartnerBillingTab } from '@/components/admin/PartnerBillingTab'
+import { useLanguage } from '@/stores/LanguageContext'
 
 export default function AdminDashboard() {
-  const {
-    user,
-    companies,
-    franchises,
-    addFranchise,
-    approveCompany,
-    itineraries,
-    moderateItinerary,
-    systemLogs,
-  } = useCouponStore()
-  const navigate = useNavigate()
-  const { t, formatDate, formatCurrency } = useLanguage()
-  const [isFranchiseOpen, setIsFranchiseOpen] = useState(false)
-  const { register, handleSubmit, reset } = useForm()
-
-  const isSuperAdmin = user?.role === 'super_admin'
-  const isFranchisee = user?.role === 'franchisee'
-  const isDeveloperFallback = !user
-
-  if (!isSuperAdmin && !isFranchisee && !isDeveloperFallback) {
-    return (
-      <div className="flex flex-col items-center justify-center h-[calc(100vh-64px)] gap-4">
-        <ShieldAlert className="h-16 w-16 text-red-500" />
-        <h1 className="text-2xl font-bold">{t('admin.access_denied')}</h1>
-        <Button onClick={() => navigate('/login')}>
-          {t('admin.go_login')}
-        </Button>
-      </div>
-    )
-  }
-
-  const onSubmitFranchise = (data: any) => {
-    addFranchise({
-      id: Math.random().toString(),
-      name: data.name,
-      region: data.region,
-      ownerId: 'new_owner',
-      status: 'active',
-      licenseExpiry: data.expiry,
-    })
-    setIsFranchiseOpen(false)
-    reset()
-  }
-
-  const relevantFranchises =
-    isSuperAdmin || isDeveloperFallback
-      ? franchises
-      : franchises.filter((f) => f.region === user?.region)
-  const relevantCompanies =
-    isSuperAdmin || isDeveloperFallback
-      ? companies
-      : companies.filter((c) => c.region === user?.region)
-
-  const pendingItineraries = itineraries.filter((it) => it.status === 'pending')
-
-  const ScenarioCard = ({
-    title,
-    icon: Icon,
-    value,
-    color = 'text-blue-500',
-  }: any) => (
-    <Card className="hover:shadow-md transition-shadow">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        <Icon className={`h-4 w-4 ${color}`} />
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
-      </CardContent>
-    </Card>
-  )
+  const { t } = useLanguage()
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-            {isSuperAdmin || isDeveloperFallback
-              ? t('admin.super_title')
-              : `${t('admin.franchise_title')} - ${user?.region || ''}`}
-          </h1>
-          <p className="text-muted-foreground">
-            {isSuperAdmin || isDeveloperFallback
-              ? t('admin.global_mgmt')
-              : t('admin.regional_mgmt')}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="px-3 py-1 bg-white">
-            <span className="w-2 h-2 rounded-full bg-green-500 mr-2" />
-            {t('admin.system_ok')}
-          </Badge>
-          <Button variant="ghost" size="icon">
-            <Settings className="h-5 w-5" />
-          </Button>
-        </div>
+    <div className="container py-8 max-w-7xl mx-auto space-y-8 animate-fade-in mb-16 md:mb-0">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">
+          {t('admin.dashboardTitle')}
+        </h1>
+        <p className="text-muted-foreground mt-2">{t('admin.dashboardDesc')}</p>
       </div>
 
-      <h2 className="text-xl font-bold mb-4">{t('admin.scenarios')}</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-        {isSuperAdmin || isDeveloperFallback ? (
-          <>
-            <ScenarioCard
-              title={t('admin.active_users')}
-              icon={Users}
-              value="12,500"
-            />
-            <ScenarioCard
-              title={t('admin.revenue')}
-              icon={DollarSign}
-              value={formatCurrency(500000, 'USD')}
-              color="text-green-500"
-            />
-            <ScenarioCard
-              title={t('admin.active_franchises')}
-              icon={Building}
-              value={relevantFranchises.length}
-            />
-            <ScenarioCard
-              title={t('admin.logs')}
-              icon={FileText}
-              value={systemLogs.length}
-            />
-            <ScenarioCard
-              title={t('admin.ad_management')}
-              icon={BarChart}
-              value="2 Active"
-            />
-            <ScenarioCard
-              title={t('admin.user_reports')}
-              icon={AlertTriangle}
-              value="3 Pending"
-              color="text-red-500"
-            />
-            <ScenarioCard
-              title={t('admin.global_cats')}
-              icon={Settings}
-              value="8"
-            />
-            <ScenarioCard
-              title={t('admin.country_config')}
-              icon={Globe}
-              value="6 Regions"
-            />
-            <ScenarioCard
-              title={t('admin.security_alerts')}
-              icon={Lock}
-              value="0"
-              color="text-green-500"
-            />
-            <ScenarioCard
-              title={t('admin.platform_updates')}
-              icon={Activity}
-              value="v2.1.0"
-            />
-          </>
-        ) : (
-          <>
-            <ScenarioCard
-              title={t('admin.merchants')}
-              icon={Building}
-              value={relevantCompanies.length}
-            />
-            <ScenarioCard
-              title={t('franchise.regional_sales')}
-              icon={DollarSign}
-              value={formatCurrency(
-                45000,
-                user?.region === 'US-FL' ? 'USD' : 'BRL',
-              )}
-              color="text-green-500"
-            />
-            <ScenarioCard
-              title={t('vendor.active_campaigns')}
-              icon={Activity}
-              value="12"
-            />
-            <ScenarioCard
-              title={t('franchise.onboarding')}
-              icon={Users}
-              value="2 Pending"
-              color="text-orange-500"
-            />
-            <ScenarioCard
-              title={t('franchise.commission')}
-              icon={DollarSign}
-              value="5%"
-            />
-            <ScenarioCard
-              title={t('franchise.heatmaps')}
-              icon={MapIcon}
-              value={t('common.view')}
-            />
-            <ScenarioCard
-              title={t('franchise.feedback')}
-              icon={MessageCircle}
-              value="4.8/5"
-            />
-            <ScenarioCard
-              title={t('franchise.tickets')}
-              icon={AlertTriangle}
-              value="1 Open"
-              color="text-red-500"
-            />
-            <ScenarioCard
-              title={t('vendor.settings')}
-              icon={Settings}
-              value="Config"
-            />
-            <ScenarioCard
-              title={t('franchise.goals')}
-              icon={BarChart}
-              value="85%"
-              color="text-purple-500"
-            />
-          </>
-        )}
-      </div>
-
-      <Tabs
-        defaultValue={
-          isSuperAdmin || isDeveloperFallback ? 'insights' : 'merchants'
-        }
-      >
-        <TabsList className="flex flex-wrap h-auto">
-          {(isSuperAdmin || isDeveloperFallback) && (
-            <TabsTrigger value="insights">
-              <BarChart className="h-4 w-4 mr-2" /> {t('admin.insights')}
-            </TabsTrigger>
-          )}
-          {(isSuperAdmin || isDeveloperFallback) && (
-            <TabsTrigger value="monetization">
-              <DollarSign className="h-4 w-4 mr-2" /> {t('admin.monetization')}
-            </TabsTrigger>
-          )}
-          {(isSuperAdmin || isDeveloperFallback) && (
-            <TabsTrigger value="crm">
-              <Users className="h-4 w-4 mr-2" /> {t('admin.user_crm')}
-            </TabsTrigger>
-          )}
-          <TabsTrigger value="merchants">{t('admin.merchants')}</TabsTrigger>
-          <TabsTrigger value="crawler">
-            <Globe className="h-4 w-4 mr-2" /> {t('admin.crawler')}
+      <Tabs defaultValue="overview" className="w-full">
+        <TabsList className="mb-8 flex flex-wrap h-auto gap-2 p-1 justify-start">
+          <TabsTrigger value="overview">{t('admin.overview')}</TabsTrigger>
+          <TabsTrigger value="monetization">
+            {t('admin.monetization')}
           </TabsTrigger>
-          {(isSuperAdmin || isDeveloperFallback) && (
-            <TabsTrigger value="advertising">
-              <Megaphone className="h-4 w-4 mr-2" /> {t('admin.ads_manager')}
-            </TabsTrigger>
-          )}
-          {(isSuperAdmin || isDeveloperFallback) && (
-            <TabsTrigger value="franchises">
-              {t('admin.franchises')}
-            </TabsTrigger>
-          )}
-          <TabsTrigger value="moderation">{t('admin.moderation')}</TabsTrigger>
-          <TabsTrigger value="logs">{t('admin.logs')}</TabsTrigger>
+          <TabsTrigger value="policies">{t('admin.policies')}</TabsTrigger>
+          <TabsTrigger value="billing">{t('admin.billing')}</TabsTrigger>
+          <TabsTrigger value="crm">{t('admin.crm')}</TabsTrigger>
+          <TabsTrigger value="crawler">{t('admin.crawler')}</TabsTrigger>
+          <TabsTrigger value="ads">{t('admin.ads')}</TabsTrigger>
+          <TabsTrigger value="insights">{t('admin.insights')}</TabsTrigger>
         </TabsList>
 
-        {(isSuperAdmin || isDeveloperFallback) && (
-          <TabsContent value="insights">
-            <DataInsightsTab />
-          </TabsContent>
-        )}
-
-        {(isSuperAdmin || isDeveloperFallback) && (
-          <TabsContent value="monetization">
-            <AdminMonetizationTab />
-          </TabsContent>
-        )}
-
-        {(isSuperAdmin || isDeveloperFallback) && (
-          <TabsContent value="crm">
-            <AdminCRM />
-          </TabsContent>
-        )}
-
-        {(isSuperAdmin || isDeveloperFallback) && (
-          <TabsContent value="franchises">
+        <TabsContent value="overview" className="space-y-6">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle>{t('admin.licensing')}</CardTitle>
-                </div>
-                <Dialog
-                  open={isFranchiseOpen}
-                  onOpenChange={setIsFranchiseOpen}
-                >
-                  <DialogTrigger asChild>
-                    <Button className="gap-2">
-                      <Plus className="h-4 w-4" /> {t('admin.new_franchise')}
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>{t('admin.new_franchise')}</DialogTitle>
-                    </DialogHeader>
-                    <form
-                      onSubmit={handleSubmit(onSubmitFranchise)}
-                      className="space-y-4"
-                    >
-                      <div className="space-y-2">
-                        <Label>{t('admin.name')}</Label>
-                        <Input {...register('name')} required />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>{t('admin.region')}</Label>
-                        <Input
-                          {...register('region')}
-                          placeholder="Ex: BR-MG"
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>{t('admin.expiry')}</Label>
-                        <Input type="date" {...register('expiry')} required />
-                      </div>
-                      <DialogFooter>
-                        <Button type="submit">{t('common.save')}</Button>
-                      </DialogFooter>
-                    </form>
-                  </DialogContent>
-                </Dialog>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  {t('admin.activeUsers')}
+                </CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{t('admin.name')}</TableHead>
-                      <TableHead>{t('admin.region')}</TableHead>
-                      <TableHead>{t('admin.expiry')}</TableHead>
-                      <TableHead>{t('admin.status')}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {franchises.map((f) => (
-                      <TableRow key={f.id}>
-                        <TableCell className="font-medium">{f.name}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{f.region}</Badge>
-                        </TableCell>
-                        <TableCell>{formatDate(f.licenseExpiry)}</TableCell>
-                        <TableCell>
-                          <Badge className="bg-green-500">{f.status}</Badge>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                <div className="text-2xl font-bold">45.231</div>
+                <p className="text-xs text-muted-foreground">+20.1% este mês</p>
               </CardContent>
             </Card>
-          </TabsContent>
-        )}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  {t('admin.partnerStores')}
+                </CardTitle>
+                <Store className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">1.234</div>
+                <p className="text-xs text-muted-foreground">
+                  +15 novas esta semana
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  {t('admin.estRevenue')}
+                </CardTitle>
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">R$ 84.320</div>
+                <p className="text-xs text-muted-foreground">+12% este mês</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  {t('admin.engagement')}
+                </CardTitle>
+                <Activity className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">12.543</div>
+                <p className="text-xs text-muted-foreground">+5% esta semana</p>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
 
-        <TabsContent value="merchants">
-          <Card>
-            <CardHeader>
-              <CardTitle>{t('admin.active_merchants')}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t('admin.name')}</TableHead>
-                    <TableHead>{t('admin.region')}</TableHead>
-                    <TableHead>{t('admin.joined')}</TableHead>
-                    <TableHead>{t('admin.status')}</TableHead>
-                    <TableHead>{t('admin.action')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {relevantCompanies.map((company) => (
-                    <TableRow key={company.id}>
-                      <TableCell className="font-medium">
-                        {company.name}
-                        <div className="text-xs text-muted-foreground">
-                          {company.email}
-                        </div>
-                      </TableCell>
-                      <TableCell>{company.region}</TableCell>
-                      <TableCell>
-                        {formatDate(company.registrationDate)}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={
-                            company.status === 'active'
-                              ? 'default'
-                              : 'secondary'
-                          }
-                        >
-                          {company.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {company.status === 'pending' && (
-                          <Button
-                            size="sm"
-                            onClick={() => approveCompany(company.id)}
-                          >
-                            {t('common.approve')}
-                          </Button>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+        <TabsContent value="monetization">
+          <AdminMonetizationTab />
+        </TabsContent>
+
+        <TabsContent value="policies">
+          <PartnerPoliciesTab />
+        </TabsContent>
+
+        <TabsContent value="billing">
+          <PartnerBillingTab />
+        </TabsContent>
+
+        <TabsContent value="crm">
+          <AdminCRM />
         </TabsContent>
 
         <TabsContent value="crawler">
           <PromotionCrawler />
         </TabsContent>
 
-        {(isSuperAdmin || isDeveloperFallback) && (
-          <TabsContent value="advertising">
-            <AdminAdsManager />
-          </TabsContent>
-        )}
-
-        <TabsContent value="moderation">
-          <Card>
-            <CardHeader>
-              <CardTitle>{t('admin.moderation_queue')}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t('admin.type')}</TableHead>
-                    <TableHead>{t('admin.title')}</TableHead>
-                    <TableHead>{t('admin.author')}</TableHead>
-                    <TableHead>{t('admin.action')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {pendingItineraries.length === 0 && (
-                    <TableRow>
-                      <TableCell
-                        colSpan={4}
-                        className="text-center text-muted-foreground"
-                      >
-                        {t('admin.no_pending')}
-                      </TableCell>
-                    </TableRow>
-                  )}
-                  {pendingItineraries.map((it) => (
-                    <TableRow key={it.id}>
-                      <TableCell>
-                        <Badge variant="outline">Itinerary</Badge>
-                      </TableCell>
-                      <TableCell>{it.title}</TableCell>
-                      <TableCell>{it.authorName || 'Unknown'}</TableCell>
-                      <TableCell className="flex gap-2">
-                        <Button
-                          size="sm"
-                          className="bg-green-600 hover:bg-green-700"
-                          onClick={() => moderateItinerary(it.id, 'approved')}
-                        >
-                          <CheckCircle className="h-4 w-4 mr-1" />{' '}
-                          {t('common.approve')}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => moderateItinerary(it.id, 'rejected')}
-                        >
-                          <XCircle className="h-4 w-4 mr-1" />{' '}
-                          {t('common.reject')}
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+        <TabsContent value="ads">
+          <AdminAdsManager />
         </TabsContent>
 
-        <TabsContent value="logs">
-          <Card>
-            <CardHeader>
-              <CardTitle>{t('admin.logs')}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t('admin.date')}</TableHead>
-                    <TableHead>{t('admin.action')}</TableHead>
-                    <TableHead>{t('admin.details')}</TableHead>
-                    <TableHead>{t('admin.user')}</TableHead>
-                    <TableHead>{t('admin.status')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {systemLogs.map((log) => (
-                    <TableRow key={log.id}>
-                      <TableCell className="whitespace-nowrap">
-                        {formatDate(log.date)}
-                      </TableCell>
-                      <TableCell>{log.action}</TableCell>
-                      <TableCell
-                        className="max-w-[200px] truncate"
-                        title={log.details}
-                      >
-                        {log.details}
-                      </TableCell>
-                      <TableCell>{log.user}</TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={
-                            log.status === 'error' ? 'destructive' : 'outline'
-                          }
-                        >
-                          {log.status}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+        <TabsContent value="insights">
+          <DataInsightsTab />
         </TabsContent>
       </Tabs>
     </div>

@@ -1,121 +1,96 @@
-import { useState } from 'react'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import * as z from 'zod'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { COUNTRIES } from '@/lib/locationData'
-import { AddressForm } from '@/components/AddressForm'
-import { PhoneInput } from '@/components/PhoneInput'
-import { User } from '@/lib/types'
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form'
+import useUserStore from '@/stores/useUserStore'
+import { useToast } from '@/hooks/use-toast'
 import { useLanguage } from '@/stores/LanguageContext'
 
-interface ProfileEditFormProps {
-  user: User
-  onSave: (data: Partial<User>) => void
-}
+const profileSchema = z.object({
+  name: z.string().min(2, 'Nome muito curto'),
+  email: z.string().email('E-mail inválido'),
+  phone: z.string().min(10, 'Telefone muito curto'),
+})
 
-export function ProfileEditForm({ user, onSave }: ProfileEditFormProps) {
+type ProfileFormValues = z.infer<typeof profileSchema>
+
+export function ProfileEditForm() {
+  const { user, setUser } = useUserStore()
+  const { toast } = useToast()
   const { t } = useLanguage()
-  const [formData, setFormData] = useState({
-    name: user.name || '',
-    email: user.email || '',
-    birthday: user.birthday || '',
-    country: user.country || '',
-    state: user.state || '',
-    city: user.city || '',
-    phone: user.phone || '',
+
+  const form = useForm<ProfileFormValues>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: {
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+    },
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    onSave(formData)
+  const onSubmit = (data: ProfileFormValues) => {
+    setUser(data)
+    toast({
+      title: t('profile.successTitle'),
+      description: t('profile.successDesc'),
+    })
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      <div className="space-y-2">
-        <Label>{t('profile.name') || 'Name'}</Label>
-        <Input
-          value={formData.name}
-          onChange={(e) =>
-            setFormData((prev) => ({ ...prev, name: e.target.value }))
-          }
-          required
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{t('profile.name')}</FormLabel>
+              <FormControl>
+                <Input {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-      </div>
-      <div className="space-y-2">
-        <Label>{t('profile.email') || 'Email'}</Label>
-        <Input
-          type="email"
-          value={formData.email}
-          onChange={(e) =>
-            setFormData((prev) => ({ ...prev, email: e.target.value }))
-          }
-          required
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{t('profile.email')}</FormLabel>
+              <FormControl>
+                <Input type="email" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-      </div>
-      <div className="space-y-2">
-        <Label>{t('hub.date') || 'Birthday'}</Label>
-        <Input
-          type="date"
-          value={formData.birthday}
-          onChange={(e) =>
-            setFormData((prev) => ({ ...prev, birthday: e.target.value }))
-          }
-          required
+        <FormField
+          control={form.control}
+          name="phone"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{t('profile.phone')}</FormLabel>
+              <FormControl>
+                <Input type="tel" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-      </div>
-      <div className="space-y-2">
-        <Label>{t('profile.address') || 'Country'}</Label>
-        <Select
-          value={formData.country}
-          onValueChange={(val) =>
-            setFormData((prev) => ({
-              ...prev,
-              country: val,
-              state: '',
-              city: '',
-            }))
-          }
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select Country" />
-          </SelectTrigger>
-          <SelectContent>
-            {COUNTRIES.map((country) => (
-              <SelectItem key={country} value={country}>
-                {country}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <AddressForm
-        country={formData.country}
-        state={formData.state}
-        city={formData.city}
-        onChange={(data) => setFormData((prev) => ({ ...prev, ...data }))}
-      />
-
-      <div className="space-y-2">
-        <Label>{t('phone.label') || 'Phone'}</Label>
-        <PhoneInput
-          value={formData.phone}
-          onChange={(val) => setFormData((prev) => ({ ...prev, phone: val }))}
-          countryCode={formData.country}
-        />
-      </div>
-
-      <Button type="submit" className="w-full font-bold h-11 mt-4">
-        {t('profile.save') || 'Save Profile'}
-      </Button>
-    </form>
+        <Button type="submit" className="w-full mt-6">
+          {t('profile.save')}
+        </Button>
+      </form>
+    </Form>
   )
 }
