@@ -25,6 +25,8 @@ import {
   Advertiser,
   AdInvoice,
   PlatformSettings,
+  PartnerPolicy,
+  PartnerInvoice,
 } from './types'
 
 export const getCategoryTranslationKey = (category: string): string => {
@@ -637,6 +639,7 @@ export const MOCK_VALIDATION_LOGS: ValidationLog[] = Array.from({
   validatedAt: new Date(Date.now() - i * 3600000).toISOString(),
   method: i % 2 === 0 ? 'qr' : 'manual',
   shopkeeperId: 'u_shop',
+  companyId: `c${(i % 5) + 1}`,
   userId: i % 3 === 0 ? 'u_user' : 'u_agency',
   commissionAmount: 5.0,
   cashbackAmount: 2.0,
@@ -858,3 +861,33 @@ export const DEFAULT_PLATFORM_SETTINGS: PlatformSettings = {
     durationDays: 30,
   },
 }
+
+export const MOCK_PARTNER_POLICIES: PartnerPolicy[] = [
+  {
+    id: 'pol-1',
+    companyId: 'c1',
+    commissionRate: 15,
+    cashbackRate: 5,
+    fixedFee: 0,
+    billingCycle: 'monthly',
+    taxId: '11.222.333/0001-44',
+    contractTerms: 'Standard 15% commission, 5% direct cashback to user.',
+  },
+]
+
+export const MOCK_PARTNER_INVOICES: PartnerInvoice[] = [
+  {
+    id: 'pinv-1',
+    referenceNumber: 'PINV-2024-C1-001',
+    companyId: 'c1',
+    periodStart: '2024-10-01T00:00:00.000Z',
+    periodEnd: '2024-10-31T23:59:59.000Z',
+    totalSales: 5000,
+    totalCommission: 750,
+    status: 'pending',
+    dueDate: '2024-11-15T00:00:00.000Z',
+    issueDate: '2024-11-01T10:00:00.000Z',
+    transactionCount: 45,
+  },
+]
+

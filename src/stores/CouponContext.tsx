@@ -33,6 +33,8 @@ import {
   AdInvoice,
   PlatformSettings,
   SubscriptionTier,
+  PartnerPolicy,
+  PartnerInvoice,
 } from '@/lib/types'
 import {
   MOCK_COUPONS,
@@ -57,6 +59,8 @@ import {
   MOCK_ADVERTISERS,
   MOCK_AD_INVOICES,
   DEFAULT_PLATFORM_SETTINGS,
+  MOCK_PARTNER_POLICIES,
+  MOCK_PARTNER_INVOICES,
 } from '@/lib/data'
 import { toast } from 'sonner'
 import { useNotification } from './NotificationContext'
@@ -115,6 +119,8 @@ interface CouponContextType {
   advertisers: Advertiser[]
   adInvoices: AdInvoice[]
   platformSettings: PlatformSettings
+  partnerPolicies: PartnerPolicy[]
+  partnerInvoices: PartnerInvoice[]
   setRegion: (regionCode: string) => void
   toggleSave: (id: string) => void
   toggleTrip: (id: string) => void
@@ -188,6 +194,15 @@ interface CouponContextType {
   createAdCampaign: (ad: Advertisement, invoice: AdInvoice) => void
   updateInvoiceStatus: (id: string, status: AdInvoice['status']) => void
   updatePlatformSettings: (settings: Partial<PlatformSettings>) => void
+  updatePartnerPolicy: (policy: PartnerPolicy) => void
+  deletePartnerPolicy: (id: string) => void
+  generatePartnerInvoice: (
+    companyId: string,
+    startDate: string,
+    endDate: string,
+  ) => void
+  updatePartnerInvoiceStatus: (id: string, status: PartnerInvoice['status']) => void
+  reconcilePartnerInvoice: (refNumber: string) => boolean
 }
 
 const CouponContext = createContext<CouponContextType | undefined>(undefined)
@@ -271,6 +286,12 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
 
   const [platformSettings, setPlatformSettings] = useState<PlatformSettings>(
     DEFAULT_PLATFORM_SETTINGS,
+  )
+  const [partnerPolicies, setPartnerPolicies] = useState<PartnerPolicy[]>(
+    MOCK_PARTNER_POLICIES,
+  )
+  const [partnerInvoices, setPartnerInvoices] = useState<PartnerInvoice[]>(
+    MOCK_PARTNER_INVOICES,
   )
 
   useEffect(() => {
@@ -828,10 +849,15 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       prev.map((c) => (c.id === coupon.id ? { ...c, status: 'used' } : c)),
     )
 
-    // Calculate simulated commission and cashback based on platform settings
+    // Calculate commission and cashback based on policy or platform settings
     const estValue = coupon.price || 50
-    const commission = (estValue * platformSettings.commissionRate) / 100
-    const cashback = (commission * platformSettings.cashbackSplitUser) / 100
+    const companyPolicy = partnerPolicies.find(p => p.companyId === coupon.companyId)
+
+    const commRate = companyPolicy ? companyPolicy.commissionRate : platformSettings.commissionRate
+    const commission = (estValue * commRate) / 100
+
+    const cashbackRate = companyPolicy ? companyPolicy.cashbackRate : (commRate * platformSettings.cashbackSplitUser / 100)
+    const cashback = (estValue * cashbackRate) / 100
 
     const log: ValidationLog = {
       id: Math.random().toString(),
@@ -841,6 +867,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       validatedAt: new Date().toISOString(),
       method: 'qr',
       shopkeeperId: user?.id || 'unknown',
+      companyId: coupon.companyId,
       userId: customerId,
       commissionAmount: commission,
       cashbackAmount: cashback,
@@ -1076,6 +1103,80 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     )
   }
 
+  const updatePartnerPolicy = (policy: PartnerPolicy) => {
+    setPartnerPolicies((prev) => {
+      const exists = prev.find(p => p.companyId === policy.companyId)
+      if (exists) {
+        return prev.map(p => p.companyId === policy.companyId ? policy : p)
+      }
+      return [...prev, policy]
+    })
+    toast.success('Partner policy saved successfully')
+    logSystemAction('Partner Policy Updated', `Updated policy for company ${policy.companyId}`)
+  }
+
+  const deletePartnerPolicy = (id: string) => {
+    setPartnerPolicies((prev) => prev.filter(p => p.id !== id))
+    toast.success('Partner policy deleted')
+    logSystemAction('Partner Policy Deleted', `Deleted policy ${id}`)
+  }
+
+  const generatePartnerInvoice = (companyId: string, startDate: string, endDate: string) => {
+    const logs = validationLogs.filter(l =>
+      l.companyId === companyId &&
+      new Date(l.validatedAt) >= new Date(startDate) &&
+      new Date(l.validatedAt) <= new Date(endDate)
+    )
+
+    if (logs.length === 0) {
+      toast.warning('No transactions found in this period for this partner.')
+      return
+    }
+
+    const totalSales = logs.reduce((sum, l) => sum + ((coupons.find(c => c.id === l.couponId)?.price) || 50), 0)
+    const totalCommission = logs.reduce((sum, l) => sum + (l.commissionAmount || 0), 0)
+
+    const invoice: PartnerInvoice = {
+      id: Math.random().toString(),
+      referenceNumber: `INV-${Date.now().toString().slice(-6)}`,
+      companyId,
+      periodStart: startDate,
+      periodEnd: endDate,
+      totalSales,
+      totalCommission,
+      status: 'pending',
+      dueDate: new Date(Date.now() + 15 * 86400000).toISOString(),
+      issueDate: new Date().toISOString(),
+      transactionCount: logs.length
+    }
+
+    setPartnerInvoices(prev => [invoice, ...prev])
+    toast.success('Invoice generated successfully')
+    logSystemAction('Invoice Generated', `Invoice ${invoice.referenceNumber} generated for ${companyId}`)
+  }
+
+  const updatePartnerInvoiceStatus = (id: string, status: PartnerInvoice['status']) => {
+    setPartnerInvoices(prev => prev.map(inv => inv.id === id ? { ...inv, status } : inv))
+    toast.success(`Invoice status updated to ${status}`)
+  }
+
+  const reconcilePartnerInvoice = (refNumber: string) => {
+    const invoice = partnerInvoices.find(i => i.referenceNumber === refNumber)
+    if (!invoice) {
+      toast.error('Invoice not found')
+      return false
+    }
+    if (invoice.status === 'paid') {
+      toast.info('Invoice is already paid')
+      return false
+    }
+    
+    setPartnerInvoices(prev => prev.map(inv => inv.id === invoice.id ? { ...inv, status: 'paid' } : inv))
+    toast.success(`Payment confirmed for invoice ${refNumber}`)
+    logSystemAction('Payment Reconciled', `Invoice ${refNumber} manually marked as paid`)
+    return true
+  }
+
   return React.createElement(
     CouponContext.Provider,
     {
@@ -1123,6 +1224,8 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         advertisers,
         adInvoices,
         platformSettings,
+        partnerPolicies,
+        partnerInvoices,
         setRegion,
         toggleSave,
         toggleTrip,
@@ -1185,6 +1288,11 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         createAdCampaign,
         updateInvoiceStatus,
         updatePlatformSettings,
+        updatePartnerPolicy,
+        deletePartnerPolicy,
+        generatePartnerInvoice,
+        updatePartnerInvoiceStatus,
+        reconcilePartnerInvoice,
       },
     },
     children,
@@ -1197,3 +1305,4 @@ export function useCouponStore() {
     throw new Error('useCouponStore must be used within a CouponProvider')
   return context
 }
+

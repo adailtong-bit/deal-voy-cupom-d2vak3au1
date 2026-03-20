@@ -480,6 +480,7 @@ export interface ValidationLog {
   validatedAt: string
   method: 'qr' | 'manual'
   shopkeeperId: string
+  companyId?: string
   userId?: string
   commissionAmount?: number
   cashbackAmount?: number
@@ -590,3 +591,30 @@ export interface PlatformSettings {
     durationDays: number
   }
 }
+
+export interface PartnerPolicy {
+  id: string
+  companyId: string
+  commissionRate: number
+  cashbackRate: number
+  fixedFee: number
+  billingCycle: string
+  taxId: string
+  contractTerms: string
+}
+
+export interface PartnerInvoice {
+  id: string
+  referenceNumber: string
+  companyId: string
+  periodStart: string
+  periodEnd: string
+  totalSales: number
+  totalCommission: number
+  status: 'pending' | 'invoiced' | 'sent' | 'paid'
+  dueDate: string
+  issueDate: string
+  transactionCount: number
+}
+
+
