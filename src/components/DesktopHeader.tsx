@@ -1,6 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
 import {
-  Search,
   Bell,
   User,
   Heart,
@@ -14,7 +13,6 @@ import { useNotification } from '@/stores/NotificationContext'
 import { useCouponStore } from '@/stores/CouponContext'
 import { Button } from './ui/button'
 import { LanguageSelector } from './LanguageSelector'
-import { Badge } from './ui/badge'
 
 export function DesktopHeader() {
   const location = useLocation()
@@ -35,10 +33,12 @@ export function DesktopHeader() {
   return (
     <header className="hidden md:flex items-center justify-between px-6 h-16 bg-background border-b sticky top-0 z-50">
       <div className="flex items-center gap-8">
-        <Link to="/" className="flex items-center gap-2">
-          <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-xl leading-none">D</span>
-          </div>
+        <Link to="/" className="flex items-center gap-3">
+          <img
+            src="https://img.usecurling.com/i?q=ticket&color=gradient&shape=fill"
+            alt="Deal Voy Logo"
+            className="h-8 w-8 object-contain drop-shadow-sm"
+          />
           <span className="font-extrabold text-xl tracking-tight text-primary">
             Deal Voy
           </span>

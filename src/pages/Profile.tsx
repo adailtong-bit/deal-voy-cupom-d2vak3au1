@@ -1,16 +1,12 @@
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import {
   Settings,
   LogOut,
   Bell,
   CreditCard,
   ChevronRight,
-  ShieldCheck,
   Edit2,
   MapPin,
   Wallet,
@@ -26,165 +22,39 @@ import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { PhoneInput } from '@/components/PhoneInput'
-import { AddressForm } from '@/components/AddressForm'
 import { AdSpace } from '@/components/AdSpace'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { COUNTRIES } from '@/lib/locationData'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogFooter,
 } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
+import { ProfileAvatar } from '@/components/ProfileAvatar'
+import { ProfileEditForm } from '@/components/ProfileEditForm'
 
 export default function Profile() {
   const { user, updateUserProfile, logout } = useCouponStore()
   const { t, formatDate } = useLanguage()
   const navigate = useNavigate()
-
   const [isEditing, setIsEditing] = useState(false)
-  const [formData, setFormData] = useState({
-    birthday: '',
-    country: '',
-    state: '',
-    city: '',
-    phone: '',
-    zip: '',
-    address: '',
-  })
 
-  // Redirect to login if user is not authenticated
-  // This side effect is moved to useEffect to prevent state updates during render
   useEffect(() => {
     if (!user) {
       navigate('/login')
     }
   }, [user, navigate])
 
-  useEffect(() => {
-    if (user) {
-      setFormData({
-        birthday: user.birthday || '',
-        country: user.country || '',
-        state: user.state || '',
-        city: user.city || '',
-        phone: user.phone || '',
-        zip: '',
-        address: '',
-      })
-    }
-  }, [user])
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    updateUserProfile(formData)
-    setIsEditing(false)
-  }
-
   const handleLogout = () => {
     logout()
     navigate('/login')
   }
 
-  // Prevent rendering if user is missing (redirect happens in useEffect)
-  if (!user) {
-    return null
-  }
+  if (!user) return null
 
   const isProfileComplete =
     user?.birthday && user?.country && user?.state && user?.city && user?.phone
-
-  // Defined as a regular function returning JSX to prevent component re-mounting and
-  // infinite setRef/effect loops with nested Radix primitives when re-rendering
-  const renderLocationFields = () => (
-    <div className="space-y-4">
-      <div className="space-y-2">
-        <Label>{t('hub.date')}</Label>
-        <Input
-          type="date"
-          required
-          value={formData.birthday}
-          onChange={(e) =>
-            setFormData((prev) => ({
-              ...prev,
-              birthday: e.target.value,
-            }))
-          }
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label>{t('profile.address')}</Label>
-        <Select
-          value={formData.country}
-          onValueChange={(val) =>
-            setFormData((prev) => ({
-              ...prev,
-              country: val,
-              state: '',
-              city: '',
-            }))
-          }
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select Country" />
-          </SelectTrigger>
-          <SelectContent>
-            {COUNTRIES.map((country) => (
-              <SelectItem key={country} value={country}>
-                {country}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <AddressForm
-        country={formData.country}
-        state={formData.state}
-        city={formData.city}
-        onChange={(data) => setFormData((prev) => ({ ...prev, ...data }))}
-      />
-
-      <div className="space-y-2">
-        <Label>{t('phone.label')}</Label>
-        <PhoneInput
-          value={formData.phone}
-          onChange={(val) => setFormData((prev) => ({ ...prev, phone: val }))}
-          countryCode={formData.country}
-        />
-      </div>
-    </div>
-  )
-
-  // Defined as a function returning JSX to prevent unnecessary component unmounts/remounts
-  const renderScenarioCard = (
-    title: string,
-    Icon: React.ElementType,
-    path: string,
-    color: string,
-  ) => (
-    <Link to={path} key={title}>
-      <Card className="hover:shadow-md transition-shadow h-full">
-        <CardContent className="p-4 flex flex-col items-center justify-center text-center gap-2">
-          <div className={cn('p-3 rounded-full bg-slate-50', color)}>
-            <Icon className="h-6 w-6" />
-          </div>
-          <span className="text-xs font-semibold">{title}</span>
-        </CardContent>
-      </Card>
-    </Link>
-  )
 
   if (!isProfileComplete) {
     return (
@@ -203,17 +73,75 @@ export default function Profile() {
             </p>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {renderLocationFields()}
-              <Button type="submit" className="w-full font-bold">
-                {t('profile.save')}
-              </Button>
-            </form>
+            <ProfileEditForm user={user} onSave={updateUserProfile} />
           </CardContent>
         </Card>
       </div>
     )
   }
+
+  const scenarios = [
+    {
+      title: t('user.wallet'),
+      Icon: Wallet,
+      path: '/saved',
+      color: 'text-emerald-500',
+    },
+    {
+      title: t('user.saved_itineraries'),
+      Icon: Plane,
+      path: '/travel-planner',
+      color: 'text-blue-500',
+    },
+    {
+      title: t('rewards.external'),
+      Icon: Gift,
+      path: '/rewards?tab=external',
+      color: 'text-purple-600',
+    },
+    {
+      title: t('user.redemption_history'),
+      Icon: History,
+      path: '/rewards',
+      color: 'text-orange-500',
+    },
+    {
+      title: t('user.nearby'),
+      Icon: MapPin,
+      path: '/explore',
+      color: 'text-purple-500',
+    },
+    {
+      title: t('profile.settings'),
+      Icon: Settings,
+      path: '/settings',
+      color: '',
+    },
+    {
+      title: t('user.points'),
+      Icon: Coins,
+      path: '/rewards',
+      color: 'text-yellow-500',
+    },
+    {
+      title: t('user.recommended'),
+      Icon: ThumbsUp,
+      path: '/',
+      color: 'text-indigo-500',
+    },
+    {
+      title: t('user.expiring'),
+      Icon: Clock,
+      path: '/saved',
+      color: 'text-rose-500',
+    },
+    {
+      title: t('user.car_rentals'),
+      Icon: Car,
+      path: '/agencies',
+      color: 'text-cyan-500',
+    },
+  ]
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-lg">
@@ -223,26 +151,14 @@ export default function Profile() {
       />
 
       <div className="flex flex-col items-center mb-8">
-        <div className="relative">
-          <Avatar className="h-24 w-24 mb-4 border-4 border-background shadow-xl">
-            <AvatarImage
-              src={
-                user.avatar ||
-                'https://img.usecurling.com/ppl/thumbnail?gender=male'
-              }
-            />
-            <AvatarFallback>U</AvatarFallback>
-          </Avatar>
-          <div className="absolute bottom-4 right-0 bg-primary text-white p-1 rounded-full border-2 border-white">
-            <ShieldCheck className="w-4 h-4" />
-          </div>
-        </div>
-        <div className="text-center space-y-1">
+        <ProfileAvatar user={user} onUpdate={updateUserProfile} />
+
+        <div className="text-center space-y-1 mt-2">
           <h1 className="text-2xl font-bold">{user.name}</h1>
           <p className="text-sm font-medium text-slate-600 bg-slate-100 px-3 py-1 rounded-full inline-block">
             {user.email}
           </p>
-          <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground mt-1">
+          <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground mt-2">
             <MapPin className="w-3 h-3" />
             <p>
               {user.city}, {user.state}, {user.country}
@@ -261,76 +177,34 @@ export default function Profile() {
               <Edit2 className="w-3 h-3 mr-1" /> {t('profile.edit')}
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-h-[80vh] overflow-y-auto">
+          <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-md">
             <DialogHeader>
               <DialogTitle>{t('profile.edit')}</DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {renderLocationFields()}
-              <DialogFooter>
-                <Button type="submit">{t('common.save')}</Button>
-              </DialogFooter>
-            </form>
+            <ProfileEditForm
+              user={user}
+              onSave={(data) => {
+                updateUserProfile(data)
+                setIsEditing(false)
+              }}
+            />
           </DialogContent>
         </Dialog>
       </div>
 
       <div className="grid grid-cols-2 gap-4 mb-8">
-        {renderScenarioCard(
-          t('user.wallet'),
-          Wallet,
-          '/saved',
-          'text-emerald-500',
-        )}
-        {renderScenarioCard(
-          t('user.saved_itineraries'),
-          Plane,
-          '/travel-planner',
-          'text-blue-500',
-        )}
-        {renderScenarioCard(
-          t('rewards.external'),
-          Gift,
-          '/rewards?tab=external',
-          'text-purple-600',
-        )}
-        {renderScenarioCard(
-          t('user.redemption_history'),
-          History,
-          '/rewards',
-          'text-orange-500',
-        )}
-        {renderScenarioCard(
-          t('user.nearby'),
-          MapPin,
-          '/explore',
-          'text-purple-500',
-        )}
-        {renderScenarioCard(t('profile.settings'), Settings, '/settings', '')}
-        {renderScenarioCard(
-          t('user.points'),
-          Coins,
-          '/rewards',
-          'text-yellow-500',
-        )}
-        {renderScenarioCard(
-          t('user.recommended'),
-          ThumbsUp,
-          '/',
-          'text-indigo-500',
-        )}
-        {renderScenarioCard(
-          t('user.expiring'),
-          Clock,
-          '/saved',
-          'text-rose-500',
-        )}
-        {renderScenarioCard(
-          t('user.car_rentals'),
-          Car,
-          '/agencies',
-          'text-cyan-500',
-        )}
+        {scenarios.map((s) => (
+          <Link to={s.path} key={s.title}>
+            <Card className="hover:shadow-md transition-shadow h-full">
+              <CardContent className="p-4 flex flex-col items-center justify-center text-center gap-2">
+                <div className={cn('p-3 rounded-full bg-slate-50', s.color)}>
+                  <s.Icon className="h-6 w-6" />
+                </div>
+                <span className="text-xs font-semibold">{s.title}</span>
+              </CardContent>
+            </Card>
+          </Link>
+        ))}
       </div>
 
       <div className="space-y-3">
@@ -368,28 +242,11 @@ export default function Profile() {
           </Button>
         </Link>
 
-        <Link to="/rewards?tab=external">
-          <Button
-            variant="outline"
-            className="w-full justify-between h-14 bg-white hover:bg-slate-50 border-slate-200 group"
-          >
-            <div className="flex items-center gap-3">
-              <div className="bg-purple-100 p-2 rounded-full group-hover:bg-purple-200 transition-colors">
-                <Gift className="h-5 w-5 text-purple-600" />
-              </div>
-              <span className="font-semibold text-slate-700">
-                {t('rewards.import_points')}
-              </span>
-            </div>
-            <ChevronRight className="h-4 w-4 text-slate-400" />
-          </Button>
-        </Link>
-
-        <Separator className="my-4" />
+        <Separator className="my-6" />
 
         <Button
           variant="ghost"
-          className="w-full justify-start h-12 gap-3 text-red-500 hover:text-red-600 hover:bg-red-50"
+          className="w-full justify-start h-12 gap-3 text-red-500 hover:text-red-600 hover:bg-red-50 font-semibold"
           size="lg"
           onClick={handleLogout}
         >

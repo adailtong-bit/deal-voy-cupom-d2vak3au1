@@ -17,12 +17,14 @@ export function MobileHeader() {
   return (
     <header className="md:hidden flex items-center justify-between px-4 h-14 bg-background border-b sticky top-0 z-50">
       <Link
-        className="font-extrabold text-xl tracking-tight text-primary flex items-center gap-2"
+        className="font-extrabold text-xl tracking-tight text-primary flex items-center gap-2.5"
         to="/"
       >
-        <div className="h-7 w-7 bg-primary rounded-lg flex items-center justify-center">
-          <span className="text-white font-bold text-lg leading-none">D</span>
-        </div>
+        <img
+          src="https://img.usecurling.com/i?q=ticket&color=gradient&shape=fill"
+          alt="Deal Voy Logo"
+          className="h-7 w-7 object-contain drop-shadow-sm"
+        />
         Deal Voy
       </Link>
       <div className="flex items-center gap-1">
