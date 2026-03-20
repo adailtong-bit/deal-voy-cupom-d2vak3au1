@@ -29,105 +29,53 @@ import {
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { useLanguage } from '@/stores/LanguageContext'
-
-type InvoiceStatus = 'Draft' | 'Sent' | 'Paid'
-
-type Invoice = {
-  id: string
-  partner: string
-  periodStart: string
-  periodEnd: string
-  amount: number
-  status: InvoiceStatus
-}
-
-const initialInvoices: Invoice[] = [
-  {
-    id: 'INV-001',
-    partner: 'Restaurante Sabor',
-    periodStart: '2026-09-01',
-    periodEnd: '2026-09-30',
-    amount: 1250.0,
-    status: 'Paid',
-  },
-  {
-    id: 'INV-002',
-    partner: 'Hotel Paraíso',
-    periodStart: '2026-10-01',
-    periodEnd: '2026-10-31',
-    amount: 3400.5,
-    status: 'Sent',
-  },
-  {
-    id: 'INV-003',
-    partner: 'Passeio Radical',
-    periodStart: '2026-11-01',
-    periodEnd: '2026-11-30',
-    amount: 890.0,
-    status: 'Draft',
-  },
-]
+import { useCouponStore } from '@/stores/CouponContext'
 
 export function PartnerBillingTab() {
-  const { t } = useLanguage()
-  const [invoices, setInvoices] = useState<Invoice[]>(initialInvoices)
+  const { t, formatCurrency } = useLanguage()
+  const {
+    partnerInvoices,
+    updatePartnerInvoiceStatus,
+    companies,
+    generatePartnerInvoice,
+  } = useCouponStore()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [newInvoice, setNewInvoice] = useState<Partial<Invoice>>({
-    partner: '',
+  const [newInvoice, setNewInvoice] = useState({
+    companyId: '',
     periodStart: '',
     periodEnd: '',
-    status: 'Draft',
   })
 
-  const calculateAmount = () => {
-    if (!newInvoice.partner) return 0
-    return Math.floor(Math.random() * 5000) + 500
-  }
-
   const handleCreate = () => {
-    const amount = calculateAmount()
-    const invoice: Invoice = {
-      id: `INV-00${invoices.length + 1}`,
-      partner: newInvoice.partner || 'Desconhecido',
-      periodStart:
-        newInvoice.periodStart || new Date().toISOString().split('T')[0],
-      periodEnd: newInvoice.periodEnd || new Date().toISOString().split('T')[0],
-      amount,
-      status: 'Draft',
-    }
-    setInvoices([invoice, ...invoices])
-    setIsDialogOpen(false)
-    setNewInvoice({
-      partner: '',
-      periodStart: '',
-      periodEnd: '',
-      status: 'Draft',
-    })
-  }
-
-  const updateStatus = (id: string, newStatus: InvoiceStatus) => {
-    setInvoices(
-      invoices.map((inv) =>
-        inv.id === id ? { ...inv, status: newStatus } : inv,
-      ),
+    generatePartnerInvoice(
+      newInvoice.companyId,
+      newInvoice.periodStart,
+      newInvoice.periodEnd,
     )
+    setIsDialogOpen(false)
+    setNewInvoice({ companyId: '', periodStart: '', periodEnd: '' })
   }
 
-  const getStatusBadge = (status: InvoiceStatus) => {
+  const updateStatus = (id: string, newStatus: any) => {
+    updatePartnerInvoiceStatus(id, newStatus)
+  }
+
+  const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'Paid':
+      case 'paid':
         return (
           <Badge className="bg-green-500 hover:bg-green-600">
             <CheckCircle className="mr-1 h-3 w-3" /> {t('admin.paid')}
           </Badge>
         )
-      case 'Sent':
+      case 'sent':
         return (
           <Badge className="bg-blue-500 hover:bg-blue-600">
             <Send className="mr-1 h-3 w-3" /> {t('admin.sent')}
           </Badge>
         )
-      case 'Draft':
+      case 'draft':
+      default:
         return (
           <Badge variant="secondary">
             <Clock className="mr-1 h-3 w-3" /> {t('admin.draft')}
@@ -135,6 +83,19 @@ export function PartnerBillingTab() {
         )
     }
   }
+
+  const getCompanyName = (id: string) =>
+    companies.find((c) => c.id === id)?.name || id
+
+  const paidAmount = partnerInvoices
+    .filter((i) => i.status === 'paid')
+    .reduce((acc, i) => acc + i.totalCommission, 0)
+  const sentAmount = partnerInvoices
+    .filter((i) => i.status === 'sent')
+    .reduce((acc, i) => acc + i.totalCommission, 0)
+  const draftAmount = partnerInvoices
+    .filter((i) => i.status === 'draft')
+    .reduce((acc, i) => acc + i.totalCommission, 0)
 
   return (
     <div className="space-y-6 animate-fade-in-up">
@@ -156,7 +117,9 @@ export function PartnerBillingTab() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">R$ 1.250,00</div>
+            <div className="text-2xl font-bold text-green-600">
+              {formatCurrency(paidAmount)}
+            </div>
           </CardContent>
         </Card>
         <Card>
@@ -166,7 +129,9 @@ export function PartnerBillingTab() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">R$ 3.400,50</div>
+            <div className="text-2xl font-bold text-blue-600">
+              {formatCurrency(sentAmount)}
+            </div>
           </CardContent>
         </Card>
         <Card>
@@ -177,7 +142,7 @@ export function PartnerBillingTab() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-muted-foreground">
-              R$ 890,00
+              {formatCurrency(draftAmount)}
             </div>
           </CardContent>
         </Card>
@@ -196,32 +161,34 @@ export function PartnerBillingTab() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {invoices.map((invoice) => (
+            {partnerInvoices.map((invoice) => (
               <TableRow key={invoice.id}>
-                <TableCell className="font-medium">{invoice.id}</TableCell>
-                <TableCell>{invoice.partner}</TableCell>
-                <TableCell>
+                <TableCell className="font-medium text-xs">
+                  {invoice.referenceNumber}
+                </TableCell>
+                <TableCell>{getCompanyName(invoice.companyId)}</TableCell>
+                <TableCell className="text-xs">
                   {format(new Date(invoice.periodStart), 'dd/MM')} -{' '}
                   {format(new Date(invoice.periodEnd), 'dd/MM')}
                 </TableCell>
-                <TableCell>R$ {invoice.amount.toFixed(2)}</TableCell>
+                <TableCell>{formatCurrency(invoice.totalCommission)}</TableCell>
                 <TableCell>{getStatusBadge(invoice.status)}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
-                    {invoice.status === 'Draft' && (
+                    {invoice.status === 'draft' && (
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => updateStatus(invoice.id, 'Sent')}
+                        onClick={() => updateStatus(invoice.id, 'sent')}
                       >
                         {t('admin.sent')}
                       </Button>
                     )}
-                    {invoice.status === 'Sent' && (
+                    {invoice.status === 'sent' && (
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => updateStatus(invoice.id, 'Paid')}
+                        onClick={() => updateStatus(invoice.id, 'paid')}
                       >
                         {t('admin.paid')}
                       </Button>
@@ -233,6 +200,16 @@ export function PartnerBillingTab() {
                 </TableCell>
               </TableRow>
             ))}
+            {partnerInvoices.length === 0 && (
+              <TableRow>
+                <TableCell
+                  colSpan={6}
+                  className="text-center py-8 text-muted-foreground"
+                >
+                  No invoices found.
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </div>
@@ -247,26 +224,24 @@ export function PartnerBillingTab() {
               <Label>{t('admin.partner')}</Label>
               <Select
                 onValueChange={(v) =>
-                  setNewInvoice({ ...newInvoice, partner: v })
+                  setNewInvoice({ ...newInvoice, companyId: v })
                 }
               >
                 <SelectTrigger>
                   <SelectValue placeholder={t('admin.partner')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Restaurante Sabor">
-                    Restaurante Sabor
-                  </SelectItem>
-                  <SelectItem value="Hotel Paraíso">Hotel Paraíso</SelectItem>
-                  <SelectItem value="Passeio Radical">
-                    Passeio Radical
-                  </SelectItem>
+                  {companies.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Início</Label>
+                <Label>Start</Label>
                 <Input
                   type="date"
                   value={newInvoice.periodStart}
@@ -279,7 +254,7 @@ export function PartnerBillingTab() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Fim</Label>
+                <Label>End</Label>
                 <Input
                   type="date"
                   value={newInvoice.periodEnd}
@@ -289,21 +264,6 @@ export function PartnerBillingTab() {
                 />
               </div>
             </div>
-            {newInvoice.partner &&
-              newInvoice.periodStart &&
-              newInvoice.periodEnd && (
-                <div className="rounded-lg bg-muted p-4 mt-2">
-                  <div className="text-sm text-muted-foreground mb-1">
-                    {t('admin.calculate')}
-                  </div>
-                  <div className="text-2xl font-bold">
-                    R$ {calculateAmount().toFixed(2)}
-                  </div>
-                  <div className="text-xs text-muted-foreground mt-1">
-                    Baseado em políticas ativas
-                  </div>
-                </div>
-              )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
@@ -312,7 +272,7 @@ export function PartnerBillingTab() {
             <Button
               onClick={handleCreate}
               disabled={
-                !newInvoice.partner ||
+                !newInvoice.companyId ||
                 !newInvoice.periodStart ||
                 !newInvoice.periodEnd
               }

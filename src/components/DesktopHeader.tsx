@@ -44,6 +44,14 @@ export function DesktopHeader() {
             >
               {t('nav.planner')}
             </Link>
+            {user && ['super_admin', 'franchisee'].includes(user.role) && (
+              <Link
+                to="/admin"
+                className="transition-colors text-primary hover:text-primary/80 font-bold"
+              >
+                {t('nav.admin')}
+              </Link>
+            )}
           </nav>
         </div>
         <div className="flex items-center gap-4">

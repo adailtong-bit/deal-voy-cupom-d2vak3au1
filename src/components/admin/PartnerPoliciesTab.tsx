@@ -26,55 +26,37 @@ import {
 } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
 import { useLanguage } from '@/stores/LanguageContext'
-
-type Policy = {
-  id: string
-  partnerName: string
-  commission: number
-  cashback: number
-  billingModel: 'CPA' | 'CPC' | 'Fixed'
-}
-
-const initialPolicies: Policy[] = [
-  {
-    id: '1',
-    partnerName: 'Restaurante Sabor',
-    commission: 10,
-    cashback: 5,
-    billingModel: 'CPA',
-  },
-  {
-    id: '2',
-    partnerName: 'Hotel Paraíso',
-    commission: 15,
-    cashback: 2,
-    billingModel: 'Fixed',
-  },
-]
+import { useCouponStore } from '@/stores/CouponContext'
+import { PartnerPolicy } from '@/lib/types'
 
 export function PartnerPoliciesTab() {
   const { t } = useLanguage()
-  const [policies, setPolicies] = useState<Policy[]>(initialPolicies)
+  const {
+    partnerPolicies,
+    companies,
+    updatePartnerPolicy,
+    deletePartnerPolicy,
+  } = useCouponStore()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [editingPolicy, setEditingPolicy] = useState<Policy | null>(null)
+  const [editingPolicy, setEditingPolicy] = useState<PartnerPolicy | null>(null)
 
-  const [formData, setFormData] = useState<Partial<Policy>>({
-    partnerName: '',
-    commission: 0,
-    cashback: 0,
+  const [formData, setFormData] = useState<Partial<PartnerPolicy>>({
+    companyId: '',
+    commissionRate: 0,
+    cashbackRate: 0,
     billingModel: 'CPA',
   })
 
-  const handleOpenDialog = (policy?: Policy) => {
+  const handleOpenDialog = (policy?: PartnerPolicy) => {
     if (policy) {
       setEditingPolicy(policy)
       setFormData(policy)
     } else {
       setEditingPolicy(null)
       setFormData({
-        partnerName: '',
-        commission: 0,
-        cashback: 0,
+        companyId: companies[0]?.id || '',
+        commissionRate: 0,
+        cashbackRate: 0,
         billingModel: 'CPA',
       })
     }
@@ -82,24 +64,28 @@ export function PartnerPoliciesTab() {
   }
 
   const handleSave = () => {
-    if (editingPolicy) {
-      setPolicies(
-        policies.map((p) =>
-          p.id === editingPolicy.id ? ({ ...formData, id: p.id } as Policy) : p,
-        ),
-      )
-    } else {
-      setPolicies([
-        ...policies,
-        { ...formData, id: Math.random().toString() } as Policy,
-      ])
+    const newPolicy: PartnerPolicy = {
+      id: editingPolicy?.id || Math.random().toString(),
+      companyId: formData.companyId || companies[0]?.id || '',
+      billingModel: (formData.billingModel as any) || 'CPA',
+      commissionRate: formData.commissionRate || 0,
+      cashbackRate: formData.cashbackRate || 0,
+      cpcValue: formData.cpcValue || 0,
+      fixedFee: formData.fixedFee || 0,
+      billingCycle: formData.billingCycle || 'monthly',
+      taxId: formData.taxId || '',
+      contractTerms: formData.contractTerms || '',
     }
+    updatePartnerPolicy(newPolicy)
     setIsDialogOpen(false)
   }
 
   const handleDelete = (id: string) => {
-    setPolicies(policies.filter((p) => p.id !== id))
+    deletePartnerPolicy(id)
   }
+
+  const getCompanyName = (id: string) =>
+    companies.find((c) => c.id === id)?.name || id
 
   return (
     <div className="space-y-6 animate-fade-in-up">
@@ -125,15 +111,16 @@ export function PartnerPoliciesTab() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {policies.map((policy) => (
+            {partnerPolicies.map((policy) => (
               <TableRow key={policy.id}>
                 <TableCell className="font-medium">
-                  {policy.partnerName}
+                  {getCompanyName(policy.companyId)}
                 </TableCell>
-                <TableCell>{policy.commission}%</TableCell>
-                <TableCell>{policy.cashback}%</TableCell>
+                <TableCell>{policy.commissionRate}%</TableCell>
+                <TableCell>{policy.cashbackRate}%</TableCell>
                 <TableCell>
-                  {t(`admin.${policy.billingModel.toLowerCase()}`)}
+                  {t(`admin.${policy.billingModel.toLowerCase()}`) ||
+                    policy.billingModel}
                 </TableCell>
                 <TableCell className="text-right">
                   <Button
@@ -153,6 +140,16 @@ export function PartnerPoliciesTab() {
                 </TableCell>
               </TableRow>
             ))}
+            {partnerPolicies.length === 0 && (
+              <TableRow>
+                <TableCell
+                  colSpan={5}
+                  className="text-center py-8 text-muted-foreground"
+                >
+                  No policies found.
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </div>
@@ -167,23 +164,34 @@ export function PartnerPoliciesTab() {
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
               <Label>{t('admin.partner')}</Label>
-              <Input
-                value={formData.partnerName}
-                onChange={(e) =>
-                  setFormData({ ...formData, partnerName: e.target.value })
+              <Select
+                value={formData.companyId}
+                onValueChange={(v) =>
+                  setFormData({ ...formData, companyId: v })
                 }
-              />
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={t('admin.partner')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {companies.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>{t('admin.commission')}</Label>
                 <Input
                   type="number"
-                  value={formData.commission}
+                  value={formData.commissionRate}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      commission: Number(e.target.value),
+                      commissionRate: Number(e.target.value),
                     })
                   }
                 />
@@ -192,11 +200,11 @@ export function PartnerPoliciesTab() {
                 <Label>{t('admin.cashback')}</Label>
                 <Input
                   type="number"
-                  value={formData.cashback}
+                  value={formData.cashbackRate}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      cashback: Number(e.target.value),
+                      cashbackRate: Number(e.target.value),
                     })
                   }
                 />
@@ -206,7 +214,7 @@ export function PartnerPoliciesTab() {
               <Label>{t('admin.billingModel')}</Label>
               <Select
                 value={formData.billingModel}
-                onValueChange={(v: 'CPA' | 'CPC' | 'Fixed') =>
+                onValueChange={(v: any) =>
                   setFormData({ ...formData, billingModel: v })
                 }
               >
@@ -216,7 +224,8 @@ export function PartnerPoliciesTab() {
                 <SelectContent>
                   <SelectItem value="CPA">{t('admin.cpa')}</SelectItem>
                   <SelectItem value="CPC">{t('admin.cpc')}</SelectItem>
-                  <SelectItem value="Fixed">{t('admin.fixed')}</SelectItem>
+                  <SelectItem value="monthly">{t('admin.fixed')}</SelectItem>
+                  <SelectItem value="global">Global</SelectItem>
                 </SelectContent>
               </Select>
             </div>

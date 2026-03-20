@@ -28,7 +28,6 @@ import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
 import { CouponCard } from '@/components/CouponCard'
 import { CATEGORIES } from '@/lib/data'
-import { LOCATION_DATA, COUNTRIES } from '@/lib/locationData'
 import * as Icons from 'lucide-react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
@@ -51,6 +50,7 @@ import {
 } from '@/components/ui/select'
 import { Slider } from '@/components/ui/slider'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { LOCATION_DATA, COUNTRIES } from '@/lib/locationData'
 
 export default function Index() {
   const {
@@ -62,11 +62,6 @@ export default function Index() {
     updateUserPreferences,
   } = useCouponStore()
   const { t, formatCurrency } = useLanguage()
-
-  const tFallback = (key: string, fallback: string) => {
-    const res = t(key)
-    return res === key ? fallback : res
-  }
 
   // Search & Filter State
   const [searchParams, setSearchParams] = useSearchParams()
@@ -446,7 +441,7 @@ export default function Index() {
               className="h-11 lg:h-10 rounded-full bg-primary hover:bg-primary/90 text-white font-bold px-8 text-sm w-full lg:w-auto shrink-0 shadow-sm"
             >
               <Search className="h-4 w-4 mr-2 lg:hidden" />
-              {tFallback('common.search', 'Buscar')}
+              {t('common.search')}
             </Button>
           </form>
 
@@ -748,7 +743,7 @@ export default function Index() {
                       className="h-9 gap-2 text-sm relative pr-4"
                     >
                       <SlidersHorizontal className="h-4 w-4" />
-                      {tFallback('common.filters', 'Filters')}
+                      {t('common.filters')}
                       {(maxPrice[0] < 1000 || discountType !== 'all') && (
                         <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-primary animate-pulse" />
                       )}
@@ -757,7 +752,7 @@ export default function Index() {
                   <PopoverContent className="w-80 md:w-96" align="end">
                     <div className="space-y-5">
                       <h4 className="font-bold text-base border-b pb-2">
-                        {tFallback('filters.advanced', 'Advanced Filters')}
+                        {t('filters.advanced')}
                       </h4>
 
                       <div className="space-y-3">
@@ -784,11 +779,11 @@ export default function Index() {
                       <div className="space-y-4 pt-2">
                         <div className="flex items-center justify-between">
                           <Label className="text-sm font-semibold">
-                            {tFallback('filters.max_price', 'Max Price')}
+                            {t('filters.max_price')}
                           </Label>
                           <span className="text-sm font-bold text-primary">
                             {maxPrice[0] >= 1000
-                              ? tFallback('common.any', 'Any')
+                              ? t('common.any')
                               : formatCurrency(maxPrice[0])}
                           </span>
                         </div>
@@ -803,7 +798,7 @@ export default function Index() {
 
                       <div className="space-y-3 pt-2">
                         <Label className="text-sm font-semibold">
-                          {tFallback('filters.discount_type', 'Discount Type')}
+                          {t('filters.discount_type')}
                         </Label>
                         <Select
                           value={discountType}
@@ -814,22 +809,16 @@ export default function Index() {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="all">
-                              {tFallback('common.all', 'All Types')}
+                              {t('common.all')}
                             </SelectItem>
                             <SelectItem value="percentage">
-                              {tFallback(
-                                'filters.percentage',
-                                'Percentage (%)',
-                              )}
+                              {t('filters.percentage')}
                             </SelectItem>
                             <SelectItem value="fixed">
-                              {tFallback('filters.fixed', 'Fixed Amount')}
+                              {t('filters.fixed')}
                             </SelectItem>
                             <SelectItem value="free_shipping">
-                              {tFallback(
-                                'filters.free_shipping',
-                                'Free Shipping',
-                              )}
+                              {t('filters.free_shipping')}
                             </SelectItem>
                           </SelectContent>
                         </Select>
@@ -845,7 +834,7 @@ export default function Index() {
                             setDiscountType('all')
                           }}
                         >
-                          {tFallback('common.clear', 'Clear Filters')}
+                          {t('common.clear')}
                         </Button>
                       </div>
                     </div>
@@ -933,7 +922,7 @@ export default function Index() {
                   }}
                   className="font-semibold"
                 >
-                  {tFallback('common.clear', 'Limpar Filtros')}
+                  {t('common.clear')}
                 </Button>
               </div>
             )}
