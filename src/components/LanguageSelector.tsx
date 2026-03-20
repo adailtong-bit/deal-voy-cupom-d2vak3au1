@@ -14,26 +14,30 @@ export function LanguageSelector() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-slate-600 hover:text-primary rounded-full"
+        >
           <Globe className="h-5 w-5" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align="end" className="w-32">
         <DropdownMenuItem
           onClick={() => setLanguage('pt')}
-          className={language === 'pt' ? 'bg-muted' : ''}
+          className={`font-medium ${language === 'pt' ? 'bg-primary/10 text-primary' : ''}`}
         >
           Português
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => setLanguage('en')}
-          className={language === 'en' ? 'bg-muted' : ''}
+          className={`font-medium ${language === 'en' ? 'bg-primary/10 text-primary' : ''}`}
         >
           English
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => setLanguage('es')}
-          className={language === 'es' ? 'bg-muted' : ''}
+          className={`font-medium ${language === 'es' ? 'bg-primary/10 text-primary' : ''}`}
         >
           Español
         </DropdownMenuItem>

@@ -4,28 +4,28 @@ import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { LanguageSelector } from '@/components/LanguageSelector'
 import logoUrl from '@/assets/whatsapp-image-2026-01-25-at-5.34.51-am-1-9b370.jpeg'
-import useUserStore from '@/stores/useUserStore'
 import { useLanguage } from '@/stores/LanguageContext'
+import { useCouponStore } from '@/stores/CouponContext'
 
 export function DesktopHeader() {
-  const { user } = useUserStore()
+  const { user } = useCouponStore()
   const { t } = useLanguage()
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 hidden md:block">
       <div className="container flex h-16 items-center justify-between">
-        <div className="flex items-center gap-6">
-          <Link to="/" className="flex items-center gap-2">
+        <div className="flex items-center gap-8">
+          <Link to="/" className="flex items-center gap-3">
             <img
               src={logoUrl}
               alt="Deal voy cupom"
-              className="h-10 w-10 rounded-full object-cover shadow-sm"
+              className="h-10 w-10 rounded-full object-cover shadow-sm border border-slate-200"
             />
             <span className="font-bold text-xl text-primary tracking-tight">
               Deal Voy
             </span>
           </Link>
-          <nav className="flex items-center gap-6 text-sm font-medium">
+          <nav className="flex items-center gap-6 text-sm font-semibold">
             <Link
               to="/explore"
               className="transition-colors hover:text-primary"
@@ -36,7 +36,7 @@ export function DesktopHeader() {
               to="/seasonal"
               className="transition-colors hover:text-primary"
             >
-              Ofertas
+              {t('nav.seasonal')}
             </Link>
             <Link
               to="/travel-planner"
@@ -48,29 +48,44 @@ export function DesktopHeader() {
         </div>
         <div className="flex items-center gap-4">
           <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input
               type="search"
               placeholder={t('nav.search')}
-              className="h-9 w-64 rounded-md border border-input bg-background pl-8 pr-3 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="h-9 w-64 rounded-full border border-input bg-slate-50 pl-9 pr-4 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:bg-white transition-all"
             />
           </div>
           <LanguageSelector />
-          <Button variant="ghost" size="icon" asChild>
-            <Link to="/notifications">
-              <Bell className="h-5 w-5" />
-            </Link>
-          </Button>
-          <Link to="/profile">
-            <Avatar className="h-8 w-8 transition-transform hover:scale-105">
-              <AvatarImage
-                src={user.avatar || undefined}
-                alt={user.name}
-                className="object-cover"
-              />
-              <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-            </Avatar>
-          </Link>
+
+          {user ? (
+            <>
+              <Button variant="ghost" size="icon" asChild>
+                <Link to="/notifications">
+                  <Bell className="h-5 w-5" />
+                </Link>
+              </Button>
+              <Link to="/profile">
+                <Avatar className="h-9 w-9 transition-transform hover:scale-105 border">
+                  <AvatarImage
+                    src={user.avatar || undefined}
+                    alt={user.name}
+                    className="object-cover"
+                  />
+                  <AvatarFallback className="font-bold text-primary bg-primary/10">
+                    {user.name.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              </Link>
+            </>
+          ) : (
+            <Button
+              asChild
+              variant="default"
+              className="font-bold rounded-full px-6"
+            >
+              <Link to="/login">{t('auth.login')}</Link>
+            </Button>
+          )}
         </div>
       </div>
     </header>

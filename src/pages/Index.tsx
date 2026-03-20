@@ -222,11 +222,6 @@ export default function Index() {
     let relevantAds: Advertisement[] = []
     let dashboardLink = '/'
     let dashboardLabel = ''
-    const welcomeMessage = t('common.welcome')
-    const managementPanel = t('dashboard.management_panel')
-    const campaignsTitle = t('dashboard.your_campaigns')
-    const noCampaignsMessage = t('dashboard.no_active_campaigns')
-    const createAdLabel = t('dashboard.create_campaign')
 
     if (user?.role === 'shopkeeper') {
       relevantAds = ads.filter((ad) => ad.companyId === user.companyId)
@@ -251,9 +246,11 @@ export default function Index() {
         <div className="container mx-auto px-4 space-y-8">
           <div className="text-center space-y-4">
             <h1 className="text-3xl font-bold text-slate-900">
-              {welcomeMessage}, {user?.name}
+              {t('common.welcome')}, {user?.name}
             </h1>
-            <p className="text-muted-foreground text-lg">{managementPanel}</p>
+            <p className="text-muted-foreground text-lg">
+              {t('dashboard.management_panel')}
+            </p>
             <div className="flex justify-center">
               <Link to={dashboardLink}>
                 <Button className="gap-2 h-12 px-8 text-base shadow-md">
@@ -267,7 +264,7 @@ export default function Index() {
           <div className="max-w-4xl mx-auto">
             <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
               <Zap className="h-5 w-5 text-yellow-500" />
-              {campaignsTitle}
+              {t('dashboard.your_campaigns')}
             </h2>
 
             {relevantAds.length > 0 ? (
@@ -280,12 +277,12 @@ export default function Index() {
             ) : (
               <div className="text-center py-16 bg-white rounded-xl border border-dashed shadow-sm">
                 <p className="text-muted-foreground mb-4">
-                  {noCampaignsMessage}
+                  {t('dashboard.no_active_campaigns')}
                 </p>
                 {user?.role === 'shopkeeper' && (
                   <Link to="/vendor">
                     <Button variant="outline" size="sm">
-                      {createAdLabel}
+                      {t('dashboard.create_campaign')}
                     </Button>
                   </Link>
                 )}
@@ -374,28 +371,27 @@ export default function Index() {
         </div>
       )}
 
-      <section className="bg-white border-b sticky top-0 md:top-0 z-30 shadow-sm py-2">
-        <div className="container mx-auto px-2 md:px-4">
+      <section className="bg-white border-b sticky top-0 md:top-0 z-30 shadow-sm py-3">
+        <div className="container mx-auto px-4">
           <form
             onSubmit={handleSearchSubmit}
-            className="flex flex-col lg:flex-row items-center justify-center gap-2 md:gap-3 w-full max-w-5xl mx-auto"
+            className="flex flex-col lg:flex-row items-center justify-center gap-3 w-full max-w-6xl mx-auto"
           >
             {/* Text Search */}
-            <div className="relative w-full lg:w-80 flex items-center shrink-0">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+            <div className="relative w-full lg:w-96 flex items-center shrink-0">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
                 placeholder={t('common.search')}
-                className="pl-9 pr-4 h-9 lg:h-8 text-xs rounded-full bg-slate-50 border-slate-200 focus:bg-white focus:border-primary/50 focus:ring-1 focus:ring-primary/50 w-full shadow-sm"
+                className="pl-9 pr-4 h-11 lg:h-10 text-sm rounded-full bg-slate-50 border-slate-200 focus:bg-white focus:border-primary/50 focus:ring-1 focus:ring-primary/50 w-full shadow-sm"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
               />
             </div>
 
             {/* Location Hierarchical Filters */}
-            <div className="flex items-center w-full lg:w-auto flex-1 gap-1.5">
-              <MapPin className="h-3.5 w-3.5 text-slate-400 shrink-0 hidden lg:block ml-1" />
+            <div className="grid grid-cols-3 w-full lg:w-auto flex-1 gap-2">
               <Select value={tempCountry} onValueChange={handleCountryChange}>
-                <SelectTrigger className="h-9 lg:h-8 text-xs bg-slate-50 border-slate-200 rounded-full w-1/3 truncate px-2.5 shadow-sm">
+                <SelectTrigger className="h-11 lg:h-10 text-xs sm:text-sm bg-slate-50 border-slate-200 rounded-full w-full truncate px-3 shadow-sm">
                   <SelectValue placeholder={t('home.country')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -413,7 +409,7 @@ export default function Index() {
                 onValueChange={handleStateChange}
                 disabled={tempCountry === 'all'}
               >
-                <SelectTrigger className="h-9 lg:h-8 text-xs bg-slate-50 border-slate-200 rounded-full w-1/3 truncate px-2.5 shadow-sm disabled:opacity-50">
+                <SelectTrigger className="h-11 lg:h-10 text-xs sm:text-sm bg-slate-50 border-slate-200 rounded-full w-full truncate px-3 shadow-sm disabled:opacity-50">
                   <SelectValue placeholder={t('home.state')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -431,7 +427,7 @@ export default function Index() {
                 onValueChange={setTempCity}
                 disabled={tempState === 'all'}
               >
-                <SelectTrigger className="h-9 lg:h-8 text-xs bg-slate-50 border-slate-200 rounded-full w-1/3 truncate px-2.5 shadow-sm disabled:opacity-50">
+                <SelectTrigger className="h-11 lg:h-10 text-xs sm:text-sm bg-slate-50 border-slate-200 rounded-full w-full truncate px-3 shadow-sm disabled:opacity-50">
                   <SelectValue placeholder={t('home.city')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -447,22 +443,21 @@ export default function Index() {
 
             <Button
               type="submit"
-              size="sm"
-              className="h-9 lg:h-8 rounded-full bg-primary hover:bg-primary/90 text-white font-semibold px-6 text-xs w-full lg:w-auto shrink-0 shadow-sm"
+              className="h-11 lg:h-10 rounded-full bg-primary hover:bg-primary/90 text-white font-bold px-8 text-sm w-full lg:w-auto shrink-0 shadow-sm"
             >
-              <Search className="h-3.5 w-3.5 mr-1.5 lg:hidden" />
+              <Search className="h-4 w-4 mr-2 lg:hidden" />
               {tFallback('common.search', 'Buscar')}
             </Button>
           </form>
 
-          <div className="mt-2 hidden lg:flex items-center justify-center text-[10px] text-slate-400 gap-1.5">
+          <div className="mt-2 hidden lg:flex items-center justify-center text-xs text-slate-400 gap-1.5 font-medium">
             {isLoadingLocation ? (
               <span className="animate-pulse">
                 {t('home.detecting_location')}
               </span>
             ) : (
               <>
-                <MapPin className="h-3 w-3" />
+                <MapPin className="h-3.5 w-3.5" />
                 <span>
                   {t('home.current_location')}{' '}
                   {selectedRegion === 'Global' ? 'Global' : selectedRegion}
@@ -480,18 +475,18 @@ export default function Index() {
             <Button
               variant="ghost"
               size="sm"
-              className="h-7 text-[10px] gap-1.5 text-muted-foreground hover:text-foreground px-2"
+              className="h-8 text-xs gap-1.5 text-muted-foreground hover:text-foreground px-3"
             >
-              <Edit className="h-3 w-3" /> {t('dashboard.customize')}
+              <Edit className="h-3.5 w-3.5" /> {t('dashboard.customize')}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-52" align="end">
-            <div className="space-y-3">
+          <PopoverContent className="w-56" align="end">
+            <div className="space-y-4">
               <h4 className="font-bold text-xs uppercase tracking-wider text-muted-foreground">
                 {t('dashboard.visible_widgets')}
               </h4>
               <div className="flex items-center justify-between">
-                <Label htmlFor="w-cat" className="text-xs">
+                <Label htmlFor="w-cat" className="text-sm">
                   {t('explore.categories')}
                 </Label>
                 <Checkbox
@@ -501,7 +496,7 @@ export default function Index() {
                 />
               </div>
               <div className="flex items-center justify-between">
-                <Label htmlFor="w-feat" className="text-xs">
+                <Label htmlFor="w-feat" className="text-sm">
                   {t('home.featured_deals')}
                 </Label>
                 <Checkbox
@@ -511,7 +506,7 @@ export default function Index() {
                 />
               </div>
               <div className="flex items-center justify-between">
-                <Label htmlFor="w-trav" className="text-xs">
+                <Label htmlFor="w-trav" className="text-sm">
                   {t('hub.title')}
                 </Label>
                 <Checkbox
@@ -521,7 +516,7 @@ export default function Index() {
                 />
               </div>
               <div className="flex items-center justify-between">
-                <Label htmlFor="w-track" className="text-xs">
+                <Label htmlFor="w-track" className="text-sm">
                   {t('home.tracked_deals')}
                 </Label>
                 <Checkbox
@@ -531,7 +526,7 @@ export default function Index() {
                 />
               </div>
               <div className="flex items-center justify-between">
-                <Label htmlFor="w-all" className="text-xs">
+                <Label htmlFor="w-all" className="text-sm">
                   {t('home.all_offers')}
                 </Label>
                 <Checkbox
@@ -546,31 +541,31 @@ export default function Index() {
       </div>
 
       {widgets.categories && (
-        <section className="bg-white border-y py-1.5 shadow-sm">
+        <section className="bg-white border-y py-3 shadow-sm">
           <div className="container mx-auto px-2 md:px-4">
             <ScrollArea className="w-full whitespace-nowrap">
-              <div className="flex space-x-2 md:space-x-6 px-2 py-1.5 justify-start md:justify-center">
+              <div className="flex space-x-3 md:space-x-8 px-2 py-1.5 justify-start md:justify-center">
                 {CATEGORIES.map((cat) => {
                   const isActive = selectedCategory === cat.id
                   return (
                     <button
                       key={cat.id}
-                      className="flex flex-col items-center justify-center min-w-[56px] group"
+                      className="flex flex-col items-center justify-center min-w-[64px] group"
                       onClick={() => setSelectedCategory(cat.id)}
                     >
                       <div
                         className={cn(
-                          'h-10 w-10 md:h-12 md:w-12 rounded-full border flex items-center justify-center transition-all duration-300',
+                          'h-12 w-12 md:h-14 md:w-14 rounded-full border flex items-center justify-center transition-all duration-300 shadow-sm',
                           isActive
-                            ? 'bg-primary text-white border-primary shadow-sm scale-105'
-                            : 'bg-slate-50 border-slate-100 text-slate-500 group-hover:bg-primary/10 group-hover:text-primary group-hover:border-primary/20',
+                            ? 'bg-primary text-white border-primary shadow-md scale-105'
+                            : 'bg-slate-50 border-slate-100 text-slate-500 group-hover:bg-primary/10 group-hover:text-primary group-hover:border-primary/30',
                         )}
                       >
                         {getIcon(cat.icon)}
                       </div>
                       <span
                         className={cn(
-                          'text-[10px] md:text-xs font-medium mt-1.5 transition-colors',
+                          'text-[11px] md:text-sm font-medium mt-2 transition-colors',
                           isActive
                             ? 'text-primary font-bold'
                             : 'text-slate-600 group-hover:text-primary',
@@ -588,23 +583,24 @@ export default function Index() {
         </section>
       )}
 
-      <div className="container mx-auto px-3 md:px-4 py-4 md:py-6 space-y-6 md:space-y-8">
+      <div className="container mx-auto px-4 py-6 md:py-8 space-y-8 md:space-y-10">
         <AdSpace position="top" className="py-0 md:py-0" />
 
         {searchQuery && (
           <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">
+            <span className="text-sm text-muted-foreground">
               {t('home.showing_results')}:
             </span>
-            <Badge variant="secondary" className="gap-1 pl-1 text-[10px] h-5">
-              <span className="bg-white rounded-full p-0.5">
-                <Search className="h-2.5 w-2.5" />
-              </span>
+            <Badge
+              variant="secondary"
+              className="gap-1.5 pl-2 text-xs h-7 py-1"
+            >
+              <Search className="h-3 w-3" />
               {searchQuery}
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-4 w-4 ml-0.5 hover:bg-transparent"
+                className="h-5 w-5 ml-1 hover:bg-transparent text-slate-500 hover:text-slate-800"
                 onClick={clearSearch}
               >
                 <span className="sr-only">Clear</span>
@@ -618,7 +614,7 @@ export default function Index() {
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  className="lucide lucide-x h-2.5 w-2.5"
+                  className="lucide lucide-x h-3.5 w-3.5"
                 >
                   <path d="M18 6 6 18" />
                   <path d="m6 6 12 12" />
@@ -629,16 +625,16 @@ export default function Index() {
         )}
 
         {widgets.featured && featuredCoupons.length > 0 && (
-          <section className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 rounded-xl p-4 md:p-6 border border-amber-100 dark:border-amber-900/30 shadow-sm relative overflow-hidden">
+          <section className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 rounded-xl p-5 md:p-8 border border-amber-100 dark:border-amber-900/30 shadow-sm relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-amber-200/30 dark:bg-amber-800/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
             <div className="relative z-10">
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-base md:text-lg font-bold flex items-center gap-1.5 text-amber-900 dark:text-amber-500">
+              <div className="flex items-center justify-between mb-4 md:mb-6">
+                <h2 className="text-lg md:text-2xl font-bold flex items-center gap-2 text-amber-900 dark:text-amber-500">
                   {travelModeActive ? (
-                    <MapIcon className="h-4 w-4 text-blue-500" />
+                    <MapIcon className="h-5 w-5 text-blue-500" />
                   ) : (
                     <Zap
-                      className="h-4 w-4 text-amber-500"
+                      className="h-5 w-5 text-amber-500"
                       fill="currentColor"
                     />
                   )}
@@ -648,26 +644,26 @@ export default function Index() {
                 </h2>
                 <Link
                   to="/explore"
-                  className="text-[11px] md:text-xs font-medium text-amber-700 hover:text-amber-800 hover:underline flex items-center"
+                  className="text-xs md:text-sm font-bold text-amber-700 hover:text-amber-800 hover:underline flex items-center bg-amber-100/50 px-3 py-1.5 rounded-full"
                 >
-                  {t('common.view_all')} <ArrowRight className="h-3 w-3 ml-1" />
+                  {t('common.view_all')} <ArrowRight className="h-4 w-4 ml-1" />
                 </Link>
               </div>
 
               <Carousel className="w-full">
-                <CarouselContent className="-ml-3">
+                <CarouselContent className="-ml-4">
                   {featuredCoupons.map((coupon) => (
                     <CarouselItem
                       key={coupon.id}
-                      className="pl-3 basis-[45%] sm:basis-[30%] md:basis-1/4 lg:basis-1/5 xl:basis-1/6"
+                      className="pl-4 basis-[60%] sm:basis-[45%] md:basis-1/3 lg:basis-1/4 xl:basis-1/5"
                     >
                       <CouponCard coupon={coupon} />
                     </CarouselItem>
                   ))}
                 </CarouselContent>
                 <div className="hidden md:block">
-                  <CarouselPrevious className="h-8 w-8 -left-4" />
-                  <CarouselNext className="h-8 w-8 -right-4" />
+                  <CarouselPrevious className="h-10 w-10 -left-5 bg-white" />
+                  <CarouselNext className="h-10 w-10 -right-5 bg-white" />
                 </div>
               </Carousel>
             </div>
@@ -675,31 +671,31 @@ export default function Index() {
         )}
 
         {widgets.travel && (
-          <section className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-xl p-4 md:p-6 relative overflow-hidden text-white shadow-md">
-            <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+          <section className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-xl p-6 md:p-8 relative overflow-hidden text-white shadow-md">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
             <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between">
               <div className="mb-4 sm:mb-0 sm:w-2/3">
-                <Badge className="bg-white/20 text-white border-none mb-2 text-[9px] uppercase tracking-wider hover:bg-white/30 px-1.5 py-0 h-4">
+                <Badge className="bg-white/20 text-white border-none mb-3 text-[10px] md:text-xs uppercase tracking-wider px-2.5 py-0.5 font-bold">
                   {t('common.new')}: {t('hub.title')}
                 </Badge>
-                <h2 className="text-lg md:text-xl font-bold mb-1">
+                <h2 className="text-xl md:text-3xl font-extrabold mb-2 leading-tight">
                   {t('hub.subtitle')}
                 </h2>
-                <p className="text-blue-100 text-[11px] md:text-xs mb-3 max-w-sm line-clamp-2">
+                <p className="text-blue-100 text-sm md:text-base mb-5 max-w-md">
                   {t('hub.promo_desc')}
                 </p>
                 <Link to="/travel-hub">
                   <Button
-                    size="sm"
-                    className="bg-white text-blue-600 hover:bg-blue-50 font-bold rounded-full px-4 h-7 text-[11px] gap-1.5 shadow-sm"
+                    size="lg"
+                    className="bg-white text-blue-700 hover:bg-blue-50 font-bold rounded-full px-6 gap-2 shadow-lg"
                   >
-                    <Plane className="h-3 w-3" /> {t('common.search')}
+                    <Plane className="h-4 w-4" /> {t('common.search')}
                   </Button>
                 </Link>
               </div>
-              <div className="hidden sm:flex sm:w-1/3 justify-end pr-4">
+              <div className="hidden sm:flex sm:w-1/3 justify-end pr-6">
                 <Plane
-                  className="h-16 w-16 md:h-20 md:w-20 text-white/40 transform -rotate-12"
+                  className="h-24 w-24 md:h-32 md:w-32 text-white/30 transform -rotate-12"
                   strokeWidth={1.5}
                 />
               </div>
@@ -709,21 +705,21 @@ export default function Index() {
 
         {widgets.tracked && finalCoupons.length > 0 && (
           <section>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-base md:text-lg font-bold flex items-center gap-1.5 text-slate-800">
-                <TrendingUp className="h-4 w-4 text-accent" />
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg md:text-xl font-bold flex items-center gap-2 text-slate-800">
+                <TrendingUp className="h-5 w-5 text-accent" />
                 {t('home.tracked_deals')}
               </h2>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
               {aggregatedCoupons.length > 0
                 ? aggregatedCoupons
                     .slice(0, 6)
                     .map((coupon) => (
                       <CouponCard key={coupon.id} coupon={coupon} />
                     ))
-                : featuredCoupons.slice(0, 4).map((coupon) => (
-                    <div key={`fallback-${coupon.id}`} className="opacity-80">
+                : featuredCoupons.slice(0, 6).map((coupon) => (
+                    <div key={`fallback-${coupon.id}`} className="opacity-90">
                       <CouponCard coupon={coupon} />
                     </div>
                   ))}
@@ -735,9 +731,9 @@ export default function Index() {
 
         {widgets.all && (
           <section>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
-              <h2 className="text-base md:text-lg font-bold flex items-center gap-1.5 text-slate-800">
-                <ShoppingBag className="h-4 w-4 text-primary" />
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+              <h2 className="text-lg md:text-xl font-bold flex items-center gap-2 text-slate-800">
+                <ShoppingBag className="h-5 w-5 text-primary" />
                 {selectedCategory === 'all'
                   ? t('home.all_offers')
                   : `${t('home.offers_of')} ${t(selectedCategoryLabel)}`}
@@ -749,30 +745,30 @@ export default function Index() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="h-8 gap-1.5 text-xs relative pr-3"
+                      className="h-9 gap-2 text-sm relative pr-4"
                     >
-                      <SlidersHorizontal className="h-3.5 w-3.5" />
+                      <SlidersHorizontal className="h-4 w-4" />
                       {tFallback('common.filters', 'Filters')}
                       {(maxPrice[0] < 1000 || discountType !== 'all') && (
-                        <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-primary" />
+                        <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-primary animate-pulse" />
                       )}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-72 md:w-80" align="end">
-                    <div className="space-y-4">
-                      <h4 className="font-semibold text-sm">
+                  <PopoverContent className="w-80 md:w-96" align="end">
+                    <div className="space-y-5">
+                      <h4 className="font-bold text-base border-b pb-2">
                         {tFallback('filters.advanced', 'Advanced Filters')}
                       </h4>
 
-                      <div className="space-y-2">
-                        <Label className="text-xs">
+                      <div className="space-y-3">
+                        <Label className="text-sm font-semibold">
                           {t('explore.categories')}
                         </Label>
                         <Select
                           value={selectedCategory}
                           onValueChange={setSelectedCategory}
                         >
-                          <SelectTrigger className="h-8 text-xs">
+                          <SelectTrigger className="h-10 text-sm">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -785,12 +781,12 @@ export default function Index() {
                         </Select>
                       </div>
 
-                      <div className="space-y-3 pt-2">
+                      <div className="space-y-4 pt-2">
                         <div className="flex items-center justify-between">
-                          <Label className="text-xs">
+                          <Label className="text-sm font-semibold">
                             {tFallback('filters.max_price', 'Max Price')}
                           </Label>
-                          <span className="text-xs font-medium text-primary">
+                          <span className="text-sm font-bold text-primary">
                             {maxPrice[0] >= 1000
                               ? tFallback('common.any', 'Any')
                               : formatCurrency(maxPrice[0])}
@@ -801,18 +797,19 @@ export default function Index() {
                           step={50}
                           value={maxPrice}
                           onValueChange={setMaxPrice}
+                          className="py-2"
                         />
                       </div>
 
-                      <div className="space-y-2 pt-2">
-                        <Label className="text-xs">
+                      <div className="space-y-3 pt-2">
+                        <Label className="text-sm font-semibold">
                           {tFallback('filters.discount_type', 'Discount Type')}
                         </Label>
                         <Select
                           value={discountType}
                           onValueChange={setDiscountType}
                         >
-                          <SelectTrigger className="h-8 text-xs">
+                          <SelectTrigger className="h-10 text-sm">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -838,11 +835,10 @@ export default function Index() {
                         </Select>
                       </div>
 
-                      <div className="pt-2">
+                      <div className="pt-4 border-t">
                         <Button
                           variant="secondary"
-                          size="sm"
-                          className="w-full text-xs h-8"
+                          className="w-full font-bold h-10"
                           onClick={() => {
                             setSelectedCategory('all')
                             setMaxPrice([1000])
@@ -862,21 +858,21 @@ export default function Index() {
                   onValueChange={(val) => {
                     if (val) setViewMode(val as 'grid' | 'list')
                   }}
-                  className="bg-white border rounded-md h-8 p-0.5"
+                  className="bg-white border rounded-lg h-9 p-1 shadow-sm"
                 >
                   <ToggleGroupItem
                     value="grid"
                     aria-label="Grid view"
-                    className="h-full w-8 p-0 data-[state=on]:bg-slate-100"
+                    className="h-full px-3 data-[state=on]:bg-slate-100 data-[state=on]:text-primary"
                   >
-                    <LayoutGrid className="h-3.5 w-3.5" />
+                    <LayoutGrid className="h-4 w-4" />
                   </ToggleGroupItem>
                   <ToggleGroupItem
                     value="list"
                     aria-label="List view"
-                    className="h-full w-8 p-0 data-[state=on]:bg-slate-100"
+                    className="h-full px-3 data-[state=on]:bg-slate-100 data-[state=on]:text-primary"
                   >
-                    <List className="h-3.5 w-3.5" />
+                    <List className="h-4 w-4" />
                   </ToggleGroupItem>
                 </ToggleGroup>
               </div>
@@ -886,10 +882,10 @@ export default function Index() {
               <>
                 <div
                   className={cn(
-                    'gap-3',
+                    'gap-4',
                     viewMode === 'grid'
                       ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6'
-                      : 'flex flex-col space-y-3',
+                      : 'flex flex-col space-y-4',
                   )}
                 >
                   {finalCoupons.slice(0, visibleCount).map((coupon) => (
@@ -904,26 +900,25 @@ export default function Index() {
                 {visibleCount < finalCoupons.length && (
                   <div
                     ref={loaderRef}
-                    className="py-8 flex justify-center items-center"
+                    className="py-10 flex justify-center items-center"
                   >
-                    <Loader2 className="h-6 w-6 text-primary/60 animate-spin" />
+                    <Loader2 className="h-8 w-8 text-primary/60 animate-spin" />
                   </div>
                 )}
               </>
             ) : (
-              <div className="text-center py-12 text-muted-foreground bg-white rounded-lg border border-dashed shadow-sm">
-                <div className="flex justify-center mb-3">
-                  <ShoppingBag className="h-10 w-10 text-slate-300" />
+              <div className="text-center py-16 px-4 bg-white rounded-xl border border-dashed shadow-sm">
+                <div className="flex justify-center mb-4">
+                  <ShoppingBag className="h-12 w-12 text-slate-300" />
                 </div>
-                <p className="text-base font-semibold text-slate-700 mb-2">
+                <p className="text-lg font-bold text-slate-800 mb-2">
                   {t('home.no_ads_location')}
                 </p>
-                <p className="text-sm text-slate-500 mb-4">
+                <p className="text-sm text-slate-500 mb-6 max-w-md mx-auto">
                   {t('home.adjust_filters')}
                 </p>
                 <Button
                   variant="outline"
-                  size="sm"
                   onClick={() => {
                     setSelectedCategory('all')
                     setMaxPrice([1000])
@@ -936,6 +931,7 @@ export default function Index() {
                     setFilterState('all')
                     setFilterCity('all')
                   }}
+                  className="font-semibold"
                 >
                   {tFallback('common.clear', 'Limpar Filtros')}
                 </Button>
