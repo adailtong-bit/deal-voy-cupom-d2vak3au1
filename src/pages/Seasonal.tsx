@@ -20,13 +20,15 @@ export default function Seasonal() {
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8 flex items-center gap-2">
         <CalendarIcon className="h-8 w-8 text-primary" />
-        {t('seasonal.title')}
+        {t('seasonal.title', 'Ofertas Sazonais')}
       </h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <Card className="h-fit">
           <CardHeader>
-            <CardTitle>{t('seasonal.title')}</CardTitle>
+            <CardTitle>
+              {t('seasonal.calendar_title', 'Calendário de Eventos')}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <Calendar
@@ -67,13 +69,20 @@ export default function Seasonal() {
             <Card className="bg-muted/50 border-dashed">
               <CardContent className="flex flex-col items-center justify-center py-12 text-center">
                 <Gift className="h-12 w-12 text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">{t('seasonal.title')}</p>
+                <p className="text-muted-foreground">
+                  {t(
+                    'seasonal.no_event',
+                    'Selecione uma data para ver os detalhes do evento.',
+                  )}
+                </p>
               </CardContent>
             </Card>
           )}
 
           <div className="space-y-4">
-            <h3 className="font-bold text-lg">{t('seasonal.title')}</h3>
+            <h3 className="font-bold text-lg">
+              {t('seasonal.upcoming', 'Próximos Eventos')}
+            </h3>
             {activeEvents.map((event) => (
               <div
                 key={event.id}

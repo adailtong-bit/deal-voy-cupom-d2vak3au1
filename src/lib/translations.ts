@@ -175,6 +175,12 @@ export const translations: Record<Language, any> = {
     ad: {
       sponsored: 'Patrocinado',
     },
+    seasonal: {
+      title: 'Ofertas Sazonais',
+      calendar_title: 'Calendário de Eventos',
+      no_event: 'Selecione uma data para ver os detalhes do evento.',
+      upcoming: 'Próximos Eventos',
+    },
   },
   en: {
     common: {
@@ -349,6 +355,12 @@ export const translations: Record<Language, any> = {
     ad: {
       sponsored: 'Sponsored',
     },
+    seasonal: {
+      title: 'Seasonal Offers',
+      calendar_title: 'Event Calendar',
+      no_event: 'Select a date to see event details.',
+      upcoming: 'Upcoming Events',
+    },
   },
   es: {
     common: {
@@ -522,6 +534,12 @@ export const translations: Record<Language, any> = {
     },
     ad: {
       sponsored: 'Patrocinado',
+    },
+    seasonal: {
+      title: 'Ofertas de Temporada',
+      calendar_title: 'Calendario de Eventos',
+      no_event: 'Selecciona una fecha para ver los detalles del evento.',
+      upcoming: 'Próximos Eventos',
     },
   },
 }
