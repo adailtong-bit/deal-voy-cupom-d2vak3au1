@@ -123,7 +123,8 @@ export interface UserLocation {
 export interface SeasonalEvent {
   id: string
   title: string
-  date: Date
+  startDate: string
+  endDate: string
   description: string
   type: 'sale' | 'holiday' | 'event'
   coordinates?: {
@@ -132,6 +133,9 @@ export interface SeasonalEvent {
   }
   image?: string
   region?: string
+  companyId?: string
+  billingAmount?: number
+  status: 'active' | 'paused' | 'scheduled' | 'archived'
 }
 
 export interface Notification {

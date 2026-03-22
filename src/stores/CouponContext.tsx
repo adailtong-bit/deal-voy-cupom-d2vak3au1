@@ -35,6 +35,7 @@ import {
   SubscriptionTier,
   PartnerPolicy,
   PartnerInvoice,
+  SeasonalEvent,
 } from '@/lib/types'
 import {
   MOCK_COUPONS,
@@ -61,6 +62,7 @@ import {
   DEFAULT_PLATFORM_SETTINGS,
   MOCK_PARTNER_POLICIES,
   MOCK_PARTNER_INVOICES,
+  SEASONAL_EVENTS,
 } from '@/lib/data'
 import { toast } from 'sonner'
 import { useNotification } from './NotificationContext'
@@ -121,6 +123,7 @@ interface CouponContextType {
   platformSettings: PlatformSettings
   partnerPolicies: PartnerPolicy[]
   partnerInvoices: PartnerInvoice[]
+  seasonalEvents: SeasonalEvent[]
   setRegion: (regionCode: string) => void
   toggleSave: (id: string) => void
   toggleTrip: (id: string) => void
@@ -206,6 +209,9 @@ interface CouponContextType {
     status: PartnerInvoice['status'],
   ) => void
   reconcilePartnerInvoice: (refNumber: string) => boolean
+  addSeasonalEvent: (event: SeasonalEvent) => void
+  updateSeasonalEvent: (id: string, event: Partial<SeasonalEvent>) => void
+  deleteSeasonalEvent: (id: string) => void
 }
 
 const CouponContext = createContext<CouponContextType | undefined>(undefined)
@@ -296,6 +302,8 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   const [partnerInvoices, setPartnerInvoices] = useState<PartnerInvoice[]>(
     MOCK_PARTNER_INVOICES,
   )
+  const [seasonalEvents, setSeasonalEvents] =
+    useState<SeasonalEvent[]>(SEASONAL_EVENTS)
 
   useEffect(() => {
     if (user) {
@@ -1241,6 +1249,47 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     return true
   }
 
+  const addSeasonalEvent = (event: SeasonalEvent) => {
+    setSeasonalEvents((prev) => [...prev, event])
+    if (event.companyId && event.billingAmount && event.billingAmount > 0) {
+      const invoice: PartnerInvoice = {
+        id: Math.random().toString(),
+        referenceNumber: `INV-SEAS-${Date.now().toString().slice(-6)}`,
+        companyId: event.companyId,
+        periodStart: event.startDate,
+        periodEnd: event.endDate,
+        totalSales: 0,
+        totalCommission: event.billingAmount,
+        totalCashback: 0,
+        status: 'draft',
+        dueDate: new Date(Date.now() + 15 * 86400000).toISOString(),
+        issueDate: new Date().toISOString(),
+        transactionCount: 1,
+      }
+      setPartnerInvoices((prev) => [...prev, invoice])
+      toast.success('Campaign created and invoice drafted!')
+    } else {
+      toast.success('Campaign created successfully!')
+    }
+    logSystemAction('Seasonal Event Added', `Added event ${event.title}`)
+  }
+
+  const updateSeasonalEvent = (id: string, event: Partial<SeasonalEvent>) => {
+    setSeasonalEvents((prev) =>
+      prev.map((e) => (e.id === id ? { ...e, ...event } : e)),
+    )
+    toast.success('Campaign updated successfully')
+    logSystemAction('Seasonal Event Updated', `Updated event ${id}`)
+  }
+
+  const deleteSeasonalEvent = (id: string) => {
+    setSeasonalEvents((prev) =>
+      prev.map((e) => (e.id === id ? { ...e, status: 'archived' } : e)),
+    )
+    toast.success('Campaign archived successfully')
+    logSystemAction('Seasonal Event Deleted/Archived', `Archived event ${id}`)
+  }
+
   return React.createElement(
     CouponContext.Provider,
     {
@@ -1290,6 +1339,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         platformSettings,
         partnerPolicies,
         partnerInvoices,
+        seasonalEvents,
         setRegion,
         toggleSave,
         toggleTrip,
@@ -1357,6 +1407,9 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         generatePartnerInvoice,
         updatePartnerInvoiceStatus,
         reconcilePartnerInvoice,
+        addSeasonalEvent,
+        updateSeasonalEvent,
+        deleteSeasonalEvent,
       },
     },
     children,
