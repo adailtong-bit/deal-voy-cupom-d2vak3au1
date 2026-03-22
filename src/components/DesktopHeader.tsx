@@ -15,7 +15,10 @@ export function DesktopHeader() {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 hidden md:block">
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-8">
-          <Link to="/" className="flex items-center gap-3">
+          <Link
+            to="/"
+            className="flex items-center gap-3 transition-transform hover:opacity-90"
+          >
             <img
               src={logoUrl}
               alt="Deal voy cupom"

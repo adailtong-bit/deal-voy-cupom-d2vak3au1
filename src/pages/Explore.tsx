@@ -14,17 +14,15 @@ import {
   SheetFooter,
   SheetClose,
 } from '@/components/ui/sheet'
-import { Filter, Map as MapIcon, List } from 'lucide-react'
+import { Filter, SearchX } from 'lucide-react'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
-import { cn } from '@/lib/utils'
 import { useLanguage } from '@/stores/LanguageContext'
 import { CATEGORIES } from '@/lib/data'
 
 export default function Explore() {
   const { coupons } = useCouponStore()
   const { t } = useLanguage()
-  const [viewMode, setViewMode] = useState<'map' | 'list'>('list')
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [maxDistance, setMaxDistance] = useState([10]) // km
 
@@ -38,11 +36,11 @@ export default function Explore() {
   const filterCategories = CATEGORIES.filter((c) => c.id !== 'all')
 
   return (
-    <div className="flex flex-col h-[calc(100vh-64px-64px)] md:h-[calc(100vh-64px)] overflow-hidden">
+    <div className="flex flex-col h-[calc(100vh-64px-64px)] md:h-[calc(100vh-64px)] overflow-hidden bg-slate-50/50">
       <div className="px-4 py-3 bg-background border-b flex items-center gap-2 overflow-x-auto hide-scrollbar shrink-0 z-20">
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-2">
+            <Button variant="outline" size="sm" className="gap-2 shrink-0">
               <Filter className="h-4 w-4" /> {t('explore.filters')}
             </Button>
           </SheetTrigger>
@@ -105,7 +103,7 @@ export default function Explore() {
             <Badge
               key={cat.id}
               variant={selectedCategory === cat.id ? 'default' : 'outline'}
-              className="cursor-pointer"
+              className="cursor-pointer whitespace-nowrap"
               onClick={() =>
                 setSelectedCategory(selectedCategory === cat.id ? null : cat.id)
               }
@@ -116,97 +114,49 @@ export default function Explore() {
         </div>
       </div>
 
-      <div className="flex flex-1 overflow-hidden relative">
-        <div
-          className={cn(
-            'w-full md:w-[400px] lg:w-[450px] bg-background border-r flex flex-col transition-transform duration-300 absolute inset-0 z-10 md:relative md:translate-x-0',
-            viewMode === 'map' ? 'translate-x-[-100%]' : 'translate-x-0',
-          )}
-        >
-          <div className="p-4 border-b bg-muted/10">
-            <p className="text-sm text-muted-foreground font-medium">
-              {filteredCoupons.length} {t('explore.offers_found')}
-            </p>
-          </div>
-          <ScrollArea className="flex-1">
-            <div className="p-4 space-y-4">
+      <div className="flex flex-1 flex-col overflow-hidden relative">
+        <div className="p-4 border-b bg-background shadow-sm shrink-0">
+          <p className="text-sm text-muted-foreground font-medium">
+            {filteredCoupons.length} {t('explore.offers_found')}
+          </p>
+        </div>
+        <ScrollArea className="flex-1">
+          <div className="p-4 md:p-6 lg:p-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 max-w-7xl mx-auto">
               {filteredCoupons.map((coupon) => (
                 <CouponCard
                   key={coupon.id}
                   coupon={coupon}
-                  variant="horizontal"
-                  className="h-auto"
+                  variant="vertical"
                 />
               ))}
-              {filteredCoupons.length === 0 && (
-                <div className="text-center py-10 text-muted-foreground">
+            </div>
+            {filteredCoupons.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-20 text-muted-foreground max-w-md mx-auto text-center">
+                <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-muted mb-4">
+                  <SearchX className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <h3 className="font-semibold text-lg text-foreground mb-2">
                   {t('home.no_offers')}
-                </div>
-              )}
-            </div>
-          </ScrollArea>
-        </div>
-
-        <div
-          className={cn(
-            'flex-1 bg-slate-100 relative transition-transform duration-300 absolute inset-0 md:relative md:translate-x-0',
-            viewMode === 'list'
-              ? 'translate-x-[100%] md:translate-x-0'
-              : 'translate-x-0',
-          )}
-        >
-          <div className="w-full h-full relative overflow-hidden">
-            <img
-              src="https://img.usecurling.com/p/1200/800?q=map%20street%20view&color=gray"
-              className="w-full h-full object-cover opacity-60 grayscale"
-              alt="Map Background"
-            />
-
-            {filteredCoupons.map((coupon, idx) => (
-              <div
-                key={coupon.id}
-                className="absolute transform -translate-x-1/2 -translate-y-1/2 group cursor-pointer"
-                style={{
-                  top: `${30 + ((idx * 15) % 60)}%`,
-                  left: `${20 + ((idx * 23) % 70)}%`,
-                }}
-              >
-                <div className="bg-primary text-white p-2 rounded-full shadow-lg hover:scale-110 transition-transform">
-                  <div className="h-3 w-3 rounded-full bg-white" />
-                </div>
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-32 bg-white rounded-lg shadow-xl p-2 hidden group-hover:block z-50 text-xs">
-                  <p className="font-bold truncate">{coupon.storeName}</p>
-                  <p className="text-emerald-600 font-bold">
-                    {coupon.discount}
-                  </p>
-                </div>
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Nenhuma oferta encontrada com os filtros atuais. Tente
+                  aumentar a distância ou alterar a categoria.
+                </p>
+                <Button
+                  variant="outline"
+                  className="mt-6"
+                  onClick={() => {
+                    setSelectedCategory(null)
+                    setMaxDistance([50])
+                  }}
+                >
+                  Limpar Filtros
+                </Button>
               </div>
-            ))}
-
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-              <div className="h-4 w-4 bg-blue-500 rounded-full border-2 border-white shadow-lg animate-pulse" />
-              <div className="h-16 w-16 bg-blue-500/20 rounded-full absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-ping" />
-            </div>
+            )}
           </div>
-        </div>
-      </div>
-
-      <div className="absolute bottom-6 right-6 md:hidden z-30">
-        <Button
-          size="lg"
-          className="rounded-full shadow-elevation h-14 px-6 gap-2"
-          onClick={() => setViewMode(viewMode === 'list' ? 'map' : 'list')}
-        >
-          {viewMode === 'list' ? (
-            <>
-              <MapIcon className="h-5 w-5" /> {t('explore.view_map')}
-            </>
-          ) : (
-            <>
-              <List className="h-5 w-5" /> {t('explore.view_list')}
-            </>
-          )}
-        </Button>
+        </ScrollArea>
       </div>
     </div>
   )
