@@ -54,7 +54,7 @@ export default function Explore() {
             <div className="py-6 space-y-6">
               <div className="space-y-3">
                 <h3 className="font-medium text-sm">
-                  {t('explore.max_distance')}: {maxDistance}km
+                  {t('explore.max_distance')}: {maxDistance[0]}km
                 </h3>
                 <Slider
                   defaultValue={[10]}

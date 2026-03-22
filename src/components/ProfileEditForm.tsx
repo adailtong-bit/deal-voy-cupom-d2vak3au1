@@ -11,39 +11,41 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
-import useUserStore from '@/stores/useUserStore'
+import { useCouponStore } from '@/stores/CouponContext'
 import { useToast } from '@/hooks/use-toast'
 import { useLanguage } from '@/stores/LanguageContext'
 
 const profileSchema = z.object({
   name: z.string().min(2, 'Nome muito curto'),
   email: z.string().email('E-mail inválido'),
-  phone: z.string().min(10, 'Telefone muito curto'),
+  phone: z.string().optional(),
 })
 
 type ProfileFormValues = z.infer<typeof profileSchema>
 
 export function ProfileEditForm() {
-  const { user, setUser } = useUserStore()
+  const { user, updateUserProfile } = useCouponStore()
   const { toast } = useToast()
   const { t } = useLanguage()
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      name: user.name,
-      email: user.email,
-      phone: user.phone,
+      name: user?.name || '',
+      email: user?.email || '',
+      phone: user?.phone || '',
     },
   })
 
   const onSubmit = (data: ProfileFormValues) => {
-    setUser(data)
+    updateUserProfile(data)
     toast({
       title: t('profile.successTitle'),
       description: t('profile.successDesc'),
     })
   }
+
+  if (!user) return null
 
   return (
     <Form {...form}>
@@ -81,7 +83,7 @@ export function ProfileEditForm() {
             <FormItem>
               <FormLabel>{t('profile.phone')}</FormLabel>
               <FormControl>
-                <Input type="tel" {...field} />
+                <Input type="tel" {...field} value={field.value || ''} />
               </FormControl>
               <FormMessage />
             </FormItem>

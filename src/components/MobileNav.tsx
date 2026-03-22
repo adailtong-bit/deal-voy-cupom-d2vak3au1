@@ -2,20 +2,16 @@ import { Link, useLocation } from 'react-router-dom'
 import { Home, Compass, Map, User, Settings } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useLanguage } from '@/stores/LanguageContext'
-import { useCouponStore } from '@/stores/CouponContext'
 
 export function MobileNav() {
   const location = useLocation()
   const { t } = useLanguage()
-  const { user } = useCouponStore()
 
   const navItems = [
     { icon: Home, label: t('nav.home'), path: '/' },
     { icon: Compass, label: t('nav.explore'), path: '/explore' },
     { icon: Map, label: t('nav.planner'), path: '/travel-planner' },
-    ...(user && ['super_admin', 'franchisee'].includes(user.role)
-      ? [{ icon: Settings, label: t('nav.admin'), path: '/admin' }]
-      : []),
+    { icon: Settings, label: t('nav.admin'), path: '/admin' },
     { icon: User, label: t('nav.profile'), path: '/profile' },
   ]
 

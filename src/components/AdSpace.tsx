@@ -47,7 +47,7 @@ export function AdSpace({
       <div className="container mx-auto px-4">
         <div className="relative group overflow-hidden rounded-md border border-slate-200 shadow-sm bg-white hover:border-primary/30 transition-colors">
           <div className="absolute top-0 right-0 bg-slate-100 text-slate-400 text-[8px] px-1.5 py-0.5 z-10 font-medium rounded-bl-sm uppercase tracking-wider">
-            {t('ad.sponsored', 'Patrocinado')}
+            {t('ad.sponsored')}
           </div>
           <a
             href={ad.link || '#'}
@@ -76,7 +76,7 @@ export function AdSpace({
                 <span className="text-[9px] md:text-[10px] font-bold text-primary uppercase tracking-wider truncate mr-2">
                   {ad.category && ad.category !== 'all'
                     ? t(getCategoryTranslationKey(ad.category))
-                    : 'Publicidade'}
+                    : t('ad.sponsored')}
                 </span>
               </div>
               <div className="flex items-center justify-between gap-2">

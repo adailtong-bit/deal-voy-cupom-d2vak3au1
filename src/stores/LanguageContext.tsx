@@ -8,8 +8,11 @@ import {
 type LanguageContextType = {
   language: Language
   setLanguage: (lang: Language) => void
-  t: (path: string) => string
-  formatCurrency: (amount: number, currency?: string) => string
+  t: (path: string, fallback?: string) => string
+  formatCurrency: (
+    amount: number | undefined | null,
+    currency?: string,
+  ) => string
   formatDate: (date: string | Date) => string
   locale: string
 }
@@ -21,12 +24,12 @@ export const LanguageContext = createContext<LanguageContextType | undefined>(
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguage] = useState<Language>('pt')
 
-  const t = (path: string): string => {
+  const t = (path: string, fallback?: string): string => {
     const keys = path.split('.')
     let current: any = translations[language]
     for (const key of keys) {
       if (!current || current[key] === undefined) {
-        return path // Fallback to path string if not found
+        return fallback || path // Fallback to path string if not found
       }
       current = current[key]
     }
@@ -36,7 +39,10 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const locale =
     language === 'en' ? 'en-US' : language === 'es' ? 'es-ES' : 'pt-BR'
 
-  const formatCurrency = (amount: number, currency?: string) => {
+  const formatCurrency = (
+    amount: number | undefined | null,
+    currency?: string,
+  ) => {
     return utilsFormatCurrency(amount, currency, locale)
   }
 
@@ -59,8 +65,8 @@ export function useLanguage() {
     return {
       language: 'pt',
       setLanguage: () => {},
-      t: (k: string) => k,
-      formatCurrency: (a: number, c?: string) =>
+      t: (k: string, fallback?: string) => fallback || k,
+      formatCurrency: (a: number | undefined | null, c?: string) =>
         utilsFormatCurrency(a, c, 'pt-BR'),
       formatDate: (d: string | Date) => utilsFormatDate(d, 'pt-BR'),
       locale: 'pt-BR',

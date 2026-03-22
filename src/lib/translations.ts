@@ -172,6 +172,9 @@ export const translations: Record<Language, any> = {
       period: 'Período',
       amount: 'Valor',
     },
+    ad: {
+      sponsored: 'Patrocinado',
+    },
   },
   en: {
     common: {
@@ -343,6 +346,9 @@ export const translations: Record<Language, any> = {
       period: 'Period',
       amount: 'Amount',
     },
+    ad: {
+      sponsored: 'Sponsored',
+    },
   },
   es: {
     common: {
@@ -513,6 +519,9 @@ export const translations: Record<Language, any> = {
       status: 'Estado',
       period: 'Período',
       amount: 'Monto',
+    },
+    ad: {
+      sponsored: 'Patrocinado',
     },
   },
 }

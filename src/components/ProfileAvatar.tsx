@@ -2,11 +2,11 @@ import { useRef } from 'react'
 import { Camera, Upload, User as UserIcon } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
-import useUserStore from '@/stores/useUserStore'
+import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
 
 export function ProfileAvatar() {
-  const { user, setUser } = useUserStore()
+  const { user, updateUserProfile } = useCouponStore()
   const { t } = useLanguage()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const cameraInputRef = useRef<HTMLInputElement>(null)
@@ -16,11 +16,13 @@ export function ProfileAvatar() {
     if (file) {
       const reader = new FileReader()
       reader.onload = (event) => {
-        setUser({ avatar: event.target?.result as string })
+        updateUserProfile({ avatar: event.target?.result as string })
       }
       reader.readAsDataURL(file)
     }
   }
+
+  if (!user) return null
 
   return (
     <div className="flex flex-col items-center gap-6">
@@ -46,7 +48,7 @@ export function ProfileAvatar() {
         <input
           type="file"
           accept="image/*"
-          capture="user"
+          capture="environment"
           className="hidden"
           ref={cameraInputRef}
           onChange={handleFileChange}

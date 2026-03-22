@@ -22,10 +22,12 @@ export function formatDate(dateStr: string | Date | undefined, locale: string) {
 }
 
 export function formatCurrency(
-  amount: number,
+  amount: number | undefined | null,
   currency: string = 'BRL',
   locale?: string,
 ) {
+  if (amount === undefined || amount === null || isNaN(amount)) return ''
+
   // Determine locale based on currency to force correct regional formatting
   // overriding the UI locale if necessary to guarantee origin-based formatting.
   let targetLocale = locale
