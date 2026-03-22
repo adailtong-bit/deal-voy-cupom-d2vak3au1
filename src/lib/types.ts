@@ -132,10 +132,20 @@ export interface SeasonalEvent {
     lng: number
   }
   image?: string
+  images?: string[]
   region?: string
   companyId?: string
   billingAmount?: number
-  status: 'active' | 'paused' | 'scheduled' | 'archived'
+  price?: number
+  status:
+    | 'draft'
+    | 'pending'
+    | 'active'
+    | 'rejected'
+    | 'scheduled'
+    | 'archived'
+    | 'expired'
+  clickCount?: number
 }
 
 export interface Notification {

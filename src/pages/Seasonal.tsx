@@ -8,13 +8,19 @@ import { Calendar as CalendarIcon, Gift, Store } from 'lucide-react'
 
 export default function Seasonal() {
   const { t, formatDate } = useLanguage()
-  const { seasonalEvents, companies } = useCouponStore()
+  const { seasonalEvents, companies, trackSeasonalClick } = useCouponStore()
   const [date, setDate] = useState<Date | undefined>(new Date())
 
-  const activeEvents = useMemo(
-    () => seasonalEvents.filter((e) => e.status === 'active'),
-    [seasonalEvents],
-  )
+  const activeEvents = useMemo(() => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    return seasonalEvents.filter((e) => {
+      if (e.status !== 'active') return false
+      const end = new Date(e.endDate)
+      end.setHours(23, 59, 59, 999)
+      return end >= today
+    })
+  }, [seasonalEvents])
 
   const selectedEvent = useMemo(() => {
     if (!date) return null
@@ -59,25 +65,44 @@ export default function Seasonal() {
     return dates
   }, [activeEvents])
 
+  const handleEventClick = (eventId: string, newDate: Date) => {
+    trackSeasonalClick(eventId)
+    setDate(newDate)
+  }
+
   return (
     <div className="container mx-auto px-4 py-8 mb-16 md:mb-0">
       <h1 className="text-3xl font-bold mb-8 flex items-center gap-2">
         <CalendarIcon className="h-8 w-8 text-primary" />
-        {t('seasonal.title', 'Ofertas Sazonais')}
+        {t('seasonal.title')}
       </h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <Card className="h-fit">
           <CardHeader>
-            <CardTitle>
-              {t('seasonal.calendar_title', 'Calendário de Eventos')}
-            </CardTitle>
+            <CardTitle>{t('seasonal.calendar_title')}</CardTitle>
           </CardHeader>
           <CardContent>
             <Calendar
               mode="single"
               selected={date}
-              onSelect={setDate}
+              onSelect={(d) => {
+                if (d) {
+                  setDate(d)
+                  const searchDate = new Date(d)
+                  searchDate.setHours(0, 0, 0, 0)
+                  const ev = activeEvents.find((e) => {
+                    const s = new Date(e.startDate)
+                    s.setHours(0, 0, 0, 0)
+                    const en = new Date(e.endDate)
+                    en.setHours(23, 59, 59, 999)
+                    return searchDate >= s && searchDate <= en
+                  })
+                  if (ev) trackSeasonalClick(ev.id)
+                } else {
+                  setDate(undefined)
+                }
+              }}
               className="rounded-md border mx-auto"
               modifiers={{
                 event: highlightDates,
@@ -93,12 +118,24 @@ export default function Seasonal() {
           {selectedEvent ? (
             <Card className="border-primary bg-primary/5 animate-in fade-in zoom-in-95 overflow-hidden">
               {selectedEvent.image && (
-                <div className="w-full h-48 bg-muted">
+                <div className="w-full h-48 bg-muted relative">
                   <img
                     src={selectedEvent.image}
                     alt={selectedEvent.title}
                     className="w-full h-full object-cover"
                   />
+                  {selectedEvent.images && selectedEvent.images.length > 0 && (
+                    <div className="absolute bottom-2 right-2 flex gap-1">
+                      {selectedEvent.images.slice(0, 3).map((img, idx) => (
+                        <img
+                          key={idx}
+                          src={img}
+                          alt=""
+                          className="w-10 h-10 border-2 border-white rounded-md object-cover shadow-sm"
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
               <CardHeader>
@@ -141,15 +178,15 @@ export default function Seasonal() {
           )}
 
           <div className="space-y-4">
-            <h3 className="font-bold text-lg">
-              {t('seasonal.upcoming', 'Próximos Eventos')}
-            </h3>
+            <h3 className="font-bold text-lg">{t('seasonal.upcoming')}</h3>
             {upcomingEvents.length > 0 ? (
               upcomingEvents.map((event) => (
                 <div
                   key={event.id}
                   className="flex items-center p-4 rounded-lg border bg-card hover:bg-accent transition-colors cursor-pointer group"
-                  onClick={() => setDate(new Date(event.startDate))}
+                  onClick={() =>
+                    handleEventClick(event.id, new Date(event.startDate))
+                  }
                 >
                   <div className="flex-1">
                     <h4 className="font-bold group-hover:text-primary transition-colors">
@@ -170,7 +207,7 @@ export default function Seasonal() {
               ))
             ) : (
               <p className="text-sm text-muted-foreground">
-                {t('common.none', 'Nenhum')}
+                {t('common.none')}
               </p>
             )}
           </div>

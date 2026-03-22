@@ -1,5 +1,11 @@
 import { useState } from 'react'
-import { Plus, Edit2, Trash2, Calendar as CalendarIcon } from 'lucide-react'
+import {
+  Plus,
+  Edit2,
+  Trash2,
+  Calendar as CalendarIcon,
+  MousePointerClick,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -27,9 +33,23 @@ import {
 } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useCouponStore } from '@/stores/CouponContext'
 import { SeasonalEvent } from '@/lib/types'
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from '@/components/ui/chart'
+import {
+  BarChart,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Bar,
+  ResponsiveContainer,
+} from 'recharts'
 
 export function AdminSeasonalTab() {
   const { t, formatCurrency, formatDate } = useLanguage()
@@ -50,11 +70,14 @@ export function AdminSeasonalTab() {
     startDate: '',
     endDate: '',
     companyId: '',
-    billingAmount: 0,
-    status: 'active',
+    price: 0,
+    status: 'pending',
     image: '',
+    images: [],
     type: 'sale',
   })
+
+  const [imageInput, setImageInput] = useState('')
 
   const handleOpenDialog = (event?: SeasonalEvent) => {
     if (event) {
@@ -63,6 +86,8 @@ export function AdminSeasonalTab() {
         ...event,
         startDate: event.startDate.split('T')[0],
         endDate: event.endDate.split('T')[0],
+        images: event.images || [],
+        price: event.price || event.billingAmount || 0,
       })
     } else {
       setEditingEvent(null)
@@ -74,12 +99,14 @@ export function AdminSeasonalTab() {
           .toISOString()
           .split('T')[0],
         companyId: 'none',
-        billingAmount: 0,
-        status: 'active',
+        price: 0,
+        status: 'pending',
         image: 'https://img.usecurling.com/p/600/400?q=campaign',
+        images: [],
         type: 'sale',
       })
     }
+    setImageInput('')
     setIsDialogOpen(true)
   }
 
@@ -91,11 +118,22 @@ export function AdminSeasonalTab() {
       ? new Date(formData.endDate).toISOString()
       : new Date().toISOString()
 
+    const finalImages = [...(formData.images || [])]
+    if (imageInput.trim() !== '') {
+      finalImages.push(imageInput.trim())
+    }
+    const mainImage =
+      formData.image ||
+      finalImages[0] ||
+      'https://img.usecurling.com/p/600/400?q=campaign'
+
     if (editingEvent) {
       updateSeasonalEvent(editingEvent.id, {
         ...formData,
         startDate: startIso,
         endDate: endIso,
+        image: mainImage,
+        images: finalImages,
         companyId:
           formData.companyId === 'none' ? undefined : formData.companyId,
       })
@@ -105,6 +143,8 @@ export function AdminSeasonalTab() {
         id: Math.random().toString(),
         startDate: startIso,
         endDate: endIso,
+        image: mainImage,
+        images: finalImages,
         companyId:
           formData.companyId === 'none' ? undefined : formData.companyId,
       })
@@ -119,6 +159,26 @@ export function AdminSeasonalTab() {
 
   const activeEvents = seasonalEvents.filter((e) => e.status !== 'archived')
 
+  const chartData = activeEvents.map((e) => ({
+    name: e.title.length > 15 ? e.title.substring(0, 15) + '...' : e.title,
+    clicks: e.clickCount || 0,
+  }))
+
+  const getStatusBadgeVariant = (status: string) => {
+    switch (status) {
+      case 'active':
+        return 'default'
+      case 'pending':
+        return 'secondary'
+      case 'rejected':
+        return 'destructive'
+      case 'expired':
+        return 'outline'
+      default:
+        return 'secondary'
+    }
+  }
+
   return (
     <div className="space-y-6 animate-fade-in-up">
       <div className="flex items-center justify-between">
@@ -131,6 +191,49 @@ export function AdminSeasonalTab() {
         </Button>
       </div>
 
+      {chartData.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <MousePointerClick className="h-5 w-5 text-primary" />
+              Clicks per Campaign
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[200px] w-full">
+              <ChartContainer
+                config={{
+                  clicks: {
+                    label: t('vendor.clicks'),
+                    color: 'hsl(var(--primary))',
+                  },
+                }}
+              >
+                <BarChart
+                  data={chartData}
+                  margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis
+                    dataKey="name"
+                    tickLine={false}
+                    axisLine={false}
+                    fontSize={12}
+                  />
+                  <YAxis tickLine={false} axisLine={false} fontSize={12} />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Bar
+                    dataKey="clicks"
+                    fill="var(--color-clicks)"
+                    radius={[4, 4, 0, 0]}
+                  />
+                </BarChart>
+              </ChartContainer>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="rounded-md border bg-card">
         <Table>
           <TableHeader>
@@ -138,6 +241,8 @@ export function AdminSeasonalTab() {
               <TableHead>{t('admin.title')}</TableHead>
               <TableHead>{t('admin.partner')}</TableHead>
               <TableHead>{t('admin.period')}</TableHead>
+              <TableHead>{t('admin.price')}</TableHead>
+              <TableHead>Clicks</TableHead>
               <TableHead>{t('admin.status')}</TableHead>
               <TableHead className="text-right">{t('admin.action')}</TableHead>
             </TableRow>
@@ -162,11 +267,13 @@ export function AdminSeasonalTab() {
                   {formatDate(event.startDate)} - {formatDate(event.endDate)}
                 </TableCell>
                 <TableCell>
-                  <Badge
-                    variant={
-                      event.status === 'active' ? 'default' : 'secondary'
-                    }
-                  >
+                  {formatCurrency(event.price || event.billingAmount)}
+                </TableCell>
+                <TableCell className="font-bold">
+                  {event.clickCount || 0}
+                </TableCell>
+                <TableCell>
+                  <Badge variant={getStatusBadgeVariant(event.status)}>
                     {t(`admin.${event.status}`)}
                   </Badge>
                 </TableCell>
@@ -191,7 +298,7 @@ export function AdminSeasonalTab() {
             {activeEvents.length === 0 && (
               <TableRow>
                 <TableCell
-                  colSpan={5}
+                  colSpan={7}
                   className="text-center py-8 text-muted-foreground"
                 >
                   {t('common.none')}
@@ -203,7 +310,7 @@ export function AdminSeasonalTab() {
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {editingEvent ? t('admin.editSeasonal') : t('admin.addSeasonal')}
@@ -251,13 +358,14 @@ export function AdminSeasonalTab() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>{t('admin.billingAmount')}</Label>
+                <Label>{t('admin.price')}</Label>
                 <Input
                   type="number"
-                  value={formData.billingAmount}
+                  value={formData.price}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
+                      price: Number(e.target.value),
                       billingAmount: Number(e.target.value),
                     })
                   }
@@ -299,16 +407,22 @@ export function AdminSeasonalTab() {
                     <SelectValue placeholder={t('admin.status')} />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="draft">{t('admin.draft')}</SelectItem>
+                    <SelectItem value="pending">
+                      {t('admin.pending')}
+                    </SelectItem>
                     <SelectItem value="active">{t('admin.active')}</SelectItem>
-                    <SelectItem value="paused">{t('admin.paused')}</SelectItem>
-                    <SelectItem value="scheduled">
-                      {t('admin.scheduled')}
+                    <SelectItem value="rejected">
+                      {t('admin.rejected')}
+                    </SelectItem>
+                    <SelectItem value="expired">
+                      {t('admin.expired')}
                     </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>{t('admin.image')}</Label>
+                <Label>{t('admin.image')} (Main)</Label>
                 <Input
                   type="url"
                   placeholder="https://..."
@@ -318,6 +432,23 @@ export function AdminSeasonalTab() {
                   }
                 />
               </div>
+            </div>
+            <div className="space-y-2">
+              <Label>
+                Additional Images (Comma separated URLs or type and click Save)
+              </Label>
+              <Input
+                type="text"
+                placeholder="https://img1.jpg, https://img2.jpg"
+                value={formData.images?.join(', ')}
+                onChange={(e) => {
+                  const arr = e.target.value
+                    .split(',')
+                    .map((s) => s.trim())
+                    .filter(Boolean)
+                  setFormData({ ...formData, images: arr })
+                }}
+              />
             </div>
           </div>
           <DialogFooter>

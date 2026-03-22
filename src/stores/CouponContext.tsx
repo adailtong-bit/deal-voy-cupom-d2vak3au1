@@ -66,6 +66,7 @@ import {
 } from '@/lib/data'
 import { toast } from 'sonner'
 import { useNotification } from './NotificationContext'
+import { useLanguage } from './LanguageContext'
 
 const MOCK_USERS: User[] = ORIGINAL_MOCK_USERS.map((u) => ({
   ...u,
@@ -212,12 +213,16 @@ interface CouponContextType {
   addSeasonalEvent: (event: SeasonalEvent) => void
   updateSeasonalEvent: (id: string, event: Partial<SeasonalEvent>) => void
   deleteSeasonalEvent: (id: string) => void
+  trackSeasonalClick: (id: string) => void
+  approveSeasonalCampaign: (id: string) => void
+  rejectSeasonalCampaign: (id: string) => void
 }
 
 const CouponContext = createContext<CouponContextType | undefined>(undefined)
 
 export function CouponProvider({ children }: { children: React.ReactNode }) {
   const { addNotification } = useNotification()
+  const { t } = useLanguage()
   const [coupons, setCoupons] = useState<Coupon[]>(MOCK_COUPONS)
   const [companies, setCompanies] = useState<Company[]>(MOCK_COMPANIES)
   const [ads, setAds] = useState<Advertisement[]>(MOCK_ADS)
@@ -302,8 +307,16 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   const [partnerInvoices, setPartnerInvoices] = useState<PartnerInvoice[]>(
     MOCK_PARTNER_INVOICES,
   )
-  const [seasonalEvents, setSeasonalEvents] =
-    useState<SeasonalEvent[]>(SEASONAL_EVENTS)
+
+  // Convert MOCK seasonal events to include clickCount
+  const initializedSeasonalEvents = SEASONAL_EVENTS.map((event) => ({
+    ...event,
+    clickCount: Math.floor(Math.random() * 500),
+  }))
+
+  const [seasonalEvents, setSeasonalEvents] = useState<SeasonalEvent[]>(
+    initializedSeasonalEvents,
+  )
 
   useEffect(() => {
     if (user) {
@@ -1250,27 +1263,13 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   }
 
   const addSeasonalEvent = (event: SeasonalEvent) => {
-    setSeasonalEvents((prev) => [...prev, event])
-    if (event.companyId && event.billingAmount && event.billingAmount > 0) {
-      const invoice: PartnerInvoice = {
-        id: Math.random().toString(),
-        referenceNumber: `INV-SEAS-${Date.now().toString().slice(-6)}`,
-        companyId: event.companyId,
-        periodStart: event.startDate,
-        periodEnd: event.endDate,
-        totalSales: 0,
-        totalCommission: event.billingAmount,
-        totalCashback: 0,
-        status: 'draft',
-        dueDate: new Date(Date.now() + 15 * 86400000).toISOString(),
-        issueDate: new Date().toISOString(),
-        transactionCount: 1,
-      }
-      setPartnerInvoices((prev) => [...prev, invoice])
-      toast.success('Campaign created and invoice drafted!')
-    } else {
-      toast.success('Campaign created successfully!')
+    const newEvent = {
+      ...event,
+      status: event.status || 'pending',
+      clickCount: 0,
     }
+    setSeasonalEvents((prev) => [...prev, newEvent])
+    toast.success(t('common.success'))
     logSystemAction('Seasonal Event Added', `Added event ${event.title}`)
   }
 
@@ -1278,7 +1277,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     setSeasonalEvents((prev) =>
       prev.map((e) => (e.id === id ? { ...e, ...event } : e)),
     )
-    toast.success('Campaign updated successfully')
+    toast.success(t('common.success'))
     logSystemAction('Seasonal Event Updated', `Updated event ${id}`)
   }
 
@@ -1286,8 +1285,62 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     setSeasonalEvents((prev) =>
       prev.map((e) => (e.id === id ? { ...e, status: 'archived' } : e)),
     )
-    toast.success('Campaign archived successfully')
+    toast.success(t('common.success'))
     logSystemAction('Seasonal Event Deleted/Archived', `Archived event ${id}`)
+  }
+
+  const trackSeasonalClick = (id: string) => {
+    setSeasonalEvents((prev) =>
+      prev.map((e) =>
+        e.id === id ? { ...e, clickCount: (e.clickCount || 0) + 1 } : e,
+      ),
+    )
+  }
+
+  const approveSeasonalCampaign = (id: string) => {
+    const event = seasonalEvents.find((e) => e.id === id)
+    if (!event) return
+
+    setSeasonalEvents((prev) =>
+      prev.map((e) => (e.id === id ? { ...e, status: 'active' } : e)),
+    )
+
+    if (event.companyId && event.price && event.price > 0) {
+      const invoice: PartnerInvoice = {
+        id: Math.random().toString(),
+        referenceNumber: `INV-SEAS-${Date.now().toString().slice(-6)}`,
+        companyId: event.companyId,
+        periodStart: event.startDate,
+        periodEnd: event.endDate,
+        totalSales: 0,
+        totalCommission: event.price,
+        totalCashback: 0,
+        status: 'draft',
+        dueDate: new Date(Date.now() + 15 * 86400000).toISOString(),
+        issueDate: new Date().toISOString(),
+        transactionCount: 1,
+      }
+      setPartnerInvoices((prev) => [...prev, invoice])
+    }
+
+    addNotification({
+      title: t('seasonal.campaign_approved'),
+      message: t('seasonal.campaign_approved_desc'),
+      type: 'system',
+      priority: 'high',
+      category: 'system',
+    })
+
+    toast.success(t('seasonal.campaign_approved'))
+    logSystemAction('Seasonal Event Approved', `Approved event ${id}`)
+  }
+
+  const rejectSeasonalCampaign = (id: string) => {
+    setSeasonalEvents((prev) =>
+      prev.map((e) => (e.id === id ? { ...e, status: 'rejected' } : e)),
+    )
+    toast.success(t('common.success'))
+    logSystemAction('Seasonal Event Rejected', `Rejected event ${id}`)
   }
 
   return React.createElement(
@@ -1410,6 +1463,9 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         addSeasonalEvent,
         updateSeasonalEvent,
         deleteSeasonalEvent,
+        trackSeasonalClick,
+        approveSeasonalCampaign,
+        rejectSeasonalCampaign,
       },
     },
     children,
