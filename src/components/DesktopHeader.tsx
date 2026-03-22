@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Search, Bell } from 'lucide-react'
+import { Search, Bell, Home } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { LanguageSelector } from '@/components/LanguageSelector'
@@ -30,28 +30,35 @@ export function DesktopHeader() {
           </Link>
           <nav className="flex items-center gap-6 text-sm font-semibold">
             <Link
+              to="/"
+              className="flex items-center gap-1.5 transition-colors hover:text-primary"
+            >
+              <Home className="h-4 w-4" />
+              {t('nav.home', 'Início')}
+            </Link>
+            <Link
               to="/explore"
               className="transition-colors hover:text-primary"
             >
-              {t('nav.explore')}
+              {t('nav.explore', 'Explorar')}
             </Link>
             <Link
               to="/seasonal"
               className="transition-colors hover:text-primary"
             >
-              {t('nav.seasonal')}
+              {t('nav.seasonal', 'Sazonal')}
             </Link>
             <Link
               to="/travel-planner"
               className="transition-colors hover:text-primary"
             >
-              {t('nav.planner')}
+              {t('nav.planner', 'Roteiros')}
             </Link>
             <Link
               to="/admin"
               className="transition-colors text-primary hover:text-primary/80 font-bold"
             >
-              {t('nav.admin')}
+              {t('nav.admin', 'Admin')}
             </Link>
           </nav>
         </div>
@@ -60,7 +67,7 @@ export function DesktopHeader() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input
               type="search"
-              placeholder={t('nav.search')}
+              placeholder={t('nav.search', 'Buscar...')}
               className="h-9 w-64 rounded-full border border-input bg-slate-50 pl-9 pr-4 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:bg-white transition-all"
             />
           </div>
@@ -92,7 +99,7 @@ export function DesktopHeader() {
               variant="default"
               className="font-bold rounded-full px-6"
             >
-              <Link to="/login">{t('auth.login')}</Link>
+              <Link to="/login">{t('auth.login', 'Entrar')}</Link>
             </Button>
           )}
         </div>

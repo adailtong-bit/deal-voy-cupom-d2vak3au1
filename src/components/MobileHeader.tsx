@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Bell, Search } from 'lucide-react'
+import { Bell, Search, Home } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import logoUrl from '@/assets/whatsapp-image-2026-01-25-at-5.34.51-am-1-9b370.jpeg'
@@ -27,6 +27,17 @@ export function MobileHeader() {
           </span>
         </Link>
         <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-slate-600 hover:text-primary"
+            asChild
+          >
+            <Link to="/">
+              <Home className="h-5 w-5" />
+            </Link>
+          </Button>
+
           <Button
             variant="ghost"
             size="icon"
@@ -67,7 +78,7 @@ export function MobileHeader() {
               variant="default"
               className="font-bold rounded-full ml-1"
             >
-              <Link to="/login">{t('auth.login')}</Link>
+              <Link to="/login">{t('auth.login', 'Entrar')}</Link>
             </Button>
           )}
         </div>
