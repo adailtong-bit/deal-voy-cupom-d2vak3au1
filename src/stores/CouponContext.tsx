@@ -216,6 +216,7 @@ interface CouponContextType {
   trackSeasonalClick: (id: string) => void
   approveSeasonalCampaign: (id: string) => void
   rejectSeasonalCampaign: (id: string) => void
+  renewSeasonalCampaign: (id: string) => void
 }
 
 const CouponContext = createContext<CouponContextType | undefined>(undefined)
@@ -308,15 +309,8 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     MOCK_PARTNER_INVOICES,
   )
 
-  // Convert MOCK seasonal events to include clickCount
-  const initializedSeasonalEvents = SEASONAL_EVENTS.map((event) => ({
-    ...event,
-    clickCount: Math.floor(Math.random() * 500),
-  }))
-
-  const [seasonalEvents, setSeasonalEvents] = useState<SeasonalEvent[]>(
-    initializedSeasonalEvents,
-  )
+  const [seasonalEvents, setSeasonalEvents] =
+    useState<SeasonalEvent[]>(SEASONAL_EVENTS)
 
   useEffect(() => {
     if (user) {
@@ -342,6 +336,25 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       setUserLocation(MOCK_USER_LOCATION)
       setIsLoadingLocation(false)
     }, 1500)
+
+    // Notify about expiring campaigns
+    const expiring = SEASONAL_EVENTS.filter((e) => {
+      if (e.status !== 'active') return false
+      const days =
+        (new Date(e.endDate).getTime() - Date.now()) / (1000 * 3600 * 24)
+      return days >= 0 && days <= 7
+    })
+    if (expiring.length > 0) {
+      setTimeout(() => {
+        addNotification({
+          title: 'Campanhas Expirando',
+          message: `${expiring.length} campanha(s) requer(em) atenção para renovação.`,
+          type: 'alert',
+          priority: 'high',
+          category: 'system',
+        })
+      }, 2000)
+    }
   }, [])
 
   useEffect(() => {
@@ -1301,8 +1314,14 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     const event = seasonalEvents.find((e) => e.id === id)
     if (!event) return
 
+    const newVouchers = Array.from({ length: 15 }).map(
+      () => `VCH-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
+    )
+
     setSeasonalEvents((prev) =>
-      prev.map((e) => (e.id === id ? { ...e, status: 'active' } : e)),
+      prev.map((e) =>
+        e.id === id ? { ...e, status: 'active', vouchers: newVouchers } : e,
+      ),
     )
 
     if (event.companyId && event.price && event.price > 0) {
@@ -1331,7 +1350,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       category: 'system',
     })
 
-    toast.success(t('seasonal.campaign_approved'))
+    toast.success(t('admin.vouchersGenerated', 'Vouchers gerados com sucesso.'))
     logSystemAction('Seasonal Event Approved', `Approved event ${id}`)
   }
 
@@ -1341,6 +1360,34 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     )
     toast.success(t('common.success'))
     logSystemAction('Seasonal Event Rejected', `Rejected event ${id}`)
+  }
+
+  const renewSeasonalCampaign = (id: string) => {
+    const event = seasonalEvents.find((e) => e.id === id)
+    if (!event) return
+
+    const oldEnd = new Date(event.endDate)
+    const newStart = new Date(oldEnd)
+    newStart.setDate(newStart.getDate() + 1)
+    const newEnd = new Date(newStart)
+    newEnd.setDate(newEnd.getDate() + 30)
+
+    const newEvent: SeasonalEvent = {
+      ...event,
+      id: Math.random().toString(),
+      title: `${event.title} (Renewed)`,
+      startDate: newStart.toISOString(),
+      endDate: newEnd.toISOString(),
+      status: 'draft',
+      clickCount: 0,
+      vouchers: [],
+    }
+
+    setSeasonalEvents((prev) => [newEvent, ...prev])
+    toast.success(
+      t('admin.renewSuccess', 'Campanha renovada com sucesso como rascunho.'),
+    )
+    logSystemAction('Seasonal Event Renewed', `Renewed event ${id}`)
   }
 
   return React.createElement(
@@ -1466,6 +1513,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         trackSeasonalClick,
         approveSeasonalCampaign,
         rejectSeasonalCampaign,
+        renewSeasonalCampaign,
       },
     },
     children,

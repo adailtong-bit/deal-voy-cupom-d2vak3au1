@@ -146,6 +146,7 @@ export interface SeasonalEvent {
     | 'archived'
     | 'expired'
   clickCount?: number
+  vouchers?: string[]
 }
 
 export interface Notification {

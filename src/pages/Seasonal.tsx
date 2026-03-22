@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useCouponStore } from '@/stores/CouponContext'
-import { Calendar as CalendarIcon, Gift, Store } from 'lucide-react'
+import { Calendar as CalendarIcon, Gift, Store, Ticket } from 'lucide-react'
 
 export default function Seasonal() {
   const { t, formatDate } = useLanguage()
@@ -150,6 +150,16 @@ export default function Seasonal() {
                         {getCompanyName(selectedEvent.companyId)}
                       </p>
                     )}
+                    {selectedEvent.vouchers &&
+                      selectedEvent.vouchers.length > 0 && (
+                        <Badge
+                          variant="outline"
+                          className="mt-2 bg-primary/10 text-primary border-primary/20"
+                        >
+                          <Ticket className="w-3 h-3 mr-1" />
+                          {selectedEvent.vouchers.length} Vouchers Available
+                        </Badge>
+                      )}
                   </div>
                   <Badge variant="secondary">{selectedEvent.type}</Badge>
                 </div>
@@ -189,8 +199,11 @@ export default function Seasonal() {
                   }
                 >
                   <div className="flex-1">
-                    <h4 className="font-bold group-hover:text-primary transition-colors">
+                    <h4 className="font-bold group-hover:text-primary transition-colors flex items-center gap-2">
                       {event.title}
+                      {event.vouchers && event.vouchers.length > 0 && (
+                        <Ticket className="w-3 h-3 text-primary" />
+                      )}
                     </h4>
                     <p className="text-xs text-muted-foreground">
                       {formatDate(event.startDate)} -{' '}

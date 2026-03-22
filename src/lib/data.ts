@@ -134,49 +134,62 @@ export const CATEGORIES: {
   },
 ]
 
-export const SEASONAL_EVENTS: SeasonalEvent[] = [
-  {
-    id: '1',
-    title: 'Black Friday',
-    startDate: new Date('2024-11-20T12:00:00').toISOString(),
-    endDate: new Date('2024-11-30T12:00:00').toISOString(),
-    description: 'As maiores ofertas do ano em todas as lojas.',
-    type: 'sale',
-    coordinates: { lat: -23.55052, lng: -46.633308 },
-    image: 'https://img.usecurling.com/p/600/400?q=black%20friday',
-    region: 'BR-SP',
-    companyId: 'c1',
-    billingAmount: 500,
-    status: 'active',
-  },
-  {
-    id: '2',
-    title: 'Natal na Paulista',
-    startDate: new Date('2024-12-01T12:00:00').toISOString(),
-    endDate: new Date('2024-12-25T12:00:00').toISOString(),
-    description:
-      'Ofertas especiais de presentes e decoração com show de luzes.',
-    type: 'holiday',
-    coordinates: { lat: -23.5614, lng: -46.656 },
-    image: 'https://img.usecurling.com/p/600/400?q=christmas%20lights',
-    region: 'BR-SP',
-    companyId: 'c2',
-    billingAmount: 300,
-    status: 'active',
-  },
-  {
-    id: '3',
-    title: 'Independence Day Sale',
-    startDate: new Date('2024-07-01T12:00:00').toISOString(),
-    endDate: new Date('2024-07-05T12:00:00').toISOString(),
-    description: 'July 4th Specials across Florida.',
-    type: 'sale',
-    coordinates: { lat: 28.5383, lng: -81.3792 },
-    image: 'https://img.usecurling.com/p/600/400?q=fireworks',
-    region: 'US-FL',
-    status: 'paused',
-  },
-]
+const generateSeasonalEvents = (): SeasonalEvent[] => {
+  const events: SeasonalEvent[] = []
+  const statuses: SeasonalEvent['status'][] = [
+    'draft',
+    'pending',
+    'active',
+    'expired',
+    'active', // duplicate to have more active
+  ]
+
+  for (let i = 1; i <= 15; i++) {
+    const status = statuses[i % statuses.length]
+    const now = new Date()
+    let startDate = new Date()
+    let endDate = new Date()
+
+    if (status === 'expired') {
+      startDate.setDate(now.getDate() - 30)
+      endDate.setDate(now.getDate() - 5)
+    } else if (status === 'active') {
+      startDate.setDate(now.getDate() - (i % 2 === 0 ? 5 : 10))
+      endDate.setDate(now.getDate() + (i % 3 === 0 ? 3 : 15)) // Some expire soon
+    } else {
+      startDate.setDate(now.getDate() + 5)
+      endDate.setDate(now.getDate() + 35)
+    }
+
+    events.push({
+      id: `se-${i}`,
+      title: `Campaign ${i} - ${status.toUpperCase()}`,
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
+      description: `Special promotional campaign ${i} with exclusive discounts across multiple channels.`,
+      type: i % 2 === 0 ? 'sale' : 'event',
+      companyId: `c${(i % 5) + 1}`,
+      billingAmount: 500 + i * 100,
+      price: 500 + i * 100,
+      status,
+      clickCount:
+        status === 'active' || status === 'expired'
+          ? Math.floor(Math.random() * 1000) + 100
+          : 0,
+      image: `https://img.usecurling.com/p/600/400?q=campaign&seed=${i}`,
+      vouchers:
+        status === 'active'
+          ? Array.from({ length: 15 }).map(
+              (_, vi) =>
+                `VCH-${i}-${vi}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`,
+            )
+          : [],
+    })
+  }
+  return events
+}
+
+export const SEASONAL_EVENTS: SeasonalEvent[] = generateSeasonalEvents()
 
 export const MOCK_NOTIFICATIONS: Notification[] = [
   {
@@ -887,6 +900,23 @@ export const MOCK_PARTNER_POLICIES: PartnerPolicy[] = [
   },
 ]
 
+const generatedSeasonalInvoices: PartnerInvoice[] = SEASONAL_EVENTS.filter(
+  (e) => e.status === 'active' || e.status === 'expired',
+).map((e) => ({
+  id: `inv-se-${e.id}`,
+  referenceNumber: `INV-SEAS-${e.id.toUpperCase()}`,
+  companyId: e.companyId || 'c1',
+  periodStart: e.startDate,
+  periodEnd: e.endDate,
+  totalSales: 0,
+  totalCommission: e.price || e.billingAmount || 0,
+  totalCashback: 0,
+  status: e.status === 'expired' ? 'paid' : 'sent',
+  dueDate: new Date(Date.now() + 15 * 86400000).toISOString(),
+  issueDate: e.startDate,
+  transactionCount: 1,
+}))
+
 export const MOCK_PARTNER_INVOICES: PartnerInvoice[] = [
   {
     id: 'pinv-1',
@@ -902,4 +932,5 @@ export const MOCK_PARTNER_INVOICES: PartnerInvoice[] = [
     issueDate: '2024-11-01T10:00:00.000Z',
     transactionCount: 45,
   },
+  ...generatedSeasonalInvoices,
 ]
