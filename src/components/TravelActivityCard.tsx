@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Coupon } from '@/lib/types'
+import { useLanguage } from '@/stores/LanguageContext'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -35,6 +36,7 @@ export function TravelActivityCard({
   onRemove,
 }: TravelActivityCardProps) {
   const navigate = useNavigate()
+  const { t } = useLanguage()
   const [isBookingOpen, setIsBookingOpen] = useState(false)
 
   // Simple heuristic to determine booking form type
@@ -90,7 +92,7 @@ export function TravelActivityCard({
                 size="icon"
                 className="text-slate-400 hover:text-red-600 hover:bg-red-50 shrink-0 -mr-2 -mt-2"
                 onClick={() => onRemove(dayId, stop.id)}
-                title="Remove activity"
+                title={t('travel.activity_removed', 'Activity removed')}
               >
                 <Trash2 className="h-5 w-5" />
               </Button>
@@ -105,7 +107,11 @@ export function TravelActivityCard({
               <div className="flex items-start sm:items-center gap-1.5 text-xs text-slate-600">
                 <MapPin className="h-3.5 w-3.5 text-slate-400 shrink-0 mt-0.5 sm:mt-0" />
                 <span className="line-clamp-1">
-                  {stop.address || 'Address unavailable'}
+                  {stop.address ||
+                    t(
+                      'activity_card.address_unavailable',
+                      'Address unavailable',
+                    )}
                 </span>
               </div>
 
@@ -116,12 +122,13 @@ export function TravelActivityCard({
                     variant="outline"
                     className="h-8 gap-2 bg-slate-50 border-primary/20 text-primary hover:bg-primary/5 shrink-0 self-start sm:self-auto font-semibold"
                   >
-                    <Calendar className="h-3 w-3" /> Reservar Agora
+                    <Calendar className="h-3 w-3" />{' '}
+                    {t('activity_card.book_now', 'Reservar Agora')}
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-md p-0 border-none bg-transparent shadow-none">
                   <DialogTitle className="sr-only">
-                    Reservar {stop.storeName}
+                    {t('hub.book', 'Reservar')} {stop.storeName}
                   </DialogTitle>
                   <BookingForm
                     coupon={stop}
@@ -137,11 +144,14 @@ export function TravelActivityCard({
               <div className="flex-1 space-y-1.5">
                 <h5 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
                   <Info className="h-3.5 w-3.5 text-primary" />
-                  Como Utilizar
+                  {t('activity_card.how_to_use', 'Como Utilizar')}
                 </h5>
                 <p className="text-xs text-slate-600 leading-relaxed">
                   {stop.instructions ||
-                    'Apresente esta tela no balcão. Certifique-se de que o código esteja bem visível para garantir seu benefício.'}
+                    t(
+                      'activity_card.instructions_default',
+                      'Apresente esta tela no balcão. Certifique-se de que o código esteja bem visível para garantir seu benefício.',
+                    )}
                 </p>
               </div>
               <div className="shrink-0 bg-white border border-slate-200 rounded p-2 flex flex-col items-center justify-center min-w-[110px] w-full sm:w-auto shadow-sm">
@@ -150,7 +160,7 @@ export function TravelActivityCard({
                   strokeWidth={1.5}
                 />
                 <span className="text-[10px] font-mono font-bold text-slate-500 tracking-widest uppercase text-center w-full truncate px-1">
-                  {stop.code || 'NO-CODE'}
+                  {stop.code || t('activity_card.no_code', 'SEM-CÓDIGO')}
                 </span>
               </div>
             </div>

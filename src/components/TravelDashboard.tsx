@@ -261,7 +261,8 @@ export function TravelDashboard({
                         <Calendar className="w-4 h-4 text-slate-400" />
                         <span>
                           {formatDate(booking.date)}{' '}
-                          {booking.time && `às ${booking.time}`}
+                          {booking.time &&
+                            ` ${t('common.at', 'às')} ${booking.time}`}
                         </span>
                       </div>
                       <div className="flex items-center gap-2 text-sm text-slate-600">

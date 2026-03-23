@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useCouponStore } from '@/stores/CouponContext'
+import { useLanguage } from '@/stores/LanguageContext'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -42,6 +43,7 @@ export function TravelDiscoveryHub({
   onBookingSuccess,
 }: TravelDiscoveryHubProps) {
   const { travelOffers } = useCouponStore()
+  const { t } = useLanguage()
   const [activeTab, setActiveTab] = useState('hotel')
   const [guests, setGuests] = useState('2')
   const [requirePrivacy, setRequirePrivacy] = useState(false)
@@ -79,11 +81,13 @@ export function TravelDiscoveryHub({
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-2xl font-bold text-slate-900">
-            Explore Oportunidades
+            {t('hub.explore_opportunities', 'Explore Oportunidades')}
           </h2>
           <p className="text-muted-foreground mt-1">
-            Encontre os melhores hotéis, aluguéis de carro e atividades
-            exclusivas.
+            {t(
+              'hub.explore_opportunities_desc',
+              'Encontre os melhores hotéis, aluguéis de carro e atividades exclusivas.',
+            )}
           </p>
         </div>
       </div>
@@ -95,21 +99,25 @@ export function TravelDiscoveryHub({
             className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground gap-2 rounded-lg"
           >
             <Hotel className="h-4 w-4" />{' '}
-            <span className="hidden sm:inline">Hotéis</span>
+            <span className="hidden sm:inline">
+              {t('hub.hotels', 'Hotéis')}
+            </span>
           </TabsTrigger>
           <TabsTrigger
             value="car_rental"
             className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground gap-2 rounded-lg"
           >
             <Car className="h-4 w-4" />{' '}
-            <span className="hidden sm:inline">Carros</span>
+            <span className="hidden sm:inline">{t('hub.cars', 'Carros')}</span>
           </TabsTrigger>
           <TabsTrigger
             value="activity"
             className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground gap-2 rounded-lg"
           >
             <Ticket className="h-4 w-4" />{' '}
-            <span className="hidden sm:inline">Atividades</span>
+            <span className="hidden sm:inline">
+              {t('hub.activities', 'Atividades')}
+            </span>
           </TabsTrigger>
         </TabsList>
 
@@ -118,7 +126,7 @@ export function TravelDiscoveryHub({
             <CardContent className="p-4 flex flex-col sm:flex-row items-start sm:items-center gap-6">
               <div className="flex items-center gap-3 w-full sm:w-auto">
                 <Label className="font-semibold whitespace-nowrap text-slate-700">
-                  Hóspedes:
+                  {t('hub.guests_label', 'Hóspedes:')}
                 </Label>
                 <Select value={guests} onValueChange={setGuests}>
                   <SelectTrigger className="w-[140px] bg-white border-slate-200 shadow-sm">
@@ -127,7 +135,10 @@ export function TravelDiscoveryHub({
                   <SelectContent>
                     {[1, 2, 3, 4, 5, 6, 8, 10].map((n) => (
                       <SelectItem key={n} value={n.toString()}>
-                        {n} {n === 1 ? 'Pessoa' : 'Pessoas'}
+                        {n}{' '}
+                        {n === 1
+                          ? t('hub.person', 'Pessoa')
+                          : t('hub.people', 'Pessoas')}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -146,7 +157,10 @@ export function TravelDiscoveryHub({
                     className="text-sm font-bold leading-none text-slate-700 cursor-pointer flex items-center gap-2"
                   >
                     <Users className="h-4 w-4 text-blue-500" />
-                    Exigir Quartos Individuais (Privacidade)
+                    {t(
+                      'hub.require_privacy',
+                      'Exigir Quartos Individuais (Privacidade)',
+                    )}
                   </label>
                 </div>
               )}
@@ -158,9 +172,14 @@ export function TravelDiscoveryHub({
           {filteredOffers.length === 0 ? (
             <div className="col-span-full text-center py-16 text-slate-500 bg-white rounded-2xl border-2 border-dashed border-slate-200">
               <p className="text-lg font-medium text-slate-700 mb-2">
-                Nenhuma oferta encontrada
+                {t('hub.no_offers', 'Nenhuma oferta encontrada')}
               </p>
-              <p>Tente ajustar seus filtros ou mudar de categoria.</p>
+              <p>
+                {t(
+                  'hub.try_adjusting_filters',
+                  'Tente ajustar seus filtros ou mudar de categoria.',
+                )}
+              </p>
             </div>
           ) : (
             filteredOffers.map((offer) => (
@@ -181,14 +200,16 @@ export function TravelDiscoveryHub({
                         variant="secondary"
                         className="bg-purple-600 text-white hover:bg-purple-700 border-none shadow-sm"
                       >
-                        <Megaphone className="w-3 h-3 mr-1" /> Parceiro
+                        <Megaphone className="w-3 h-3 mr-1" />{' '}
+                        {t('hub.partner', 'Parceiro')}
                       </Badge>
                     ) : (
                       <Badge
                         variant="secondary"
                         className="bg-slate-700/80 text-white hover:bg-slate-800 border-none backdrop-blur-sm shadow-sm"
                       >
-                        <Search className="w-3 h-3 mr-1" /> Orgânico
+                        <Search className="w-3 h-3 mr-1" />{' '}
+                        {t('hub.organic', 'Orgânico')}
                       </Badge>
                     )}
                   </div>
@@ -198,7 +219,8 @@ export function TravelDiscoveryHub({
                     </div>
                     {offer.hasSeparatedRooms && (
                       <div className="bg-blue-600 text-white px-2 py-1 rounded-md text-xs font-bold shadow-sm flex items-center gap-1">
-                        <Users className="h-3 w-3" /> Privacidade
+                        <Users className="h-3 w-3" />{' '}
+                        {t('hub.privacy', 'Privacidade')}
                       </div>
                     )}
                   </div>
@@ -235,17 +257,17 @@ export function TravelDiscoveryHub({
                       className="w-full font-bold shadow-sm text-xs px-2"
                       onClick={() => setDetailsOffer(offer)}
                     >
-                      Ver Detalhes
+                      {t('hub.view_details', 'Ver Detalhes')}
                     </Button>
                     <Button
                       className="w-full font-bold shadow-sm text-xs px-2"
                       onClick={() => setBookingOffer(offer)}
                     >
                       {activeTab === 'hotel'
-                        ? 'Reservar'
+                        ? t('hub.book', 'Reservar')
                         : activeTab === 'car_rental'
-                          ? 'Alugar'
-                          : 'Comprar'}
+                          ? t('hub.rent', 'Alugar')
+                          : t('hub.buy', 'Comprar')}
                     </Button>
                   </div>
                 </CardContent>
@@ -280,7 +302,7 @@ export function TravelDiscoveryHub({
               <div className="space-y-5 py-2">
                 <div>
                   <h4 className="font-bold text-slate-800 mb-1 flex items-center gap-2">
-                    Sobre a Oferta
+                    {t('hub.about_offer', 'Sobre a Oferta')}
                   </h4>
                   <p className="text-sm text-slate-600 leading-relaxed">
                     {detailsOffer.description}
@@ -289,12 +311,12 @@ export function TravelDiscoveryHub({
 
                 <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
                   <h4 className="font-bold text-slate-800 mb-3 text-sm uppercase tracking-wider">
-                    Detalhes da Promoção
+                    {t('hub.promo_details', 'Detalhes da Promoção')}
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3 gap-x-4 text-sm">
                     <div>
                       <span className="text-slate-500 block text-xs">
-                        Fornecedor
+                        {t('hub.provider', 'Fornecedor')}
                       </span>
                       <span className="font-semibold text-slate-800">
                         {detailsOffer.provider}
@@ -302,7 +324,7 @@ export function TravelDiscoveryHub({
                     </div>
                     <div>
                       <span className="text-slate-500 block text-xs">
-                        Destino
+                        {t('hub.destination', 'Destino')}
                       </span>
                       <span className="font-semibold text-slate-800">
                         {detailsOffer.destination}
@@ -311,7 +333,7 @@ export function TravelDiscoveryHub({
                     {detailsOffer.rating && (
                       <div>
                         <span className="text-slate-500 block text-xs mb-0.5">
-                          Avaliação
+                          {t('hub.rating', 'Avaliação')}
                         </span>
                         <StarRating rating={detailsOffer.rating} size={4} />
                       </div>
@@ -319,8 +341,11 @@ export function TravelDiscoveryHub({
                     {detailsOffer.hasSeparatedRooms && (
                       <div className="sm:col-span-2">
                         <span className="text-blue-600 bg-blue-50 border border-blue-100 px-2 py-1 rounded text-xs font-bold flex w-fit items-center gap-1.5">
-                          <Users className="w-3.5 h-3.5" /> Privacidade
-                          Garantida / Quartos Individuais
+                          <Users className="w-3.5 h-3.5" />{' '}
+                          {t(
+                            'hub.privacy_guaranteed_full',
+                            'Privacidade Garantida / Quartos Individuais',
+                          )}
                         </span>
                       </div>
                     )}
@@ -333,7 +358,7 @@ export function TravelDiscoveryHub({
                   className="w-full sm:w-auto"
                   onClick={() => setDetailsOffer(null)}
                 >
-                  Voltar
+                  {t('hub.back', 'Voltar')}
                 </Button>
                 <Button asChild className="w-full sm:w-auto gap-2 bg-primary">
                   <a
@@ -341,7 +366,8 @@ export function TravelDiscoveryHub({
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    Visitar Site <ExternalLink className="w-4 h-4" />
+                    {t('hub.visit_site', 'Visitar Site')}{' '}
+                    <ExternalLink className="w-4 h-4" />
                   </a>
                 </Button>
               </DialogFooter>

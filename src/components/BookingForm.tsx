@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/select'
 import { Coupon, TravelOffer } from '@/lib/types'
 import { useCouponStore } from '@/stores/CouponContext'
+import { useLanguage } from '@/stores/LanguageContext'
 import { toast } from 'sonner'
 import { Calendar, Users, Car, Hotel, Ticket as TicketIcon } from 'lucide-react'
 
@@ -29,6 +30,7 @@ export function BookingForm({
   onSuccess?: () => void
 }) {
   const { makeBooking } = useCouponStore()
+  const { t } = useLanguage()
 
   // General & Hotel
   const [date, setDate] = useState('')
@@ -58,15 +60,18 @@ export function BookingForm({
 
     const msg =
       type === 'hotel'
-        ? 'Reserva de Hotel Solicitada'
+        ? t('booking.hotel_requested', 'Reserva de Hotel Solicitada')
         : type === 'car'
-          ? 'Aluguel de Carro Solicitado'
+          ? t('booking.car_requested', 'Aluguel de Carro Solicitado')
           : type === 'ticket'
-            ? 'Ingresso Solicitado'
-            : 'Reserva Solicitada'
+            ? t('booking.ticket_requested', 'Ingresso Solicitado')
+            : t('booking.reservation_requested', 'Reserva Solicitada')
 
     toast.success(msg, {
-      description: 'O parceiro confirmará em breve.',
+      description: t(
+        'booking.partner_will_confirm',
+        'O parceiro confirmará em breve.',
+      ),
     })
 
     if (onSuccess) {
@@ -83,12 +88,12 @@ export function BookingForm({
   const Icon = iconMap[type] || Calendar
   const titleLabel =
     type === 'hotel'
-      ? 'Reservar Hotel'
+      ? t('booking.book_hotel', 'Reservar Hotel')
       : type === 'car'
-        ? 'Alugar Carro'
+        ? t('booking.rent_car', 'Alugar Carro')
         : type === 'ticket'
-          ? 'Comprar Ingresso'
-          : 'Fazer Reserva'
+          ? t('booking.buy_ticket', 'Comprar Ingresso')
+          : t('booking.make_reservation', 'Fazer Reserva')
 
   return (
     <Card className="bg-slate-50 border-slate-200 shadow-none">
@@ -103,7 +108,7 @@ export function BookingForm({
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <Label className="text-xs font-semibold text-slate-600">
-                    Check-in
+                    {t('booking.check_in', 'Check-in')}
                   </Label>
                   <Input
                     type="date"
@@ -115,7 +120,7 @@ export function BookingForm({
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs font-semibold text-slate-600">
-                    Check-out
+                    {t('booking.check_out', 'Check-out')}
                   </Label>
                   <Input
                     type="date"
@@ -129,7 +134,7 @@ export function BookingForm({
               </div>
               <div className="space-y-1">
                 <Label className="text-xs font-semibold text-slate-600">
-                  Hóspedes
+                  {t('hub.guests_label', 'Hóspedes:').replace(':', '')}
                 </Label>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <Select value={guests} onValueChange={setGuests}>
@@ -139,7 +144,10 @@ export function BookingForm({
                     <SelectContent>
                       {[1, 2, 3, 4, 5, 6, 8, 10].map((num) => (
                         <SelectItem key={num} value={num.toString()}>
-                          {num} {num === 1 ? 'Pessoa' : 'Pessoas'}
+                          {num}{' '}
+                          {num === 1
+                            ? t('hub.person', 'Pessoa')
+                            : t('hub.people', 'Pessoas')}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -148,7 +156,7 @@ export function BookingForm({
                     type="submit"
                     className="sm:w-1/2 gap-2 shadow-sm font-bold"
                   >
-                    <Hotel className="h-4 w-4" /> Reservar
+                    <Hotel className="h-4 w-4" /> {t('hub.book', 'Reservar')}
                   </Button>
                 </div>
               </div>
@@ -160,7 +168,7 @@ export function BookingForm({
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <Label className="text-xs font-semibold text-slate-600">
-                    Retirada
+                    {t('booking.pickup_date', 'Retirada')}
                   </Label>
                   <Input
                     type="date"
@@ -172,7 +180,7 @@ export function BookingForm({
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs font-semibold text-slate-600">
-                    Hora (Retirada)
+                    {t('booking.pickup_time', 'Hora (Retirada)')}
                   </Label>
                   <Input
                     type="time"
@@ -186,7 +194,7 @@ export function BookingForm({
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <Label className="text-xs font-semibold text-slate-600">
-                    Devolução
+                    {t('booking.return_date', 'Devolução')}
                   </Label>
                   <Input
                     type="date"
@@ -199,7 +207,7 @@ export function BookingForm({
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs font-semibold text-slate-600">
-                    Hora (Devolução)
+                    {t('booking.return_time', 'Hora (Devolução)')}
                   </Label>
                   <Input
                     type="time"
@@ -212,7 +220,7 @@ export function BookingForm({
               </div>
               <div className="space-y-1">
                 <Label className="text-xs font-semibold text-slate-600">
-                  Categoria
+                  {t('booking.category', 'Categoria')}
                 </Label>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <Select value={carCategory} onValueChange={setCarCategory}>
@@ -220,17 +228,25 @@ export function BookingForm({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="economy">Econômico</SelectItem>
-                      <SelectItem value="compact">Compacto</SelectItem>
-                      <SelectItem value="suv">SUV</SelectItem>
-                      <SelectItem value="luxury">Luxo</SelectItem>
+                      <SelectItem value="economy">
+                        {t('booking.economy', 'Econômico')}
+                      </SelectItem>
+                      <SelectItem value="compact">
+                        {t('booking.compact', 'Compacto')}
+                      </SelectItem>
+                      <SelectItem value="suv">
+                        {t('booking.suv', 'SUV')}
+                      </SelectItem>
+                      <SelectItem value="luxury">
+                        {t('booking.luxury', 'Luxo')}
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                   <Button
                     type="submit"
                     className="sm:w-1/2 gap-2 shadow-sm font-bold"
                   >
-                    <Car className="h-4 w-4" /> Alugar
+                    <Car className="h-4 w-4" /> {t('hub.rent', 'Alugar')}
                   </Button>
                 </div>
               </div>
@@ -241,7 +257,7 @@ export function BookingForm({
             <>
               <div className="space-y-1">
                 <Label className="text-xs font-semibold text-slate-600">
-                  Data da Visita
+                  {t('booking.visit_date', 'Data da Visita')}
                 </Label>
                 <Input
                   type="date"
@@ -253,7 +269,7 @@ export function BookingForm({
               </div>
               <div className="space-y-1 mt-3">
                 <Label className="text-xs font-semibold text-slate-600">
-                  Quantidade de Ingressos
+                  {t('booking.ticket_quantity', 'Quantidade de Ingressos')}
                 </Label>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <Select value={guests} onValueChange={setGuests}>
@@ -263,7 +279,10 @@ export function BookingForm({
                     <SelectContent>
                       {[1, 2, 3, 4, 5, 6, 8, 10].map((num) => (
                         <SelectItem key={num} value={num.toString()}>
-                          {num} {num === 1 ? 'Ingresso' : 'Ingressos'}
+                          {num}{' '}
+                          {num === 1
+                            ? t('booking.ticket', 'Ingresso')
+                            : t('booking.tickets', 'Ingressos')}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -272,7 +291,7 @@ export function BookingForm({
                     type="submit"
                     className="sm:w-1/2 gap-2 shadow-sm font-bold"
                   >
-                    <TicketIcon className="h-4 w-4" /> Comprar
+                    <TicketIcon className="h-4 w-4" /> {t('hub.buy', 'Comprar')}
                   </Button>
                 </div>
               </div>
@@ -284,7 +303,7 @@ export function BookingForm({
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <Label className="text-xs font-semibold text-slate-600">
-                    Data
+                    {t('booking.date', 'Data')}
                   </Label>
                   <Input
                     type="date"
@@ -296,7 +315,7 @@ export function BookingForm({
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs font-semibold text-slate-600">
-                    Hora
+                    {t('booking.time', 'Hora')}
                   </Label>
                   <Input
                     type="time"
@@ -309,7 +328,7 @@ export function BookingForm({
               </div>
               <div className="space-y-1">
                 <Label className="text-xs font-semibold text-slate-600">
-                  Convidados
+                  {t('booking.guests', 'Convidados')}
                 </Label>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <Select value={guests} onValueChange={setGuests}>
@@ -319,7 +338,10 @@ export function BookingForm({
                     <SelectContent>
                       {[1, 2, 3, 4, 5, 6, 8, 10].map((num) => (
                         <SelectItem key={num} value={num.toString()}>
-                          {num} {num === 1 ? 'Pessoa' : 'Pessoas'}
+                          {num}{' '}
+                          {num === 1
+                            ? t('hub.person', 'Pessoa')
+                            : t('hub.people', 'Pessoas')}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -328,7 +350,7 @@ export function BookingForm({
                     type="submit"
                     className="sm:w-1/2 gap-2 shadow-sm font-bold"
                   >
-                    <Users className="h-4 w-4" /> Reservar
+                    <Users className="h-4 w-4" /> {t('hub.book', 'Reservar')}
                   </Button>
                 </div>
               </div>

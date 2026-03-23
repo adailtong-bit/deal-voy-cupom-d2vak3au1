@@ -12,6 +12,7 @@ import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { useCouponStore } from '@/stores/CouponContext'
+import { useLanguage } from '@/stores/LanguageContext'
 import { Coupon } from '@/lib/types'
 
 interface DiscoverActivitiesSheetProps {
@@ -26,6 +27,7 @@ export function DiscoverActivitiesSheet({
   onAdd,
 }: DiscoverActivitiesSheetProps) {
   const { coupons } = useCouponStore()
+  const { t } = useLanguage()
   const [searchQuery, setSearchQuery] = useState('')
 
   const discoveryCoupons = useMemo(() => {
@@ -46,11 +48,16 @@ export function DiscoverActivitiesSheet({
         className="w-full sm:max-w-md p-0 flex flex-col bg-slate-50"
       >
         <SheetHeader className="p-6 bg-white border-b">
-          <SheetTitle className="text-xl">Discover Activities</SheetTitle>
+          <SheetTitle className="text-xl">
+            {t('discover_sheet.title', 'Discover Activities')}
+          </SheetTitle>
           <div className="relative mt-4">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input
-              placeholder="Search restaurants, places, events..."
+              placeholder={t(
+                'discover_sheet.search_placeholder',
+                'Search restaurants, places, events...',
+              )}
               className="pl-9 bg-slate-50 border-transparent focus-visible:ring-primary/50"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -61,7 +68,7 @@ export function DiscoverActivitiesSheet({
           <div className="space-y-4">
             {discoveryCoupons.length === 0 ? (
               <div className="text-center py-12 text-slate-500">
-                No activities found.
+                {t('discover_sheet.no_activities', 'No activities found.')}
               </div>
             ) : (
               discoveryCoupons.map((coupon) => (
@@ -98,7 +105,7 @@ export function DiscoverActivitiesSheet({
                           className="h-7 text-xs px-3"
                           onClick={() => onAdd(coupon)}
                         >
-                          Add
+                          {t('discover_sheet.add', 'Add')}
                         </Button>
                       </div>
                     </div>
