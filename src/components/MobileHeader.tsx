@@ -12,6 +12,7 @@ import {
   Filter,
   MapPin,
   Globe,
+  Compass,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -100,6 +101,15 @@ export function MobileHeader() {
                 >
                   <Home className="h-5 w-5 text-slate-400" />
                   {t('nav.home', 'Home')}
+                </Link>
+
+                <Link
+                  to="/explore"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors"
+                >
+                  <Compass className="h-5 w-5 text-slate-400" />
+                  {t('nav.explore', 'Explorar')}
                 </Link>
 
                 <Link

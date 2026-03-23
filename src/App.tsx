@@ -12,6 +12,7 @@ import Voucher from '@/pages/Voucher'
 import MyVouchers from '@/pages/MyVouchers'
 import MerchantScanner from '@/pages/MerchantScanner'
 import TravelPage from '@/pages/TravelPage'
+import Explore from '@/pages/Explore'
 
 export default function App() {
   return (
@@ -22,6 +23,7 @@ export default function App() {
             <Routes>
               <Route element={<Layout />}>
                 <Route path="/" element={<Index />} />
+                <Route path="/explore" element={<Explore />} />
                 <Route path="/vouchers" element={<MyVouchers />} />
                 <Route path="/vendor" element={<VendorDashboard />} />
                 <Route path="/admin" element={<AdminDashboard />} />
