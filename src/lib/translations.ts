@@ -20,6 +20,7 @@ export const translations: Record<Language, any> = {
       loading: 'Carregando...',
       view: 'Visualizar',
       none: 'Nenhum',
+      language: 'Idioma',
     },
     auth: {
       login: 'Entrar',
@@ -41,6 +42,11 @@ export const translations: Record<Language, any> = {
       admin: 'Painel Admin',
       agency: 'Painel da Agência',
       seasonal: 'Ofertas',
+      menu: 'Menu de Navegação',
+      vouchers: 'Meus Vouchers',
+      travel: 'Viagens',
+      reports: 'Relatórios',
+      categories: 'Categorias',
     },
     home: {
       travel_mode_active: 'Modo Viagem Ativo',
@@ -249,6 +255,7 @@ export const translations: Record<Language, any> = {
       loading: 'Loading...',
       view: 'View',
       none: 'None',
+      language: 'Language',
     },
     auth: {
       login: 'Sign In',
@@ -270,6 +277,11 @@ export const translations: Record<Language, any> = {
       admin: 'Admin Panel',
       agency: 'Agency Dashboard',
       seasonal: 'Offers',
+      menu: 'Navigation Menu',
+      vouchers: 'My Vouchers',
+      travel: 'Travel',
+      reports: 'Reports',
+      categories: 'Categories',
     },
     home: {
       travel_mode_active: 'Travel Mode Active',
@@ -477,6 +489,7 @@ export const translations: Record<Language, any> = {
       loading: 'Cargando...',
       view: 'Ver',
       none: 'Ninguno',
+      language: 'Idioma',
     },
     auth: {
       login: 'Iniciar Sesión',
@@ -498,6 +511,11 @@ export const translations: Record<Language, any> = {
       admin: 'Panel de Admin',
       agency: 'Panel de Agencia',
       seasonal: 'Ofertas',
+      menu: 'Menú de Navegación',
+      vouchers: 'Mis Vouchers',
+      travel: 'Viajes',
+      reports: 'Reportes',
+      categories: 'Categorías',
     },
     home: {
       travel_mode_active: 'Modo Viaje Activo',

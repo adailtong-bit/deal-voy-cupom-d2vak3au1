@@ -11,6 +11,7 @@ import {
   BarChart3,
   Filter,
   MapPin,
+  Globe,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -23,6 +24,13 @@ import {
 } from '@/components/ui/sheet'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import logoUrl from '@/assets/whatsapp-image-2026-01-25-at-5.34.51-am-1-9b370.jpeg'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
@@ -30,7 +38,7 @@ import { CATEGORIES } from '@/lib/data'
 
 export function MobileHeader() {
   const { user } = useCouponStore()
-  const { t } = useLanguage()
+  const { t, language, setLanguage } = useLanguage()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -147,6 +155,28 @@ export function MobileHeader() {
                       {t(cat.translationKey, cat.label)}
                     </Badge>
                   ))}
+                </div>
+
+                <div className="my-2 border-t border-slate-100"></div>
+
+                <div className="px-3 py-2 flex flex-col gap-2">
+                  <h4 className="text-sm font-semibold text-slate-900 flex items-center gap-2 mb-1">
+                    <Globe className="h-4 w-4 text-slate-500" />
+                    {t('common.language', 'Idioma')}
+                  </h4>
+                  <Select
+                    value={language}
+                    onValueChange={(v) => setLanguage(v as any)}
+                  >
+                    <SelectTrigger className="w-full bg-slate-50 border-slate-200 h-11 rounded-xl">
+                      <SelectValue placeholder="Select Language" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pt">Português</SelectItem>
+                      <SelectItem value="en">English</SelectItem>
+                      <SelectItem value="es">Español</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="my-2 border-t border-slate-100"></div>
