@@ -166,7 +166,10 @@ export function MobileHeader() {
                   </h4>
                   <Select
                     value={language}
-                    onValueChange={(v) => setLanguage(v as any)}
+                    onValueChange={(v) => {
+                      setLanguage(v as any)
+                      setIsMenuOpen(false)
+                    }}
                   >
                     <SelectTrigger className="w-full bg-slate-50 border-slate-200 h-11 rounded-xl">
                       <SelectValue placeholder="Select Language" />
