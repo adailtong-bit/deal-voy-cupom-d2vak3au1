@@ -137,14 +137,16 @@ export function MobileHeader() {
                   {t('nav.seasonal', 'Ofertas Sazonais')}
                 </Link>
 
-                <Link
-                  to="/vouchers"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors"
-                >
-                  <Ticket className="h-5 w-5 text-slate-400" />
-                  {t('nav.vouchers', 'Meus Vouchers')}
-                </Link>
+                {user && (
+                  <Link
+                    to="/vouchers"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors"
+                  >
+                    <Ticket className="h-5 w-5 text-slate-400" />
+                    {t('nav.vouchers', 'Meus Vouchers')}
+                  </Link>
+                )}
 
                 <Link
                   to="/travel"
@@ -208,16 +210,20 @@ export function MobileHeader() {
                   </Select>
                 </div>
 
-                <div className="my-2 border-t border-slate-100"></div>
+                {user?.role === 'super_admin' && (
+                  <>
+                    <div className="my-2 border-t border-slate-100"></div>
 
-                <Link
-                  to="/admin"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-base font-bold text-primary bg-primary/5 hover:bg-primary/10 transition-colors"
-                >
-                  <Settings className="h-5 w-5 text-primary" />
-                  {t('nav.admin', 'Admin Dashboard')}
-                </Link>
+                    <Link
+                      to="/admin"
+                      onClick={() => setIsMenuOpen(false)}
+                      className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-base font-bold text-primary bg-primary/5 hover:bg-primary/10 transition-colors"
+                    >
+                      <Settings className="h-5 w-5 text-primary" />
+                      {t('nav.admin', 'Admin Dashboard')}
+                    </Link>
+                  </>
+                )}
               </nav>
             </SheetContent>
           </Sheet>
@@ -276,7 +282,7 @@ export function MobileHeader() {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild className="cursor-pointer">
-                    <Link to="/profile" className="flex items-center">
+                    <Link to="/profile" className="flex items-center w-full">
                       <User className="mr-2 h-4 w-4" />
                       {t('profile.title', 'Meu Perfil')}
                     </Link>

@@ -50,12 +50,14 @@ export function DesktopHeader() {
               <Home className="h-4 w-4" />
               {t('nav.home', 'Início')}
             </Link>
-            <Link
-              to="/vouchers"
-              className="transition-colors hover:text-primary"
-            >
-              {t('nav.vouchers', 'Meus Vouchers')}
-            </Link>
+            {user && (
+              <Link
+                to="/vouchers"
+                className="transition-colors hover:text-primary"
+              >
+                {t('nav.vouchers', 'Meus Vouchers')}
+              </Link>
+            )}
             <Link
               to="/explore"
               className="transition-colors hover:text-primary"
@@ -71,12 +73,14 @@ export function DesktopHeader() {
             <Link to="/travel" className="transition-colors hover:text-primary">
               {t('nav.travel', 'Viagens')}
             </Link>
-            <Link
-              to="/admin"
-              className="transition-colors text-primary hover:text-primary/80 font-bold"
-            >
-              {t('nav.admin', 'Admin')}
-            </Link>
+            {user?.role === 'super_admin' && (
+              <Link
+                to="/admin"
+                className="transition-colors text-primary hover:text-primary/80 font-bold"
+              >
+                {t('nav.admin', 'Admin')}
+              </Link>
+            )}
           </nav>
         </div>
         <div className="flex items-center gap-4">
@@ -123,7 +127,7 @@ export function DesktopHeader() {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild className="cursor-pointer">
-                    <Link to="/profile" className="flex items-center">
+                    <Link to="/profile" className="flex items-center w-full">
                       <User className="mr-2 h-4 w-4" />
                       {t('profile.title', 'Meu Perfil')}
                     </Link>
