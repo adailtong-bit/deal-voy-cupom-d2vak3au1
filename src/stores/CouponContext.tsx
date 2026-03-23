@@ -130,6 +130,7 @@ interface CouponContextType {
   toggleSave: (id: string) => void
   toggleTrip: (id: string) => void
   reserveCoupon: (id: string) => boolean
+  cancelReservation: (id: string) => void
   addCoupon: (coupon: Coupon) => void
   isSaved: (id: string) => boolean
   isReserved: (id: string) => boolean
@@ -482,10 +483,81 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   }
 
   const reserveCoupon = (id: string) => {
+    const coupon = coupons.find((c) => c.id === id)
+    const event = seasonalEvents.find((e) => e.id === id)
+
+    let available = 0
+    if (coupon)
+      available =
+        coupon.totalAvailable !== undefined ? coupon.totalAvailable : 100
+    if (event)
+      available =
+        event.totalAvailable !== undefined ? event.totalAvailable : 100
+
+    if (available <= 0) {
+      toast.error('Este voucher está esgotado.')
+      return false
+    }
+
     setReservedIds((prev) => [...prev, id])
+
+    if (coupon) {
+      setCoupons((prev) =>
+        prev.map((c) =>
+          c.id === id
+            ? {
+                ...c,
+                totalAvailable: Math.max(0, (c.totalAvailable ?? 100) - 1),
+              }
+            : c,
+        ),
+      )
+    } else if (event) {
+      setSeasonalEvents((prev) =>
+        prev.map((e) =>
+          e.id === id
+            ? {
+                ...e,
+                totalAvailable: Math.max(0, (e.totalAvailable ?? 100) - 1),
+              }
+            : e,
+        ),
+      )
+    }
+
     logSystemAction('Reserve Coupon', `Reserved coupon ${id}`)
     trackVisit(id)
     return true
+  }
+
+  const cancelReservation = (id: string) => {
+    setReservedIds((prev) => prev.filter((rid) => rid !== id))
+
+    const coupon = coupons.find((c) => c.id === id)
+    const event = seasonalEvents.find((e) => e.id === id)
+
+    if (coupon) {
+      setCoupons((prev) =>
+        prev.map((c) =>
+          c.id === id
+            ? { ...c, totalAvailable: (c.totalAvailable ?? 100) + 1 }
+            : c,
+        ),
+      )
+    } else if (event) {
+      setSeasonalEvents((prev) =>
+        prev.map((e) =>
+          e.id === id
+            ? { ...e, totalAvailable: (e.totalAvailable ?? 100) + 1 }
+            : e,
+        ),
+      )
+    }
+
+    logSystemAction('Cancel Reservation', `Cancelled reservation for ${id}`)
+    toast.success(
+      'Reserva cancelada. O voucher voltou para a disponibilidade geral.',
+    )
   }
 
   const addCoupon = (coupon: Coupon) => setCoupons((prev) => [coupon, ...prev])
@@ -1532,6 +1604,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         toggleSave,
         toggleTrip,
         reserveCoupon,
+        cancelReservation,
         addCoupon,
         isSaved,
         isReserved,

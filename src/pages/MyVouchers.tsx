@@ -1,15 +1,21 @@
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
 import { Link } from 'react-router-dom'
-import { Ticket, Search, CheckCircle2, Globe } from 'lucide-react'
+import { Ticket, Search, CheckCircle2, Globe, XCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 
 export default function MyVouchers() {
-  const { reservedIds, coupons, seasonalEvents, companies, usedVouchers } =
-    useCouponStore()
+  const {
+    reservedIds,
+    coupons,
+    seasonalEvents,
+    companies,
+    usedVouchers,
+    cancelReservation,
+  } = useCouponStore()
   const { t } = useLanguage()
 
   const myCoupons = coupons.filter((c) => reservedIds.includes(c.id))
@@ -129,34 +135,52 @@ export default function MyVouchers() {
                     {v.storeName}
                   </p>
                 </div>
-                <Button
-                  asChild
-                  variant={
-                    v.isUsed ? 'secondary' : v.isOnline ? 'default' : 'outline'
-                  }
-                  className={cn(
-                    'w-full mt-auto font-medium shadow-sm transition-colors',
-                    !v.isUsed &&
-                      !v.isOnline &&
-                      'hover:bg-primary hover:text-white hover:border-primary',
-                    v.isOnline &&
+                <div className="mt-auto space-y-2">
+                  <Button
+                    asChild
+                    variant={
+                      v.isUsed
+                        ? 'secondary'
+                        : v.isOnline
+                          ? 'default'
+                          : 'outline'
+                    }
+                    className={cn(
+                      'w-full font-medium shadow-sm transition-colors',
                       !v.isUsed &&
-                      'bg-blue-600 hover:bg-blue-700 text-white',
-                  )}
-                >
-                  <Link to={`/voucher/${v.id}`}>
-                    {v.isOnline ? (
-                      <Globe className="w-4 h-4 mr-2" />
-                    ) : (
-                      <Ticket className="w-4 h-4 mr-2" />
+                        !v.isOnline &&
+                        'hover:bg-primary hover:text-white hover:border-primary',
+                      v.isOnline &&
+                        !v.isUsed &&
+                        'bg-blue-600 hover:bg-blue-700 text-white',
                     )}
-                    {v.isUsed
-                      ? t('vouchers.view_used', 'Ver Detalhes')
-                      : v.isOnline
-                        ? t('vouchers.go_to_store', 'Acessar Loja Online')
-                        : t('vouchers.view', 'Ver Voucher')}
-                  </Link>
-                </Button>
+                  >
+                    <Link to={`/voucher/${v.id}`}>
+                      {v.isOnline ? (
+                        <Globe className="w-4 h-4 mr-2" />
+                      ) : (
+                        <Ticket className="w-4 h-4 mr-2" />
+                      )}
+                      {v.isUsed
+                        ? t('vouchers.view_used', 'Ver Detalhes')
+                        : v.isOnline
+                          ? t('vouchers.go_to_store', 'Acessar Loja Online')
+                          : t('vouchers.view', 'Ver Voucher')}
+                    </Link>
+                  </Button>
+
+                  {!v.isUsed && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => cancelReservation(v.id)}
+                      className="w-full text-red-500 hover:text-red-600 hover:bg-red-50"
+                    >
+                      <XCircle className="w-4 h-4 mr-2" />
+                      Retirar da prateleira
+                    </Button>
+                  )}
+                </div>
               </CardContent>
             </Card>
           ))}

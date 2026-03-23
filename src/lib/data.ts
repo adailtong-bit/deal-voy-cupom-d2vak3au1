@@ -184,6 +184,7 @@ const generateSeasonalEvents = (): SeasonalEvent[] => {
                 `VCH-${i}-${vi}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`,
             )
           : [],
+      totalAvailable: status === 'active' ? (i % 4 === 0 ? 0 : 50) : undefined,
     })
   }
   return events
@@ -286,6 +287,7 @@ const generateCoupons = (): Coupon[] => {
     logo: 'https://img.usecurling.com/i?q=shopee&color=orange&shape=fill',
     code: 'SHP50OFF',
     coordinates: { lat: 0, lng: 0 },
+    totalAvailable: 0, // Mocked sold out
     status: 'active',
     source: 'aggregated',
     region: 'Global',
@@ -396,7 +398,7 @@ const generateCoupons = (): Coupon[] => {
       coordinates: isUS
         ? { lat: 28.5383 + i * 0.001, lng: -81.3792 + i * 0.001 }
         : { lat: -23.55 + i * 0.001, lng: -46.63 + i * 0.001 },
-      totalAvailable: 100 * i,
+      totalAvailable: i % 5 === 0 ? 0 : 100 * i, // Some sold out
       reservedCount: 10 * i,
       averageRating: 4.0 + (i % 10) / 10,
       status: statuses[i % 3],

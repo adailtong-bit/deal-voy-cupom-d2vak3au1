@@ -21,6 +21,9 @@ export function CouponCard({
   const { t, formatCurrency } = useLanguage()
   const [imgError, setImgError] = useState(false)
 
+  const isSoldOut =
+    coupon.totalAvailable !== undefined && coupon.totalAvailable <= 0
+
   if (variant === 'horizontal') {
     return (
       <Link to={`/voucher/${coupon.id}`} className="block">
@@ -44,9 +47,15 @@ export function CouponCard({
                 <ImageOff className="h-6 w-6 text-slate-300" />
               )}
               <div className="absolute top-1.5 left-1.5 flex flex-col gap-1 z-10 items-start">
-                <Badge className="bg-white/95 text-black hover:bg-white shadow-sm font-bold backdrop-blur-sm text-[10px] h-5 px-1.5 py-0">
-                  {coupon.discount}
-                </Badge>
+                {isSoldOut ? (
+                  <Badge className="bg-red-600 text-white shadow-sm font-bold backdrop-blur-sm text-[10px] h-5 px-1.5 py-0 border-none">
+                    Esgotado
+                  </Badge>
+                ) : (
+                  <Badge className="bg-white/95 text-black hover:bg-white shadow-sm font-bold backdrop-blur-sm text-[10px] h-5 px-1.5 py-0">
+                    {coupon.discount}
+                  </Badge>
+                )}
               </div>
               {coupon.offerType === 'online' && (
                 <Badge
@@ -132,9 +141,15 @@ export function CouponCard({
             <ImageOff className="h-8 w-8 text-slate-300" />
           )}
           <div className="absolute top-1.5 left-1.5 flex flex-col gap-1 z-10 items-start">
-            <Badge className="bg-white/95 text-black hover:bg-white shadow-sm font-bold backdrop-blur-sm text-[9px] sm:text-[10px] h-4 sm:h-5 px-1.5 py-0">
-              {coupon.discount}
-            </Badge>
+            {isSoldOut ? (
+              <Badge className="bg-red-600 text-white shadow-sm font-bold backdrop-blur-sm text-[9px] sm:text-[10px] h-4 sm:h-5 px-1.5 py-0 border-none">
+                Esgotado
+              </Badge>
+            ) : (
+              <Badge className="bg-white/95 text-black hover:bg-white shadow-sm font-bold backdrop-blur-sm text-[9px] sm:text-[10px] h-4 sm:h-5 px-1.5 py-0">
+                {coupon.discount}
+              </Badge>
+            )}
           </div>
           <div className="absolute top-1.5 right-1.5 flex flex-col gap-1 z-10 items-end">
             {coupon.isFeatured && (

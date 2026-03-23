@@ -70,14 +70,25 @@ export default function Voucher() {
   const isUsed = coupon ? coupon.status === 'used' : usedVouchers.includes(code)
   const reserved = isReserved(id || '')
 
+  const available =
+    coupon?.totalAvailable !== undefined
+      ? coupon.totalAvailable
+      : event?.totalAvailable !== undefined
+        ? event.totalAvailable
+        : 100
+  const isSoldOut = available <= 0
+
   const handleSimulateScan = () => {
     validateCoupon(code)
   }
 
-  const handleRedeem = () => {
+  const handleReserve = () => {
     if (id) {
-      reserveCoupon(id)
-      toast.success('Voucher resgatado e salvo em "Meus Vouchers"!')
+      const success = reserveCoupon(id)
+      if (success) {
+        toast.success('Voucher reservado e salvo em "Meus Vouchers"!')
+        navigate('/vouchers')
+      }
     }
   }
 
@@ -200,25 +211,44 @@ export default function Voucher() {
                   <p className="text-sm text-slate-600 leading-relaxed">
                     {description}
                   </p>
+                  {!isOnline && (
+                    <p className="text-xs text-slate-400 mt-3 pt-3 border-t border-slate-200/60">
+                      Disponíveis: {available}
+                    </p>
+                  )}
                 </div>
 
                 {isOnline ? (
                   <Button
                     size="lg"
-                    className="w-full h-14 text-base font-bold shadow-md hover:-translate-y-0.5 transition-all duration-300 rounded-xl bg-blue-600 hover:bg-blue-700 text-white"
+                    disabled={isSoldOut}
+                    className="w-full h-14 text-base font-bold shadow-md hover:-translate-y-0.5 transition-all duration-300 rounded-xl bg-blue-600 hover:bg-blue-700 text-white disabled:bg-slate-300 disabled:text-slate-500 disabled:hover:translate-y-0"
                     onClick={handleBuyNow}
                   >
-                    <ExternalLink className="mr-2 h-5 w-5" />
-                    Comprar Agora no Site
+                    {isSoldOut ? (
+                      'Esgotado'
+                    ) : (
+                      <>
+                        <ExternalLink className="mr-2 h-5 w-5" />
+                        Comprar Agora no Site
+                      </>
+                    )}
                   </Button>
                 ) : (
                   <Button
                     size="lg"
-                    className="w-full h-14 text-base font-bold shadow-md hover:-translate-y-0.5 transition-all duration-300 rounded-xl"
-                    onClick={handleRedeem}
+                    disabled={isSoldOut}
+                    className="w-full h-14 text-base font-bold shadow-md hover:-translate-y-0.5 transition-all duration-300 rounded-xl disabled:bg-slate-300 disabled:text-slate-500 disabled:hover:translate-y-0"
+                    onClick={handleReserve}
                   >
-                    <QrCode className="mr-2 h-5 w-5" />
-                    Resgatar Voucher
+                    {isSoldOut ? (
+                      'Esgotado'
+                    ) : (
+                      <>
+                        <QrCode className="mr-2 h-5 w-5" />
+                        Reservar Voucher
+                      </>
+                    )}
                   </Button>
                 )}
               </>

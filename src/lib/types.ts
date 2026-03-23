@@ -159,6 +159,7 @@ export interface SeasonalEvent {
   offerType?: 'in-store' | 'online'
   externalUrl?: string
   affiliateConfig?: AffiliateConfig
+  totalAvailable?: number
 }
 
 export interface Notification {
