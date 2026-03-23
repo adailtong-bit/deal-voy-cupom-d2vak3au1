@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { LanguageProvider } from '@/stores/LanguageContext'
 import { NotificationProvider } from '@/stores/NotificationContext'
 import { CouponProvider } from '@/stores/CouponContext'
@@ -21,6 +21,7 @@ export default function App() {
                 <Route path="/vendor" element={<VendorDashboard />} />
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/seasonal" element={<Seasonal />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
               </Route>
             </Routes>
           </BrowserRouter>

@@ -9,6 +9,7 @@ import {
   Gift,
   Ticket,
   BarChart3,
+  Filter,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -20,14 +21,17 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet'
 import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
 import logoUrl from '@/assets/whatsapp-image-2026-01-25-at-5.34.51-am-1-9b370.jpeg'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
+import { CATEGORIES } from '@/lib/data'
 
 export function MobileHeader() {
   const { user } = useCouponStore()
   const { t } = useLanguage()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -72,12 +76,14 @@ export function MobileHeader() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   type="search"
-                  placeholder={t('nav.search', 'Search')}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder={t('nav.search', 'Buscar ofertas...')}
                   className="w-full pl-9 bg-slate-50 border-slate-200 h-11 rounded-xl"
                 />
               </form>
 
-              <nav className="flex flex-col gap-1.5 flex-1">
+              <nav className="flex flex-col gap-1.5 flex-1 overflow-y-auto pb-4">
                 <Link
                   to="/"
                   onClick={() => setIsMenuOpen(false)}
@@ -93,7 +99,7 @@ export function MobileHeader() {
                   className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors"
                 >
                   <Gift className="h-5 w-5 text-slate-400" />
-                  {t('nav.seasonal', 'Seasonal Offers')}
+                  {t('nav.seasonal', 'Ofertas Sazonais')}
                 </Link>
 
                 <Link
@@ -102,7 +108,7 @@ export function MobileHeader() {
                   className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors"
                 >
                   <Ticket className="h-5 w-5 text-slate-400" />
-                  {t('nav.vouchers', 'My Vouchers')}
+                  {t('nav.vouchers', 'Meus Vouchers')}
                 </Link>
 
                 <Link
@@ -111,10 +117,29 @@ export function MobileHeader() {
                   className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors"
                 >
                   <BarChart3 className="h-5 w-5 text-slate-400" />
-                  {t('nav.reports', 'Reports')}
+                  {t('nav.reports', 'Relatórios')}
                 </Link>
 
-                <div className="my-4 border-t border-slate-100"></div>
+                <div className="my-2 border-t border-slate-100"></div>
+
+                <h4 className="text-sm font-semibold text-slate-900 px-3 flex items-center gap-2 mb-2 mt-2">
+                  <Filter className="h-4 w-4 text-slate-500" />
+                  {t('nav.categories', 'Categorias')}
+                </h4>
+                <div className="flex flex-wrap gap-2 px-3 mb-2">
+                  {CATEGORIES.filter((c) => c.id !== 'all').map((cat) => (
+                    <Badge
+                      key={cat.id}
+                      variant="secondary"
+                      className="font-normal bg-slate-100 text-slate-700 hover:bg-slate-200 cursor-pointer"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      {t(cat.translationKey, cat.label)}
+                    </Badge>
+                  ))}
+                </div>
+
+                <div className="my-2 border-t border-slate-100"></div>
 
                 <Link
                   to="/admin"

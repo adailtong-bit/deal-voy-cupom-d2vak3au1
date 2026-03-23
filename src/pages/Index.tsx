@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
@@ -6,7 +6,7 @@ import { CouponCard } from '@/components/CouponCard'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Skeleton } from '@/components/ui/skeleton'
+import { AdSpace } from '@/components/AdSpace'
 import {
   Ticket,
   CalendarIcon,
@@ -21,25 +21,9 @@ import { Input } from '@/components/ui/input'
 
 export default function Index() {
   const { t, formatDate } = useLanguage()
-  const {
-    coupons,
-    seasonalEvents,
-    trackSeasonalClick,
-    isLoadingLocation,
-    userLocation,
-  } = useCouponStore()
+  const { coupons, seasonalEvents, trackSeasonalClick, userLocation } =
+    useCouponStore()
   const [searchQuery, setSearchQuery] = useState('')
-  const [isMounting, setIsMounting] = useState(true)
-
-  // Simulate an initial loading state to prevent a "white screen" flash and show skeleton
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsMounting(false)
-    }, 800)
-    return () => clearTimeout(timer)
-  }, [])
-
-  const isLoading = isMounting || isLoadingLocation
 
   const activeEvents = useMemo(() => {
     const today = new Date()
@@ -70,51 +54,10 @@ export default function Index() {
     .filter((c) => !finalTrending.find((tc) => tc.id === c.id))
     .slice(0, 12)
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen pb-20 md:pb-8 animate-fade-in">
-        {/* Hero Skeleton */}
-        <section className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent pt-8 md:pt-12 pb-12 px-4 mb-8 border-b">
-          <div className="container mx-auto max-w-5xl">
-            <div className="max-w-2xl space-y-4">
-              <Skeleton className="h-12 w-3/4 md:w-2/3 bg-primary/10" />
-              <Skeleton className="h-6 w-full bg-primary/5" />
-              <Skeleton className="h-6 w-5/6 bg-primary/5" />
-              <div className="pt-4">
-                <Skeleton className="h-14 w-full max-w-md rounded-full bg-white/60 shadow-sm" />
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <div className="container mx-auto max-w-5xl px-4 space-y-12">
-          {/* Seasonal Events Skeleton */}
-          <section>
-            <div className="flex items-center justify-between mb-6">
-              <Skeleton className="h-8 w-64" />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Skeleton className="h-[240px] rounded-xl" />
-              <Skeleton className="h-[240px] rounded-xl" />
-            </div>
-          </section>
-
-          {/* Trending Skeleton */}
-          <section>
-            <Skeleton className="h-8 w-48 mb-6" />
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-              {[1, 2, 3, 4].map((i) => (
-                <Skeleton key={i} className="h-48 rounded-xl" />
-              ))}
-            </div>
-          </section>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="min-h-screen pb-20 md:pb-8 animate-fade-in">
+      <AdSpace position="top" className="border-b" />
+
       {/* Hero / Header banner */}
       <section className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent pt-8 md:pt-12 pb-12 px-4 mb-8 border-b relative overflow-hidden">
         <div className="absolute top-0 right-0 -translate-y-1/4 translate-x-1/4 opacity-[0.03] pointer-events-none hidden md:block">
