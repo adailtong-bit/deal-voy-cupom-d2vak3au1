@@ -22,8 +22,11 @@ export default function MyVouchers() {
   const myEvents = seasonalEvents.filter((e) => reservedIds.includes(e.id))
 
   const getCompanyName = (id?: string) => {
-    if (!id) return 'Loja Parceira'
-    return companies.find((c) => c.id === id)?.name || 'Loja Parceira'
+    if (!id) return t('vouchers.partner_store', 'Loja Parceira')
+    return (
+      companies.find((c) => c.id === id)?.name ||
+      t('vouchers.partner_store', 'Loja Parceira')
+    )
   }
 
   const allVouchers = [
@@ -46,7 +49,10 @@ export default function MyVouchers() {
         id: e.id,
         title: e.title,
         storeName: getCompanyName(e.companyId),
-        discount: e.type === 'sale' ? 'Sale' : 'Evento Especial',
+        discount:
+          e.type === 'sale'
+            ? t('vouchers.sale', 'Promoção')
+            : t('vouchers.special_event', 'Evento Especial'),
         image: e.image,
         type: 'event',
         isUsed: usedVouchers.includes(code),
@@ -109,7 +115,7 @@ export default function MyVouchers() {
                 {v.isOnline && !v.isUsed && (
                   <Badge className="absolute top-2 right-2 bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-sm border-none backdrop-blur-sm">
                     <Globe className="w-3 h-3 mr-1" />
-                    Online
+                    {t('vouchers.online', 'Online')}
                   </Badge>
                 )}
 
@@ -120,7 +126,7 @@ export default function MyVouchers() {
                       className="bg-white text-emerald-600 font-bold px-3 py-1 shadow-md"
                     >
                       <CheckCircle2 className="w-4 h-4 mr-1" />
-                      Utilizado
+                      {t('vouchers.used', 'Utilizado')}
                     </Badge>
                   </div>
                 )}
@@ -177,7 +183,7 @@ export default function MyVouchers() {
                       className="w-full text-red-500 hover:text-red-600 hover:bg-red-50"
                     >
                       <XCircle className="w-4 h-4 mr-2" />
-                      Retirar da prateleira
+                      {t('vouchers.remove_shelf', 'Retirar da prateleira')}
                     </Button>
                   )}
                 </div>

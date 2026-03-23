@@ -199,9 +199,9 @@ export default function Index() {
                             <div className="absolute top-2 left-2 flex gap-1">
                               <Badge
                                 variant="secondary"
-                                className="bg-white/95 text-black backdrop-blur-sm shadow-sm font-bold"
+                                className="bg-white/95 text-black backdrop-blur-sm shadow-sm font-bold capitalize"
                               >
-                                {event.type}
+                                {t(`event.type.${event.type}`, event.type)}
                               </Badge>
                             </div>
                           </div>

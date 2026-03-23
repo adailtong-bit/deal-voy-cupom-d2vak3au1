@@ -49,7 +49,7 @@ export function CouponCard({
               <div className="absolute top-1.5 left-1.5 flex flex-col gap-1 z-10 items-start">
                 {isSoldOut ? (
                   <Badge className="bg-red-600 text-white shadow-sm font-bold backdrop-blur-sm text-[10px] h-5 px-1.5 py-0 border-none">
-                    Esgotado
+                    {t('vouchers.sold_out', 'Esgotado')}
                   </Badge>
                 ) : (
                   <Badge className="bg-white/95 text-black hover:bg-white shadow-sm font-bold backdrop-blur-sm text-[10px] h-5 px-1.5 py-0">
@@ -62,7 +62,8 @@ export function CouponCard({
                   variant="secondary"
                   className="absolute bottom-1.5 left-1.5 text-[8px] px-1.5 h-4 bg-blue-500/90 hover:bg-blue-600 text-white border-none shadow-sm z-10"
                 >
-                  <Globe className="w-2 h-2 mr-0.5" /> Online
+                  <Globe className="w-2 h-2 mr-0.5" />{' '}
+                  {t('vouchers.online', 'Online')}
                 </Badge>
               )}
             </div>
@@ -91,7 +92,8 @@ export function CouponCard({
                   <span className="flex items-center gap-1">
                     {coupon.offerType === 'online' ? (
                       <>
-                        <Globe className="h-3 w-3 text-blue-500" /> Online
+                        <Globe className="h-3 w-3 text-blue-500" />{' '}
+                        {t('vouchers.online', 'Online')}
                       </>
                     ) : (
                       <>
@@ -104,7 +106,7 @@ export function CouponCard({
                   </span>
                   <span className="flex items-center gap-1 text-orange-600 font-medium">
                     <Clock className="h-3 w-3" />
-                    Exp.
+                    {t('vouchers.exp', 'Exp.')}
                   </span>
                 </div>
                 {coupon.price !== undefined && !coupon.isPaid && (
@@ -143,7 +145,7 @@ export function CouponCard({
           <div className="absolute top-1.5 left-1.5 flex flex-col gap-1 z-10 items-start">
             {isSoldOut ? (
               <Badge className="bg-red-600 text-white shadow-sm font-bold backdrop-blur-sm text-[9px] sm:text-[10px] h-4 sm:h-5 px-1.5 py-0 border-none">
-                Esgotado
+                {t('vouchers.sold_out', 'Esgotado')}
               </Badge>
             ) : (
               <Badge className="bg-white/95 text-black hover:bg-white shadow-sm font-bold backdrop-blur-sm text-[9px] sm:text-[10px] h-4 sm:h-5 px-1.5 py-0">
@@ -165,7 +167,8 @@ export function CouponCard({
                 variant="secondary"
                 className="text-[8px] sm:text-[9px] px-1.5 h-4 sm:h-5 bg-blue-500 text-white border-none shadow-sm"
               >
-                <Globe className="w-2.5 h-2.5 mr-0.5" /> Online
+                <Globe className="w-2.5 h-2.5 mr-0.5" />{' '}
+                {t('vouchers.online', 'Online')}
               </Badge>
             )}
           </div>
@@ -191,7 +194,7 @@ export function CouponCard({
               {coupon.offerType === 'online' ? (
                 <>
                   <Globe className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-blue-500" />
-                  Online
+                  {t('vouchers.online', 'Online')}
                 </>
               ) : (
                 <>
@@ -204,7 +207,7 @@ export function CouponCard({
             </span>
             <span className="flex items-center gap-0.5 sm:gap-1 text-orange-600 font-medium">
               <Clock className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-              Exp.
+              {t('vouchers.exp', 'Exp.')}
             </span>
           </div>
         </CardContent>

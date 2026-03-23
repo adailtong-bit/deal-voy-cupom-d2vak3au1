@@ -27,11 +27,19 @@ export function RedemptionCenter() {
 
   const handleRedeem = (rewardId: string, cost: number, title: string) => {
     if (redeemPoints(cost, 'points')) {
-      toast.success(`${title} resgatado com sucesso!`, {
-        description: 'Verifique seu email para mais detalhes.',
-      })
+      toast.success(
+        `${title} ${t('redemption.redeemed_success', 'resgatado com sucesso!')}`,
+        {
+          description: t(
+            'redemption.check_email',
+            'Verifique seu email para mais detalhes.',
+          ),
+        },
+      )
     } else {
-      toast.error('Saldo de pontos insuficiente.')
+      toast.error(
+        t('redemption.points_insufficient', 'Saldo de pontos insuficiente.'),
+      )
     }
   }
 
@@ -44,20 +52,26 @@ export function RedemptionCenter() {
     const amount = parseFloat(withdrawAmount)
     if (isNaN(amount) || amount < minAmount) {
       toast.error(
-        `O valor mínimo para saque é ${formatCurrency(minAmount, 'USD')}`,
+        `${t('redemption.min_error', 'O valor mínimo para saque é')} ${formatCurrency(minAmount, 'USD')}`,
       )
       return
     }
     if (amount > cashBalance) {
-      toast.error('Saldo insuficiente')
+      toast.error(t('redemption.insufficient_funds', 'Saldo insuficiente'))
       return
     }
 
     const pointsToDeduct = amount * 100
     if (redeemPoints(pointsToDeduct, 'points')) {
-      toast.success('Saque solicitado com sucesso!', {
-        description: `Taxa instantânea de ${formatCurrency(instantFee, 'USD')} será aplicada.`,
-      })
+      toast.success(
+        t('redemption.success_msg', 'Saque solicitado com sucesso!'),
+        {
+          description: t(
+            'redemption.fee_applied',
+            'Taxa instantânea de {fee} será aplicada.',
+          ).replace('{fee}', formatCurrency(instantFee, 'USD')),
+        },
+      )
       setWithdrawOpen(false)
       setWithdrawAmount('')
     }
@@ -73,17 +87,21 @@ export function RedemptionCenter() {
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div>
               <h3 className="text-xl font-bold text-emerald-900 mb-1 flex items-center gap-2">
-                <Wallet className="h-6 w-6" /> Retirada de Cashback
+                <Wallet className="h-6 w-6" />{' '}
+                {t('redemption.cashback_withdrawal', 'Retirada de Cashback')}
               </h3>
               <p className="text-sm text-emerald-700">
-                Converta seus pontos em dinheiro real. Saque mínimo de{' '}
+                {t(
+                  'redemption.convert_points',
+                  'Converta seus pontos em dinheiro real. Saque mínimo de',
+                )}{' '}
                 {formatCurrency(minAmount, 'USD')}.
               </p>
             </div>
             <div className="flex items-center gap-4">
               <div className="text-right">
                 <p className="text-xs text-muted-foreground uppercase font-bold">
-                  Saldo Convertido
+                  {t('redemption.converted_balance', 'Saldo Convertido')}
                 </p>
                 <p className="text-2xl font-black text-emerald-600">
                   {formatCurrency(cashBalance, 'USD')}
@@ -92,43 +110,59 @@ export function RedemptionCenter() {
               <Dialog open={withdrawOpen} onOpenChange={setWithdrawOpen}>
                 <DialogTrigger asChild>
                   <Button className="bg-emerald-600 hover:bg-emerald-700 font-bold h-12">
-                    Sacar Agora
+                    {t('redemption.withdraw_now', 'Sacar Agora')}
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Solicitar Saque</DialogTitle>
+                    <DialogTitle>
+                      {t('redemption.request_withdrawal', 'Solicitar Saque')}
+                    </DialogTitle>
                     <DialogDescription>
-                      Transfira seu saldo de cashback para sua conta bancária.
+                      {t(
+                        'redemption.transfer_cashback',
+                        'Transfira seu saldo de cashback para sua conta bancária.',
+                      )}
                     </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4 py-4">
                     <div className="bg-slate-50 p-4 rounded-lg flex justify-between border">
-                      <span className="font-medium">Saldo Disponível</span>
+                      <span className="font-medium">
+                        {t('redemption.available_balance', 'Saldo Disponível')}
+                      </span>
                       <span className="font-bold text-emerald-600">
                         {formatCurrency(cashBalance, 'USD')}
                       </span>
                     </div>
                     <div className="space-y-2">
-                      <Label>Valor do Saque</Label>
+                      <Label>
+                        {t('redemption.withdrawal_amount', 'Valor do Saque')}
+                      </Label>
                       <Input
                         type="number"
-                        placeholder={`Mínimo ${formatCurrency(minAmount, 'USD')}`}
+                        placeholder={`${t('redemption.minimum', 'Mínimo')} ${formatCurrency(minAmount, 'USD')}`}
                         value={withdrawAmount}
                         onChange={(e) => setWithdrawAmount(e.target.value)}
                       />
                     </div>
                     <div className="text-sm space-y-1 text-muted-foreground border-t pt-4">
                       <div className="flex justify-between">
-                        <span>Taxa de Saque Instantâneo</span>
+                        <span>
+                          {t(
+                            'redemption.instant_fee',
+                            'Taxa de Saque Instantâneo',
+                          )}
+                        </span>
                         <span>
                           {isPremiumOrVip
-                            ? 'Grátis'
+                            ? t('redemption.free', 'Grátis')
                             : formatCurrency(instantFee, 'USD')}
                         </span>
                       </div>
                       <div className="flex justify-between font-bold text-slate-800">
-                        <span>Total a Receber</span>
+                        <span>
+                          {t('redemption.total_receive', 'Total a Receber')}
+                        </span>
                         <span>
                           {formatCurrency(
                             Math.max(
@@ -152,7 +186,10 @@ export function RedemptionCenter() {
                       }
                       className="w-full"
                     >
-                      Confirmar Transferência
+                      {t(
+                        'redemption.confirm_transfer',
+                        'Confirmar Transferência',
+                      )}
                     </Button>
                   </DialogFooter>
                 </DialogContent>
@@ -200,11 +237,12 @@ export function RedemptionCenter() {
                   {canAfford ? (
                     <>
                       <ShoppingBag className="h-4 w-4" />{' '}
-                      {t('rewards.redeem_now')}
+                      {t('rewards.redeem_now', 'Resgatar Agora')}
                     </>
                   ) : (
                     <>
-                      <Lock className="h-4 w-4" /> {t('rewards.redeem')}
+                      <Lock className="h-4 w-4" />{' '}
+                      {t('rewards.redeem', 'Resgatar')}
                     </>
                   )}
                 </Button>
