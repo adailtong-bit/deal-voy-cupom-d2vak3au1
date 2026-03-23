@@ -10,6 +10,7 @@ import AdminDashboard from '@/pages/AdminDashboard'
 import Seasonal from '@/pages/Seasonal'
 import Voucher from '@/pages/Voucher'
 import MyVouchers from '@/pages/MyVouchers'
+import MerchantScanner from '@/pages/MerchantScanner'
 
 export default function App() {
   return (
@@ -25,6 +26,7 @@ export default function App() {
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/seasonal" element={<Seasonal />} />
                 <Route path="/voucher/:id" element={<Voucher />} />
+                <Route path="/merchant/scanner" element={<MerchantScanner />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Route>
             </Routes>

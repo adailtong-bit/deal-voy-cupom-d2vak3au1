@@ -8,6 +8,7 @@ import {
   Settings,
   Users,
   CalendarDays,
+  ScanLine,
 } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useCouponStore } from '@/stores/CouponContext'
@@ -24,6 +25,8 @@ import { BehavioralTriggersTab } from '@/components/vendor/BehavioralTriggersTab
 import { VendorSettingsTab } from '@/components/vendor/VendorSettingsTab'
 import { VendorCustomersTab } from '@/components/vendor/VendorCustomersTab'
 import { VendorSeasonalTab } from '@/components/vendor/VendorSeasonalTab'
+import { Link } from 'react-router-dom'
+import { Button } from '@/components/ui/button'
 
 export default function VendorDashboard() {
   const { t } = useLanguage()
@@ -51,7 +54,18 @@ export default function VendorDashboard() {
             {myCompany.name} - {myCompany.region}
           </p>
         </div>
-        <CreateCampaignDialog company={myCompany} />
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <Button
+            asChild
+            variant="outline"
+            className="gap-2 bg-slate-50 hover:bg-slate-100 border-slate-200"
+          >
+            <Link to="/merchant/scanner">
+              <ScanLine className="h-4 w-4" /> Scanner POS
+            </Link>
+          </Button>
+          <CreateCampaignDialog company={myCompany} />
+        </div>
       </div>
 
       <VendorStats company={myCompany} activeCampaigns={coupons.length} />
