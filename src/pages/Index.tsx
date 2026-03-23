@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
@@ -6,6 +6,7 @@ import { CouponCard } from '@/components/CouponCard'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   Ticket,
   CalendarIcon,
@@ -14,13 +15,31 @@ import {
   TrendingUp,
   Sparkles,
   Search,
+  MapPin,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 
 export default function Index() {
   const { t, formatDate } = useLanguage()
-  const { coupons, seasonalEvents, trackSeasonalClick } = useCouponStore()
+  const {
+    coupons,
+    seasonalEvents,
+    trackSeasonalClick,
+    isLoadingLocation,
+    userLocation,
+  } = useCouponStore()
   const [searchQuery, setSearchQuery] = useState('')
+  const [isMounting, setIsMounting] = useState(true)
+
+  // Simulate an initial loading state to prevent a "white screen" flash and show skeleton
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsMounting(false)
+    }, 800)
+    return () => clearTimeout(timer)
+  }, [])
+
+  const isLoading = isMounting || isLoadingLocation
 
   const activeEvents = useMemo(() => {
     const today = new Date()
@@ -37,18 +56,71 @@ export default function Index() {
     return coupons.filter(
       (c) =>
         c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        c.storeName.toLowerCase().includes(searchQuery.toLowerCase()),
+        c.storeName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        c.category.toLowerCase().includes(searchQuery.toLowerCase()),
     )
   }, [coupons, searchQuery])
 
-  const trendingCoupons = filteredCoupons.slice(0, 4)
-  const moreCoupons = filteredCoupons.slice(4, 12)
+  const trendingCoupons = filteredCoupons
+    .filter((c) => c.isTrending || (c.averageRating && c.averageRating > 4.5))
+    .slice(0, 4)
+  const finalTrending =
+    trendingCoupons.length >= 4 ? trendingCoupons : filteredCoupons.slice(0, 4)
+  const moreCoupons = filteredCoupons
+    .filter((c) => !finalTrending.find((tc) => tc.id === c.id))
+    .slice(0, 12)
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen pb-20 md:pb-8 animate-fade-in">
+        {/* Hero Skeleton */}
+        <section className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent pt-8 md:pt-12 pb-12 px-4 mb-8 border-b">
+          <div className="container mx-auto max-w-5xl">
+            <div className="max-w-2xl space-y-4">
+              <Skeleton className="h-12 w-3/4 md:w-2/3 bg-primary/10" />
+              <Skeleton className="h-6 w-full bg-primary/5" />
+              <Skeleton className="h-6 w-5/6 bg-primary/5" />
+              <div className="pt-4">
+                <Skeleton className="h-14 w-full max-w-md rounded-full bg-white/60 shadow-sm" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div className="container mx-auto max-w-5xl px-4 space-y-12">
+          {/* Seasonal Events Skeleton */}
+          <section>
+            <div className="flex items-center justify-between mb-6">
+              <Skeleton className="h-8 w-64" />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Skeleton className="h-[240px] rounded-xl" />
+              <Skeleton className="h-[240px] rounded-xl" />
+            </div>
+          </section>
+
+          {/* Trending Skeleton */}
+          <section>
+            <Skeleton className="h-8 w-48 mb-6" />
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              {[1, 2, 3, 4].map((i) => (
+                <Skeleton key={i} className="h-48 rounded-xl" />
+              ))}
+            </div>
+          </section>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen pb-20 md:pb-8 animate-fade-in">
       {/* Hero / Header banner */}
-      <section className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent pt-8 md:pt-12 pb-12 px-4 mb-8 border-b">
-        <div className="container mx-auto max-w-5xl">
+      <section className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent pt-8 md:pt-12 pb-12 px-4 mb-8 border-b relative overflow-hidden">
+        <div className="absolute top-0 right-0 -translate-y-1/4 translate-x-1/4 opacity-[0.03] pointer-events-none hidden md:block">
+          <Gift className="w-[400px] h-[400px]" />
+        </div>
+        <div className="container mx-auto max-w-5xl relative z-10">
           <div className="max-w-2xl">
             <h1 className="text-3xl md:text-5xl font-extrabold text-slate-900 mb-4 tracking-tight leading-tight">
               {t('home.hero_title', 'Encontre as Melhores Ofertas e Cupons')}
@@ -60,24 +132,36 @@ export default function Index() {
               )}
             </p>
             <div className="relative max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t(
                   'home.search_placeholder',
-                  'Buscar ofertas, lojas...',
+                  'Buscar ofertas, lojas ou categorias...',
                 )}
-                className="pl-10 h-12 text-base rounded-full shadow-sm bg-white"
+                className="pl-12 h-14 text-base rounded-full shadow-sm bg-white border-primary/20 focus-visible:ring-primary/30 transition-all"
               />
             </div>
+
+            {userLocation && (
+              <div className="mt-4 flex items-center gap-2 text-sm font-medium text-slate-500 animate-fade-in">
+                <MapPin className="h-4 w-4 text-primary" />
+                <span>
+                  {t(
+                    'home.location_active',
+                    'Mostrando ofertas próximas a você',
+                  )}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </section>
 
       <div className="container mx-auto max-w-5xl px-4 space-y-12">
         {/* Seasonal Events */}
-        {activeEvents.length > 0 && (
+        {activeEvents.length > 0 && !searchQuery && (
           <section>
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold flex items-center gap-2 text-slate-800">
@@ -96,7 +180,7 @@ export default function Index() {
               </Button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {activeEvents.map((event) => (
+              {activeEvents.slice(0, 2).map((event) => (
                 <Card
                   key={event.id}
                   className="overflow-hidden border-primary/20 hover:border-primary/50 transition-all hover:shadow-md group cursor-pointer"
@@ -148,18 +232,29 @@ export default function Index() {
                 </Card>
               ))}
             </div>
+            {activeEvents.length > 2 && (
+              <div className="mt-6 text-center sm:hidden">
+                <Button variant="outline" asChild className="w-full">
+                  <Link to="/seasonal">
+                    {t('home.view_all_events', 'Ver todos os eventos')}
+                  </Link>
+                </Button>
+              </div>
+            )}
           </section>
         )}
 
         {/* Trending Coupons */}
-        {trendingCoupons.length > 0 && (
+        {finalTrending.length > 0 && (
           <section>
             <h2 className="text-2xl font-bold flex items-center gap-2 mb-6 text-slate-800">
               <TrendingUp className="h-6 w-6 text-orange-500" />
-              {t('home.trending', 'Em Alta')}
+              {searchQuery
+                ? t('home.search_results', 'Resultados da Busca')
+                : t('home.trending', 'Em Alta')}
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-              {trendingCoupons.map((coupon) => (
+              {finalTrending.map((coupon) => (
                 <CouponCard key={coupon.id} coupon={coupon} />
               ))}
             </div>
@@ -185,17 +280,28 @@ export default function Index() {
           </section>
         )}
 
+        {/* Empty State */}
         {filteredCoupons.length === 0 && (
           <div className="text-center py-16 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Search className="h-8 w-8 text-slate-400" />
+            </div>
             <h3 className="text-lg font-bold text-slate-700">
               {t('home.no_results', 'Nenhuma oferta encontrada')}
             </h3>
-            <p className="text-slate-500 mt-1">
+            <p className="text-slate-500 mt-1 max-w-md mx-auto">
               {t(
                 'home.try_another_search',
-                'Tente usar outros termos de busca.',
+                'Tente usar outros termos de busca ou navegue pelas categorias disponíveis.',
               )}
             </p>
+            <Button
+              variant="outline"
+              className="mt-6"
+              onClick={() => setSearchQuery('')}
+            >
+              {t('home.clear_search', 'Limpar Busca')}
+            </Button>
           </div>
         )}
       </div>
