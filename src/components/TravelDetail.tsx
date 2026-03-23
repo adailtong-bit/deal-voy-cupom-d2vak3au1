@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useCouponStore } from '@/stores/CouponContext'
+import { useLanguage } from '@/stores/LanguageContext'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, Trash2, Calendar, MapPin, Plus } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -16,6 +17,7 @@ export function TravelDetail({
   tripId: string
   onBack: () => void
 }) {
+  const { t } = useLanguage()
   const { itineraries, deleteItinerary, updateItinerary } = useCouponStore()
   const activeTrip = useMemo(
     () => itineraries.find((i) => i.id === tripId) || null,
@@ -31,7 +33,7 @@ export function TravelDetail({
   const handleDeleteTrip = () => {
     deleteItinerary(activeTrip.id)
     onBack()
-    toast.success('Trip deleted')
+    toast.success(t('travel.trip_deleted', 'Trip deleted'))
   }
 
   const handleAddActivity = (coupon: Coupon) => {
@@ -39,7 +41,12 @@ export function TravelDetail({
     const updatedDays = activeTrip.days.map((day) => {
       if (day.id === activeDayId) {
         if (day.stops.find((s) => s.id === coupon.id)) {
-          toast.info('Activity already added to this day')
+          toast.info(
+            t(
+              'travel.activity_already_added',
+              'Activity already added to this day',
+            ),
+          )
           return day
         }
         return { ...day, stops: [...day.stops, coupon] }
@@ -51,7 +58,7 @@ export function TravelDetail({
       days: updatedDays,
       stops: updatedDays.flatMap((d) => d.stops),
     })
-    toast.success('Activity added')
+    toast.success(t('travel.activity_added', 'Activity added'))
     setIsAddSheetOpen(false)
   }
 
@@ -68,7 +75,7 @@ export function TravelDetail({
       days: updatedDays,
       stops: updatedDays.flatMap((d) => d.stops),
     })
-    toast.success('Activity removed')
+    toast.success(t('travel.activity_removed', 'Activity removed'))
   }
 
   const getMockTime = (index: number) => {
@@ -86,7 +93,8 @@ export function TravelDetail({
             onClick={onBack}
             className="gap-2 -ml-3 text-slate-600 hover:text-slate-900"
           >
-            <ArrowLeft className="h-4 w-4" /> Back to Trips
+            <ArrowLeft className="h-4 w-4" />{' '}
+            {t('travel.back_to_trips', 'Back to Trips')}
           </Button>
           <Button
             variant="outline"
@@ -95,7 +103,9 @@ export function TravelDetail({
             onClick={handleDeleteTrip}
           >
             <Trash2 className="h-4 w-4 sm:mr-2" />
-            <span className="hidden sm:inline">Delete</span>
+            <span className="hidden sm:inline">
+              {t('common.delete', 'Delete')}
+            </span>
           </Button>
         </div>
       </div>
@@ -120,7 +130,8 @@ export function TravelDetail({
               </span>
               <span className="flex items-center gap-1.5 bg-white px-3 py-1 rounded-full shadow-sm border">
                 <MapPin className="h-4 w-4 text-orange-500" />{' '}
-                {activeTrip.stops.length} Total Activities
+                {activeTrip.stops.length}{' '}
+                {t('travel.total_activities', 'Total Activities')}
               </span>
             </div>
           </div>
@@ -140,7 +151,7 @@ export function TravelDetail({
                     value={day.id}
                     className="rounded-lg px-6 font-semibold data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all flex-1"
                   >
-                    Day {day.dayNumber}
+                    {t('travel.day', 'Day')} {day.dayNumber}
                   </TabsTrigger>
                 ))}
               </TabsList>
@@ -155,13 +166,15 @@ export function TravelDetail({
               >
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-xl font-bold text-slate-800">
-                    Activities for Day {day.dayNumber}
+                    {t('travel.activities_for_day', 'Activities for Day')}{' '}
+                    {day.dayNumber}
                   </h3>
                   <Button
                     onClick={() => setIsAddSheetOpen(true)}
                     className="gap-2 bg-primary hover:bg-primary/90"
                   >
-                    <Plus className="h-4 w-4" /> Add Activity
+                    <Plus className="h-4 w-4" />{' '}
+                    {t('travel.add_activity', 'Add Activity')}
                   </Button>
                 </div>
 
@@ -169,16 +182,19 @@ export function TravelDetail({
                   <div className="text-center py-16 bg-slate-50 border-2 border-dashed rounded-xl">
                     <MapPin className="h-12 w-12 text-slate-300 mx-auto mb-3" />
                     <p className="text-lg font-medium text-slate-700">
-                      Your day is empty
+                      {t('travel.empty_day', 'Your day is empty')}
                     </p>
                     <p className="text-slate-500 mb-6">
-                      Add places to visit, restaurants, or events.
+                      {t(
+                        'travel.empty_day_desc',
+                        'Add places to visit, restaurants, or events.',
+                      )}
                     </p>
                     <Button
                       variant="outline"
                       onClick={() => setIsAddSheetOpen(true)}
                     >
-                      Browse Discoveries
+                      {t('travel.browse_discoveries', 'Browse Discoveries')}
                     </Button>
                   </div>
                 ) : (

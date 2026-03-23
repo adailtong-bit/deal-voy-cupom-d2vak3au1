@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useCouponStore } from '@/stores/CouponContext'
+import { useLanguage } from '@/stores/LanguageContext'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -44,6 +45,7 @@ export function TravelDashboard({
   onSelectTrip,
   onCreateNew,
 }: TravelDashboardProps) {
+  const { t } = useLanguage()
   const { itineraries, user, deleteItinerary, bookings } = useCouponStore()
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [searchParams, setSearchParams] = useSearchParams()
@@ -69,7 +71,7 @@ export function TravelDashboard({
 
   const handleDeleteTrip = (id: string) => {
     deleteItinerary(id)
-    toast.success('Trip deleted')
+    toast.success(t('travel.trip_deleted', 'Trip deleted'))
   }
 
   const handleCreateNew = () => {
@@ -86,20 +88,21 @@ export function TravelDashboard({
       case 'paid':
         return (
           <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white gap-1">
-            <CheckCircle className="w-3 h-3" /> Confirmado
+            <CheckCircle className="w-3 h-3" />{' '}
+            {t('travel.confirmed', 'Confirmado')}
           </Badge>
         )
       case 'cancelled':
         return (
           <Badge variant="destructive" className="gap-1">
-            <XCircle className="w-3 h-3" /> Cancelado
+            <XCircle className="w-3 h-3" /> {t('travel.cancelled', 'Cancelado')}
           </Badge>
         )
       case 'pending':
       default:
         return (
           <Badge className="bg-amber-500 hover:bg-amber-600 text-white gap-1">
-            <Clock className="w-3 h-3" /> Pendente
+            <Clock className="w-3 h-3" /> {t('travel.pending', 'Pendente')}
           </Badge>
         )
     }
@@ -122,14 +125,14 @@ export function TravelDashboard({
   const getTypeName = (type?: string) => {
     switch (type) {
       case 'hotel':
-        return 'Hospedagem'
+        return t('travel.accommodation', 'Hospedagem')
       case 'car':
-        return 'Aluguel de Carro'
+        return t('travel.car_rental', 'Aluguel de Carro')
       case 'ticket':
       case 'activity':
-        return 'Atividade / Ingresso'
+        return t('travel.activity', 'Atividade / Ingresso')
       default:
-        return 'Reserva Geral'
+        return t('travel.general_booking', 'Reserva Geral')
     }
   }
 
@@ -139,12 +142,14 @@ export function TravelDashboard({
         <Alert className="mb-6 bg-blue-50 border-blue-200">
           <Users className="h-4 w-4 text-blue-600" />
           <AlertTitle className="text-blue-800 font-bold">
-            Merchant Prospecting Tool
+            {t('travel.prospecting_tool', 'Merchant Prospecting Tool')}
           </AlertTitle>
           <AlertDescription className="text-blue-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-2">
             <span>
-              Discover potential customers traveling to your region and view
-              market trends.
+              {t(
+                'travel.prospecting_desc',
+                'Discover potential customers traveling to your region and view market trends.',
+              )}
             </span>
             <Link to={user?.role === 'super_admin' ? '/admin' : '/vendor'}>
               <Button
@@ -152,7 +157,7 @@ export function TravelDashboard({
                 variant="outline"
                 className="bg-white border-blue-200 hover:bg-blue-100"
               >
-                Access CRM
+                {t('travel.access_crm', 'Access CRM')}
               </Button>
             </Link>
           </AlertDescription>
@@ -169,19 +174,19 @@ export function TravelDashboard({
             value="discover"
             className="rounded-lg py-2.5 px-6 font-semibold text-base sm:flex-1 data-[state=active]:bg-white data-[state=active]:shadow-sm"
           >
-            Hub de Descobertas
+            {t('travel.discover_hub', 'Hub de Descobertas')}
           </TabsTrigger>
           <TabsTrigger
             value="bookings"
             className="rounded-lg py-2.5 px-6 font-semibold text-base sm:flex-1 data-[state=active]:bg-white data-[state=active]:shadow-sm"
           >
-            Status de Reservas
+            {t('travel.booking_status', 'Status de Reservas')}
           </TabsTrigger>
           <TabsTrigger
             value="trips"
             className="rounded-lg py-2.5 px-6 font-semibold text-base sm:flex-1 data-[state=active]:bg-white data-[state=active]:shadow-sm"
           >
-            Minhas Viagens
+            {t('travel.my_trips', 'Minhas Viagens')}
           </TabsTrigger>
         </TabsList>
 
@@ -202,10 +207,13 @@ export function TravelDashboard({
             <div>
               <h1 className="text-3xl font-extrabold text-slate-900 flex items-center gap-3">
                 <Clock className="h-8 w-8 text-primary" />
-                Status de Reservas
+                {t('travel.booking_status', 'Status de Reservas')}
               </h1>
               <p className="text-muted-foreground mt-1">
-                Acompanhe o ciclo de vida de todas as suas solicitações.
+                {t(
+                  'travel.track_lifecycle',
+                  'Acompanhe o ciclo de vida de todas as suas solicitações.',
+                )}
               </p>
             </div>
           </div>
@@ -214,11 +222,13 @@ export function TravelDashboard({
             <div className="text-center py-20 bg-slate-50 rounded-2xl border border-dashed">
               <Ticket className="h-16 w-16 mx-auto text-slate-300 mb-4" />
               <h3 className="text-xl font-bold text-slate-700 mb-2">
-                Nenhuma reserva encontrada
+                {t('travel.no_bookings', 'Nenhuma reserva encontrada')}
               </h3>
               <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                Você ainda não solicitou nenhuma reserva através do Hub de
-                Descobertas.
+                {t(
+                  'travel.no_bookings_desc',
+                  'Você ainda não solicitou nenhuma reserva através do Hub de Descobertas.',
+                )}
               </p>
             </div>
           ) : (
@@ -258,34 +268,43 @@ export function TravelDashboard({
                         <Users className="w-4 h-4 text-slate-400" />
                         <span>
                           {booking.guests}{' '}
-                          {booking.guests === 1 ? 'Pessoa' : 'Pessoas'}
+                          {booking.guests === 1
+                            ? t('travel.person', 'Pessoa')
+                            : t('travel.people', 'Pessoas')}
                         </span>
                       </div>
                       {booking.requiresPrivacy && (
                         <div className="flex items-center gap-2 text-sm text-blue-700 font-medium bg-blue-50 p-2 rounded-md border border-blue-100">
                           <Shield className="w-4 h-4 text-blue-600" />
-                          <span>Privacidade: Quartos Individuais</span>
+                          <span>
+                            {t(
+                              'travel.privacy_rooms',
+                              'Privacidade: Quartos Individuais',
+                            )}
+                          </span>
                         </div>
                       )}
                     </div>
 
                     <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
                       <span className="text-xs font-semibold text-slate-500 uppercase">
-                        Fonte da Oferta
+                        {t('travel.source_offer', 'Fonte da Oferta')}
                       </span>
                       {booking.source === 'partner' ? (
                         <Badge
                           variant="secondary"
                           className="bg-purple-100 text-purple-800 hover:bg-purple-200 shadow-none border-none"
                         >
-                          <Megaphone className="w-3 h-3 mr-1" /> Parceiro
+                          <Megaphone className="w-3 h-3 mr-1" />{' '}
+                          {t('travel.source_partner', 'Parceiro')}
                         </Badge>
                       ) : (
                         <Badge
                           variant="outline"
                           className="bg-slate-50 text-slate-600 shadow-none border-slate-200"
                         >
-                          <Search className="w-3 h-3 mr-1" /> Orgânico
+                          <Search className="w-3 h-3 mr-1" />{' '}
+                          {t('travel.source_organic', 'Orgânico')}
                         </Badge>
                       )}
                     </div>
@@ -304,10 +323,13 @@ export function TravelDashboard({
             <div>
               <h1 className="text-3xl font-extrabold text-slate-900 flex items-center gap-3">
                 <Luggage className="h-8 w-8 text-primary" />
-                Minhas Viagens
+                {t('travel.my_trips', 'Minhas Viagens')}
               </h1>
               <p className="text-muted-foreground mt-1">
-                Organize suas próximas viagens e atividades com facilidade.
+                {t(
+                  'travel.organize_trips',
+                  'Organize suas próximas viagens e atividades com facilidade.',
+                )}
               </p>
             </div>
             <Button
@@ -315,7 +337,8 @@ export function TravelDashboard({
               className="font-bold shadow-sm"
               onClick={handleCreateNew}
             >
-              <Plus className="h-5 w-5 mr-2" /> Nova Viagem
+              <Plus className="h-5 w-5 mr-2" />{' '}
+              {t('travel.new_trip', 'Nova Viagem')}
             </Button>
           </div>
 
@@ -323,14 +346,16 @@ export function TravelDashboard({
             <div className="text-center py-20 bg-slate-50 rounded-2xl border border-dashed">
               <Luggage className="h-16 w-16 mx-auto text-slate-300 mb-4" />
               <h3 className="text-xl font-bold text-slate-700 mb-2">
-                Nenhuma viagem planejada
+                {t('travel.no_trips', 'Nenhuma viagem planejada')}
               </h3>
               <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                Comece a planejar suas próximas férias, viagem de fim de semana
-                ou negócios aqui.
+                {t(
+                  'travel.no_trips_desc',
+                  'Comece a planejar suas próximas férias, viagem de fim de semana ou negócios aqui.',
+                )}
               </p>
               <Button onClick={handleCreateNew}>
-                Criar sua primeira viagem
+                {t('travel.create_first_trip', 'Criar sua primeira viagem')}
               </Button>
             </div>
           ) : (
@@ -373,7 +398,8 @@ export function TravelDashboard({
                               handleDeleteTrip(trip.id)
                             }}
                           >
-                            <Trash2 className="h-4 w-4 mr-2" /> Deletar Viagem
+                            <Trash2 className="h-4 w-4 mr-2" />{' '}
+                            {t('travel.delete_trip', 'Deletar Viagem')}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -387,11 +413,12 @@ export function TravelDashboard({
                       </span>
                       <span className="flex items-center gap-1.5">
                         <MapPin className="h-4 w-4" />
-                        {trip.stops?.length || 0} Atividades
+                        {trip.stops?.length || 0}{' '}
+                        {t('travel.activities', 'Atividades')}
                       </span>
                     </div>
                     <Button variant="outline" className="w-full bg-slate-50">
-                      Ver Itinerário
+                      {t('travel.view_itinerary', 'Ver Itinerário')}
                     </Button>
                   </CardContent>
                 </Card>
@@ -401,7 +428,6 @@ export function TravelDashboard({
         </TabsContent>
       </Tabs>
 
-      {/* Render internal wizard only if no onCreateNew was provided */}
       {!onCreateNew && (
         <CreateTripWizard
           isOpen={isCreateOpen}

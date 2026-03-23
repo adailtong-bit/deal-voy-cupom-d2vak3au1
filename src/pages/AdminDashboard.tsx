@@ -11,6 +11,7 @@ import { PartnerBillingTab } from '@/components/admin/PartnerBillingTab'
 import { AdminSeasonalTab } from '@/components/admin/AdminSeasonalTab'
 import { AdminCategoriesTab } from '@/components/admin/AdminCategoriesTab'
 import { AdminInterestsTab } from '@/components/admin/AdminInterestsTab'
+import { TestingSandboxTab } from '@/components/admin/TestingSandboxTab'
 import { useLanguage } from '@/stores/LanguageContext'
 
 export default function AdminDashboard() {
@@ -44,6 +45,9 @@ export default function AdminDashboard() {
           <TabsTrigger value="crawler">{t('admin.crawler')}</TabsTrigger>
           <TabsTrigger value="ads">{t('admin.ads')}</TabsTrigger>
           <TabsTrigger value="insights">{t('admin.insights')}</TabsTrigger>
+          <TabsTrigger value="sandbox">
+            {t('admin.sandbox', 'Testing Sandbox')}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
@@ -139,6 +143,10 @@ export default function AdminDashboard() {
 
         <TabsContent value="insights">
           <DataInsightsTab />
+        </TabsContent>
+
+        <TabsContent value="sandbox">
+          <TestingSandboxTab />
         </TabsContent>
       </Tabs>
     </div>
