@@ -1,3 +1,5 @@
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Coupon } from '@/lib/types'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -32,12 +34,20 @@ export function TravelActivityCard({
   mockTime,
   onRemove,
 }: TravelActivityCardProps) {
+  const navigate = useNavigate()
+  const [isBookingOpen, setIsBookingOpen] = useState(false)
+
   // Simple heuristic to determine booking form type
   const isHotel =
     stop.category === 'Outros' && stop.title.toLowerCase().includes('hotel')
   const isCar =
     stop.category === 'Serviços' && stop.title.toLowerCase().includes('car')
   const bookingType = isCar ? 'car' : isHotel ? 'hotel' : 'general'
+
+  const handleBookingSuccess = () => {
+    setIsBookingOpen(false)
+    navigate('/travel?tab=bookings')
+  }
 
   return (
     <div className="flex gap-4 group">
@@ -99,7 +109,7 @@ export function TravelActivityCard({
                 </span>
               </div>
 
-              <Dialog>
+              <Dialog open={isBookingOpen} onOpenChange={setIsBookingOpen}>
                 <DialogTrigger asChild>
                   <Button
                     size="sm"
@@ -113,7 +123,11 @@ export function TravelActivityCard({
                   <DialogTitle className="sr-only">
                     Reservar {stop.storeName}
                   </DialogTitle>
-                  <BookingForm coupon={stop} type={bookingType} />
+                  <BookingForm
+                    coupon={stop}
+                    type={bookingType}
+                    onSuccess={handleBookingSuccess}
+                  />
                 </DialogContent>
               </Dialog>
             </div>

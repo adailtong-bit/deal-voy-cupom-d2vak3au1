@@ -9,19 +9,22 @@ import { Badge } from '@/components/ui/badge'
 import {
   Dialog,
   DialogContent,
-  DialogTrigger,
   DialogTitle,
+  DialogHeader,
+  DialogFooter,
 } from '@/components/ui/dialog'
 import { BookingForm } from './BookingForm'
+import { StarRating } from './StarRating'
+import { TravelOffer } from '@/lib/types'
 import {
   Hotel,
   Car,
   Ticket,
   MapPin,
-  Star,
   Users,
   Megaphone,
   Search,
+  ExternalLink,
 } from 'lucide-react'
 import {
   Select,
@@ -31,11 +34,20 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 
-export function TravelDiscoveryHub() {
+interface TravelDiscoveryHubProps {
+  onBookingSuccess?: () => void
+}
+
+export function TravelDiscoveryHub({
+  onBookingSuccess,
+}: TravelDiscoveryHubProps) {
   const { travelOffers } = useCouponStore()
   const [activeTab, setActiveTab] = useState('hotel')
   const [guests, setGuests] = useState('2')
   const [requirePrivacy, setRequirePrivacy] = useState(false)
+
+  const [detailsOffer, setDetailsOffer] = useState<TravelOffer | null>(null)
+  const [bookingOffer, setBookingOffer] = useState<TravelOffer | null>(null)
 
   const numGuests = parseInt(guests)
 
@@ -204,50 +216,164 @@ export function TravelDiscoveryHub() {
                     {offer.description}
                   </p>
                   <div className="flex items-center justify-between text-xs font-medium text-slate-500 mb-5 bg-slate-50 p-2 rounded-md border border-slate-100">
-                    <span className="flex items-center gap-1.5">
-                      <MapPin className="h-3.5 w-3.5 text-slate-400" />{' '}
+                    <span className="flex items-center gap-1.5 line-clamp-1">
+                      <MapPin className="h-3.5 w-3.5 text-slate-400 shrink-0" />{' '}
                       {offer.destination}
                     </span>
                     {offer.rating && (
-                      <span className="flex items-center gap-1 text-amber-500">
-                        <Star className="h-3.5 w-3.5 fill-current" />{' '}
-                        {offer.rating}
-                      </span>
+                      <StarRating
+                        rating={offer.rating}
+                        size={3}
+                        className="shrink-0"
+                      />
                     )}
                   </div>
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button className="w-full font-bold shadow-sm">
-                        {activeTab === 'hotel'
-                          ? 'Reservar Quarto'
-                          : activeTab === 'car_rental'
-                            ? 'Alugar Carro'
-                            : 'Comprar Ingresso'}
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-md p-0 border-none bg-transparent shadow-none">
-                      <DialogTitle className="sr-only">
-                        Reservar {offer.title}
-                      </DialogTitle>
-                      <BookingForm
-                        offer={offer}
-                        type={
-                          activeTab === 'hotel'
-                            ? 'hotel'
-                            : activeTab === 'car_rental'
-                              ? 'car'
-                              : 'ticket'
-                        }
-                        requirePrivacy={requirePrivacy && numGuests >= 4}
-                      />
-                    </DialogContent>
-                  </Dialog>
+
+                  <div className="grid grid-cols-2 gap-2 mt-auto">
+                    <Button
+                      variant="outline"
+                      className="w-full font-bold shadow-sm text-xs px-2"
+                      onClick={() => setDetailsOffer(offer)}
+                    >
+                      Ver Detalhes
+                    </Button>
+                    <Button
+                      className="w-full font-bold shadow-sm text-xs px-2"
+                      onClick={() => setBookingOffer(offer)}
+                    >
+                      {activeTab === 'hotel'
+                        ? 'Reservar'
+                        : activeTab === 'car_rental'
+                          ? 'Alugar'
+                          : 'Comprar'}
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ))
           )}
         </div>
       </Tabs>
+
+      <Dialog
+        open={!!detailsOffer}
+        onOpenChange={(open) => !open && setDetailsOffer(null)}
+      >
+        <DialogContent className="sm:max-w-xl overflow-y-auto max-h-[90vh]">
+          {detailsOffer && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-extrabold text-slate-900 pr-6">
+                  {detailsOffer.title}
+                </DialogTitle>
+              </DialogHeader>
+              <div className="relative h-56 w-full rounded-xl overflow-hidden mb-2 shadow-sm">
+                <img
+                  src={detailsOffer.image}
+                  className="object-cover w-full h-full"
+                  alt={detailsOffer.title}
+                />
+                <div className="absolute bottom-3 right-3 bg-white/95 px-3 py-1.5 rounded-lg shadow-md font-extrabold text-lg text-slate-900">
+                  {detailsOffer.currency} {detailsOffer.price}
+                </div>
+              </div>
+              <div className="space-y-5 py-2">
+                <div>
+                  <h4 className="font-bold text-slate-800 mb-1 flex items-center gap-2">
+                    Sobre a Oferta
+                  </h4>
+                  <p className="text-sm text-slate-600 leading-relaxed">
+                    {detailsOffer.description}
+                  </p>
+                </div>
+
+                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                  <h4 className="font-bold text-slate-800 mb-3 text-sm uppercase tracking-wider">
+                    Detalhes da Promoção
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3 gap-x-4 text-sm">
+                    <div>
+                      <span className="text-slate-500 block text-xs">
+                        Fornecedor
+                      </span>
+                      <span className="font-semibold text-slate-800">
+                        {detailsOffer.provider}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block text-xs">
+                        Destino
+                      </span>
+                      <span className="font-semibold text-slate-800">
+                        {detailsOffer.destination}
+                      </span>
+                    </div>
+                    {detailsOffer.rating && (
+                      <div>
+                        <span className="text-slate-500 block text-xs mb-0.5">
+                          Avaliação
+                        </span>
+                        <StarRating rating={detailsOffer.rating} size={4} />
+                      </div>
+                    )}
+                    {detailsOffer.hasSeparatedRooms && (
+                      <div className="sm:col-span-2">
+                        <span className="text-blue-600 bg-blue-50 border border-blue-100 px-2 py-1 rounded text-xs font-bold flex w-fit items-center gap-1.5">
+                          <Users className="w-3.5 h-3.5" /> Privacidade
+                          Garantida / Quartos Individuais
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <DialogFooter className="mt-2 flex flex-col sm:flex-row gap-3">
+                <Button
+                  variant="outline"
+                  className="w-full sm:w-auto"
+                  onClick={() => setDetailsOffer(null)}
+                >
+                  Voltar
+                </Button>
+                <Button asChild className="w-full sm:w-auto gap-2 bg-primary">
+                  <a
+                    href={detailsOffer.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Visitar Site <ExternalLink className="w-4 h-4" />
+                  </a>
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={!!bookingOffer}
+        onOpenChange={(open) => !open && setBookingOffer(null)}
+      >
+        <DialogContent className="sm:max-w-md p-0 border-none bg-transparent shadow-none">
+          {bookingOffer && (
+            <BookingForm
+              offer={bookingOffer}
+              type={
+                bookingOffer.type === 'hotel'
+                  ? 'hotel'
+                  : bookingOffer.type === 'car_rental'
+                    ? 'car'
+                    : 'ticket'
+              }
+              requirePrivacy={requirePrivacy && numGuests >= 4}
+              onSuccess={() => {
+                setBookingOffer(null)
+                if (onBookingSuccess) onBookingSuccess()
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

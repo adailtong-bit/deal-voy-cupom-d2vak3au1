@@ -20,11 +20,13 @@ export function BookingForm({
   offer,
   type = 'general',
   requirePrivacy = false,
+  onSuccess,
 }: {
   coupon?: Coupon
   offer?: TravelOffer
   type?: 'general' | 'hotel' | 'car' | 'ticket'
   requirePrivacy?: boolean
+  onSuccess?: () => void
 }) {
   const { makeBooking } = useCouponStore()
 
@@ -66,6 +68,10 @@ export function BookingForm({
     toast.success(msg, {
       description: 'O parceiro confirmará em breve.',
     })
+
+    if (onSuccess) {
+      onSuccess()
+    }
   }
 
   const iconMap = {

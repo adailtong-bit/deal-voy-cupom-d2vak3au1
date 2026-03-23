@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useCouponStore } from '@/stores/CouponContext'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -29,7 +30,6 @@ import {
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
-import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import { CreateTripWizard } from './CreateTripWizard'
 import { TravelDiscoveryHub } from './TravelDiscoveryHub'
@@ -46,6 +46,13 @@ export function TravelDashboard({
 }: TravelDashboardProps) {
   const { itineraries, user, deleteItinerary, bookings } = useCouponStore()
   const [isCreateOpen, setIsCreateOpen] = useState(false)
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  const activeTab = searchParams.get('tab') || 'discover'
+
+  const handleTabChange = (value: string) => {
+    setSearchParams({ tab: value })
+  }
 
   const myTrips = useMemo(
     () => itineraries.filter((it) => it.authorId === user?.id),
@@ -152,7 +159,11 @@ export function TravelDashboard({
         </Alert>
       )}
 
-      <Tabs defaultValue="discover" className="w-full">
+      <Tabs
+        value={activeTab}
+        onValueChange={handleTabChange}
+        className="w-full"
+      >
         <TabsList className="mb-8 bg-slate-100 p-1 rounded-xl h-auto flex flex-col sm:flex-row w-full sm:w-auto">
           <TabsTrigger
             value="discover"
@@ -178,7 +189,9 @@ export function TravelDashboard({
           value="discover"
           className="mt-0 outline-none animate-in fade-in-50 duration-500"
         >
-          <TravelDiscoveryHub />
+          <TravelDiscoveryHub
+            onBookingSuccess={() => handleTabChange('bookings')}
+          />
         </TabsContent>
 
         <TabsContent
