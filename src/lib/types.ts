@@ -322,6 +322,7 @@ export interface User {
   country?: string
   state?: string
   city?: string
+  zipCode?: string
   phone?: string
   preferences?: UserPreferences
   partnerId?: string
@@ -383,7 +384,7 @@ export interface AdPricing {
   placement: string
   billingType: AdBillingType
   durationDays?: number
-  price: number // Can be fixed price, CPC, or CPA value
+  price: number
 }
 
 export interface Advertiser {
@@ -602,11 +603,18 @@ export interface DiscoveredPromotion {
   rawData?: Record<string, any>
 }
 
+export interface InterestCategory {
+  id: string
+  label: string
+  icon?: string
+}
+
 export interface PlatformSettings {
   commissionRate: number
   cashbackSplitUser: number
   cashbackSplitPlatform: number
   mainCategories?: string[]
+  availableInterests?: InterestCategory[]
   travelMargins: {
     hotels: number
     flights: number

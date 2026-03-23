@@ -1008,6 +1008,11 @@ export const DEFAULT_PLATFORM_SETTINGS: PlatformSettings = {
   cashbackSplitUser: 40,
   cashbackSplitPlatform: 60,
   mainCategories: ['Alimentação', 'Moda', 'Serviços', 'Eletrônicos'],
+  availableInterests: CATEGORIES.filter((c) => c.id !== 'all').map((c) => ({
+    id: c.id,
+    label: c.label,
+    icon: c.icon,
+  })),
   travelMargins: {
     hotels: 12,
     flights: 3,

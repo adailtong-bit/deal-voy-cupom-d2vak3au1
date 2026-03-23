@@ -15,11 +15,11 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
-import { CATEGORIES } from '@/lib/data'
+import { COUNTRIES, LOCATION_DATA } from '@/lib/locationData'
 import { User } from '@/lib/types'
 
 export default function Profile() {
-  const { user, updateUserProfile } = useCouponStore()
+  const { user, updateUserProfile, platformSettings } = useCouponStore()
   const { t } = useLanguage()
 
   const [formData, setFormData] = useState({
@@ -27,10 +27,24 @@ export default function Profile() {
     phone: user?.phone || '',
     birthday: user?.birthday || '',
     gender: user?.gender || '',
+    country: user?.country || '',
     state: user?.state || '',
     city: user?.city || '',
+    zipCode: user?.zipCode || '',
     categories: user?.preferences?.categories || [],
   })
+
+  const availableStates = useMemo(() => {
+    return formData.country
+      ? Object.keys(LOCATION_DATA[formData.country]?.states || {})
+      : []
+  }, [formData.country])
+
+  const availableCities = useMemo(() => {
+    return formData.country && formData.state
+      ? LOCATION_DATA[formData.country]?.states[formData.state] || []
+      : []
+  }, [formData.country, formData.state])
 
   const progress = useMemo(() => {
     let score = 0
@@ -38,14 +52,29 @@ export default function Profile() {
     if (formData.phone) score++
     if (formData.birthday) score++
     if (formData.gender) score++
+    if (formData.country) score++
     if (formData.state) score++
     if (formData.city) score++
+    if (formData.zipCode) score++
     if (formData.categories.length > 0) score++
-    return Math.round((score / 7) * 100)
+    return Math.round((score / 9) * 100)
   }, [formData])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
+  }
+
+  const handleZipChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let val = e.target.value
+    if (formData.country === 'Brasil') {
+      val = val.replace(/\D/g, '')
+      if (val.length > 8) val = val.slice(0, 8)
+      val = val.replace(/^(\d{5})(\d{0,3})/, '$1-$2')
+    } else if (formData.country === 'USA') {
+      val = val.replace(/\D/g, '')
+      if (val.length > 5) val = val.slice(0, 5)
+    }
+    setFormData({ ...formData, zipCode: val })
   }
 
   const handleCategoryChange = (id: string, checked: boolean) => {
@@ -63,8 +92,10 @@ export default function Profile() {
       phone: formData.phone,
       birthday: formData.birthday,
       gender: formData.gender as User['gender'],
+      country: formData.country,
       state: formData.state,
       city: formData.city,
+      zipCode: formData.zipCode,
       preferences: {
         ...user?.preferences,
         categories: formData.categories,
@@ -186,23 +217,85 @@ export default function Profile() {
                 </Select>
               </div>
             </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>{t('profile.country', 'País')}</Label>
+                <Select
+                  value={formData.country}
+                  onValueChange={(v) =>
+                    setFormData({
+                      ...formData,
+                      country: v,
+                      state: '',
+                      city: '',
+                    })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {COUNTRIES.map((c) => (
+                      <SelectItem key={c} value={c}>
+                        {c}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>{t('profile.state', 'Estado')}</Label>
+                <Select
+                  value={formData.state}
+                  onValueChange={(v) =>
+                    setFormData({ ...formData, state: v, city: '' })
+                  }
+                  disabled={!formData.country || availableStates.length === 0}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableStates.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {s}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>{t('profile.city', 'Cidade')}</Label>
-                <Input
-                  name="city"
+                <Select
                   value={formData.city}
-                  onChange={handleChange}
-                  placeholder="Ex: São Paulo"
-                />
+                  onValueChange={(v) => setFormData({ ...formData, city: v })}
+                  disabled={!formData.state || availableCities.length === 0}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableCities.map((c) => (
+                      <SelectItem key={c} value={c}>
+                        {c}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
+
               <div className="space-y-2">
-                <Label>{t('profile.state', 'Estado')}</Label>
+                <Label>{t('profile.zip', 'CEP / Zip Code')}</Label>
                 <Input
-                  name="state"
-                  value={formData.state}
-                  onChange={handleChange}
-                  placeholder="Ex: SP"
+                  name="zipCode"
+                  value={formData.zipCode}
+                  onChange={handleZipChange}
+                  placeholder="Ex: 00000-000"
                 />
               </div>
             </div>
@@ -215,7 +308,7 @@ export default function Profile() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {CATEGORIES.filter((c) => c.id !== 'all').map((cat) => (
+              {(platformSettings.availableInterests || []).map((cat) => (
                 <div
                   key={cat.id}
                   className="flex flex-row items-center space-x-3 rounded-md border p-3 bg-card hover:bg-slate-50 transition-colors"
@@ -230,7 +323,7 @@ export default function Profile() {
                       htmlFor={`cat-${cat.id}`}
                       className="text-sm font-medium cursor-pointer"
                     >
-                      {t(cat.translationKey, cat.label)}
+                      {cat.label}
                     </Label>
                   </div>
                 </div>
