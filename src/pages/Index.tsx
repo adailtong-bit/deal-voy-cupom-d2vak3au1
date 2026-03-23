@@ -216,11 +216,14 @@ export default function Index() {
                               </span>
                             </div>
                             <Button
+                              asChild
                               className="w-full gap-2 font-bold shadow-sm transition-transform hover:-translate-y-0.5"
                               size="lg"
                             >
-                              <Ticket className="h-5 w-5" />
-                              {t('home.get_voucher', 'Resgatar Voucher')}
+                              <Link to={`/voucher/${event.id}`}>
+                                <Ticket className="h-5 w-5" />
+                                {t('home.get_voucher', 'Resgatar Voucher')}
+                              </Link>
                             </Button>
                           </div>
                         </div>

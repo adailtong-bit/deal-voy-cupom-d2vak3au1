@@ -125,6 +125,7 @@ interface CouponContextType {
   partnerPolicies: PartnerPolicy[]
   partnerInvoices: PartnerInvoice[]
   seasonalEvents: SeasonalEvent[]
+  usedVouchers: string[]
   setRegion: (regionCode: string) => void
   toggleSave: (id: string) => void
   toggleTrip: (id: string) => void
@@ -311,6 +312,8 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
 
   const [seasonalEvents, setSeasonalEvents] =
     useState<SeasonalEvent[]>(SEASONAL_EVENTS)
+
+  const [usedVouchers, setUsedVouchers] = useState<string[]>([])
 
   useEffect(() => {
     if (user) {
@@ -851,6 +854,62 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     const coupon = coupons.find((c) => c.code === code)
 
     if (!coupon) {
+      const eventWithVoucher = seasonalEvents.find((e) =>
+        e.vouchers?.includes(code),
+      )
+
+      if (eventWithVoucher) {
+        if (usedVouchers.includes(code)) {
+          logSystemAction(
+            'Validation Failed',
+            `Attempted to use redeemed voucher ${code}`,
+            'warning',
+          )
+          return { success: false, message: 'Already used' }
+        }
+
+        setUsedVouchers((prev) => [...prev, code])
+
+        const log: ValidationLog = {
+          id: Math.random().toString(),
+          couponId: eventWithVoucher.id,
+          couponTitle: eventWithVoucher.title,
+          customerName: customerEmail || 'Customer Walk-in',
+          validatedAt: new Date().toISOString(),
+          method: 'qr',
+          shopkeeperId: user?.id || 'unknown',
+          companyId: eventWithVoucher.companyId,
+          userId: customerEmail
+            ? users.find((u) => u.email === customerEmail)?.id
+            : 'u_user',
+          commissionAmount: eventWithVoucher.price || 0,
+          cashbackAmount: 0,
+        }
+
+        setValidationLogs((prev) => [log, ...prev])
+        logSystemAction(
+          'Voucher Validated',
+          `Seasonal Voucher ${code} validated via QR`,
+        )
+
+        setPoints((prev) => prev + 20)
+        setRewardHistory((prev) => [
+          {
+            id: Math.random().toString(),
+            title: 'Voucher Utilizado',
+            points: 20,
+            date: new Date().toISOString(),
+            type: 'earned',
+          },
+          ...prev,
+        ])
+
+        return {
+          success: true,
+          message: 'Validated successfully!',
+        }
+      }
+
       return { success: false, message: 'Invalid code' }
     }
 
@@ -1440,6 +1499,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         partnerPolicies,
         partnerInvoices,
         seasonalEvents,
+        usedVouchers,
         setRegion,
         toggleSave,
         toggleTrip,

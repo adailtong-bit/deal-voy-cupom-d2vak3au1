@@ -23,7 +23,7 @@ export function CouponCard({
 
   if (variant === 'horizontal') {
     return (
-      <Link to={`/coupon/${coupon.id}`} className="block">
+      <Link to={`/voucher/${coupon.id}`} className="block">
         <Card
           className={cn(
             'overflow-hidden hover:shadow-sm transition-all group h-28 sm:h-32',
@@ -94,7 +94,7 @@ export function CouponCard({
   }
 
   return (
-    <Link to={`/coupon/${coupon.id}`} className="block h-full">
+    <Link to={`/voucher/${coupon.id}`} className="block h-full">
       <Card
         className={cn(
           'overflow-hidden hover:shadow-md transition-all group h-full flex flex-col border-slate-200',
