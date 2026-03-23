@@ -1,15 +1,29 @@
-import { Link } from 'react-router-dom'
-import { Search, Bell, Home } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { Search, Bell, Home, User, LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { LanguageSelector } from '@/components/LanguageSelector'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import logoUrl from '@/assets/whatsapp-image-2026-01-25-at-5.34.51-am-1-9b370.jpeg'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useCouponStore } from '@/stores/CouponContext'
 
 export function DesktopHeader() {
-  const { user } = useCouponStore()
+  const { user, logout } = useCouponStore()
   const { t } = useLanguage()
+  const navigate = useNavigate()
+
+  const handleLogout = () => {
+    logout()
+    navigate('/')
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 hidden md:block">
@@ -83,18 +97,46 @@ export function DesktopHeader() {
                   <Bell className="h-5 w-5" />
                 </Link>
               </Button>
-              <Link to="/profile">
-                <Avatar className="h-9 w-9 transition-transform hover:scale-105 border">
-                  <AvatarImage
-                    src={user.avatar || undefined}
-                    alt={user.name}
-                    className="object-cover"
-                  />
-                  <AvatarFallback className="font-bold text-primary bg-primary/10">
-                    {user.name.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-              </Link>
+              <DropdownMenu>
+                <DropdownMenuTrigger className="outline-none">
+                  <Avatar className="h-9 w-9 transition-transform hover:scale-105 border cursor-pointer">
+                    <AvatarImage
+                      src={user.avatar || undefined}
+                      alt={user.name}
+                      className="object-cover"
+                    />
+                    <AvatarFallback className="font-bold text-primary bg-primary/10">
+                      {user.name.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">
+                        {user.name}
+                      </p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {user.email}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild className="cursor-pointer">
+                    <Link to="/profile" className="flex items-center">
+                      <User className="mr-2 h-4 w-4" />
+                      {t('profile.title', 'Meu Perfil')}
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
+                    onClick={handleLogout}
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    {t('auth.logout', 'Sair')}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           ) : (
             <Button

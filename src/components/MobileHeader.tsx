@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   Bell,
   Search,
@@ -13,6 +13,8 @@ import {
   MapPin,
   Globe,
   Compass,
+  User,
+  LogOut,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -32,20 +34,34 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import logoUrl from '@/assets/whatsapp-image-2026-01-25-at-5.34.51-am-1-9b370.jpeg'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
 import { CATEGORIES } from '@/lib/data'
 
 export function MobileHeader() {
-  const { user } = useCouponStore()
+  const { user, logout } = useCouponStore()
   const { t, language, setLanguage } = useLanguage()
+  const navigate = useNavigate()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     setIsMenuOpen(false)
+  }
+
+  const handleLogout = () => {
+    logout()
+    navigate('/')
   }
 
   return (
@@ -234,18 +250,46 @@ export function MobileHeader() {
                   <Bell className="h-5 w-5" />
                 </Link>
               </Button>
-              <Link to="/profile">
-                <Avatar className="h-8 w-8 border">
-                  <AvatarImage
-                    src={user.avatar || undefined}
-                    alt={user.name}
-                    className="object-cover"
-                  />
-                  <AvatarFallback className="text-xs font-bold text-primary bg-primary/10">
-                    {user.name.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-              </Link>
+              <DropdownMenu>
+                <DropdownMenuTrigger className="outline-none">
+                  <Avatar className="h-8 w-8 border cursor-pointer hover:opacity-80 transition-opacity">
+                    <AvatarImage
+                      src={user.avatar || undefined}
+                      alt={user.name}
+                      className="object-cover"
+                    />
+                    <AvatarFallback className="text-xs font-bold text-primary bg-primary/10">
+                      {user.name.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">
+                        {user.name}
+                      </p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {user.email}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild className="cursor-pointer">
+                    <Link to="/profile" className="flex items-center">
+                      <User className="mr-2 h-4 w-4" />
+                      {t('profile.title', 'Meu Perfil')}
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
+                    onClick={handleLogout}
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    {t('auth.logout', 'Sair')}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           ) : (
             <Button
