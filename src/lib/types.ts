@@ -1,3 +1,9 @@
+export interface AffiliateConfig {
+  paramName: string
+  partnerId?: string
+  discountParamName?: string
+}
+
 export interface MenuItem {
   name: string
   description: string
@@ -110,6 +116,9 @@ export interface Coupon {
   behavioralTriggers?: BehavioralTrigger[]
   visitCount?: number
   targetAudience?: 'all' | 'preferred'
+  offerType?: 'in-store' | 'online'
+  externalUrl?: string
+  affiliateConfig?: AffiliateConfig
 }
 
 export type CategoryType = Coupon['category']
@@ -147,6 +156,9 @@ export interface SeasonalEvent {
     | 'expired'
   clickCount?: number
   vouchers?: string[]
+  offerType?: 'in-store' | 'online'
+  externalUrl?: string
+  affiliateConfig?: AffiliateConfig
 }
 
 export interface Notification {
@@ -308,6 +320,7 @@ export interface User {
   city?: string
   phone?: string
   preferences?: UserPreferences
+  partnerId?: string
 }
 
 export interface Company {

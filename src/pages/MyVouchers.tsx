@@ -1,7 +1,7 @@
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
 import { Link } from 'react-router-dom'
-import { Ticket, Search, CheckCircle2 } from 'lucide-react'
+import { Ticket, Search, CheckCircle2, Globe } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -29,6 +29,7 @@ export default function MyVouchers() {
       image: c.image,
       type: 'coupon',
       isUsed: c.status === 'used',
+      isOnline: c.offerType === 'online',
     })),
     ...myEvents.map((e) => {
       const code =
@@ -43,6 +44,7 @@ export default function MyVouchers() {
         image: e.image,
         type: 'event',
         isUsed: usedVouchers.includes(code),
+        isOnline: e.offerType === 'online',
       }
     }),
   ]
@@ -97,6 +99,14 @@ export default function MyVouchers() {
                 <Badge className="absolute top-2 left-2 bg-white/95 text-black hover:bg-white shadow-sm font-bold backdrop-blur-sm">
                   {v.discount}
                 </Badge>
+
+                {v.isOnline && !v.isUsed && (
+                  <Badge className="absolute top-2 right-2 bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-sm border-none backdrop-blur-sm">
+                    <Globe className="w-3 h-3 mr-1" />
+                    Online
+                  </Badge>
+                )}
+
                 {v.isUsed && (
                   <div className="absolute inset-0 bg-white/40 flex items-center justify-center backdrop-blur-[1px]">
                     <Badge
@@ -114,24 +124,37 @@ export default function MyVouchers() {
                   <h3 className="font-bold text-lg leading-tight mb-1 text-slate-800 line-clamp-1">
                     {v.title}
                   </h3>
-                  <p className="text-sm text-slate-500 mb-4 truncate">
+                  <p className="text-sm text-slate-500 mb-4 truncate flex items-center gap-1.5">
+                    {v.isOnline && <Globe className="w-3 h-3" />}
                     {v.storeName}
                   </p>
                 </div>
                 <Button
                   asChild
-                  variant={v.isUsed ? 'secondary' : 'outline'}
+                  variant={
+                    v.isUsed ? 'secondary' : v.isOnline ? 'default' : 'outline'
+                  }
                   className={cn(
                     'w-full mt-auto font-medium shadow-sm transition-colors',
                     !v.isUsed &&
+                      !v.isOnline &&
                       'hover:bg-primary hover:text-white hover:border-primary',
+                    v.isOnline &&
+                      !v.isUsed &&
+                      'bg-blue-600 hover:bg-blue-700 text-white',
                   )}
                 >
                   <Link to={`/voucher/${v.id}`}>
-                    <Ticket className="w-4 h-4 mr-2" />
+                    {v.isOnline ? (
+                      <Globe className="w-4 h-4 mr-2" />
+                    ) : (
+                      <Ticket className="w-4 h-4 mr-2" />
+                    )}
                     {v.isUsed
                       ? t('vouchers.view_used', 'Ver Detalhes')
-                      : t('vouchers.view', 'Ver Voucher')}
+                      : v.isOnline
+                        ? t('vouchers.go_to_store', 'Acessar Loja Online')
+                        : t('vouchers.view', 'Ver Voucher')}
                   </Link>
                 </Button>
               </CardContent>

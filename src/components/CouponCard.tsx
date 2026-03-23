@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Coupon } from '@/lib/types'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Star, MapPin, Clock, ImageOff } from 'lucide-react'
+import { Star, MapPin, Clock, ImageOff, Globe } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { useLanguage } from '@/stores/LanguageContext'
@@ -43,9 +43,19 @@ export function CouponCard({
               ) : (
                 <ImageOff className="h-6 w-6 text-slate-300" />
               )}
-              <Badge className="absolute top-1.5 left-1.5 bg-white/95 text-black hover:bg-white shadow-sm font-bold backdrop-blur-sm text-[10px] h-5 px-1.5 py-0 z-10">
-                {coupon.discount}
-              </Badge>
+              <div className="absolute top-1.5 left-1.5 flex flex-col gap-1 z-10 items-start">
+                <Badge className="bg-white/95 text-black hover:bg-white shadow-sm font-bold backdrop-blur-sm text-[10px] h-5 px-1.5 py-0">
+                  {coupon.discount}
+                </Badge>
+              </div>
+              {coupon.offerType === 'online' && (
+                <Badge
+                  variant="secondary"
+                  className="absolute bottom-1.5 left-1.5 text-[8px] px-1.5 h-4 bg-blue-500/90 hover:bg-blue-600 text-white border-none shadow-sm z-10"
+                >
+                  <Globe className="w-2 h-2 mr-0.5" /> Online
+                </Badge>
+              )}
             </div>
             <div className="flex-1 p-3 flex flex-col justify-between min-w-0">
               <div>
@@ -70,10 +80,18 @@ export function CouponCard({
               <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
                 <div className="flex items-center gap-2 text-[10px] sm:text-xs text-muted-foreground">
                   <span className="flex items-center gap-1">
-                    <MapPin className="h-3 w-3" />{' '}
-                    {coupon.distance > 1000
-                      ? `${(coupon.distance / 1000).toFixed(1)}km`
-                      : `${coupon.distance}m`}
+                    {coupon.offerType === 'online' ? (
+                      <>
+                        <Globe className="h-3 w-3 text-blue-500" /> Online
+                      </>
+                    ) : (
+                      <>
+                        <MapPin className="h-3 w-3" />{' '}
+                        {coupon.distance > 1000
+                          ? `${(coupon.distance / 1000).toFixed(1)}km`
+                          : `${coupon.distance}m`}
+                      </>
+                    )}
                   </span>
                   <span className="flex items-center gap-1 text-orange-600 font-medium">
                     <Clock className="h-3 w-3" />
@@ -113,19 +131,29 @@ export function CouponCard({
           ) : (
             <ImageOff className="h-8 w-8 text-slate-300" />
           )}
-          <div className="absolute top-1.5 left-1.5 flex gap-1 z-10">
+          <div className="absolute top-1.5 left-1.5 flex flex-col gap-1 z-10 items-start">
             <Badge className="bg-white/95 text-black hover:bg-white shadow-sm font-bold backdrop-blur-sm text-[9px] sm:text-[10px] h-4 sm:h-5 px-1.5 py-0">
               {coupon.discount}
             </Badge>
           </div>
-          {coupon.isFeatured && (
-            <Badge
-              variant="secondary"
-              className="absolute top-1.5 right-1.5 text-[8px] sm:text-[9px] px-1.5 h-4 sm:h-5 bg-yellow-400 text-yellow-900 border-none z-10"
-            >
-              Featured
-            </Badge>
-          )}
+          <div className="absolute top-1.5 right-1.5 flex flex-col gap-1 z-10 items-end">
+            {coupon.isFeatured && (
+              <Badge
+                variant="secondary"
+                className="text-[8px] sm:text-[9px] px-1.5 h-4 sm:h-5 bg-yellow-400 text-yellow-900 border-none shadow-sm"
+              >
+                Featured
+              </Badge>
+            )}
+            {coupon.offerType === 'online' && (
+              <Badge
+                variant="secondary"
+                className="text-[8px] sm:text-[9px] px-1.5 h-4 sm:h-5 bg-blue-500 text-white border-none shadow-sm"
+              >
+                <Globe className="w-2.5 h-2.5 mr-0.5" /> Online
+              </Badge>
+            )}
+          </div>
         </div>
         <CardContent className="p-2 sm:p-2.5 flex-1 flex flex-col">
           <div className="flex justify-between items-start mb-0.5 sm:mb-1">
@@ -145,10 +173,19 @@ export function CouponCard({
 
           <div className="mt-auto pt-1.5 sm:pt-2 border-t flex items-center justify-between text-[9px] sm:text-[10px] text-muted-foreground">
             <span className="flex items-center gap-0.5 sm:gap-1">
-              <MapPin className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-              {coupon.distance > 1000
-                ? `${(coupon.distance / 1000).toFixed(1)}km`
-                : `${coupon.distance}m`}
+              {coupon.offerType === 'online' ? (
+                <>
+                  <Globe className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-blue-500" />
+                  Online
+                </>
+              ) : (
+                <>
+                  <MapPin className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                  {coupon.distance > 1000
+                    ? `${(coupon.distance / 1000).toFixed(1)}km`
+                    : `${coupon.distance}m`}
+                </>
+              )}
             </span>
             <span className="flex items-center gap-0.5 sm:gap-1 text-orange-600 font-medium">
               <Clock className="h-2.5 w-2.5 sm:h-3 sm:w-3" />

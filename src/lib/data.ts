@@ -141,7 +141,7 @@ const generateSeasonalEvents = (): SeasonalEvent[] => {
     'pending',
     'active',
     'expired',
-    'active', // duplicate to have more active
+    'active',
   ]
 
   for (let i = 1; i <= 15; i++) {
@@ -155,7 +155,7 @@ const generateSeasonalEvents = (): SeasonalEvent[] => {
       endDate.setDate(now.getDate() - 5)
     } else if (status === 'active') {
       startDate.setDate(now.getDate() - (i % 2 === 0 ? 5 : 10))
-      endDate.setDate(now.getDate() + (i % 3 === 0 ? 3 : 15)) // Some expire soon
+      endDate.setDate(now.getDate() + (i % 3 === 0 ? 3 : 15))
     } else {
       startDate.setDate(now.getDate() + 5)
       endDate.setDate(now.getDate() + 35)
@@ -234,6 +234,75 @@ const generateCoupons = (): Coupon[] => {
   const categories = ['Alimentação', 'Moda', 'Serviços', 'Outros'] as const
   const statuses = ['active', 'used', 'expired'] as const
 
+  // Online Affiliate Offers
+  coupons.push({
+    id: 'amazon-online-1',
+    storeName: 'Amazon',
+    companyId: 'c_amazon',
+    title: 'Echo Dot (5ª Geração)',
+    description:
+      'Smart speaker com Alexa. Use o código para 20% de desconto adicional no checkout.',
+    discount: '20% OFF',
+    category: 'Eletrônicos',
+    distance: 0,
+    expiryDate: '2025-12-31',
+    image: 'https://img.usecurling.com/p/600/400?q=smart%20speaker',
+    logo: 'https://img.usecurling.com/i?q=amazon&color=solid-black&shape=fill',
+    code: 'ALEXA20OFF',
+    coordinates: { lat: 0, lng: 0 },
+    totalAvailable: 10000,
+    reservedCount: 1500,
+    averageRating: 4.9,
+    status: 'active',
+    source: 'partner',
+    region: 'Global',
+    country: 'Global',
+    offerType: 'online',
+    externalUrl: 'https://www.amazon.com/dp/B09B8V1LZ3',
+    affiliateConfig: {
+      paramName: 'tag',
+      partnerId: 'dealvoy-20',
+      discountParamName: 'couponCode',
+    },
+    price: 299.0,
+    currency: 'BRL',
+    instructions:
+      'Clique em Comprar Agora. O código será copiado e o desconto será aplicado no checkout da Amazon.',
+    targetAudience: 'all',
+  })
+
+  coupons.push({
+    id: 'shopee-online-1',
+    storeName: 'Shopee',
+    companyId: 'c_shopee',
+    title: 'Fones de Ouvido Bluetooth',
+    description:
+      'Fones sem fio com cancelamento de ruído. Oferta exclusiva online para dropshipping parceiro.',
+    discount: 'R$ 50 OFF',
+    category: 'Eletrônicos',
+    distance: 0,
+    expiryDate: '2025-10-31',
+    image: 'https://img.usecurling.com/p/600/400?q=headphones',
+    logo: 'https://img.usecurling.com/i?q=shopee&color=orange&shape=fill',
+    code: 'SHP50OFF',
+    coordinates: { lat: 0, lng: 0 },
+    status: 'active',
+    source: 'aggregated',
+    region: 'Global',
+    country: 'Global',
+    offerType: 'online',
+    externalUrl: 'https://shopee.com.br/',
+    affiliateConfig: {
+      paramName: 'aff_id',
+    },
+    price: 150.0,
+    currency: 'BRL',
+    instructions:
+      'Resgate online. Não esqueça de colar o código promocional no carrinho de compras.',
+    targetAudience: 'all',
+  })
+
+  // Physical Store Offers
   coupons.push({
     id: 'nike-promo-50',
     storeName: 'Nike Store',
@@ -262,6 +331,7 @@ const generateCoupons = (): Coupon[] => {
     price: 199.99,
     currency: 'BRL',
     address: 'Av. Paulista, 1230, São Paulo, SP',
+    offerType: 'in-store',
     instructions:
       'Apresente este código no caixa da loja para aplicar o desconto. Válido apenas para itens selecionados.',
     targetAudience: 'all',
@@ -341,6 +411,7 @@ const generateCoupons = (): Coupon[] => {
       address: isUS
         ? `${1000 + i} Ocean Drive, Miami, FL`
         : `Av. Paulista, ${1000 + i}, São Paulo, SP`,
+      offerType: 'in-store',
       instructions: `Apresente este código no caixa do ${isUS ? 'estabelecimento' : 'estabelecimento'} para resgatar sua oferta. Certifique-se de que o código esteja visível.`,
       targetAudience: i % 5 === 0 ? 'preferred' : 'all',
       behavioralTriggers:
@@ -522,6 +593,7 @@ export const MOCK_USERS: User[] = [
     state: 'Florida',
     city: 'Miami',
     phone: '+1 305 555-9999',
+    partnerId: 'user-dropship-123',
     preferences: {
       notifications: true,
       newsletter: true,
