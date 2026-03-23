@@ -292,6 +292,7 @@ export type UserRole =
   | 'shopkeeper'
   | 'agency'
   | 'user'
+  | 'staff'
 
 export type SubscriptionTier = 'free' | 'premium' | 'vip'
 
@@ -319,6 +320,7 @@ export interface User {
   region?: string
   companyId?: string
   agencyId?: string
+  franchiseId?: string
   country?: string
   state?: string
   city?: string
@@ -327,6 +329,8 @@ export interface User {
   preferences?: UserPreferences
   partnerId?: string
   gender?: 'male' | 'female' | 'non-binary' | 'prefer-not-to-say'
+  staffRole?: string
+  status?: 'active' | 'inactive'
 }
 
 export interface Company {
@@ -339,6 +343,9 @@ export interface Company {
   enableLoyalty: boolean
   ownerId?: string
   preferredCustomers?: string[]
+  franchiseId?: string
+  taxId?: string
+  contactPerson?: string
 }
 
 export type AdBillingType = 'fixed' | 'cpc' | 'cpa'
@@ -462,6 +469,10 @@ export interface Franchise {
   ownerId: string
   status: 'active' | 'inactive'
   licenseExpiry: string
+  taxId?: string
+  contactPerson?: string
+  contactEmail?: string
+  address?: string
 }
 
 export type TravelOfferType =

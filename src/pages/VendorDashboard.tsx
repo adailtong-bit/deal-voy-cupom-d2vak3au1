@@ -25,6 +25,7 @@ import { BehavioralTriggersTab } from '@/components/vendor/BehavioralTriggersTab
 import { VendorSettingsTab } from '@/components/vendor/VendorSettingsTab'
 import { VendorCustomersTab } from '@/components/vendor/VendorCustomersTab'
 import { VendorSeasonalTab } from '@/components/vendor/VendorSeasonalTab'
+import { StaffTab } from '@/components/admin/hierarchy/StaffTab'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 
@@ -43,7 +44,7 @@ export default function VendorDashboard() {
     .slice(0, 15)
 
   return (
-    <div className="container mx-auto px-4 py-8 mb-16 md:mb-0">
+    <div className="container mx-auto px-4 py-8 mb-16 md:mb-0 animate-fade-in">
       <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-4 bg-white p-6 rounded-xl shadow-sm border">
         <div>
           <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-2">
@@ -94,6 +95,9 @@ export default function VendorDashboard() {
             <History className="h-3 w-3 mr-1" />{' '}
             {t('vendor.redemption_history')}
           </TabsTrigger>
+          <TabsTrigger value="staff">
+            <Users className="h-3 w-3 mr-1" /> Staff
+          </TabsTrigger>
           <TabsTrigger value="settings">
             <Settings className="h-3 w-3 mr-1" /> {t('vendor.settings')}
           </TabsTrigger>
@@ -122,6 +126,9 @@ export default function VendorDashboard() {
         </TabsContent>
         <TabsContent value="history">
           <HistoryTable />
+        </TabsContent>
+        <TabsContent value="staff">
+          <StaffTab parentType="company" parentId={myCompany.id} />
         </TabsContent>
         <TabsContent value="settings">
           <VendorSettingsTab company={myCompany} />

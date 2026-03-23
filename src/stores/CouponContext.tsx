@@ -176,7 +176,6 @@ interface CouponContextType {
   publishItinerary: (id: string) => void
   moderateItinerary: (id: string, status: 'approved' | 'rejected') => void
   toggleLoyaltySystem: (companyId: string, enabled: boolean) => void
-  addFranchise: (franchise: Franchise) => void
   validateCoupon: (
     code: string,
     customerEmail?: string,
@@ -219,6 +218,17 @@ interface CouponContextType {
   approveSeasonalCampaign: (id: string) => void
   rejectSeasonalCampaign: (id: string) => void
   renewSeasonalCampaign: (id: string) => void
+
+  // Hierarchy Management
+  addUser: (user: User) => void
+  updateUser: (id: string, data: Partial<User>) => void
+  deleteUser: (id: string) => void
+  addCompany: (company: Company) => void
+  updateCompany: (id: string, data: Partial<Company>) => void
+  deleteCompany: (id: string) => void
+  addFranchise: (franchise: Franchise) => void
+  updateFranchise: (id: string, data: Partial<Franchise>) => void
+  deleteFranchise: (id: string) => void
 }
 
 const CouponContext = createContext<CouponContextType | undefined>(undefined)
@@ -944,12 +954,6 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     )
   }
 
-  const addFranchise = (franchise: Franchise) => {
-    setFranchises((prev) => [...prev, franchise])
-    logSystemAction('Franchise Added', `Franchise ${franchise.name} created`)
-    toast.success('Franquia criada com sucesso!')
-  }
-
   const validateCoupon = (code: string, customerEmail?: string) => {
     const coupon = coupons.find((c) => c.code === code)
 
@@ -1549,6 +1553,64 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     logSystemAction('Seasonal Event Renewed', `Renewed event ${id}`)
   }
 
+  const addUser = (newUser: User) => {
+    setUsers((prev) => [newUser, ...prev])
+    toast.success('User saved successfully')
+    logSystemAction('User Added', `Added user ${newUser.email}`)
+  }
+
+  const updateUser = (id: string, data: Partial<User>) => {
+    setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, ...data } : u)))
+    toast.success('User updated successfully')
+    logSystemAction('User Updated', `Updated user ${id}`)
+  }
+
+  const deleteUser = (id: string) => {
+    setUsers((prev) => prev.filter((u) => u.id !== id))
+    toast.success('User deleted')
+    logSystemAction('User Deleted', `Deleted user ${id}`)
+  }
+
+  const addCompany = (company: Company) => {
+    setCompanies((prev) => [company, ...prev])
+    toast.success('Merchant saved successfully')
+    logSystemAction('Merchant Added', `Added company ${company.name}`)
+  }
+
+  const updateCompany = (id: string, data: Partial<Company>) => {
+    setCompanies((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, ...data } : c)),
+    )
+    toast.success('Merchant updated successfully')
+    logSystemAction('Merchant Updated', `Updated company ${id}`)
+  }
+
+  const deleteCompany = (id: string) => {
+    setCompanies((prev) => prev.filter((c) => c.id !== id))
+    toast.success('Merchant deleted')
+    logSystemAction('Merchant Deleted', `Deleted company ${id}`)
+  }
+
+  const addFranchise = (franchise: Franchise) => {
+    setFranchises((prev) => [franchise, ...prev])
+    toast.success('Franchise saved successfully')
+    logSystemAction('Franchise Added', `Added franchise ${franchise.name}`)
+  }
+
+  const updateFranchise = (id: string, data: Partial<Franchise>) => {
+    setFranchises((prev) =>
+      prev.map((f) => (f.id === id ? { ...f, ...data } : f)),
+    )
+    toast.success('Franchise updated successfully')
+    logSystemAction('Franchise Updated', `Updated franchise ${id}`)
+  }
+
+  const deleteFranchise = (id: string) => {
+    setFranchises((prev) => prev.filter((f) => f.id !== id))
+    toast.success('Franchise deleted')
+    logSystemAction('Franchise Deleted', `Deleted franchise ${id}`)
+  }
+
   return React.createElement(
     CouponContext.Provider,
     {
@@ -1675,6 +1737,14 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         approveSeasonalCampaign,
         rejectSeasonalCampaign,
         renewSeasonalCampaign,
+        addUser,
+        updateUser,
+        deleteUser,
+        addCompany,
+        updateCompany,
+        deleteCompany,
+        updateFranchise,
+        deleteFranchise,
       },
     },
     children,
