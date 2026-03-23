@@ -4,6 +4,7 @@ import { NotificationProvider } from '@/stores/NotificationContext'
 import { CouponProvider } from '@/stores/CouponContext'
 import { Toaster } from 'sonner'
 import Layout from '@/components/Layout'
+import Index from '@/pages/Index'
 import VendorDashboard from '@/pages/VendorDashboard'
 import AdminDashboard from '@/pages/AdminDashboard'
 import Seasonal from '@/pages/Seasonal'
@@ -16,7 +17,8 @@ export default function App() {
           <BrowserRouter>
             <Routes>
               <Route element={<Layout />}>
-                <Route path="/" element={<VendorDashboard />} />
+                <Route path="/" element={<Index />} />
+                <Route path="/vendor" element={<VendorDashboard />} />
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/seasonal" element={<Seasonal />} />
               </Route>
