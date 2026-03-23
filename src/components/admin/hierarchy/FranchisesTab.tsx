@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useCouponStore } from '@/stores/CouponContext'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import {
   Table,
   TableBody,
@@ -15,12 +14,11 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from '@/components/ui/dialog'
-import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Plus, Edit2, Trash2 } from 'lucide-react'
 import { Franchise } from '@/lib/types'
+import { AdvancedCompanyForm } from './AdvancedCompanyForm'
 
 export function FranchisesTab() {
   const { franchises, addFranchise, updateFranchise, deleteFranchise } =
@@ -30,41 +28,24 @@ export function FranchisesTab() {
   const [editingFranchise, setEditingFranchise] = useState<Franchise | null>(
     null,
   )
-  const [formData, setFormData] = useState<Partial<Franchise>>({
-    name: '',
-    taxId: '',
-    contactPerson: '',
-    contactEmail: '',
-    address: '',
-    status: 'active',
-  })
 
   const handleOpenDialog = (franchise?: Franchise) => {
     if (franchise) {
       setEditingFranchise(franchise)
-      setFormData(franchise)
     } else {
       setEditingFranchise(null)
-      setFormData({
-        name: '',
-        taxId: '',
-        contactPerson: '',
-        contactEmail: '',
-        address: '',
-        status: 'active',
-      })
     }
     setIsDialogOpen(true)
   }
 
-  const handleSave = () => {
+  const handleSave = (finalData: any) => {
     if (editingFranchise) {
-      updateFranchise(editingFranchise.id, formData)
+      updateFranchise(editingFranchise.id, finalData)
     } else {
       const newFranchise: Franchise = {
-        ...(formData as Franchise),
+        ...(finalData as Franchise),
         id: Math.random().toString(),
-        region: formData.address || 'Global',
+        region: finalData.addressState || finalData.addressCity || 'Global',
         ownerId: 'u_fran', // Mocked, ideally from dropdown of users
         licenseExpiry: new Date(Date.now() + 31536000000).toISOString(),
       }
@@ -110,7 +91,7 @@ export function FranchisesTab() {
                     {f.contactEmail || f.ownerId}
                   </p>
                 </TableCell>
-                <TableCell>{f.region || f.address}</TableCell>
+                <TableCell>{f.region || f.addressState || f.address}</TableCell>
                 <TableCell>
                   <Badge
                     variant={f.status === 'active' ? 'default' : 'secondary'}
@@ -142,75 +123,18 @@ export function FranchisesTab() {
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {editingFranchise ? 'Edit Franchise' : 'Register Franchise'}
+              {editingFranchise ? 'Editar Franquia' : 'Cadastrar Franquia'}
             </DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="space-y-2">
-              <Label>Name</Label>
-              <Input
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Business ID (CNPJ)</Label>
-                <Input
-                  value={formData.taxId}
-                  onChange={(e) =>
-                    setFormData({ ...formData, taxId: e.target.value })
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Contact Person</Label>
-                <Input
-                  value={formData.contactPerson}
-                  onChange={(e) =>
-                    setFormData({ ...formData, contactPerson: e.target.value })
-                  }
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Email</Label>
-                <Input
-                  type="email"
-                  value={formData.contactEmail}
-                  onChange={(e) =>
-                    setFormData({ ...formData, contactEmail: e.target.value })
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Region / Address</Label>
-                <Input
-                  value={formData.address}
-                  onChange={(e) =>
-                    setFormData({ ...formData, address: e.target.value })
-                  }
-                />
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSave}
-              disabled={!formData.name || !formData.contactEmail}
-            >
-              Save
-            </Button>
-          </DialogFooter>
+          <AdvancedCompanyForm
+            type="franchise"
+            initialData={editingFranchise}
+            onSave={handleSave}
+            onCancel={() => setIsDialogOpen(false)}
+          />
         </DialogContent>
       </Dialog>
     </div>

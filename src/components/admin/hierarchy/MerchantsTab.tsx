@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useCouponStore } from '@/stores/CouponContext'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import {
   Table,
   TableBody,
@@ -15,19 +14,11 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from '@/components/ui/dialog'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Plus, Edit2, Trash2, Store } from 'lucide-react'
 import { Company } from '@/lib/types'
+import { AdvancedCompanyForm } from './AdvancedCompanyForm'
 
 export function MerchantsTab({ franchiseId }: { franchiseId?: string }) {
   const { companies, franchises, addCompany, updateCompany, deleteCompany } =
@@ -35,13 +26,6 @@ export function MerchantsTab({ franchiseId }: { franchiseId?: string }) {
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingMerchant, setEditingMerchant] = useState<Company | null>(null)
-  const [formData, setFormData] = useState<Partial<Company>>({
-    name: '',
-    email: '',
-    region: '',
-    franchiseId: franchiseId || 'independent',
-    status: 'active',
-  })
 
   const displayCompanies = franchiseId
     ? companies.filter((c) => c.franchiseId === franchiseId)
@@ -50,39 +34,30 @@ export function MerchantsTab({ franchiseId }: { franchiseId?: string }) {
   const handleOpenDialog = (merchant?: Company) => {
     if (merchant) {
       setEditingMerchant(merchant)
-      setFormData(merchant)
     } else {
       setEditingMerchant(null)
-      setFormData({
-        name: '',
-        email: '',
-        region: '',
-        franchiseId: franchiseId || 'independent',
-        status: 'active',
-      })
     }
     setIsDialogOpen(true)
   }
 
-  const handleSave = () => {
+  const handleSave = (finalData: any) => {
+    const formattedData = {
+      ...finalData,
+      franchiseId:
+        finalData.franchiseId === 'independent'
+          ? undefined
+          : finalData.franchiseId,
+      region: finalData.addressState || finalData.addressCity || 'Global',
+    }
+
     if (editingMerchant) {
-      updateCompany(editingMerchant.id, {
-        ...formData,
-        franchiseId:
-          formData.franchiseId === 'independent'
-            ? undefined
-            : formData.franchiseId,
-      })
+      updateCompany(editingMerchant.id, formattedData)
     } else {
       const newCompany: Company = {
-        ...(formData as Company),
+        ...formattedData,
         id: Math.random().toString(),
         registrationDate: new Date().toISOString(),
         enableLoyalty: false,
-        franchiseId:
-          formData.franchiseId === 'independent'
-            ? undefined
-            : formData.franchiseId,
       }
       addCompany(newCompany)
     }
@@ -171,98 +146,19 @@ export function MerchantsTab({ franchiseId }: { franchiseId?: string }) {
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {editingMerchant ? 'Edit Merchant' : 'Register Merchant'}
+              {editingMerchant ? 'Editar Lojista' : 'Cadastrar Lojista'}
             </DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="space-y-2">
-              <Label>Store Name</Label>
-              <Input
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Email</Label>
-                <Input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Region</Label>
-                <Input
-                  value={formData.region}
-                  onChange={(e) =>
-                    setFormData({ ...formData, region: e.target.value })
-                  }
-                />
-              </div>
-            </div>
-            {!franchiseId && (
-              <div className="space-y-2">
-                <Label>Franchise Affiliation</Label>
-                <Select
-                  value={formData.franchiseId || 'independent'}
-                  onValueChange={(v) =>
-                    setFormData({ ...formData, franchiseId: v })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Franchise" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="independent">
-                      Independent (None)
-                    </SelectItem>
-                    {franchises.map((f) => (
-                      <SelectItem key={f.id} value={f.id}>
-                        {f.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-            <div className="space-y-2">
-              <Label>Status</Label>
-              <Select
-                value={formData.status}
-                onValueChange={(v: any) =>
-                  setFormData({ ...formData, status: v })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="rejected">Rejected</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSave}
-              disabled={!formData.name || !formData.email}
-            >
-              Save
-            </Button>
-          </DialogFooter>
+          <AdvancedCompanyForm
+            type="merchant"
+            initialData={editingMerchant}
+            franchiseId={franchiseId}
+            onSave={handleSave}
+            onCancel={() => setIsDialogOpen(false)}
+          />
         </DialogContent>
       </Dialog>
     </div>

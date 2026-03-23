@@ -336,8 +336,11 @@ export interface User {
 export interface Company {
   id: string
   name: string
+  legalName?: string
+  category?: string
+  status: 'active' | 'pending' | 'rejected' | 'inactive'
+  internalRef?: string
   email: string
-  status: 'active' | 'pending' | 'rejected'
   registrationDate: string
   region: string
   enableLoyalty: boolean
@@ -346,6 +349,23 @@ export interface Company {
   franchiseId?: string
   taxId?: string
   contactPerson?: string
+  contactDepartment?: string
+  businessPhone?: string
+  whatsapp?: string
+  website?: string
+  secondaryContactName?: string
+  secondaryContactEmail?: string
+  secondaryContactPhone?: string
+  billingEmail?: string
+  addressStreet?: string
+  addressNumber?: string
+  addressComplement?: string
+  addressNeighborhood?: string
+  addressCity?: string
+  addressState?: string
+  addressZip?: string
+  paymentMethod?: string
+  billingFrequency?: string
 }
 
 export type AdBillingType = 'fixed' | 'cpc' | 'cpa'
@@ -465,13 +485,33 @@ export interface ConnectedApp {
 export interface Franchise {
   id: string
   name: string
+  legalName?: string
+  category?: string
+  status: 'active' | 'inactive' | 'pending' | 'rejected'
+  internalRef?: string
   region: string
   ownerId: string
-  status: 'active' | 'inactive'
   licenseExpiry: string
   taxId?: string
   contactPerson?: string
   contactEmail?: string
+  contactDepartment?: string
+  businessPhone?: string
+  whatsapp?: string
+  website?: string
+  secondaryContactName?: string
+  secondaryContactEmail?: string
+  secondaryContactPhone?: string
+  billingEmail?: string
+  addressStreet?: string
+  addressNumber?: string
+  addressComplement?: string
+  addressNeighborhood?: string
+  addressCity?: string
+  addressState?: string
+  addressZip?: string
+  paymentMethod?: string
+  billingFrequency?: string
   address?: string
 }
 
