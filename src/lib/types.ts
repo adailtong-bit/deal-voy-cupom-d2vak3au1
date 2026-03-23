@@ -464,6 +464,7 @@ export type TravelOfferType =
   | 'package'
   | 'car_rental'
   | 'insurance'
+  | 'activity'
 
 export interface TravelOffer {
   id: string
