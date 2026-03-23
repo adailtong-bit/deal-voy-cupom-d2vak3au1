@@ -54,11 +54,8 @@ export function DesktopHeader() {
             >
               {t('nav.seasonal', 'Sazonal')}
             </Link>
-            <Link
-              to="/travel-planner"
-              className="transition-colors hover:text-primary"
-            >
-              {t('nav.planner', 'Roteiros')}
+            <Link to="/travel" className="transition-colors hover:text-primary">
+              {t('nav.travel', 'Viagens')}
             </Link>
             <Link
               to="/admin"

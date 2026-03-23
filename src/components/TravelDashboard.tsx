@@ -22,11 +22,15 @@ import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import { CreateTripWizard } from './CreateTripWizard'
 
+interface TravelDashboardProps {
+  onSelectTrip: (id: string) => void
+  onCreateNew?: () => void
+}
+
 export function TravelDashboard({
   onSelectTrip,
-}: {
-  onSelectTrip: (id: string) => void
-}) {
+  onCreateNew,
+}: TravelDashboardProps) {
   const { itineraries, user, deleteItinerary } = useCouponStore()
   const [isCreateOpen, setIsCreateOpen] = useState(false)
 
@@ -43,8 +47,16 @@ export function TravelDashboard({
     toast.success('Trip deleted')
   }
 
+  const handleCreateNew = () => {
+    if (onCreateNew) {
+      onCreateNew()
+    } else {
+      setIsCreateOpen(true)
+    }
+  }
+
   return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl min-h-[calc(100vh-64px)] animate-in fade-in duration-500">
+    <div className="container mx-auto px-4 py-8 max-w-6xl min-h-[calc(100vh-64px)] animate-in fade-in duration-500 mb-16 md:mb-0">
       {isMerchantOrAdmin && (
         <Alert className="mb-6 bg-blue-50 border-blue-200">
           <Users className="h-4 w-4 text-blue-600" />
@@ -56,7 +68,7 @@ export function TravelDashboard({
               Discover potential customers traveling to your region and view
               market trends.
             </span>
-            <Link to={user.role === 'super_admin' ? '/admin' : '/vendor'}>
+            <Link to={user?.role === 'super_admin' ? '/admin' : '/vendor'}>
               <Button
                 size="sm"
                 variant="outline"
@@ -73,18 +85,18 @@ export function TravelDashboard({
         <div>
           <h1 className="text-3xl font-extrabold text-slate-900 flex items-center gap-3">
             <Luggage className="h-8 w-8 text-primary" />
-            My Travel Plans
+            Minhas Viagens
           </h1>
           <p className="text-muted-foreground mt-1">
-            Organize your upcoming trips and adventures.
+            Organize suas próximas viagens e atividades com facilidade.
           </p>
         </div>
         <Button
           size="lg"
           className="font-bold shadow-sm"
-          onClick={() => setIsCreateOpen(true)}
+          onClick={handleCreateNew}
         >
-          <Plus className="h-5 w-5 mr-2" /> New Trip
+          <Plus className="h-5 w-5 mr-2" /> Nova Viagem
         </Button>
       </div>
 
@@ -92,15 +104,13 @@ export function TravelDashboard({
         <div className="text-center py-20 bg-slate-50 rounded-2xl border border-dashed">
           <Luggage className="h-16 w-16 mx-auto text-slate-300 mb-4" />
           <h3 className="text-xl font-bold text-slate-700 mb-2">
-            No trips planned yet
+            Nenhuma viagem planejada
           </h3>
           <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-            Start planning your next vacation, weekend getaway, or business trip
-            right here.
+            Comece a planejar suas próximas férias, viagem de fim de semana ou
+            negócios aqui.
           </p>
-          <Button onClick={() => setIsCreateOpen(true)}>
-            Create Your First Trip
-          </Button>
+          <Button onClick={handleCreateNew}>Criar sua primeira viagem</Button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -142,7 +152,7 @@ export function TravelDashboard({
                           handleDeleteTrip(trip.id)
                         }}
                       >
-                        <Trash2 className="h-4 w-4 mr-2" /> Delete Trip
+                        <Trash2 className="h-4 w-4 mr-2" /> Deletar Viagem
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -156,11 +166,11 @@ export function TravelDashboard({
                   </span>
                   <span className="flex items-center gap-1.5">
                     <MapPin className="h-4 w-4" />
-                    {trip.stops.length} Activities
+                    {trip.stops?.length || 0} Atividades
                   </span>
                 </div>
                 <Button variant="outline" className="w-full bg-slate-50">
-                  View Itinerary
+                  Ver Itinerário
                 </Button>
               </CardContent>
             </Card>
@@ -168,11 +178,14 @@ export function TravelDashboard({
         </div>
       )}
 
-      <CreateTripWizard
-        isOpen={isCreateOpen}
-        onClose={() => setIsCreateOpen(false)}
-        onCreated={(t) => onSelectTrip(t.id)}
-      />
+      {/* Render internal wizard only if no onCreateNew was provided */}
+      {!onCreateNew && (
+        <CreateTripWizard
+          isOpen={isCreateOpen}
+          onClose={() => setIsCreateOpen(false)}
+          onCreated={(t) => onSelectTrip(t.id)}
+        />
+      )}
     </div>
   )
 }

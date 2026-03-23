@@ -8,8 +8,16 @@ import {
   QrCode,
   ImageOff,
   Trash2,
+  Calendar,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { BookingForm } from './BookingForm'
 
 interface TravelActivityCardProps {
   stop: Coupon
@@ -24,6 +32,13 @@ export function TravelActivityCard({
   mockTime,
   onRemove,
 }: TravelActivityCardProps) {
+  // Simple heuristic to determine booking form type
+  const isHotel =
+    stop.category === 'Outros' && stop.title.toLowerCase().includes('hotel')
+  const isCar =
+    stop.category === 'Serviços' && stop.title.toLowerCase().includes('car')
+  const bookingType = isCar ? 'car' : isHotel ? 'hotel' : 'general'
+
   return (
     <div className="flex gap-4 group">
       {/* Time Column */}
@@ -76,27 +91,31 @@ export function TravelActivityCard({
             </p>
 
             {/* Address and Validity */}
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 mb-5">
               <div className="flex items-start sm:items-center gap-1.5 text-xs text-slate-600">
                 <MapPin className="h-3.5 w-3.5 text-slate-400 shrink-0 mt-0.5 sm:mt-0" />
                 <span className="line-clamp-1">
                   {stop.address || 'Address unavailable'}
                 </span>
               </div>
-              <div className="hidden sm:block w-1 h-1 rounded-full bg-slate-300" />
-              <div className="flex items-center gap-1.5 text-xs text-slate-600">
-                <CalendarDays className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                <span>
-                  Validity:{' '}
-                  {stop.startDate
-                    ? new Date(stop.startDate).toLocaleDateString()
-                    : 'Now'}{' '}
-                  -{' '}
-                  {stop.expiryDate
-                    ? new Date(stop.expiryDate).toLocaleDateString()
-                    : 'N/A'}
-                </span>
-              </div>
+
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 gap-2 bg-slate-50 border-primary/20 text-primary hover:bg-primary/5 shrink-0 self-start sm:self-auto font-semibold"
+                  >
+                    <Calendar className="h-3 w-3" /> Reservar Agora
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md p-0 border-none bg-transparent shadow-none">
+                  <DialogTitle className="sr-only">
+                    Reservar {stop.storeName}
+                  </DialogTitle>
+                  <BookingForm coupon={stop} type={bookingType} />
+                </DialogContent>
+              </Dialog>
             </div>
 
             {/* Instructions and QR block */}
@@ -104,11 +123,11 @@ export function TravelActivityCard({
               <div className="flex-1 space-y-1.5">
                 <h5 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
                   <Info className="h-3.5 w-3.5 text-primary" />
-                  How to Use
+                  Como Utilizar
                 </h5>
                 <p className="text-xs text-slate-600 leading-relaxed">
                   {stop.instructions ||
-                    'Present this screen at the counter. Ensure the code is clearly visible to claim your benefit.'}
+                    'Apresente esta tela no balcão. Certifique-se de que o código esteja bem visível para garantir seu benefício.'}
                 </p>
               </div>
               <div className="shrink-0 bg-white border border-slate-200 rounded p-2 flex flex-col items-center justify-center min-w-[110px] w-full sm:w-auto shadow-sm">

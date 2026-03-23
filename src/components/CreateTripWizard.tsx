@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -16,12 +16,12 @@ import { DayPlan, Itinerary } from '@/lib/types'
 import { ArrowLeft, ArrowRight, Check } from 'lucide-react'
 
 const INTERESTS = [
-  'Gastronomy',
-  'Culture',
-  'Shopping',
-  'Nightlife',
-  'Relaxation',
-  'Adventure',
+  'Gastronomia',
+  'Cultura',
+  'Compras',
+  'Vida Noturna',
+  'Relaxamento',
+  'Aventura',
 ]
 
 interface CreateTripWizardProps {
@@ -38,39 +38,60 @@ export function CreateTripWizard({
   const { user, saveItinerary } = useCouponStore()
   const [step, setStep] = useState(1)
   const [title, setTitle] = useState('')
-  const [days, setDays] = useState('3')
+  const [startDate, setStartDate] = useState('')
+  const [endDate, setEndDate] = useState('')
   const [interests, setInterests] = useState<string[]>([])
+
+  const numDays = useMemo(() => {
+    if (startDate && endDate) {
+      const start = new Date(startDate)
+      const end = new Date(endDate)
+      if (end >= start) {
+        return (
+          Math.floor((end.getTime() - start.getTime()) / (1000 * 3600 * 24)) + 1
+        )
+      }
+    }
+    return 1
+  }, [startDate, endDate])
 
   const handleClose = () => {
     onClose()
     setTimeout(() => {
       setStep(1)
       setTitle('')
-      setDays('3')
+      setStartDate('')
+      setEndDate('')
       setInterests([])
     }, 200)
   }
 
   const handleCreate = () => {
     if (!title.trim()) {
-      toast.error('Title is required')
+      toast.error('O nome da viagem é obrigatório')
       return
     }
-    const numDays = parseInt(days) || 1
-    const tripDays: DayPlan[] = Array.from({ length: numDays }).map((_, i) => ({
-      id: `day-${Math.random().toString(36).substring(2, 9)}`,
-      dayNumber: i + 1,
-      stops: [],
-    }))
+
+    const tripDays: DayPlan[] = Array.from({ length: numDays }).map((_, i) => {
+      const dayDate = startDate ? new Date(startDate) : new Date()
+      if (startDate) dayDate.setDate(dayDate.getDate() + i)
+
+      return {
+        id: `day-${Math.random().toString(36).substring(2, 9)}`,
+        dayNumber: i + 1,
+        date: startDate ? dayDate.toISOString() : undefined,
+        stops: [],
+      }
+    })
 
     const newTrip: Itinerary = {
       id: Math.random().toString(36).substring(2, 9),
       title,
-      description: `A new adventure exploring ${interests.length ? interests.join(', ') : 'everything'}.`,
+      description: `Uma nova aventura explorando ${interests.length ? interests.join(', ') : 'tudo'}.`,
       stops: [],
       days: tripDays,
-      tags: interests.length ? interests : ['New'],
-      duration: `${numDays} Days`,
+      tags: interests.length ? interests : ['Nova'],
+      duration: `${numDays} Dias`,
       totalSavings: 0,
       image: `https://img.usecurling.com/p/800/400?q=${encodeURIComponent(title || 'travel')}`,
       status: 'draft',
@@ -97,19 +118,19 @@ export function CreateTripWizard({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>
-            {step === 1 && 'Step 1: Destination'}
-            {step === 2 && 'Step 2: Dates & Duration'}
-            {step === 3 && 'Step 3: Activities & Interests'}
-            {step === 4 && 'Step 4: Review'}
+            {step === 1 && 'Passo 1: Destino'}
+            {step === 2 && 'Passo 2: Datas & Duração'}
+            {step === 3 && 'Passo 3: Interesses'}
+            {step === 4 && 'Passo 4: Revisão'}
           </DialogTitle>
         </DialogHeader>
         <div className="py-4 min-h-[160px] flex flex-col justify-center">
           {step === 1 && (
             <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
               <div className="space-y-2">
-                <Label>Destination or Trip Name</Label>
+                <Label>Nome ou Destino da Viagem</Label>
                 <Input
-                  placeholder="e.g. Summer in Paris"
+                  placeholder="ex. Verão em Paris"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   autoFocus
@@ -119,22 +140,35 @@ export function CreateTripWizard({
           )}
           {step === 2 && (
             <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
-              <div className="space-y-2">
-                <Label>Duration (Days)</Label>
-                <Input
-                  type="number"
-                  min="1"
-                  max="30"
-                  value={days}
-                  onChange={(e) => setDays(e.target.value)}
-                  autoFocus
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Data de Início</Label>
+                  <Input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Data de Fim</Label>
+                  <Input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    min={startDate}
+                  />
+                </div>
               </div>
+              {startDate && endDate && (
+                <p className="text-sm text-muted-foreground text-center pt-2">
+                  Duração Total: <strong>{numDays} Dias</strong>
+                </p>
+              )}
             </div>
           )}
           {step === 3 && (
             <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
-              <Label>Select your interests</Label>
+              <Label>Selecione seus interesses</Label>
               <div className="flex flex-wrap gap-2 mt-2">
                 {INTERESTS.map((interest) => (
                   <Badge
@@ -154,17 +188,24 @@ export function CreateTripWizard({
           {step === 4 && (
             <div className="space-y-4 bg-slate-50 p-5 rounded-lg border animate-in fade-in slide-in-from-right-4 duration-300">
               <p className="flex justify-between border-b pb-2">
-                <span className="text-muted-foreground">Destination</span>{' '}
+                <span className="text-muted-foreground">Destino</span>{' '}
                 <strong className="text-right">{title}</strong>
               </p>
               <p className="flex justify-between border-b pb-2">
-                <span className="text-muted-foreground">Duration</span>{' '}
-                <strong>{days} Days</strong>
+                <span className="text-muted-foreground">Duração</span>{' '}
+                <strong>{numDays} Dias</strong>
+              </p>
+              <p className="flex justify-between border-b pb-2">
+                <span className="text-muted-foreground">Período</span>{' '}
+                <strong className="text-right">
+                  {startDate ? new Date(startDate).toLocaleDateString() : 'N/D'}{' '}
+                  - {endDate ? new Date(endDate).toLocaleDateString() : 'N/D'}
+                </strong>
               </p>
               <p className="flex justify-between">
-                <span className="text-muted-foreground">Interests</span>{' '}
+                <span className="text-muted-foreground">Interesses</span>{' '}
                 <strong className="text-right">
-                  {interests.length ? interests.join(', ') : 'None'}
+                  {interests.length ? interests.join(', ') : 'Nenhum'}
                 </strong>
               </p>
             </div>
@@ -176,23 +217,26 @@ export function CreateTripWizard({
             onClick={step === 1 ? handleClose : () => setStep(step - 1)}
           >
             {step === 1 ? (
-              'Cancel'
+              'Cancelar'
             ) : (
               <>
-                <ArrowLeft className="w-4 h-4 mr-2" /> Back
+                <ArrowLeft className="w-4 h-4 mr-2" /> Voltar
               </>
             )}
           </Button>
           {step < 4 ? (
             <Button
               onClick={() => setStep(step + 1)}
-              disabled={step === 1 && !title.trim()}
+              disabled={
+                (step === 1 && !title.trim()) ||
+                (step === 2 && (!startDate || !endDate))
+              }
             >
-              Next <ArrowRight className="w-4 h-4 ml-2" />
+              Próximo <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           ) : (
             <Button onClick={handleCreate} className="bg-primary">
-              <Check className="w-4 h-4 mr-2" /> Create Trip
+              <Check className="w-4 h-4 mr-2" /> Criar Viagem
             </Button>
           )}
         </DialogFooter>

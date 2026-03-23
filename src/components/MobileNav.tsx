@@ -10,7 +10,7 @@ export function MobileNav() {
   const navItems = [
     { icon: Home, label: t('nav.home', 'Início'), path: '/' },
     { icon: Ticket, label: t('nav.vouchers', 'Vouchers'), path: '/vouchers' },
-    { icon: Map, label: t('nav.planner', 'Roteiros'), path: '/travel-planner' },
+    { icon: Map, label: t('nav.travel', 'Viagens'), path: '/travel' },
     { icon: Settings, label: t('nav.admin', 'Admin'), path: '/admin' },
     { icon: User, label: t('nav.profile', 'Perfil'), path: '/profile' },
   ]
@@ -21,7 +21,9 @@ export function MobileNav() {
         {navItems.map((item) => {
           const isActive =
             location.pathname === item.path ||
-            (item.path === '/admin' && location.pathname.startsWith('/admin'))
+            (item.path === '/admin' &&
+              location.pathname.startsWith('/admin')) ||
+            (item.path === '/travel' && location.pathname.startsWith('/travel'))
           return (
             <Link
               key={item.path}
