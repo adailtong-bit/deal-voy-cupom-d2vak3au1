@@ -29,8 +29,13 @@ import { Input } from '@/components/ui/input'
 
 export default function Index() {
   const { t, formatDate } = useLanguage()
-  const { coupons, seasonalEvents, trackSeasonalClick, userLocation } =
-    useCouponStore()
+  const {
+    coupons,
+    seasonalEvents,
+    trackSeasonalClick,
+    userLocation,
+    reservedIds,
+  } = useCouponStore()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
 
@@ -39,14 +44,17 @@ export default function Index() {
     today.setHours(0, 0, 0, 0)
     return seasonalEvents.filter((e) => {
       if (e.status !== 'active') return false
+      if (reservedIds.includes(e.id)) return false // Exclude already redeemed vouchers
       const end = new Date(e.endDate)
       end.setHours(23, 59, 59, 999)
       return end >= today
     })
-  }, [seasonalEvents])
+  }, [seasonalEvents, reservedIds])
 
   const filteredCoupons = useMemo(() => {
     return coupons.filter((c) => {
+      if (reservedIds.includes(c.id)) return false // Exclude already redeemed vouchers
+
       const matchesSearch =
         c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         c.storeName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -57,7 +65,7 @@ export default function Index() {
 
       return matchesSearch && matchesCategory
     })
-  }, [coupons, searchQuery, selectedCategory])
+  }, [coupons, searchQuery, selectedCategory, reservedIds])
 
   const trendingCoupons = filteredCoupons
     .filter((c) => c.isTrending || (c.averageRating && c.averageRating > 4.5))

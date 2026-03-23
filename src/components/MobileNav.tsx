@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Home, Compass, Map, User, Settings } from 'lucide-react'
+import { Home, Ticket, Map, User, Settings } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useLanguage } from '@/stores/LanguageContext'
 
@@ -8,11 +8,11 @@ export function MobileNav() {
   const { t } = useLanguage()
 
   const navItems = [
-    { icon: Home, label: t('nav.home'), path: '/' },
-    { icon: Compass, label: t('nav.explore'), path: '/explore' },
-    { icon: Map, label: t('nav.planner'), path: '/travel-planner' },
-    { icon: Settings, label: t('nav.admin'), path: '/admin' },
-    { icon: User, label: t('nav.profile'), path: '/profile' },
+    { icon: Home, label: t('nav.home', 'Início'), path: '/' },
+    { icon: Ticket, label: t('nav.vouchers', 'Vouchers'), path: '/vouchers' },
+    { icon: Map, label: t('nav.planner', 'Roteiros'), path: '/travel-planner' },
+    { icon: Settings, label: t('nav.admin', 'Admin'), path: '/admin' },
+    { icon: User, label: t('nav.profile', 'Perfil'), path: '/profile' },
   ]
 
   return (

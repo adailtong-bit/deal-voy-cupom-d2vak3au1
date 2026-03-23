@@ -37,6 +37,12 @@ export function DesktopHeader() {
               {t('nav.home', 'Início')}
             </Link>
             <Link
+              to="/vouchers"
+              className="transition-colors hover:text-primary"
+            >
+              {t('nav.vouchers', 'Meus Vouchers')}
+            </Link>
+            <Link
               to="/explore"
               className="transition-colors hover:text-primary"
             >
