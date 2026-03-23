@@ -10,6 +10,15 @@ import {
   MoreVertical,
   Trash2,
   Users,
+  Clock,
+  CheckCircle,
+  XCircle,
+  Car,
+  Hotel,
+  Ticket,
+  Megaphone,
+  Search,
+  Shield,
 } from 'lucide-react'
 import {
   DropdownMenu,
@@ -19,10 +28,12 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Badge } from '@/components/ui/badge'
 import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import { CreateTripWizard } from './CreateTripWizard'
 import { TravelDiscoveryHub } from './TravelDiscoveryHub'
+import { formatDate } from '@/lib/utils'
 
 interface TravelDashboardProps {
   onSelectTrip: (id: string) => void
@@ -33,12 +44,17 @@ export function TravelDashboard({
   onSelectTrip,
   onCreateNew,
 }: TravelDashboardProps) {
-  const { itineraries, user, deleteItinerary } = useCouponStore()
+  const { itineraries, user, deleteItinerary, bookings } = useCouponStore()
   const [isCreateOpen, setIsCreateOpen] = useState(false)
 
   const myTrips = useMemo(
     () => itineraries.filter((it) => it.authorId === user?.id),
     [itineraries, user],
+  )
+
+  const myBookings = useMemo(
+    () => bookings.filter((b) => b.userId === user?.id),
+    [bookings, user],
   )
 
   const isMerchantOrAdmin =
@@ -54,6 +70,59 @@ export function TravelDashboard({
       onCreateNew()
     } else {
       setIsCreateOpen(true)
+    }
+  }
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'confirmed':
+      case 'paid':
+        return (
+          <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white gap-1">
+            <CheckCircle className="w-3 h-3" /> Confirmado
+          </Badge>
+        )
+      case 'cancelled':
+        return (
+          <Badge variant="destructive" className="gap-1">
+            <XCircle className="w-3 h-3" /> Cancelado
+          </Badge>
+        )
+      case 'pending':
+      default:
+        return (
+          <Badge className="bg-amber-500 hover:bg-amber-600 text-white gap-1">
+            <Clock className="w-3 h-3" /> Pendente
+          </Badge>
+        )
+    }
+  }
+
+  const getTypeIcon = (type?: string) => {
+    switch (type) {
+      case 'hotel':
+        return <Hotel className="w-5 h-5" />
+      case 'car':
+        return <Car className="w-5 h-5" />
+      case 'ticket':
+      case 'activity':
+        return <Ticket className="w-5 h-5" />
+      default:
+        return <Calendar className="w-5 h-5" />
+    }
+  }
+
+  const getTypeName = (type?: string) => {
+    switch (type) {
+      case 'hotel':
+        return 'Hospedagem'
+      case 'car':
+        return 'Aluguel de Carro'
+      case 'ticket':
+      case 'activity':
+        return 'Atividade / Ingresso'
+      default:
+        return 'Reserva Geral'
     }
   }
 
@@ -92,6 +161,12 @@ export function TravelDashboard({
             Hub de Descobertas
           </TabsTrigger>
           <TabsTrigger
+            value="bookings"
+            className="rounded-lg py-2.5 px-6 font-semibold text-base sm:flex-1 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+          >
+            Status de Reservas
+          </TabsTrigger>
+          <TabsTrigger
             value="trips"
             className="rounded-lg py-2.5 px-6 font-semibold text-base sm:flex-1 data-[state=active]:bg-white data-[state=active]:shadow-sm"
           >
@@ -104,6 +179,108 @@ export function TravelDashboard({
           className="mt-0 outline-none animate-in fade-in-50 duration-500"
         >
           <TravelDiscoveryHub />
+        </TabsContent>
+
+        <TabsContent
+          value="bookings"
+          className="mt-0 outline-none animate-in fade-in-50 duration-500"
+        >
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+            <div>
+              <h1 className="text-3xl font-extrabold text-slate-900 flex items-center gap-3">
+                <Clock className="h-8 w-8 text-primary" />
+                Status de Reservas
+              </h1>
+              <p className="text-muted-foreground mt-1">
+                Acompanhe o ciclo de vida de todas as suas solicitações.
+              </p>
+            </div>
+          </div>
+
+          {myBookings.length === 0 ? (
+            <div className="text-center py-20 bg-slate-50 rounded-2xl border border-dashed">
+              <Ticket className="h-16 w-16 mx-auto text-slate-300 mb-4" />
+              <h3 className="text-xl font-bold text-slate-700 mb-2">
+                Nenhuma reserva encontrada
+              </h3>
+              <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                Você ainda não solicitou nenhuma reserva através do Hub de
+                Descobertas.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {myBookings.map((booking) => (
+                <Card
+                  key={booking.id}
+                  className="flex flex-col border-slate-200 shadow-sm hover:shadow-md transition-shadow"
+                >
+                  <CardContent className="p-5 flex flex-col h-full">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2.5 bg-slate-100 rounded-lg text-slate-600">
+                          {getTypeIcon(booking.type)}
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-primary uppercase tracking-wider">
+                            {getTypeName(booking.type)}
+                          </p>
+                          <h3 className="font-extrabold text-lg text-slate-900 leading-tight">
+                            {booking.storeName}
+                          </h3>
+                        </div>
+                      </div>
+                      {getStatusBadge(booking.status)}
+                    </div>
+
+                    <div className="space-y-3 mb-5 flex-1">
+                      <div className="flex items-center gap-2 text-sm text-slate-600">
+                        <Calendar className="w-4 h-4 text-slate-400" />
+                        <span>
+                          {formatDate(booking.date)}{' '}
+                          {booking.time && `às ${booking.time}`}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-slate-600">
+                        <Users className="w-4 h-4 text-slate-400" />
+                        <span>
+                          {booking.guests}{' '}
+                          {booking.guests === 1 ? 'Pessoa' : 'Pessoas'}
+                        </span>
+                      </div>
+                      {booking.requiresPrivacy && (
+                        <div className="flex items-center gap-2 text-sm text-blue-700 font-medium bg-blue-50 p-2 rounded-md border border-blue-100">
+                          <Shield className="w-4 h-4 text-blue-600" />
+                          <span>Privacidade: Quartos Individuais</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+                      <span className="text-xs font-semibold text-slate-500 uppercase">
+                        Fonte da Oferta
+                      </span>
+                      {booking.source === 'partner' ? (
+                        <Badge
+                          variant="secondary"
+                          className="bg-purple-100 text-purple-800 hover:bg-purple-200 shadow-none border-none"
+                        >
+                          <Megaphone className="w-3 h-3 mr-1" /> Parceiro
+                        </Badge>
+                      ) : (
+                        <Badge
+                          variant="outline"
+                          className="bg-slate-50 text-slate-600 shadow-none border-slate-200"
+                        >
+                          <Search className="w-3 h-3 mr-1" /> Orgânico
+                        </Badge>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent

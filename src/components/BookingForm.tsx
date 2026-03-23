@@ -19,10 +19,12 @@ export function BookingForm({
   coupon,
   offer,
   type = 'general',
+  requirePrivacy = false,
 }: {
   coupon?: Coupon
   offer?: TravelOffer
   type?: 'general' | 'hotel' | 'car' | 'ticket'
+  requirePrivacy?: boolean
 }) {
   const { makeBooking } = useCouponStore()
 
@@ -47,6 +49,9 @@ export function BookingForm({
       date: type === 'car' ? pickupDate : date,
       time: type === 'car' ? pickupTime : type === 'ticket' ? '10:00' : time,
       guests: type === 'car' ? 1 : parseInt(guests),
+      source: offer?.source || 'organic',
+      requiresPrivacy: requirePrivacy,
+      type: type,
     })
 
     const msg =

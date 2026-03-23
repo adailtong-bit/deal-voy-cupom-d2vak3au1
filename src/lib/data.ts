@@ -644,6 +644,7 @@ export const MOCK_TRAVEL_OFFERS: TravelOffer[] = [
     link: 'https://google.com/flights',
     region: 'BR-SP',
     hasSeparatedRooms: false,
+    source: 'partner',
   },
   {
     id: 'h1',
@@ -659,6 +660,7 @@ export const MOCK_TRAVEL_OFFERS: TravelOffer[] = [
     link: 'https://booking.com',
     region: 'US-FL',
     hasSeparatedRooms: true,
+    source: 'partner',
   },
   {
     id: 'h2',
@@ -674,6 +676,7 @@ export const MOCK_TRAVEL_OFFERS: TravelOffer[] = [
     link: 'https://booking.com',
     region: 'US-FL',
     hasSeparatedRooms: false,
+    source: 'organic',
   },
   {
     id: 'h3',
@@ -690,6 +693,7 @@ export const MOCK_TRAVEL_OFFERS: TravelOffer[] = [
     link: 'https://booking.com',
     region: 'US-FL',
     hasSeparatedRooms: true,
+    source: 'partner',
   },
   {
     id: 'h4',
@@ -705,6 +709,7 @@ export const MOCK_TRAVEL_OFFERS: TravelOffer[] = [
     link: 'https://booking.com',
     region: 'BR-SP',
     hasSeparatedRooms: false,
+    source: 'organic',
   },
   {
     id: 'a1',
@@ -720,6 +725,7 @@ export const MOCK_TRAVEL_OFFERS: TravelOffer[] = [
     link: 'https://universalorlando.com',
     region: 'US-FL',
     availability: 100,
+    source: 'partner',
   },
   {
     id: 'a2',
@@ -735,6 +741,7 @@ export const MOCK_TRAVEL_OFFERS: TravelOffer[] = [
     link: 'https://masp.org.br',
     region: 'BR-SP',
     availability: 50,
+    source: 'organic',
   },
 ]
 

@@ -250,7 +250,35 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null)
   const [isLoadingLocation, setIsLoadingLocation] = useState(true)
   const [uploads, setUploads] = useState<UploadedDocument[]>([])
-  const [bookings, setBookings] = useState<Booking[]>([])
+  const [bookings, setBookings] = useState<Booking[]>([
+    {
+      id: 'b1',
+      couponId: 'h1',
+      storeName: 'Family Resorts',
+      date: '2025-05-10',
+      time: '14:00',
+      guests: 4,
+      status: 'confirmed',
+      userId: 'u_user',
+      userName: 'End User',
+      source: 'partner',
+      requiresPrivacy: true,
+      type: 'hotel',
+    },
+    {
+      id: 'b2',
+      couponId: 'a2',
+      storeName: 'MASP',
+      date: '2025-06-15',
+      time: '10:00',
+      guests: 2,
+      status: 'pending',
+      userId: 'u_user',
+      userName: 'End User',
+      source: 'organic',
+      type: 'ticket',
+    },
+  ])
   const [points, setPoints] = useState(1250)
   const [fetchCredits, setFetchCredits] = useState(50.0)
   const [challenges, setChallenges] = useState<Challenge[]>(MOCK_CHALLENGES)

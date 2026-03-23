@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Badge } from '@/components/ui/badge'
 import {
   Dialog,
   DialogContent,
@@ -12,7 +13,16 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { BookingForm } from './BookingForm'
-import { Hotel, Car, Ticket, MapPin, Star, Users } from 'lucide-react'
+import {
+  Hotel,
+  Car,
+  Ticket,
+  MapPin,
+  Star,
+  Users,
+  Megaphone,
+  Search,
+} from 'lucide-react'
 import {
   Select,
   SelectContent,
@@ -153,6 +163,23 @@ export function TravelDiscoveryHub() {
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                  <div className="absolute top-3 left-3">
+                    {offer.source === 'partner' ? (
+                      <Badge
+                        variant="secondary"
+                        className="bg-purple-600 text-white hover:bg-purple-700 border-none shadow-sm"
+                      >
+                        <Megaphone className="w-3 h-3 mr-1" /> Parceiro
+                      </Badge>
+                    ) : (
+                      <Badge
+                        variant="secondary"
+                        className="bg-slate-700/80 text-white hover:bg-slate-800 border-none backdrop-blur-sm shadow-sm"
+                      >
+                        <Search className="w-3 h-3 mr-1" /> Orgânico
+                      </Badge>
+                    )}
+                  </div>
                   <div className="absolute bottom-3 left-3 right-3 flex justify-between items-end">
                     <div className="bg-white/95 text-slate-900 px-2.5 py-1 rounded-md text-sm font-extrabold shadow-sm">
                       {offer.currency} {offer.price}
@@ -211,6 +238,7 @@ export function TravelDiscoveryHub() {
                               ? 'car'
                               : 'ticket'
                         }
+                        requirePrivacy={requirePrivacy && numGuests >= 4}
                       />
                     </DialogContent>
                   </Dialog>

@@ -108,7 +108,7 @@ export interface Coupon {
   price?: number
   currency?: string
   isPaid?: boolean
-  source?: 'partner' | 'aggregated'
+  source?: 'partner' | 'aggregated' | 'organic'
   region?: string
   country?: string
   state?: string
@@ -193,6 +193,9 @@ export interface Booking {
   price?: number
   userId?: string
   userName?: string
+  source?: 'partner' | 'organic'
+  requiresPrivacy?: boolean
+  type?: 'general' | 'hotel' | 'car' | 'ticket' | 'activity'
 }
 
 export interface Challenge {
@@ -482,6 +485,7 @@ export interface TravelOffer {
   agencyId?: string
   availability?: number
   hasSeparatedRooms?: boolean
+  source?: 'partner' | 'organic'
 }
 
 export interface Region {
