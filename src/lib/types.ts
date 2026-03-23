@@ -605,6 +605,7 @@ export interface PlatformSettings {
   commissionRate: number
   cashbackSplitUser: number
   cashbackSplitPlatform: number
+  mainCategories?: string[]
   travelMargins: {
     hotels: number
     flights: number

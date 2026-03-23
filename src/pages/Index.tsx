@@ -11,6 +11,12 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { CATEGORIES } from '@/lib/data'
 import { cn } from '@/lib/utils'
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
   Ticket,
   CalendarIcon,
   Gift,
@@ -24,6 +30,10 @@ import {
   Shirt,
   Briefcase,
   CircleEllipsis,
+  Smartphone,
+  ShoppingCart,
+  Check,
+  ChevronDown,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 
@@ -35,6 +45,7 @@ export default function Index() {
     trackSeasonalClick,
     userLocation,
     reservedIds,
+    platformSettings,
   } = useCouponStore()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
@@ -84,6 +95,14 @@ export default function Index() {
         return <Shirt className="w-4 h-4" />
       case 'Briefcase':
         return <Briefcase className="w-4 h-4" />
+      case 'Smartphone':
+        return <Smartphone className="w-4 h-4" />
+      case 'Ticket':
+        return <Ticket className="w-4 h-4" />
+      case 'ShoppingCart':
+        return <ShoppingCart className="w-4 h-4" />
+      case 'Sparkles':
+        return <Sparkles className="w-4 h-4" />
       case 'CircleEllipsis':
         return <CircleEllipsis className="w-4 h-4" />
       case 'LayoutGrid':
@@ -91,6 +110,18 @@ export default function Index() {
         return <LayoutGrid className="w-4 h-4" />
     }
   }
+
+  const mainCategoryIds =
+    platformSettings.mainCategories || CATEGORIES.slice(1, 5).map((c) => c.id)
+  const mainCategories = CATEGORIES.filter((c) =>
+    mainCategoryIds.includes(c.id),
+  ).slice(0, 4)
+  const secondaryCategories = CATEGORIES.filter(
+    (c) => c.id !== 'all' && !mainCategoryIds.includes(c.id),
+  )
+  const isSecondarySelected = secondaryCategories.some(
+    (c) => c.id === selectedCategory,
+  )
 
   return (
     <div className="min-h-screen pb-20 md:pb-8 animate-fade-in bg-slate-50/30">
@@ -132,8 +163,24 @@ export default function Index() {
         {/* Category Filter */}
         <div className="mb-8">
           <ScrollArea className="w-full whitespace-nowrap pb-4">
-            <div className="flex w-max space-x-3 px-1">
-              {CATEGORIES.map((cat) => {
+            <div className="flex w-max space-x-3 px-1 items-center">
+              <Button
+                variant={selectedCategory === 'all' ? 'default' : 'outline'}
+                className={cn(
+                  'rounded-full px-5 transition-all duration-300',
+                  selectedCategory === 'all'
+                    ? 'shadow-md shadow-primary/20 scale-105'
+                    : 'hover:border-primary/50 hover:bg-primary/5 text-slate-600 bg-white',
+                )}
+                onClick={() => setSelectedCategory('all')}
+              >
+                <LayoutGrid className="w-4 h-4" />
+                <span className="ml-2 font-medium">
+                  {t('category.all', 'Todos')}
+                </span>
+              </Button>
+
+              {mainCategories.map((cat) => {
                 const isActive = selectedCategory === cat.id
                 return (
                   <Button
@@ -154,6 +201,52 @@ export default function Index() {
                   </Button>
                 )
               })}
+
+              {secondaryCategories.length > 0 && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant={isSecondarySelected ? 'default' : 'outline'}
+                      className={cn(
+                        'rounded-full px-5 transition-all duration-300',
+                        isSecondarySelected
+                          ? 'shadow-md shadow-primary/20 scale-105'
+                          : 'hover:border-primary/50 hover:bg-primary/5 text-slate-600 bg-white',
+                      )}
+                    >
+                      <CircleEllipsis className="w-4 h-4" />
+                      <span className="ml-2 font-medium">
+                        {isSecondarySelected
+                          ? t(
+                              secondaryCategories.find(
+                                (c) => c.id === selectedCategory,
+                              )?.translationKey || 'category.others',
+                              'Outros',
+                            )
+                          : t('category.others', 'Outros')}
+                      </span>
+                      <ChevronDown className="w-4 h-4 ml-1 opacity-50" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    {secondaryCategories.map((cat) => (
+                      <DropdownMenuItem
+                        key={cat.id}
+                        onClick={() => setSelectedCategory(cat.id)}
+                        className="cursor-pointer"
+                      >
+                        {getCategoryIcon(cat.icon)}
+                        <span className="ml-2">
+                          {t(cat.translationKey, cat.label)}
+                        </span>
+                        {selectedCategory === cat.id && (
+                          <Check className="ml-auto w-4 h-4 text-primary" />
+                        )}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
             </div>
             <ScrollBar orientation="horizontal" className="invisible" />
           </ScrollArea>

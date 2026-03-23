@@ -9,6 +9,7 @@ import { AdminMonetizationTab } from '@/components/admin/AdminMonetizationTab'
 import { PartnerPoliciesTab } from '@/components/admin/PartnerPoliciesTab'
 import { PartnerBillingTab } from '@/components/admin/PartnerBillingTab'
 import { AdminSeasonalTab } from '@/components/admin/AdminSeasonalTab'
+import { AdminCategoriesTab } from '@/components/admin/AdminCategoriesTab'
 import { useLanguage } from '@/stores/LanguageContext'
 
 export default function AdminDashboard() {
@@ -32,6 +33,9 @@ export default function AdminDashboard() {
           <TabsTrigger value="policies">{t('admin.policies')}</TabsTrigger>
           <TabsTrigger value="billing">{t('admin.billing')}</TabsTrigger>
           <TabsTrigger value="seasonal">{t('admin.seasonal')}</TabsTrigger>
+          <TabsTrigger value="categories">
+            {t('admin.categoriesTab', 'Categorias')}
+          </TabsTrigger>
           <TabsTrigger value="crm">{t('admin.crm')}</TabsTrigger>
           <TabsTrigger value="crawler">{t('admin.crawler')}</TabsTrigger>
           <TabsTrigger value="ads">{t('admin.ads')}</TabsTrigger>
@@ -107,6 +111,10 @@ export default function AdminDashboard() {
 
         <TabsContent value="seasonal">
           <AdminSeasonalTab />
+        </TabsContent>
+
+        <TabsContent value="categories">
+          <AdminCategoriesTab />
         </TabsContent>
 
         <TabsContent value="crm">

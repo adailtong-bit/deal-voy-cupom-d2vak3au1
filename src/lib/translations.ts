@@ -219,6 +219,13 @@ export const translations: Record<Language, any> = {
       viewVouchers: 'Ver Vouchers',
       renewSuccess: 'Campanha renovada com sucesso como rascunho.',
       vouchersGenerated: 'Vouchers gerados automaticamente.',
+      categoriesTab: 'Categorias',
+      categoryManagement: 'Gerenciamento de Categorias',
+      mainCategoriesDesc:
+        'Selecione até 4 categorias principais para exibir em destaque na página inicial. As demais ficarão no menu "Outros".',
+      maxCategoriesReached:
+        'Você já selecionou 4 categorias principais. Desmarque uma para selecionar outra.',
+      mainCategory: 'Principal',
     },
     ad: {
       sponsored: 'Patrocinado',
@@ -540,6 +547,13 @@ export const translations: Record<Language, any> = {
       viewVouchers: 'View Vouchers',
       renewSuccess: 'Campaign successfully renewed as draft.',
       vouchersGenerated: 'Vouchers generated successfully.',
+      categoriesTab: 'Categories',
+      categoryManagement: 'Category Management',
+      mainCategoriesDesc:
+        'Select up to 4 main categories to feature on the home page. The rest will be grouped under "Others".',
+      maxCategoriesReached:
+        'You have already selected 4 main categories. Uncheck one to select another.',
+      mainCategory: 'Main',
     },
     ad: {
       sponsored: 'Sponsored',
@@ -686,7 +700,7 @@ export const translations: Record<Language, any> = {
       admin: 'Panel de Admin',
       agency: 'Panel de Agencia',
       seasonal: 'Ofertas',
-      menu: 'Menú de Navegación',
+      menu: 'Menú de Navegação',
       vouchers: 'Mis Vouchers',
       travel: 'Viajes',
       reports: 'Reportes',
@@ -861,6 +875,13 @@ export const translations: Record<Language, any> = {
       viewVouchers: 'Ver Vouchers',
       renewSuccess: 'Campaña renovada con éxito como borrador.',
       vouchersGenerated: 'Vouchers generados con éxito.',
+      categoriesTab: 'Categorías',
+      categoryManagement: 'Gestión de Categorías',
+      mainCategoriesDesc:
+        'Selecciona hasta 4 categorías principales para destacar en la página de inicio. El resto se agrupará en "Otros".',
+      maxCategoriesReached:
+        'Ya has seleccionado 4 categorías principales. Desmarca una para seleccionar otra.',
+      mainCategory: 'Principal',
     },
     ad: {
       sponsored: 'Patrocinado',

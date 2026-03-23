@@ -127,6 +127,30 @@ export const CATEGORIES: {
     icon: 'Briefcase',
   },
   {
+    id: 'Eletrônicos',
+    label: 'Eletrônicos',
+    translationKey: 'category.electronics',
+    icon: 'Smartphone',
+  },
+  {
+    id: 'Lazer',
+    label: 'Lazer',
+    translationKey: 'category.leisure',
+    icon: 'Ticket',
+  },
+  {
+    id: 'Mercado',
+    label: 'Mercado',
+    translationKey: 'category.market',
+    icon: 'ShoppingCart',
+  },
+  {
+    id: 'Beleza',
+    label: 'Beleza',
+    translationKey: 'category.beauty',
+    icon: 'Sparkles',
+  },
+  {
     id: 'Outros',
     label: 'Outros',
     translationKey: 'category.others',
@@ -232,7 +256,16 @@ export const MOCK_BADGES: Badge[] = [
 
 const generateCoupons = (): Coupon[] => {
   const coupons: Coupon[] = []
-  const categories = ['Alimentação', 'Moda', 'Serviços', 'Outros'] as const
+  const categories = [
+    'Alimentação',
+    'Moda',
+    'Serviços',
+    'Eletrônicos',
+    'Lazer',
+    'Mercado',
+    'Beleza',
+    'Outros',
+  ] as const
   const statuses = ['active', 'used', 'expired'] as const
 
   // Online Affiliate Offers
@@ -685,8 +718,7 @@ export const MOCK_TRAVEL_OFFERS: TravelOffer[] = [
     type: 'hotel',
     provider: 'Luxury Stays',
     title: 'Executive Apartment',
-    description:
-      'Apartamento executivo com quarto separado e área de trabalho.',
+    description: 'Apartamento executivo com quarto separado e área de trabajo.',
     price: 450,
     currency: 'USD',
     image: 'https://img.usecurling.com/p/300/200?q=luxury%20apartment',
@@ -975,6 +1007,7 @@ export const DEFAULT_PLATFORM_SETTINGS: PlatformSettings = {
   commissionRate: 10,
   cashbackSplitUser: 40,
   cashbackSplitPlatform: 60,
+  mainCategories: ['Alimentação', 'Moda', 'Serviços', 'Eletrônicos'],
   travelMargins: {
     hotels: 12,
     flights: 3,
