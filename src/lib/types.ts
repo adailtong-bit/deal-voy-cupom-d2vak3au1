@@ -325,6 +325,7 @@ export interface User {
   phone?: string
   preferences?: UserPreferences
   partnerId?: string
+  gender?: 'male' | 'female' | 'non-binary' | 'prefer-not-to-say'
 }
 
 export interface Company {
