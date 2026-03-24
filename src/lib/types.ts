@@ -767,3 +767,15 @@ export interface WebhookLog {
   status: number
   timestamp: string
 }
+
+export interface FinancialTransaction {
+  id: string
+  franchiseId?: string
+  type: 'receipt' | 'payment' | 'royalty_payment'
+  amount: number
+  date: string
+  description: string
+  status: 'completed' | 'pending'
+  sourceId?: string
+}
+

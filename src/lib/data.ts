@@ -29,6 +29,7 @@ import {
   PartnerInvoice,
   WebhookLog,
   Booking,
+  FinancialTransaction,
 } from './types'
 
 export const getCategoryTranslationKey = (category: string): string => {
@@ -1442,3 +1443,43 @@ export const MOCK_BOOKINGS: Booking[] = [
     franchiseId: 'f_ny',
   })),
 ]
+
+export const MOCK_FINANCIAL_TRANSACTIONS: FinancialTransaction[] = [
+  {
+    id: 'ft-1',
+    franchiseId: 'f_ny',
+    type: 'receipt',
+    amount: 1500,
+    date: new Date().toISOString(),
+    description: 'Ad Revenue - NY Local Promo',
+    status: 'completed',
+  },
+  {
+    id: 'ft-2',
+    franchiseId: 'f_ny',
+    type: 'payment',
+    amount: 250,
+    date: new Date(Date.now() - 86400000).toISOString(),
+    description: 'Office Supplies',
+    status: 'completed',
+  },
+  {
+    id: 'ft-3',
+    franchiseId: 'f_ny',
+    type: 'royalty_payment',
+    amount: 100,
+    date: new Date(Date.now() - 86400000 * 2).toISOString(),
+    description: 'Royalty Payment - Nov 2024',
+    status: 'completed',
+  },
+  {
+    id: 'ft-4',
+    franchiseId: 'f1',
+    type: 'receipt',
+    amount: 3200,
+    date: new Date().toISOString(),
+    description: 'Local Merchants Monthly Fees',
+    status: 'completed',
+  },
+]
+
