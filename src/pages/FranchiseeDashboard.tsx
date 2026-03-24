@@ -29,7 +29,9 @@ import {
   DollarSign,
   TrendingUp,
   Ticket,
+  Megaphone,
 } from 'lucide-react'
+import { FranchiseeAdsTab } from '@/components/franchisee/FranchiseeAdsTab'
 
 export default function FranchiseeDashboard() {
   const { user, companies, coupons, franchises } = useCouponStore()
@@ -188,6 +190,13 @@ export default function FranchiseeDashboard() {
             Merchant Overview
           </TabsTrigger>
           <TabsTrigger
+            value="regional-ads"
+            className="py-2.5 px-4 font-semibold data-[state=active]:shadow-sm"
+          >
+            <Megaphone className="h-4 w-4 mr-2" />
+            Publicidade Regional
+          </TabsTrigger>
+          <TabsTrigger
             value="settings"
             className="py-2.5 px-4 font-semibold data-[state=active]:shadow-sm"
           >
@@ -322,6 +331,11 @@ export default function FranchiseeDashboard() {
               </Table>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Regional Ads Tab */}
+        <TabsContent value="regional-ads" className="space-y-4">
+          <FranchiseeAdsTab franchiseId={myFranchise?.id} />
         </TabsContent>
 
         {/* Settings Tab */}

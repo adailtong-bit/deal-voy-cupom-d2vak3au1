@@ -738,6 +738,7 @@ export const MOCK_ADS: Advertisement[] = [
     id: 'ad1',
     title: 'Verão Burger King',
     companyId: 'c1',
+    franchiseId: 'f1',
     region: 'BR-SP',
     category: 'Alimentação',
     billingType: 'fixed',
@@ -749,6 +750,7 @@ export const MOCK_ADS: Advertisement[] = [
     endDate: '2025-01-31',
     image: 'https://img.usecurling.com/p/800/200?q=burger%20ad',
     link: 'https://burgerking.com.br',
+    description: 'Promoção regional de verão para Burger King.',
     price: 29.9,
     currency: 'BRL',
     advertiserId: 'adv1',
@@ -771,6 +773,26 @@ export const MOCK_ADS: Advertisement[] = [
     link: 'https://electronics.com',
     price: 0.5,
     currency: 'BRL',
+  },
+  {
+    id: 'ad3',
+    title: 'NY Local Business Promo',
+    companyId: 'c_ny_1',
+    franchiseId: 'f_ny',
+    description: 'Support your local NY businesses.',
+    region: 'US-NY',
+    category: 'Outros',
+    billingType: 'fixed',
+    placement: 'sidebar',
+    status: 'active',
+    views: 2000,
+    clicks: 150,
+    startDate: '2024-12-01',
+    endDate: '2025-01-31',
+    image: 'https://img.usecurling.com/p/800/400?q=new%20york',
+    link: 'https://ny-local.com',
+    price: 500,
+    currency: 'USD',
   },
 ]
 
@@ -1273,6 +1295,7 @@ export const DEFAULT_PLATFORM_SETTINGS: PlatformSettings = {
   commissionRate: 10,
   cashbackSplitUser: 40,
   cashbackSplitPlatform: 60,
+  franchiseRoyaltyRate: 15,
   mainCategories: ['Alimentação', 'Moda', 'Serviços', 'Eletrônicos'],
   availableInterests: CATEGORIES.filter((c) => c.id !== 'all').map((c) => ({
     id: c.id,
@@ -1419,4 +1442,3 @@ export const MOCK_BOOKINGS: Booking[] = [
     franchiseId: 'f_ny',
   })),
 ]
-

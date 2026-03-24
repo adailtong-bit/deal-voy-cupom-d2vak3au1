@@ -161,6 +161,7 @@ interface CouponContextType {
   approveCompany: (id: string) => void
   rejectCompany: (id: string) => void
   createAd: (ad: Advertisement) => void
+  updateAd: (id: string, data: Partial<Advertisement>) => void
   deleteAd: (id: string) => void
   updateCampaign: (id: string, data: Partial<Coupon>) => void
   connectFetch: () => void
@@ -856,9 +857,20 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     )
     logSystemAction('Company Rejected', `Company ${id} rejected`)
   }
+
   const createAd = (ad: Advertisement) => setAds((prev) => [ad, ...prev])
-  const deleteAd = (id: string) =>
+
+  const updateAd = (id: string, data: Partial<Advertisement>) => {
+    setAds((prev) => prev.map((a) => (a.id === id ? { ...a, ...data } : a)))
+    logSystemAction('Ad Updated', `Updated advertisement ${id}`)
+    toast.success('Anúncio atualizado com sucesso')
+  }
+
+  const deleteAd = (id: string) => {
     setAds((prev) => prev.filter((a) => a.id !== id))
+    logSystemAction('Ad Deleted', `Deleted advertisement ${id}`)
+    toast.success('Anúncio removido')
+  }
 
   const updateCampaign = (id: string, data: Partial<Coupon>) => {
     setCoupons((prev) => prev.map((c) => (c.id === id ? { ...c, ...data } : c)))
@@ -1701,6 +1713,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         approveCompany,
         rejectCompany,
         createAd,
+        updateAd,
         deleteAd,
         updateCampaign,
         connectFetch,

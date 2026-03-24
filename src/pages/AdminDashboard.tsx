@@ -1,5 +1,12 @@
 import { useState } from 'react'
-import { Activity, Users, Store, DollarSign, Bell } from 'lucide-react'
+import {
+  Activity,
+  Users,
+  Store,
+  DollarSign,
+  Bell,
+  Megaphone,
+} from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
@@ -11,6 +18,7 @@ import {
 import { AdminCRM } from '@/components/admin/AdminCRM'
 import { PromotionCrawler } from '@/components/admin/PromotionCrawler'
 import { AdminAdsManager } from '@/components/admin/ads/AdminAdsManager'
+import { AdminNetworkAdsTab } from '@/components/admin/AdminNetworkAdsTab'
 import { DataInsightsTab } from '@/components/admin/DataInsightsTab'
 import { AdminMonetizationTab } from '@/components/admin/AdminMonetizationTab'
 import { PartnerPoliciesTab } from '@/components/admin/PartnerPoliciesTab'
@@ -217,6 +225,10 @@ export default function AdminDashboard() {
               <TabsTrigger value="crm">{t('admin.crm')}</TabsTrigger>
               <TabsTrigger value="crawler">{t('admin.crawler')}</TabsTrigger>
               <TabsTrigger value="ads">{t('admin.ads')}</TabsTrigger>
+              <TabsTrigger value="network-ads" className="gap-2">
+                <Megaphone className="h-4 w-4" />
+                Publicidade de Rede
+              </TabsTrigger>
               <TabsTrigger value="insights">{t('admin.insights')}</TabsTrigger>
               <TabsTrigger value="sandbox">
                 {t('admin.sandbox', 'Testing Sandbox')}
@@ -316,6 +328,9 @@ export default function AdminDashboard() {
             </TabsContent>
             <TabsContent value="ads">
               <AdminAdsManager />
+            </TabsContent>
+            <TabsContent value="network-ads">
+              <AdminNetworkAdsTab />
             </TabsContent>
             <TabsContent value="insights">
               <DataInsightsTab />

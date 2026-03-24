@@ -413,7 +413,7 @@ export interface Advertisement {
   category: string
   billingType: AdBillingType
   placement: AdPlacement
-  status: 'active' | 'paused' | 'ended'
+  status: 'active' | 'paused' | 'ended' | 'pending'
   budget?: number
   costPerClick?: number
   views: number
@@ -426,6 +426,8 @@ export interface Advertisement {
   currency?: string
   advertiserId?: string
   durationDays?: number
+  franchiseId?: string
+  description?: string
 }
 
 export interface AdPricing {
@@ -697,6 +699,7 @@ export interface PlatformSettings {
   commissionRate: number
   cashbackSplitUser: number
   cashbackSplitPlatform: number
+  franchiseRoyaltyRate: number
   mainCategories?: string[]
   availableInterests?: InterestCategory[]
   travelMargins: {
@@ -764,4 +767,3 @@ export interface WebhookLog {
   status: number
   timestamp: string
 }
-

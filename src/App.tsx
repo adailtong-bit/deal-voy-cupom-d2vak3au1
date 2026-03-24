@@ -43,8 +43,7 @@ function RequireAuth({
 
   if (roles && roles.length > 0 && !roles.includes(user.role)) {
     if (user.role === 'super_admin') return <Navigate to="/admin" replace />
-    if (user.role === 'franchisee')
-      return <Navigate to="/franchisee" replace />
+    if (user.role === 'franchisee') return <Navigate to="/franchisee" replace />
     if (user.role === 'shopkeeper') return <Navigate to="/vendor" replace />
     return <Navigate to="/" replace />
   }
@@ -130,4 +129,3 @@ export default function App() {
     </LanguageProvider>
   )
 }
-
