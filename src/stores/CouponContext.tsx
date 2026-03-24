@@ -518,6 +518,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
             ? {
                 ...c,
                 totalAvailable: Math.max(0, (c.totalAvailable ?? 100) - 1),
+                reservedCount: (c.reservedCount || 0) + 1,
               }
             : c,
         ),
@@ -550,7 +551,11 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       setCoupons((prev) =>
         prev.map((c) =>
           c.id === id
-            ? { ...c, totalAvailable: (c.totalAvailable ?? 100) + 1 }
+            ? {
+                ...c,
+                totalAvailable: (c.totalAvailable ?? 100) + 1,
+                reservedCount: Math.max(0, (c.reservedCount || 1) - 1),
+              }
             : c,
         ),
       )
@@ -854,9 +859,13 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   const createAd = (ad: Advertisement) => setAds((prev) => [ad, ...prev])
   const deleteAd = (id: string) =>
     setAds((prev) => prev.filter((a) => a.id !== id))
-  const updateCampaign = (id: string, data: any) => {
-    /* ... */
+
+  const updateCampaign = (id: string, data: Partial<Coupon>) => {
+    setCoupons((prev) => prev.map((c) => (c.id === id ? { ...c, ...data } : c)))
+    toast.success('Campanha atualizada com sucesso')
+    logSystemAction('Campaign Updated', `Campaign ${id} updated`)
   }
+
   const connectFetch = () => {
     /* ... */
   }

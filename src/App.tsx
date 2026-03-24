@@ -10,6 +10,7 @@ import { NotificationProvider } from '@/stores/NotificationContext'
 import { CouponProvider, useCouponStore } from '@/stores/CouponContext'
 import { Toaster } from 'sonner'
 import Layout from '@/components/Layout'
+import MerchantLayout from '@/components/MerchantLayout'
 import Index from '@/pages/Index'
 import VendorDashboard from '@/pages/VendorDashboard'
 import AdminDashboard from '@/pages/AdminDashboard'
@@ -17,6 +18,8 @@ import Seasonal from '@/pages/Seasonal'
 import Voucher from '@/pages/Voucher'
 import MyVouchers from '@/pages/MyVouchers'
 import MerchantScanner from '@/pages/MerchantScanner'
+import MerchantCampaigns from '@/pages/MerchantCampaigns'
+import MerchantLeads from '@/pages/MerchantLeads'
 import TravelPage from '@/pages/TravelPage'
 import Explore from '@/pages/Explore'
 import Profile from '@/pages/Profile'
@@ -61,6 +64,18 @@ export default function App() {
                   }
                 />
                 <Route
+                  path="/merchant"
+                  element={
+                    <RequireAuth>
+                      <MerchantLayout />
+                    </RequireAuth>
+                  }
+                >
+                  <Route path="scanner" element={<MerchantScanner />} />
+                  <Route path="campaigns" element={<MerchantCampaigns />} />
+                  <Route path="leads" element={<MerchantLeads />} />
+                </Route>
+                <Route
                   path="/admin"
                   element={
                     <RequireAuth>
@@ -81,14 +96,6 @@ export default function App() {
                 <Route path="/travel/new" element={<TravelPage />} />
                 <Route path="/travel/:id" element={<TravelPage />} />
                 <Route path="/voucher/:id" element={<Voucher />} />
-                <Route
-                  path="/merchant/scanner"
-                  element={
-                    <RequireAuth>
-                      <MerchantScanner />
-                    </RequireAuth>
-                  }
-                />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Route>
             </Routes>

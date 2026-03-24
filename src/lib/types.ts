@@ -93,6 +93,7 @@ export interface Coupon {
     lng: number
   }
   totalAvailable?: number
+  totalLimit?: number
   maxPerUser?: number
   reservedCount?: number
   menu?: MenuItem[]
