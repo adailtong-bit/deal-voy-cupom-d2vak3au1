@@ -60,6 +60,9 @@ export function AdvancedCompanyForm({
         franchiseId: initialData.franchiseId || franchiseId || 'independent',
         documents: initialData.documents || [],
       })
+    } else if (franchiseId) {
+      // Auto assign if a new merchant is created from a franchise context
+      setData((prev: any) => ({ ...prev, franchiseId }))
     }
   }, [initialData, franchiseId])
 
@@ -99,52 +102,56 @@ export function AdvancedCompanyForm({
   return (
     <div className="flex flex-col space-y-4 pt-2">
       <Tabs defaultValue="controle" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 mb-4">
-          <TabsTrigger value="controle">
-            <Building className="h-4 w-4 mr-2" /> Controle
+        <TabsList className="grid w-full grid-cols-4 mb-4 bg-slate-100/80 p-1">
+          <TabsTrigger value="controle" className="font-semibold">
+            <Building className="h-4 w-4 mr-2 text-primary" /> Controle
           </TabsTrigger>
-          <TabsTrigger value="contato">
-            <UserCircle className="h-4 w-4 mr-2" /> Contato
+          <TabsTrigger value="contato" className="font-semibold">
+            <UserCircle className="h-4 w-4 mr-2 text-blue-500" /> Contato
           </TabsTrigger>
-          <TabsTrigger value="cobranca">
-            <Receipt className="h-4 w-4 mr-2" /> Cobrança
+          <TabsTrigger value="cobranca" className="font-semibold">
+            <Receipt className="h-4 w-4 mr-2 text-emerald-500" /> Cobrança
           </TabsTrigger>
-          <TabsTrigger value="documentos">
-            <FileText className="h-4 w-4 mr-2" /> Documentos
+          <TabsTrigger value="documentos" className="font-semibold">
+            <FileText className="h-4 w-4 mr-2 text-orange-500" /> Documentos
           </TabsTrigger>
         </TabsList>
+
         <TabsContent
           value="controle"
-          className="grid grid-cols-2 gap-4 animate-in fade-in-50"
+          className="grid grid-cols-2 gap-5 animate-in fade-in-50 pt-2"
         >
-          <div className="space-y-1">
-            <Label>Razão Social *</Label>
+          <div className="space-y-1.5">
+            <Label className="text-slate-700">Razão Social *</Label>
             <Input
               value={data.legalName || ''}
               onChange={(e) => onChange('legalName', e.target.value)}
+              className="bg-slate-50"
             />
           </div>
-          <div className="space-y-1">
-            <Label>Nome Fantasia *</Label>
+          <div className="space-y-1.5">
+            <Label className="text-slate-700">Nome Fantasia *</Label>
             <Input
               value={data.name || ''}
               onChange={(e) => onChange('name', e.target.value)}
+              className="bg-slate-50"
             />
           </div>
-          <div className="space-y-1">
-            <Label>Categoria</Label>
+          <div className="space-y-1.5">
+            <Label className="text-slate-700">Categoria</Label>
             <Input
               value={data.category || ''}
               onChange={(e) => onChange('category', e.target.value)}
+              className="bg-slate-50"
             />
           </div>
-          <div className="space-y-1">
-            <Label>Status</Label>
+          <div className="space-y-1.5">
+            <Label className="text-slate-700">Status</Label>
             <Select
               value={data.status}
               onValueChange={(v) => onChange('status', v)}
             >
-              <SelectTrigger>
+              <SelectTrigger className="bg-slate-50">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -154,25 +161,30 @@ export function AdvancedCompanyForm({
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-1">
-            <Label>Referência Interna</Label>
+          <div className="space-y-1.5">
+            <Label className="text-slate-700">Referência Interna</Label>
             <Input
               value={data.internalRef || ''}
               onChange={(e) => onChange('internalRef', e.target.value)}
+              className="bg-slate-50"
             />
           </div>
-          {type === 'merchant' && (
-            <div className="space-y-1">
-              <Label>Entidade Pai (Franquia)</Label>
+
+          {/* Data Isolation: Hide franchise selector if a franchise context (franchiseId prop) is provided */}
+          {type === 'merchant' && !franchiseId && (
+            <div className="space-y-1.5">
+              <Label className="text-slate-700">Entidade Pai (Franquia)</Label>
               <Select
                 value={data.franchiseId}
                 onValueChange={(v) => onChange('franchiseId', v)}
               >
-                <SelectTrigger>
+                <SelectTrigger className="bg-slate-50 border-primary/20">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="independent">Independente</SelectItem>
+                  <SelectItem value="independent">
+                    Nenhuma (Independente)
+                  </SelectItem>
                   {franchises.map((f) => (
                     <SelectItem key={f.id} value={f.id}>
                       {f.name}
@@ -183,79 +195,86 @@ export function AdvancedCompanyForm({
             </div>
           )}
         </TabsContent>
+
         <TabsContent
           value="contato"
-          className="space-y-4 animate-in fade-in-50"
+          className="space-y-5 animate-in fade-in-50 pt-2"
         >
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <Label>Nome do Contato</Label>
+          <div className="grid grid-cols-2 gap-5">
+            <div className="space-y-1.5">
+              <Label className="text-slate-700">Nome do Contato</Label>
               <Input
                 value={data.contactPerson || ''}
                 onChange={(e) => onChange('contactPerson', e.target.value)}
+                className="bg-slate-50"
               />
             </div>
-            <div className="space-y-1">
-              <Label>Departamento</Label>
+            <div className="space-y-1.5">
+              <Label className="text-slate-700">Departamento</Label>
               <Input
                 value={data.contactDepartment || ''}
                 onChange={(e) => onChange('contactDepartment', e.target.value)}
+                className="bg-slate-50"
               />
             </div>
-            <div className="space-y-1">
-              <Label>Email Principal *</Label>
+            <div className="space-y-1.5">
+              <Label className="text-slate-700">Email Principal *</Label>
               <Input
                 type="email"
                 value={data.email || ''}
                 onChange={(e) => onChange('email', e.target.value)}
+                className="bg-slate-50"
               />
             </div>
-            <div className="space-y-1">
-              <Label>Site</Label>
+            <div className="space-y-1.5">
+              <Label className="text-slate-700">Site</Label>
               <Input
                 value={data.website || ''}
                 onChange={(e) => onChange('website', e.target.value)}
+                className="bg-slate-50"
               />
             </div>
-            <div className="space-y-1">
-              <Label>Telefone</Label>
+            <div className="space-y-1.5">
+              <Label className="text-slate-700">Telefone</Label>
               <PhoneInput
                 value={data.businessPhone || ''}
                 onChange={(v) => onChange('businessPhone', v)}
               />
             </div>
-            <div className="space-y-1">
-              <Label>WhatsApp</Label>
+            <div className="space-y-1.5">
+              <Label className="text-slate-700">WhatsApp</Label>
               <PhoneInput
                 value={data.whatsapp || ''}
                 onChange={(v) => onChange('whatsapp', v)}
               />
             </div>
           </div>
-          <h4 className="text-sm font-bold border-b pb-1 mt-4">
+          <h4 className="text-sm font-bold text-slate-800 border-b border-slate-200 pb-2 mt-6">
             Contato Secundário
           </h4>
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-1">
-              <Label>Nome</Label>
+          <div className="grid grid-cols-3 gap-5 pt-2">
+            <div className="space-y-1.5">
+              <Label className="text-slate-700">Nome</Label>
               <Input
                 value={data.secondaryContactName || ''}
                 onChange={(e) =>
                   onChange('secondaryContactName', e.target.value)
                 }
+                className="bg-slate-50"
               />
             </div>
-            <div className="space-y-1">
-              <Label>Email</Label>
+            <div className="space-y-1.5">
+              <Label className="text-slate-700">Email</Label>
               <Input
                 value={data.secondaryContactEmail || ''}
                 onChange={(e) =>
                   onChange('secondaryContactEmail', e.target.value)
                 }
+                className="bg-slate-50"
               />
             </div>
-            <div className="space-y-1">
-              <Label>Telefone</Label>
+            <div className="space-y-1.5">
+              <Label className="text-slate-700">Telefone</Label>
               <PhoneInput
                 value={data.secondaryContactPhone || ''}
                 onChange={(v) => onChange('secondaryContactPhone', v)}
@@ -263,13 +282,14 @@ export function AdvancedCompanyForm({
             </div>
           </div>
         </TabsContent>
+
         <TabsContent
           value="cobranca"
-          className="space-y-4 animate-in fade-in-50"
+          className="space-y-5 animate-in fade-in-50 pt-2"
         >
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <Label>CNPJ *</Label>
+          <div className="grid grid-cols-2 gap-5">
+            <div className="space-y-1.5">
+              <Label className="text-slate-700">CNPJ / Tax ID *</Label>
               <Input
                 value={data.taxId || ''}
                 maxLength={18}
@@ -282,53 +302,59 @@ export function AdvancedCompanyForm({
                   onChange('taxId', v)
                 }}
                 placeholder="00.000.000/0000-00"
+                className="bg-slate-50 font-mono tracking-wider"
               />
             </div>
-            <div className="space-y-1">
-              <Label>Inscrição Estadual</Label>
+            <div className="space-y-1.5">
+              <Label className="text-slate-700">Inscrição Estadual</Label>
               <Input
                 value={data.stateRegistration || ''}
                 onChange={(e) => onChange('stateRegistration', e.target.value)}
+                className="bg-slate-50"
               />
             </div>
-            <div className="space-y-1">
-              <Label>Banco (Nome/Número)</Label>
+            <div className="space-y-1.5">
+              <Label className="text-slate-700">Banco (Nome/Número)</Label>
               <Input
                 value={data.bankName || ''}
                 onChange={(e) => onChange('bankName', e.target.value)}
+                className="bg-slate-50"
               />
             </div>
-            <div className="grid grid-cols-2 gap-2 space-y-0">
-              <div className="space-y-1">
-                <Label>Agência</Label>
+            <div className="grid grid-cols-2 gap-3 space-y-0">
+              <div className="space-y-1.5">
+                <Label className="text-slate-700">Agência</Label>
                 <Input
                   value={data.bankAgency || ''}
                   onChange={(e) => onChange('bankAgency', e.target.value)}
+                  className="bg-slate-50"
                 />
               </div>
-              <div className="space-y-1">
-                <Label>Conta</Label>
+              <div className="space-y-1.5">
+                <Label className="text-slate-700">Conta</Label>
                 <Input
                   value={data.bankAccount || ''}
                   onChange={(e) => onChange('bankAccount', e.target.value)}
+                  className="bg-slate-50"
                 />
               </div>
             </div>
-            <div className="space-y-1">
-              <Label>Email de Faturamento</Label>
+            <div className="space-y-1.5">
+              <Label className="text-slate-700">Email de Faturamento</Label>
               <Input
                 type="email"
                 value={data.billingEmail || ''}
                 onChange={(e) => onChange('billingEmail', e.target.value)}
+                className="bg-slate-50"
               />
             </div>
-            <div className="space-y-1">
-              <Label>Ciclo de Faturamento</Label>
+            <div className="space-y-1.5">
+              <Label className="text-slate-700">Ciclo de Faturamento</Label>
               <Select
                 value={data.billingFrequency || 'monthly'}
                 onValueChange={(v) => onChange('billingFrequency', v)}
               >
-                <SelectTrigger>
+                <SelectTrigger className="bg-slate-50">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -338,19 +364,22 @@ export function AdvancedCompanyForm({
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-1 col-span-2">
-              <Label>Termos do Contrato</Label>
+            <div className="space-y-1.5 col-span-2">
+              <Label className="text-slate-700">Termos do Contrato</Label>
               <Textarea
                 value={data.contractTerms || ''}
                 onChange={(e) => onChange('contractTerms', e.target.value)}
-                className="h-16"
+                className="h-20 bg-slate-50 resize-none"
+                placeholder="Detalhes ou condições comerciais específicas..."
               />
             </div>
           </div>
-          <h4 className="text-sm font-bold border-b pb-1 mt-4">Endereço</h4>
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-1">
-              <Label>CEP</Label>
+          <h4 className="text-sm font-bold text-slate-800 border-b border-slate-200 pb-2 mt-6">
+            Endereço Principal
+          </h4>
+          <div className="grid grid-cols-3 gap-5 pt-2">
+            <div className="space-y-1.5">
+              <Label className="text-slate-700">CEP</Label>
               <Input
                 value={data.addressZip || ''}
                 maxLength={9}
@@ -361,65 +390,75 @@ export function AdvancedCompanyForm({
                   onChange('addressZip', v)
                 }}
                 placeholder="00000-000"
+                className="bg-slate-50"
               />
             </div>
-            <div className="space-y-1 col-span-2">
-              <Label>Logradouro (Rua)</Label>
+            <div className="space-y-1.5 col-span-2">
+              <Label className="text-slate-700">Logradouro (Rua)</Label>
               <Input
                 value={data.addressStreet || ''}
                 onChange={(e) => onChange('addressStreet', e.target.value)}
+                className="bg-slate-50"
               />
             </div>
-            <div className="space-y-1">
-              <Label>Número</Label>
+            <div className="space-y-1.5">
+              <Label className="text-slate-700">Número</Label>
               <Input
                 value={data.addressNumber || ''}
                 onChange={(e) => onChange('addressNumber', e.target.value)}
+                className="bg-slate-50"
               />
             </div>
-            <div className="space-y-1">
-              <Label>Complemento</Label>
+            <div className="space-y-1.5">
+              <Label className="text-slate-700">Complemento</Label>
               <Input
                 value={data.addressComplement || ''}
                 onChange={(e) => onChange('addressComplement', e.target.value)}
+                className="bg-slate-50"
               />
             </div>
-            <div className="space-y-1">
-              <Label>Bairro</Label>
+            <div className="space-y-1.5">
+              <Label className="text-slate-700">Bairro</Label>
               <Input
                 value={data.addressNeighborhood || ''}
                 onChange={(e) =>
                   onChange('addressNeighborhood', e.target.value)
                 }
+                className="bg-slate-50"
               />
             </div>
-            <div className="space-y-1 col-span-2">
-              <Label>Cidade</Label>
+            <div className="space-y-1.5 col-span-2">
+              <Label className="text-slate-700">Cidade</Label>
               <Input
                 value={data.addressCity || ''}
                 onChange={(e) => onChange('addressCity', e.target.value)}
+                className="bg-slate-50"
               />
             </div>
-            <div className="space-y-1">
-              <Label>UF</Label>
+            <div className="space-y-1.5">
+              <Label className="text-slate-700">UF / Estado</Label>
               <Input
                 value={data.addressState || ''}
                 maxLength={2}
-                className="uppercase"
+                className="uppercase bg-slate-50"
                 onChange={(e) => onChange('addressState', e.target.value)}
+                placeholder="SP, FL..."
               />
             </div>
           </div>
         </TabsContent>
+
         <TabsContent
           value="documentos"
-          className="space-y-4 animate-in fade-in-50"
+          className="space-y-6 animate-in fade-in-50 pt-2"
         >
-          <div className="grid gap-4">
-            <div className="flex flex-col space-y-2 max-w-sm">
-              <Label>Tipo de Documento para Upload</Label>
+          <div className="grid gap-5">
+            <div className="flex flex-col space-y-2 max-w-md">
+              <Label className="text-slate-700">
+                Tipo de Documento para Upload
+              </Label>
               <Select value={docLabel} onValueChange={setDocLabel}>
-                <SelectTrigger>
+                <SelectTrigger className="bg-slate-50 border-slate-200">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -439,46 +478,56 @@ export function AdvancedCompanyForm({
                 </SelectContent>
               </Select>
             </div>
-            <div className="border-2 border-dashed rounded-lg p-8 flex flex-col items-center justify-center bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer relative">
+            <div className="border-2 border-dashed border-primary/30 rounded-xl p-8 flex flex-col items-center justify-center bg-primary/5 hover:bg-primary/10 transition-colors cursor-pointer relative group">
               <input
                 type="file"
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                 accept=".pdf,.jpg,.jpeg,.png"
                 onChange={handleUpload}
               />
-              <UploadCloud className="h-8 w-8 text-muted-foreground mb-2" />
-              <p className="text-sm font-medium text-slate-700">
-                Clique ou arraste para fazer o upload do documento
+              <UploadCloud className="h-10 w-10 text-primary mb-3 group-hover:scale-110 transition-transform" />
+              <p className="text-sm font-bold text-slate-800 text-center">
+                Clique ou arraste para enviar o documento
               </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Suportado: PDF, JPG, PNG (Máx 10MB)
+              <p className="text-xs text-slate-500 mt-1.5 font-medium">
+                Arquivos suportados: PDF, JPG, PNG (Máx. 10MB)
               </p>
             </div>
           </div>
 
-          <div className="rounded-md border mt-6 overflow-hidden">
+          <div className="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
             <Table>
-              <TableHeader>
+              <TableHeader className="bg-slate-50">
                 <TableRow>
-                  <TableHead>Arquivo</TableHead>
-                  <TableHead>Rótulo</TableHead>
-                  <TableHead>Data de Envio</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
+                  <TableHead className="font-semibold text-slate-700">
+                    Arquivo
+                  </TableHead>
+                  <TableHead className="font-semibold text-slate-700">
+                    Categoria
+                  </TableHead>
+                  <TableHead className="font-semibold text-slate-700">
+                    Data de Envio
+                  </TableHead>
+                  <TableHead className="font-semibold text-slate-700 text-right">
+                    Ações
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {data.documents?.map((doc: CompanyDocument) => (
-                  <TableRow key={doc.id}>
+                  <TableRow key={doc.id} className="hover:bg-slate-50/50">
                     <TableCell className="font-medium flex items-center gap-2">
-                      <FileText className="h-4 w-4 text-blue-500" />
-                      <span className="truncate max-w-[150px] sm:max-w-xs">
+                      <FileText className="h-4 w-4 text-blue-500 shrink-0" />
+                      <span className="truncate max-w-[150px] sm:max-w-xs text-slate-800">
                         {doc.name}
                       </span>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="secondary">{doc.label}</Badge>
+                      <Badge variant="outline" className="bg-slate-100">
+                        {doc.label}
+                      </Badge>
                     </TableCell>
-                    <TableCell className="text-xs text-muted-foreground">
+                    <TableCell className="text-sm text-slate-500 font-medium">
                       {new Date(doc.uploadDate).toLocaleDateString()}
                     </TableCell>
                     <TableCell className="text-right">
@@ -489,13 +538,14 @@ export function AdvancedCompanyForm({
                           e.preventDefault()
                           window.open(doc.url, '_blank')
                         }}
+                        className="text-slate-500 hover:text-primary hover:bg-primary/10"
                       >
                         <Download className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="text-destructive"
+                        className="text-red-400 hover:text-red-600 hover:bg-red-50"
                         onClick={() => removeDoc(doc.id)}
                       >
                         <Trash2 className="h-4 w-4" />
@@ -507,7 +557,7 @@ export function AdvancedCompanyForm({
                   <TableRow>
                     <TableCell
                       colSpan={4}
-                      className="text-center py-6 text-muted-foreground"
+                      className="text-center py-8 text-slate-500 font-medium"
                     >
                       Nenhum documento anexado ainda.
                     </TableCell>
@@ -518,11 +568,17 @@ export function AdvancedCompanyForm({
           </div>
         </TabsContent>
       </Tabs>
-      <div className="flex justify-end gap-2 pt-4 border-t mt-4">
-        <Button variant="outline" onClick={onCancel}>
+      <div className="flex justify-end gap-3 pt-6 border-t border-slate-100 mt-6">
+        <Button
+          variant="outline"
+          onClick={onCancel}
+          className="font-semibold px-6"
+        >
           Cancelar
         </Button>
-        <Button onClick={save}>Salvar</Button>
+        <Button onClick={save} className="font-bold px-8 shadow-md">
+          Salvar Dados
+        </Button>
       </div>
     </div>
   )

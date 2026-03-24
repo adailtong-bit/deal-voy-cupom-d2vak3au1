@@ -67,8 +67,8 @@ export function MerchantsTab({ franchiseId }: { franchiseId?: string }) {
   }
 
   const getFranchiseName = (id?: string) => {
-    if (!id) return 'Independent'
-    return franchises.find((f) => f.id === id)?.name || 'Unknown'
+    if (!id) return 'Independente'
+    return franchises.find((f) => f.id === id)?.name || 'Desconhecida'
   }
 
   const exportCsv = () => {
@@ -85,7 +85,7 @@ export function MerchantsTab({ franchiseId }: { franchiseId?: string }) {
     const encodedUri = encodeURI(csvContent)
     const link = document.createElement('a')
     link.setAttribute('href', encodedUri)
-    link.setAttribute('download', 'merchants_export.csv')
+    link.setAttribute('download', 'lojistas_export.csv')
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
@@ -95,12 +95,12 @@ export function MerchantsTab({ franchiseId }: { franchiseId?: string }) {
     const w = window.open('', '_blank')
     if (w) {
       w.document.write(`
-        <html><head><title>Merchants Report</title>
+        <html><head><title>Relatório de Lojistas</title>
         <style>body{font-family:sans-serif; padding:20px;} table{width:100%; border-collapse:collapse;} th,td{border:1px solid #ddd; padding:8px; text-align:left;}</style></head>
         <body>
-        <h1>Merchants Report</h1>
+        <h1>Relatório de Lojistas</h1>
         <table>
-          <tr><th>Name</th><th>Email</th><th>Franchise</th><th>Region</th><th>Status</th></tr>
+          <tr><th>Nome</th><th>Email</th><th>Franquia</th><th>Região</th><th>Status</th></tr>
           ${displayCompanies.map((c) => `<tr><td>${c.name}</td><td>${c.email}</td><td>${getFranchiseName(c.franchiseId)}</td><td>${c.region}</td><td>${c.status}</td></tr>`).join('')}
         </table>
         <script>window.print(); window.close();</script>
@@ -112,62 +112,95 @@ export function MerchantsTab({ franchiseId }: { franchiseId?: string }) {
 
   const handleSendCredentials = (c: Company) => {
     updateCompany(c.id, { credentialsSent: true })
-    toast.success(`Credentials emailed to ${c.email}`)
+    toast.success(`Credenciais enviadas para ${c.email}`)
   }
 
   return (
     <div className="space-y-4 animate-fade-in-up">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-card p-4 rounded-lg border gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-5 rounded-xl border border-slate-200 shadow-sm gap-4">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-primary/10 rounded-full text-primary hidden sm:block">
+          <div className="p-2.5 bg-primary/10 rounded-lg text-primary hidden sm:block">
             <Store className="h-6 w-6" />
           </div>
           <div>
-            <h3 className="text-lg font-bold">Merchants Directory</h3>
-            <p className="text-sm text-muted-foreground">
+            <h3 className="text-lg font-bold text-slate-800">
+              Diretório de Lojistas
+            </h3>
+            <p className="text-sm text-slate-500">
               {franchiseId
-                ? 'Manage merchants linked to your franchise.'
-                : 'Manage all independent and franchise-linked merchants.'}
+                ? 'Gerencie os lojistas vinculados à sua franquia.'
+                : 'Gerencie todos os lojistas (independentes e de franquias).'}
             </p>
           </div>
         </div>
         <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-          <Button variant="outline" onClick={exportCsv}>
+          <Button
+            variant="outline"
+            onClick={exportCsv}
+            className="font-semibold"
+          >
             <FileText className="w-4 h-4 mr-2" /> CSV
           </Button>
-          <Button variant="outline" onClick={exportPdf}>
+          <Button
+            variant="outline"
+            onClick={exportPdf}
+            className="font-semibold"
+          >
             <Download className="w-4 h-4 mr-2" /> PDF
           </Button>
-          <Button onClick={() => handleOpenDialog()}>
-            <Plus className="w-4 h-4 mr-2" /> Add Merchant
+          <Button onClick={() => handleOpenDialog()} className="font-bold">
+            <Plus className="w-4 h-4 mr-2" /> Adicionar Lojista
           </Button>
         </div>
       </div>
 
-      <div className="rounded-md border bg-card overflow-hidden">
+      <div className="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
         <Table>
-          <TableHeader>
+          <TableHeader className="bg-slate-50">
             <TableRow>
-              <TableHead>Store Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Location</TableHead>
-              {!franchiseId && <TableHead>Affiliation</TableHead>}
-              <TableHead>Status</TableHead>
-              <TableHead>Credentials</TableHead>
-              <TableHead className="text-right">Action</TableHead>
+              <TableHead className="font-semibold text-slate-700">
+                Nome da Loja
+              </TableHead>
+              <TableHead className="font-semibold text-slate-700">
+                E-mail
+              </TableHead>
+              <TableHead className="font-semibold text-slate-700">
+                Localização
+              </TableHead>
+              {!franchiseId && (
+                <TableHead className="font-semibold text-slate-700">
+                  Afiliação
+                </TableHead>
+              )}
+              <TableHead className="font-semibold text-slate-700">
+                Status
+              </TableHead>
+              <TableHead className="font-semibold text-slate-700">
+                Credenciais
+              </TableHead>
+              <TableHead className="font-semibold text-slate-700 text-right">
+                Ações
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {displayCompanies.map((c) => {
               const isSent = c.credentialsSent || c.status === 'active'
               return (
-                <TableRow key={c.id}>
-                  <TableCell className="font-medium">{c.name}</TableCell>
-                  <TableCell>{c.email}</TableCell>
-                  <TableCell>{c.region}</TableCell>
+                <TableRow key={c.id} className="hover:bg-slate-50/80">
+                  <TableCell className="font-bold text-slate-800">
+                    {c.name}
+                  </TableCell>
+                  <TableCell className="text-slate-600 font-medium">
+                    {c.email}
+                  </TableCell>
+                  <TableCell className="text-slate-600">{c.region}</TableCell>
                   {!franchiseId && (
                     <TableCell>
-                      <Badge variant="outline">
+                      <Badge
+                        variant="outline"
+                        className="bg-slate-100 text-slate-700"
+                      >
                         {getFranchiseName(c.franchiseId)}
                       </Badge>
                     </TableCell>
@@ -181,8 +214,16 @@ export function MerchantsTab({ franchiseId }: { franchiseId?: string }) {
                             ? 'secondary'
                             : 'destructive'
                       }
+                      className={cn(
+                        c.status === 'active' && 'bg-emerald-500',
+                        'capitalize',
+                      )}
                     >
-                      {c.status}
+                      {c.status === 'active'
+                        ? 'Ativo'
+                        : c.status === 'pending'
+                          ? 'Pendente'
+                          : 'Inativo'}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -191,19 +232,19 @@ export function MerchantsTab({ franchiseId }: { franchiseId?: string }) {
                         variant={isSent ? 'default' : 'secondary'}
                         className={
                           isSent
-                            ? 'bg-green-500 hover:bg-green-600'
-                            : 'text-slate-600'
+                            ? 'bg-blue-500 hover:bg-blue-600 text-white'
+                            : 'bg-slate-100 text-slate-600'
                         }
                       >
-                        {isSent ? 'Sent' : 'Pending'}
+                        {isSent ? 'Enviado' : 'Pendente'}
                       </Badge>
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-6 px-2 text-xs text-blue-600 hover:text-blue-700 font-medium"
+                        className="h-6 px-2 text-xs text-primary hover:text-primary/80 font-bold hover:bg-primary/10"
                         onClick={() => handleSendCredentials(c)}
                       >
-                        {isSent ? 'Resend' : 'Send'}
+                        {isSent ? 'Reenviar' : 'Enviar'}
                       </Button>
                     </div>
                   </TableCell>
@@ -212,6 +253,7 @@ export function MerchantsTab({ franchiseId }: { franchiseId?: string }) {
                       variant="ghost"
                       size="icon"
                       onClick={() => handleOpenDialog(c)}
+                      className="text-slate-500 hover:text-primary hover:bg-primary/5"
                     >
                       <Edit2 className="h-4 w-4" />
                     </Button>
@@ -219,7 +261,7 @@ export function MerchantsTab({ franchiseId }: { franchiseId?: string }) {
                       variant="ghost"
                       size="icon"
                       onClick={() => deleteCompany(c.id)}
-                      className="text-destructive"
+                      className="text-red-400 hover:text-red-600 hover:bg-red-50"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -227,6 +269,16 @@ export function MerchantsTab({ franchiseId }: { franchiseId?: string }) {
                 </TableRow>
               )
             })}
+            {displayCompanies.length === 0 && (
+              <TableRow>
+                <TableCell
+                  colSpan={franchiseId ? 6 : 7}
+                  className="text-center py-12 text-slate-500 font-medium"
+                >
+                  Nenhum lojista encontrado.
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </div>
