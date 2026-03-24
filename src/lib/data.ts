@@ -28,6 +28,7 @@ import {
   PartnerPolicy,
   PartnerInvoice,
   WebhookLog,
+  Booking,
 } from './types'
 
 export const getCategoryTranslationKey = (category: string): string => {
@@ -489,6 +490,7 @@ const generateCoupons = (): Coupon[] => {
       city: 'New York',
       storeName: 'Deal Voy NY HQ',
       targetAudience: 'all',
+      currency: 'USD',
     },
     {
       id: 'cpn_ny_f2',
@@ -512,6 +514,7 @@ const generateCoupons = (): Coupon[] => {
       city: 'New York',
       storeName: 'Deal Voy NY HQ',
       targetAudience: 'all',
+      currency: 'USD',
     },
     {
       id: 'cpn_ny_f3',
@@ -535,13 +538,14 @@ const generateCoupons = (): Coupon[] => {
       city: 'New York',
       storeName: 'Deal Voy NY HQ',
       targetAudience: 'all',
+      currency: 'USD',
     },
     {
       id: 'cpn_ny_m1',
       companyId: 'c_ny_1',
-      title: 'Morning Brew Deal',
-      description: 'Morning coffee special',
-      discount: '15% OFF',
+      title: 'Brooklyn Coffee Buy 1 Get 1',
+      description: 'Morning coffee special - Buy one coffee, get one free.',
+      discount: 'BOGO',
       category: 'Alimentação',
       distance: 1,
       expiryDate: '2025-12-31',
@@ -558,13 +562,14 @@ const generateCoupons = (): Coupon[] => {
       city: 'New York',
       storeName: 'Brooklyn Coffee',
       targetAudience: 'all',
+      currency: 'USD',
     },
     {
       id: 'cpn_ny_m2',
       companyId: 'c_ny_2',
-      title: 'Slice & Soda',
-      description: 'Pizza and soda combo',
-      discount: '$5.00 OFF',
+      title: 'Queens Pizza 20% Off',
+      description: 'Pizza and soda combo discount',
+      discount: '20% OFF',
       category: 'Alimentação',
       distance: 3,
       expiryDate: '2025-12-31',
@@ -581,6 +586,7 @@ const generateCoupons = (): Coupon[] => {
       city: 'New York',
       storeName: 'Queens Pizza',
       targetAudience: 'all',
+      currency: 'USD',
     },
     {
       id: 'cpn_ny_m3',
@@ -604,6 +610,7 @@ const generateCoupons = (): Coupon[] => {
       city: 'New York',
       storeName: 'Bronx Fitness',
       targetAudience: 'all',
+      currency: 'USD',
     },
   )
 
@@ -842,6 +849,27 @@ export const MOCK_USERS: User[] = [
     city: 'New York',
     phone: '+1 212 555-0199',
   },
+  {
+    id: 'u_shop_ny',
+    name: 'Brooklyn Coffee Admin',
+    email: 'ny_shop@dealvoy.com',
+    role: 'shopkeeper',
+    companyId: 'c_ny_1',
+    avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=male&seed=10',
+    country: 'USA',
+    state: 'New York',
+    city: 'Brooklyn',
+    phone: '+1 718 555-0101',
+  },
+  ...Array.from({ length: 12 }).map((_, i) => ({
+    id: `u_ny_lead_${i}`,
+    name: `NY Customer ${i + 1}`,
+    email: `customer${i + 1}@ny.com`,
+    role: 'user' as const,
+    country: 'USA',
+    state: 'New York',
+    city: 'Brooklyn',
+  })),
 ]
 
 export const MOCK_REWARDS: RewardItem[] = [
@@ -1006,21 +1034,34 @@ export const MOCK_CAR_RENTALS: CarRental[] = Array.from({ length: 15 }).map(
   }),
 )
 
-export const MOCK_VALIDATION_LOGS: ValidationLog[] = Array.from({
-  length: 20,
-}).map((_, i) => ({
-  id: `vl-${i}`,
-  couponId: `cpn-${(i % 5) + 1}`,
-  couponTitle: `Coupon Offer ${(i % 5) + 1}`,
-  customerName: `Customer ${i}`,
-  validatedAt: new Date(Date.now() - i * 3600000).toISOString(),
-  method: i % 2 === 0 ? 'qr' : 'manual',
-  shopkeeperId: 'u_shop',
-  companyId: `c${(i % 5) + 1}`,
-  userId: i % 3 === 0 ? 'u_user' : 'u_agency',
-  commissionAmount: 5.0,
-  cashbackAmount: 2.0,
-}))
+export const MOCK_VALIDATION_LOGS: ValidationLog[] = [
+  ...Array.from({ length: 20 }).map((_, i) => ({
+    id: `vl-${i}`,
+    couponId: `cpn-${(i % 5) + 1}`,
+    couponTitle: `Coupon Offer ${(i % 5) + 1}`,
+    customerName: `Customer ${i}`,
+    validatedAt: new Date(Date.now() - i * 3600000).toISOString(),
+    method: i % 2 === 0 ? ('qr' as const) : ('manual' as const),
+    shopkeeperId: 'u_shop',
+    companyId: `c${(i % 5) + 1}`,
+    userId: i % 3 === 0 ? 'u_user' : 'u_agency',
+    commissionAmount: 5.0,
+    cashbackAmount: 2.0,
+  })),
+  ...Array.from({ length: 15 }).map((_, i) => ({
+    id: `vl_ny_${i}`,
+    couponId: `cpn_ny_m1`,
+    couponTitle: 'Brooklyn Coffee Buy 1 Get 1',
+    customerName: `NY Customer ${i + 1}`,
+    validatedAt: new Date(Date.now() - i * 3600000 * 24).toISOString(),
+    method: i % 2 === 0 ? ('qr' as const) : ('manual' as const),
+    shopkeeperId: 'u_shop_ny',
+    companyId: 'c_ny_1',
+    userId: `u_ny_lead_${i}`,
+    commissionAmount: 2.5,
+    cashbackAmount: 0.5,
+  })),
+]
 
 export const MOCK_SYSTEM_LOGS: SystemLog[] = Array.from({ length: 15 }).map(
   (_, i) => ({
@@ -1315,3 +1356,47 @@ export const MOCK_WEBHOOK_LOGS: WebhookLog[] = [
     timestamp: new Date(Date.now() - 86400000).toISOString(),
   },
 ]
+
+export const MOCK_BOOKINGS: Booking[] = [
+  {
+    id: 'b1',
+    couponId: 'h1',
+    storeName: 'Family Resorts',
+    date: '2025-05-10',
+    time: '14:00',
+    guests: 4,
+    status: 'confirmed',
+    userId: 'u_user',
+    userName: 'End User',
+    source: 'partner',
+    requiresPrivacy: true,
+    type: 'hotel',
+  },
+  {
+    id: 'b2',
+    couponId: 'a2',
+    storeName: 'MASP',
+    date: '2025-06-15',
+    time: '10:00',
+    guests: 2,
+    status: 'pending',
+    userId: 'u_user',
+    userName: 'End User',
+    source: 'organic',
+    type: 'ticket',
+  },
+  ...Array.from({ length: 5 }).map((_, i) => ({
+    id: `b_ny_${i}`,
+    couponId: `cpn_ny_m1`,
+    storeName: 'Brooklyn Coffee',
+    date: new Date(Date.now() - i * 86400000).toISOString().split('T')[0],
+    time: '09:00',
+    guests: 1,
+    status: 'confirmed' as const,
+    userId: `u_ny_lead_${i}`,
+    userName: `NY Customer ${i + 1}`,
+    source: 'partner' as const,
+    type: 'general' as const,
+  })),
+]
+
