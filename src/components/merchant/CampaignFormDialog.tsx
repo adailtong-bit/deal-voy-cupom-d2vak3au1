@@ -20,77 +20,73 @@ import {
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { useCouponStore } from '@/stores/CouponContext'
 import { ImagePlus } from 'lucide-react'
 
+const STORE_LOCATIONS = [
+  'Matriz - Centro',
+  'Filial - Zona Sul',
+  'Filial - Zona Norte',
+  'Shopping Cidade',
+  'Unidade Express',
+]
+
 const formSchema = z
   .object({
-    title: z.string().min(3, 'Nome muito curto'),
-    description: z.string().min(10, 'Descrição muito curta'),
+    title: z.string().min(3, 'Campo obrigatório. Mínimo de 3 caracteres.'),
+    description: z
+      .string()
+      .min(10, 'Campo obrigatório. Mínimo de 10 caracteres.'),
     image: z.string().optional(),
+    companyUrl: z
+      .string()
+      .url('Insira uma URL válida (ex: https://site.com)')
+      .or(z.literal(''))
+      .optional(),
     scope: z.enum(['network', 'specific']),
     specificStore: z.string().optional(),
     discountType: z.enum(['percentage', 'fixed_spend']),
     discountPercentage: z.string().optional(),
     minSpend: z.string().optional(),
     fixedDiscount: z.string().optional(),
-    startDate: z.string().min(1, 'Data inicial obrigatória'),
-    endDate: z.string().min(1, 'Data final obrigatória'),
-    totalLimit: z.coerce.number().min(1, 'O limite deve ser maior que zero'),
+    startDate: z.string().min(1, 'Campo obrigatório.'),
+    endDate: z.string().min(1, 'Campo obrigatório.'),
+    totalLimit: z.coerce.number().min(1, 'O limite deve ser maior que zero.'),
   })
   .refine((data) => new Date(data.endDate) >= new Date(data.startDate), {
     message: 'A data final deve ser posterior ou igual à inicial',
     path: ['endDate'],
   })
   .refine(
-    (data) => {
-      if (data.scope === 'specific') {
-        return !!data.specificStore && data.specificStore.trim().length > 0
-      }
-      return true
-    },
-    {
-      message: 'Informe a loja específica',
-      path: ['specificStore'],
-    },
+    (data) =>
+      data.scope !== 'specific' ||
+      (!!data.specificStore && data.specificStore.trim().length > 0),
+    { message: 'Selecione uma loja específica', path: ['specificStore'] },
   )
   .refine(
-    (data) => {
-      if (data.discountType === 'percentage') {
-        return (
-          !!data.discountPercentage && data.discountPercentage.trim().length > 0
-        )
-      }
-      return true
-    },
-    {
-      message: 'Informe a porcentagem de desconto',
-      path: ['discountPercentage'],
-    },
+    (data) =>
+      data.discountType !== 'percentage' ||
+      (!!data.discountPercentage && data.discountPercentage.trim().length > 0),
+    { message: 'Valor inválido', path: ['discountPercentage'] },
   )
   .refine(
-    (data) => {
-      if (data.discountType === 'fixed_spend') {
-        return !!data.minSpend && data.minSpend.trim().length > 0
-      }
-      return true
-    },
-    {
-      message: 'Informe o valor mínimo de compra',
-      path: ['minSpend'],
-    },
+    (data) =>
+      data.discountType !== 'fixed_spend' ||
+      (!!data.minSpend && data.minSpend.trim().length > 0),
+    { message: 'Valor inválido', path: ['minSpend'] },
   )
   .refine(
-    (data) => {
-      if (data.discountType === 'fixed_spend') {
-        return !!data.fixedDiscount && data.fixedDiscount.trim().length > 0
-      }
-      return true
-    },
-    {
-      message: 'Informe o valor de desconto',
-      path: ['fixedDiscount'],
-    },
+    (data) =>
+      data.discountType !== 'fixed_spend' ||
+      (!!data.fixedDiscount && data.fixedDiscount.trim().length > 0),
+    { message: 'Valor inválido', path: ['fixedDiscount'] },
   )
 
 type FormData = z.infer<typeof formSchema>
@@ -100,25 +96,50 @@ function parseDiscountString(discountStr: string) {
     return { type: 'percentage', percentage: '', minSpend: '', fixed: '' }
 
   if (discountStr.toLowerCase().includes('gaste')) {
-    const numbers = discountStr.match(/(\d+)/g)
-    if (numbers && numbers.length >= 2) {
+    const parts = discountStr.toLowerCase().split('ganhe')
+    if (parts.length >= 2) {
+      const minSpendMatch = parts[0].match(/R\$\s*[\d.,]+/i)
+      const fixedMatch = parts[1].match(/R\$\s*[\d.,]+/i)
       return {
         type: 'fixed_spend',
         percentage: '',
-        minSpend: numbers[0],
-        fixed: numbers[1],
+        minSpend: minSpendMatch ? minSpendMatch[0].toUpperCase() : '',
+        fixed: fixedMatch ? fixedMatch[0].toUpperCase() : '',
       }
     }
   }
 
-  const match = discountStr.match(/(\d+)/)
+  const match = discountStr.match(/(\d+)%/)
   return {
     type: 'percentage',
-    percentage: match ? match[1] : '',
+    percentage: match ? `${match[1]}%` : '',
     minSpend: '',
     fixed: '',
   }
 }
+
+const CurrencyInput = ({ field, label, placeholder }: any) => (
+  <FormItem>
+    <FormLabel>{label}</FormLabel>
+    <FormControl>
+      <Input
+        placeholder={placeholder}
+        {...field}
+        onChange={(e) => {
+          const raw = e.target.value.replace(/\D/g, '')
+          if (!raw) return field.onChange('')
+          field.onChange(
+            new Intl.NumberFormat('pt-BR', {
+              style: 'currency',
+              currency: 'BRL',
+            }).format(parseFloat(raw) / 100),
+          )
+        }}
+      />
+    </FormControl>
+    <FormMessage />
+  </FormItem>
+)
 
 export function CampaignFormDialog({
   open,
@@ -139,6 +160,7 @@ export function CampaignFormDialog({
       title: '',
       description: '',
       image: '',
+      companyUrl: '',
       scope: 'network',
       specificStore: '',
       discountType: 'percentage',
@@ -161,6 +183,7 @@ export function CampaignFormDialog({
         title: coupon.title,
         description: coupon.description,
         image: coupon.image || '',
+        companyUrl: coupon.externalUrl || '',
         scope: coupon.address ? 'specific' : 'network',
         specificStore: coupon.address || '',
         discountType: pd.type as any,
@@ -174,30 +197,15 @@ export function CampaignFormDialog({
         totalLimit: coupon.totalLimit || coupon.totalAvailable || 100,
       })
     } else if (open) {
-      form.reset({
-        title: '',
-        description: '',
-        image: '',
-        scope: 'network',
-        specificStore: '',
-        discountType: 'percentage',
-        discountPercentage: '',
-        minSpend: '',
-        fixedDiscount: '',
-        startDate: new Date().toISOString().split('T')[0],
-        endDate: new Date(Date.now() + 30 * 86400000)
-          .toISOString()
-          .split('T')[0],
-        totalLimit: 100,
-      })
+      form.reset()
     }
   }, [coupon, open, form])
 
   const onSubmit = (data: FormData) => {
     const formattedDiscount =
       data.discountType === 'percentage'
-        ? `${data.discountPercentage}% OFF`
-        : `Gaste R$${data.minSpend}, ganhe R$${data.fixedDiscount} OFF`
+        ? `${data.discountPercentage} OFF`
+        : `Gaste ${data.minSpend}, ganhe ${data.fixedDiscount} OFF`
 
     if (coupon) {
       updateCampaign(coupon.id, {
@@ -205,6 +213,7 @@ export function CampaignFormDialog({
         description: data.description,
         discount: formattedDiscount,
         image: data.image || coupon.image,
+        externalUrl: data.companyUrl || coupon.externalUrl,
         address: data.scope === 'specific' ? data.specificStore : '',
         startDate: data.startDate,
         endDate: data.endDate,
@@ -227,6 +236,7 @@ export function CampaignFormDialog({
         description: data.description,
         discount: formattedDiscount,
         image: data.image || 'https://img.usecurling.com/p/400/300?q=sale',
+        externalUrl: data.companyUrl,
         address: data.scope === 'specific' ? data.specificStore : '',
         startDate: data.startDate,
         endDate: data.endDate,
@@ -258,9 +268,6 @@ export function CampaignFormDialog({
             className="space-y-6 pt-2"
           >
             <div className="space-y-4">
-              <h3 className="text-sm font-medium text-slate-500 uppercase tracking-wider">
-                Detalhes Básicos
-              </h3>
               <FormField
                 control={form.control}
                 name="title"
@@ -269,7 +276,7 @@ export function CampaignFormDialog({
                     <FormLabel>Nome da Campanha</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Ex: Oferta Especial de Verão"
+                        placeholder="Digite o nome da campanha"
                         {...field}
                       />
                     </FormControl>
@@ -284,8 +291,30 @@ export function CampaignFormDialog({
                   <FormItem>
                     <FormLabel>Descrição</FormLabel>
                     <FormControl>
-                      <Input placeholder="Detalhes da oferta..." {...field} />
+                      <Input
+                        placeholder="Descreva os detalhes da oferta"
+                        {...field}
+                      />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="companyUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>URL da Empresa</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="https://suaempresa.com.br"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Link do site ou rede social da loja (opcional).
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -330,10 +359,7 @@ export function CampaignFormDialog({
                         )}
                       </div>
                     </FormControl>
-                    <FormDescription>
-                      Faça o upload de uma imagem específica para esta campanha,
-                      separada do logo da empresa.
-                    </FormDescription>
+                    <FormDescription>Selecione uma imagem.</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -341,16 +367,12 @@ export function CampaignFormDialog({
             </div>
 
             <div className="space-y-4 pt-4 border-t">
-              <h3 className="text-sm font-medium text-slate-500 uppercase tracking-wider">
-                Abrangência & Desconto
-              </h3>
-
               <FormField
                 control={form.control}
                 name="scope"
                 render={({ field }) => (
                   <FormItem className="space-y-3">
-                    <FormLabel>Abrangência da Campanha</FormLabel>
+                    <FormLabel>Abrangência</FormLabel>
                     <FormControl>
                       <RadioGroup
                         onValueChange={field.onChange}
@@ -386,10 +408,24 @@ export function CampaignFormDialog({
                   name="specificStore"
                   render={({ field }) => (
                     <FormItem className="animate-in fade-in slide-in-from-top-2">
-                      <FormLabel>Nome ou Endereço da Loja</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Ex: Unidade Centro..." {...field} />
-                      </FormControl>
+                      <FormLabel>Selecione a Loja</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione uma loja" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {STORE_LOCATIONS.map((store) => (
+                            <SelectItem key={store} value={store}>
+                              {store}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -421,7 +457,7 @@ export function CampaignFormDialog({
                             <RadioGroupItem value="percentage" />
                           </FormControl>
                           <FormLabel className="font-semibold cursor-pointer">
-                            Porcentagem
+                            Percentual
                           </FormLabel>
                         </FormItem>
                         <FormItem className="flex items-center space-x-2 space-y-0">
@@ -429,7 +465,7 @@ export function CampaignFormDialog({
                             <RadioGroupItem value="fixed_spend" />
                           </FormControl>
                           <FormLabel className="font-semibold cursor-pointer">
-                            Valor com Compra Mínima (Gate)
+                            Valor Fixo (Gaste e Ganhe)
                           </FormLabel>
                         </FormItem>
                       </RadioGroup>
@@ -445,13 +481,18 @@ export function CampaignFormDialog({
                   name="discountPercentage"
                   render={({ field }) => (
                     <FormItem className="animate-in fade-in slide-in-from-top-2 p-4 border rounded-lg bg-white">
-                      <FormLabel>Porcentagem de Desconto (%)</FormLabel>
+                      <FormLabel>% de Desconto</FormLabel>
                       <FormControl>
                         <Input
-                          type="number"
-                          placeholder="Ex: 15"
+                          placeholder="0%"
                           className="w-full sm:w-1/2"
                           {...field}
+                          onChange={(e) => {
+                            let raw = e.target.value.replace(/\D/g, '')
+                            if (!raw) return field.onChange('')
+                            if (parseInt(raw) > 100) raw = '100'
+                            field.onChange(`${raw}%`)
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -466,34 +507,22 @@ export function CampaignFormDialog({
                     control={form.control}
                     name="minSpend"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Valor Mínimo (Gaste R$)</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            placeholder="Ex: 100"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
+                      <CurrencyInput
+                        field={field}
+                        label="Gaste (Valor Mínimo)"
+                        placeholder="R$ 0,00"
+                      />
                     )}
                   />
                   <FormField
                     control={form.control}
                     name="fixedDiscount"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Desconto Fixo (Ganhe R$)</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            placeholder="Ex: 20"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
+                      <CurrencyInput
+                        field={field}
+                        label="Ganhe (Valor do Desconto)"
+                        placeholder="R$ 0,00"
+                      />
                     )}
                   />
                 </div>
@@ -501,9 +530,6 @@ export function CampaignFormDialog({
             </div>
 
             <div className="space-y-4 pt-4 border-t">
-              <h3 className="text-sm font-medium text-slate-500 uppercase tracking-wider">
-                Limites & Prazos
-              </h3>
               <FormField
                 control={form.control}
                 name="totalLimit"
@@ -555,7 +581,9 @@ export function CampaignFormDialog({
               >
                 Cancelar
               </Button>
-              <Button type="submit">Salvar Campanha</Button>
+              <Button type="submit">
+                {coupon ? 'Salvar Alterações' : 'Criar Campanha'}
+              </Button>
             </div>
           </form>
         </Form>
