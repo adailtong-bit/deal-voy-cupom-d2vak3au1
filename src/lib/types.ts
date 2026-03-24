@@ -104,7 +104,7 @@ export interface Coupon {
   lastVerified?: string
   upvotes?: number
   downvotes?: number
-  status?: 'active' | 'expired' | 'issue' | 'used'
+  status?: 'active' | 'expired' | 'issue' | 'used' | 'paused'
   acceptsBooking?: boolean
   price?: number
   currency?: string
@@ -756,3 +756,4 @@ export interface WebhookLog {
   status: number
   timestamp: string
 }
+
