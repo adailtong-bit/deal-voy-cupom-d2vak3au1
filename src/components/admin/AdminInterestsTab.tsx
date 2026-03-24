@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/table'
 import { Plus, Trash2, Edit2, Check, X, Tag } from 'lucide-react'
 
-export function AdminInterestsTab() {
+export function AdminInterestsTab({ franchiseId }: { franchiseId?: string }) {
   const { platformSettings, updatePlatformSettings } = useCouponStore()
 
   const interests = platformSettings.availableInterests || []

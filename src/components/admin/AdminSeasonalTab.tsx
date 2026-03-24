@@ -57,7 +57,7 @@ import {
 } from '@/components/ui/chart'
 import { BarChart, CartesianGrid, XAxis, YAxis, Bar } from 'recharts'
 
-export function AdminSeasonalTab() {
+export function AdminSeasonalTab({ franchiseId }: { franchiseId?: string }) {
   const { t, formatCurrency, formatDate } = useLanguage()
   const {
     seasonalEvents,
@@ -67,6 +67,22 @@ export function AdminSeasonalTab() {
     deleteSeasonalEvent,
     renewSeasonalCampaign,
   } = useCouponStore()
+
+  const displayCompanies = franchiseId
+    ? companies.filter((c) => c.franchiseId === franchiseId)
+    : companies
+  const companyIds = displayCompanies.map((c) => c.id)
+
+  const activeEvents = seasonalEvents.filter((e) => {
+    if (e.status === 'archived') return false
+    if (franchiseId) {
+      return (
+        e.franchiseId === franchiseId ||
+        (e.companyId && companyIds.includes(e.companyId))
+      )
+    }
+    return true
+  })
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingEvent, setEditingEvent] = useState<SeasonalEvent | null>(null)
@@ -150,6 +166,7 @@ export function AdminSeasonalTab() {
       addSeasonalEvent({
         ...(formData as SeasonalEvent),
         id: Math.random().toString(),
+        franchiseId,
         startDate: startIso,
         endDate: endIso,
         image: mainImage,
@@ -163,10 +180,8 @@ export function AdminSeasonalTab() {
 
   const getCompanyName = (id?: string) => {
     if (!id || id === 'none') return '-'
-    return companies.find((c) => c.id === id)?.name || id
+    return displayCompanies.find((c) => c.id === id)?.name || id
   }
-
-  const activeEvents = seasonalEvents.filter((e) => e.status !== 'archived')
 
   const chartData = activeEvents.map((e) => ({
     name: e.title.length > 15 ? e.title.substring(0, 15) + '...' : e.title,
@@ -469,7 +484,7 @@ export function AdminSeasonalTab() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">{t('common.none')}</SelectItem>
-                    {companies.map((c) => (
+                    {displayCompanies.map((c) => (
                       <SelectItem key={c.id} value={c.id}>
                         {c.name}
                       </SelectItem>

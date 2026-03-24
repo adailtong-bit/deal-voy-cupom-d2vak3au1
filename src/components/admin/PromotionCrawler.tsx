@@ -11,15 +11,16 @@ import { Globe, Box } from 'lucide-react'
 import { CrawlerSourcesTab } from './CrawlerSourcesTab'
 import { CrawlerPromotionsTab } from './CrawlerPromotionsTab'
 
-export function PromotionCrawler() {
+export function PromotionCrawler({ franchiseId }: { franchiseId?: string }) {
   const { user, discoveredPromotions } = useCouponStore()
 
-  const isFranchisee = user?.role === 'franchisee'
-
-  const pendingPromotionsCount = discoveredPromotions.filter(
-    (p) =>
-      p.status === 'pending' && (!isFranchisee || p.region === user?.region),
-  ).length
+  const pendingPromotionsCount = discoveredPromotions.filter((p) => {
+    if (p.status !== 'pending') return false
+    if (franchiseId) {
+      return p.franchiseId === franchiseId || p.region === user?.region
+    }
+    return true
+  }).length
 
   return (
     <div className="space-y-6">

@@ -13,6 +13,19 @@ import {
   Ticket,
   Mail,
   Phone,
+  Wallet,
+  FileText,
+  CalendarDays,
+  LayoutGrid,
+  Tag,
+  Shield,
+  Target,
+  Globe,
+  BarChart3,
+  Box,
+  UsersRound,
+  Menu,
+  X,
 } from 'lucide-react'
 import {
   Card,
@@ -32,11 +45,24 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Button } from '@/components/ui/button'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
 
 import { MerchantsTab } from '@/components/admin/hierarchy/MerchantsTab'
 import { FranchiseeAdsTab } from '@/components/franchisee/FranchiseeAdsTab'
+import { FranchiseeCurrentAccountTab } from '@/components/franchisee/FranchiseeCurrentAccountTab'
+import { PartnerBillingTab } from '@/components/admin/PartnerBillingTab'
+import { AdminMonetizationTab } from '@/components/admin/AdminMonetizationTab'
+import { AdminSeasonalTab } from '@/components/admin/AdminSeasonalTab'
+import { AdminCategoriesTab } from '@/components/admin/AdminCategoriesTab'
+import { AdminInterestsTab } from '@/components/admin/AdminInterestsTab'
+import { PartnerPoliciesTab } from '@/components/admin/PartnerPoliciesTab'
+import { AdminCRM } from '@/components/admin/AdminCRM'
+import { PromotionCrawler } from '@/components/admin/PromotionCrawler'
+import { DataInsightsTab } from '@/components/admin/DataInsightsTab'
+import { TestingSandboxTab } from '@/components/admin/TestingSandboxTab'
+import { StaffTab } from '@/components/admin/hierarchy/StaffTab'
 
 export default function FranchiseeDashboard() {
   const {
@@ -51,11 +77,12 @@ export default function FranchiseeDashboard() {
   } = useCouponStore()
   const { formatCurrency, formatDate } = useLanguage()
   const [activeTab, setActiveTab] = useState('overview')
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const myFranchise =
     franchises.find((f) => f.ownerId === user?.id) || franchises[0]
 
-  // --- Data Calculations ---
+  // --- Data Calculations for Overview & Leads ---
   const franchiseCompanies = useMemo(
     () =>
       myFranchise
@@ -142,13 +169,54 @@ export default function FranchiseeDashboard() {
   )
   const totalRoyalties = adRevenue * (royaltyRate / 100)
 
-  // --- Navigation ---
-  const navItems = [
-    { id: 'overview', label: 'Visão Geral', icon: LayoutDashboard },
-    { id: 'merchants', label: 'Lojistas Afiliados', icon: Store },
-    { id: 'campaigns-leads', label: 'Campanhas e Leads', icon: Megaphone },
-    { id: 'ads', label: 'Publicidade e Royalties', icon: DollarSign },
-    { id: 'settings', label: 'Configurações', icon: Settings },
+  // --- Navigation Structure ---
+  const menuGroups = [
+    {
+      title: 'Principal',
+      items: [
+        { id: 'overview', label: 'Visão Geral', icon: LayoutDashboard },
+        { id: 'merchants', label: 'Lojistas Afiliados', icon: Store },
+      ],
+    },
+    {
+      title: 'Financeiro',
+      items: [
+        { id: 'current-account', label: 'Conta Corrente', icon: Wallet },
+        { id: 'billing', label: 'Faturamento', icon: FileText },
+        { id: 'monetization', label: 'Monetização', icon: DollarSign },
+        {
+          id: 'ads-royalties',
+          label: 'Publicidade & Royalties',
+          icon: Megaphone,
+        },
+      ],
+    },
+    {
+      title: 'Operacional',
+      items: [
+        { id: 'seasonal', label: 'Ofertas Sazonais', icon: CalendarDays },
+        { id: 'categories', label: 'Categorias', icon: LayoutGrid },
+        { id: 'interests', label: 'Interesses', icon: Tag },
+        { id: 'policies', label: 'Políticas de Parceiros', icon: Shield },
+      ],
+    },
+    {
+      title: 'Inteligência',
+      items: [
+        { id: 'crm', label: 'CRM', icon: Users },
+        { id: 'leads', label: 'Leads Capturados', icon: Target },
+        { id: 'crawler', label: 'Crawler de Ofertas', icon: Globe },
+        { id: 'insights', label: 'Data Insights', icon: BarChart3 },
+      ],
+    },
+    {
+      title: 'Apoio & Configurações',
+      items: [
+        { id: 'sandbox', label: 'Testing Sandbox', icon: Box },
+        { id: 'team', label: 'Equipe Local', icon: UsersRound },
+        { id: 'settings', label: 'Configurações', icon: Settings },
+      ],
+    },
   ]
 
   // --- Render Helpers ---
@@ -229,170 +297,96 @@ export default function FranchiseeDashboard() {
     </div>
   )
 
-  const renderCampaignsAndLeads = () => (
+  const renderLeads = () => (
     <div className="space-y-6 animate-fade-in-up">
       <div>
-        <h2 className="text-2xl font-bold text-slate-800">Campanhas e Leads</h2>
+        <h2 className="text-2xl font-bold text-slate-800">Leads Regionais</h2>
         <p className="text-muted-foreground">
-          Acompanhe o desempenho das ofertas dos seus lojistas e os clientes
-          capturados.
+          Clientes que interagiram com ofertas dos seus lojistas.
         </p>
       </div>
-
-      <Tabs defaultValue="campaigns" className="w-full">
-        <TabsList className="mb-4">
-          <TabsTrigger value="campaigns" className="font-semibold">
-            Ofertas Regionais
-          </TabsTrigger>
-          <TabsTrigger value="leads" className="font-semibold">
-            Leads Capturados
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="campaigns">
-          <Card className="shadow-sm">
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader className="bg-slate-50">
-                  <TableRow>
-                    <TableHead>Campanha</TableHead>
-                    <TableHead>Lojista</TableHead>
-                    <TableHead>Benefício</TableHead>
-                    <TableHead>Resgates / Limite</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {franchiseCoupons.map((c) => (
-                    <TableRow key={c.id}>
-                      <TableCell className="font-medium">{c.title}</TableCell>
-                      <TableCell>
-                        {companies.find((comp) => comp.id === c.companyId)
-                          ?.name || 'N/A'}
-                      </TableCell>
-                      <TableCell className="font-bold text-primary">
-                        {c.discount}
-                      </TableCell>
-                      <TableCell className="text-slate-600">
-                        {c.reservedCount || 0} / {c.totalAvailable || '∞'}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={
-                            c.status === 'active' ? 'default' : 'secondary'
-                          }
-                          className={cn(
-                            c.status === 'active' && 'bg-emerald-500',
-                          )}
-                        >
-                          {c.status === 'active' ? 'Ativa' : 'Inativa'}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {franchiseCoupons.length === 0 && (
-                    <TableRow>
-                      <TableCell
-                        colSpan={5}
-                        className="text-center py-8 text-slate-500"
-                      >
-                        Nenhuma campanha encontrada na região.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="leads">
-          <Card className="shadow-sm">
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader className="bg-slate-50">
-                  <TableRow>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Contato</TableHead>
-                    <TableHead>Campanha Utilizada</TableHead>
-                    <TableHead>Lojista</TableHead>
-                    <TableHead>Data</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {leadsList.map((lead) => (
-                    <TableRow key={lead.id}>
-                      <TableCell className="font-medium text-slate-900">
-                        {lead.customerName}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col gap-1 text-sm text-slate-600">
-                          {lead.email !== 'N/A' && (
-                            <span className="flex items-center gap-1.5">
-                              <Mail className="h-3 w-3 text-slate-400" />{' '}
-                              {lead.email}
-                            </span>
-                          )}
-                          {lead.phone !== 'N/A' && (
-                            <span className="flex items-center gap-1.5">
-                              <Phone className="h-3 w-3 text-slate-400" />{' '}
-                              {lead.phone}
-                            </span>
-                          )}
-                          {lead.email === 'N/A' && lead.phone === 'N/A' && (
-                            <span className="text-slate-400 italic">
-                              Não informado
-                            </span>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="bg-slate-50">
-                          {lead.campaignName}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-slate-700 font-medium">
-                        {lead.storeName}
-                      </TableCell>
-                      <TableCell className="text-slate-500 text-sm whitespace-nowrap">
-                        {formatDate(lead.acquiredAt)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {leadsList.length === 0 && (
-                    <TableRow>
-                      <TableCell
-                        colSpan={5}
-                        className="text-center py-8 text-slate-500"
-                      >
-                        Nenhum lead capturado ainda.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+      <Card className="shadow-sm">
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader className="bg-slate-50">
+              <TableRow>
+                <TableHead>Cliente</TableHead>
+                <TableHead>Contato</TableHead>
+                <TableHead>Campanha Utilizada</TableHead>
+                <TableHead>Lojista</TableHead>
+                <TableHead>Data</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {leadsList.map((lead) => (
+                <TableRow key={lead.id}>
+                  <TableCell className="font-medium text-slate-900">
+                    {lead.customerName}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-col gap-1 text-sm text-slate-600">
+                      {lead.email !== 'N/A' && (
+                        <span className="flex items-center gap-1.5">
+                          <Mail className="h-3 w-3 text-slate-400" />{' '}
+                          {lead.email}
+                        </span>
+                      )}
+                      {lead.phone !== 'N/A' && (
+                        <span className="flex items-center gap-1.5">
+                          <Phone className="h-3 w-3 text-slate-400" />{' '}
+                          {lead.phone}
+                        </span>
+                      )}
+                      {lead.email === 'N/A' && lead.phone === 'N/A' && (
+                        <span className="text-slate-400 italic">
+                          Não informado
+                        </span>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className="bg-slate-50">
+                      {lead.campaignName}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-slate-700 font-medium">
+                    {lead.storeName}
+                  </TableCell>
+                  <TableCell className="text-slate-500 text-sm whitespace-nowrap">
+                    {formatDate(lead.acquiredAt)}
+                  </TableCell>
+                </TableRow>
+              ))}
+              {leadsList.length === 0 && (
+                <TableRow>
+                  <TableCell
+                    colSpan={5}
+                    className="text-center py-8 text-slate-500"
+                  >
+                    Nenhum lead capturado ainda.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   )
 
   const renderSettings = () => (
     <div className="space-y-6 animate-fade-in-up">
       <div>
-        <h2 className="text-2xl font-bold text-slate-800">
-          Configurações da Franquia
-        </h2>
+        <h2 className="text-2xl font-bold text-slate-800">Configurações</h2>
         <p className="text-muted-foreground">
-          Ajustes regionais e obrigações contratuais.
+          Parâmetros operacionais da franquia.
         </p>
       </div>
       <Card className="max-w-2xl shadow-sm border-slate-200">
         <CardHeader className="bg-slate-50 border-b">
-          <CardTitle className="text-lg">Parâmetros Operacionais</CardTitle>
+          <CardTitle className="text-lg">Informações Contratuais</CardTitle>
           <CardDescription>
-            Configurações bloqueadas e geridas pelo Super Admin global.
+            Configurações gerenciadas pela rede Master.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-5 pt-6">
@@ -428,110 +422,156 @@ export default function FranchiseeDashboard() {
               />
             </div>
           </div>
-          <div className="bg-blue-50 text-blue-800 p-4 rounded-xl border border-blue-100 text-sm mt-4">
-            Em caso de dúvidas sobre faturamento ou alteração de região de
-            cobertura, entre em contato com o administrador da rede Deal Voy.
-          </div>
         </CardContent>
       </Card>
     </div>
   )
 
+  const handleTabChange = (id: string) => {
+    setActiveTab(id)
+    setIsMobileMenuOpen(false)
+  }
+
   return (
     <div className="flex flex-col md:flex-row min-h-[calc(100vh-4rem)] bg-slate-50/50">
-      {/* Sidebar (Desktop) */}
-      <aside className="hidden md:flex w-64 flex-col border-r bg-white min-h-[calc(100vh-4rem)] py-6 px-4 shrink-0 shadow-sm z-10">
-        <div className="mb-8 px-2">
+      {/* Mobile Header for Sidebar Toggle */}
+      <div className="md:hidden flex items-center justify-between bg-white border-b p-4 sticky top-0 z-40 shadow-sm">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+            <LayoutDashboard className="w-4 h-4 text-primary" />
+          </div>
+          <span className="font-bold text-slate-800">Franquia</span>
+        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        >
+          {isMobileMenuOpen ? (
+            <X className="h-6 w-6" />
+          ) : (
+            <Menu className="h-6 w-6" />
+          )}
+        </Button>
+      </div>
+
+      {/* Sidebar */}
+      <aside
+        className={cn(
+          'fixed inset-y-0 left-0 z-50 w-64 bg-white border-r shadow-lg transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 flex flex-col',
+          isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full',
+        )}
+      >
+        <div className="p-6 border-b flex-shrink-0">
           <h2 className="text-xl font-bold text-slate-800 tracking-tight">
-            Painel do Franqueado
+            Painel Regional
           </h2>
           <p className="text-sm font-medium text-primary mt-1 truncate">
             {myFranchise.name}
           </p>
         </div>
-        <nav className="flex flex-col gap-1.5 flex-1">
-          {navItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              className={cn(
-                'flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all text-left w-full',
-                activeTab === item.id
-                  ? 'bg-primary text-white shadow-md shadow-primary/20'
-                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
-              )}
-            >
-              <item.icon className="h-5 w-5 shrink-0" />
-              <span className="truncate">{item.label}</span>
-            </button>
-          ))}
-        </nav>
+
+        <ScrollArea className="flex-1 w-full">
+          <div className="p-4 space-y-6">
+            {menuGroups.map((group, idx) => (
+              <div key={idx} className="space-y-2">
+                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider px-2">
+                  {group.title}
+                </h4>
+                <nav className="space-y-1">
+                  {group.items.map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => handleTabChange(item.id)}
+                      className={cn(
+                        'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all w-full text-left',
+                        activeTab === item.id
+                          ? 'bg-primary/10 text-primary font-bold'
+                          : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900',
+                      )}
+                    >
+                      <item.icon
+                        className={cn(
+                          'h-4 w-4 shrink-0',
+                          activeTab === item.id
+                            ? 'text-primary'
+                            : 'text-slate-400',
+                        )}
+                      />
+                      <span className="truncate">{item.label}</span>
+                    </button>
+                  ))}
+                </nav>
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
       </aside>
+
+      {/* Mobile Overlay */}
+      {isMobileMenuOpen && (
+        <div
+          className="fixed inset-0 bg-slate-900/50 z-40 md:hidden"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
 
       {/* Main Content */}
       <main className="flex-1 w-full pb-20 md:pb-8 overflow-y-auto p-4 sm:p-6 lg:p-8">
         <div className="max-w-6xl mx-auto">
           {activeTab === 'overview' && renderOverview()}
           {activeTab === 'merchants' && (
-            <div className="animate-fade-in-up">
-              <h2 className="text-2xl font-bold text-slate-800 mb-1">
-                Lojistas Afiliados
-              </h2>
-              <p className="text-muted-foreground mb-6">
-                Gerencie todos os estabelecimentos vinculados à sua franquia.
-              </p>
-              <MerchantsTab franchiseId={myFranchise.id} />
-            </div>
+            <MerchantsTab franchiseId={myFranchise.id} />
           )}
-          {activeTab === 'campaigns-leads' && renderCampaignsAndLeads()}
-          {activeTab === 'ads' && (
-            <div className="animate-fade-in-up">
-              <h2 className="text-2xl font-bold text-slate-800 mb-1">
-                Publicidade e Royalties
-              </h2>
-              <p className="text-muted-foreground mb-6">
-                Gerencie campanhas regionais patrocinadas e visualize os
-                royalties devidos à rede.
-              </p>
-              <FranchiseeAdsTab franchiseId={myFranchise.id} />
-            </div>
+
+          {/* Financeiro */}
+          {activeTab === 'current-account' && (
+            <FranchiseeCurrentAccountTab franchiseId={myFranchise.id} />
+          )}
+          {activeTab === 'billing' && (
+            <PartnerBillingTab franchiseId={myFranchise.id} />
+          )}
+          {activeTab === 'monetization' && (
+            <AdminMonetizationTab franchiseId={myFranchise.id} />
+          )}
+          {activeTab === 'ads-royalties' && (
+            <FranchiseeAdsTab franchiseId={myFranchise.id} />
+          )}
+
+          {/* Operacional */}
+          {activeTab === 'seasonal' && (
+            <AdminSeasonalTab franchiseId={myFranchise.id} />
+          )}
+          {activeTab === 'categories' && (
+            <AdminCategoriesTab franchiseId={myFranchise.id} />
+          )}
+          {activeTab === 'interests' && (
+            <AdminInterestsTab franchiseId={myFranchise.id} />
+          )}
+          {activeTab === 'policies' && (
+            <PartnerPoliciesTab franchiseId={myFranchise.id} />
+          )}
+
+          {/* Inteligência */}
+          {activeTab === 'crm' && <AdminCRM franchiseId={myFranchise.id} />}
+          {activeTab === 'leads' && renderLeads()}
+          {activeTab === 'crawler' && (
+            <PromotionCrawler franchiseId={myFranchise.id} />
+          )}
+          {activeTab === 'insights' && (
+            <DataInsightsTab franchiseId={myFranchise.id} />
+          )}
+
+          {/* Apoio */}
+          {activeTab === 'sandbox' && (
+            <TestingSandboxTab franchiseId={myFranchise.id} />
+          )}
+          {activeTab === 'team' && (
+            <StaffTab parentType="franchise" parentId={myFranchise.id} />
           )}
           {activeTab === 'settings' && renderSettings()}
         </div>
       </main>
-
-      {/* Mobile Bottom Navigation */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 border-t bg-white z-50 px-2 py-2 flex justify-around items-center shadow-[0_-4px_20px_rgba(0,0,0,0.05)] pb-safe">
-        {navItems.map((item) => (
-          <button
-            key={item.id}
-            onClick={() => setActiveTab(item.id)}
-            className={cn(
-              'flex flex-col items-center justify-center gap-1.5 p-2 w-[70px] transition-colors',
-              activeTab === item.id
-                ? 'text-primary'
-                : 'text-slate-400 hover:text-slate-600',
-            )}
-          >
-            <div
-              className={cn(
-                'p-1.5 rounded-full transition-colors',
-                activeTab === item.id && 'bg-primary/10',
-              )}
-            >
-              <item.icon className="h-5 w-5" />
-            </div>
-            <span
-              className={cn(
-                'text-[9px] font-semibold text-center leading-tight truncate w-full',
-                activeTab === item.id ? 'text-primary' : 'text-slate-500',
-              )}
-            >
-              {item.label}
-            </span>
-          </button>
-        ))}
-      </div>
     </div>
   )
 }

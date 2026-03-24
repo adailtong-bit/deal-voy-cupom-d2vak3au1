@@ -3,37 +3,57 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useLanguage } from '@/stores/LanguageContext'
 import { DollarSign, Users, ShoppingCart, TrendingUp } from 'lucide-react'
 
-export function DataInsightsTab() {
-  const { validationLogs, users, adInvoices } = useCouponStore()
+export function DataInsightsTab({ franchiseId }: { franchiseId?: string }) {
+  const { validationLogs, users, adInvoices, companies } = useCouponStore()
   const { formatCurrency } = useLanguage()
 
+  const displayCompanies = franchiseId
+    ? companies.filter((c) => c.franchiseId === franchiseId)
+    : companies
+  const companyIds = displayCompanies.map((c) => c.id)
+
+  const displayLogs = franchiseId
+    ? validationLogs.filter(
+        (l) => l.companyId && companyIds.includes(l.companyId),
+      )
+    : validationLogs
+
+  const userIds = new Set(displayLogs.map((l) => l.userId))
+  const displayUsers = franchiseId
+    ? users.filter((u) => userIds.has(u.id))
+    : users
+
   // Calculate stats based on logs and users
-  const totalCommissions = validationLogs.reduce(
+  const totalCommissions = displayLogs.reduce(
     (sum, log) => sum + (log.commissionAmount || 0),
     0,
   )
-  const totalCashbackDistributed = validationLogs.reduce(
+  const totalCashbackDistributed = displayLogs.reduce(
     (sum, log) => sum + (log.cashbackAmount || 0),
     0,
   )
 
-  const activeSubscriptions = users.filter(
+  const activeSubscriptions = displayUsers.filter(
     (u) => u.subscriptionTier && u.subscriptionTier !== 'free',
   ).length
-  const premiumUsers = users.filter(
+  const premiumUsers = displayUsers.filter(
     (u) => u.subscriptionTier === 'premium',
   ).length
-  const vipUsers = users.filter((u) => u.subscriptionTier === 'vip').length
+  const vipUsers = displayUsers.filter(
+    (u) => u.subscriptionTier === 'vip',
+  ).length
 
-  const adRevenue = adInvoices
-    .filter((i) => i.status === 'paid')
-    .reduce((sum, i) => sum + i.amount, 0)
+  const displayInvoices = franchiseId
+    ? adInvoices.filter((i) => i.status === 'paid') // Ideally filter by franchise if adInvoices had it
+    : adInvoices.filter((i) => i.status === 'paid')
+
+  const adRevenue = displayInvoices.reduce((sum, i) => sum + i.amount, 0)
 
   // Mock referral payouts for demo
   const referralPayouts = totalCashbackDistributed * 0.15
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in-up">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-6">

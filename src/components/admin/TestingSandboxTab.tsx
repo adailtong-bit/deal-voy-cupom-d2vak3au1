@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { MapPin, User, Building, Store } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
 
-export function TestingSandboxTab() {
+export function TestingSandboxTab({ franchiseId }: { franchiseId?: string }) {
   const { t } = useLanguage()
 
   return (

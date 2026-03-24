@@ -29,7 +29,7 @@ import { Search, Users, Target, BarChart3, Download } from 'lucide-react'
 import { CATEGORIES } from '@/lib/data'
 import { useLanguage } from '@/stores/LanguageContext'
 
-export function AdminCRM() {
+export function AdminCRM({ franchiseId }: { franchiseId?: string }) {
   const { users, validationLogs, coupons, companies } = useCouponStore()
   const { formatDate } = useLanguage()
 
@@ -38,9 +38,25 @@ export function AdminCRM() {
   const [locationFilter, setLocationFilter] = useState('all')
   const [frequencyFilter, setFrequencyFilter] = useState('all')
 
+  const displayCompanies = franchiseId
+    ? companies.filter((c) => c.franchiseId === franchiseId)
+    : companies
+  const companyIds = displayCompanies.map((c) => c.id)
+
+  const displayLogs = franchiseId
+    ? validationLogs.filter(
+        (l) => l.companyId && companyIds.includes(l.companyId),
+      )
+    : validationLogs
+  const userIds = new Set(displayLogs.map((l) => l.userId))
+
+  const displayUsers = franchiseId
+    ? users.filter((u) => userIds.has(u.id))
+    : users
+
   const userStats = useMemo(() => {
-    return users.map((user) => {
-      const userLogs = validationLogs.filter((log) => log.userId === user.id)
+    return displayUsers.map((user) => {
+      const userLogs = displayLogs.filter((log) => log.userId === user.id)
       const usedCoupons = userLogs
         .map((log) => coupons.find((c) => c.id === log.couponId))
         .filter(Boolean)
@@ -56,7 +72,7 @@ export function AdminCRM() {
       const topCategory =
         Object.entries(categories).sort((a, b) => b[1] - a[1])[0]?.[0] || 'None'
 
-      const merchants = usedCoupons.reduce(
+      const merchantsCount = usedCoupons.reduce(
         (acc, c) => {
           const comp = companies.find((comp) => comp.id === c?.companyId)
           if (comp) acc[comp.name] = (acc[comp.name] || 0) + 1
@@ -66,7 +82,8 @@ export function AdminCRM() {
       )
 
       const topMerchant =
-        Object.entries(merchants).sort((a, b) => b[1] - a[1])[0]?.[0] || 'None'
+        Object.entries(merchantsCount).sort((a, b) => b[1] - a[1])[0]?.[0] ||
+        'None'
 
       const lastActiveLog = [...userLogs].sort(
         (a, b) =>
@@ -78,20 +95,20 @@ export function AdminCRM() {
         totalRedemptions: userLogs.length,
         topCategory,
         topMerchant,
-        merchantsVisited: Object.keys(merchants).length,
+        merchantsVisited: Object.keys(merchantsCount).length,
         lastActive: lastActiveLog ? lastActiveLog.validatedAt : null,
       }
     })
-  }, [users, validationLogs, coupons, companies])
+  }, [displayUsers, displayLogs, coupons, companies])
 
   const locations = useMemo(() => {
     const locs = new Set<string>()
-    users.forEach((u) => {
+    displayUsers.forEach((u) => {
       if (u.state) locs.add(u.state)
       if (u.region) locs.add(u.region)
     })
     return Array.from(locs).filter(Boolean).sort()
-  }, [users])
+  }, [displayUsers])
 
   const filteredUsers = userStats.filter((u) => {
     if (categoryFilter !== 'all' && u.topCategory !== categoryFilter)
@@ -160,13 +177,13 @@ export function AdminCRM() {
     document.body.removeChild(link)
   }
 
-  const totalRedemptions = validationLogs.length
+  const totalRedemptions = displayLogs.length
   const activeUsersCount = userStats.filter(
     (u) => u.totalRedemptions > 0,
   ).length
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in-up">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="border-l-4 border-l-blue-500">
           <CardContent className="p-4 flex items-center gap-4">
@@ -177,7 +194,7 @@ export function AdminCRM() {
               <p className="text-sm font-medium text-muted-foreground">
                 Total Users
               </p>
-              <h3 className="text-2xl font-bold">{users.length}</h3>
+              <h3 className="text-2xl font-bold">{displayUsers.length}</h3>
             </div>
           </CardContent>
         </Card>
@@ -222,7 +239,7 @@ export function AdminCRM() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Global CRM & Segmentation</CardTitle>
+          <CardTitle>CRM & Segmentation</CardTitle>
           <CardDescription>
             Filter users by behavior, location, and consumption frequency.
             Export data for marketing and sales.

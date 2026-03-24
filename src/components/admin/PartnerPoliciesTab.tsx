@@ -29,7 +29,7 @@ import { useLanguage } from '@/stores/LanguageContext'
 import { useCouponStore } from '@/stores/CouponContext'
 import { PartnerPolicy } from '@/lib/types'
 
-export function PartnerPoliciesTab() {
+export function PartnerPoliciesTab({ franchiseId }: { franchiseId?: string }) {
   const { t } = useLanguage()
   const {
     partnerPolicies,
@@ -37,6 +37,16 @@ export function PartnerPoliciesTab() {
     updatePartnerPolicy,
     deletePartnerPolicy,
   } = useCouponStore()
+
+  const displayCompanies = franchiseId
+    ? companies.filter((c) => c.franchiseId === franchiseId)
+    : companies
+  const companyIds = displayCompanies.map((c) => c.id)
+
+  const displayPolicies = franchiseId
+    ? partnerPolicies.filter((p) => companyIds.includes(p.companyId))
+    : partnerPolicies
+
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingPolicy, setEditingPolicy] = useState<PartnerPolicy | null>(null)
 
@@ -54,7 +64,7 @@ export function PartnerPoliciesTab() {
     } else {
       setEditingPolicy(null)
       setFormData({
-        companyId: companies[0]?.id || '',
+        companyId: displayCompanies[0]?.id || '',
         commissionRate: 0,
         cashbackRate: 0,
         billingModel: 'CPA',
@@ -66,7 +76,7 @@ export function PartnerPoliciesTab() {
   const handleSave = () => {
     const newPolicy: PartnerPolicy = {
       id: editingPolicy?.id || Math.random().toString(),
-      companyId: formData.companyId || companies[0]?.id || '',
+      companyId: formData.companyId || displayCompanies[0]?.id || '',
       billingModel: (formData.billingModel as any) || 'CPA',
       commissionRate: formData.commissionRate || 0,
       cashbackRate: formData.cashbackRate || 0,
@@ -85,7 +95,7 @@ export function PartnerPoliciesTab() {
   }
 
   const getCompanyName = (id: string) =>
-    companies.find((c) => c.id === id)?.name || id
+    displayCompanies.find((c) => c.id === id)?.name || id
 
   return (
     <div className="space-y-6 animate-fade-in-up">
@@ -111,7 +121,7 @@ export function PartnerPoliciesTab() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {partnerPolicies.map((policy) => (
+            {displayPolicies.map((policy) => (
               <TableRow key={policy.id}>
                 <TableCell className="font-medium">
                   {getCompanyName(policy.companyId)}
@@ -140,7 +150,7 @@ export function PartnerPoliciesTab() {
                 </TableCell>
               </TableRow>
             ))}
-            {partnerPolicies.length === 0 && (
+            {displayPolicies.length === 0 && (
               <TableRow>
                 <TableCell
                   colSpan={5}
@@ -174,7 +184,7 @@ export function PartnerPoliciesTab() {
                   <SelectValue placeholder={t('admin.partner')} />
                 </SelectTrigger>
                 <SelectContent>
-                  {companies.map((c) => (
+                  {displayCompanies.map((c) => (
                     <SelectItem key={c.id} value={c.id}>
                       {c.name}
                     </SelectItem>

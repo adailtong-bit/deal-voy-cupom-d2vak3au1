@@ -6,7 +6,6 @@ import {
   CartesianGrid,
   XAxis,
   YAxis,
-  ResponsiveContainer,
   Line,
   LineChart,
 } from 'recharts'
@@ -34,7 +33,11 @@ const timelineData = [
   { date: '25/10', revenue: 1890, coupons: 580 },
 ]
 
-export function AdminMonetizationTab() {
+export function AdminMonetizationTab({
+  franchiseId,
+}: {
+  franchiseId?: string
+}) {
   const { t } = useLanguage()
   const totals = useMemo(() => {
     return dummyData.reduce(

@@ -1482,4 +1482,3 @@ export const MOCK_FINANCIAL_TRANSACTIONS: FinancialTransaction[] = [
     status: 'completed',
   },
 ]
-

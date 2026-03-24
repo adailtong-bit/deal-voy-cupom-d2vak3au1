@@ -30,7 +30,7 @@ import {
   CircleEllipsis,
 } from 'lucide-react'
 
-export function AdminCategoriesTab() {
+export function AdminCategoriesTab({ franchiseId }: { franchiseId?: string }) {
   const { t } = useLanguage()
   const { platformSettings, updatePlatformSettings } = useCouponStore()
 

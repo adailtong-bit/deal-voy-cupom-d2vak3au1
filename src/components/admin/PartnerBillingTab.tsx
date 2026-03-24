@@ -31,7 +31,7 @@ import { Input } from '@/components/ui/input'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useCouponStore } from '@/stores/CouponContext'
 
-export function PartnerBillingTab() {
+export function PartnerBillingTab({ franchiseId }: { franchiseId?: string }) {
   const { t, formatCurrency } = useLanguage()
   const {
     partnerInvoices,
@@ -39,6 +39,16 @@ export function PartnerBillingTab() {
     companies,
     generatePartnerInvoice,
   } = useCouponStore()
+
+  const displayCompanies = franchiseId
+    ? companies.filter((c) => c.franchiseId === franchiseId)
+    : companies
+  const companyIds = displayCompanies.map((c) => c.id)
+
+  const displayInvoices = franchiseId
+    ? partnerInvoices.filter((i) => companyIds.includes(i.companyId))
+    : partnerInvoices
+
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [newInvoice, setNewInvoice] = useState({
     companyId: '',
@@ -85,15 +95,15 @@ export function PartnerBillingTab() {
   }
 
   const getCompanyName = (id: string) =>
-    companies.find((c) => c.id === id)?.name || id
+    displayCompanies.find((c) => c.id === id)?.name || id
 
-  const paidAmount = partnerInvoices
+  const paidAmount = displayInvoices
     .filter((i) => i.status === 'paid')
     .reduce((acc, i) => acc + i.totalCommission, 0)
-  const sentAmount = partnerInvoices
+  const sentAmount = displayInvoices
     .filter((i) => i.status === 'sent')
     .reduce((acc, i) => acc + i.totalCommission, 0)
-  const draftAmount = partnerInvoices
+  const draftAmount = displayInvoices
     .filter((i) => i.status === 'draft')
     .reduce((acc, i) => acc + i.totalCommission, 0)
 
@@ -161,7 +171,7 @@ export function PartnerBillingTab() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {partnerInvoices.map((invoice) => (
+            {displayInvoices.map((invoice) => (
               <TableRow key={invoice.id}>
                 <TableCell className="font-medium text-xs">
                   {invoice.referenceNumber}
@@ -200,7 +210,7 @@ export function PartnerBillingTab() {
                 </TableCell>
               </TableRow>
             ))}
-            {partnerInvoices.length === 0 && (
+            {displayInvoices.length === 0 && (
               <TableRow>
                 <TableCell
                   colSpan={6}
@@ -231,7 +241,7 @@ export function PartnerBillingTab() {
                   <SelectValue placeholder={t('admin.partner')} />
                 </SelectTrigger>
                 <SelectContent>
-                  {companies.map((c) => (
+                  {displayCompanies.map((c) => (
                     <SelectItem key={c.id} value={c.id}>
                       {c.name}
                     </SelectItem>
