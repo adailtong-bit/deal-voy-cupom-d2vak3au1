@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
 import {
@@ -23,6 +24,7 @@ import {
   Tag,
   Camera,
   Banknote,
+  ArrowLeft,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -38,6 +40,7 @@ interface VoucherData {
 }
 
 export default function MerchantScanner() {
+  const navigate = useNavigate()
   const { coupons, seasonalEvents, usedVouchers, validateCoupon, companies } =
     useCouponStore()
   const { formatCurrency } = useLanguage()
@@ -54,6 +57,14 @@ export default function MerchantScanner() {
       codeInputRef.current.focus()
     }
   }, [step])
+
+  const handleBack = () => {
+    if (window.history.state && window.history.state.idx > 0) {
+      navigate(-1)
+    } else {
+      navigate('/vendor')
+    }
+  }
 
   const handleStartScanning = (e: React.FormEvent) => {
     e.preventDefault()
@@ -159,7 +170,18 @@ export default function MerchantScanner() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-slate-50 flex items-center justify-center p-4 sm:p-8 animate-fade-in">
+    <div className="min-h-[calc(100vh-4rem)] bg-slate-50 flex flex-col items-center justify-center p-4 sm:p-8 animate-fade-in relative">
+      <div className="w-full max-w-md mb-6 flex justify-start">
+        <Button
+          variant="outline"
+          onClick={handleBack}
+          className="font-semibold text-slate-700 bg-white border-slate-200 shadow-sm hover:bg-slate-50 transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Voltar
+        </Button>
+      </div>
+
       <Card className="w-full max-w-md shadow-xl border-slate-200 overflow-hidden relative">
         <div className="absolute top-0 left-0 w-full h-1.5 bg-primary" />
 
@@ -280,7 +302,7 @@ export default function MerchantScanner() {
                     onClick={() => setStep('input_total')}
                     className="h-12 px-4"
                   >
-                    Voltar
+                    Cancelar
                   </Button>
                   <Button type="submit" className="h-12 flex-1 font-bold">
                     Validar Código
