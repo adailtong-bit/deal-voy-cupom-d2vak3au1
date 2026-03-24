@@ -16,7 +16,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
-import { Plus, Edit2, Trash2 } from 'lucide-react'
+import { Plus, Edit2, Trash2, Download, FileText } from 'lucide-react'
 import { Franchise } from '@/lib/types'
 import { AdvancedCompanyForm } from './AdvancedCompanyForm'
 
@@ -54,18 +54,65 @@ export function FranchisesTab() {
     setIsDialogOpen(false)
   }
 
+  const exportCsv = () => {
+    const headers = ['ID', 'Name', 'Tax ID', 'Contact', 'Region', 'Status']
+    const rows = franchises.map(
+      (f) =>
+        `"${f.id}","${f.name}","${f.taxId || ''}","${f.contactEmail || ''}","${f.region || ''}","${f.status}"`,
+    )
+    const csvContent =
+      'data:text/csv;charset=utf-8,' +
+      headers.join(',') +
+      '\n' +
+      rows.join('\n')
+    const encodedUri = encodeURI(csvContent)
+    const link = document.createElement('a')
+    link.setAttribute('href', encodedUri)
+    link.setAttribute('download', 'franchises_export.csv')
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
+  const exportPdf = () => {
+    const w = window.open('', '_blank')
+    if (w) {
+      w.document.write(`
+        <html><head><title>Franchises Report</title>
+        <style>body{font-family:sans-serif; padding:20px;} table{width:100%; border-collapse:collapse;} th,td{border:1px solid #ddd; padding:8px; text-align:left;}</style></head>
+        <body>
+        <h1>Franchises Report</h1>
+        <table>
+          <tr><th>Name</th><th>Tax ID</th><th>Contact</th><th>Region</th><th>Status</th></tr>
+          ${franchises.map((f) => `<tr><td>${f.name}</td><td>${f.taxId || ''}</td><td>${f.contactEmail || ''}</td><td>${f.region || ''}</td><td>${f.status}</td></tr>`).join('')}
+        </table>
+        <script>window.print(); window.close();</script>
+        </body></html>
+      `)
+      w.document.close()
+    }
+  }
+
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center bg-card p-4 rounded-lg border">
+    <div className="space-y-4 animate-fade-in-up">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-card p-4 rounded-lg border gap-4">
         <div>
           <h3 className="text-lg font-bold">Franchise Network</h3>
           <p className="text-sm text-muted-foreground">
             Manage your master franchises and their primary contacts.
           </p>
         </div>
-        <Button onClick={() => handleOpenDialog()}>
-          <Plus className="w-4 h-4 mr-2" /> Add Franchise
-        </Button>
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+          <Button variant="outline" onClick={exportCsv}>
+            <FileText className="w-4 h-4 mr-2" /> CSV
+          </Button>
+          <Button variant="outline" onClick={exportPdf}>
+            <Download className="w-4 h-4 mr-2" /> PDF
+          </Button>
+          <Button onClick={() => handleOpenDialog()}>
+            <Plus className="w-4 h-4 mr-2" /> Add Franchise
+          </Button>
+        </div>
       </div>
 
       <div className="rounded-md border bg-card overflow-hidden">

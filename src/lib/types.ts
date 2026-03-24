@@ -330,7 +330,7 @@ export interface User {
   partnerId?: string
   gender?: 'male' | 'female' | 'non-binary' | 'prefer-not-to-say'
   staffRole?: string
-  status?: 'active' | 'inactive'
+  status?: 'active' | 'inactive' | 'invited'
 }
 
 export interface Company {
@@ -366,6 +366,11 @@ export interface Company {
   addressZip?: string
   paymentMethod?: string
   billingFrequency?: string
+  bankName?: string
+  bankAgency?: string
+  bankAccount?: string
+  contractTerms?: string
+  stateRegistration?: string
 }
 
 export type AdBillingType = 'fixed' | 'cpc' | 'cpa'
@@ -513,6 +518,11 @@ export interface Franchise {
   paymentMethod?: string
   billingFrequency?: string
   address?: string
+  bankName?: string
+  bankAgency?: string
+  bankAccount?: string
+  contractTerms?: string
+  stateRegistration?: string
 }
 
 export type TravelOfferType =

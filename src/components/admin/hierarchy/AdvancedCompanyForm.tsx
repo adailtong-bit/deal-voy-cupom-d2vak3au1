@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
   SelectContent,
@@ -100,6 +101,7 @@ export function AdvancedCompanyForm({
               <SelectContent>
                 <SelectItem value="active">Ativo</SelectItem>
                 <SelectItem value="inactive">Inativo</SelectItem>
+                <SelectItem value="pending">Pendente</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -112,7 +114,7 @@ export function AdvancedCompanyForm({
           </div>
           {type === 'merchant' && (
             <div className="space-y-1">
-              <Label>Franquia</Label>
+              <Label>Entidade Pai (Franquia)</Label>
               <Select
                 value={data.franchiseId}
                 onValueChange={(v) => onChange('franchiseId', v)}
@@ -224,18 +226,47 @@ export function AdvancedCompanyForm({
                 maxLength={18}
                 onChange={(e) => {
                   let v = e.target.value.replace(/\D/g, '').slice(0, 14)
-                  if (v.length > 12)
-                    v = v.replace(
-                      /^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,
-                      '$1.$2.$3/$4-$5',
-                    )
+                  v = v.replace(/^(\d{2})(\d)/, '$1.$2')
+                  v = v.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
+                  v = v.replace(/\.(\d{3})(\d)/, '.$1/$2')
+                  v = v.replace(/(\d{4})(\d)/, '$1-$2')
                   onChange('taxId', v)
                 }}
                 placeholder="00.000.000/0000-00"
               />
             </div>
             <div className="space-y-1">
-              <Label>Email de Cobrança</Label>
+              <Label>Inscrição Estadual</Label>
+              <Input
+                value={data.stateRegistration || ''}
+                onChange={(e) => onChange('stateRegistration', e.target.value)}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>Banco (Nome/Número)</Label>
+              <Input
+                value={data.bankName || ''}
+                onChange={(e) => onChange('bankName', e.target.value)}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-2 space-y-0">
+              <div className="space-y-1">
+                <Label>Agência</Label>
+                <Input
+                  value={data.bankAgency || ''}
+                  onChange={(e) => onChange('bankAgency', e.target.value)}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label>Conta</Label>
+                <Input
+                  value={data.bankAccount || ''}
+                  onChange={(e) => onChange('bankAccount', e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label>Email de Faturamento</Label>
               <Input
                 type="email"
                 value={data.billingEmail || ''}
@@ -243,25 +274,9 @@ export function AdvancedCompanyForm({
               />
             </div>
             <div className="space-y-1">
-              <Label>Método de Pagamento</Label>
+              <Label>Ciclo de Faturamento</Label>
               <Select
-                value={data.paymentMethod}
-                onValueChange={(v) => onChange('paymentMethod', v)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="credit_card">Cartão</SelectItem>
-                  <SelectItem value="pix">PIX</SelectItem>
-                  <SelectItem value="bank_slip">Boleto</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
-              <Label>Frequência</Label>
-              <Select
-                value={data.billingFrequency}
+                value={data.billingFrequency || 'monthly'}
                 onValueChange={(v) => onChange('billingFrequency', v)}
               >
                 <SelectTrigger>
@@ -269,9 +284,18 @@ export function AdvancedCompanyForm({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="monthly">Mensal</SelectItem>
+                  <SelectItem value="quarterly">Trimestral</SelectItem>
                   <SelectItem value="annually">Anual</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div className="space-y-1 col-span-2">
+              <Label>Termos do Contrato</Label>
+              <Textarea
+                value={data.contractTerms || ''}
+                onChange={(e) => onChange('contractTerms', e.target.value)}
+                className="h-16"
+              />
             </div>
           </div>
           <h4 className="text-sm font-bold border-b pb-1 mt-4">Endereço</h4>
@@ -280,11 +304,18 @@ export function AdvancedCompanyForm({
               <Label>CEP</Label>
               <Input
                 value={data.addressZip || ''}
-                onChange={(e) => onChange('addressZip', e.target.value)}
+                maxLength={9}
+                onChange={(e) => {
+                  let v = e.target.value.replace(/\D/g, '')
+                  if (v.length > 8) v = v.slice(0, 8)
+                  v = v.replace(/^(\d{5})(\d{0,3})/, '$1-$2')
+                  onChange('addressZip', v)
+                }}
+                placeholder="00000-000"
               />
             </div>
             <div className="space-y-1 col-span-2">
-              <Label>Logradouro</Label>
+              <Label>Logradouro (Rua)</Label>
               <Input
                 value={data.addressStreet || ''}
                 onChange={(e) => onChange('addressStreet', e.target.value)}

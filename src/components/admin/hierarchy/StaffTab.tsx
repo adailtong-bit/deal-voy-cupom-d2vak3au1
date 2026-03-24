@@ -26,8 +26,9 @@ import {
 } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { Plus, Edit2, Trash2 } from 'lucide-react'
+import { Plus, Edit2, Trash2, Mail, Send } from 'lucide-react'
 import { User } from '@/lib/types'
+import { toast } from 'sonner'
 
 interface StaffTabProps {
   parentType?: 'franchise' | 'company' | 'global'
@@ -39,12 +40,20 @@ export function StaffTab({ parentType = 'global', parentId }: StaffTabProps) {
     useCouponStore()
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false)
   const [editingStaff, setEditingStaff] = useState<User | null>(null)
+
   const [formData, setFormData] = useState<Partial<User>>({
     name: '',
     email: '',
     staffRole: '',
     status: 'active',
+  })
+
+  const [inviteData, setInviteData] = useState({
+    name: '',
+    email: '',
+    staffRole: 'Manager',
   })
 
   const staffList = users.filter((u) => {
@@ -86,6 +95,23 @@ export function StaffTab({ parentType = 'global', parentId }: StaffTabProps) {
     setIsDialogOpen(false)
   }
 
+  const handleInvite = () => {
+    const newUser: User = {
+      id: Math.random().toString(),
+      name: inviteData.name,
+      email: inviteData.email,
+      role: 'staff',
+      staffRole: inviteData.staffRole,
+      companyId: parentType === 'company' ? parentId : undefined,
+      franchiseId: parentType === 'franchise' ? parentId : undefined,
+      status: 'invited',
+    }
+    addUser(newUser)
+    toast.success(`Convite enviado para ${inviteData.email} com link seguro.`)
+    setIsInviteDialogOpen(false)
+    setInviteData({ name: '', email: '', staffRole: 'Manager' })
+  }
+
   const getParentName = (u: User) => {
     if (u.companyId) return companies.find((c) => c.id === u.companyId)?.name
     if (u.franchiseId)
@@ -94,17 +120,22 @@ export function StaffTab({ parentType = 'global', parentId }: StaffTabProps) {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center bg-card p-4 rounded-lg border">
+    <div className="space-y-4 animate-fade-in-up">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-card p-4 rounded-lg border gap-4">
         <div>
           <h3 className="text-lg font-bold">Team Members</h3>
           <p className="text-sm text-muted-foreground">
             Manage employee access and roles within your organization.
           </p>
         </div>
-        <Button onClick={() => handleOpenDialog()}>
-          <Plus className="w-4 h-4 mr-2" /> Add Staff
-        </Button>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <Button variant="outline" onClick={() => setIsInviteDialogOpen(true)}>
+            <Mail className="w-4 h-4 mr-2" /> Invite User
+          </Button>
+          <Button onClick={() => handleOpenDialog()}>
+            <Plus className="w-4 h-4 mr-2" /> Add Staff
+          </Button>
+        </div>
       </div>
 
       <div className="rounded-md border bg-card overflow-hidden">
@@ -132,7 +163,13 @@ export function StaffTab({ parentType = 'global', parentId }: StaffTabProps) {
                 )}
                 <TableCell>
                   <Badge
-                    variant={u.status === 'inactive' ? 'secondary' : 'default'}
+                    variant={
+                      u.status === 'invited'
+                        ? 'outline'
+                        : u.status === 'inactive'
+                          ? 'secondary'
+                          : 'default'
+                    }
                   >
                     {u.status || 'active'}
                   </Badge>
@@ -224,6 +261,7 @@ export function StaffTab({ parentType = 'global', parentId }: StaffTabProps) {
                   <SelectContent>
                     <SelectItem value="active">Active</SelectItem>
                     <SelectItem value="inactive">Inactive</SelectItem>
+                    <SelectItem value="invited">Invited</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -238,6 +276,61 @@ export function StaffTab({ parentType = 'global', parentId }: StaffTabProps) {
               disabled={!formData.name || !formData.email}
             >
               Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Send Invitation</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label>Name</Label>
+              <Input
+                value={inviteData.name}
+                onChange={(e) =>
+                  setInviteData({ ...inviteData, name: e.target.value })
+                }
+                placeholder="Staff Member Name"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Email</Label>
+              <Input
+                type="email"
+                value={inviteData.email}
+                onChange={(e) =>
+                  setInviteData({ ...inviteData, email: e.target.value })
+                }
+                placeholder="email@example.com"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Role / Function</Label>
+              <Input
+                value={inviteData.staffRole}
+                onChange={(e) =>
+                  setInviteData({ ...inviteData, staffRole: e.target.value })
+                }
+                placeholder="e.g. Manager"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsInviteDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleInvite}
+              disabled={!inviteData.email || !inviteData.name}
+            >
+              <Send className="w-4 h-4 mr-2" /> Send Invite
             </Button>
           </DialogFooter>
         </DialogContent>
