@@ -20,6 +20,7 @@ import { Plus, Edit2, Trash2, Store, Download, FileText } from 'lucide-react'
 import { Company } from '@/lib/types'
 import { AdvancedCompanyForm } from './AdvancedCompanyForm'
 import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
 
 export function MerchantsTab({ franchiseId }: { franchiseId?: string }) {
   const { companies, franchises, addCompany, updateCompany, deleteCompany } =
