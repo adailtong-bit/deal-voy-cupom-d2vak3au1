@@ -25,13 +25,28 @@ import TravelPage from '@/pages/TravelPage'
 import Explore from '@/pages/Explore'
 import Profile from '@/pages/Profile'
 import Login from '@/pages/Login'
+import { UserRole } from '@/lib/types'
 
-function RequireAuth({ children }: { children: React.ReactNode }) {
+function RequireAuth({
+  children,
+  roles,
+}: {
+  children: React.ReactNode
+  roles?: UserRole[]
+}) {
   const { user } = useCouponStore()
   const location = useLocation()
 
   if (!user) {
     return <Navigate to="/login" state={{ from: location }} replace />
+  }
+
+  if (roles && roles.length > 0 && !roles.includes(user.role)) {
+    if (user.role === 'super_admin') return <Navigate to="/admin" replace />
+    if (user.role === 'franchisee')
+      return <Navigate to="/franchisee" replace />
+    if (user.role === 'shopkeeper') return <Navigate to="/vendor" replace />
+    return <Navigate to="/" replace />
   }
 
   return <>{children}</>
@@ -59,7 +74,7 @@ export default function App() {
                 <Route
                   path="/vendor"
                   element={
-                    <RequireAuth>
+                    <RequireAuth roles={['shopkeeper', 'super_admin']}>
                       <VendorDashboard />
                     </RequireAuth>
                   }
@@ -67,7 +82,7 @@ export default function App() {
                 <Route
                   path="/merchant"
                   element={
-                    <RequireAuth>
+                    <RequireAuth roles={['shopkeeper', 'super_admin']}>
                       <MerchantLayout />
                     </RequireAuth>
                   }
@@ -79,7 +94,7 @@ export default function App() {
                 <Route
                   path="/admin"
                   element={
-                    <RequireAuth>
+                    <RequireAuth roles={['super_admin']}>
                       <AdminDashboard />
                     </RequireAuth>
                   }
@@ -87,7 +102,7 @@ export default function App() {
                 <Route
                   path="/franchisee"
                   element={
-                    <RequireAuth>
+                    <RequireAuth roles={['franchisee', 'super_admin']}>
                       <FranchiseeDashboard />
                     </RequireAuth>
                   }
@@ -115,3 +130,4 @@ export default function App() {
     </LanguageProvider>
   )
 }
+

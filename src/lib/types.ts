@@ -63,6 +63,7 @@ export interface Coupon {
   id: string
   storeName: string
   companyId?: string
+  franchiseId?: string
   title: string
   description: string
   discount: string
@@ -145,6 +146,7 @@ export interface SeasonalEvent {
   images?: string[]
   region?: string
   companyId?: string
+  franchiseId?: string
   billingAmount?: number
   price?: number
   status:
@@ -187,6 +189,8 @@ export interface UploadedDocument {
 export interface Booking {
   id: string
   couponId: string
+  companyId?: string
+  franchiseId?: string
   storeName: string
   date: string
   time: string
@@ -488,6 +492,8 @@ export interface PaymentTransaction {
   pointsAwarded?: number
   installments?: number
   couponId?: string
+  companyId?: string
+  franchiseId?: string
 }
 
 export interface ConnectedApp {
@@ -593,6 +599,7 @@ export interface ValidationLog {
   method: 'qr' | 'manual'
   shopkeeperId: string
   companyId?: string
+  franchiseId?: string
   userId?: string
   commissionAmount?: number
   cashbackAmount?: number
@@ -677,6 +684,7 @@ export interface DiscoveredPromotion {
   category: string
   capturedAt?: string
   rawData?: Record<string, any>
+  franchiseId?: string
 }
 
 export interface InterestCategory {
@@ -756,3 +764,4 @@ export interface WebhookLog {
   status: number
   timestamp: string
 }
+

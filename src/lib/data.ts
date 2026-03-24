@@ -195,6 +195,7 @@ const generateSeasonalEvents = (): SeasonalEvent[] => {
       description: `Special promotional campaign ${i} with exclusive discounts across multiple channels.`,
       type: i % 2 === 0 ? 'sale' : 'event',
       companyId: `c${(i % 5) + 1}`,
+      franchiseId: i % 2 === 0 ? 'f1' : 'f2',
       billingAmount: 500 + i * 100,
       price: 500 + i * 100,
       status,
@@ -275,6 +276,7 @@ const generateCoupons = (): Coupon[] => {
     id: 'amazon-online-1',
     storeName: 'Amazon',
     companyId: 'c_amazon',
+    franchiseId: 'f1',
     title: 'Echo Dot (5ª Geração)',
     description:
       'Smart speaker com Alexa. Use o código para 20% de desconto adicional no checkout.',
@@ -311,6 +313,7 @@ const generateCoupons = (): Coupon[] => {
     id: 'shopee-online-1',
     storeName: 'Shopee',
     companyId: 'c_shopee',
+    franchiseId: 'f2',
     title: 'Fones de Ouvido Bluetooth',
     description:
       'Fones sem fio com cancelamento de ruído. Oferta exclusiva online para dropshipping parceiro.',
@@ -344,6 +347,7 @@ const generateCoupons = (): Coupon[] => {
     id: 'nike-promo-50',
     storeName: 'Nike Store',
     companyId: 'c1',
+    franchiseId: 'f1',
     title: '50% Nike',
     description:
       'Exclusive 50% discount on all running shoes. Single use only.',
@@ -419,6 +423,7 @@ const generateCoupons = (): Coupon[] => {
       id: `cpn-${i}`,
       storeName: isUS ? `Store #${i} USA` : `Loja #${i} BR`,
       companyId: isUS ? `c${i + 5}` : `c${i}`,
+      franchiseId: isUS ? 'f2' : 'f1',
       title: isUS ? `Super Deal ${i}` : `Oferta Imperdível ${i}`,
       description: isUS
         ? `Amazing discount on all items in section ${i}. Explore more!`
@@ -471,6 +476,7 @@ const generateCoupons = (): Coupon[] => {
     {
       id: 'cpn_ny_f1',
       companyId: 'c_ny_hq',
+      franchiseId: 'f_ny',
       title: 'NY Empire State Discount',
       description: 'Exclusive NY Franchise Deal',
       discount: '20% OFF',
@@ -495,6 +501,7 @@ const generateCoupons = (): Coupon[] => {
     {
       id: 'cpn_ny_f2',
       companyId: 'c_ny_hq',
+      franchiseId: 'f_ny',
       title: 'Manhattan Weekend Special',
       description: 'Weekend special for Manhattan',
       discount: '$15.00 OFF',
@@ -519,6 +526,7 @@ const generateCoupons = (): Coupon[] => {
     {
       id: 'cpn_ny_f3',
       companyId: 'c_ny_hq',
+      franchiseId: 'f_ny',
       title: 'Big Apple First Purchase',
       description: 'First purchase discount in NY',
       discount: '10% OFF',
@@ -543,6 +551,7 @@ const generateCoupons = (): Coupon[] => {
     {
       id: 'cpn_ny_m1',
       companyId: 'c_ny_1',
+      franchiseId: 'f_ny',
       title: 'Brooklyn Coffee Buy 1 Get 1',
       description: 'Morning coffee special - Buy one coffee, get one free.',
       discount: 'BOGO',
@@ -567,6 +576,7 @@ const generateCoupons = (): Coupon[] => {
     {
       id: 'cpn_ny_m2',
       companyId: 'c_ny_2',
+      franchiseId: 'f_ny',
       title: 'Queens Pizza 20% Off',
       description: 'Pizza and soda combo discount',
       discount: '20% OFF',
@@ -591,6 +601,7 @@ const generateCoupons = (): Coupon[] => {
     {
       id: 'cpn_ny_m3',
       companyId: 'c_ny_3',
+      franchiseId: 'f_ny',
       title: 'Guest Pass Discount',
       description: 'Discounted gym pass',
       discount: '50% OFF',
@@ -668,6 +679,7 @@ const generateCompanies = (): Company[] => {
       enableLoyalty: i % 3 === 0,
       ownerId: `u_shop_${i}`,
       preferredCustomers: i === 1 ? ['u_user'] : [],
+      franchiseId: isUS ? 'f2' : 'f1',
       webhookUrl:
         i === 1 ? 'https://api.example-pos.com/webhooks/dealvoy' : undefined,
     })
@@ -1044,6 +1056,7 @@ export const MOCK_VALIDATION_LOGS: ValidationLog[] = [
     method: i % 2 === 0 ? ('qr' as const) : ('manual' as const),
     shopkeeperId: 'u_shop',
     companyId: `c${(i % 5) + 1}`,
+    franchiseId: (i % 5) + 1 > 5 ? 'f2' : 'f1',
     userId: i % 3 === 0 ? 'u_user' : 'u_agency',
     commissionAmount: 5.0,
     cashbackAmount: 2.0,
@@ -1057,6 +1070,7 @@ export const MOCK_VALIDATION_LOGS: ValidationLog[] = [
     method: i % 2 === 0 ? ('qr' as const) : ('manual' as const),
     shopkeeperId: 'u_shop_ny',
     companyId: 'c_ny_1',
+    franchiseId: 'f_ny',
     userId: `u_ny_lead_${i}`,
     commissionAmount: 2.5,
     cashbackAmount: 0.5,
@@ -1371,6 +1385,8 @@ export const MOCK_BOOKINGS: Booking[] = [
     source: 'partner',
     requiresPrivacy: true,
     type: 'hotel',
+    companyId: 'c_amazon',
+    franchiseId: 'f1',
   },
   {
     id: 'b2',
@@ -1384,6 +1400,8 @@ export const MOCK_BOOKINGS: Booking[] = [
     userName: 'End User',
     source: 'organic',
     type: 'ticket',
+    companyId: 'c1',
+    franchiseId: 'f1',
   },
   ...Array.from({ length: 5 }).map((_, i) => ({
     id: `b_ny_${i}`,
@@ -1397,5 +1415,8 @@ export const MOCK_BOOKINGS: Booking[] = [
     userName: `NY Customer ${i + 1}`,
     source: 'partner' as const,
     type: 'general' as const,
+    companyId: 'c_ny_1',
+    franchiseId: 'f_ny',
   })),
 ]
+
