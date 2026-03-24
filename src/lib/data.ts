@@ -518,7 +518,8 @@ const generateCompanies = (): Company[] => {
       enableLoyalty: i % 3 === 0,
       ownerId: `u_shop_${i}`,
       preferredCustomers: i === 1 ? ['u_user'] : [],
-      webhookUrl: i === 1 ? 'https://api.example-pos.com/webhooks/dealvoy' : undefined,
+      webhookUrl:
+        i === 1 ? 'https://api.example-pos.com/webhooks/dealvoy' : undefined,
     })
   }
   return companies
@@ -1104,6 +1105,5 @@ export const MOCK_WEBHOOK_LOGS: WebhookLog[] = [
     payload: { couponId: 'cpn-2' },
     status: 500,
     timestamp: new Date(Date.now() - 86400000).toISOString(),
-  }
+  },
 ]
-

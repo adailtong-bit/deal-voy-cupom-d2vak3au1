@@ -755,4 +755,3 @@ export interface WebhookLog {
   status: number
   timestamp: string
 }
-
