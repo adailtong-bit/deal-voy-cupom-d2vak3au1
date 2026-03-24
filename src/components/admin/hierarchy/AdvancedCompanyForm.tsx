@@ -11,10 +11,28 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
 import { PhoneInput } from '@/components/PhoneInput'
 import { useCouponStore } from '@/stores/CouponContext'
 import { toast } from 'sonner'
-import { Building, UserCircle, Receipt } from 'lucide-react'
+import {
+  Building,
+  UserCircle,
+  Receipt,
+  FileText,
+  UploadCloud,
+  Download,
+  Trash2,
+} from 'lucide-react'
+import { CompanyDocument } from '@/lib/types'
 
 export function AdvancedCompanyForm({
   type,
@@ -28,8 +46,11 @@ export function AdvancedCompanyForm({
     status: 'active',
     paymentMethod: 'credit_card',
     billingFrequency: 'monthly',
+    documents: [],
     ...initialData,
   })
+
+  const [docLabel, setDocLabel] = useState('Contrato Social')
 
   useEffect(() => {
     if (initialData) {
@@ -37,11 +58,36 @@ export function AdvancedCompanyForm({
         ...initialData,
         email: initialData.email || initialData.contactEmail || '',
         franchiseId: initialData.franchiseId || franchiseId || 'independent',
+        documents: initialData.documents || [],
       })
     }
   }, [initialData, franchiseId])
 
   const onChange = (f: string, v: any) => setData({ ...data, [f]: v })
+
+  const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const newDoc: CompanyDocument = {
+        id: Math.random().toString(),
+        name: file.name,
+        label: docLabel,
+        type: file.type,
+        url: URL.createObjectURL(file), // Mock URL for preview
+        uploadDate: new Date().toISOString(),
+      }
+      setData({ ...data, documents: [...(data.documents || []), newDoc] })
+      toast.success('Documento carregado com sucesso.')
+    }
+  }
+
+  const removeDoc = (id: string) => {
+    setData({
+      ...data,
+      documents: data.documents?.filter((d: CompanyDocument) => d.id !== id),
+    })
+    toast.success('Documento removido.')
+  }
 
   const save = () => {
     if (!data.name || !data.legalName || !data.email || !data.taxId) {
@@ -53,7 +99,7 @@ export function AdvancedCompanyForm({
   return (
     <div className="flex flex-col space-y-4 pt-2">
       <Tabs defaultValue="controle" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-4">
+        <TabsList className="grid w-full grid-cols-4 mb-4">
           <TabsTrigger value="controle">
             <Building className="h-4 w-4 mr-2" /> Controle
           </TabsTrigger>
@@ -62,6 +108,9 @@ export function AdvancedCompanyForm({
           </TabsTrigger>
           <TabsTrigger value="cobranca">
             <Receipt className="h-4 w-4 mr-2" /> Cobrança
+          </TabsTrigger>
+          <TabsTrigger value="documentos">
+            <FileText className="h-4 w-4 mr-2" /> Documentos
           </TabsTrigger>
         </TabsList>
         <TabsContent
@@ -360,6 +409,112 @@ export function AdvancedCompanyForm({
                 onChange={(e) => onChange('addressState', e.target.value)}
               />
             </div>
+          </div>
+        </TabsContent>
+        <TabsContent
+          value="documentos"
+          className="space-y-4 animate-in fade-in-50"
+        >
+          <div className="grid gap-4">
+            <div className="flex flex-col space-y-2 max-w-sm">
+              <Label>Tipo de Documento para Upload</Label>
+              <Select value={docLabel} onValueChange={setDocLabel}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Contrato Social">
+                    Contrato Social
+                  </SelectItem>
+                  <SelectItem value="Alvará de Funcionamento">
+                    Alvará de Funcionamento
+                  </SelectItem>
+                  <SelectItem value="Comprovante de Endereço">
+                    Comprovante de Endereço
+                  </SelectItem>
+                  <SelectItem value="Documento de Identidade">
+                    Documento de Identidade (Sócio)
+                  </SelectItem>
+                  <SelectItem value="Outros">Outros</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="border-2 border-dashed rounded-lg p-8 flex flex-col items-center justify-center bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer relative">
+              <input
+                type="file"
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                accept=".pdf,.jpg,.jpeg,.png"
+                onChange={handleUpload}
+              />
+              <UploadCloud className="h-8 w-8 text-muted-foreground mb-2" />
+              <p className="text-sm font-medium text-slate-700">
+                Clique ou arraste para fazer o upload do documento
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Suportado: PDF, JPG, PNG (Máx 10MB)
+              </p>
+            </div>
+          </div>
+
+          <div className="rounded-md border mt-6 overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Arquivo</TableHead>
+                  <TableHead>Rótulo</TableHead>
+                  <TableHead>Data de Envio</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data.documents?.map((doc: CompanyDocument) => (
+                  <TableRow key={doc.id}>
+                    <TableCell className="font-medium flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-blue-500" />
+                      <span className="truncate max-w-[150px] sm:max-w-xs">
+                        {doc.name}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary">{doc.label}</Badge>
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {new Date(doc.uploadDate).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          window.open(doc.url, '_blank')
+                        }}
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-destructive"
+                        onClick={() => removeDoc(doc.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {(!data.documents || data.documents.length === 0) && (
+                  <TableRow>
+                    <TableCell
+                      colSpan={4}
+                      className="text-center py-6 text-muted-foreground"
+                    >
+                      Nenhum documento anexado ainda.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
           </div>
         </TabsContent>
       </Tabs>

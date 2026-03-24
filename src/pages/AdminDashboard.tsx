@@ -1,6 +1,13 @@
-import { Activity, Users, Store, DollarSign } from 'lucide-react'
+import { useState } from 'react'
+import { Activity, Users, Store, DollarSign, Bell } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Button } from '@/components/ui/button'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import { AdminCRM } from '@/components/admin/AdminCRM'
 import { PromotionCrawler } from '@/components/admin/PromotionCrawler'
 import { AdminAdsManager } from '@/components/admin/ads/AdminAdsManager'
@@ -15,13 +22,74 @@ import { TestingSandboxTab } from '@/components/admin/TestingSandboxTab'
 import { AdminHierarchyTab } from '@/components/admin/AdminHierarchyTab'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useCouponStore } from '@/stores/CouponContext'
+import { cn } from '@/lib/utils'
 
 export default function AdminDashboard() {
   const { t } = useLanguage()
-  const { user } = useCouponStore()
+  const { user, companies } = useCouponStore()
 
   const isSuperAdmin = user?.role === 'super_admin'
   const isFranchisee = user?.role === 'franchisee'
+
+  const [activeTab, setActiveTab] = useState(
+    isSuperAdmin ? 'overview' : 'hierarchy',
+  )
+
+  const pendingMerchants = companies.filter((c) => c.status === 'pending')
+  const incompleteCompanies = companies.filter(
+    (c) => c.status === 'active' && (!c.taxId || !c.billingEmail),
+  )
+
+  const [unreadIds, setUnreadIds] = useState<Set<string>>(
+    new Set(['notif-1', 'notif-2', 'notif-3']),
+  )
+
+  const notifications = [
+    ...(pendingMerchants.length > 0
+      ? [
+          {
+            id: 'notif-1',
+            title: 'Pending Approvals',
+            desc: `${pendingMerchants.length} new merchants waiting for review.`,
+            tab: 'hierarchy',
+            time: 'Just now',
+          },
+        ]
+      : []),
+    ...(incompleteCompanies.length > 0
+      ? [
+          {
+            id: 'notif-2',
+            title: 'Incomplete Profiles',
+            desc: `${incompleteCompanies.length} companies have missing billing records.`,
+            tab: 'overview',
+            time: '1 hour ago',
+          },
+        ]
+      : []),
+    {
+      id: 'notif-3',
+      title: 'New Document Uploaded',
+      desc: 'A new "Contrato Social" was uploaded by a merchant.',
+      tab: 'hierarchy',
+      time: '3 hours ago',
+    },
+  ]
+
+  const currentUnreadCount = notifications.filter((n) =>
+    unreadIds.has(n.id),
+  ).length
+
+  const handleNotifClick = (n: any) => {
+    setActiveTab(n.tab)
+    const newSet = new Set(unreadIds)
+    newSet.delete(n.id)
+    setUnreadIds(newSet)
+  }
+
+  const markAllRead = () => {
+    setUnreadIds(new Set())
+  }
 
   if (!isSuperAdmin && !isFranchisee) {
     return (
@@ -33,23 +101,103 @@ export default function AdminDashboard() {
 
   return (
     <div className="container py-8 max-w-7xl mx-auto space-y-8 animate-fade-in mb-16 md:mb-0">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">
-          {isSuperAdmin
-            ? t('admin.dashboardTitle')
-            : 'Franchise Management Dashboard'}
-        </h1>
-        <p className="text-muted-foreground mt-2">
-          {isSuperAdmin
-            ? t('admin.dashboardDesc')
-            : 'Gerencie sua rede de lojistas e colaboradores locais.'}
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">
+            {isSuperAdmin
+              ? t('admin.dashboardTitle')
+              : 'Franchise Management Dashboard'}
+          </h1>
+          <p className="text-muted-foreground mt-2">
+            {isSuperAdmin
+              ? t('admin.dashboardDesc')
+              : 'Gerencie sua rede de lojistas e colaboradores locais.'}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                className="relative h-10 w-10"
+              >
+                <Bell className="h-5 w-5 text-slate-700" />
+                {currentUnreadCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm ring-2 ring-white">
+                    {currentUnreadCount}
+                  </span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent
+              align="end"
+              className="w-80 p-0 shadow-lg border-slate-200"
+            >
+              <div className="flex items-center justify-between p-4 border-b bg-slate-50 rounded-t-lg">
+                <span className="font-semibold text-slate-800">
+                  Admin Notifications
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={markAllRead}
+                  className="h-auto text-xs py-1 px-2 text-primary hover:text-primary"
+                >
+                  Mark all read
+                </Button>
+              </div>
+              <div className="max-h-[350px] overflow-y-auto">
+                {notifications.map((n) => {
+                  const isUnread = unreadIds.has(n.id)
+                  return (
+                    <div
+                      key={n.id}
+                      onClick={() => handleNotifClick(n)}
+                      className={cn(
+                        'p-4 border-b cursor-pointer transition-colors',
+                        isUnread
+                          ? 'bg-blue-50/50 hover:bg-blue-50'
+                          : 'hover:bg-slate-50',
+                      )}
+                    >
+                      <div className="flex justify-between items-start mb-1">
+                        <p
+                          className={cn(
+                            'text-sm',
+                            isUnread
+                              ? 'font-semibold text-slate-900'
+                              : 'font-medium text-slate-700',
+                          )}
+                        >
+                          {n.title}
+                        </p>
+                        {isUnread && (
+                          <span className="h-2 w-2 rounded-full bg-blue-500 mt-1.5 shrink-0 shadow-sm" />
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        {n.desc}
+                      </p>
+                      <p className="text-[10px] text-slate-400 mt-2 font-medium">
+                        {n.time}
+                      </p>
+                    </div>
+                  )
+                })}
+                {notifications.length === 0 && (
+                  <div className="p-8 text-center text-sm text-muted-foreground">
+                    All caught up! No new alerts.
+                  </div>
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
 
-      <Tabs
-        defaultValue={isSuperAdmin ? 'overview' : 'hierarchy'}
-        className="w-full"
-      >
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="mb-8 flex flex-wrap h-auto gap-2 p-1 justify-start">
           {isSuperAdmin && (
             <>

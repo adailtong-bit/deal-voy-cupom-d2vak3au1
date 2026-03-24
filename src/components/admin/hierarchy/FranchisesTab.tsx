@@ -19,6 +19,7 @@ import { Badge } from '@/components/ui/badge'
 import { Plus, Edit2, Trash2, Download, FileText } from 'lucide-react'
 import { Franchise } from '@/lib/types'
 import { AdvancedCompanyForm } from './AdvancedCompanyForm'
+import { toast } from 'sonner'
 
 export function FranchisesTab() {
   const { franchises, addFranchise, updateFranchise, deleteFranchise } =
@@ -48,6 +49,7 @@ export function FranchisesTab() {
         region: finalData.addressState || finalData.addressCity || 'Global',
         ownerId: 'u_fran', // Mocked, ideally from dropdown of users
         licenseExpiry: new Date(Date.now() + 31536000000).toISOString(),
+        credentialsSent: false,
       }
       addFranchise(newFranchise)
     }
@@ -93,6 +95,11 @@ export function FranchisesTab() {
     }
   }
 
+  const handleSendCredentials = (f: Franchise) => {
+    updateFranchise(f.id, { credentialsSent: true })
+    toast.success(`Credentials emailed to Franchise Partner`)
+  }
+
   return (
     <div className="space-y-4 animate-fade-in-up">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-card p-4 rounded-lg border gap-4">
@@ -124,47 +131,75 @@ export function FranchisesTab() {
               <TableHead>Contact</TableHead>
               <TableHead>Region</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Credentials</TableHead>
               <TableHead className="text-right">Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {franchises.map((f) => (
-              <TableRow key={f.id}>
-                <TableCell className="font-medium">{f.name}</TableCell>
-                <TableCell>{f.taxId || 'N/A'}</TableCell>
-                <TableCell>
-                  <p className="text-sm">{f.contactPerson || 'N/A'}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {f.contactEmail || f.ownerId}
-                  </p>
-                </TableCell>
-                <TableCell>{f.region || f.addressState || f.address}</TableCell>
-                <TableCell>
-                  <Badge
-                    variant={f.status === 'active' ? 'default' : 'secondary'}
-                  >
-                    {f.status}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-right">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleOpenDialog(f)}
-                  >
-                    <Edit2 className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => deleteFranchise(f.id)}
-                    className="text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
+            {franchises.map((f) => {
+              const isSent = f.credentialsSent || f.status === 'active'
+              return (
+                <TableRow key={f.id}>
+                  <TableCell className="font-medium">{f.name}</TableCell>
+                  <TableCell>{f.taxId || 'N/A'}</TableCell>
+                  <TableCell>
+                    <p className="text-sm">{f.contactPerson || 'N/A'}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {f.contactEmail || f.ownerId}
+                    </p>
+                  </TableCell>
+                  <TableCell>
+                    {f.region || f.addressState || f.address}
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant={f.status === 'active' ? 'default' : 'secondary'}
+                    >
+                      {f.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Badge
+                        variant={isSent ? 'default' : 'secondary'}
+                        className={
+                          isSent
+                            ? 'bg-green-500 hover:bg-green-600'
+                            : 'text-slate-600'
+                        }
+                      >
+                        {isSent ? 'Sent' : 'Pending'}
+                      </Badge>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 px-2 text-xs text-blue-600 hover:text-blue-700 font-medium"
+                        onClick={() => handleSendCredentials(f)}
+                      >
+                        {isSent ? 'Resend' : 'Send'}
+                      </Button>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleOpenDialog(f)}
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => deleteFranchise(f.id)}
+                      className="text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              )
+            })}
           </TableBody>
         </Table>
       </div>

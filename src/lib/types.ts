@@ -333,6 +333,15 @@ export interface User {
   status?: 'active' | 'inactive' | 'invited'
 }
 
+export interface CompanyDocument {
+  id: string
+  name: string
+  label: string
+  url: string
+  type: string
+  uploadDate: string
+}
+
 export interface Company {
   id: string
   name: string
@@ -371,6 +380,8 @@ export interface Company {
   bankAccount?: string
   contractTerms?: string
   stateRegistration?: string
+  credentialsSent?: boolean
+  documents?: CompanyDocument[]
 }
 
 export type AdBillingType = 'fixed' | 'cpc' | 'cpa'
@@ -523,6 +534,8 @@ export interface Franchise {
   bankAccount?: string
   contractTerms?: string
   stateRegistration?: string
+  credentialsSent?: boolean
+  documents?: CompanyDocument[]
 }
 
 export type TravelOfferType =
