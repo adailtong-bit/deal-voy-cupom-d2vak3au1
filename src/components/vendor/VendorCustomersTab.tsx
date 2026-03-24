@@ -33,9 +33,10 @@ export function VendorCustomersTab({ company }: any) {
 
         return {
           id: uid,
-          name: user?.name || lastActivity?.customerName || 'Unknown Customer',
-          email: user?.email || 'N/A',
-          phone: user?.phone || 'N/A',
+          name:
+            user?.name || lastActivity?.customerName || 'Cliente Desconhecido',
+          email: user?.email || 'N/D',
+          phone: user?.phone || 'N/D',
           redemptions: userLogs.length,
           lastActive: lastActivity?.validatedAt,
           lastCampaign: lastActivity?.couponTitle,
@@ -51,7 +52,8 @@ export function VendorCustomersTab({ company }: any) {
   if (leads.length === 0) {
     return (
       <div className="text-center p-12 border border-dashed rounded-lg bg-white text-muted-foreground animate-fade-in-up">
-        No leads found in CRM. Wait for users to redeem your offers.
+        Nenhum lead encontrado no CRM. Aguarde os usuários resgatarem suas
+        ofertas.
       </div>
     )
   }
@@ -62,19 +64,19 @@ export function VendorCustomersTab({ company }: any) {
         <TableHeader className="bg-slate-50">
           <TableRow>
             <TableHead className="font-semibold text-slate-700">
-              Customer Name
+              Nome do Cliente
             </TableHead>
             <TableHead className="font-semibold text-slate-700">
-              Contact Info
+              Contato
             </TableHead>
             <TableHead className="font-semibold text-slate-700 text-center">
-              Total Redemptions
+              Total de Resgates
             </TableHead>
             <TableHead className="font-semibold text-slate-700">
-              Last Campaign Used
+              Última Campanha Usada
             </TableHead>
             <TableHead className="font-semibold text-slate-700">
-              Last Active
+              Última Atividade
             </TableHead>
           </TableRow>
         </TableHeader>
@@ -86,21 +88,21 @@ export function VendorCustomersTab({ company }: any) {
               </TableCell>
               <TableCell>
                 <div className="text-xs text-slate-600 space-y-1.5 font-medium">
-                  {lead.email !== 'N/A' && (
+                  {lead.email !== 'N/D' && (
                     <div className="flex items-center gap-2">
                       <Mail className="w-3.5 h-3.5 text-slate-400" />{' '}
                       {lead.email}
                     </div>
                   )}
-                  {lead.phone !== 'N/A' && (
+                  {lead.phone !== 'N/D' && (
                     <div className="flex items-center gap-2">
                       <Phone className="w-3.5 h-3.5 text-slate-400" />{' '}
                       {lead.phone}
                     </div>
                   )}
-                  {lead.email === 'N/A' && lead.phone === 'N/A' && (
+                  {lead.email === 'N/D' && lead.phone === 'N/D' && (
                     <span className="text-slate-400 italic font-normal">
-                      No contact details
+                      Sem contato
                     </span>
                   )}
                 </div>
@@ -114,7 +116,7 @@ export function VendorCustomersTab({ company }: any) {
                 {lead.lastCampaign}
               </TableCell>
               <TableCell className="text-slate-500 text-sm">
-                {lead.lastActive ? formatDate(lead.lastActive) : 'N/A'}
+                {lead.lastActive ? formatDate(lead.lastActive) : 'N/D'}
               </TableCell>
             </TableRow>
           ))}

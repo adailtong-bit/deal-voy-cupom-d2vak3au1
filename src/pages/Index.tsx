@@ -35,6 +35,7 @@ import {
   Check,
   ChevronDown,
   ArrowLeft,
+  Globe,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 
@@ -65,7 +66,7 @@ export default function Index() {
     today.setHours(0, 0, 0, 0)
     return seasonalEvents.filter((e) => {
       if (e.status !== 'active') return false
-      if (reservedIds.includes(e.id)) return false // Exclude already redeemed vouchers
+      if (reservedIds.includes(e.id)) return false
       const end = new Date(e.endDate)
       end.setHours(23, 59, 59, 999)
       return end >= today
@@ -74,7 +75,7 @@ export default function Index() {
 
   const filteredCoupons = useMemo(() => {
     return coupons.filter((c) => {
-      if (reservedIds.includes(c.id)) return false // Exclude already redeemed vouchers
+      if (reservedIds.includes(c.id)) return false
 
       const matchesSearch =
         c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -137,7 +138,6 @@ export default function Index() {
     <div className="min-h-screen pb-20 md:pb-8 animate-fade-in bg-slate-50/30">
       <AdSpace position="top" className="border-b bg-white" />
 
-      {/* Compact Search Header */}
       <section className="bg-white pt-4 pb-3 px-4 border-b shadow-sm">
         <div className="container mx-auto max-w-5xl">
           <div className="flex flex-col gap-2.5 max-w-2xl mx-auto md:mx-0">
@@ -182,7 +182,6 @@ export default function Index() {
       </section>
 
       <div className="container mx-auto max-w-5xl px-4 mt-6">
-        {/* Category Filter */}
         <div className="mb-8">
           <ScrollArea className="w-full whitespace-nowrap pb-4">
             <div className="flex w-max space-x-3 px-1 items-center">
@@ -275,7 +274,6 @@ export default function Index() {
         </div>
 
         <div className="space-y-10">
-          {/* Seasonal Events */}
           {activeEvents.length > 0 &&
             !searchQuery &&
             selectedCategory === 'all' && (
@@ -311,13 +309,19 @@ export default function Index() {
                               alt={event.title}
                               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                             />
-                            <div className="absolute top-2 left-2 flex gap-1">
+                            <div className="absolute top-2 left-2 flex gap-1 flex-col items-start">
                               <Badge
                                 variant="secondary"
                                 className="bg-white/95 text-black backdrop-blur-sm shadow-sm font-bold capitalize"
                               >
                                 {t(`event.type.${event.type}`, event.type)}
                               </Badge>
+                              {(event.offerType === 'online' ||
+                                event.externalUrl) && (
+                                <Badge className="bg-blue-600 text-white font-bold shadow-sm border-none">
+                                  <Globe className="w-3 h-3 mr-1" /> Online
+                                </Badge>
+                              )}
                             </div>
                           </div>
                         )}
@@ -366,7 +370,6 @@ export default function Index() {
               </section>
             )}
 
-          {/* Trending Coupons */}
           {finalTrending.length > 0 && (
             <section>
               <h2 className="text-2xl font-bold flex items-center gap-2 mb-5 text-slate-800">
@@ -383,7 +386,6 @@ export default function Index() {
             </section>
           )}
 
-          {/* More Coupons */}
           {moreCoupons.length > 0 && (
             <section>
               <h2 className="text-2xl font-bold flex items-center gap-2 mb-5 text-slate-800">
@@ -402,7 +404,6 @@ export default function Index() {
             </section>
           )}
 
-          {/* Empty State */}
           {filteredCoupons.length === 0 && (
             <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-slate-200 shadow-sm mt-8">
               <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">

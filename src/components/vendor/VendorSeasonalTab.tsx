@@ -63,11 +63,11 @@ export function VendorSeasonalTab({ company }: { company: Company }) {
           <CardHeader>
             <CardTitle className="text-orange-800 flex items-center gap-2">
               <CalendarIcon className="h-5 w-5" />
-              Action Required: Pending Campaigns
+              Ação Necessária: Campanhas Pendentes
             </CardTitle>
             <CardDescription className="text-orange-700/80">
-              Review and approve seasonal campaigns proposed by the platform
-              administrator to activate them and begin billing.
+              Revise e aprove campanhas sazonais propostas pelo administrador da
+              plataforma para ativá-las.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -100,7 +100,7 @@ export function VendorSeasonalTab({ company }: { company: Company }) {
                   variant="outline"
                   onClick={() => setSelectedEvent(event)}
                 >
-                  Preview & Decide
+                  Pré-visualizar e Decidir
                 </Button>
               </div>
             ))}
@@ -111,7 +111,7 @@ export function VendorSeasonalTab({ company }: { company: Company }) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>{t('vendor.performance')}</CardTitle>
+            <CardTitle>Desempenho</CardTitle>
           </CardHeader>
           <CardContent>
             {chartData.length > 0 ? (
@@ -119,7 +119,7 @@ export function VendorSeasonalTab({ company }: { company: Company }) {
                 <ChartContainer
                   config={{
                     clicks: {
-                      label: t('vendor.clicks'),
+                      label: 'Cliques',
                       color: 'hsl(var(--primary))',
                     },
                   }}
@@ -147,7 +147,7 @@ export function VendorSeasonalTab({ company }: { company: Company }) {
               </div>
             ) : (
               <div className="h-[250px] flex items-center justify-center text-muted-foreground bg-slate-50 rounded-lg border border-dashed">
-                No active campaigns with data
+                Nenhuma campanha ativa com dados
               </div>
             )}
           </CardContent>
@@ -155,12 +155,12 @@ export function VendorSeasonalTab({ company }: { company: Company }) {
 
         <Card>
           <CardHeader>
-            <CardTitle>My Campaigns</CardTitle>
+            <CardTitle>Minhas Campanhas</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {myEvents.length === 0 && (
               <p className="text-muted-foreground text-center py-8">
-                No seasonal campaigns found.
+                Nenhuma campanha sazonal encontrada.
               </p>
             )}
             {myEvents
@@ -178,11 +178,15 @@ export function VendorSeasonalTab({ company }: { company: Company }) {
                           event.status === 'active' ? 'default' : 'secondary'
                         }
                       >
-                        {t(`admin.${event.status}`)}
+                        {event.status === 'active'
+                          ? 'Ativo'
+                          : event.status === 'expired'
+                            ? 'Expirado'
+                            : event.status}
                       </Badge>
                       <span className="text-xs text-muted-foreground flex items-center gap-1">
                         <MousePointerClick className="h-3 w-3" />{' '}
-                        {event.clickCount || 0} {t('vendor.clicks')}
+                        {event.clickCount || 0} Cliques
                       </span>
                     </div>
                   </div>
@@ -201,7 +205,7 @@ export function VendorSeasonalTab({ company }: { company: Company }) {
       >
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Campaign Preview</DialogTitle>
+            <DialogTitle>Pré-visualização da Campanha</DialogTitle>
           </DialogHeader>
           {selectedEvent && (
             <div className="space-y-4 py-4">
@@ -220,22 +224,24 @@ export function VendorSeasonalTab({ company }: { company: Company }) {
               </div>
               <div className="bg-slate-50 p-4 rounded-lg border space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Period:</span>
+                  <span className="text-muted-foreground">Período:</span>
                   <span className="font-medium">
                     {formatDate(selectedEvent.startDate)} -{' '}
                     {formatDate(selectedEvent.endDate)}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Campaign Price:</span>
+                  <span className="text-muted-foreground">
+                    Preço da Campanha:
+                  </span>
                   <span className="font-bold text-primary">
                     {formatCurrency(selectedEvent.price)}
                   </span>
                 </div>
               </div>
               <p className="text-xs text-muted-foreground mt-4 text-center">
-                By approving this campaign, an invoice will be generated and the
-                campaign will go live on the specified dates.
+                Ao aprovar esta campanha, uma fatura será gerada e a campanha
+                entrará no ar nas datas especificadas.
               </p>
             </div>
           )}
@@ -245,13 +251,13 @@ export function VendorSeasonalTab({ company }: { company: Company }) {
               className="gap-2"
               onClick={() => selectedEvent && handleReject(selectedEvent.id)}
             >
-              <XCircle className="h-4 w-4" /> {t('vendor.reject_campaign')}
+              <XCircle className="h-4 w-4" /> Rejeitar
             </Button>
             <Button
               className="gap-2 bg-green-600 hover:bg-green-700"
               onClick={() => selectedEvent && handleApprove(selectedEvent.id)}
             >
-              <CheckCircle className="h-4 w-4" /> {t('vendor.approve_campaign')}
+              <CheckCircle className="h-4 w-4" /> Aprovar
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -23,6 +23,7 @@ export function CouponCard({
 
   const isSoldOut =
     coupon.totalAvailable !== undefined && coupon.totalAvailable <= 0
+  const isOnline = coupon.offerType === 'online' || !!coupon.externalUrl
 
   if (variant === 'horizontal') {
     return (
@@ -57,7 +58,7 @@ export function CouponCard({
                   </Badge>
                 )}
               </div>
-              {coupon.offerType === 'online' && (
+              {isOnline && (
                 <Badge
                   variant="secondary"
                   className="absolute bottom-1.5 left-1.5 text-[8px] px-1.5 h-4 bg-blue-500/90 hover:bg-blue-600 text-white border-none shadow-sm z-10"
@@ -90,7 +91,7 @@ export function CouponCard({
               <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
                 <div className="flex items-center gap-2 text-[10px] sm:text-xs text-muted-foreground">
                   <span className="flex items-center gap-1">
-                    {coupon.offerType === 'online' ? (
+                    {isOnline ? (
                       <>
                         <Globe className="h-3 w-3 text-blue-500" />{' '}
                         {t('vouchers.online', 'Online')}
@@ -162,7 +163,7 @@ export function CouponCard({
                 Featured
               </Badge>
             )}
-            {coupon.offerType === 'online' && (
+            {isOnline && (
               <Badge
                 variant="secondary"
                 className="text-[8px] sm:text-[9px] px-1.5 h-4 sm:h-5 bg-blue-500 text-white border-none shadow-sm"
@@ -191,7 +192,7 @@ export function CouponCard({
 
           <div className="mt-auto pt-1.5 sm:pt-2 border-t flex items-center justify-between text-[9px] sm:text-[10px] text-muted-foreground">
             <span className="flex items-center gap-0.5 sm:gap-1">
-              {coupon.offerType === 'online' ? (
+              {isOnline ? (
                 <>
                   <Globe className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-blue-500" />
                   {t('vouchers.online', 'Online')}

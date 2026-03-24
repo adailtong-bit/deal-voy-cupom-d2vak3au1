@@ -19,11 +19,11 @@ export function CouponValidation() {
             <ScanLine className="h-10 w-10 text-primary" />
           </div>
           <CardTitle className="text-2xl font-bold text-slate-800">
-            Validate Customer Vouchers
+            Validar Vouchers de Clientes
           </CardTitle>
           <CardDescription className="text-base mt-2 max-w-md mx-auto">
-            Use the dedicated POS Scanner tool to quickly validate QR codes or
-            enter voucher codes manually at checkout.
+            Utilize a ferramenta Scanner PDV para validar rapidamente os QR
+            codes ou digitar códigos de vouchers manualmente no caixa.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex justify-center pb-10 pt-6">
@@ -33,7 +33,7 @@ export function CouponValidation() {
             className="h-14 px-8 font-bold shadow-lg hover:-translate-y-0.5 transition-transform rounded-xl text-base"
           >
             <Link to="/merchant/scanner">
-              Open POS Scanner <ArrowRight className="ml-2 w-5 h-5" />
+              Abrir Scanner PDV <ArrowRight className="ml-2 w-5 h-5" />
             </Link>
           </Button>
         </CardContent>

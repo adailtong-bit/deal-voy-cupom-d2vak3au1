@@ -20,7 +20,7 @@ export function OrdersTable({ orders }: any) {
   if (myOrders.length === 0)
     return (
       <div className="text-center p-12 text-muted-foreground border border-dashed rounded-lg bg-white">
-        No orders found.
+        Nenhum pedido encontrado.
       </div>
     )
 
@@ -29,10 +29,10 @@ export function OrdersTable({ orders }: any) {
       <Table>
         <TableHeader className="bg-slate-50">
           <TableRow>
-            <TableHead className="font-semibold">Order ID</TableHead>
-            <TableHead className="font-semibold">Customer</TableHead>
-            <TableHead className="font-semibold">Date</TableHead>
-            <TableHead className="font-semibold">Type</TableHead>
+            <TableHead className="font-semibold">ID do Pedido</TableHead>
+            <TableHead className="font-semibold">Cliente</TableHead>
+            <TableHead className="font-semibold">Data</TableHead>
+            <TableHead className="font-semibold">Tipo</TableHead>
             <TableHead className="font-semibold">Status</TableHead>
           </TableRow>
         </TableHeader>
@@ -49,14 +49,20 @@ export function OrdersTable({ orders }: any) {
                 {formatDate(o.date)}
               </TableCell>
               <TableCell className="capitalize text-slate-600">
-                {o.type || 'general'}
+                {o.type || 'geral'}
               </TableCell>
               <TableCell>
                 <Badge
                   variant={o.status === 'confirmed' ? 'default' : 'secondary'}
                   className={o.status === 'confirmed' ? 'bg-emerald-500' : ''}
                 >
-                  {o.status}
+                  {o.status === 'confirmed'
+                    ? 'Confirmado'
+                    : o.status === 'pending'
+                      ? 'Pendente'
+                      : o.status === 'cancelled'
+                        ? 'Cancelado'
+                        : o.status}
                 </Badge>
               </TableCell>
             </TableRow>
@@ -73,7 +79,7 @@ export function OffersTable({ offers }: any) {
   if (!offers || offers.length === 0)
     return (
       <div className="text-center p-12 text-muted-foreground border border-dashed rounded-lg bg-white">
-        No offers found.
+        Nenhuma oferta encontrada.
       </div>
     )
 
@@ -82,11 +88,11 @@ export function OffersTable({ offers }: any) {
       <Table>
         <TableHeader className="bg-slate-50">
           <TableRow>
-            <TableHead className="font-semibold">Campaign Name</TableHead>
-            <TableHead className="font-semibold">Discount</TableHead>
-            <TableHead className="font-semibold">Redeemed</TableHead>
+            <TableHead className="font-semibold">Nome da Campanha</TableHead>
+            <TableHead className="font-semibold">Desconto</TableHead>
+            <TableHead className="font-semibold">Resgatados</TableHead>
             <TableHead className="font-semibold">Status</TableHead>
-            <TableHead className="font-semibold">Expires</TableHead>
+            <TableHead className="font-semibold">Expira em</TableHead>
             <TableHead className="font-semibold text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
@@ -109,11 +115,17 @@ export function OffersTable({ offers }: any) {
                 <Badge
                   variant={o.status === 'active' ? 'default' : 'secondary'}
                 >
-                  {o.status}
+                  {o.status === 'active'
+                    ? 'Ativo'
+                    : o.status === 'expired'
+                      ? 'Expirado'
+                      : o.status === 'used'
+                        ? 'Usado'
+                        : o.status}
                 </Badge>
               </TableCell>
               <TableCell className="text-slate-500 text-sm">
-                {o.expiryDate ? formatDate(o.expiryDate) : 'N/A'}
+                {o.expiryDate ? formatDate(o.expiryDate) : 'N/D'}
               </TableCell>
               <TableCell className="text-right">
                 <Button asChild variant="outline" size="sm" className="h-8">
@@ -145,7 +157,7 @@ export function HistoryTable() {
   if (logs.length === 0)
     return (
       <div className="text-center p-12 text-muted-foreground border border-dashed rounded-lg bg-white">
-        No redemption history.
+        Nenhum histórico de resgates.
       </div>
     )
 
@@ -154,17 +166,17 @@ export function HistoryTable() {
       <Table>
         <TableHeader className="bg-slate-50">
           <TableRow>
-            <TableHead className="font-semibold">Date & Time</TableHead>
-            <TableHead className="font-semibold">Campaign</TableHead>
-            <TableHead className="font-semibold">Customer</TableHead>
-            <TableHead className="font-semibold">Method</TableHead>
+            <TableHead className="font-semibold">Data & Hora</TableHead>
+            <TableHead className="font-semibold">Campanha</TableHead>
+            <TableHead className="font-semibold">Cliente</TableHead>
+            <TableHead className="font-semibold">Método</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {logs.map((l: any) => (
             <TableRow key={l.id} className="hover:bg-slate-50/50">
               <TableCell className="whitespace-nowrap text-slate-500 text-sm">
-                {new Date(l.validatedAt).toLocaleString()}
+                {new Date(l.validatedAt).toLocaleString('pt-BR')}
               </TableCell>
               <TableCell className="font-medium text-slate-800 max-w-[200px] truncate">
                 {l.couponTitle}

@@ -18,7 +18,6 @@ import {
   Bar,
   LineChart,
   Line,
-  ResponsiveContainer,
 } from 'recharts'
 import { useCouponStore } from '@/stores/CouponContext'
 
@@ -29,31 +28,30 @@ export function VendorAnalytics() {
 
   const myLogs = validationLogs.filter((l) => l.companyId === myCompany.id)
 
-  // Mock chart data to ensure dashboard looks fully populated
   const redemptionData = [
-    { name: 'Mon', redemptions: Math.max(2, myLogs.length % 5) },
-    { name: 'Tue', redemptions: Math.max(5, myLogs.length % 8) },
-    { name: 'Wed', redemptions: Math.max(4, myLogs.length % 6) },
-    { name: 'Thu', redemptions: Math.max(8, myLogs.length % 12) },
-    { name: 'Fri', redemptions: Math.max(12, myLogs.length % 18) },
-    { name: 'Sat', redemptions: Math.max(20, myLogs.length % 25) },
-    { name: 'Sun', redemptions: Math.max(15, myLogs.length % 20) },
+    { name: 'Seg', redemptions: Math.max(2, myLogs.length % 5) },
+    { name: 'Ter', redemptions: Math.max(5, myLogs.length % 8) },
+    { name: 'Qua', redemptions: Math.max(4, myLogs.length % 6) },
+    { name: 'Qui', redemptions: Math.max(8, myLogs.length % 12) },
+    { name: 'Sex', redemptions: Math.max(12, myLogs.length % 18) },
+    { name: 'Sáb', redemptions: Math.max(20, myLogs.length % 25) },
+    { name: 'Dom', redemptions: Math.max(15, myLogs.length % 20) },
   ]
 
   const growthData = [
-    { name: 'Week 1', leads: 5 },
-    { name: 'Week 2', leads: 8 },
-    { name: 'Week 3', leads: 14 },
-    { name: 'Week 4', leads: 22 },
+    { name: 'Semana 1', leads: 5 },
+    { name: 'Semana 2', leads: 8 },
+    { name: 'Semana 3', leads: 14 },
+    { name: 'Semana 4', leads: 22 },
   ]
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in-up">
       <Card className="border-slate-200 shadow-sm">
         <CardHeader>
-          <CardTitle>Weekly Redemptions</CardTitle>
+          <CardTitle>Resgates Semanais</CardTitle>
           <CardDescription>
-            Coupon usage volume over the last 7 days.
+            Volume de uso de cupons nos últimos 7 dias.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -61,7 +59,7 @@ export function VendorAnalytics() {
             <ChartContainer
               config={{
                 redemptions: {
-                  label: 'Redemptions',
+                  label: 'Resgates',
                   color: 'hsl(var(--primary))',
                 },
               }}
@@ -92,15 +90,15 @@ export function VendorAnalytics() {
 
       <Card className="border-slate-200 shadow-sm">
         <CardHeader>
-          <CardTitle>Lead Growth</CardTitle>
+          <CardTitle>Crescimento de Leads</CardTitle>
           <CardDescription>
-            New unique customers acquired via campaigns.
+            Novos clientes únicos adquiridos via campanhas.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="h-[300px] w-full">
             <ChartContainer
-              config={{ leads: { label: 'New Leads', color: '#10b981' } }}
+              config={{ leads: { label: 'Novos Leads', color: '#10b981' } }}
             >
               <LineChart
                 data={growthData}

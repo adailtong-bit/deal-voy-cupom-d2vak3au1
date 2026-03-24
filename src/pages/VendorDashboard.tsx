@@ -43,7 +43,6 @@ export default function VendorDashboard() {
     )
     .slice(0, 15)
 
-  // Filter bookings for this merchant
   const myBookings = bookings.filter((b) => b.storeName === myCompany.name)
 
   return (
@@ -52,7 +51,7 @@ export default function VendorDashboard() {
         <div>
           <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-2">
             <Briefcase className="h-8 w-8 text-primary" />{' '}
-            {t('vendor.dashboard', 'Merchant Dashboard')}
+            {t('vendor.dashboard', 'Painel do Lojista')}
           </h1>
           <p className="text-slate-500 font-medium mt-1">
             {myCompany.name} - {myCompany.region}
@@ -65,7 +64,7 @@ export default function VendorDashboard() {
             className="gap-2 bg-slate-50 hover:bg-slate-100 border-slate-200 font-bold"
           >
             <Link to="/merchant/scanner">
-              <ScanLine className="h-4 w-4 text-primary" /> POS Scanner
+              <ScanLine className="h-4 w-4 text-primary" /> Scanner PDV
             </Link>
           </Button>
           <CreateCampaignDialog company={myCompany} />
@@ -80,61 +79,61 @@ export default function VendorDashboard() {
             value="overview"
             className="py-2.5 px-4 font-semibold data-[state=active]:shadow-sm"
           >
-            {t('vendor.overview')}
+            {t('vendor.overview', 'Visão Geral')}
           </TabsTrigger>
           <TabsTrigger
             value="customers"
             className="py-2.5 px-4 font-semibold data-[state=active]:shadow-sm"
           >
-            <Users className="h-4 w-4 mr-2 text-blue-500" /> CRM Leads
+            <Users className="h-4 w-4 mr-2 text-blue-500" /> CRM / Leads
           </TabsTrigger>
           <TabsTrigger
             value="offers"
             className="py-2.5 px-4 font-semibold data-[state=active]:shadow-sm"
           >
-            <ShoppingBag className="h-4 w-4 mr-2 text-emerald-500" /> Campaigns
+            <ShoppingBag className="h-4 w-4 mr-2 text-emerald-500" /> Campanhas
           </TabsTrigger>
           <TabsTrigger
             value="orders"
             className="py-2.5 px-4 font-semibold data-[state=active]:shadow-sm"
           >
-            Orders
+            Pedidos
           </TabsTrigger>
           <TabsTrigger
             value="validation"
             className="py-2.5 px-4 font-semibold data-[state=active]:shadow-sm"
           >
-            <Scan className="h-4 w-4 mr-2" /> Validate
+            <Scan className="h-4 w-4 mr-2" /> Validar
           </TabsTrigger>
           <TabsTrigger
             value="history"
             className="py-2.5 px-4 font-semibold data-[state=active]:shadow-sm"
           >
-            <History className="h-4 w-4 mr-2" /> Redemptions
+            <History className="h-4 w-4 mr-2" /> Resgates
           </TabsTrigger>
           <TabsTrigger
             value="behavioral"
             className="py-2.5 px-4 font-semibold data-[state=active]:shadow-sm"
           >
-            <Zap className="h-4 w-4 mr-2 text-orange-500" /> Auto-Rewards
+            <Zap className="h-4 w-4 mr-2 text-orange-500" /> Gatilhos
           </TabsTrigger>
           <TabsTrigger
             value="seasonal"
             className="py-2.5 px-4 font-semibold data-[state=active]:shadow-sm"
           >
-            <CalendarDays className="h-4 w-4 mr-2 text-purple-500" /> Seasonal
+            <CalendarDays className="h-4 w-4 mr-2 text-purple-500" /> Sazonal
           </TabsTrigger>
           <TabsTrigger
             value="staff"
             className="py-2.5 px-4 font-semibold data-[state=active]:shadow-sm"
           >
-            <Users className="h-4 w-4 mr-2" /> Staff
+            <Users className="h-4 w-4 mr-2" /> Equipe
           </TabsTrigger>
           <TabsTrigger
             value="settings"
             className="py-2.5 px-4 font-semibold data-[state=active]:shadow-sm"
           >
-            <Settings className="h-4 w-4 mr-2" /> Settings
+            <Settings className="h-4 w-4 mr-2" /> Configurações
           </TabsTrigger>
         </TabsList>
 

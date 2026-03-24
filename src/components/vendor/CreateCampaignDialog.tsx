@@ -14,7 +14,7 @@ export function CreateCampaignDialog({ company }: any) {
         onClick={() => setIsOpen(true)}
         className="w-full sm:w-auto font-bold shadow-md hover:-translate-y-0.5 transition-transform bg-primary hover:bg-primary/90 text-white"
       >
-        <Plus className="w-4 h-4 mr-2" /> New Campaign
+        <Plus className="w-4 h-4 mr-2" /> Nova Campanha
       </Button>
       <CampaignFormDialog
         open={isOpen}

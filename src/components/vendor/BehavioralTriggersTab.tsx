@@ -20,11 +20,11 @@ export function BehavioralTriggersTab({ coupons }: any) {
           <Zap className="h-8 w-8 text-slate-300" />
         </div>
         <h3 className="font-bold text-lg text-slate-700">
-          No Behavioral Triggers Active
+          Nenhum Gatilho Comportamental Ativo
         </h3>
         <p className="text-slate-500 text-sm max-w-sm mx-auto mt-1">
-          You haven't set up any automated rewards for loyal customers yet. Add
-          triggers when creating a campaign.
+          Você ainda não configurou recompensas automáticas para clientes fiéis.
+          Adicione gatilhos ao criar uma campanha.
         </p>
       </div>
     )
@@ -41,10 +41,12 @@ export function BehavioralTriggersTab({ coupons }: any) {
                 variant="secondary"
                 className="bg-orange-100 text-orange-700 hover:bg-orange-100 border-none shrink-0"
               >
-                <Zap className="w-3 h-3 mr-1" /> Auto-Reward
+                <Zap className="w-3 h-3 mr-1" /> Auto-Recompensa
               </Badge>
             </CardTitle>
-            <CardDescription>Automated rules for this campaign</CardDescription>
+            <CardDescription>
+              Regras automatizadas para esta campanha
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3 pt-4">
             {c.behavioralTriggers.map((t: any) => (
@@ -54,17 +56,18 @@ export function BehavioralTriggersTab({ coupons }: any) {
               >
                 <div>
                   <p className="font-bold text-slate-800 capitalize flex items-center gap-1.5 mb-0.5">
-                    <Zap className="h-3.5 w-3.5 text-primary" /> {t.type} Rule
+                    <Zap className="h-3.5 w-3.5 text-primary" /> Regra de{' '}
+                    {t.type === 'visit' ? 'Visita' : t.type}
                   </p>
                   <p className="text-slate-500 font-medium">
-                    Triggers every{' '}
+                    Ativa a cada{' '}
                     <strong className="text-slate-700">{t.threshold}</strong>{' '}
-                    {t.type}s
+                    {t.type === 'visit' ? 'visitas' : 'ações'}
                   </p>
                 </div>
                 <div className="text-right bg-slate-50 py-2 px-3 rounded-lg border border-slate-100">
                   <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-0.5">
-                    Customer Reward
+                    Recompensa
                   </p>
                   <p className="font-black text-primary">{t.reward}</p>
                 </div>

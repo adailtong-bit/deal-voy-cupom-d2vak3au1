@@ -30,6 +30,7 @@ import {
 import { useCouponStore } from '@/stores/CouponContext'
 import { ImagePlus, ExternalLink } from 'lucide-react'
 import { CouponCard } from '@/components/CouponCard'
+import { toast } from 'sonner'
 
 const STORE_LOCATIONS = [
   'Matriz - Centro',
@@ -48,8 +49,18 @@ const formSchema = z
     image: z.string().optional(),
     companyUrl: z
       .string()
-      .url('Insira uma URL válida (ex: https://site.com)')
-      .or(z.literal(''))
+      .refine(
+        (val) => {
+          if (!val) return true
+          try {
+            new URL(val.startsWith('http') ? val : `https://${val}`)
+            return true
+          } catch {
+            return false
+          }
+        },
+        { message: 'Insira uma URL válida (ex: https://site.com)' },
+      )
       .optional(),
     scope: z.enum(['network', 'specific']),
     specificStore: z.string().optional(),
@@ -210,13 +221,19 @@ export function CampaignFormDialog({
         ? `${data.discountPercentage} OFF`
         : `Gaste ${data.minSpend}, ganhe ${data.fixedDiscount} OFF`
 
+    let finalUrl = data.companyUrl
+    if (finalUrl && !finalUrl.startsWith('http')) {
+      finalUrl = `https://${finalUrl}`
+    }
+
     if (coupon) {
       updateCampaign(coupon.id, {
         title: data.title,
         description: data.description,
         discount: formattedDiscount,
         image: data.image || coupon.image,
-        externalUrl: data.companyUrl || coupon.externalUrl,
+        externalUrl: finalUrl || coupon.externalUrl,
+        offerType: finalUrl ? 'online' : coupon.offerType || 'in-store',
         address: data.scope === 'specific' ? data.specificStore : '',
         startDate: data.startDate,
         endDate: data.endDate,
@@ -233,12 +250,13 @@ export function CampaignFormDialog({
         storeName:
           data.scope === 'specific' && data.specificStore
             ? data.specificStore
-            : company?.name || 'Store',
+            : company?.name || 'Loja',
         title: data.title,
         description: data.description,
         discount: formattedDiscount,
         image: data.image || 'https://img.usecurling.com/p/400/300?q=sale',
-        externalUrl: data.companyUrl,
+        externalUrl: finalUrl,
+        offerType: finalUrl ? 'online' : 'in-store',
         address: data.scope === 'specific' ? data.specificStore : '',
         startDate: data.startDate,
         endDate: data.endDate,
@@ -257,13 +275,15 @@ export function CampaignFormDialog({
   }
 
   const handleTestLink = () => {
-    const url = form.getValues('companyUrl')
-    if (url) {
+    const urlStr = form.getValues('companyUrl')
+    if (urlStr) {
+      const finalUrl = urlStr.startsWith('http') ? urlStr : `https://${urlStr}`
       try {
-        new URL(url)
-        window.open(url, '_blank')
+        new URL(finalUrl)
+        window.open(finalUrl, '_blank')
       } catch {
         form.setError('companyUrl', { message: 'URL inválida.' })
+        toast.error('URL inválida.')
       }
     }
   }
@@ -291,6 +311,7 @@ export function CampaignFormDialog({
     coordinates: { lat: 0, lng: 0 },
     status: 'active',
     offerType: watchedVals.companyUrl ? 'online' : 'in-store',
+    externalUrl: watchedVals.companyUrl,
   } as any
 
   function formattedDiscountPreview(vals: any, fallback: string) {
@@ -318,7 +339,7 @@ export function CampaignFormDialog({
                   name="title"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Nome da Campanha</FormLabel>
+                      <FormLabel>Título da Campanha</FormLabel>
                       <FormControl>
                         <Input
                           placeholder="Digite o nome da campanha"
@@ -354,7 +375,7 @@ export function CampaignFormDialog({
                       <FormControl>
                         <div className="flex gap-2">
                           <Input
-                            placeholder="https://suaempresa.com.br"
+                            placeholder="ex: suaempresa.com.br"
                             {...field}
                           />
                           <Button
@@ -362,7 +383,7 @@ export function CampaignFormDialog({
                             variant="outline"
                             onClick={handleTestLink}
                             disabled={!field.value}
-                            className="shrink-0"
+                            className="shrink-0 font-medium"
                           >
                             <ExternalLink className="w-4 h-4 mr-2" />
                             Testar Link
@@ -370,7 +391,7 @@ export function CampaignFormDialog({
                         </div>
                       </FormControl>
                       <FormDescription>
-                        Link do site ou rede social da loja (opcional).
+                        Link do site da loja para campanhas online (opcional).
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -408,6 +429,7 @@ export function CampaignFormDialog({
                                     message:
                                       'Apenas arquivos .jpg, .jpeg e .png são permitidos.',
                                   })
+                                  toast.error('Formato inválido.')
                                   return
                                 }
                                 if (file.size > MAX_SIZE) {
@@ -416,6 +438,7 @@ export function CampaignFormDialog({
                                     message:
                                       'O arquivo não pode ter mais de 2MB.',
                                   })
+                                  toast.error('Arquivo muito grande.')
                                   return
                                 }
                                 form.clearErrors('image')
@@ -512,7 +535,7 @@ export function CampaignFormDialog({
                   name="discountType"
                   render={({ field }) => (
                     <FormItem className="space-y-3 pt-2">
-                      <FormLabel>Tipo de Desconto</FormLabel>
+                      <FormLabel>Regras de Desconto</FormLabel>
                       <FormControl>
                         <RadioGroup
                           onValueChange={(val) => {
@@ -663,15 +686,18 @@ export function CampaignFormDialog({
             </form>
           </Form>
 
-          <div className="bg-slate-50 p-6 rounded-xl border border-slate-200 hidden md:block">
-            <h3 className="font-bold text-lg mb-2 text-slate-800">
-              Pré-visualização da Campanha
-            </h3>
-            <p className="text-sm text-slate-500 mb-6">
-              É assim que sua campanha aparecerá para os clientes no aplicativo.
-            </p>
-            <div className="max-w-[320px] mx-auto pointer-events-none">
-              <CouponCard coupon={previewCoupon} />
+          <div className="bg-slate-50 p-6 rounded-xl border border-slate-200 hidden md:block relative h-full">
+            <div className="sticky top-6">
+              <h3 className="font-bold text-lg mb-2 text-slate-800">
+                Pré-visualização da Campanha
+              </h3>
+              <p className="text-sm text-slate-500 mb-6">
+                É assim que sua campanha aparecerá para os clientes no
+                aplicativo em tempo real.
+              </p>
+              <div className="max-w-[320px] mx-auto pointer-events-none">
+                <CouponCard coupon={previewCoupon} />
+              </div>
             </div>
           </div>
         </div>

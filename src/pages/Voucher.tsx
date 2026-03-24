@@ -17,10 +17,12 @@ import {
   Globe,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useLanguage } from '@/stores/LanguageContext'
 
 export default function Voucher() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { t } = useLanguage()
   const {
     user,
     coupons,
@@ -40,13 +42,18 @@ export default function Voucher() {
         <h2 className="text-2xl font-bold mb-4 text-slate-800">
           Voucher não encontrado
         </h2>
-        <Button onClick={() => navigate(-1)}>Voltar</Button>
+        <Button onClick={() => navigate(-1)}>
+          {t('common.back', 'Voltar')}
+        </Button>
       </div>
     )
   }
 
   const isOnline =
-    coupon?.offerType === 'online' || event?.offerType === 'online'
+    coupon?.offerType === 'online' ||
+    event?.offerType === 'online' ||
+    !!coupon?.externalUrl ||
+    !!event?.externalUrl
   const externalUrl = coupon?.externalUrl || event?.externalUrl
   const title = coupon?.title || event?.title || ''
   const storeName = coupon?.storeName || event?.companyId || 'Loja Parceira'
@@ -58,7 +65,8 @@ export default function Voucher() {
 
   const description = coupon?.description || event?.description || ''
   const discount =
-    coupon?.discount || (event?.type === 'sale' ? 'Sale' : 'Evento Especial')
+    coupon?.discount ||
+    (event?.type === 'sale' ? 'Promoção' : 'Evento Especial')
   const image = coupon?.image || event?.image
 
   const code =
@@ -102,7 +110,12 @@ export default function Voucher() {
   const handleBuyNow = () => {
     if (!externalUrl) return
     try {
-      const url = new URL(externalUrl)
+      let finalUrl = externalUrl
+      if (!finalUrl.startsWith('http')) {
+        finalUrl = `https://${finalUrl}`
+      }
+
+      const url = new URL(finalUrl)
       const config = coupon?.affiliateConfig || event?.affiliateConfig
 
       if (config) {
@@ -110,19 +123,19 @@ export default function Voucher() {
         if (pId) {
           url.searchParams.set(config.paramName, pId)
         }
-        if (config.discountParamName && code) {
+        if (config.discountParamName && code && code !== 'PREVIEW') {
           url.searchParams.set(config.discountParamName, code)
         }
       }
 
-      // Auto-copy promo code
-      navigator.clipboard.writeText(code)
-      toast.info('Código copiado! Você será redirecionado para a loja.', {
-        duration: 3000,
-      })
+      if (code && code !== 'PREVIEW') {
+        navigator.clipboard.writeText(code)
+        toast.info('Código copiado! Você será redirecionado para a loja.', {
+          duration: 3000,
+        })
+      }
 
-      // Mark as reserved to save in "My Vouchers"
-      if (id && !reserved) {
+      if (id && !reserved && id !== 'preview') {
         reserveCoupon(id)
       }
 
@@ -143,7 +156,7 @@ export default function Voucher() {
           className="mb-6 -ml-4 text-slate-600 hover:text-slate-900 transition-colors"
         >
           <ArrowLeft className="h-5 w-5 mr-2" />
-          Voltar
+          {t('common.back', 'Voltar')}
         </Button>
 
         <Card className="overflow-hidden border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-2xl relative bg-white">
@@ -230,7 +243,7 @@ export default function Voucher() {
                     ) : (
                       <>
                         <ExternalLink className="mr-2 h-5 w-5" />
-                        Comprar Agora no Site
+                        Visitar Site da Loja
                       </>
                     )}
                   </Button>
@@ -384,7 +397,6 @@ export default function Voucher() {
           </CardContent>
         </Card>
 
-        {/* Extra actions below the card if reserved */}
         {reserved && (
           <div className="mt-8 flex flex-col items-center">
             {isOnline ? (
@@ -394,7 +406,7 @@ export default function Voucher() {
                 onClick={handleBuyNow}
                 className="w-full gap-2 font-bold h-14 text-base transition-all duration-300 rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:-translate-y-0.5"
               >
-                <ExternalLink className="h-5 w-5" /> Acessar Loja Online
+                <ExternalLink className="h-5 w-5" /> Visitar Site da Loja
               </Button>
             ) : (
               <>
