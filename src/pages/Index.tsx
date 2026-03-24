@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
 import { CouponCard } from '@/components/CouponCard'
@@ -34,11 +34,13 @@ import {
   ShoppingCart,
   Check,
   ChevronDown,
+  ArrowLeft,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 
 export default function Index() {
   const { t, formatDate } = useLanguage()
+  const navigate = useNavigate()
   const {
     coupons,
     seasonalEvents,
@@ -49,6 +51,14 @@ export default function Index() {
   } = useCouponStore()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
+
+  const handleBack = () => {
+    if (window.history.state && window.history.state.idx > 0) {
+      navigate(-1)
+    } else {
+      navigate('/vendor')
+    }
+  }
 
   const activeEvents = useMemo(() => {
     const today = new Date()
@@ -131,6 +141,18 @@ export default function Index() {
       <section className="bg-white pt-4 pb-3 px-4 border-b shadow-sm">
         <div className="container mx-auto max-w-5xl">
           <div className="flex flex-col gap-2.5 max-w-2xl mx-auto md:mx-0">
+            <div className="flex items-center mb-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleBack}
+                className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 -ml-2 h-8 px-2"
+              >
+                <ArrowLeft className="w-4 h-4 mr-1.5" />
+                {t('common.back', 'Voltar')}
+              </Button>
+            </div>
+
             <div className="relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
               <Input
