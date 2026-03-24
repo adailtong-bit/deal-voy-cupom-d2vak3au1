@@ -27,6 +27,7 @@ import {
   PlatformSettings,
   PartnerPolicy,
   PartnerInvoice,
+  WebhookLog,
 } from './types'
 
 export const getCategoryTranslationKey = (category: string): string => {
@@ -517,6 +518,7 @@ const generateCompanies = (): Company[] => {
       enableLoyalty: i % 3 === 0,
       ownerId: `u_shop_${i}`,
       preferredCustomers: i === 1 ? ['u_user'] : [],
+      webhookUrl: i === 1 ? 'https://api.example-pos.com/webhooks/dealvoy' : undefined,
     })
   }
   return companies
@@ -1083,3 +1085,25 @@ export const MOCK_PARTNER_INVOICES: PartnerInvoice[] = [
   },
   ...generatedSeasonalInvoices,
 ]
+
+export const MOCK_WEBHOOK_LOGS: WebhookLog[] = [
+  {
+    id: 'wl-1',
+    companyId: 'c1',
+    endpoint: 'https://api.pos-system.com/webhooks/dealvoy',
+    event: 'coupon.redeemed',
+    payload: { couponId: 'cpn-1' },
+    status: 200,
+    timestamp: new Date(Date.now() - 3600000).toISOString(),
+  },
+  {
+    id: 'wl-2',
+    companyId: 'c1',
+    endpoint: 'https://api.pos-system.com/webhooks/dealvoy',
+    event: 'coupon.redeemed',
+    payload: { couponId: 'cpn-2' },
+    status: 500,
+    timestamp: new Date(Date.now() - 86400000).toISOString(),
+  }
+]
+

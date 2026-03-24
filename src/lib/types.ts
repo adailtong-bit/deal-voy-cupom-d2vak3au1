@@ -382,6 +382,7 @@ export interface Company {
   stateRegistration?: string
   credentialsSent?: boolean
   documents?: CompanyDocument[]
+  webhookUrl?: string
 }
 
 export type AdBillingType = 'fixed' | 'cpc' | 'cpa'
@@ -744,3 +745,14 @@ export interface PartnerInvoice {
   issueDate: string
   transactionCount: number
 }
+
+export interface WebhookLog {
+  id: string
+  companyId: string
+  endpoint: string
+  event: string
+  payload: any
+  status: number
+  timestamp: string
+}
+
