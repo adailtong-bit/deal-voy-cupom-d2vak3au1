@@ -15,6 +15,7 @@ import {
   Compass,
   User,
   LogOut,
+  Building,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -157,15 +158,6 @@ export function MobileHeader() {
                   {t('nav.travel', 'Viagens')}
                 </Link>
 
-                <Link
-                  to="/reports"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors"
-                >
-                  <BarChart3 className="h-5 w-5 text-slate-400" />
-                  {t('nav.reports', 'Relatórios')}
-                </Link>
-
                 <div className="my-2 border-t border-slate-100"></div>
 
                 <h4 className="text-sm font-semibold text-slate-900 px-3 flex items-center gap-2 mb-2 mt-2">
@@ -221,6 +213,21 @@ export function MobileHeader() {
                     >
                       <Settings className="h-5 w-5 text-primary" />
                       {t('nav.admin', 'Admin Dashboard')}
+                    </Link>
+                  </>
+                )}
+
+                {user?.role === 'franchisee' && (
+                  <>
+                    <div className="my-2 border-t border-slate-100"></div>
+
+                    <Link
+                      to="/franchisee"
+                      onClick={() => setIsMenuOpen(false)}
+                      className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-base font-bold text-primary bg-primary/5 hover:bg-primary/10 transition-colors"
+                    >
+                      <Building className="h-5 w-5 text-primary" />
+                      Franchise Dashboard
                     </Link>
                   </>
                 )}

@@ -81,6 +81,14 @@ export function DesktopHeader() {
                 {t('nav.admin', 'Admin')}
               </Link>
             )}
+            {user?.role === 'franchisee' && (
+              <Link
+                to="/franchisee"
+                className="transition-colors text-primary hover:text-primary/80 font-bold"
+              >
+                Dashboard
+              </Link>
+            )}
           </nav>
         </div>
         <div className="flex items-center gap-4">

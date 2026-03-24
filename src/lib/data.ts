@@ -464,6 +464,149 @@ const generateCoupons = (): Coupon[] => {
           : [],
     })
   }
+
+  // Add Franchisee NY Coupons
+  coupons.push(
+    {
+      id: 'cpn_ny_f1',
+      companyId: 'c_ny_hq',
+      title: 'NY Empire State Discount',
+      description: 'Exclusive NY Franchise Deal',
+      discount: '20% OFF',
+      category: 'Outros',
+      distance: 5,
+      expiryDate: '2025-12-31',
+      image: 'https://img.usecurling.com/p/600/400?q=new%20york',
+      code: 'NYEMP20',
+      coordinates: { lat: 40.7128, lng: -74.006 },
+      totalAvailable: 500,
+      reservedCount: 150,
+      status: 'active',
+      source: 'partner',
+      region: 'US-NY',
+      country: 'USA',
+      state: 'New York',
+      city: 'New York',
+      storeName: 'Deal Voy NY HQ',
+      targetAudience: 'all',
+    },
+    {
+      id: 'cpn_ny_f2',
+      companyId: 'c_ny_hq',
+      title: 'Manhattan Weekend Special',
+      description: 'Weekend special for Manhattan',
+      discount: '$15.00 OFF',
+      category: 'Outros',
+      distance: 2,
+      expiryDate: '2025-12-31',
+      image: 'https://img.usecurling.com/p/600/400?q=manhattan',
+      code: 'MAN15',
+      coordinates: { lat: 40.7128, lng: -74.006 },
+      totalAvailable: 200,
+      reservedCount: 50,
+      status: 'active',
+      source: 'partner',
+      region: 'US-NY',
+      country: 'USA',
+      state: 'New York',
+      city: 'New York',
+      storeName: 'Deal Voy NY HQ',
+      targetAudience: 'all',
+    },
+    {
+      id: 'cpn_ny_f3',
+      companyId: 'c_ny_hq',
+      title: 'Big Apple First Purchase',
+      description: 'First purchase discount in NY',
+      discount: '10% OFF',
+      category: 'Outros',
+      distance: 10,
+      expiryDate: '2025-12-31',
+      image: 'https://img.usecurling.com/p/600/400?q=apple',
+      code: 'BIG10',
+      coordinates: { lat: 40.7128, lng: -74.006 },
+      totalAvailable: 1000,
+      reservedCount: 300,
+      status: 'active',
+      source: 'partner',
+      region: 'US-NY',
+      country: 'USA',
+      state: 'New York',
+      city: 'New York',
+      storeName: 'Deal Voy NY HQ',
+      targetAudience: 'all',
+    },
+    {
+      id: 'cpn_ny_m1',
+      companyId: 'c_ny_1',
+      title: 'Morning Brew Deal',
+      description: 'Morning coffee special',
+      discount: '15% OFF',
+      category: 'Alimentação',
+      distance: 1,
+      expiryDate: '2025-12-31',
+      image: 'https://img.usecurling.com/p/600/400?q=coffee',
+      code: 'BK15',
+      coordinates: { lat: 40.7128, lng: -74.006 },
+      totalAvailable: 100,
+      reservedCount: 20,
+      status: 'active',
+      source: 'partner',
+      region: 'US-NY',
+      country: 'USA',
+      state: 'New York',
+      city: 'New York',
+      storeName: 'Brooklyn Coffee',
+      targetAudience: 'all',
+    },
+    {
+      id: 'cpn_ny_m2',
+      companyId: 'c_ny_2',
+      title: 'Slice & Soda',
+      description: 'Pizza and soda combo',
+      discount: '$5.00 OFF',
+      category: 'Alimentação',
+      distance: 3,
+      expiryDate: '2025-12-31',
+      image: 'https://img.usecurling.com/p/600/400?q=pizza',
+      code: 'QZ5',
+      coordinates: { lat: 40.7128, lng: -74.006 },
+      totalAvailable: 100,
+      reservedCount: 80,
+      status: 'active',
+      source: 'partner',
+      region: 'US-NY',
+      country: 'USA',
+      state: 'New York',
+      city: 'New York',
+      storeName: 'Queens Pizza',
+      targetAudience: 'all',
+    },
+    {
+      id: 'cpn_ny_m3',
+      companyId: 'c_ny_3',
+      title: 'Guest Pass Discount',
+      description: 'Discounted gym pass',
+      discount: '50% OFF',
+      category: 'Lazer',
+      distance: 8,
+      expiryDate: '2023-12-31',
+      image: 'https://img.usecurling.com/p/600/400?q=gym',
+      code: 'BX50',
+      coordinates: { lat: 40.7128, lng: -74.006 },
+      totalAvailable: 50,
+      reservedCount: 50,
+      status: 'expired',
+      source: 'partner',
+      region: 'US-NY',
+      country: 'USA',
+      state: 'New York',
+      city: 'New York',
+      storeName: 'Bronx Fitness',
+      targetAudience: 'all',
+    },
+  )
+
   return coupons
 }
 
@@ -522,6 +665,51 @@ const generateCompanies = (): Company[] => {
         i === 1 ? 'https://api.example-pos.com/webhooks/dealvoy' : undefined,
     })
   }
+
+  // NY Companies
+  companies.push(
+    {
+      id: 'c_ny_hq',
+      name: 'Deal Voy NY HQ',
+      email: 'hq@dealvoy.com',
+      status: 'active',
+      region: 'US-NY',
+      franchiseId: 'f_ny',
+      enableLoyalty: false,
+      registrationDate: '2024-01-01',
+    },
+    {
+      id: 'c_ny_1',
+      name: 'Brooklyn Coffee',
+      email: 'bk@example.com',
+      status: 'active',
+      region: 'US-NY',
+      franchiseId: 'f_ny',
+      enableLoyalty: false,
+      registrationDate: '2024-01-01',
+    },
+    {
+      id: 'c_ny_2',
+      name: 'Queens Pizza',
+      email: 'queens@example.com',
+      status: 'active',
+      region: 'US-NY',
+      franchiseId: 'f_ny',
+      enableLoyalty: false,
+      registrationDate: '2024-01-01',
+    },
+    {
+      id: 'c_ny_3',
+      name: 'Bronx Fitness',
+      email: 'bronx@example.com',
+      status: 'active',
+      region: 'US-NY',
+      franchiseId: 'f_ny',
+      enableLoyalty: false,
+      registrationDate: '2024-01-01',
+    },
+  )
+
   return companies
 }
 export const MOCK_COMPANIES: Company[] = generateCompanies()
@@ -642,6 +830,18 @@ export const MOCK_USERS: User[] = [
       travelMode: false,
     },
   },
+  {
+    id: 'u_fran_ny',
+    name: 'NY Franchisee',
+    email: 'ny@dealvoy.com',
+    role: 'franchisee',
+    region: 'US-NY',
+    avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=female&seed=77',
+    country: 'USA',
+    state: 'New York',
+    city: 'New York',
+    phone: '+1 212 555-0199',
+  },
 ]
 
 export const MOCK_REWARDS: RewardItem[] = [
@@ -656,16 +856,24 @@ export const MOCK_REWARDS: RewardItem[] = [
   },
 ]
 
-export const MOCK_FRANCHISES: Franchise[] = Array.from({ length: 12 }).map(
-  (_, i) => ({
+export const MOCK_FRANCHISES: Franchise[] = [
+  ...Array.from({ length: 12 }).map((_, i) => ({
     id: `f${i + 1}`,
     name: `Deal Voy Franchise ${i + 1}`,
     region: i % 2 === 0 ? 'BR-SP' : 'US-FL',
     ownerId: `u_fran_${i}`,
-    status: 'active',
+    status: 'active' as const,
     licenseExpiry: `2030-0${(i % 9) + 1}-01`,
-  }),
-)
+  })),
+  {
+    id: 'f_ny',
+    name: 'Deal Voy New York',
+    region: 'US-NY',
+    ownerId: 'u_fran_ny',
+    status: 'active',
+    licenseExpiry: '2030-01-01',
+  },
+]
 
 export const MOCK_TRAVEL_OFFERS: TravelOffer[] = [
   {

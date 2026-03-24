@@ -94,6 +94,15 @@ export default function Login() {
             </Button>
             <Button
               variant="outline"
+              onClick={() =>
+                handleQuickLogin('ny@dealvoy.com', 'franchisee', '/franchisee')
+              }
+              className="border-primary/20 text-primary hover:bg-primary/5"
+            >
+              Acessar como Franqueado NY
+            </Button>
+            <Button
+              variant="outline"
               onClick={() => handleQuickLogin('user@dealvoy.com', 'user', '/')}
             >
               Acessar como Usuário

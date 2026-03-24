@@ -14,6 +14,7 @@ import MerchantLayout from '@/components/MerchantLayout'
 import Index from '@/pages/Index'
 import VendorDashboard from '@/pages/VendorDashboard'
 import AdminDashboard from '@/pages/AdminDashboard'
+import FranchiseeDashboard from '@/pages/FranchiseeDashboard'
 import Seasonal from '@/pages/Seasonal'
 import Voucher from '@/pages/Voucher'
 import MyVouchers from '@/pages/MyVouchers'
@@ -80,6 +81,14 @@ export default function App() {
                   element={
                     <RequireAuth>
                       <AdminDashboard />
+                    </RequireAuth>
+                  }
+                />
+                <Route
+                  path="/franchisee"
+                  element={
+                    <RequireAuth>
+                      <FranchiseeDashboard />
                     </RequireAuth>
                   }
                 />
