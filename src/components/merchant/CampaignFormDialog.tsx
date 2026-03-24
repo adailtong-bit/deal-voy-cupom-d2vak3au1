@@ -15,11 +15,13 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { useCouponStore } from '@/stores/CouponContext'
+import { ImagePlus } from 'lucide-react'
 
 const formSchema = z
   .object({
@@ -267,7 +269,7 @@ export function CampaignFormDialog({
                     <FormLabel>Nome da Campanha</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Ex: Black Friday Especial"
+                        placeholder="Ex: Oferta Especial de Verão"
                         {...field}
                       />
                     </FormControl>
@@ -288,15 +290,50 @@ export function CampaignFormDialog({
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
                 name="image"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Imagem da Campanha (URL Opcional)</FormLabel>
+                render={({ field: { value, onChange, ...fieldProps } }) => (
+                  <FormItem className="mt-4">
+                    <FormLabel className="flex items-center gap-2">
+                      <ImagePlus className="w-4 h-4 text-slate-500" />
+                      Imagem da Campanha
+                    </FormLabel>
                     <FormControl>
-                      <Input placeholder="https://..." {...field} />
+                      <div className="space-y-3">
+                        <Input
+                          type="file"
+                          accept="image/*"
+                          className="file:bg-slate-100 file:border-0 file:rounded-md file:px-3 file:py-1 file:mr-4 file:text-sm file:font-medium hover:file:bg-slate-200 cursor-pointer"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0]
+                            if (file) {
+                              const reader = new FileReader()
+                              reader.onloadend = () =>
+                                onChange(reader.result as string)
+                              reader.readAsDataURL(file)
+                            } else {
+                              onChange('')
+                            }
+                          }}
+                          {...fieldProps}
+                        />
+                        {value && (
+                          <div className="relative rounded-lg overflow-hidden border bg-slate-50 mt-2">
+                            <img
+                              src={value}
+                              alt="Preview"
+                              className="w-full h-40 object-cover"
+                            />
+                          </div>
+                        )}
+                      </div>
                     </FormControl>
+                    <FormDescription>
+                      Faça o upload de uma imagem específica para esta campanha,
+                      separada do logo da empresa.
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -325,7 +362,7 @@ export function CampaignFormDialog({
                             <RadioGroupItem value="network" />
                           </FormControl>
                           <FormLabel className="font-normal cursor-pointer">
-                            Rede de Lojas
+                            Toda a Rede
                           </FormLabel>
                         </FormItem>
                         <FormItem className="flex items-center space-x-2 space-y-0">
@@ -377,22 +414,22 @@ export function CampaignFormDialog({
                           }
                         }}
                         defaultValue={field.value}
-                        className="flex flex-col gap-2"
+                        className="flex flex-col gap-3 p-3 bg-slate-50 border rounded-lg"
                       >
                         <FormItem className="flex items-center space-x-2 space-y-0">
                           <FormControl>
                             <RadioGroupItem value="percentage" />
                           </FormControl>
-                          <FormLabel className="font-normal cursor-pointer">
-                            Porcentagem (%)
+                          <FormLabel className="font-semibold cursor-pointer">
+                            Porcentagem
                           </FormLabel>
                         </FormItem>
                         <FormItem className="flex items-center space-x-2 space-y-0">
                           <FormControl>
                             <RadioGroupItem value="fixed_spend" />
                           </FormControl>
-                          <FormLabel className="font-normal cursor-pointer">
-                            Valor por Compra Mínima (Gaste & Ganhe)
+                          <FormLabel className="font-semibold cursor-pointer">
+                            Valor com Compra Mínima (Gate)
                           </FormLabel>
                         </FormItem>
                       </RadioGroup>
@@ -407,10 +444,15 @@ export function CampaignFormDialog({
                   control={form.control}
                   name="discountPercentage"
                   render={({ field }) => (
-                    <FormItem className="animate-in fade-in slide-in-from-top-2">
-                      <FormLabel>Porcentagem (%)</FormLabel>
+                    <FormItem className="animate-in fade-in slide-in-from-top-2 p-4 border rounded-lg bg-white">
+                      <FormLabel>Porcentagem de Desconto (%)</FormLabel>
                       <FormControl>
-                        <Input type="number" placeholder="Ex: 20" {...field} />
+                        <Input
+                          type="number"
+                          placeholder="Ex: 15"
+                          className="w-full sm:w-1/2"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -419,13 +461,13 @@ export function CampaignFormDialog({
               )}
 
               {discountType === 'fixed_spend' && (
-                <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 p-4 border rounded-lg bg-white">
                   <FormField
                     control={form.control}
                     name="minSpend"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Compra Mínima (R$)</FormLabel>
+                        <FormLabel>Valor Mínimo (Gaste R$)</FormLabel>
                         <FormControl>
                           <Input
                             type="number"
@@ -442,11 +484,11 @@ export function CampaignFormDialog({
                     name="fixedDiscount"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Desconto Fixo (R$)</FormLabel>
+                        <FormLabel>Desconto Fixo (Ganhe R$)</FormLabel>
                         <FormControl>
                           <Input
                             type="number"
-                            placeholder="Ex: 15"
+                            placeholder="Ex: 20"
                             {...field}
                           />
                         </FormControl>
@@ -467,7 +509,7 @@ export function CampaignFormDialog({
                 name="totalLimit"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Limite Total de Cupons</FormLabel>
+                    <FormLabel>Limite Total de Utilizações</FormLabel>
                     <FormControl>
                       <Input type="number" {...field} />
                     </FormControl>
