@@ -7,6 +7,9 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { ExternalLink } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useCouponStore } from '@/stores/CouponContext'
 
@@ -84,6 +87,7 @@ export function OffersTable({ offers }: any) {
             <TableHead className="font-semibold">Redeemed</TableHead>
             <TableHead className="font-semibold">Status</TableHead>
             <TableHead className="font-semibold">Expires</TableHead>
+            <TableHead className="font-semibold text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -110,6 +114,14 @@ export function OffersTable({ offers }: any) {
               </TableCell>
               <TableCell className="text-slate-500 text-sm">
                 {o.expiryDate ? formatDate(o.expiryDate) : 'N/A'}
+              </TableCell>
+              <TableCell className="text-right">
+                <Button asChild variant="outline" size="sm" className="h-8">
+                  <Link to={`/voucher/${o.id}`} target="_blank">
+                    <ExternalLink className="w-3.5 h-3.5 mr-1.5" /> Acessar
+                    Página
+                  </Link>
+                </Button>
               </TableCell>
             </TableRow>
           ))}

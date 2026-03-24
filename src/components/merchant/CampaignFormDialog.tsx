@@ -28,7 +28,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useCouponStore } from '@/stores/CouponContext'
-import { ImagePlus } from 'lucide-react'
+import { ImagePlus, ExternalLink } from 'lucide-react'
+import { CouponCard } from '@/components/CouponCard'
 
 const STORE_LOCATIONS = [
   'Matriz - Centro',
@@ -153,6 +154,7 @@ export function CampaignFormDialog({
   companyId: string
 }) {
   const { addCoupon, updateCampaign, companies } = useCouponStore()
+  const company = companies.find((c) => c.id === companyId)
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -175,6 +177,7 @@ export function CampaignFormDialog({
 
   const scope = form.watch('scope')
   const discountType = form.watch('discountType')
+  const watchedVals = form.watch()
 
   useEffect(() => {
     if (coupon && open) {
@@ -224,7 +227,6 @@ export function CampaignFormDialog({
         ),
       })
     } else {
-      const company = companies.find((c) => c.id === companyId)
       addCoupon({
         id: Math.random().toString(),
         companyId,
@@ -254,304 +256,90 @@ export function CampaignFormDialog({
     onOpenChange(false)
   }
 
+  const handleTestLink = () => {
+    const url = form.getValues('companyUrl')
+    if (url) {
+      try {
+        new URL(url)
+        window.open(url, '_blank')
+      } catch {
+        form.setError('companyUrl', { message: 'URL inválida.' })
+      }
+    }
+  }
+
+  const formattedPreviewDiscount =
+    watchedVals.discountType === 'percentage'
+      ? `${watchedVals.discountPercentage || '0%'} OFF`
+      : `Gaste ${watchedVals.minSpend || 'R$ 0,00'}, ganhe ${watchedVals.fixedDiscount || 'R$ 0,00'} OFF`
+
+  const previewCoupon = {
+    id: 'preview',
+    title: watchedVals.title || 'Título da Campanha',
+    description:
+      watchedVals.description || 'A descrição da sua campanha aparecerá aqui.',
+    storeName:
+      watchedVals.scope === 'specific' && watchedVals.specificStore
+        ? watchedVals.specificStore
+        : company?.name || 'Nome da Empresa',
+    image: watchedVals.image || 'https://img.usecurling.com/p/400/300?q=sale',
+    discount: formattedDiscountPreview(watchedVals, formattedPreviewDiscount),
+    distance: 50,
+    expiryDate: watchedVals.endDate,
+    category: 'Outros',
+    code: 'PREVIEW',
+    coordinates: { lat: 0, lng: 0 },
+    status: 'active',
+    offerType: watchedVals.companyUrl ? 'online' : 'in-store',
+  } as any
+
+  function formattedDiscountPreview(vals: any, fallback: string) {
+    if (vals.discountType === 'percentage' && !vals.discountPercentage)
+      return '0% OFF'
+    if (vals.discountType === 'fixed_spend' && !vals.minSpend)
+      return 'Valor OFF'
+    return fallback
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {coupon ? 'Editar Campanha' : 'Criar Nova Campanha'}
           </DialogTitle>
         </DialogHeader>
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit)}
-            className="space-y-6 pt-2"
-          >
-            <div className="space-y-4">
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nome da Campanha</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Digite o nome da campanha"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Descrição</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Descreva os detalhes da oferta"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="companyUrl"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>URL da Empresa</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="https://suaempresa.com.br"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Link do site ou rede social da loja (opcional).
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="image"
-                render={({ field: { value, onChange, ...fieldProps } }) => (
-                  <FormItem className="mt-4">
-                    <FormLabel className="flex items-center gap-2">
-                      <ImagePlus className="w-4 h-4 text-slate-500" />
-                      Imagem da Campanha
-                    </FormLabel>
-                    <FormControl>
-                      <div className="space-y-3">
-                        <Input
-                          type="file"
-                          accept="image/*"
-                          className="file:bg-slate-100 file:border-0 file:rounded-md file:px-3 file:py-1 file:mr-4 file:text-sm file:font-medium hover:file:bg-slate-200 cursor-pointer"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0]
-                            if (file) {
-                              const reader = new FileReader()
-                              reader.onloadend = () =>
-                                onChange(reader.result as string)
-                              reader.readAsDataURL(file)
-                            } else {
-                              onChange('')
-                            }
-                          }}
-                          {...fieldProps}
-                        />
-                        {value && (
-                          <div className="relative rounded-lg overflow-hidden border bg-slate-50 mt-2">
-                            <img
-                              src={value}
-                              alt="Preview"
-                              className="w-full h-40 object-cover"
-                            />
-                          </div>
-                        )}
-                      </div>
-                    </FormControl>
-                    <FormDescription>Selecione uma imagem.</FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="space-y-4 pt-4 border-t">
-              <FormField
-                control={form.control}
-                name="scope"
-                render={({ field }) => (
-                  <FormItem className="space-y-3">
-                    <FormLabel>Abrangência</FormLabel>
-                    <FormControl>
-                      <RadioGroup
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                        className="flex flex-col sm:flex-row gap-4"
-                      >
-                        <FormItem className="flex items-center space-x-2 space-y-0">
-                          <FormControl>
-                            <RadioGroupItem value="network" />
-                          </FormControl>
-                          <FormLabel className="font-normal cursor-pointer">
-                            Toda a Rede
-                          </FormLabel>
-                        </FormItem>
-                        <FormItem className="flex items-center space-x-2 space-y-0">
-                          <FormControl>
-                            <RadioGroupItem value="specific" />
-                          </FormControl>
-                          <FormLabel className="font-normal cursor-pointer">
-                            Loja Específica
-                          </FormLabel>
-                        </FormItem>
-                      </RadioGroup>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {scope === 'specific' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-2">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <div className="space-y-4">
                 <FormField
                   control={form.control}
-                  name="specificStore"
+                  name="title"
                   render={({ field }) => (
-                    <FormItem className="animate-in fade-in slide-in-from-top-2">
-                      <FormLabel>Selecione a Loja</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione uma loja" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {STORE_LOCATIONS.map((store) => (
-                            <SelectItem key={store} value={store}>
-                              {store}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-
-              <FormField
-                control={form.control}
-                name="discountType"
-                render={({ field }) => (
-                  <FormItem className="space-y-3 pt-2">
-                    <FormLabel>Tipo de Desconto</FormLabel>
-                    <FormControl>
-                      <RadioGroup
-                        onValueChange={(val) => {
-                          field.onChange(val)
-                          if (val === 'percentage') {
-                            form.setValue('minSpend', '')
-                            form.setValue('fixedDiscount', '')
-                          } else {
-                            form.setValue('discountPercentage', '')
-                          }
-                        }}
-                        defaultValue={field.value}
-                        className="flex flex-col gap-3 p-3 bg-slate-50 border rounded-lg"
-                      >
-                        <FormItem className="flex items-center space-x-2 space-y-0">
-                          <FormControl>
-                            <RadioGroupItem value="percentage" />
-                          </FormControl>
-                          <FormLabel className="font-semibold cursor-pointer">
-                            Percentual
-                          </FormLabel>
-                        </FormItem>
-                        <FormItem className="flex items-center space-x-2 space-y-0">
-                          <FormControl>
-                            <RadioGroupItem value="fixed_spend" />
-                          </FormControl>
-                          <FormLabel className="font-semibold cursor-pointer">
-                            Valor Fixo (Gaste e Ganhe)
-                          </FormLabel>
-                        </FormItem>
-                      </RadioGroup>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {discountType === 'percentage' && (
-                <FormField
-                  control={form.control}
-                  name="discountPercentage"
-                  render={({ field }) => (
-                    <FormItem className="animate-in fade-in slide-in-from-top-2 p-4 border rounded-lg bg-white">
-                      <FormLabel>% de Desconto</FormLabel>
+                    <FormItem>
+                      <FormLabel>Nome da Campanha</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="0%"
-                          className="w-full sm:w-1/2"
+                          placeholder="Digite o nome da campanha"
                           {...field}
-                          onChange={(e) => {
-                            let raw = e.target.value.replace(/\D/g, '')
-                            if (!raw) return field.onChange('')
-                            if (parseInt(raw) > 100) raw = '100'
-                            field.onChange(`${raw}%`)
-                          }}
                         />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-              )}
-
-              {discountType === 'fixed_spend' && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 p-4 border rounded-lg bg-white">
-                  <FormField
-                    control={form.control}
-                    name="minSpend"
-                    render={({ field }) => (
-                      <CurrencyInput
-                        field={field}
-                        label="Gaste (Valor Mínimo)"
-                        placeholder="R$ 0,00"
-                      />
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="fixedDiscount"
-                    render={({ field }) => (
-                      <CurrencyInput
-                        field={field}
-                        label="Ganhe (Valor do Desconto)"
-                        placeholder="R$ 0,00"
-                      />
-                    )}
-                  />
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-4 pt-4 border-t">
-              <FormField
-                control={form.control}
-                name="totalLimit"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Limite Total de Utilizações</FormLabel>
-                    <FormControl>
-                      <Input type="number" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="startDate"
+                  name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Data de Início</FormLabel>
+                      <FormLabel>Descrição</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} />
+                        <Input
+                          placeholder="Descreva os detalhes da oferta"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -559,34 +347,334 @@ export function CampaignFormDialog({
                 />
                 <FormField
                   control={form.control}
-                  name="endDate"
+                  name="companyUrl"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Data de Término</FormLabel>
+                      <FormLabel>URL da Empresa</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} />
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder="https://suaempresa.com.br"
+                            {...field}
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={handleTestLink}
+                            disabled={!field.value}
+                            className="shrink-0"
+                          >
+                            <ExternalLink className="w-4 h-4 mr-2" />
+                            Testar Link
+                          </Button>
+                        </div>
                       </FormControl>
+                      <FormDescription>
+                        Link do site ou rede social da loja (opcional).
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="image"
+                  render={({ field: { value, onChange, ...fieldProps } }) => (
+                    <FormItem className="mt-4">
+                      <FormLabel className="flex items-center gap-2">
+                        <ImagePlus className="w-4 h-4 text-slate-500" />
+                        Imagem da Campanha
+                      </FormLabel>
+                      <FormControl>
+                        <div className="space-y-3">
+                          <Input
+                            type="file"
+                            accept=".jpg,.jpeg,.png"
+                            className="file:bg-slate-100 file:border-0 file:rounded-md file:px-3 file:py-1 file:mr-4 file:text-sm file:font-medium hover:file:bg-slate-200 cursor-pointer"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0]
+                              if (file) {
+                                const MAX_SIZE = 2 * 1024 * 1024 // 2MB
+                                const ALLOWED_TYPES = [
+                                  'image/jpeg',
+                                  'image/png',
+                                  'image/jpg',
+                                ]
+
+                                if (!ALLOWED_TYPES.includes(file.type)) {
+                                  form.setError('image', {
+                                    type: 'manual',
+                                    message:
+                                      'Apenas arquivos .jpg, .jpeg e .png são permitidos.',
+                                  })
+                                  return
+                                }
+                                if (file.size > MAX_SIZE) {
+                                  form.setError('image', {
+                                    type: 'manual',
+                                    message:
+                                      'O arquivo não pode ter mais de 2MB.',
+                                  })
+                                  return
+                                }
+                                form.clearErrors('image')
+
+                                const reader = new FileReader()
+                                reader.onloadend = () =>
+                                  onChange(reader.result as string)
+                                reader.readAsDataURL(file)
+                              } else {
+                                onChange('')
+                              }
+                            }}
+                            {...fieldProps}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormDescription>
+                        Selecione uma imagem (Máx 2MB, JPG/PNG).
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
-            </div>
 
-            <div className="flex justify-end gap-3 pt-6">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-              >
-                Cancelar
-              </Button>
-              <Button type="submit">
-                {coupon ? 'Salvar Alterações' : 'Criar Campanha'}
-              </Button>
+              <div className="space-y-4 pt-4 border-t">
+                <FormField
+                  control={form.control}
+                  name="scope"
+                  render={({ field }) => (
+                    <FormItem className="space-y-3">
+                      <FormLabel>Abrangência</FormLabel>
+                      <FormControl>
+                        <RadioGroup
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                          className="flex flex-col sm:flex-row gap-4"
+                        >
+                          <FormItem className="flex items-center space-x-2 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="network" />
+                            </FormControl>
+                            <FormLabel className="font-normal cursor-pointer">
+                              Toda a Rede
+                            </FormLabel>
+                          </FormItem>
+                          <FormItem className="flex items-center space-x-2 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="specific" />
+                            </FormControl>
+                            <FormLabel className="font-normal cursor-pointer">
+                              Loja Específica
+                            </FormLabel>
+                          </FormItem>
+                        </RadioGroup>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {scope === 'specific' && (
+                  <FormField
+                    control={form.control}
+                    name="specificStore"
+                    render={({ field }) => (
+                      <FormItem className="animate-in fade-in slide-in-from-top-2">
+                        <FormLabel>Selecione a Loja</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione uma loja" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {STORE_LOCATIONS.map((store) => (
+                              <SelectItem key={store} value={store}>
+                                {store}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+
+                <FormField
+                  control={form.control}
+                  name="discountType"
+                  render={({ field }) => (
+                    <FormItem className="space-y-3 pt-2">
+                      <FormLabel>Tipo de Desconto</FormLabel>
+                      <FormControl>
+                        <RadioGroup
+                          onValueChange={(val) => {
+                            field.onChange(val)
+                            if (val === 'percentage') {
+                              form.setValue('minSpend', '')
+                              form.setValue('fixedDiscount', '')
+                            } else {
+                              form.setValue('discountPercentage', '')
+                            }
+                          }}
+                          defaultValue={field.value}
+                          className="flex flex-col gap-3 p-3 bg-slate-50 border rounded-lg"
+                        >
+                          <FormItem className="flex items-center space-x-2 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="percentage" />
+                            </FormControl>
+                            <FormLabel className="font-semibold cursor-pointer">
+                              Percentual
+                            </FormLabel>
+                          </FormItem>
+                          <FormItem className="flex items-center space-x-2 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="fixed_spend" />
+                            </FormControl>
+                            <FormLabel className="font-semibold cursor-pointer">
+                              Valor Fixo (Gaste e Ganhe)
+                            </FormLabel>
+                          </FormItem>
+                        </RadioGroup>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {discountType === 'percentage' && (
+                  <FormField
+                    control={form.control}
+                    name="discountPercentage"
+                    render={({ field }) => (
+                      <FormItem className="animate-in fade-in slide-in-from-top-2 p-4 border rounded-lg bg-white">
+                        <FormLabel>% de Desconto</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="0%"
+                            className="w-full sm:w-1/2"
+                            {...field}
+                            onChange={(e) => {
+                              let raw = e.target.value.replace(/\D/g, '')
+                              if (!raw) return field.onChange('')
+                              if (parseInt(raw) > 100) raw = '100'
+                              field.onChange(`${raw}%`)
+                            }}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+
+                {discountType === 'fixed_spend' && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 p-4 border rounded-lg bg-white">
+                    <FormField
+                      control={form.control}
+                      name="minSpend"
+                      render={({ field }) => (
+                        <CurrencyInput
+                          field={field}
+                          label="Gaste (Valor Mínimo)"
+                          placeholder="R$ 0,00"
+                        />
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="fixedDiscount"
+                      render={({ field }) => (
+                        <CurrencyInput
+                          field={field}
+                          label="Ganhe (Valor do Desconto)"
+                          placeholder="R$ 0,00"
+                        />
+                      )}
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-4 pt-4 border-t">
+                <FormField
+                  control={form.control}
+                  name="totalLimit"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Limite Total de Utilizações</FormLabel>
+                      <FormControl>
+                        <Input type="number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="startDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Data de Início</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="endDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Data de Término</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-6">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => onOpenChange(false)}
+                >
+                  Cancelar
+                </Button>
+                <Button type="submit">
+                  {coupon ? 'Salvar Alterações' : 'Criar Campanha'}
+                </Button>
+              </div>
+            </form>
+          </Form>
+
+          <div className="bg-slate-50 p-6 rounded-xl border border-slate-200 hidden md:block">
+            <h3 className="font-bold text-lg mb-2 text-slate-800">
+              Pré-visualização da Campanha
+            </h3>
+            <p className="text-sm text-slate-500 mb-6">
+              É assim que sua campanha aparecerá para os clientes no aplicativo.
+            </p>
+            <div className="max-w-[320px] mx-auto pointer-events-none">
+              <CouponCard coupon={previewCoupon} />
             </div>
-          </form>
-        </Form>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   )
