@@ -1399,4 +1399,3 @@ export const MOCK_BOOKINGS: Booking[] = [
     type: 'general' as const,
   })),
 ]
-

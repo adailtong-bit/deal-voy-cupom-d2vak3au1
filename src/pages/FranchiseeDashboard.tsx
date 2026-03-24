@@ -21,7 +21,15 @@ import { Badge } from '@/components/ui/badge'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { MapPin, Store, Tags, Settings, DollarSign } from 'lucide-react'
+import {
+  MapPin,
+  Store,
+  Tags,
+  Settings,
+  DollarSign,
+  TrendingUp,
+  Ticket,
+} from 'lucide-react'
 
 export default function FranchiseeDashboard() {
   const { user, companies, coupons, franchises } = useCouponStore()
@@ -82,6 +90,10 @@ export default function FranchiseeDashboard() {
     }
   }
 
+  const totalFranchiseCoupons = myCampaigns.length + merchantCampaigns.length
+  const activeMerchants = Math.max(0, franchiseCompanyIds.length - 1) // excluding HQ
+  const simulatedRevenue = isNY ? 24500.0 : 15420.5
+
   return (
     <div className="container py-8 max-w-6xl mx-auto space-y-8 animate-fade-in-up mb-16 md:mb-0">
       {/* Header Section */}
@@ -107,23 +119,78 @@ export default function FranchiseeDashboard() {
         )}
       </div>
 
+      {/* Top Metrics Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="shadow-sm border-slate-200">
+          <CardHeader className="pb-2 flex flex-row items-center justify-between">
+            <CardTitle className="text-sm text-slate-500 font-semibold uppercase tracking-wider">
+              Network Campaigns
+            </CardTitle>
+            <Ticket className="h-4 w-4 text-primary" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-black text-slate-800">
+              {totalFranchiseCoupons}
+            </div>
+            <p className="text-xs text-slate-400 mt-1 font-medium">
+              HQ + Partner Stores
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="shadow-sm border-slate-200">
+          <CardHeader className="pb-2 flex flex-row items-center justify-between">
+            <CardTitle className="text-sm text-slate-500 font-semibold uppercase tracking-wider">
+              Active Merchants
+            </CardTitle>
+            <Store className="h-4 w-4 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-black text-slate-800">
+              {activeMerchants}
+            </div>
+            <p className="text-xs text-emerald-600 mt-1 font-medium">
+              +2 this month
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="shadow-sm border-slate-200 border-l-4 border-l-emerald-500">
+          <CardHeader className="pb-2 flex flex-row items-center justify-between">
+            <CardTitle className="text-sm text-slate-500 font-semibold uppercase tracking-wider">
+              Network Gross Val.
+            </CardTitle>
+            <TrendingUp className="h-4 w-4 text-emerald-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-black text-emerald-600">
+              {formatMoney(simulatedRevenue)}
+            </div>
+            <p className="text-xs text-slate-400 mt-1 font-medium">
+              Simulated YTD Volume
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
       <Tabs defaultValue="my-campaigns" className="w-full">
-        <TabsList className="mb-6 flex flex-wrap h-auto gap-2 p-1 bg-slate-100 rounded-lg justify-start">
+        <TabsList className="mb-6 flex flex-wrap h-auto gap-2 p-1 bg-slate-100 rounded-lg justify-start shadow-inner">
           <TabsTrigger
             value="my-campaigns"
-            className="py-2.5 px-4 font-semibold"
+            className="py-2.5 px-4 font-semibold data-[state=active]:shadow-sm"
           >
             <Tags className="h-4 w-4 mr-2" />
             My Campaigns
           </TabsTrigger>
           <TabsTrigger
             value="merchant-overview"
-            className="py-2.5 px-4 font-semibold"
+            className="py-2.5 px-4 font-semibold data-[state=active]:shadow-sm"
           >
             <Store className="h-4 w-4 mr-2" />
             Merchant Overview
           </TabsTrigger>
-          <TabsTrigger value="settings" className="py-2.5 px-4 font-semibold">
+          <TabsTrigger
+            value="settings"
+            className="py-2.5 px-4 font-semibold data-[state=active]:shadow-sm"
+          >
             <Settings className="h-4 w-4 mr-2" />
             Settings
           </TabsTrigger>
@@ -131,12 +198,15 @@ export default function FranchiseeDashboard() {
 
         {/* My Campaigns Tab */}
         <TabsContent value="my-campaigns" className="space-y-4">
-          <Card className="border-slate-200 shadow-sm">
-            <CardHeader className="bg-slate-50 border-b">
+          <Card className="border-slate-200 shadow-sm overflow-hidden">
+            <CardHeader className="bg-slate-50/80 border-b">
               <CardTitle className="text-xl">Franchisee Campaigns</CardTitle>
               <CardDescription>
                 Manage central promotions created specifically for the{' '}
-                {isNY ? 'New York' : myFranchise?.region} region.
+                <strong className="text-slate-700">
+                  {isNY ? 'New York' : myFranchise?.region}
+                </strong>{' '}
+                region.
               </CardDescription>
             </CardHeader>
             <CardContent className="p-0">
@@ -156,15 +226,19 @@ export default function FranchiseeDashboard() {
                 <TableBody>
                   {myCampaigns.length > 0 ? (
                     myCampaigns.map((coupon) => (
-                      <TableRow key={coupon.id} className="hover:bg-slate-50">
-                        <TableCell className="font-medium pl-6">
+                      <TableRow
+                        key={coupon.id}
+                        className="hover:bg-slate-50/80"
+                      >
+                        <TableCell className="font-medium text-slate-800 pl-6">
                           {coupon.title}
                         </TableCell>
                         <TableCell className="text-primary font-bold">
                           {coupon.discount}
                         </TableCell>
-                        <TableCell>
-                          {coupon.totalAvailable ?? 0} coupons
+                        <TableCell className="text-slate-600 font-medium">
+                          {coupon.reservedCount || 0} /{' '}
+                          {coupon.totalAvailable ?? 0}
                         </TableCell>
                         <TableCell>{getStatusBadge(coupon.status)}</TableCell>
                       </TableRow>
@@ -173,7 +247,7 @@ export default function FranchiseeDashboard() {
                     <TableRow>
                       <TableCell
                         colSpan={4}
-                        className="text-center py-8 text-muted-foreground"
+                        className="text-center py-12 text-slate-500"
                       >
                         No active campaigns for this franchise.
                       </TableCell>
@@ -187,8 +261,8 @@ export default function FranchiseeDashboard() {
 
         {/* Merchant Overview Tab */}
         <TabsContent value="merchant-overview" className="space-y-4">
-          <Card className="border-slate-200 shadow-sm">
-            <CardHeader className="bg-slate-50 border-b">
+          <Card className="border-slate-200 shadow-sm overflow-hidden">
+            <CardHeader className="bg-slate-50/80 border-b">
               <CardTitle className="text-xl">Merchant Campaigns</CardTitle>
               <CardDescription>
                 Overview of active and expired offers generated by local
@@ -213,16 +287,21 @@ export default function FranchiseeDashboard() {
                 <TableBody>
                   {merchantCampaigns.length > 0 ? (
                     merchantCampaigns.map((coupon) => (
-                      <TableRow key={coupon.id} className="hover:bg-slate-50">
-                        <TableCell className="font-medium text-slate-700 pl-6">
+                      <TableRow
+                        key={coupon.id}
+                        className="hover:bg-slate-50/80"
+                      >
+                        <TableCell className="font-bold text-slate-700 pl-6">
                           {coupon.storeName}
                         </TableCell>
-                        <TableCell>{coupon.title}</TableCell>
+                        <TableCell className="font-medium text-slate-600">
+                          {coupon.title}
+                        </TableCell>
                         <TableCell className="text-primary font-bold">
                           {coupon.discount}
                         </TableCell>
-                        <TableCell>
-                          {coupon.totalAvailable ?? 0} /{' '}
+                        <TableCell className="text-slate-600 font-medium">
+                          {coupon.reservedCount || 0} /{' '}
                           {(coupon.totalAvailable ?? 0) +
                             (coupon.reservedCount ?? 0)}
                         </TableCell>
@@ -233,7 +312,7 @@ export default function FranchiseeDashboard() {
                     <TableRow>
                       <TableCell
                         colSpan={5}
-                        className="text-center py-8 text-muted-foreground"
+                        className="text-center py-12 text-slate-500"
                       >
                         No merchant campaigns found in your region.
                       </TableCell>
@@ -248,7 +327,7 @@ export default function FranchiseeDashboard() {
         {/* Settings Tab */}
         <TabsContent value="settings" className="space-y-4">
           <Card className="border-slate-200 shadow-sm max-w-2xl">
-            <CardHeader className="bg-slate-50 border-b">
+            <CardHeader className="bg-slate-50/80 border-b">
               <CardTitle className="text-xl">Regional Settings</CardTitle>
               <CardDescription>
                 Configure the defaults for your specific geographic territory.
@@ -256,27 +335,39 @@ export default function FranchiseeDashboard() {
             </CardHeader>
             <CardContent className="space-y-6 pt-6">
               <div className="space-y-2">
-                <Label>Registered Region</Label>
-                <Input value={user.region || 'Not Set'} disabled />
+                <Label className="text-slate-700">Registered Region</Label>
+                <Input
+                  value={user.region || 'Not Set'}
+                  disabled
+                  className="bg-slate-50 font-medium"
+                />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Default Currency</Label>
-                  <Input value={currency} disabled />
+                  <Label className="text-slate-700">Default Currency</Label>
+                  <Input
+                    value={currency}
+                    disabled
+                    className="bg-slate-50 font-medium text-primary"
+                  />
                 </div>
                 <div className="space-y-2">
-                  <Label>Formatting Standard</Label>
-                  <Input value={locale} disabled />
+                  <Label className="text-slate-700">Formatting Standard</Label>
+                  <Input
+                    value={locale}
+                    disabled
+                    className="bg-slate-50 font-medium"
+                  />
                 </div>
               </div>
-              <div className="bg-blue-50 text-blue-800 p-4 rounded-lg border border-blue-200 text-sm">
+              <div className="bg-blue-50 text-blue-800 p-4 rounded-xl border border-blue-200 text-sm font-medium">
                 These settings are automatically inherited from your master
                 franchise agreement and dictate how all billing, pricing, and
                 campaign data is presented to users in your territory.
               </div>
-              <div className="pt-4 border-t">
-                <Button className="w-full sm:w-auto">
-                  Save Additional Configurations
+              <div className="pt-4 border-t flex justify-end">
+                <Button className="w-full sm:w-auto font-bold">
+                  Save Configurations
                 </Button>
               </div>
             </CardContent>

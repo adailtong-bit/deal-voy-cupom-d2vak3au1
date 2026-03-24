@@ -43,15 +43,18 @@ export default function VendorDashboard() {
     )
     .slice(0, 15)
 
+  // Filter bookings for this merchant
+  const myBookings = bookings.filter((b) => b.storeName === myCompany.name)
+
   return (
-    <div className="container mx-auto px-4 py-8 mb-16 md:mb-0 animate-fade-in">
-      <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-4 bg-white p-6 rounded-xl shadow-sm border">
+    <div className="container mx-auto px-4 py-8 mb-16 md:mb-0 animate-fade-in-up">
+      <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
         <div>
           <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-2">
             <Briefcase className="h-8 w-8 text-primary" />{' '}
-            {t('vendor.dashboard')}
+            {t('vendor.dashboard', 'Merchant Dashboard')}
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-slate-500 font-medium mt-1">
             {myCompany.name} - {myCompany.region}
           </p>
         </div>
@@ -59,10 +62,10 @@ export default function VendorDashboard() {
           <Button
             asChild
             variant="outline"
-            className="gap-2 bg-slate-50 hover:bg-slate-100 border-slate-200"
+            className="gap-2 bg-slate-50 hover:bg-slate-100 border-slate-200 font-bold"
           >
             <Link to="/merchant/scanner">
-              <ScanLine className="h-4 w-4" /> Scanner POS
+              <ScanLine className="h-4 w-4 text-primary" /> POS Scanner
             </Link>
           </Button>
           <CreateCampaignDialog company={myCompany} />
@@ -71,66 +74,98 @@ export default function VendorDashboard() {
 
       <VendorStats company={myCompany} activeCampaigns={coupons.length} />
 
-      <Tabs defaultValue="overview">
-        <TabsList className="mb-4 flex flex-wrap h-auto p-1 bg-slate-100/50 justify-start">
-          <TabsTrigger value="overview">{t('vendor.overview')}</TabsTrigger>
-          <TabsTrigger value="customers">
-            <Users className="h-3 w-3 mr-1" /> CRM
+      <Tabs defaultValue="overview" className="w-full">
+        <TabsList className="mb-6 flex flex-wrap h-auto p-1 bg-slate-100/80 rounded-lg justify-start shadow-inner">
+          <TabsTrigger
+            value="overview"
+            className="py-2.5 px-4 font-semibold data-[state=active]:shadow-sm"
+          >
+            {t('vendor.overview')}
           </TabsTrigger>
-          <TabsTrigger value="seasonal">
-            <CalendarDays className="h-3 w-3 mr-1" />{' '}
-            {t('vendor.seasonal_campaigns')}
+          <TabsTrigger
+            value="customers"
+            className="py-2.5 px-4 font-semibold data-[state=active]:shadow-sm"
+          >
+            <Users className="h-4 w-4 mr-2 text-blue-500" /> CRM Leads
           </TabsTrigger>
-          <TabsTrigger value="orders">
-            <ShoppingBag className="h-3 w-3 mr-1" /> {t('vendor.orders')}
+          <TabsTrigger
+            value="offers"
+            className="py-2.5 px-4 font-semibold data-[state=active]:shadow-sm"
+          >
+            <ShoppingBag className="h-4 w-4 mr-2 text-emerald-500" /> Campaigns
           </TabsTrigger>
-          <TabsTrigger value="offers">{t('vendor.offers')}</TabsTrigger>
-          <TabsTrigger value="behavioral">
-            <Zap className="h-3 w-3 mr-1" /> {t('vendor.behavioral')}
+          <TabsTrigger
+            value="orders"
+            className="py-2.5 px-4 font-semibold data-[state=active]:shadow-sm"
+          >
+            Orders
           </TabsTrigger>
-          <TabsTrigger value="validation">
-            <Scan className="h-3 w-3 mr-1" /> {t('vendor.validation')}
+          <TabsTrigger
+            value="validation"
+            className="py-2.5 px-4 font-semibold data-[state=active]:shadow-sm"
+          >
+            <Scan className="h-4 w-4 mr-2" /> Validate
           </TabsTrigger>
-          <TabsTrigger value="history">
-            <History className="h-3 w-3 mr-1" />{' '}
-            {t('vendor.redemption_history')}
+          <TabsTrigger
+            value="history"
+            className="py-2.5 px-4 font-semibold data-[state=active]:shadow-sm"
+          >
+            <History className="h-4 w-4 mr-2" /> Redemptions
           </TabsTrigger>
-          <TabsTrigger value="staff">
-            <Users className="h-3 w-3 mr-1" /> Staff
+          <TabsTrigger
+            value="behavioral"
+            className="py-2.5 px-4 font-semibold data-[state=active]:shadow-sm"
+          >
+            <Zap className="h-4 w-4 mr-2 text-orange-500" /> Auto-Rewards
           </TabsTrigger>
-          <TabsTrigger value="settings">
-            <Settings className="h-3 w-3 mr-1" /> {t('vendor.settings')}
+          <TabsTrigger
+            value="seasonal"
+            className="py-2.5 px-4 font-semibold data-[state=active]:shadow-sm"
+          >
+            <CalendarDays className="h-4 w-4 mr-2 text-purple-500" /> Seasonal
+          </TabsTrigger>
+          <TabsTrigger
+            value="staff"
+            className="py-2.5 px-4 font-semibold data-[state=active]:shadow-sm"
+          >
+            <Users className="h-4 w-4 mr-2" /> Staff
+          </TabsTrigger>
+          <TabsTrigger
+            value="settings"
+            className="py-2.5 px-4 font-semibold data-[state=active]:shadow-sm"
+          >
+            <Settings className="h-4 w-4 mr-2" /> Settings
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview">
+        <TabsContent value="overview" className="mt-4">
           <VendorAnalytics />
         </TabsContent>
-        <TabsContent value="customers">
+        <TabsContent value="customers" className="mt-4">
           <VendorCustomersTab company={myCompany} />
         </TabsContent>
-        <TabsContent value="seasonal">
+        <TabsContent value="seasonal" className="mt-4">
           <VendorSeasonalTab company={myCompany} />
         </TabsContent>
-        <TabsContent value="orders">
-          <OrdersTable orders={bookings} />
+        <TabsContent value="orders" className="mt-4">
+          <OrdersTable orders={myBookings} />
         </TabsContent>
-        <TabsContent value="offers">
+        <TabsContent value="offers" className="mt-4">
           <OffersTable offers={coupons} />
         </TabsContent>
-        <TabsContent value="behavioral">
+        <TabsContent value="behavioral" className="mt-4">
           <BehavioralTriggersTab coupons={coupons} />
         </TabsContent>
-        <TabsContent value="validation">
+        <TabsContent value="validation" className="mt-4">
           <CouponValidation />
         </TabsContent>
-        <TabsContent value="history">
+        <TabsContent value="history" className="mt-4">
           <HistoryTable />
         </TabsContent>
-        <TabsContent value="staff">
+        <TabsContent value="staff" className="mt-4">
           <StaffTab parentType="company" parentId={myCompany.id} />
         </TabsContent>
-        <TabsContent value="settings">
+        <TabsContent value="settings" className="mt-4">
           <VendorSettingsTab company={myCompany} />
         </TabsContent>
       </Tabs>
