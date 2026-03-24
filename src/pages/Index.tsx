@@ -141,14 +141,14 @@ export default function Index() {
       <section className="bg-white pt-4 pb-3 px-4 border-b shadow-sm">
         <div className="container mx-auto max-w-5xl">
           <div className="flex flex-col gap-2.5 max-w-2xl mx-auto md:mx-0">
-            <div className="flex items-center mb-1">
+            <div className="flex items-center mb-2">
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
                 onClick={handleBack}
-                className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 -ml-2 h-8 px-2"
+                className="font-semibold text-slate-700 bg-white border-slate-200 shadow-sm hover:bg-slate-50 transition-colors"
               >
-                <ArrowLeft className="w-4 h-4 mr-1.5" />
+                <ArrowLeft className="w-4 h-4 mr-2" />
                 {t('common.back', 'Voltar')}
               </Button>
             </div>
