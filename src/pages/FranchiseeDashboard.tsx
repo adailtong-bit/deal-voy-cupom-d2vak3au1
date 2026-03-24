@@ -52,29 +52,21 @@ export default function FranchiseeDashboard() {
   const { formatCurrency, formatDate } = useLanguage()
   const [activeTab, setActiveTab] = useState('overview')
 
-  if (user?.role !== 'franchisee' && user?.role !== 'super_admin') {
-    return <Navigate to="/" replace />
-  }
-
   const myFranchise =
     franchises.find((f) => f.ownerId === user?.id) || franchises[0]
 
-  if (!myFranchise) {
-    return (
-      <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
-        <p className="text-xl font-semibold text-slate-500">
-          Nenhuma franquia associada encontrada.
-        </p>
-      </div>
-    )
-  }
-
   // --- Data Calculations ---
   const franchiseCompanies = useMemo(
-    () => companies.filter((c) => c.franchiseId === myFranchise.id),
-    [companies, myFranchise.id],
+    () =>
+      myFranchise
+        ? companies.filter((c) => c.franchiseId === myFranchise.id)
+        : [],
+    [companies, myFranchise?.id],
   )
-  const franchiseCompanyIds = franchiseCompanies.map((c) => c.id)
+  const franchiseCompanyIds = useMemo(
+    () => franchiseCompanies.map((c) => c.id),
+    [franchiseCompanies],
+  )
 
   const franchiseLogs = useMemo(
     () =>
@@ -103,16 +95,10 @@ export default function FranchiseeDashboard() {
   ).length
 
   const franchiseAds = useMemo(
-    () => ads.filter((a) => a.franchiseId === myFranchise.id),
-    [ads, myFranchise.id],
+    () =>
+      myFranchise ? ads.filter((a) => a.franchiseId === myFranchise.id) : [],
+    [ads, myFranchise?.id],
   )
-
-  const royaltyRate = platformSettings.franchiseRoyaltyRate || 15
-  const adRevenue = franchiseAds.reduce(
-    (sum, ad) => sum + (ad.price || ad.budget || 0),
-    0,
-  )
-  const totalRoyalties = adRevenue * (royaltyRate / 100)
 
   const leadsList = useMemo(() => {
     return franchiseLogs
@@ -134,6 +120,27 @@ export default function FranchiseeDashboard() {
           new Date(b.acquiredAt).getTime() - new Date(a.acquiredAt).getTime(),
       )
   }, [franchiseLogs, users, companies])
+
+  if (user?.role !== 'franchisee' && user?.role !== 'super_admin') {
+    return <Navigate to="/" replace />
+  }
+
+  if (!myFranchise) {
+    return (
+      <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
+        <p className="text-xl font-semibold text-slate-500">
+          Nenhuma franquia associada encontrada.
+        </p>
+      </div>
+    )
+  }
+
+  const royaltyRate = platformSettings.franchiseRoyaltyRate || 15
+  const adRevenue = franchiseAds.reduce(
+    (sum, ad) => sum + (ad.price || ad.budget || 0),
+    0,
+  )
+  const totalRoyalties = adRevenue * (royaltyRate / 100)
 
   // --- Navigation ---
   const navItems = [
