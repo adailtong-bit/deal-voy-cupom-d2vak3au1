@@ -21,7 +21,7 @@ export function CouponCard({
   variant = 'vertical',
   className,
 }: CouponCardProps) {
-  const { t, formatCurrency } = useLanguage()
+  const { t, formatCurrency, language } = useLanguage()
   const navigate = useNavigate()
   const { reserveCoupon, isReserved } = useCouponStore()
   const [imgError, setImgError] = useState(false)
@@ -30,6 +30,10 @@ export function CouponCard({
   const isSoldOut =
     coupon.totalAvailable !== undefined && coupon.totalAvailable <= 0
   const isOnline = coupon.offerType === 'online' || !!coupon.externalUrl
+
+  const title = coupon.translations?.[language]?.title || coupon.title
+  const description =
+    coupon.translations?.[language]?.description || coupon.description
 
   const handleCardClick = () => {
     navigate(`/voucher/${coupon.id}`)
@@ -59,7 +63,7 @@ export function CouponCard({
             {!imgError ? (
               <img
                 src={coupon.image}
-                alt={coupon.title}
+                alt={title}
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 crossOrigin="anonymous"
                 onError={() => setImgError(true)}
@@ -92,7 +96,7 @@ export function CouponCard({
             <div>
               <div className="flex justify-between items-start mb-1">
                 <h4 className="font-semibold text-sm sm:text-base truncate leading-tight flex-1 mr-2">
-                  {coupon.title}
+                  {title}
                 </h4>
                 {coupon.averageRating && (
                   <div className="flex items-center gap-0.5 text-[10px] sm:text-xs font-bold text-orange-500 bg-orange-50 px-1.5 py-0.5 rounded shrink-0">
@@ -105,7 +109,7 @@ export function CouponCard({
                 {coupon.storeName}
               </p>
               <p className="text-[11px] sm:text-xs text-slate-500 mt-1 line-clamp-2">
-                {coupon.description}
+                {description}
               </p>
             </div>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between mt-2 pt-2 border-t border-slate-100 gap-2 sm:gap-0">
@@ -172,7 +176,7 @@ export function CouponCard({
           {!imgError ? (
             <img
               src={coupon.image}
-              alt={coupon.title}
+              alt={title}
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
               crossOrigin="anonymous"
               onError={() => setImgError(true)}
@@ -197,7 +201,7 @@ export function CouponCard({
                 variant="secondary"
                 className="text-[8px] sm:text-[9px] px-1.5 h-4 sm:h-5 bg-yellow-400 text-yellow-900 border-none shadow-sm"
               >
-                Featured
+                {t('vouchers.featured', 'Destaque')}
               </Badge>
             )}
             {isOnline && (
@@ -214,7 +218,7 @@ export function CouponCard({
         <CardContent className="p-2.5 sm:p-3 flex-1 flex flex-col">
           <div className="flex justify-between items-start mb-1">
             <h3 className="font-semibold text-xs sm:text-sm leading-tight line-clamp-2 flex-1 mr-1">
-              {coupon.title}
+              {title}
             </h3>
             {coupon.averageRating && (
               <div className="flex items-center gap-0.5 text-[9px] sm:text-[10px] font-bold text-orange-500 bg-orange-50 px-1 py-0.5 rounded shrink-0">

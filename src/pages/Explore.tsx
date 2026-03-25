@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Search, Map as MapIcon, List, Filter } from 'lucide-react'
+import { Search, Map as MapIcon, List, Filter, Radar } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useCouponStore } from '@/stores/CouponContext'
 import { Input } from '@/components/ui/input'
@@ -10,7 +10,7 @@ import { CATEGORIES } from '@/lib/data'
 import { cn } from '@/lib/utils'
 
 export default function Explore() {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
   const { coupons } = useCouponStore()
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list')
   const [search, setSearch] = useState('')
@@ -18,15 +18,20 @@ export default function Explore() {
 
   const filtered = useMemo(() => {
     return coupons.filter((c) => {
+      const title = c.translations?.[language]?.title || c.title
+      const desc = c.translations?.[language]?.description || c.description
+
       const matchesSearch =
-        c.title.toLowerCase().includes(search.toLowerCase()) ||
-        c.storeName.toLowerCase().includes(search.toLowerCase())
+        title.toLowerCase().includes(search.toLowerCase()) ||
+        c.storeName.toLowerCase().includes(search.toLowerCase()) ||
+        desc.toLowerCase().includes(search.toLowerCase())
+
       const matchesCategory =
         selectedCategory === 'all' || c.category === selectedCategory
 
       return matchesSearch && matchesCategory
     })
-  }, [coupons, search, selectedCategory])
+  }, [coupons, search, selectedCategory, language])
 
   return (
     <div className="container max-w-6xl py-6 animate-fade-in-up flex flex-col gap-6">
@@ -74,6 +79,13 @@ export default function Explore() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
+        <Button
+          variant="outline"
+          className="hidden sm:flex bg-white shadow-sm gap-2 text-slate-600 font-medium"
+        >
+          <Radar className="h-4 w-4 text-primary" />
+          {t('explore.offer_radar', 'Radar de Ofertas')}
+        </Button>
         <Button
           variant="outline"
           size="icon"

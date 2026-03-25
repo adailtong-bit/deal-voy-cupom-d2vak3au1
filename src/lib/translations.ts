@@ -107,6 +107,7 @@ export const translations: Record<Language, any> = {
       clear_filters: 'Limpar filtros',
       map_coming_soon: 'Visualização do mapa interativa em breve.',
       none_desc: 'Tente ajustar os filtros ou buscar por outros termos.',
+      offer_radar: 'Radar de Ofertas',
     },
     hub: {
       title: 'Hub de Viagens',
@@ -623,6 +624,7 @@ export const translations: Record<Language, any> = {
       partner_store: 'Loja Parceira',
       special_event: 'Evento Especial',
       sale: 'Promoção',
+      featured: 'Destaque',
     },
     voucher_detail: {
       not_found: 'Voucher não encontrado',
@@ -902,6 +904,7 @@ export const translations: Record<Language, any> = {
       clear_filters: 'Clear filters',
       map_coming_soon: 'Interactive map view coming soon.',
       none_desc: 'Try adjusting the filters or search for other terms.',
+      offer_radar: 'Offer Radar',
     },
     hub: {
       title: 'Travel Hub',
@@ -1416,6 +1419,7 @@ export const translations: Record<Language, any> = {
       partner_store: 'Partner Store',
       special_event: 'Special Event',
       sale: 'Sale',
+      featured: 'Featured',
     },
     voucher_detail: {
       not_found: 'Voucher not found',
@@ -1694,6 +1698,7 @@ export const translations: Record<Language, any> = {
       clear_filters: 'Limpiar filtros',
       map_coming_soon: 'Vista de mapa interactiva próximamente.',
       none_desc: 'Intenta ajustar los filtros o buscar otros términos.',
+      offer_radar: 'Radar de Ofertas',
     },
     hub: {
       title: 'Hub de Viajes',
@@ -2209,6 +2214,7 @@ export const translations: Record<Language, any> = {
       partner_store: 'Tienda Asociada',
       special_event: 'Evento Especial',
       sale: 'Promoción',
+      featured: 'Destacado',
     },
     voucher_detail: {
       not_found: 'Voucher no encontrado',

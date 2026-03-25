@@ -41,7 +41,7 @@ import {
 import { Input } from '@/components/ui/input'
 
 export default function Index() {
-  const { t, formatDate } = useLanguage()
+  const { t, formatDate, language } = useLanguage()
   const navigate = useNavigate()
   const {
     coupons,
@@ -92,8 +92,10 @@ export default function Index() {
     return coupons.filter((c) => {
       if (reservedIds.includes(c.id)) return false
 
+      const title = c.translations?.[language]?.title || c.title
+
       const matchesSearch =
-        c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         c.storeName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         c.category.toLowerCase().includes(searchQuery.toLowerCase())
 
@@ -102,7 +104,7 @@ export default function Index() {
 
       return matchesSearch && matchesCategory
     })
-  }, [coupons, searchQuery, selectedCategory, reservedIds])
+  }, [coupons, searchQuery, selectedCategory, reservedIds, language])
 
   const trendingCoupons = filteredCoupons
     .filter((c) => c.isTrending || (c.averageRating && c.averageRating > 4.5))
