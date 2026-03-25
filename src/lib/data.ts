@@ -1204,6 +1204,18 @@ export const MOCK_TRAVEL_OFFERS: TravelOffer[] = [
     region: 'BR-SP',
     hasSeparatedRooms: false,
     source: 'partner',
+    translations: {
+      en: {
+        title: 'São Paulo -> Orlando',
+        description: 'Direct round-trip flight. Includes luggage.',
+        destination: 'Orlando, FL'
+      },
+      es: {
+        title: 'São Paulo -> Orlando',
+        description: 'Vuelo directo ida y vuelta. Incluye equipaje.',
+        destination: 'Orlando, FL'
+      }
+    }
   },
   {
     id: 'h1',
@@ -1220,6 +1232,16 @@ export const MOCK_TRAVEL_OFFERS: TravelOffer[] = [
     region: 'US-FL',
     hasSeparatedRooms: true,
     source: 'partner',
+    translations: {
+      en: {
+        title: 'Orlando Family Suite',
+        description: 'Spacious suite with 2 separate bedrooms and living room.',
+      },
+      es: {
+        title: 'Suite Familiar Orlando',
+        description: 'Amplia suite con 2 dormitorios separados y sala de estar.',
+      }
+    }
   },
   {
     id: 'h2',
@@ -1236,13 +1258,26 @@ export const MOCK_TRAVEL_OFFERS: TravelOffer[] = [
     region: 'US-FL',
     hasSeparatedRooms: false,
     source: 'organic',
+    translations: {
+      en: {
+        title: 'Standard Room',
+        description: 'Standard room with 2 queen beds.',
+      },
+      pt: {
+        title: 'Quarto Padrão',
+      },
+      es: {
+        title: 'Habitación Estándar',
+        description: 'Habitación estándar con 2 camas queen.',
+      }
+    }
   },
   {
     id: 'h3',
     type: 'hotel',
     provider: 'Luxury Stays',
     title: 'Executive Apartment',
-    description: 'Apartamento executivo com quarto separado e área de trabajo.',
+    description: 'Apartamento executivo com quarto separado e área de trabalho.',
     price: 450,
     currency: 'USD',
     image: 'https://img.usecurling.com/p/300/200?q=luxury%20apartment',
@@ -1252,6 +1287,19 @@ export const MOCK_TRAVEL_OFFERS: TravelOffer[] = [
     region: 'US-FL',
     hasSeparatedRooms: true,
     source: 'partner',
+    translations: {
+      en: {
+        title: 'Executive Apartment',
+        description: 'Executive apartment with separate bedroom and workspace.',
+      },
+      pt: {
+        title: 'Apartamento Executivo',
+      },
+      es: {
+        title: 'Apartamento Ejecutivo',
+        description: 'Apartamento ejecutivo con dormitorio separado y área de trabajo.',
+      }
+    }
   },
   {
     id: 'h4',
@@ -1268,6 +1316,19 @@ export const MOCK_TRAVEL_OFFERS: TravelOffer[] = [
     region: 'BR-SP',
     hasSeparatedRooms: false,
     source: 'organic',
+    translations: {
+      en: {
+        title: 'Double Room',
+        description: 'Comfortable room in the city center.',
+      },
+      pt: {
+        title: 'Quarto Duplo',
+      },
+      es: {
+        title: 'Habitación Doble',
+        description: 'Cómoda habitación en el centro de la ciudad.',
+      }
+    }
   },
   {
     id: 'a1',
@@ -1284,6 +1345,16 @@ export const MOCK_TRAVEL_OFFERS: TravelOffer[] = [
     region: 'US-FL',
     availability: 100,
     source: 'partner',
+    translations: {
+      pt: {
+        title: 'Ingresso para o Parque',
+        description: 'Ingresso de 1 dia Park-to-Park para uma aventura inesquecível.',
+      },
+      es: {
+        title: 'Entrada al Parque',
+        description: 'Boleto de 1 día Park-to-Park para una aventura inolvidable.',
+      }
+    }
   },
   {
     id: 'a2',
@@ -1300,7 +1371,17 @@ export const MOCK_TRAVEL_OFFERS: TravelOffer[] = [
     region: 'BR-SP',
     availability: 50,
     source: 'organic',
-  },
+    translations: {
+      pt: {
+        title: 'Ingresso do Museu',
+        description: 'Entrada geral para o Museu de Arte de São Paulo.',
+      },
+      es: {
+        title: 'Entrada al Museo',
+        description: 'Entrada general al Museo de Arte de São Paulo.',
+      }
+    }
+  }
 ]
 
 export const MOCK_CAR_RENTALS: CarRental[] = Array.from({ length: 15 }).map(
@@ -1733,3 +1814,4 @@ export const MOCK_FINANCIAL_TRANSACTIONS: FinancialTransaction[] = [
     status: 'completed',
   },
 ]
+

@@ -587,6 +587,10 @@ export interface TravelOffer {
   availability?: number
   hasSeparatedRooms?: boolean
   source?: 'partner' | 'organic'
+  translations?: Record<
+    string,
+    { title?: string; description?: string; destination?: string }
+  >
 }
 
 export interface Region {
@@ -793,3 +797,4 @@ export interface FinancialTransaction {
   status: 'completed' | 'pending'
   sourceId?: string
 }
+
