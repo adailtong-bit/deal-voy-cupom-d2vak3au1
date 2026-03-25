@@ -24,6 +24,7 @@ import {
   ShoppingBag,
   Plane,
   Edit,
+  CreditCard,
 } from 'lucide-react'
 import {
   DropdownMenu,
@@ -48,6 +49,8 @@ import { toast } from 'sonner'
 import { CreateTripWizard } from './CreateTripWizard'
 import { TravelDiscoveryHub } from './TravelDiscoveryHub'
 import { EditBookingDialog } from './EditBookingDialog'
+import { BookingPaymentModal } from './BookingPaymentModal'
+import { BookingVoucherModal } from './BookingVoucherModal'
 import { formatDate, cn } from '@/lib/utils'
 import { Booking } from '@/lib/types'
 
@@ -68,12 +71,17 @@ export function TravelDashboard({
     bookings,
     updateBooking,
     cancelBooking,
+    approveBooking,
   } = useCouponStore()
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [searchParams, setSearchParams] = useSearchParams()
 
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null)
   const [cancellingBookingId, setCancellingBookingId] = useState<string | null>(
+    null,
+  )
+  const [payingBooking, setPayingBooking] = useState<Booking | null>(null)
+  const [viewVoucherBooking, setViewVoucherBooking] = useState<Booking | null>(
     null,
   )
 
@@ -128,6 +136,20 @@ export function TravelDashboard({
           <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white gap-1">
             <CheckCircle className="w-3 h-3" />{' '}
             {t('travel.confirmed', 'Confirmado')}
+          </Badge>
+        )
+      case 'awaiting_payment':
+        return (
+          <Badge className="bg-blue-500 hover:bg-blue-600 text-white gap-1">
+            <CreditCard className="w-3 h-3" />{' '}
+            {t('travel.awaiting_payment', 'Aguardando Pagamento')}
+          </Badge>
+        )
+      case 'refund_processing':
+        return (
+          <Badge className="bg-orange-500 hover:bg-orange-600 text-white gap-1">
+            <Clock className="w-3 h-3" />{' '}
+            {t('travel.refund_processing', 'Reembolso em Análise')}
           </Badge>
         )
       case 'cancelled':
@@ -276,8 +298,8 @@ export function TravelDashboard({
                   key={booking.id}
                   className={cn(
                     'flex flex-col border-slate-200 transition-shadow',
-                    booking.status === 'cancelled'
-                      ? 'bg-slate-50 opacity-75'
+                    ['cancelled', 'refund_processing'].includes(booking.status)
+                      ? 'bg-slate-50 opacity-80'
                       : 'bg-white shadow-sm hover:shadow-md',
                   )}
                 >
@@ -337,13 +359,6 @@ export function TravelDashboard({
                                     {booking.childrenCount === 1
                                       ? t('booking.child', 'Criança')
                                       : t('booking.children', 'Crianças')}
-                                    {booking.childAges &&
-                                      booking.childAges.length > 0 && (
-                                        <span className="text-slate-500 whitespace-nowrap ml-1">
-                                          ({t('booking.age', 'Idade')}:{' '}
-                                          {booking.childAges.join(', ')})
-                                        </span>
-                                      )}
                                   </>
                                 )}
                             </span>
@@ -370,15 +385,12 @@ export function TravelDashboard({
                       )}
                     </div>
 
-                    <div className="pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-semibold text-slate-500 uppercase">
-                          {t('travel.source_offer', 'Fonte da Oferta')}
-                        </span>
+                    <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="flex flex-wrap items-center gap-2">
                         {booking.source === 'partner' ? (
                           <Badge
                             variant="secondary"
-                            className="bg-purple-100 text-purple-800 hover:bg-purple-200 shadow-none border-none text-[10px] px-1.5"
+                            className="bg-purple-100 text-purple-800 shadow-none text-[10px] px-1.5"
                           >
                             <Megaphone className="w-3 h-3 mr-1" />{' '}
                             {t('travel.source_partner', 'Parceiro')}
@@ -394,33 +406,77 @@ export function TravelDashboard({
                         )}
                       </div>
 
-                      {booking.status !== 'cancelled' && (
-                        <div className="flex items-center gap-2 ml-auto w-full sm:w-auto justify-end mt-2 sm:mt-0">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-8 text-xs text-slate-600 flex-1 sm:flex-none"
-                            onClick={() => setEditingBooking(booking)}
-                          >
-                            <Edit className="w-3.5 h-3.5 mr-1.5" />
-                            {t('common.edit', 'Editar')}
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 text-xs text-red-600 hover:text-red-700 hover:bg-red-50 flex-1 sm:flex-none"
-                            onClick={() => setCancellingBookingId(booking.id)}
-                          >
-                            <XCircle className="w-3.5 h-3.5 mr-1.5" />
-                            {['confirmed', 'paid'].includes(booking.status)
-                              ? t(
-                                  'travel.request_cancel',
-                                  'Solicitar Cancelamento',
-                                )
-                              : t('common.cancel', 'Desistir')}
-                          </Button>
-                        </div>
-                      )}
+                      <div className="flex items-center gap-2 ml-auto w-full sm:w-auto justify-end">
+                        {booking.status === 'pending' && (
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                approveBooking(booking.id, booking.price || 150)
+                              }
+                              title="Simular aprovação do parceiro"
+                              className="h-8 text-xs border-amber-200 text-amber-700 hover:bg-amber-50"
+                            >
+                              <CheckCircle className="w-3.5 h-3.5 mr-1.5" />{' '}
+                              {t('travel.sim_approve', 'Aprovar')}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setCancellingBookingId(booking.id)}
+                              className="h-8 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                            >
+                              {t('common.cancel', 'Desistir')}
+                            </Button>
+                          </>
+                        )}
+
+                        {booking.status === 'awaiting_payment' && (
+                          <>
+                            <Button
+                              variant="default"
+                              size="sm"
+                              onClick={() => setPayingBooking(booking)}
+                              className="h-8 text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
+                            >
+                              <CreditCard className="w-3.5 h-3.5 mr-1.5" />{' '}
+                              {t('payment.pay_now', 'Pagar Agora')}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setCancellingBookingId(booking.id)}
+                              className="h-8 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                            >
+                              {t('common.cancel', 'Desistir')}
+                            </Button>
+                          </>
+                        )}
+
+                        {(booking.status === 'confirmed' ||
+                          booking.status === 'paid') && (
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setViewVoucherBooking(booking)}
+                              className="h-8 text-xs text-blue-600 border-blue-200 hover:bg-blue-50"
+                            >
+                              <Ticket className="w-3.5 h-3.5 mr-1.5" />{' '}
+                              {t('travel.view_voucher', 'Ver Voucher')}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setCancellingBookingId(booking.id)}
+                              className="h-8 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                            >
+                              {t('common.cancel', 'Cancelar')}
+                            </Button>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -576,6 +632,17 @@ export function TravelDashboard({
         booking={editingBooking}
         onClose={() => setEditingBooking(null)}
         onSave={handleEditSave}
+      />
+
+      <BookingPaymentModal
+        booking={payingBooking}
+        onClose={() => setPayingBooking(null)}
+        onSuccess={() => setPayingBooking(null)}
+      />
+
+      <BookingVoucherModal
+        booking={viewVoucherBooking}
+        onClose={() => setViewVoucherBooking(null)}
       />
 
       <AlertDialog

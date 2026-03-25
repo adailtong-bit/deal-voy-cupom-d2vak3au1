@@ -146,6 +146,7 @@ interface CouponContextType {
   updateBooking: (id: string, data: Partial<Booking>) => void
   cancelBooking: (id: string) => void
   payBooking: (id: string) => void
+  approveBooking: (id: string, price: number) => void
   redeemPoints: (amount: number, type: 'points' | 'fetch') => boolean
   earnPoints: (amount: number, title: string) => void
   addABTest: (test: ABTest) => void
@@ -309,6 +310,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       time: '09:00',
       guests: 1,
       status: 'awaiting_payment',
+      price: 450,
       userId: 'u_user',
       userName: 'End User',
       source: 'organic',
@@ -317,6 +319,22 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       driverContact: 'CNH 123456789',
       includesToll: true,
       carCategory: 'suv',
+    },
+    {
+      id: 'b4',
+      couponId: 'h2',
+      storeName: 'Budget Inn',
+      date: '2025-08-10',
+      endDate: '2025-08-15',
+      time: '14:00',
+      guests: 2,
+      adults: 2,
+      childrenCount: 0,
+      status: 'pending',
+      userId: 'u_user',
+      userName: 'End User',
+      source: 'organic',
+      type: 'hotel',
     },
   ])
   const [points, setPoints] = useState(1250)
@@ -768,17 +786,40 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
 
   const cancelBooking = (id: string) => {
     setBookings((prev) =>
-      prev.map((b) => (b.id === id ? { ...b, status: 'cancelled' } : b)),
+      prev.map((b) => {
+        if (b.id === id) {
+          const newStatus = ['confirmed', 'paid'].includes(b.status)
+            ? 'refund_processing'
+            : 'cancelled'
+          return { ...b, status: newStatus }
+        }
+        return b
+      }),
     )
     toast.success(
-      t('travel.booking_cancelled', 'Reserva cancelada com sucesso.'),
+      t('travel.booking_cancelled', 'Status da reserva atualizado.'),
     )
     logSystemAction('Booking Cancelled', `Booking ${id} cancelled`)
   }
 
+  const approveBooking = (id: string, price: number) => {
+    setBookings((prev) =>
+      prev.map((b) =>
+        b.id === id ? { ...b, status: 'awaiting_payment', price } : b,
+      ),
+    )
+    toast.success(
+      t(
+        'travel.partner_notified',
+        'Reserva aprovada pelo parceiro. Aguardando pagamento.',
+      ),
+    )
+    logSystemAction('Booking Approved', `Booking ${id} approved (simulated)`)
+  }
+
   const payBooking = (id: string) => {
     setBookings((prev) =>
-      prev.map((b) => (b.id === id ? { ...b, status: 'confirmed' } : b)),
+      prev.map((b) => (b.id === id ? { ...b, status: 'paid' } : b)),
     )
     logSystemAction('Booking Paid', `Booking ${id} paid and confirmed`)
   }
@@ -949,7 +990,6 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     const updatedUser = { ...user, ...data }
     setUser(updatedUser)
     logSystemAction('Profile Updated', 'User updated profile details')
-    toast.success('Perfil atualizado!')
   }
 
   const updateUserPreferences = (prefs: Partial<UserPreferences>) => {
@@ -1758,6 +1798,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         makeBooking,
         updateBooking,
         cancelBooking,
+        approveBooking,
         payBooking,
         redeemPoints,
         earnPoints,

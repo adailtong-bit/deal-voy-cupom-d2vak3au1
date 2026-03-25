@@ -17,12 +17,12 @@ import { useLanguage } from '@/stores/LanguageContext'
 import { toast } from 'sonner'
 import {
   Calendar,
-  Users,
   Car,
   Hotel,
   Ticket as TicketIcon,
   User as UserIcon,
 } from 'lucide-react'
+import { ProfileCompletion } from './ProfileCompletion'
 
 export function BookingForm({
   coupon,
@@ -37,24 +37,15 @@ export function BookingForm({
   requirePrivacy?: boolean
   onSuccess?: () => void
 }) {
-  const { user, updateUserProfile, makeBooking } = useCouponStore()
+  const { user, makeBooking } = useCouponStore()
   const { t } = useLanguage()
 
   const isProfileMissingData =
     !user?.name || !user?.gender || !user?.birthday || !user?.documentNumber
   const [showProfileForm, setShowProfileForm] = useState(isProfileMissingData)
 
-  const [profName, setProfName] = useState(user?.name || '')
-  const [profGender, setProfGender] = useState(user?.gender || '')
-  const [profBirthday, setProfBirthday] = useState(user?.birthday || '')
-  const [profDoc, setProfDoc] = useState(user?.documentNumber || '')
-
   useEffect(() => {
     if (user) {
-      setProfName(user.name || '')
-      setProfGender(user.gender || '')
-      setProfBirthday(user.birthday || '')
-      setProfDoc(user.documentNumber || '')
       if (user.name && user.gender && user.birthday && user.documentNumber) {
         setShowProfileForm(false)
       }
@@ -103,29 +94,6 @@ export function BookingForm({
     setChildAges(newAges)
   }
 
-  const handleSaveProfile = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!profName || !profGender || !profBirthday || !profDoc) {
-      toast.error(
-        t('booking.fill_all_fields', 'Preencha todos os campos obrigatórios.'),
-      )
-      return
-    }
-    updateUserProfile({
-      name: profName,
-      gender: profGender as any,
-      birthday: profBirthday,
-      documentNumber: profDoc,
-    })
-    setShowProfileForm(false)
-    toast.success(
-      t(
-        'booking.profile_updated',
-        'Perfil atualizado! Você pode continuar sua reserva.',
-      ),
-    )
-  }
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -155,6 +123,7 @@ export function BookingForm({
       childAges: childAges.map((a) => parseInt(a) || 0),
       source: offer?.source || 'organic',
       requiresPrivacy: requirePrivacy,
+      price: offer?.price || coupon?.price || 150,
       type: type,
       ...(type === 'car' && {
         driverName,
@@ -176,7 +145,7 @@ export function BookingForm({
     toast.success(msg, {
       description: t(
         'booking.partner_will_confirm',
-        'O parceiro confirmará em breve.',
+        'O parceiro confirmará em breve. Acompanhe em "Status de Reservas".',
       ),
     })
 
@@ -199,75 +168,7 @@ export function BookingForm({
               'Para confirmar sua reserva junto ao parceiro e garantir a validade do documento, precisamos que complete as informações obrigatórias abaixo.',
             )}
           </p>
-          <form onSubmit={handleSaveProfile} className="space-y-4">
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-slate-700">
-                {t('profile.name', 'Nome Completo')}
-              </Label>
-              <Input
-                required
-                value={profName}
-                onChange={(e) => setProfName(e.target.value)}
-                className="bg-white shadow-sm"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-slate-700">
-                {t('profile.gender', 'Gênero')}
-              </Label>
-              <Select value={profGender} onValueChange={setProfGender} required>
-                <SelectTrigger className="bg-white shadow-sm">
-                  <SelectValue
-                    placeholder={t('common.select', 'Selecione...')}
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="male">
-                    {t('gender.male', 'Masculino')}
-                  </SelectItem>
-                  <SelectItem value="female">
-                    {t('gender.female', 'Feminino')}
-                  </SelectItem>
-                  <SelectItem value="non-binary">
-                    {t('gender.nb', 'Não-binário')}
-                  </SelectItem>
-                  <SelectItem value="other">
-                    {t('gender.other', 'Outro')}
-                  </SelectItem>
-                  <SelectItem value="prefer-not-to-say">
-                    {t('gender.none', 'Prefiro não dizer')}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-slate-700">
-                {t('profile.birthday', 'Data de Nascimento')}
-              </Label>
-              <Input
-                required
-                type="date"
-                value={profBirthday}
-                onChange={(e) => setProfBirthday(e.target.value)}
-                className="bg-white shadow-sm"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-slate-700">
-                {t('profile.document', 'Documento (CPF/Passaporte/ID)')}
-              </Label>
-              <Input
-                required
-                value={profDoc}
-                onChange={(e) => setProfDoc(e.target.value)}
-                className="bg-white shadow-sm"
-                placeholder="Ex: 123.456.789-00"
-              />
-            </div>
-            <Button type="submit" className="w-full mt-4 font-bold shadow-sm">
-              {t('booking.save_and_continue', 'Salvar e Continuar')}
-            </Button>
-          </form>
+          <ProfileCompletion onSuccess={() => setShowProfileForm(false)} />
         </CardContent>
       </Card>
     )

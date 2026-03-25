@@ -213,7 +213,13 @@ export interface Booking {
   adults?: number
   childrenCount?: number
   childAges?: number[]
-  status: 'confirmed' | 'cancelled' | 'paid' | 'pending' | 'awaiting_payment'
+  status:
+    | 'confirmed'
+    | 'cancelled'
+    | 'paid'
+    | 'pending'
+    | 'awaiting_payment'
+    | 'refund_processing'
   price?: number
   userId?: string
   userName?: string
