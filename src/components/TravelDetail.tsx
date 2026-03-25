@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { TravelActivityCard } from './TravelActivityCard'
 import { DiscoverActivitiesSheet } from './DiscoverActivitiesSheet'
+import { ItineraryMap } from './ItineraryMap'
 import { Coupon } from '@/lib/types'
 import { toast } from 'sonner'
 
@@ -87,7 +88,7 @@ export function TravelDetail({
   return (
     <div className="bg-slate-50 min-h-[calc(100vh-64px)] pb-20 animate-in fade-in duration-500">
       <div className="bg-white border-b sticky top-0 z-20 shadow-sm">
-        <div className="container mx-auto px-4 max-w-4xl py-3 flex items-center justify-between">
+        <div className="container mx-auto px-4 max-w-6xl py-3 flex items-center justify-between">
           <Button
             variant="ghost"
             onClick={onBack}
@@ -110,7 +111,7 @@ export function TravelDetail({
         </div>
       </div>
 
-      <div className="container mx-auto px-4 max-w-4xl py-8">
+      <div className="container mx-auto px-4 max-w-6xl py-8">
         <div className="mb-8 text-center sm:text-left flex flex-col sm:flex-row items-center gap-6">
           <div className="h-24 w-24 sm:h-32 sm:w-32 rounded-2xl overflow-hidden shrink-0 shadow-md">
             <img
@@ -137,84 +138,93 @@ export function TravelDetail({
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border p-4 sm:p-6">
-          <Tabs
-            value={activeDayId}
-            onValueChange={setActiveDayId}
-            className="w-full"
-          >
-            <ScrollArea className="w-full mb-6">
-              <TabsList className="inline-flex w-max min-w-full h-12 bg-slate-100 p-1 rounded-xl">
-                {activeTrip.days?.map((day) => (
-                  <TabsTrigger
-                    key={day.id}
-                    value={day.id}
-                    className="rounded-lg px-6 font-semibold data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all flex-1"
-                  >
-                    {t('travel.day', 'Day')} {day.dayNumber}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-              <ScrollBar orientation="horizontal" className="invisible" />
-            </ScrollArea>
-
-            {activeTrip.days?.map((day) => (
-              <TabsContent
-                key={day.id}
-                value={day.id}
-                className="mt-0 outline-none animate-in fade-in-50 duration-500"
-              >
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-xl font-bold text-slate-800">
-                    {t('travel.activities_for_day', 'Activities for Day')}{' '}
-                    {day.dayNumber}
-                  </h3>
-                  <Button
-                    onClick={() => setIsAddSheetOpen(true)}
-                    className="gap-2 bg-primary hover:bg-primary/90"
-                  >
-                    <Plus className="h-4 w-4" />{' '}
-                    {t('travel.add_activity', 'Add Activity')}
-                  </Button>
-                </div>
-
-                {day.stops.length === 0 ? (
-                  <div className="text-center py-16 bg-slate-50 border-2 border-dashed rounded-xl">
-                    <MapPin className="h-12 w-12 text-slate-300 mx-auto mb-3" />
-                    <p className="text-lg font-medium text-slate-700">
-                      {t('travel.empty_day', 'Your day is empty')}
-                    </p>
-                    <p className="text-slate-500 mb-6">
-                      {t(
-                        'travel.empty_day_desc',
-                        'Add places to visit, restaurants, or events.',
-                      )}
-                    </p>
-                    <Button
-                      variant="outline"
-                      onClick={() => setIsAddSheetOpen(true)}
+        <div className="flex flex-col lg:flex-row gap-8 items-start">
+          <div className="flex-1 w-full min-w-0 bg-white rounded-2xl shadow-sm border p-4 sm:p-6">
+            <Tabs
+              value={activeDayId}
+              onValueChange={setActiveDayId}
+              className="w-full"
+            >
+              <ScrollArea className="w-full mb-6">
+                <TabsList className="inline-flex w-max min-w-full h-12 bg-slate-100 p-1 rounded-xl">
+                  {activeTrip.days?.map((day) => (
+                    <TabsTrigger
+                      key={day.id}
+                      value={day.id}
+                      className="rounded-lg px-6 font-semibold data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all flex-1"
                     >
-                      {t('travel.browse_discoveries', 'Browse Discoveries')}
+                      {t('travel.day', 'Day')} {day.dayNumber}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+                <ScrollBar orientation="horizontal" className="invisible" />
+              </ScrollArea>
+
+              {activeTrip.days?.map((day) => (
+                <TabsContent
+                  key={day.id}
+                  value={day.id}
+                  className="mt-0 outline-none animate-in fade-in-50 duration-500"
+                >
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-bold text-slate-800">
+                      {t('travel.activities_for_day', 'Activities for Day')}{' '}
+                      {day.dayNumber}
+                    </h3>
+                    <Button
+                      onClick={() => setIsAddSheetOpen(true)}
+                      className="gap-2 bg-primary hover:bg-primary/90"
+                    >
+                      <Plus className="h-4 w-4" />{' '}
+                      {t('travel.add_activity', 'Add Activity')}
                     </Button>
                   </div>
-                ) : (
-                  <div className="space-y-4">
-                    {day.stops.map((stop, idx) => (
-                      <TravelActivityCard
-                        key={`${stop.id}-${idx}`}
-                        stop={stop}
-                        dayId={day.id}
-                        mockTime={getMockTime(idx)}
-                        onRemove={handleRemoveActivity}
-                      />
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
-            ))}
-          </Tabs>
+
+                  {day.stops.length === 0 ? (
+                    <div className="text-center py-16 bg-slate-50 border-2 border-dashed rounded-xl">
+                      <MapPin className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+                      <p className="text-lg font-medium text-slate-700">
+                        {t('travel.empty_day', 'Your day is empty')}
+                      </p>
+                      <p className="text-slate-500 mb-6">
+                        {t(
+                          'travel.empty_day_desc',
+                          'Add places to visit, restaurants, or events.',
+                        )}
+                      </p>
+                      <Button
+                        variant="outline"
+                        onClick={() => setIsAddSheetOpen(true)}
+                      >
+                        {t('travel.browse_discoveries', 'Browse Discoveries')}
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {day.stops.map((stop, idx) => (
+                        <TravelActivityCard
+                          key={`${stop.id}-${idx}`}
+                          stop={stop}
+                          dayId={day.id}
+                          mockTime={getMockTime(idx)}
+                          onRemove={handleRemoveActivity}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+              ))}
+            </Tabs>
+          </div>
+
+          <div className="w-full lg:w-[400px] xl:w-[450px] shrink-0 lg:sticky lg:top-[88px] z-10">
+            <ItineraryMap
+              day={activeTrip.days?.find((d) => d.id === activeDayId)}
+            />
+          </div>
         </div>
       </div>
+
       <DiscoverActivitiesSheet
         isOpen={isAddSheetOpen}
         onClose={() => setIsAddSheetOpen(false)}

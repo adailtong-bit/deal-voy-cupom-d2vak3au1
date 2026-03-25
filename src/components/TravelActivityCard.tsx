@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Coupon } from '@/lib/types'
 import { useLanguage } from '@/stores/LanguageContext'
+import { useCouponStore } from '@/stores/CouponContext'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -12,6 +13,7 @@ import {
   ImageOff,
   Trash2,
   Calendar,
+  Navigation,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -37,9 +39,9 @@ export function TravelActivityCard({
 }: TravelActivityCardProps) {
   const navigate = useNavigate()
   const { t } = useLanguage()
+  const { userLocation } = useCouponStore()
   const [isBookingOpen, setIsBookingOpen] = useState(false)
 
-  // Simple heuristic to determine booking form type
   const isHotel =
     stop.category === 'Outros' && stop.title.toLowerCase().includes('hotel')
   const isCar =
@@ -51,9 +53,12 @@ export function TravelActivityCard({
     navigate('/travel?tab=bookings')
   }
 
+  const navUrl = `https://www.google.com/maps/dir/?api=1&destination=${stop.coordinates.lat},${stop.coordinates.lng}${
+    userLocation ? `&origin=${userLocation.lat},${userLocation.lng}` : ''
+  }`
+
   return (
     <div className="flex gap-4 group">
-      {/* Time Column */}
       <div className="w-16 sm:w-20 shrink-0 flex flex-col items-center pt-4">
         <span className="text-xs sm:text-sm font-bold text-slate-700 text-center leading-tight whitespace-pre-line">
           {mockTime}
@@ -61,7 +66,6 @@ export function TravelActivityCard({
         <div className="flex-1 w-px bg-slate-200 mt-2 group-last:hidden" />
       </div>
 
-      {/* Activity Card */}
       <Card className="flex-1 overflow-hidden hover:shadow-md transition-shadow bg-white border-slate-200">
         <div className="flex flex-col sm:flex-row">
           <div className="w-full sm:w-48 h-40 sm:h-auto shrink-0 relative bg-slate-100 flex items-center justify-center">
@@ -102,11 +106,10 @@ export function TravelActivityCard({
               {stop.description}
             </p>
 
-            {/* Address and Validity */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 mb-5">
-              <div className="flex items-start sm:items-center gap-1.5 text-xs text-slate-600">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+              <div className="flex items-start sm:items-center gap-1.5 text-xs text-slate-600 pr-2">
                 <MapPin className="h-3.5 w-3.5 text-slate-400 shrink-0 mt-0.5 sm:mt-0" />
-                <span className="line-clamp-1">
+                <span className="line-clamp-2 sm:line-clamp-1">
                   {stop.address ||
                     t(
                       'activity_card.address_unavailable',
@@ -115,31 +118,44 @@ export function TravelActivityCard({
                 </span>
               </div>
 
-              <Dialog open={isBookingOpen} onOpenChange={setIsBookingOpen}>
-                <DialogTrigger asChild>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-8 gap-2 bg-slate-50 border-primary/20 text-primary hover:bg-primary/5 shrink-0 self-start sm:self-auto font-semibold"
-                  >
-                    <Calendar className="h-3 w-3" />{' '}
-                    {t('activity_card.book_now', 'Reservar Agora')}
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-md p-0 border-none bg-transparent shadow-none">
-                  <DialogTitle className="sr-only">
-                    {t('hub.book', 'Reservar')} {stop.storeName}
-                  </DialogTitle>
-                  <BookingForm
-                    coupon={stop}
-                    type={bookingType}
-                    onSuccess={handleBookingSuccess}
-                  />
-                </DialogContent>
-              </Dialog>
+              <div className="flex flex-wrap items-center gap-2 shrink-0">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  asChild
+                  className="h-8 gap-1.5 bg-white border-slate-200 text-slate-700 hover:bg-slate-50 font-medium shadow-sm"
+                >
+                  <a href={navUrl} target="_blank" rel="noopener noreferrer">
+                    <Navigation className="h-3 w-3" />{' '}
+                    {t('travel.navigate', 'Navegar')}
+                  </a>
+                </Button>
+
+                <Dialog open={isBookingOpen} onOpenChange={setIsBookingOpen}>
+                  <DialogTrigger asChild>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 gap-2 bg-slate-50 border-primary/20 text-primary hover:bg-primary/5 font-semibold shadow-sm"
+                    >
+                      <Calendar className="h-3 w-3" />{' '}
+                      {t('activity_card.book_now', 'Reservar')}
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-md p-0 border-none bg-transparent shadow-none">
+                    <DialogTitle className="sr-only">
+                      {t('hub.book', 'Reservar')} {stop.storeName}
+                    </DialogTitle>
+                    <BookingForm
+                      coupon={stop}
+                      type={bookingType}
+                      onSuccess={handleBookingSuccess}
+                    />
+                  </DialogContent>
+                </Dialog>
+              </div>
             </div>
 
-            {/* Instructions and QR block */}
             <div className="mt-auto bg-slate-50 rounded-lg border border-slate-100 p-3 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
               <div className="flex-1 space-y-1.5">
                 <h5 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
