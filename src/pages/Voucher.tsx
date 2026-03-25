@@ -15,6 +15,10 @@ import {
   ExternalLink,
   Copy,
   Globe,
+  Share2,
+  MapPin,
+  Clock,
+  Info,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useLanguage } from '@/stores/LanguageContext'
@@ -22,7 +26,7 @@ import { useLanguage } from '@/stores/LanguageContext'
 export default function Voucher() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { t } = useLanguage()
+  const { t, formatDate } = useLanguage()
   const {
     user,
     coupons,
@@ -98,7 +102,15 @@ export default function Voucher() {
   const isSoldOut = available <= 0
 
   const handleSimulateScan = () => {
-    validateCoupon(code)
+    if (!code) return
+    const result = validateCoupon(code)
+    if (result.success) {
+      toast.success(
+        t('voucher_detail.scan_success', 'Voucher validado com sucesso!'),
+      )
+    } else {
+      toast.error(t('voucher_detail.scan_error', 'Erro ao validar o voucher.'))
+    }
   }
 
   const handleReserve = () => {
@@ -127,6 +139,23 @@ export default function Voucher() {
         duration: 3000,
       },
     )
+  }
+
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator
+        .share({
+          title,
+          text: description,
+          url: window.location.href,
+        })
+        .catch((error) => console.error('Error sharing', error))
+    } else {
+      navigator.clipboard.writeText(window.location.href)
+      toast.success(
+        t('voucher_detail.share_success', 'Link copiado para compartilhar!'),
+      )
+    }
   }
 
   const handleBuyNow = () => {
@@ -180,14 +209,25 @@ export default function Voucher() {
   return (
     <div className="min-h-screen bg-slate-50/50 flex flex-col items-center py-8 px-4 sm:py-12 animate-fade-in-up">
       <div className="w-full max-w-md">
-        <Button
-          variant="ghost"
-          onClick={() => navigate(-1)}
-          className="mb-6 -ml-4 text-slate-600 hover:text-slate-900 transition-colors"
-        >
-          <ArrowLeft className="h-5 w-5 mr-2" />
-          {t('common.back', 'Voltar')}
-        </Button>
+        <div className="flex items-center justify-between w-full mb-6">
+          <Button
+            variant="ghost"
+            onClick={() => navigate(-1)}
+            className="-ml-4 text-slate-600 hover:text-slate-900 transition-colors"
+          >
+            <ArrowLeft className="h-5 w-5 mr-2" />
+            {t('common.back', 'Voltar')}
+          </Button>
+
+          <Button
+            variant="ghost"
+            onClick={handleShare}
+            className="-mr-4 text-slate-600 hover:text-primary transition-colors"
+          >
+            <Share2 className="h-4 w-4 mr-2" />
+            {t('voucher_detail.share', 'Compartilhar')}
+          </Button>
+        </div>
 
         <Card className="overflow-hidden border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-2xl relative bg-white">
           <div
@@ -247,21 +287,55 @@ export default function Voucher() {
                   {storeName}
                 </p>
 
-                <div className="bg-slate-50 p-5 rounded-xl text-left w-full mb-8 border border-slate-100 shadow-inner">
-                  <h3 className="font-semibold text-slate-800 mb-2 flex items-center gap-2">
-                    <Ticket className="h-4 w-4 text-primary" />{' '}
-                    {t(
-                      'voucher_detail.campaign_details',
-                      'Detalhes da Campanha',
-                    )}
-                  </h3>
-                  <p className="text-sm text-slate-600 leading-relaxed">
-                    {description}
-                  </p>
+                <div className="bg-slate-50 p-5 rounded-xl text-left w-full mb-8 border border-slate-100 shadow-inner space-y-4">
+                  <div>
+                    <h3 className="font-semibold text-slate-800 mb-1.5 flex items-center gap-2">
+                      <Ticket className="h-4 w-4 text-primary" />{' '}
+                      {t('voucher_detail.description', 'Descrição')}
+                    </h3>
+                    <p className="text-sm text-slate-600 leading-relaxed">
+                      {description}
+                    </p>
+                  </div>
+
+                  {(coupon?.expiryDate || event?.endDate) && (
+                    <div className="pt-4 border-t border-slate-200/60">
+                      <h3 className="font-semibold text-slate-800 mb-1.5 flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-primary" />{' '}
+                        {t('voucher_detail.validity', 'Validade')}
+                      </h3>
+                      <p className="text-sm text-slate-600 leading-relaxed">
+                        {formatDate(coupon?.expiryDate || event?.endDate || '')}
+                      </p>
+                    </div>
+                  )}
+
+                  {coupon?.address && !isOnline && (
+                    <div className="pt-4 border-t border-slate-200/60">
+                      <h3 className="font-semibold text-slate-800 mb-1.5 flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-primary" />{' '}
+                        {t('voucher_detail.address', 'Endereço')}
+                      </h3>
+                      <p className="text-sm text-slate-600 leading-relaxed">
+                        {coupon.address}
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="pt-4 border-t border-slate-200/60">
+                    <h3 className="font-semibold text-slate-800 mb-1.5 flex items-center gap-2">
+                      <Info className="h-4 w-4 text-primary" />{' '}
+                      {t('voucher_detail.rules', 'Regras e Condições')}
+                    </h3>
+                    <p className="text-sm text-slate-600 leading-relaxed">
+                      {instructions}
+                    </p>
+                  </div>
+
                   {!isOnline && (
-                    <p className="text-xs text-slate-400 mt-3 pt-3 border-t border-slate-200/60">
+                    <p className="text-xs text-slate-400 mt-2 pt-4 border-t border-slate-200/60 font-medium">
                       {t('voucher_detail.available', 'Disponíveis:')}{' '}
-                      {available}
+                      <span className="text-slate-700">{available}</span>
                     </p>
                   )}
                 </div>

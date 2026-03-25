@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react'
+import React, {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useEffect,
+} from 'react'
 import { translations, Language } from '@/lib/translations'
 import {
   formatCurrency as utilsFormatCurrency,
@@ -22,7 +28,17 @@ export const LanguageContext = createContext<LanguageContextType | undefined>(
 )
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<Language>('pt')
+  const [language, setLanguage] = useState<Language>(() => {
+    const saved = localStorage.getItem('app_language')
+    if (saved && (saved === 'pt' || saved === 'en' || saved === 'es')) {
+      return saved as Language
+    }
+    return 'pt'
+  })
+
+  useEffect(() => {
+    localStorage.setItem('app_language', language)
+  }, [language])
 
   const t = (path: string, fallback?: string): string => {
     const keys = path.split('.')
