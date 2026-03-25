@@ -11,13 +11,13 @@ import { useLanguage } from '@/stores/LanguageContext'
 import { useCouponStore } from '@/stores/CouponContext'
 
 export function OrdersTable({ orders }: any) {
-  const { formatDate } = useLanguage()
+  const { formatDate, t } = useLanguage()
   const myOrders = orders || []
 
   if (myOrders.length === 0)
     return (
       <div className="text-center p-12 text-muted-foreground border border-dashed rounded-lg bg-white">
-        Nenhum pedido encontrado.
+        {t('vendor.tables.no_orders', 'Nenhum pedido encontrado.')}
       </div>
     )
 
@@ -26,11 +26,21 @@ export function OrdersTable({ orders }: any) {
       <Table>
         <TableHeader className="bg-slate-50">
           <TableRow>
-            <TableHead className="font-semibold">ID do Pedido</TableHead>
-            <TableHead className="font-semibold">Cliente</TableHead>
-            <TableHead className="font-semibold">Data</TableHead>
-            <TableHead className="font-semibold">Tipo</TableHead>
-            <TableHead className="font-semibold">Status</TableHead>
+            <TableHead className="font-semibold">
+              {t('vendor.tables.order_id', 'ID do Pedido')}
+            </TableHead>
+            <TableHead className="font-semibold">
+              {t('vendor.tables.customer', 'Cliente')}
+            </TableHead>
+            <TableHead className="font-semibold">
+              {t('vendor.tables.date', 'Data')}
+            </TableHead>
+            <TableHead className="font-semibold">
+              {t('vendor.tables.type', 'Tipo')}
+            </TableHead>
+            <TableHead className="font-semibold">
+              {t('vendor.tables.status', 'Status')}
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -46,7 +56,7 @@ export function OrdersTable({ orders }: any) {
                 {formatDate(o.date)}
               </TableCell>
               <TableCell className="capitalize text-slate-600">
-                {o.type || 'geral'}
+                {o.type || t('vendor.tables.general', 'geral')}
               </TableCell>
               <TableCell>
                 <Badge
@@ -54,11 +64,11 @@ export function OrdersTable({ orders }: any) {
                   className={o.status === 'confirmed' ? 'bg-emerald-500' : ''}
                 >
                   {o.status === 'confirmed'
-                    ? 'Confirmado'
+                    ? t('vendor.tables.confirmed', 'Confirmado')
                     : o.status === 'pending'
-                      ? 'Pendente'
+                      ? t('vendor.tables.pending', 'Pendente')
                       : o.status === 'cancelled'
-                        ? 'Cancelado'
+                        ? t('vendor.tables.cancelled', 'Cancelado')
                         : o.status}
                 </Badge>
               </TableCell>
@@ -72,6 +82,7 @@ export function OrdersTable({ orders }: any) {
 
 export function HistoryTable() {
   const { validationLogs, user, companies } = useCouponStore()
+  const { t } = useLanguage()
   const myCompany =
     companies.find((c) => c.id === user?.companyId) || companies[0]
   const logs = validationLogs
@@ -84,7 +95,7 @@ export function HistoryTable() {
   if (logs.length === 0)
     return (
       <div className="text-center p-12 text-muted-foreground border border-dashed rounded-lg bg-white">
-        Nenhum histórico de resgates.
+        {t('vendor.tables.no_history', 'Nenhum histórico de resgates.')}
       </div>
     )
 
@@ -93,10 +104,18 @@ export function HistoryTable() {
       <Table>
         <TableHeader className="bg-slate-50">
           <TableRow>
-            <TableHead className="font-semibold">Data & Hora</TableHead>
-            <TableHead className="font-semibold">Campanha</TableHead>
-            <TableHead className="font-semibold">Cliente</TableHead>
-            <TableHead className="font-semibold">Método</TableHead>
+            <TableHead className="font-semibold">
+              {t('vendor.tables.datetime', 'Data & Hora')}
+            </TableHead>
+            <TableHead className="font-semibold">
+              {t('vendor.tables.campaign', 'Campanha')}
+            </TableHead>
+            <TableHead className="font-semibold">
+              {t('vendor.tables.customer', 'Cliente')}
+            </TableHead>
+            <TableHead className="font-semibold">
+              {t('vendor.tables.method', 'Método')}
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

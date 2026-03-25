@@ -13,7 +13,7 @@ import { Mail, Phone } from 'lucide-react'
 
 export function VendorCustomersTab({ company }: any) {
   const { validationLogs, users } = useCouponStore()
-  const { formatDate } = useLanguage()
+  const { formatDate, t } = useLanguage()
 
   const leads = useMemo(() => {
     const companyLogs = validationLogs.filter((l) => l.companyId === company.id)
@@ -52,8 +52,10 @@ export function VendorCustomersTab({ company }: any) {
   if (leads.length === 0) {
     return (
       <div className="text-center p-12 border border-dashed rounded-lg bg-white text-muted-foreground animate-fade-in-up">
-        Nenhum lead encontrado no CRM. Aguarde os usuários resgatarem suas
-        ofertas.
+        {t(
+          'vendor.customers_tab.empty',
+          'Nenhum lead encontrado no CRM. Aguarde os usuários resgatarem suas ofertas.',
+        )}
       </div>
     )
   }
@@ -64,19 +66,19 @@ export function VendorCustomersTab({ company }: any) {
         <TableHeader className="bg-slate-50">
           <TableRow>
             <TableHead className="font-semibold text-slate-700">
-              Nome do Cliente
+              {t('vendor.customers_tab.name', 'Nome do Cliente')}
             </TableHead>
             <TableHead className="font-semibold text-slate-700">
-              Contato
+              {t('vendor.customers_tab.contact', 'Contato')}
             </TableHead>
             <TableHead className="font-semibold text-slate-700 text-center">
-              Total de Resgates
+              {t('vendor.customers_tab.total_redemptions', 'Total de Resgates')}
             </TableHead>
             <TableHead className="font-semibold text-slate-700">
-              Última Campanha Usada
+              {t('vendor.customers_tab.last_campaign', 'Última Campanha Usada')}
             </TableHead>
             <TableHead className="font-semibold text-slate-700">
-              Última Atividade
+              {t('vendor.customers_tab.last_active', 'Última Atividade')}
             </TableHead>
           </TableRow>
         </TableHeader>
@@ -102,7 +104,7 @@ export function VendorCustomersTab({ company }: any) {
                   )}
                   {lead.email === 'N/D' && lead.phone === 'N/D' && (
                     <span className="text-slate-400 italic font-normal">
-                      Sem contato
+                      {t('vendor.customers_tab.no_contact', 'Sem contato')}
                     </span>
                   )}
                 </div>

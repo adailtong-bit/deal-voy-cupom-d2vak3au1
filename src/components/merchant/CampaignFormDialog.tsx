@@ -29,6 +29,7 @@ import {
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { useCouponStore } from '@/stores/CouponContext'
+import { useLanguage } from '@/stores/LanguageContext'
 import { ImagePlus, ExternalLink, Radar } from 'lucide-react'
 import { CouponCard } from '@/components/CouponCard'
 import { toast } from 'sonner'
@@ -172,6 +173,7 @@ export function CampaignFormDialog({
   companyId: string
 }) {
   const { addCoupon, updateCampaign, companies } = useCouponStore()
+  const { t } = useLanguage()
   const company = companies.find((c) => c.id === companyId)
 
   const form = useForm<FormData>({
@@ -310,9 +312,14 @@ export function CampaignFormDialog({
 
   const previewCoupon = {
     id: 'preview',
-    title: watchedVals.title || 'Título da Campanha',
+    title:
+      watchedVals.title || t('vendor.form.campaign_title', 'Nome da Campanha'),
     description:
-      watchedVals.description || 'A descrição da sua campanha aparecerá aqui.',
+      watchedVals.description ||
+      t(
+        'vendor.form.description',
+        'A descrição da sua campanha aparecerá aqui.',
+      ),
     storeName:
       watchedVals.scope === 'specific' && watchedVals.specificStore
         ? watchedVals.specificStore
@@ -342,7 +349,9 @@ export function CampaignFormDialog({
       <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {coupon ? 'Editar Campanha' : 'Criar Nova Campanha'}
+            {coupon
+              ? t('vendor.form.edit_title', 'Editar Campanha')
+              : t('vendor.form.create_title', 'Criar Nova Campanha')}
           </DialogTitle>
         </DialogHeader>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-2">
@@ -354,7 +363,9 @@ export function CampaignFormDialog({
                   name="title"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Título da Campanha</FormLabel>
+                      <FormLabel>
+                        {t('vendor.form.campaign_title', 'Nome da Campanha')}
+                      </FormLabel>
                       <FormControl>
                         <Input
                           placeholder="Digite o nome da campanha"
@@ -370,7 +381,9 @@ export function CampaignFormDialog({
                   name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Descrição</FormLabel>
+                      <FormLabel>
+                        {t('vendor.form.description', 'Descrição')}
+                      </FormLabel>
                       <FormControl>
                         <Input
                           placeholder="Descreva os detalhes da oferta"
@@ -386,7 +399,9 @@ export function CampaignFormDialog({
                   name="companyUrl"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>URL da Empresa</FormLabel>
+                      <FormLabel>
+                        {t('vendor.form.company_url', 'URL da Empresa')}
+                      </FormLabel>
                       <FormControl>
                         <div className="flex gap-2">
                           <Input
@@ -401,7 +416,7 @@ export function CampaignFormDialog({
                             className="shrink-0 font-medium"
                           >
                             <ExternalLink className="w-4 h-4 mr-2" />
-                            Testar Link
+                            {t('vendor.form.test_link', 'Testar Link')}
                           </Button>
                         </div>
                       </FormControl>
@@ -420,7 +435,7 @@ export function CampaignFormDialog({
                     <FormItem className="mt-4">
                       <FormLabel className="flex items-center gap-2">
                         <ImagePlus className="w-4 h-4 text-slate-500" />
-                        Imagem da Campanha
+                        {t('vendor.form.image', 'Imagem da Campanha')}
                       </FormLabel>
                       <FormControl>
                         <div className="space-y-3">
@@ -485,7 +500,9 @@ export function CampaignFormDialog({
                   name="scope"
                   render={({ field }) => (
                     <FormItem className="space-y-3">
-                      <FormLabel>Abrangência</FormLabel>
+                      <FormLabel>
+                        {t('vendor.form.scope', 'Abrangência')}
+                      </FormLabel>
                       <FormControl>
                         <RadioGroup
                           onValueChange={field.onChange}
@@ -497,7 +514,7 @@ export function CampaignFormDialog({
                               <RadioGroupItem value="network" />
                             </FormControl>
                             <FormLabel className="font-normal cursor-pointer">
-                              Toda a Rede
+                              {t('vendor.form.scope_network', 'Toda a Rede')}
                             </FormLabel>
                           </FormItem>
                           <FormItem className="flex items-center space-x-2 space-y-0">
@@ -505,7 +522,10 @@ export function CampaignFormDialog({
                               <RadioGroupItem value="specific" />
                             </FormControl>
                             <FormLabel className="font-normal cursor-pointer">
-                              Loja Específica
+                              {t(
+                                'vendor.form.scope_specific',
+                                'Loja Específica',
+                              )}
                             </FormLabel>
                           </FormItem>
                         </RadioGroup>
@@ -521,7 +541,9 @@ export function CampaignFormDialog({
                     name="specificStore"
                     render={({ field }) => (
                       <FormItem className="animate-in fade-in slide-in-from-top-2">
-                        <FormLabel>Selecione a Loja</FormLabel>
+                        <FormLabel>
+                          {t('vendor.form.select_store', 'Selecione a Loja')}
+                        </FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           defaultValue={field.value}
@@ -550,7 +572,9 @@ export function CampaignFormDialog({
                   name="discountType"
                   render={({ field }) => (
                     <FormItem className="space-y-3 pt-2">
-                      <FormLabel>Regras de Desconto</FormLabel>
+                      <FormLabel>
+                        {t('vendor.form.discount_rules', 'Regras de Desconto')}
+                      </FormLabel>
                       <FormControl>
                         <RadioGroup
                           onValueChange={(val) => {
@@ -570,7 +594,7 @@ export function CampaignFormDialog({
                               <RadioGroupItem value="percentage" />
                             </FormControl>
                             <FormLabel className="font-semibold cursor-pointer">
-                              Percentual
+                              {t('vendor.form.percentage', 'Percentual')}
                             </FormLabel>
                           </FormItem>
                           <FormItem className="flex items-center space-x-2 space-y-0">
@@ -578,7 +602,10 @@ export function CampaignFormDialog({
                               <RadioGroupItem value="fixed_spend" />
                             </FormControl>
                             <FormLabel className="font-semibold cursor-pointer">
-                              Valor Fixo (Gaste e Ganhe)
+                              {t(
+                                'vendor.form.fixed_spend',
+                                'Valor Fixo (Gaste e Ganhe)',
+                              )}
                             </FormLabel>
                           </FormItem>
                         </RadioGroup>
@@ -594,7 +621,12 @@ export function CampaignFormDialog({
                     name="discountPercentage"
                     render={({ field }) => (
                       <FormItem className="animate-in fade-in slide-in-from-top-2 p-4 border rounded-lg bg-white">
-                        <FormLabel>% de Desconto</FormLabel>
+                        <FormLabel>
+                          {t(
+                            'vendor.form.discount_percentage',
+                            '% de Desconto',
+                          )}
+                        </FormLabel>
                         <FormControl>
                           <Input
                             placeholder="0%"
@@ -622,7 +654,10 @@ export function CampaignFormDialog({
                       render={({ field }) => (
                         <CurrencyInput
                           field={field}
-                          label="Gaste (Valor Mínimo)"
+                          label={t(
+                            'vendor.form.min_spend',
+                            'Gaste (Valor Mínimo)',
+                          )}
                           placeholder="R$ 0,00"
                         />
                       )}
@@ -633,7 +668,10 @@ export function CampaignFormDialog({
                       render={({ field }) => (
                         <CurrencyInput
                           field={field}
-                          label="Ganhe (Valor do Desconto)"
+                          label={t(
+                            'vendor.form.fixed_discount',
+                            'Ganhe (Valor do Desconto)',
+                          )}
                           placeholder="R$ 0,00"
                         />
                       )}
@@ -646,7 +684,10 @@ export function CampaignFormDialog({
                 <div className="p-4 bg-blue-50/50 rounded-xl border border-blue-100 space-y-4">
                   <div className="flex items-center gap-2 text-blue-800 font-semibold">
                     <Radar className="w-5 h-5 text-blue-600" />
-                    Alertas de Proximidade (Geofencing)
+                    {t(
+                      'vendor.form.proximity_alerts',
+                      'Alertas de Proximidade (Geofencing)',
+                    )}
                   </div>
                   <FormField
                     control={form.control}
@@ -655,7 +696,10 @@ export function CampaignFormDialog({
                       <FormItem className="flex flex-row items-center justify-between rounded-lg border border-blue-200 bg-white p-4 shadow-sm">
                         <div className="space-y-0.5">
                           <FormLabel className="text-base cursor-pointer">
-                            Ativar Radar para esta Campanha
+                            {t(
+                              'vendor.form.activate_radar',
+                              'Ativar Radar para esta Campanha',
+                            )}
                           </FormLabel>
                           <FormDescription className="text-xs">
                             Envia uma notificação push quando usuários passarem
@@ -680,7 +724,10 @@ export function CampaignFormDialog({
                       render={({ field }) => (
                         <FormItem className="animate-in fade-in slide-in-from-top-2 pt-2">
                           <FormLabel className="text-blue-900">
-                            Raio de Alerta (metros)
+                            {t(
+                              'vendor.form.alert_radius',
+                              'Raio de Alerta (metros)',
+                            )}
                           </FormLabel>
                           <FormControl>
                             <Input
@@ -706,7 +753,12 @@ export function CampaignFormDialog({
                   name="totalLimit"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Limite Total de Utilizações</FormLabel>
+                      <FormLabel>
+                        {t(
+                          'vendor.form.total_limit',
+                          'Limite Total de Utilizações',
+                        )}
+                      </FormLabel>
                       <FormControl>
                         <Input type="number" {...field} />
                       </FormControl>
@@ -720,7 +772,9 @@ export function CampaignFormDialog({
                     name="startDate"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Data de Início</FormLabel>
+                        <FormLabel>
+                          {t('vendor.form.start_date', 'Data de Início')}
+                        </FormLabel>
                         <FormControl>
                           <Input type="date" {...field} />
                         </FormControl>
@@ -733,7 +787,9 @@ export function CampaignFormDialog({
                     name="endDate"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Data de Término</FormLabel>
+                        <FormLabel>
+                          {t('vendor.form.end_date', 'Data de Término')}
+                        </FormLabel>
                         <FormControl>
                           <Input type="date" {...field} />
                         </FormControl>
@@ -750,10 +806,12 @@ export function CampaignFormDialog({
                   variant="outline"
                   onClick={() => onOpenChange(false)}
                 >
-                  Cancelar
+                  {t('vendor.form.cancel', 'Cancelar')}
                 </Button>
                 <Button type="submit">
-                  {coupon ? 'Salvar Alterações' : 'Criar Campanha'}
+                  {coupon
+                    ? t('vendor.form.save', 'Salvar Alterações')
+                    : t('vendor.form.create', 'Criar Campanha')}
                 </Button>
               </div>
             </form>
@@ -762,7 +820,7 @@ export function CampaignFormDialog({
           <div className="bg-slate-50 p-6 rounded-xl border border-slate-200 hidden md:block relative h-full">
             <div className="sticky top-6">
               <h3 className="font-bold text-lg mb-2 text-slate-800">
-                Pré-visualização da Campanha
+                {t('vendor.form.preview', 'Pré-visualização da Campanha')}
               </h3>
               <p className="text-sm text-slate-500 mb-6">
                 É assim que sua campanha aparecerá para os clientes no

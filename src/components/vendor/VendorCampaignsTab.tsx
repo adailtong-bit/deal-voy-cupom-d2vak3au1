@@ -35,7 +35,7 @@ export function VendorCampaignsTab({
   coupons: any[]
   company: any
 }) {
-  const { formatDate } = useLanguage()
+  const { formatDate, t } = useLanguage()
   const { deleteCoupon } = useCouponStore()
   const [editingCoupon, setEditingCoupon] = useState<any>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -55,14 +55,17 @@ export function VendorCampaignsTab({
       <div className="py-16 text-center bg-white rounded-xl border border-dashed border-slate-300 animate-fade-in-up">
         <Megaphone className="h-12 w-12 text-slate-300 mx-auto mb-3" />
         <h3 className="text-lg font-semibold text-slate-700">
-          Nenhuma promoção encontrada
+          {t('vendor.campaigns_tab.empty_title', 'Nenhuma campanha encontrada')}
         </h3>
         <p className="text-slate-500 mt-1 max-w-md mx-auto mb-6">
-          Você ainda não criou nenhuma oferta. Crie sua primeira promoção para
-          atrair mais clientes e aumentar suas vendas.
+          {t(
+            'vendor.campaigns_tab.empty_desc',
+            'Você ainda não criou nenhuma campanha. Crie sua primeira campanha para atrair mais clientes e aumentar suas vendas.',
+          )}
         </p>
         <Button onClick={handleCreate} className="font-bold shadow-md">
-          <Plus className="w-4 h-4 mr-2" /> Criar Nova Promoção
+          <Plus className="w-4 h-4 mr-2" />{' '}
+          {t('vendor.campaigns_tab.create', 'Criar Campanha')}
         </Button>
         <CampaignFormDialog
           open={isDialogOpen}
@@ -90,13 +93,13 @@ export function VendorCampaignsTab({
 
           let statusBadge = (
             <Badge className="bg-emerald-500 border-none shadow-sm">
-              Ativa
+              {t('vendor.campaigns_tab.active', 'Ativo')}
             </Badge>
           )
           if (isExpired)
             statusBadge = (
               <Badge variant="secondary" className="shadow-sm">
-                Expirada
+                {t('vendor.campaigns_tab.expired', 'Expirado')}
               </Badge>
             )
           else if (isSoldOut)
@@ -105,7 +108,7 @@ export function VendorCampaignsTab({
                 variant="destructive"
                 className="bg-red-500 border-none shadow-sm"
               >
-                Esgotada
+                {t('vendor.campaigns_tab.sold_out', 'Esgotado')}
               </Badge>
             )
 
@@ -130,17 +133,19 @@ export function VendorCampaignsTab({
                   </h3>
                   <div className="flex items-center gap-1.5 text-xs text-white/90 font-medium">
                     <CalendarIcon className="h-3.5 w-3.5" />
-                    Expira em:{' '}
+                    {t('vendor.campaigns_tab.expires_in', 'Expira em')}:{' '}
                     {expiryDateStr
                       ? formatDate(expiryDateStr)
-                      : 'Indeterminado'}
+                      : t('vendor.campaigns_tab.indefinite', 'Indeterminado')}
                   </div>
                 </div>
               </div>
 
               <CardContent className="pt-4 flex-1 flex flex-col gap-4 p-5">
                 <div className="flex justify-between items-center text-sm font-medium bg-slate-50 px-3.5 py-2.5 rounded-lg border border-slate-100">
-                  <span className="text-slate-600">Desconto:</span>
+                  <span className="text-slate-600">
+                    {t('vendor.campaigns_tab.discount', 'Desconto:')}
+                  </span>
                   <span className="text-primary font-bold text-base">
                     {coupon.discount}
                   </span>
@@ -149,7 +154,7 @@ export function VendorCampaignsTab({
                 <div className="space-y-2.5 mt-auto">
                   <div className="flex justify-between items-end text-sm">
                     <span className="font-semibold text-slate-700">
-                      Resgates
+                      {t('vendor.campaigns_tab.redemptions', 'Resgates')}
                     </span>
                     <span
                       className={cn(
@@ -174,7 +179,8 @@ export function VendorCampaignsTab({
                     className="text-slate-500 hover:text-primary px-2"
                   >
                     <Link to={`/voucher/${coupon.id}`}>
-                      <ExternalLink className="h-4 w-4 mr-1.5" /> Ver cliente
+                      <ExternalLink className="h-4 w-4 mr-1.5" />{' '}
+                      {t('vendor.campaigns_tab.view_customer', 'Ver cliente')}
                     </Link>
                   </Button>
 
@@ -185,7 +191,8 @@ export function VendorCampaignsTab({
                       onClick={() => handleEdit(coupon)}
                       className="text-slate-600 hover:text-primary hover:bg-primary/5"
                     >
-                      <Edit2 className="h-4 w-4 mr-1.5" /> Editar
+                      <Edit2 className="h-4 w-4 mr-1.5" />{' '}
+                      {t('vendor.campaigns_tab.edit', 'Editar')}
                     </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
@@ -199,23 +206,31 @@ export function VendorCampaignsTab({
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
-                          <AlertDialogTitle>Excluir Promoção?</AlertDialogTitle>
+                          <AlertDialogTitle>
+                            {t(
+                              'vendor.campaigns_tab.delete_title',
+                              'Excluir Campanha?',
+                            )}
+                          </AlertDialogTitle>
                           <AlertDialogDescription>
-                            Esta ação não pode ser desfeita. A promoção{' '}
-                            <strong className="text-slate-800">
-                              "{coupon.title}"
-                            </strong>{' '}
-                            será permanentemente removida e não estará mais
-                            acessível aos clientes.
+                            {t(
+                              'vendor.campaigns_tab.delete_desc',
+                              'Esta ação não pode ser desfeita. A campanha será permanentemente removida e não estará mais acessível aos clientes.',
+                            )}
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
-                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogCancel>
+                            {t('common.cancel', 'Cancelar')}
+                          </AlertDialogCancel>
                           <AlertDialogAction
                             onClick={() => deleteCoupon(coupon.id)}
                             className="bg-red-600 hover:bg-red-700 text-white font-bold"
                           >
-                            Excluir Promoção
+                            {t(
+                              'vendor.campaigns_tab.delete_confirm',
+                              'Excluir Campanha',
+                            )}
                           </AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>

@@ -18,11 +18,13 @@ import {
 } from '@/components/ui/select'
 import { Store, Save, MapPin } from 'lucide-react'
 import { useCouponStore } from '@/stores/CouponContext'
+import { useLanguage } from '@/stores/LanguageContext'
 import { COUNTRIES, LOCATION_DATA } from '@/lib/locationData'
 import { toast } from 'sonner'
 
 export function VendorSettingsTab({ company }: any) {
   const { updateCompany } = useCouponStore()
+  const { t } = useLanguage()
   const [data, setData] = useState<any>({})
 
   useEffect(() => {
@@ -49,7 +51,11 @@ export function VendorSettingsTab({ company }: any) {
       addressNumber: n,
       addressComplement: comp,
     } = data
-    if (!st || !n) return 'Preencha Rua e Número para visualizar'
+    if (!st || !n)
+      return t(
+        'vendor.settings_tab.fill_address',
+        'Preencha Rua e Número para visualizar',
+      )
 
     const cText = comp ? ` - ${comp}` : ''
     const usCText = comp ? `, ${comp}` : ''
@@ -58,11 +64,16 @@ export function VendorSettingsTab({ company }: any) {
       return `${n} ${st}${usCText}, ${ci || 'Cidade'}, ${s || 'Estado'} ${z || 'CEP'}`
     }
     return `${st}, ${n}${cText}, ${ci || 'Cidade'} - ${s || 'Estado'}, ${z || 'CEP'}`
-  }, [data])
+  }, [data, t])
 
   const handleSave = () => {
     updateCompany(company.id, data)
-    toast.success('Configurações da loja atualizadas com sucesso')
+    toast.success(
+      t(
+        'vendor.settings_tab.save_success',
+        'Configurações da loja atualizadas com sucesso',
+      ),
+    )
   }
 
   return (
@@ -73,9 +84,14 @@ export function VendorSettingsTab({ company }: any) {
             <Store className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <CardTitle className="text-xl">Configurações da Loja</CardTitle>
+            <CardTitle className="text-xl">
+              {t('vendor.settings_tab.title', 'Configurações da Loja')}
+            </CardTitle>
             <CardDescription>
-              Gerencie o perfil da sua empresa e detalhes de localização.
+              {t(
+                'vendor.settings_tab.desc',
+                'Gerencie o perfil da sua empresa e detalhes de localização.',
+              )}
             </CardDescription>
           </div>
         </div>
@@ -83,7 +99,9 @@ export function VendorSettingsTab({ company }: any) {
       <CardContent className="space-y-6 pt-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="space-y-2">
-            <Label className="text-slate-700">Nome da Loja</Label>
+            <Label className="text-slate-700">
+              {t('vendor.settings_tab.store_name', 'Nome da Loja')}
+            </Label>
             <Input
               value={data.name || ''}
               onChange={(e) => handleChange('name', e.target.value)}
@@ -91,7 +109,9 @@ export function VendorSettingsTab({ company }: any) {
             />
           </div>
           <div className="space-y-2">
-            <Label className="text-slate-700">E-mail de Contato</Label>
+            <Label className="text-slate-700">
+              {t('vendor.settings_tab.contact_email', 'E-mail de Contato')}
+            </Label>
             <Input
               type="email"
               value={data.email || ''}
@@ -100,7 +120,9 @@ export function VendorSettingsTab({ company }: any) {
             />
           </div>
           <div className="space-y-2">
-            <Label className="text-slate-700">Telefone Comercial</Label>
+            <Label className="text-slate-700">
+              {t('vendor.settings_tab.business_phone', 'Telefone Comercial')}
+            </Label>
             <Input
               value={data.businessPhone || ''}
               onChange={(e) => handleChange('businessPhone', e.target.value)}
@@ -109,7 +131,9 @@ export function VendorSettingsTab({ company }: any) {
             />
           </div>
           <div className="space-y-2">
-            <Label className="text-slate-700">Região Atribuída</Label>
+            <Label className="text-slate-700">
+              {t('vendor.settings_tab.assigned_region', 'Região Atribuída')}
+            </Label>
             <Input
               value={data.region || 'Global'}
               disabled
@@ -122,13 +146,18 @@ export function VendorSettingsTab({ company }: any) {
           <div className="flex items-center gap-2 mb-4">
             <MapPin className="h-5 w-5 text-slate-500" />
             <h3 className="text-lg font-semibold text-slate-800">
-              Endereço Físico (Mapa)
+              {t(
+                'vendor.settings_tab.physical_address',
+                'Endereço Físico (Mapa)',
+              )}
             </h3>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
             <div className="space-y-2">
-              <Label className="text-slate-700">País</Label>
+              <Label className="text-slate-700">
+                {t('vendor.settings_tab.country', 'País')}
+              </Label>
               <Select
                 value={data.addressCountry || ''}
                 onValueChange={(v) =>
@@ -141,7 +170,12 @@ export function VendorSettingsTab({ company }: any) {
                 }
               >
                 <SelectTrigger className="bg-white">
-                  <SelectValue placeholder="Selecione..." />
+                  <SelectValue
+                    placeholder={t(
+                      'vendor.settings_tab.select',
+                      'Selecione...',
+                    )}
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {COUNTRIES.map((c) => (
@@ -153,7 +187,9 @@ export function VendorSettingsTab({ company }: any) {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label className="text-slate-700">Estado / Província</Label>
+              <Label className="text-slate-700">
+                {t('vendor.settings_tab.state', 'Estado / Província')}
+              </Label>
               <Select
                 value={data.addressState || ''}
                 onValueChange={(v) =>
@@ -162,7 +198,12 @@ export function VendorSettingsTab({ company }: any) {
                 disabled={!states.length}
               >
                 <SelectTrigger className="bg-white">
-                  <SelectValue placeholder="Selecione..." />
+                  <SelectValue
+                    placeholder={t(
+                      'vendor.settings_tab.select',
+                      'Selecione...',
+                    )}
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {states.map((s) => (
@@ -174,14 +215,21 @@ export function VendorSettingsTab({ company }: any) {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label className="text-slate-700">Cidade</Label>
+              <Label className="text-slate-700">
+                {t('vendor.settings_tab.city', 'Cidade')}
+              </Label>
               <Select
                 value={data.addressCity || ''}
                 onValueChange={(v) => handleChange('addressCity', v)}
                 disabled={!cities.length}
               >
                 <SelectTrigger className="bg-white">
-                  <SelectValue placeholder="Selecione..." />
+                  <SelectValue
+                    placeholder={t(
+                      'vendor.settings_tab.select',
+                      'Selecione...',
+                    )}
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {cities.map((c) => (
@@ -193,7 +241,9 @@ export function VendorSettingsTab({ company }: any) {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label className="text-slate-700">CEP / Postal Code</Label>
+              <Label className="text-slate-700">
+                {t('vendor.settings_tab.zip', 'CEP / Código Postal')}
+              </Label>
               <Input
                 value={data.addressZip || ''}
                 onChange={(e) => handleChange('addressZip', e.target.value)}
@@ -207,7 +257,9 @@ export function VendorSettingsTab({ company }: any) {
 
           <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
             <div className="space-y-2 sm:col-span-6">
-              <Label className="text-slate-700">Rua / Logradouro</Label>
+              <Label className="text-slate-700">
+                {t('vendor.settings_tab.street', 'Rua / Logradouro')}
+              </Label>
               <Input
                 value={data.addressStreet || ''}
                 onChange={(e) => handleChange('addressStreet', e.target.value)}
@@ -216,7 +268,9 @@ export function VendorSettingsTab({ company }: any) {
               />
             </div>
             <div className="space-y-2 sm:col-span-2">
-              <Label className="text-slate-700">Número</Label>
+              <Label className="text-slate-700">
+                {t('vendor.settings_tab.number', 'Número')}
+              </Label>
               <Input
                 value={data.addressNumber || ''}
                 onChange={(e) => handleChange('addressNumber', e.target.value)}
@@ -225,7 +279,9 @@ export function VendorSettingsTab({ company }: any) {
               />
             </div>
             <div className="space-y-2 sm:col-span-4">
-              <Label className="text-slate-700">Complemento (Opcional)</Label>
+              <Label className="text-slate-700">
+                {t('vendor.settings_tab.complement', 'Complemento (Opcional)')}
+              </Label>
               <Input
                 value={data.addressComplement || ''}
                 onChange={(e) =>
@@ -239,7 +295,7 @@ export function VendorSettingsTab({ company }: any) {
 
           <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 mt-5">
             <p className="text-[11px] text-slate-500 font-bold mb-1.5 uppercase tracking-wider">
-              Como aparecerá no app
+              {t('vendor.settings_tab.app_preview', 'Como aparecerá no app')}
             </p>
             <p className="text-slate-800 font-medium flex items-center gap-2">
               <MapPin className="h-4 w-4 text-primary shrink-0" />{' '}
@@ -250,7 +306,8 @@ export function VendorSettingsTab({ company }: any) {
 
         <div className="pt-4 border-t border-slate-100 flex justify-end">
           <Button onClick={handleSave} className="font-bold shadow-sm">
-            <Save className="w-4 h-4 mr-2" /> Salvar Alterações
+            <Save className="w-4 h-4 mr-2" />{' '}
+            {t('vendor.settings_tab.save', 'Salvar Alterações')}
           </Button>
         </div>
       </CardContent>

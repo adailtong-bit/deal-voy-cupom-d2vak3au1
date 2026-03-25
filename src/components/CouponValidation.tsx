@@ -8,8 +8,10 @@ import {
 } from '@/components/ui/card'
 import { ScanLine, ArrowRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { useLanguage } from '@/stores/LanguageContext'
 
 export function CouponValidation() {
+  const { t } = useLanguage()
   return (
     <div className="animate-fade-in-up py-4">
       <Card className="max-w-xl mx-auto border-slate-200 shadow-md rounded-2xl overflow-hidden relative bg-white">
@@ -19,11 +21,13 @@ export function CouponValidation() {
             <ScanLine className="h-10 w-10 text-primary" />
           </div>
           <CardTitle className="text-2xl font-bold text-slate-800">
-            Validar Vouchers de Clientes
+            {t('vendor.validation.title', 'Validar Vouchers de Clientes')}
           </CardTitle>
           <CardDescription className="text-base mt-2 max-w-md mx-auto">
-            Utilize a ferramenta Scanner PDV para validar rapidamente os QR
-            codes ou digitar códigos de vouchers manualmente no caixa.
+            {t(
+              'vendor.validation.desc',
+              'Utilize a ferramenta Scanner PDV para validar rapidamente os QR codes ou digitar códigos de vouchers manualmente no caixa.',
+            )}
           </CardDescription>
         </CardHeader>
         <CardContent className="flex justify-center pb-10 pt-6">
@@ -33,7 +37,8 @@ export function CouponValidation() {
             className="h-14 px-8 font-bold shadow-lg hover:-translate-y-0.5 transition-transform rounded-xl text-base"
           >
             <Link to="/merchant/scanner">
-              Abrir Scanner PDV <ArrowRight className="ml-2 w-5 h-5" />
+              {t('vendor.validation.open_scanner', 'Abrir Scanner PDV')}{' '}
+              <ArrowRight className="ml-2 w-5 h-5" />
             </Link>
           </Button>
         </CardContent>

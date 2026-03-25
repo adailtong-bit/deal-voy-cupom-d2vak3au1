@@ -74,7 +74,8 @@ export default function VendorDashboard() {
             className="gap-2 bg-slate-50 hover:bg-slate-100 border-slate-200 font-bold"
           >
             <Link to="/merchant/scanner">
-              <ScanLine className="h-4 w-4 text-primary" /> Scanner PDV
+              <ScanLine className="h-4 w-4 text-primary" />{' '}
+              {t('vendor.scanner', 'Scanner PDV')}
             </Link>
           </Button>
           <CreateCampaignDialog company={myCompany} />
@@ -85,16 +86,18 @@ export default function VendorDashboard() {
         <Alert className="mb-6 border-orange-200 bg-orange-50/80 animate-fade-in-up shadow-sm">
           <MapPin className="h-5 w-5 !text-orange-600" />
           <AlertTitle className="text-orange-800 font-bold">
-            Endereço da Loja Incompleto
+            {t('vendor.incomplete_address', 'Endereço da Loja Incompleto')}
           </AlertTitle>
           <AlertDescription className="text-orange-700 mt-1">
-            Seu estabelecimento não será exibido corretamente no mapa para os
-            clientes. Complete os dados de endereço para ativar a navegação GPS.{' '}
+            {t(
+              'vendor.incomplete_address_desc',
+              'Seu estabelecimento não será exibido corretamente no mapa para os clientes. Complete os dados de endereço para ativar a navegação GPS.',
+            )}{' '}
             <button
               onClick={() => setActiveTab('settings')}
               className="font-bold underline hover:text-orange-900 transition-colors"
             >
-              Configurar endereço agora
+              {t('vendor.setup_address', 'Configurar endereço agora')}
             </button>
           </AlertDescription>
         </Alert>
@@ -114,56 +117,62 @@ export default function VendorDashboard() {
             value="offers"
             className="py-2.5 px-4 font-semibold data-[state=active]:shadow-sm"
           >
-            <ShoppingBag className="h-4 w-4 mr-2 text-emerald-500" /> Minhas
-            Promoções
+            <ShoppingBag className="h-4 w-4 mr-2 text-emerald-500" />{' '}
+            {t('vendor.campaigns', 'Campanhas')}
           </TabsTrigger>
           <TabsTrigger
             value="customers"
             className="py-2.5 px-4 font-semibold data-[state=active]:shadow-sm"
           >
-            <Users className="h-4 w-4 mr-2 text-blue-500" /> CRM / Leads
+            <Users className="h-4 w-4 mr-2 text-blue-500" />{' '}
+            {t('vendor.customers', 'CRM / Leads')}
           </TabsTrigger>
           <TabsTrigger
             value="orders"
             className="py-2.5 px-4 font-semibold data-[state=active]:shadow-sm"
           >
-            Pedidos
+            {t('vendor.orders', 'Pedidos')}
           </TabsTrigger>
           <TabsTrigger
             value="validation"
             className="py-2.5 px-4 font-semibold data-[state=active]:shadow-sm"
           >
-            <Scan className="h-4 w-4 mr-2" /> Validar
+            <Scan className="h-4 w-4 mr-2" />{' '}
+            {t('vendor.validation', 'Validar')}
           </TabsTrigger>
           <TabsTrigger
             value="history"
             className="py-2.5 px-4 font-semibold data-[state=active]:shadow-sm"
           >
-            <History className="h-4 w-4 mr-2" /> Resgates
+            <History className="h-4 w-4 mr-2" />{' '}
+            {t('vendor.history', 'Resgates')}
           </TabsTrigger>
           <TabsTrigger
             value="behavioral"
             className="py-2.5 px-4 font-semibold data-[state=active]:shadow-sm"
           >
-            <Zap className="h-4 w-4 mr-2 text-orange-500" /> Gatilhos
+            <Zap className="h-4 w-4 mr-2 text-orange-500" />{' '}
+            {t('vendor.behavioral', 'Gatilhos')}
           </TabsTrigger>
           <TabsTrigger
             value="seasonal"
             className="py-2.5 px-4 font-semibold data-[state=active]:shadow-sm"
           >
-            <CalendarDays className="h-4 w-4 mr-2 text-purple-500" /> Sazonal
+            <CalendarDays className="h-4 w-4 mr-2 text-purple-500" />{' '}
+            {t('vendor.seasonal', 'Sazonal')}
           </TabsTrigger>
           <TabsTrigger
             value="staff"
             className="py-2.5 px-4 font-semibold data-[state=active]:shadow-sm"
           >
-            <Users className="h-4 w-4 mr-2" /> Equipe
+            <Users className="h-4 w-4 mr-2" /> {t('vendor.staff', 'Equipe')}
           </TabsTrigger>
           <TabsTrigger
             value="settings"
             className="py-2.5 px-4 font-semibold data-[state=active]:shadow-sm"
           >
-            <Settings className="h-4 w-4 mr-2" /> Configurações
+            <Settings className="h-4 w-4 mr-2" />{' '}
+            {t('vendor.settings', 'Configurações')}
           </TabsTrigger>
         </TabsList>
 

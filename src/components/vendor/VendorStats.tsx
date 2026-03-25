@@ -1,10 +1,12 @@
 import { useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useCouponStore } from '@/stores/CouponContext'
+import { useLanguage } from '@/stores/LanguageContext'
 import { Users, Ticket, DollarSign, Megaphone } from 'lucide-react'
 
 export function VendorStats({ company, activeCampaigns }: any) {
   const { validationLogs } = useCouponStore()
+  const { t } = useLanguage()
 
   const isNY = company?.region === 'US-NY'
   const currency = isNY ? 'USD' : 'BRL'
@@ -36,7 +38,7 @@ export function VendorStats({ company, activeCampaigns }: any) {
       <Card className="shadow-sm border-slate-200 bg-white">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium text-slate-600">
-            Total de Resgates
+            {t('vendor.stats.total_redemptions', 'Total de Resgates')}
           </CardTitle>
           <div className="bg-primary/10 p-2 rounded-lg">
             <Ticket className="h-4 w-4 text-primary" />
@@ -55,7 +57,7 @@ export function VendorStats({ company, activeCampaigns }: any) {
       <Card className="shadow-sm border-slate-200 bg-white">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium text-slate-600">
-            Leads Ativos (CRM)
+            {t('vendor.stats.active_leads', 'Leads Ativos (CRM)')}
           </CardTitle>
           <div className="bg-blue-50 p-2 rounded-lg">
             <Users className="h-4 w-4 text-blue-500" />
@@ -72,7 +74,7 @@ export function VendorStats({ company, activeCampaigns }: any) {
       <Card className="shadow-sm border-slate-200 bg-white">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium text-slate-600">
-            Receita Estimada
+            {t('vendor.stats.est_revenue', 'Receita Estimada')}
           </CardTitle>
           <div className="bg-emerald-50 p-2 rounded-lg">
             <DollarSign className="h-4 w-4 text-emerald-500" />
@@ -82,14 +84,16 @@ export function VendorStats({ company, activeCampaigns }: any) {
           <div className="text-3xl font-bold text-slate-800">
             {customFormat(stats.revenue)}
           </div>
-          <p className="text-xs text-slate-500 mt-1">Baseado no ticket médio</p>
+          <p className="text-xs text-slate-500 mt-1">
+            {t('vendor.stats.based_on_ticket', 'Baseado no ticket médio')}
+          </p>
         </CardContent>
       </Card>
 
       <Card className="shadow-sm border-slate-200 bg-white">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium text-slate-600">
-            Campanhas Ativas
+            {t('vendor.stats.active_campaigns', 'Campanhas Ativas')}
           </CardTitle>
           <div className="bg-orange-50 p-2 rounded-lg">
             <Megaphone className="h-4 w-4 text-orange-500" />
@@ -99,7 +103,9 @@ export function VendorStats({ company, activeCampaigns }: any) {
           <div className="text-3xl font-bold text-slate-800">
             {activeCampaigns}
           </div>
-          <p className="text-xs text-slate-500 mt-1">Ativas / Agendadas</p>
+          <p className="text-xs text-slate-500 mt-1">
+            {t('vendor.stats.active_scheduled', 'Ativas / Agendadas')}
+          </p>
         </CardContent>
       </Card>
     </div>

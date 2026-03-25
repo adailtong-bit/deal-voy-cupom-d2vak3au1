@@ -21,9 +21,11 @@ import {
 } from 'recharts'
 import { Radar } from 'lucide-react'
 import { useCouponStore } from '@/stores/CouponContext'
+import { useLanguage } from '@/stores/LanguageContext'
 
 export function VendorAnalytics() {
   const { validationLogs, user, companies, coupons } = useCouponStore()
+  const { t } = useLanguage()
   const myCompany =
     companies.find((c) => c.id === user?.companyId) || companies[0]
 
@@ -61,9 +63,14 @@ export function VendorAnalytics() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="border-slate-200 shadow-sm">
           <CardHeader>
-            <CardTitle>Resgates Semanais</CardTitle>
+            <CardTitle>
+              {t('vendor.analytics.weekly_redemptions', 'Resgates Semanais')}
+            </CardTitle>
             <CardDescription>
-              Volume de uso de cupons nos últimos 7 dias.
+              {t(
+                'vendor.analytics.weekly_redemptions_desc',
+                'Volume de uso de cupons nos últimos 7 dias.',
+              )}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -102,9 +109,14 @@ export function VendorAnalytics() {
 
         <Card className="border-slate-200 shadow-sm">
           <CardHeader>
-            <CardTitle>Crescimento de Leads</CardTitle>
+            <CardTitle>
+              {t('vendor.analytics.lead_growth', 'Crescimento de Leads')}
+            </CardTitle>
             <CardDescription>
-              Novos clientes únicos adquiridos via campanhas.
+              {t(
+                'vendor.analytics.lead_growth_desc',
+                'Novos clientes únicos adquiridos via campanhas.',
+              )}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -143,18 +155,23 @@ export function VendorAnalytics() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Radar className="h-5 w-5 text-blue-500" />
-            Marketing de Proximidade (ROI)
+            {t(
+              'vendor.analytics.proximity_roi',
+              'Marketing de Proximidade (ROI)',
+            )}
           </CardTitle>
           <CardDescription>
-            Performance dos alertas de geolocalização disparados aos usuários
-            próximos.
+            {t(
+              'vendor.analytics.proximity_roi_desc',
+              'Performance dos alertas de geolocalização disparados aos usuários próximos.',
+            )}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="bg-slate-50 p-6 rounded-xl border border-slate-100 text-center sm:text-left flex flex-col items-center sm:items-start">
               <span className="text-sm font-medium text-slate-500 uppercase tracking-wider mb-1">
-                Alertas Disparados
+                {t('vendor.analytics.alerts_sent', 'Alertas Disparados')}
               </span>
               <span className="block text-4xl font-black text-slate-800">
                 {totalAlertsSent}
@@ -162,7 +179,10 @@ export function VendorAnalytics() {
             </div>
             <div className="bg-emerald-50/50 p-6 rounded-xl border border-emerald-100 text-center sm:text-left flex flex-col items-center sm:items-start">
               <span className="text-sm font-medium text-emerald-600 uppercase tracking-wider mb-1">
-                Cupons Utilizados via Alerta
+                {t(
+                  'vendor.analytics.alerts_redeemed',
+                  'Cupons Utilizados via Alerta',
+                )}
               </span>
               <span className="block text-4xl font-black text-emerald-600">
                 {totalAlertsRedeemed}
@@ -171,7 +191,7 @@ export function VendorAnalytics() {
                 {totalAlertsSent > 0
                   ? Math.round((totalAlertsRedeemed / totalAlertsSent) * 100)
                   : 0}
-                % de conversão
+                % {t('vendor.analytics.conversion', 'de conversão')}
               </span>
             </div>
           </div>
