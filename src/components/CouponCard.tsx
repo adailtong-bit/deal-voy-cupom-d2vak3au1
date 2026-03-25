@@ -46,7 +46,9 @@ export function CouponCard({
 
     const success = reserveCoupon(coupon.id)
     if (success) {
-      toast.success('Voucher reservado com sucesso!')
+      toast.success(
+        t('voucher_detail.reserved_success', 'Voucher reservado com sucesso!'),
+      )
     }
   }
 

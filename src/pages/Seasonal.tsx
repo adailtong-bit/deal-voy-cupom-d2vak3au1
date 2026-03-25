@@ -7,7 +7,7 @@ import { useCouponStore } from '@/stores/CouponContext'
 import { Calendar as CalendarIcon, Gift, Store, Ticket } from 'lucide-react'
 
 export default function Seasonal() {
-  const { t, formatDate } = useLanguage()
+  const { t, formatDate, language } = useLanguage()
   const { seasonalEvents, companies, trackSeasonalClick } = useCouponStore()
   const [date, setDate] = useState<Date | undefined>(new Date())
 
@@ -70,6 +70,12 @@ export default function Seasonal() {
     setDate(newDate)
   }
 
+  const selectedEventTitle =
+    selectedEvent?.translations?.[language]?.title || selectedEvent?.title
+  const selectedEventDesc =
+    selectedEvent?.translations?.[language]?.description ||
+    selectedEvent?.description
+
   return (
     <div className="container mx-auto px-4 py-8 mb-16 md:mb-0">
       <h1 className="text-3xl font-bold mb-8 flex items-center gap-2">
@@ -121,7 +127,7 @@ export default function Seasonal() {
                 <div className="w-full h-48 bg-muted relative">
                   <img
                     src={selectedEvent.image}
-                    alt={selectedEvent.title}
+                    alt={selectedEventTitle}
                     className="w-full h-full object-cover"
                   />
                   {selectedEvent.images && selectedEvent.images.length > 0 && (
@@ -142,7 +148,7 @@ export default function Seasonal() {
                 <div className="flex justify-between items-start gap-4">
                   <div>
                     <CardTitle className="text-2xl text-primary">
-                      {selectedEvent.title}
+                      {selectedEventTitle}
                     </CardTitle>
                     {selectedEvent.companyId && (
                       <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
@@ -157,15 +163,18 @@ export default function Seasonal() {
                           className="mt-2 bg-primary/10 text-primary border-primary/20"
                         >
                           <Ticket className="w-3 h-3 mr-1" />
-                          {selectedEvent.vouchers.length} Vouchers Available
+                          {selectedEvent.vouchers.length}{' '}
+                          {t('admin.vouchers', 'Vouchers')}
                         </Badge>
                       )}
                   </div>
-                  <Badge variant="secondary">{selectedEvent.type}</Badge>
+                  <Badge variant="secondary">
+                    {t(`event.type.${selectedEvent.type}`, selectedEvent.type)}
+                  </Badge>
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-lg mb-4">{selectedEvent.description}</p>
+                <p className="text-lg mb-4">{selectedEventDesc}</p>
                 <div className="flex items-center gap-2 font-medium text-sm">
                   <CalendarIcon className="h-5 w-5 text-muted-foreground" />
                   {formatDate(selectedEvent.startDate)} -{' '}
@@ -200,7 +209,7 @@ export default function Seasonal() {
                 >
                   <div className="flex-1">
                     <h4 className="font-bold group-hover:text-primary transition-colors flex items-center gap-2">
-                      {event.title}
+                      {event.translations?.[language]?.title || event.title}
                       {event.vouchers && event.vouchers.length > 0 && (
                         <Ticket className="w-3 h-3 text-primary" />
                       )}
@@ -211,11 +220,14 @@ export default function Seasonal() {
                     </p>
                     {event.companyId && (
                       <p className="text-xs text-muted-foreground mt-1">
-                        Por: {getCompanyName(event.companyId)}
+                        {t('hub.provider', 'Por:')}{' '}
+                        {getCompanyName(event.companyId)}
                       </p>
                     )}
                   </div>
-                  <Badge variant="outline">{event.type}</Badge>
+                  <Badge variant="outline">
+                    {t(`event.type.${event.type}`, event.type)}
+                  </Badge>
                 </div>
               ))
             ) : (

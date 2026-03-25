@@ -72,7 +72,9 @@ export default function Index() {
     e.stopPropagation()
     const success = reserveCoupon(id)
     if (success) {
-      toast.success('Voucher reservado com sucesso!')
+      toast.success(
+        t('voucher_detail.reserved_success', 'Voucher reservado com sucesso!'),
+      )
     }
   }
 
@@ -312,68 +314,77 @@ export default function Index() {
                   </Button>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  {activeEvents.slice(0, 2).map((event) => (
-                    <Card
-                      key={event.id}
-                      className="overflow-hidden border-primary/20 hover:border-primary/50 transition-all hover:shadow-md group cursor-pointer"
-                      onClick={() => handleCardClick(event.id)}
-                    >
-                      <div className="flex flex-col sm:flex-row h-full">
-                        {event.image && (
-                          <div className="w-full sm:w-2/5 h-48 sm:h-auto relative overflow-hidden bg-slate-100 shrink-0">
-                            <img
-                              src={event.image}
-                              alt={event.title}
-                              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                            />
-                            <div className="absolute top-2 left-2 flex gap-1 flex-col items-start">
-                              <Badge
-                                variant="secondary"
-                                className="bg-white/95 text-black backdrop-blur-sm shadow-sm font-bold capitalize"
-                              >
-                                {t(`event.type.${event.type}`, event.type)}
-                              </Badge>
-                              {(event.offerType === 'online' ||
-                                event.externalUrl) && (
-                                <Badge className="bg-blue-600 text-white font-bold shadow-sm border-none">
-                                  <Globe className="w-3 h-3 mr-1" /> Online
+                  {activeEvents.slice(0, 2).map((event) => {
+                    const eventTitle =
+                      event.translations?.[language]?.title || event.title
+                    const eventDesc =
+                      event.translations?.[language]?.description ||
+                      event.description
+
+                    return (
+                      <Card
+                        key={event.id}
+                        className="overflow-hidden border-primary/20 hover:border-primary/50 transition-all hover:shadow-md group cursor-pointer"
+                        onClick={() => handleCardClick(event.id)}
+                      >
+                        <div className="flex flex-col sm:flex-row h-full">
+                          {event.image && (
+                            <div className="w-full sm:w-2/5 h-48 sm:h-auto relative overflow-hidden bg-slate-100 shrink-0">
+                              <img
+                                src={event.image}
+                                alt={eventTitle}
+                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                              />
+                              <div className="absolute top-2 left-2 flex gap-1 flex-col items-start">
+                                <Badge
+                                  variant="secondary"
+                                  className="bg-white/95 text-black backdrop-blur-sm shadow-sm font-bold capitalize"
+                                >
+                                  {t(`event.type.${event.type}`, event.type)}
                                 </Badge>
-                              )}
+                                {(event.offerType === 'online' ||
+                                  event.externalUrl) && (
+                                  <Badge className="bg-blue-600 text-white font-bold shadow-sm border-none">
+                                    <Globe className="w-3 h-3 mr-1" />{' '}
+                                    {t('vouchers.online', 'Online')}
+                                  </Badge>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        )}
-                        <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between bg-white">
-                          <div>
-                            <h3 className="text-lg sm:text-xl font-bold text-primary mb-1.5 line-clamp-2">
-                              {event.title}
-                            </h3>
-                            <p className="text-sm text-muted-foreground line-clamp-2 sm:line-clamp-3 mb-4">
-                              {event.description}
-                            </p>
-                          </div>
-                          <div className="space-y-4 mt-auto">
-                            <div className="flex items-center gap-2 text-xs sm:text-sm font-medium text-slate-600 bg-slate-50 p-2 rounded-lg">
-                              <CalendarIcon className="h-4 w-4 text-primary shrink-0" />
-                              <span className="truncate">
-                                {formatDate(event.startDate)} -{' '}
-                                {formatDate(event.endDate)}
-                              </span>
+                          )}
+                          <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between bg-white">
+                            <div>
+                              <h3 className="text-lg sm:text-xl font-bold text-primary mb-1.5 line-clamp-2">
+                                {eventTitle}
+                              </h3>
+                              <p className="text-sm text-muted-foreground line-clamp-2 sm:line-clamp-3 mb-4">
+                                {eventDesc}
+                              </p>
                             </div>
-                            <Button
-                              className="w-full gap-2 font-bold shadow-sm transition-transform hover:-translate-y-0.5"
-                              size="lg"
-                              onClick={(e) =>
-                                handleReserveSeasonal(e, event.id)
-                              }
-                            >
-                              <Ticket className="h-5 w-5" />
-                              {t('home.reserve_voucher', 'Reservar')}
-                            </Button>
+                            <div className="space-y-4 mt-auto">
+                              <div className="flex items-center gap-2 text-xs sm:text-sm font-medium text-slate-600 bg-slate-50 p-2 rounded-lg">
+                                <CalendarIcon className="h-4 w-4 text-primary shrink-0" />
+                                <span className="truncate">
+                                  {formatDate(event.startDate)} -{' '}
+                                  {formatDate(event.endDate)}
+                                </span>
+                              </div>
+                              <Button
+                                className="w-full gap-2 font-bold shadow-sm transition-transform hover:-translate-y-0.5"
+                                size="lg"
+                                onClick={(e) =>
+                                  handleReserveSeasonal(e, event.id)
+                                }
+                              >
+                                <Ticket className="h-5 w-5" />
+                                {t('home.reserve_voucher', 'Reservar')}
+                              </Button>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </Card>
-                  ))}
+                      </Card>
+                    )
+                  })}
                 </div>
                 {activeEvents.length > 2 && (
                   <div className="mt-5 text-center sm:hidden">
