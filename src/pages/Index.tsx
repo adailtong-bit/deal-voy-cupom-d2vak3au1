@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
 import { CouponCard } from '@/components/CouponCard'
@@ -43,7 +43,9 @@ import { Input } from '@/components/ui/input'
 export default function Index() {
   const { t, formatDate, language } = useLanguage()
   const navigate = useNavigate()
+  const location = useLocation()
   const {
+    user,
     coupons,
     seasonalEvents,
     trackSeasonalClick,
@@ -70,6 +72,10 @@ export default function Index() {
 
   const handleReserveSeasonal = (e: React.MouseEvent, id: string) => {
     e.stopPropagation()
+    if (!user) {
+      navigate('/login', { state: { from: location } })
+      return
+    }
     const success = reserveCoupon(id)
     if (success) {
       toast.success(

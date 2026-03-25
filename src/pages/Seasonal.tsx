@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useCouponStore } from '@/stores/CouponContext'
+import { useLocation, useNavigate } from 'react-router-dom'
 import {
   Calendar as CalendarIcon,
   Gift,
@@ -29,7 +30,9 @@ function SeasonalCampaignCard({
   isFuture: boolean
 }) {
   const { t, formatDate, language } = useLanguage()
-  const { reserveCoupon, isReserved, companies, trackSeasonalClick } =
+  const location = useLocation()
+  const navigate = useNavigate()
+  const { user, reserveCoupon, isReserved, companies, trackSeasonalClick } =
     useCouponStore()
 
   const reserved = isReserved(event.id)
@@ -42,7 +45,14 @@ function SeasonalCampaignCard({
 
   const handleReserve = (e: React.MouseEvent) => {
     e.stopPropagation()
+
+    if (!user) {
+      navigate('/login', { state: { from: location } })
+      return
+    }
+
     if (isFuture || reserved || isSoldOut) return
+
     const success = reserveCoupon(event.id)
     if (success) {
       trackSeasonalClick(event.id)

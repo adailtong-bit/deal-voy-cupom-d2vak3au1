@@ -20,7 +20,10 @@ export default function Login() {
   const navigate = useNavigate()
   const location = useLocation()
 
-  const from = location.state?.from?.pathname || '/'
+  const fromObj = location.state?.from
+  const from = fromObj
+    ? `${fromObj.pathname}${fromObj.search}${fromObj.hash}`
+    : '/'
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault()

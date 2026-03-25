@@ -255,9 +255,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         // ignore parsing error
       }
     }
-    const defaultDevUser =
-      MOCK_USERS.find((u) => u.role === 'super_admin') || MOCK_USERS[0]
-    return defaultDevUser
+    return null
   })
 
   const [savedIds, setSavedIds] = useState<string[]>([])

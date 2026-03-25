@@ -115,10 +115,38 @@ export default function App() {
                   }
                 />
                 <Route path="/seasonal" element={<Seasonal />} />
-                <Route path="/travel" element={<TravelPage />} />
-                <Route path="/travel/new" element={<TravelPage />} />
-                <Route path="/travel/:id" element={<TravelPage />} />
-                <Route path="/voucher/:id" element={<Voucher />} />
+                <Route
+                  path="/travel"
+                  element={
+                    <RequireAuth>
+                      <TravelPage />
+                    </RequireAuth>
+                  }
+                />
+                <Route
+                  path="/travel/new"
+                  element={
+                    <RequireAuth>
+                      <TravelPage />
+                    </RequireAuth>
+                  }
+                />
+                <Route
+                  path="/travel/:id"
+                  element={
+                    <RequireAuth>
+                      <TravelPage />
+                    </RequireAuth>
+                  }
+                />
+                <Route
+                  path="/voucher/:id"
+                  element={
+                    <RequireAuth>
+                      <Voucher />
+                    </RequireAuth>
+                  }
+                />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Route>
             </Routes>

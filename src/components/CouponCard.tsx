@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Star, MapPin, Clock, ImageOff, Globe } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useCouponStore } from '@/stores/CouponContext'
@@ -23,7 +23,8 @@ export function CouponCard({
 }: CouponCardProps) {
   const { t, formatCurrency, language } = useLanguage()
   const navigate = useNavigate()
-  const { reserveCoupon, isReserved } = useCouponStore()
+  const location = useLocation()
+  const { user, reserveCoupon, isReserved } = useCouponStore()
   const [imgError, setImgError] = useState(false)
 
   const reserved = isReserved(coupon.id)
@@ -42,6 +43,12 @@ export function CouponCard({
   const handleReserve = (e: React.MouseEvent) => {
     e.stopPropagation()
     e.preventDefault()
+
+    if (!user) {
+      navigate('/login', { state: { from: location } })
+      return
+    }
+
     if (reserved || isSoldOut) return
 
     const success = reserveCoupon(coupon.id)
