@@ -3,6 +3,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
 import {
   Select,
   SelectContent,
@@ -42,12 +43,15 @@ export function BookingForm({
   const [childrenCount, setChildrenCount] = useState('0')
   const [childAges, setChildAges] = useState<string[]>([])
 
-  // Car Rental
+  // Car Rental specifics
   const [pickupDate, setPickupDate] = useState('')
   const [pickupTime, setPickupTime] = useState('')
   const [returnDate, setReturnDate] = useState('')
   const [returnTime, setReturnTime] = useState('')
   const [carCategory, setCarCategory] = useState('economy')
+  const [driverName, setDriverName] = useState('')
+  const [driverContact, setDriverContact] = useState('')
+  const [includesToll, setIncludesToll] = useState(false)
 
   useEffect(() => {
     if (type === 'car') {
@@ -101,6 +105,12 @@ export function BookingForm({
       source: offer?.source || 'organic',
       requiresPrivacy: requirePrivacy,
       type: type,
+      ...(type === 'car' && {
+        driverName,
+        driverContact,
+        includesToll,
+        carCategory,
+      }),
     })
 
     const msg =
@@ -242,9 +252,9 @@ export function BookingForm({
                   />
                 </div>
               </div>
-              <div className="space-y-1">
+              <div className="space-y-1 mb-2">
                 <Label className="text-xs font-semibold text-slate-600">
-                  {t('booking.category', 'Categoria')}
+                  {t('booking.category', 'Categoria do Veículo')}
                 </Label>
                 <Select value={carCategory} onValueChange={setCarCategory}>
                   <SelectTrigger className="bg-white shadow-sm">
@@ -265,6 +275,44 @@ export function BookingForm({
                     </SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="bg-slate-100 p-3 rounded-lg border border-slate-200 space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs font-semibold text-slate-600">
+                      {t('booking.driver_name', 'Nome do Motorista')}
+                    </Label>
+                    <Input
+                      required
+                      value={driverName}
+                      onChange={(e) => setDriverName(e.target.value)}
+                      className="bg-white shadow-sm h-9 text-sm"
+                      placeholder="Ex: Carlos Silva"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs font-semibold text-slate-600">
+                      {t('booking.driver_doc', 'Documento (CNH/ID)')}
+                    </Label>
+                    <Input
+                      required
+                      value={driverContact}
+                      onChange={(e) => setDriverContact(e.target.value)}
+                      className="bg-white shadow-sm h-9 text-sm"
+                      placeholder="Ex: 123456789"
+                    />
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2 pt-1">
+                  <Switch
+                    id="toll"
+                    checked={includesToll}
+                    onCheckedChange={setIncludesToll}
+                  />
+                  <Label htmlFor="toll" className="text-sm cursor-pointer">
+                    {t('booking.includes_toll', 'Incluir passe de pedágio')}
+                  </Label>
+                </div>
               </div>
             </>
           )}
@@ -393,3 +441,4 @@ export function BookingForm({
     </Card>
   )
 }
+

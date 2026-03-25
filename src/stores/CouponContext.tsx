@@ -145,6 +145,7 @@ interface CouponContextType {
   makeBooking: (booking: Omit<Booking, 'id' | 'status'>) => void
   updateBooking: (id: string, data: Partial<Booking>) => void
   cancelBooking: (id: string) => void
+  payBooking: (id: string) => void
   redeemPoints: (amount: number, type: 'points' | 'fetch') => boolean
   earnPoints: (amount: number, title: string) => void
   addABTest: (test: ABTest) => void
@@ -298,6 +299,24 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       userName: 'End User',
       source: 'organic',
       type: 'ticket',
+    },
+    {
+      id: 'b3',
+      couponId: 'car-1',
+      storeName: 'Localiza Rent a Car',
+      date: '2025-07-20',
+      endDate: '2025-07-25',
+      time: '09:00',
+      guests: 1,
+      status: 'awaiting_payment',
+      userId: 'u_user',
+      userName: 'End User',
+      source: 'organic',
+      type: 'car',
+      driverName: 'Carlos Silva',
+      driverContact: 'CNH 123456789',
+      includesToll: true,
+      carCategory: 'suv',
     },
   ])
   const [points, setPoints] = useState(1250)
@@ -713,6 +732,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   const reportCoupon = (id: string, issue: string) => {
     /* ... */
   }
+
   const makeBooking = (booking: Omit<Booking, 'id' | 'status'>) => {
     const newBooking: Booking = {
       ...booking,
@@ -754,6 +774,13 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       t('travel.booking_cancelled', 'Reserva cancelada com sucesso.'),
     )
     logSystemAction('Booking Cancelled', `Booking ${id} cancelled`)
+  }
+
+  const payBooking = (id: string) => {
+    setBookings((prev) =>
+      prev.map((b) => (b.id === id ? { ...b, status: 'confirmed' } : b)),
+    )
+    logSystemAction('Booking Paid', `Booking ${id} paid and confirmed`)
   }
 
   const earnPoints = (amount: number, title: string) => {
@@ -1731,6 +1758,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         makeBooking,
         updateBooking,
         cancelBooking,
+        payBooking,
         redeemPoints,
         earnPoints,
         addABTest,
@@ -1810,3 +1838,4 @@ export function useCouponStore() {
     throw new Error('useCouponStore must be used within a CouponProvider')
   return context
 }
+

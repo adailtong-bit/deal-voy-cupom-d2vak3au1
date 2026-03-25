@@ -213,13 +213,17 @@ export interface Booking {
   adults?: number
   childrenCount?: number
   childAges?: number[]
-  status: 'confirmed' | 'cancelled' | 'paid' | 'pending'
+  status: 'confirmed' | 'cancelled' | 'paid' | 'pending' | 'awaiting_payment'
   price?: number
   userId?: string
   userName?: string
   source?: 'partner' | 'organic'
   requiresPrivacy?: boolean
   type?: 'general' | 'hotel' | 'car' | 'ticket' | 'activity'
+  driverName?: string
+  driverContact?: string
+  includesToll?: boolean
+  carCategory?: string
 }
 
 export interface Challenge {
@@ -803,3 +807,4 @@ export interface FinancialTransaction {
   status: 'completed' | 'pending'
   sourceId?: string
 }
+
