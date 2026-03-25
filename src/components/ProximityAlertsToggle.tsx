@@ -51,7 +51,7 @@ export function ProximityAlertsToggle() {
   const masterEnabled = platformSettings.globalProximityAlertsEnabled !== false
 
   useEffect(() => {
-    if (isActive && masterEnabled && user) {
+    if (isActive && masterEnabled && user && user.role === 'user') {
       startTracking()
     } else {
       stopTracking()
@@ -214,7 +214,9 @@ export function ProximityAlertsToggle() {
     )
   }
 
-  if (!isSupported || !masterEnabled || !user) return null
+  // Hide the radar toggle if not supported, disabled globally, no user, or user is not a standard 'user'
+  if (!isSupported || !masterEnabled || !user || user.role !== 'user')
+    return null
 
   return (
     <>
