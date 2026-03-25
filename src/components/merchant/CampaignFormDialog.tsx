@@ -27,8 +27,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
 import { useCouponStore } from '@/stores/CouponContext'
-import { ImagePlus, ExternalLink } from 'lucide-react'
+import { ImagePlus, ExternalLink, Radar } from 'lucide-react'
 import { CouponCard } from '@/components/CouponCard'
 import { toast } from 'sonner'
 
@@ -71,6 +72,12 @@ const formSchema = z
     startDate: z.string().min(1, 'Campo obrigatório.'),
     endDate: z.string().min(1, 'Campo obrigatório.'),
     totalLimit: z.coerce.number().min(1, 'O limite deve ser maior que zero.'),
+    enableProximityAlerts: z.boolean().default(false),
+    alertRadius: z.coerce
+      .number()
+      .min(10, 'Mínimo de 10m')
+      .max(5000, 'Máximo de 5000m')
+      .optional(),
   })
   .refine((data) => new Date(data.endDate) >= new Date(data.startDate), {
     message: 'A data final deve ser posterior ou igual à inicial',
@@ -183,6 +190,8 @@ export function CampaignFormDialog({
       startDate: new Date().toISOString().split('T')[0],
       endDate: new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
       totalLimit: 100,
+      enableProximityAlerts: false,
+      alertRadius: 100,
     },
   })
 
@@ -209,6 +218,8 @@ export function CampaignFormDialog({
           coupon.endDate ||
           new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
         totalLimit: coupon.totalLimit || coupon.totalAvailable || 100,
+        enableProximityAlerts: coupon.enableProximityAlerts || false,
+        alertRadius: coupon.alertRadius || 100,
       })
     } else if (open) {
       form.reset()
@@ -242,6 +253,8 @@ export function CampaignFormDialog({
           0,
           data.totalLimit - (coupon.reservedCount || 0),
         ),
+        enableProximityAlerts: data.enableProximityAlerts,
+        alertRadius: data.enableProximityAlerts ? data.alertRadius : undefined,
       })
     } else {
       addCoupon({
@@ -266,9 +279,11 @@ export function CampaignFormDialog({
         category: 'Outros',
         distance: 0,
         code: `CMP-${Math.floor(Math.random() * 10000)}`,
-        coordinates: { lat: 0, lng: 0 },
+        coordinates: { lat: -23.55052, lng: -46.633308 }, // default coords for demo
         status: 'active',
         source: 'partner',
+        enableProximityAlerts: data.enableProximityAlerts,
+        alertRadius: data.enableProximityAlerts ? data.alertRadius : undefined,
       })
     }
     onOpenChange(false)
@@ -625,6 +640,64 @@ export function CampaignFormDialog({
                     />
                   </div>
                 )}
+              </div>
+
+              <div className="space-y-4 pt-4 border-t">
+                <div className="p-4 bg-blue-50/50 rounded-xl border border-blue-100 space-y-4">
+                  <div className="flex items-center gap-2 text-blue-800 font-semibold">
+                    <Radar className="w-5 h-5 text-blue-600" />
+                    Alertas de Proximidade (Geofencing)
+                  </div>
+                  <FormField
+                    control={form.control}
+                    name="enableProximityAlerts"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border border-blue-200 bg-white p-4 shadow-sm">
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-base cursor-pointer">
+                            Ativar Radar para esta Campanha
+                          </FormLabel>
+                          <FormDescription className="text-xs">
+                            Envia uma notificação push quando usuários passarem
+                            perto da sua loja.
+                          </FormDescription>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            className="data-[state=checked]:bg-blue-600"
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+
+                  {form.watch('enableProximityAlerts') && (
+                    <FormField
+                      control={form.control}
+                      name="alertRadius"
+                      render={({ field }) => (
+                        <FormItem className="animate-in fade-in slide-in-from-top-2 pt-2">
+                          <FormLabel className="text-blue-900">
+                            Raio de Alerta (metros)
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              className="bg-white border-blue-200 focus-visible:ring-blue-500"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormDescription className="text-blue-700/70 text-xs">
+                            Recomendamos entre 50m e 500m para melhor precisão.
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+                </div>
               </div>
 
               <div className="space-y-4 pt-4 border-t">

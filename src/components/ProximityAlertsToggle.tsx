@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react'
-import { Coupon } from '@/lib/types'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
@@ -13,13 +12,18 @@ import {
 } from '@/components/ui/dialog'
 import { Radar, MapPin, BellRing } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
+import { useCouponStore } from '@/stores/CouponContext'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { Coupon } from '@/lib/types'
 
-const DISTANCE_THRESHOLD_KM = 0.1 // 100 meters
-
-function getDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number) {
-  const R = 6371
+function getDistanceMeters(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number,
+) {
+  const R = 6371e3 // metres
   const dLat = (lat2 - lat1) * (Math.PI / 180)
   const dLon = (lon2 - lon1) * (Math.PI / 180)
   const a =
@@ -32,26 +36,27 @@ function getDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number) {
   return R * c
 }
 
-interface ProximityAlertsToggleProps {
-  stops: Coupon[]
-  tripId: string
-}
-
-export function ProximityAlertsToggle({
-  stops,
-  tripId,
-}: ProximityAlertsToggleProps) {
+export function ProximityAlertsToggle() {
   const { t } = useLanguage()
-  const [isActive, setIsActive] = useState(false)
+  const { coupons, platformSettings } = useCouponStore()
+  const [isActive, setIsActive] = useState(
+    () => localStorage.getItem('globalRadar') === 'true',
+  )
   const [showOnboarding, setShowOnboarding] = useState(false)
   const watchIdRef = useRef<number | null>(null)
   const notifiedStopsRef = useRef<Set<string>>(new Set())
 
   const isSupported = 'geolocation' in navigator && 'Notification' in window
+  const masterEnabled = platformSettings.globalProximityAlertsEnabled !== false
 
   useEffect(() => {
+    if (isActive && masterEnabled) {
+      startTracking()
+    } else {
+      stopTracking()
+    }
     return () => stopTracking()
-  }, [])
+  }, [isActive, masterEnabled, coupons])
 
   const startTracking = () => {
     if (watchIdRef.current) return
@@ -60,20 +65,26 @@ export function ProximityAlertsToggle({
       (pos) => {
         const { latitude, longitude } = pos.coords
 
-        stops.forEach((stop) => {
-          if (!stop.coordinates) return
-          if (notifiedStopsRef.current.has(stop.id)) return
+        coupons.forEach((coupon) => {
+          if (
+            !coupon.coordinates ||
+            !coupon.enableProximityAlerts ||
+            coupon.status !== 'active'
+          )
+            return
+          if (notifiedStopsRef.current.has(coupon.id)) return
 
-          const dist = getDistanceKm(
+          const radius = coupon.alertRadius || 100
+          const dist = getDistanceMeters(
             latitude,
             longitude,
-            stop.coordinates.lat,
-            stop.coordinates.lng,
+            coupon.coordinates.lat,
+            coupon.coordinates.lng,
           )
 
-          if (dist <= DISTANCE_THRESHOLD_KM) {
-            triggerNotification(stop)
-            notifiedStopsRef.current.add(stop.id)
+          if (dist <= radius) {
+            triggerNotification(coupon)
+            notifiedStopsRef.current.add(coupon.id)
           }
         })
       },
@@ -82,15 +93,16 @@ export function ProximityAlertsToggle({
         if (err.code === err.PERMISSION_DENIED) {
           stopTracking()
           setIsActive(false)
+          localStorage.setItem('globalRadar', 'false')
           toast.error(
             t('proximity.location_denied', 'Acesso à localização negado.'),
           )
         }
       },
       {
-        enableHighAccuracy: true,
-        maximumAge: 10000, // Optimize battery
-        timeout: 5000,
+        enableHighAccuracy: false, // Save battery, acceptable accuracy
+        maximumAge: 30000,
+        timeout: 10000,
       },
     )
   }
@@ -102,32 +114,33 @@ export function ProximityAlertsToggle({
     }
   }
 
-  const triggerNotification = (stop: Coupon) => {
+  const triggerNotification = (coupon: Coupon) => {
     if (Notification.permission === 'granted') {
       const n = new Notification(
-        t('proximity.nearby_alert', 'Você está perto!'),
+        t('proximity.nearby_alert', 'Oferta Próxima!'),
         {
-          body: t(
-            'proximity.nearby_desc',
-            'Você está a menos de 100m da loja {store}! Clique para usar seu benefício.',
-          ).replace('{store}', stop.storeName),
-          icon: stop.image || '/icon-192.png',
+          body: `${coupon.storeName}: ${coupon.discount} OFF. Clique para ver e usar!`,
+          icon: coupon.image || '/icon-192.png',
         },
       )
 
       n.onclick = (e) => {
         e.preventDefault()
         window.focus()
-        const url = new URL(window.location.href)
-        url.searchParams.set('stopId', stop.id)
-        window.history.pushState({}, '', url.toString())
-        window.dispatchEvent(new Event('popstate'))
+        window.location.href = `/voucher/${coupon.id}`
         n.close()
       }
     } else {
-      toast.success(
-        `${t('proximity.nearby_alert', 'Você está perto!')} - ${stop.storeName}`,
-      )
+      toast.success(`${coupon.storeName}: ${coupon.discount} OFF.`, {
+        description: 'Você está bem perto, não perca essa oportunidade!',
+        action: {
+          label: 'Ver Oferta',
+          onClick: () => {
+            window.location.href = `/voucher/${coupon.id}`
+          },
+        },
+        duration: 8000,
+      })
     }
   }
 
@@ -151,10 +164,9 @@ export function ProximityAlertsToggle({
     } else {
       stopTracking()
       setIsActive(false)
+      localStorage.setItem('globalRadar', 'false')
       notifiedStopsRef.current.clear()
-      toast.info(
-        t('proximity.alerts_disabled', 'Alertas de proximidade desativados.'),
-      )
+      toast.info(t('proximity.alerts_disabled', 'Radar de Ofertas desativado.'))
     }
   }
 
@@ -177,12 +189,12 @@ export function ProximityAlertsToggle({
 
     navigator.geolocation.getCurrentPosition(
       () => {
-        startTracking()
         setIsActive(true)
+        localStorage.setItem('globalRadar', 'true')
         toast.success(
           t(
             'proximity.alerts_enabled',
-            'Alertas de proximidade ativados com sucesso! Radar em funcionamento.',
+            'Radar ativado! Avisaremos quando você estiver perto de promoções.',
           ),
         )
       },
@@ -191,56 +203,60 @@ export function ProximityAlertsToggle({
         toast.error(
           t(
             'proximity.location_denied',
-            'Acesso à localização negado. Habilite o GPS no seu dispositivo.',
+            'Acesso à localização negado. Habilite o GPS no seu dispositivo e permita o acesso.',
           ),
         )
       },
     )
   }
 
-  if (!isSupported) return null
+  if (!isSupported || !masterEnabled) return null
 
   return (
     <>
-      <div
-        className={cn(
-          'flex items-center space-x-3 bg-white px-4 py-1.5 rounded-full border shadow-sm transition-all',
-          isActive ? 'border-primary/50 shadow-primary/10' : 'border-slate-200',
-        )}
-      >
+      <div className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-[60]">
         <div
-          className={cn('relative flex h-4 w-4 items-center justify-center')}
-        >
-          {isActive && (
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-50"></span>
+          className={cn(
+            'flex items-center space-x-3 bg-white px-4 py-3 rounded-full border shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all hover:scale-105 duration-300',
+            isActive
+              ? 'border-primary/50 shadow-primary/20'
+              : 'border-slate-200',
           )}
-          <Radar
-            className={cn(
-              'relative h-4 w-4',
-              isActive ? 'text-primary' : 'text-slate-400',
-            )}
-          />
-        </div>
-        <div className="flex flex-col">
-          <Label
-            htmlFor="proximity-alerts"
-            className="font-semibold text-sm cursor-pointer leading-none text-slate-800"
+        >
+          <div
+            className={cn('relative flex h-5 w-5 items-center justify-center')}
           >
-            {t('proximity.alerts_title', 'Radar de Ofertas')}
-          </Label>
-          <span className="text-[10px] text-slate-500 font-medium mt-0.5">
-            {isActive
-              ? t('proximity.status_active', 'Monitorando 100m')
-              : t('proximity.status_inactive', 'Desativado')}
-          </span>
-        </div>
-        <div className="pl-2">
-          <Switch
-            id="proximity-alerts"
-            checked={isActive}
-            onCheckedChange={handleToggle}
-            className="data-[state=checked]:bg-primary"
-          />
+            {isActive && (
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-50"></span>
+            )}
+            <Radar
+              className={cn(
+                'relative h-5 w-5',
+                isActive ? 'text-primary' : 'text-slate-400',
+              )}
+            />
+          </div>
+          <div className="flex flex-col">
+            <Label
+              htmlFor="global-proximity-alerts"
+              className="font-bold text-sm cursor-pointer leading-none text-slate-800"
+            >
+              {t('proximity.alerts_title', 'Radar de Ofertas')}
+            </Label>
+            <span className="text-[10px] text-slate-500 font-medium mt-1 w-28 sm:w-auto truncate">
+              {isActive
+                ? t('proximity.status_active', 'Buscando lojas próximas...')
+                : t('proximity.status_inactive', 'Desativado')}
+            </span>
+          </div>
+          <div className="pl-3 border-l ml-3 flex items-center">
+            <Switch
+              id="global-proximity-alerts"
+              checked={isActive}
+              onCheckedChange={handleToggle}
+              className="data-[state=checked]:bg-primary"
+            />
+          </div>
         </div>
       </div>
 
@@ -256,7 +272,7 @@ export function ProximityAlertsToggle({
             <DialogDescription className="text-center pt-2">
               {t(
                 'proximity.onboarding_desc',
-                'Para que possamos avisar quando você estiver a menos de 100 metros de uma loja do seu roteiro, precisamos de duas permissões:',
+                'Para receber alertas automáticos das lojas ao seu redor, precisamos de duas permissões:',
               )}
             </DialogDescription>
           </DialogHeader>
@@ -271,7 +287,7 @@ export function ProximityAlertsToggle({
                 <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">
                   {t(
                     'proximity.perm_location_desc',
-                    'Permite monitorar sua distância das lojas em tempo real e ativar os alertas corretamente.',
+                    'Permite monitorar sua distância das lojas e ativar os alertas silenciosamente.',
                   )}
                 </p>
               </div>
@@ -299,7 +315,7 @@ export function ProximityAlertsToggle({
             <Button
               variant="ghost"
               onClick={() => setShowOnboarding(false)}
-              className="w-full text-slate-500"
+              className="w-full text-slate-500 hover:bg-slate-100"
             >
               {t('common.cancel', 'Agora não')}
             </Button>

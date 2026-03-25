@@ -121,6 +121,8 @@ export interface Coupon {
   offerType?: 'in-store' | 'online'
   externalUrl?: string
   affiliateConfig?: AffiliateConfig
+  enableProximityAlerts?: boolean
+  alertRadius?: number
 }
 
 export type CategoryType = Coupon['category']
@@ -722,6 +724,7 @@ export interface PlatformSettings {
     friendCashbackPercentage: number
     durationDays: number
   }
+  globalProximityAlertsEnabled?: boolean
 }
 
 export interface PartnerPolicy {

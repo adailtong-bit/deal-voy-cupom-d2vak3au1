@@ -1,5 +1,7 @@
 import { useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Switch } from '@/components/ui/switch'
+import { Label } from '@/components/ui/label'
 import {
   Bar,
   BarChart,
@@ -14,7 +16,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from '@/components/ui/chart'
-import { DollarSign, TrendingUp, Users, Activity } from 'lucide-react'
+import { DollarSign, TrendingUp, Users, Activity, Radar } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useRegionFormatting } from '@/hooks/useRegionFormatting'
 import { useCouponStore } from '@/stores/CouponContext'
@@ -41,7 +43,8 @@ export function AdminMonetizationTab({
   franchiseId?: string
 }) {
   const { t } = useLanguage()
-  const { franchises } = useCouponStore()
+  const { franchises, platformSettings, updatePlatformSettings } =
+    useCouponStore()
   const franchise = franchises.find((f) => f.id === franchiseId)
   const { formatCurrency, formatNumber } = useRegionFormatting(
     franchise?.region,
@@ -121,7 +124,38 @@ export function AdminMonetizationTab({
         </Card>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card className="md:col-span-2 border-slate-200">
+          <CardHeader className="bg-slate-50/50 border-b">
+            <CardTitle className="flex items-center gap-2">
+              <Radar className="h-5 w-5 text-primary" />
+              Configurações Globais da Plataforma
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-6 space-y-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-white rounded-lg border border-slate-200 shadow-sm gap-4">
+              <div className="space-y-1">
+                <Label className="text-base font-semibold text-slate-800">
+                  Master Switch de Alertas de Proximidade
+                </Label>
+                <p className="text-sm text-slate-500">
+                  Habilita ou desativa a tecnologia de Geofencing e Radar para
+                  toda a base de usuários e lojistas simultaneamente.
+                </p>
+              </div>
+              <Switch
+                checked={
+                  platformSettings.globalProximityAlertsEnabled !== false
+                }
+                onCheckedChange={(c) =>
+                  updatePlatformSettings({ globalProximityAlertsEnabled: c })
+                }
+                className="data-[state=checked]:bg-primary shrink-0"
+              />
+            </div>
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle>

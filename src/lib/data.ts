@@ -377,6 +377,8 @@ const generateCoupons = (): Coupon[] => {
     instructions:
       'Apresente este código no caixa da loja para aplicar o desconto. Válido apenas para itens selecionados.',
     targetAudience: 'all',
+    enableProximityAlerts: true,
+    alertRadius: 200,
   })
 
   for (let i = 1; i <= 30; i++) {
@@ -457,6 +459,8 @@ const generateCoupons = (): Coupon[] => {
       offerType: 'in-store',
       instructions: `Apresente este código no caixa do ${isUS ? 'estabelecimento' : 'estabelecimento'} para resgatar sua oferta. Certifique-se de que o código esteja visível.`,
       targetAudience: i % 5 === 0 ? 'preferred' : 'all',
+      enableProximityAlerts: i % 4 === 0,
+      alertRadius: 100 + (i % 5) * 50,
       behavioralTriggers:
         i === 1
           ? [
@@ -598,6 +602,8 @@ const generateCoupons = (): Coupon[] => {
       storeName: 'Queens Pizza',
       targetAudience: 'all',
       currency: 'USD',
+      enableProximityAlerts: true,
+      alertRadius: 150,
     },
     {
       id: 'cpn_ny_m3',
@@ -1322,6 +1328,7 @@ export const DEFAULT_PLATFORM_SETTINGS: PlatformSettings = {
     friendCashbackPercentage: 10,
     durationDays: 30,
   },
+  globalProximityAlertsEnabled: true,
 }
 
 export const MOCK_PARTNER_POLICIES: PartnerPolicy[] = [
