@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { CampaignFormDialog } from '@/components/merchant/CampaignFormDialog'
@@ -81,8 +81,10 @@ export function VendorCampaignsTab({
           const limit = coupon.totalLimit || coupon.totalAvailable || 100
           const used = coupon.reservedCount || 0
           const progress = Math.min(100, Math.round((used / limit) * 100))
-          const isExpired = coupon.endDate
-            ? new Date(coupon.endDate) < new Date()
+
+          const expiryDateStr = coupon.endDate || coupon.expiryDate
+          const isExpired = expiryDateStr
+            ? new Date(expiryDateStr) < new Date()
             : false
           const isSoldOut = used >= limit
 
@@ -128,10 +130,10 @@ export function VendorCampaignsTab({
                   </h3>
                   <div className="flex items-center gap-1.5 text-xs text-white/90 font-medium">
                     <CalendarIcon className="h-3.5 w-3.5" />
-                    {coupon.startDate
-                      ? formatDate(coupon.startDate)
-                      : '-'} até{' '}
-                    {coupon.endDate ? formatDate(coupon.endDate) : '-'}
+                    Expira em:{' '}
+                    {expiryDateStr
+                      ? formatDate(expiryDateStr)
+                      : 'Indeterminado'}
                   </div>
                 </div>
               </div>
