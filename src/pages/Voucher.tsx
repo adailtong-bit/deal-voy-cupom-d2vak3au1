@@ -159,20 +159,36 @@ export default function Voucher() {
     )
   }
 
-  const handleShare = () => {
+  const handleShare = async () => {
+    const shareUrl = window.location.href
+
+    const fallbackCopy = () => {
+      try {
+        navigator.clipboard.writeText(shareUrl)
+        toast.success(
+          t('voucher_detail.share_success', 'Link copiado para compartilhar!'),
+        )
+      } catch (err) {
+        console.error('Fallback copy failed', err)
+      }
+    }
+
     if (navigator.share) {
-      navigator
-        .share({
+      try {
+        await navigator.share({
           title,
           text: description,
-          url: window.location.href,
+          url: shareUrl,
         })
-        .catch((error) => console.error('Error sharing', error))
+      } catch (error: any) {
+        console.error('Error sharing', error)
+        // Check if the user aborted the action themselves. If not, fallback to copy to clipboard.
+        if (error.name !== 'AbortError') {
+          fallbackCopy()
+        }
+      }
     } else {
-      navigator.clipboard.writeText(window.location.href)
-      toast.success(
-        t('voucher_detail.share_success', 'Link copiado para compartilhar!'),
-      )
+      fallbackCopy()
     }
   }
 
