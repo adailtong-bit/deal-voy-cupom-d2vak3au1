@@ -324,12 +324,17 @@ export function TravelDiscoveryHub({
         onOpenChange={(open) => !open && setDetailsOffer(null)}
       >
         <DialogContent className="sm:max-w-xl overflow-y-auto max-h-[90vh]">
+          <DialogTitle className="sr-only">
+            {detailsOffer
+              ? getTranslated(detailsOffer, 'title')
+              : t('hub.view_details', 'Ver Detalhes')}
+          </DialogTitle>
           {detailsOffer && (
             <>
               <DialogHeader>
-                <DialogTitle className="text-2xl font-extrabold text-slate-900 pr-6">
+                <h2 className="text-2xl font-extrabold text-slate-900 pr-6">
                   {getTranslated(detailsOffer, 'title')}
-                </DialogTitle>
+                </h2>
               </DialogHeader>
               <div className="relative h-56 w-full rounded-xl overflow-hidden mb-2 shadow-sm">
                 <img
@@ -435,6 +440,11 @@ export function TravelDiscoveryHub({
         onOpenChange={(open) => !open && setBookingOffer(null)}
       >
         <DialogContent className="sm:max-w-md p-0 border-none bg-transparent shadow-none">
+          <DialogTitle className="sr-only">
+            {bookingOffer
+              ? getTranslated(bookingOffer, 'title')
+              : t('hub.book', 'Reservar')}
+          </DialogTitle>
           {bookingOffer && (
             <BookingForm
               offer={bookingOffer}

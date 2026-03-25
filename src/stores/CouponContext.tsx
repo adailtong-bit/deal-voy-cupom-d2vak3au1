@@ -1838,4 +1838,3 @@ export function useCouponStore() {
     throw new Error('useCouponStore must be used within a CouponProvider')
   return context
 }
-

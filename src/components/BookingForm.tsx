@@ -441,4 +441,3 @@ export function BookingForm({
     </Card>
   )
 }
-
