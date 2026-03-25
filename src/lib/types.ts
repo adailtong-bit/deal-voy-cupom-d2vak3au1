@@ -408,6 +408,7 @@ export interface Company {
   addressCity?: string
   addressState?: string
   addressZip?: string
+  addressCountry?: string
   paymentMethod?: string
   billingFrequency?: string
   bankName?: string

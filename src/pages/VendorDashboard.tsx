@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Briefcase,
@@ -9,6 +10,7 @@ import {
   Users,
   CalendarDays,
   ScanLine,
+  MapPin,
 } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useCouponStore } from '@/stores/CouponContext'
@@ -25,10 +27,12 @@ import { VendorSeasonalTab } from '@/components/vendor/VendorSeasonalTab'
 import { StaffTab } from '@/components/admin/hierarchy/StaffTab'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 
 export default function VendorDashboard() {
   const { t } = useLanguage()
   const { user, companies, coupons: allCoupons, bookings } = useCouponStore()
+  const [activeTab, setActiveTab] = useState('overview')
 
   const myCompany =
     companies.find((c) => c.id === user?.companyId) || companies[0]
@@ -36,11 +40,20 @@ export default function VendorDashboard() {
     .filter(
       (c) =>
         c.source !== 'aggregated' &&
-        (c.companyId === myCompany.id || user?.role === 'super_admin'),
+        (c.companyId === myCompany?.id || user?.role === 'super_admin'),
     )
     .slice(0, 15)
 
-  const myBookings = bookings.filter((b) => b.storeName === myCompany.name)
+  const myBookings = bookings.filter((b) => b.storeName === myCompany?.name)
+
+  const isAddressComplete =
+    myCompany?.addressCountry &&
+    myCompany?.addressState &&
+    myCompany?.addressCity &&
+    myCompany?.addressStreet &&
+    myCompany?.addressNumber
+
+  if (!myCompany) return null
 
   return (
     <div className="container mx-auto px-4 py-8 mb-16 md:mb-0 animate-fade-in-up">
@@ -68,9 +81,28 @@ export default function VendorDashboard() {
         </div>
       </div>
 
+      {!isAddressComplete && (
+        <Alert className="mb-6 border-orange-200 bg-orange-50/80 animate-fade-in-up shadow-sm">
+          <MapPin className="h-5 w-5 !text-orange-600" />
+          <AlertTitle className="text-orange-800 font-bold">
+            Endereço da Loja Incompleto
+          </AlertTitle>
+          <AlertDescription className="text-orange-700 mt-1">
+            Seu estabelecimento não será exibido corretamente no mapa para os
+            clientes. Complete os dados de endereço para ativar a navegação GPS.{' '}
+            <button
+              onClick={() => setActiveTab('settings')}
+              className="font-bold underline hover:text-orange-900 transition-colors"
+            >
+              Configurar endereço agora
+            </button>
+          </AlertDescription>
+        </Alert>
+      )}
+
       <VendorStats company={myCompany} activeCampaigns={coupons.length} />
 
-      <Tabs defaultValue="overview" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="mb-6 flex flex-wrap h-auto p-1 bg-slate-100/80 rounded-lg justify-start shadow-inner">
           <TabsTrigger
             value="overview"
