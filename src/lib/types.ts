@@ -289,6 +289,7 @@ export interface Itinerary {
   status?: 'draft' | 'pending' | 'approved' | 'rejected'
   authorId?: string
   authorName?: string
+  type?: 'shopping' | 'travel'
 }
 
 export type UserRole =

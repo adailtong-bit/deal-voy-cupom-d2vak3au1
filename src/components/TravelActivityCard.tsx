@@ -14,6 +14,11 @@ import {
   Trash2,
   Calendar,
   Navigation,
+  ShoppingBag,
+  ExternalLink,
+  Copy,
+  Check,
+  Barcode,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -23,12 +28,14 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { BookingForm } from './BookingForm'
+import { toast } from 'sonner'
 
 interface TravelActivityCardProps {
   stop: Coupon
   dayId: string
   mockTime: string
   onRemove: (dayId: string, stopId: string) => void
+  isShopping?: boolean
 }
 
 export function TravelActivityCard({
@@ -36,11 +43,13 @@ export function TravelActivityCard({
   dayId,
   mockTime,
   onRemove,
+  isShopping = false,
 }: TravelActivityCardProps) {
   const navigate = useNavigate()
   const { t } = useLanguage()
   const { userLocation } = useCouponStore()
   const [isBookingOpen, setIsBookingOpen] = useState(false)
+  const [copied, setCopied] = useState(false)
 
   const isHotel =
     stop.category === 'Outros' && stop.title.toLowerCase().includes('hotel')
@@ -53,9 +62,22 @@ export function TravelActivityCard({
     navigate('/travel?tab=bookings')
   }
 
+  const handleCopy = () => {
+    if (stop.code) {
+      navigator.clipboard.writeText(stop.code)
+      setCopied(true)
+      toast.success(t('activity_card.copied', 'Copiado!'))
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
+
   const navUrl = `https://www.google.com/maps/dir/?api=1&destination=${stop.coordinates.lat},${stop.coordinates.lng}${
     userLocation ? `&origin=${userLocation.lat},${userLocation.lng}` : ''
   }`
+
+  const shopUrl =
+    stop.externalUrl ||
+    `https://www.amazon.com.br/s?k=${encodeURIComponent(stop.title)}`
 
   return (
     <div className="flex gap-4 group">
@@ -131,55 +153,166 @@ export function TravelActivityCard({
                   </a>
                 </Button>
 
-                <Dialog open={isBookingOpen} onOpenChange={setIsBookingOpen}>
-                  <DialogTrigger asChild>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-8 gap-2 bg-slate-50 border-primary/20 text-primary hover:bg-primary/5 font-semibold shadow-sm"
-                    >
-                      <Calendar className="h-3 w-3" />{' '}
-                      {t('activity_card.book_now', 'Reservar')}
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-md p-0 border-none bg-transparent shadow-none">
-                    <DialogTitle className="sr-only">
-                      {t('hub.book', 'Reservar')} {stop.storeName}
-                    </DialogTitle>
-                    <BookingForm
-                      coupon={stop}
-                      type={bookingType}
-                      onSuccess={handleBookingSuccess}
-                    />
-                  </DialogContent>
-                </Dialog>
+                {isShopping ? (
+                  <Button
+                    size="sm"
+                    className="h-8 gap-1.5 bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
+                    asChild
+                  >
+                    <a href={shopUrl} target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="h-3.5 w-3.5" />{' '}
+                      {t('activity_card.shop_now', 'Comprar Online')}
+                    </a>
+                  </Button>
+                ) : (
+                  <Dialog open={isBookingOpen} onOpenChange={setIsBookingOpen}>
+                    <DialogTrigger asChild>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 gap-2 bg-slate-50 border-primary/20 text-primary hover:bg-primary/5 font-semibold shadow-sm"
+                      >
+                        <Calendar className="h-3 w-3" />{' '}
+                        {t('activity_card.book_now', 'Reservar')}
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-md p-0 border-none bg-transparent shadow-none">
+                      <DialogTitle className="sr-only">
+                        {t('hub.book', 'Reservar')} {stop.storeName}
+                      </DialogTitle>
+                      <BookingForm
+                        coupon={stop}
+                        type={bookingType}
+                        onSuccess={handleBookingSuccess}
+                      />
+                    </DialogContent>
+                  </Dialog>
+                )}
               </div>
             </div>
 
-            <div className="mt-auto bg-slate-50 rounded-lg border border-slate-100 p-3 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-              <div className="flex-1 space-y-1.5">
-                <h5 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                  <Info className="h-3.5 w-3.5 text-primary" />
-                  {t('activity_card.how_to_use', 'Como Utilizar')}
-                </h5>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  {stop.instructions ||
-                    t(
-                      'activity_card.instructions_default',
-                      'Apresente esta tela no balcão. Certifique-se de que o código esteja bem visível para garantir seu benefício.',
-                    )}
-                </p>
+            {isShopping ? (
+              <div className="mt-auto bg-slate-50 rounded-lg border border-slate-200 p-3">
+                <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                  <div className="space-y-1">
+                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                      {t('activity_card.promo_code', 'Código Promocional')}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <code className="px-2 py-1 bg-white border border-slate-200 rounded text-sm font-bold text-slate-800 shadow-sm">
+                        {stop.code || t('activity_card.no_code', 'SEM-CÓDIGO')}
+                      </code>
+                      {stop.code && (
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          className="h-8 w-8 text-slate-500 hover:text-slate-900 bg-white shadow-sm"
+                          onClick={handleCopy}
+                          title={t('activity_card.copy', 'Copiar')}
+                        >
+                          {copied ? (
+                            <Check className="h-4 w-4 text-emerald-500" />
+                          ) : (
+                            <Copy className="h-4 w-4" />
+                          )}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 sm:flex-none gap-2 bg-white shadow-sm h-9"
+                        >
+                          <QrCode className="h-4 w-4 text-slate-500" /> QR Code
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-xs text-center p-6">
+                        <DialogTitle className="mb-4">
+                          {t(
+                            'activity_card.voucher_codes',
+                            'Códigos do Voucher',
+                          )}
+                        </DialogTitle>
+                        <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm inline-block mx-auto mb-3">
+                          <QrCode
+                            className="w-48 h-48 text-slate-800 mx-auto"
+                            strokeWidth={1}
+                          />
+                        </div>
+                        <p className="font-mono font-bold text-xl tracking-widest">
+                          {stop.code || 'NO-CODE'}
+                        </p>
+                        <p className="text-sm text-slate-500 mt-2">
+                          {stop.storeName}
+                        </p>
+                      </DialogContent>
+                    </Dialog>
+
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 sm:flex-none gap-2 bg-white shadow-sm h-9"
+                        >
+                          <Barcode className="h-4 w-4 text-slate-500" /> Barcode
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-xs text-center p-6">
+                        <DialogTitle className="mb-4">
+                          {t(
+                            'activity_card.voucher_codes',
+                            'Códigos do Voucher',
+                          )}
+                        </DialogTitle>
+                        <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex flex-col items-center mx-auto mb-3 w-full">
+                          <Barcode
+                            className="w-full h-24 text-slate-800 mb-2"
+                            strokeWidth={1}
+                          />
+                          <p className="font-mono font-bold text-xl tracking-widest">
+                            {stop.code || 'NO-CODE'}
+                          </p>
+                        </div>
+                        <p className="text-sm text-slate-500 mt-2">
+                          {stop.storeName}
+                        </p>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                </div>
               </div>
-              <div className="shrink-0 bg-white border border-slate-200 rounded p-2 flex flex-col items-center justify-center min-w-[110px] w-full sm:w-auto shadow-sm">
-                <QrCode
-                  className="h-10 w-10 text-slate-800 mb-1"
-                  strokeWidth={1.5}
-                />
-                <span className="text-[10px] font-mono font-bold text-slate-500 tracking-widest uppercase text-center w-full truncate px-1">
-                  {stop.code || t('activity_card.no_code', 'SEM-CÓDIGO')}
-                </span>
+            ) : (
+              <div className="mt-auto bg-slate-50 rounded-lg border border-slate-100 p-3 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                <div className="flex-1 space-y-1.5">
+                  <h5 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    <Info className="h-3.5 w-3.5 text-primary" />
+                    {t('activity_card.how_to_use', 'Como Utilizar')}
+                  </h5>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    {stop.instructions ||
+                      t(
+                        'activity_card.instructions_default',
+                        'Apresente esta tela no balcão. Certifique-se de que o código esteja bem visível para garantir seu benefício.',
+                      )}
+                  </p>
+                </div>
+                <div className="shrink-0 bg-white border border-slate-200 rounded p-2 flex flex-col items-center justify-center min-w-[110px] w-full sm:w-auto shadow-sm">
+                  <QrCode
+                    className="h-10 w-10 text-slate-800 mb-1"
+                    strokeWidth={1.5}
+                  />
+                  <span className="text-[10px] font-mono font-bold text-slate-500 tracking-widest uppercase text-center w-full truncate px-1">
+                    {stop.code || t('activity_card.no_code', 'SEM-CÓDIGO')}
+                  </span>
+                </div>
               </div>
-            </div>
+            )}
           </CardContent>
         </div>
       </Card>

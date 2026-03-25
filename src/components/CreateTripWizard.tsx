@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
 import { toast } from 'sonner'
@@ -30,6 +31,7 @@ export function CreateTripWizard({
   const { user, saveItinerary } = useCouponStore()
   const { t } = useLanguage()
   const [step, setStep] = useState(1)
+  const [tripType, setTripType] = useState<'shopping' | 'travel'>('travel')
   const [title, setTitle] = useState('')
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
@@ -61,6 +63,7 @@ export function CreateTripWizard({
     onClose()
     setTimeout(() => {
       setStep(1)
+      setTripType('travel')
       setTitle('')
       setStartDate('')
       setEndDate('')
@@ -90,11 +93,17 @@ export function CreateTripWizard({
 
     const newTrip: Itinerary = {
       id: Math.random().toString(36).substring(2, 9),
+      type: tripType,
       title,
       description: `${t('travel.new_adventure', 'Um novo roteiro explorando')} ${interests.length ? interests.join(', ') : t('travel.all', 'tudo')}.`,
       stops: [],
       days: tripDays,
-      tags: interests.length ? interests : [t('common.new', 'Novo')],
+      tags: [
+        ...(interests.length ? interests : [t('common.new', 'Novo')]),
+        tripType === 'shopping'
+          ? t('travel.type_shopping', 'Compras')
+          : t('travel.type_travel', 'Viagem'),
+      ],
       duration: `${numDays} ${t('travel.days', 'Dias')}`,
       totalSavings: 0,
       image: `https://img.usecurling.com/p/800/400?q=${encodeURIComponent(title || 'travel')}`,
@@ -130,7 +139,24 @@ export function CreateTripWizard({
         </DialogHeader>
         <div className="py-4 min-h-[160px] flex flex-col justify-center">
           {step === 1 && (
-            <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+            <div className="space-y-5 animate-in fade-in slide-in-from-right-4 duration-300">
+              <div className="space-y-2">
+                <Label>{t('travel.trip_type', 'Tipo de Roteiro')}</Label>
+                <Tabs
+                  value={tripType}
+                  onValueChange={(v) => setTripType(v as any)}
+                  className="w-full"
+                >
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="travel">
+                      {t('travel.type_travel', 'Viagem')}
+                    </TabsTrigger>
+                    <TabsTrigger value="shopping">
+                      {t('travel.type_shopping', 'Compras')}
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
               <div className="space-y-2">
                 <Label>
                   {t('travel.destination_name', 'Nome do Roteiro ou Destino')}
@@ -201,6 +227,16 @@ export function CreateTripWizard({
           )}
           {step === 4 && (
             <div className="space-y-4 bg-slate-50 p-5 rounded-lg border animate-in fade-in slide-in-from-right-4 duration-300">
+              <p className="flex justify-between border-b pb-2">
+                <span className="text-muted-foreground">
+                  {t('travel.trip_type', 'Tipo de Roteiro')}
+                </span>{' '}
+                <strong className="text-right">
+                  {tripType === 'shopping'
+                    ? t('travel.type_shopping', 'Compras')
+                    : t('travel.type_travel', 'Viagem')}
+                </strong>
+              </p>
               <p className="flex justify-between border-b pb-2">
                 <span className="text-muted-foreground">
                   {t('travel.destination', 'Destino')}

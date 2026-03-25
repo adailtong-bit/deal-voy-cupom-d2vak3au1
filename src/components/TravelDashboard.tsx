@@ -21,6 +21,8 @@ import {
   Megaphone,
   Search,
   Shield,
+  ShoppingBag,
+  Plane,
 } from 'lucide-react'
 import {
   DropdownMenu,
@@ -34,7 +36,7 @@ import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 import { CreateTripWizard } from './CreateTripWizard'
 import { TravelDiscoveryHub } from './TravelDiscoveryHub'
-import { formatDate } from '@/lib/utils'
+import { formatDate, cn } from '@/lib/utils'
 
 interface TravelDashboardProps {
   onSelectTrip: (id: string) => void
@@ -186,7 +188,7 @@ export function TravelDashboard({
             value="trips"
             className="rounded-lg py-2.5 px-6 font-semibold text-base sm:flex-1 data-[state=active]:bg-white data-[state=active]:shadow-sm"
           >
-            {t('travel.my_trips', 'Roteiros de Compras')}
+            {t('travel.my_trips', 'Meus Roteiros')}
           </TabsTrigger>
         </TabsList>
 
@@ -324,7 +326,7 @@ export function TravelDashboard({
             <div>
               <h1 className="text-3xl font-extrabold text-slate-900 flex items-center gap-3">
                 <Luggage className="h-8 w-8 text-primary" />
-                {t('travel.my_trips', 'Roteiros de Compras')}
+                {t('travel.my_trips', 'Meus Roteiros')}
               </h1>
               <p className="text-muted-foreground mt-1">
                 {t(
@@ -374,6 +376,28 @@ export function TravelDashboard({
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+
+                    <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
+                      <Badge
+                        className={cn(
+                          'bg-white/90 text-slate-900 border-none shadow-sm hover:bg-white',
+                          trip.type === 'shopping' && 'text-primary',
+                        )}
+                      >
+                        {trip.type === 'shopping' ? (
+                          <>
+                            <ShoppingBag className="w-3 h-3 mr-1" />{' '}
+                            {t('travel.type_shopping', 'Compras')}
+                          </>
+                        ) : (
+                          <>
+                            <Plane className="w-3 h-3 mr-1" />{' '}
+                            {t('travel.type_travel', 'Viagem')}
+                          </>
+                        )}
+                      </Badge>
+                    </div>
+
                     <div className="absolute bottom-3 left-3 text-white">
                       <h3 className="font-bold text-lg leading-tight">
                         {trip.title}

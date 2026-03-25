@@ -2,7 +2,15 @@ import { useState, useMemo } from 'react'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, Trash2, Calendar, MapPin, Plus } from 'lucide-react'
+import {
+  ArrowLeft,
+  Trash2,
+  Calendar,
+  MapPin,
+  Plus,
+  ShoppingBag,
+  Plane,
+} from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { TravelActivityCard } from './TravelActivityCard'
@@ -10,6 +18,14 @@ import { DiscoverActivitiesSheet } from './DiscoverActivitiesSheet'
 import { ItineraryMap } from './ItineraryMap'
 import { Coupon } from '@/lib/types'
 import { toast } from 'sonner'
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb'
 
 export function TravelDetail({
   tripId,
@@ -30,6 +46,8 @@ export function TravelDetail({
   const [isAddSheetOpen, setIsAddSheetOpen] = useState(false)
 
   if (!activeTrip) return null
+
+  const isShopping = activeTrip.type === 'shopping'
 
   const handleDeleteTrip = () => {
     deleteItinerary(activeTrip.id)
@@ -112,6 +130,24 @@ export function TravelDetail({
       </div>
 
       <div className="container mx-auto px-4 max-w-6xl py-8">
+        <Breadcrumb className="mb-6 hidden sm:flex">
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink onClick={onBack} className="cursor-pointer">
+                {t('travel.my_trips', 'Meus Roteiros')}
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>
+                {isShopping
+                  ? t('travel.shopping_itinerary', 'Roteiro de Compras')
+                  : t('travel.travel_itinerary', 'Roteiro de Viagem')}
+              </BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+
         <div className="mb-8 text-center sm:text-left flex flex-col sm:flex-row items-center gap-6">
           <div className="h-24 w-24 sm:h-32 sm:w-32 rounded-2xl overflow-hidden shrink-0 shadow-md">
             <img
@@ -121,7 +157,20 @@ export function TravelDetail({
             />
           </div>
           <div>
-            <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 mb-2">
+            <div className="flex items-center justify-center sm:justify-start gap-2 mb-2 text-sm font-bold uppercase tracking-wider text-primary">
+              {isShopping ? (
+                <>
+                  <ShoppingBag className="w-4 h-4" />{' '}
+                  {t('travel.shopping_itinerary', 'Roteiro de Compras')}
+                </>
+              ) : (
+                <>
+                  <Plane className="w-4 h-4" />{' '}
+                  {t('travel.travel_itinerary', 'Roteiro de Viagem')}
+                </>
+              )}
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 mb-3">
               {activeTrip.title}
             </h1>
             <div className="flex flex-wrap justify-center sm:justify-start items-center gap-4 text-slate-600 font-medium">
@@ -208,6 +257,7 @@ export function TravelDetail({
                           dayId={day.id}
                           mockTime={getMockTime(idx)}
                           onRemove={handleRemoveActivity}
+                          isShopping={isShopping}
                         />
                       ))}
                     </div>
