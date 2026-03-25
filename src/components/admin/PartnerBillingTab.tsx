@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { FileText, Plus, CheckCircle, Clock, Send } from 'lucide-react'
-import { format } from 'date-fns'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -29,16 +28,23 @@ import {
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { useLanguage } from '@/stores/LanguageContext'
+import { useRegionFormatting } from '@/hooks/useRegionFormatting'
 import { useCouponStore } from '@/stores/CouponContext'
 
 export function PartnerBillingTab({ franchiseId }: { franchiseId?: string }) {
-  const { t, formatCurrency } = useLanguage()
+  const { t } = useLanguage()
   const {
     partnerInvoices,
     updatePartnerInvoiceStatus,
     companies,
     generatePartnerInvoice,
+    franchises,
   } = useCouponStore()
+
+  const franchise = franchises.find((f) => f.id === franchiseId)
+  const { formatCurrency, formatShortDate } = useRegionFormatting(
+    franchise?.region,
+  )
 
   const displayCompanies = franchiseId
     ? companies.filter((c) => c.franchiseId === franchiseId)
@@ -178,8 +184,8 @@ export function PartnerBillingTab({ franchiseId }: { franchiseId?: string }) {
                 </TableCell>
                 <TableCell>{getCompanyName(invoice.companyId)}</TableCell>
                 <TableCell className="text-xs">
-                  {format(new Date(invoice.periodStart), 'dd/MM')} -{' '}
-                  {format(new Date(invoice.periodEnd), 'dd/MM')}
+                  {formatShortDate(invoice.periodStart)} -{' '}
+                  {formatShortDate(invoice.periodEnd)}
                 </TableCell>
                 <TableCell>{formatCurrency(invoice.totalCommission)}</TableCell>
                 <TableCell>{getStatusBadge(invoice.status)}</TableCell>

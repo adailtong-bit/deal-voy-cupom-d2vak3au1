@@ -1,4 +1,5 @@
 import { useLanguage } from '@/stores/LanguageContext'
+import { useRegionFormatting } from '@/hooks/useRegionFormatting'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Table,
@@ -17,8 +18,12 @@ export function FranchiseeCurrentAccountTab({
 }: {
   franchiseId: string
 }) {
-  const { formatCurrency, formatDate, t } = useLanguage()
-  const { partnerInvoices, ads, platformSettings } = useCouponStore()
+  const { t } = useLanguage()
+  const { partnerInvoices, ads, platformSettings, franchises } =
+    useCouponStore()
+
+  const franchise = franchises.find((f) => f.id === franchiseId)
+  const { formatCurrency, formatDate } = useRegionFormatting(franchise?.region)
 
   const royaltyRate = platformSettings.franchiseRoyaltyRate || 15
 

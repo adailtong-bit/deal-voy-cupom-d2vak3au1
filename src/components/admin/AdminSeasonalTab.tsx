@@ -48,6 +48,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useLanguage } from '@/stores/LanguageContext'
+import { useRegionFormatting } from '@/hooks/useRegionFormatting'
 import { useCouponStore } from '@/stores/CouponContext'
 import { SeasonalEvent } from '@/lib/types'
 import {
@@ -58,7 +59,7 @@ import {
 import { BarChart, CartesianGrid, XAxis, YAxis, Bar } from 'recharts'
 
 export function AdminSeasonalTab({ franchiseId }: { franchiseId?: string }) {
-  const { t, formatCurrency, formatDate } = useLanguage()
+  const { t } = useLanguage()
   const {
     seasonalEvents,
     companies,
@@ -66,7 +67,13 @@ export function AdminSeasonalTab({ franchiseId }: { franchiseId?: string }) {
     updateSeasonalEvent,
     deleteSeasonalEvent,
     renewSeasonalCampaign,
+    franchises,
   } = useCouponStore()
+
+  const franchise = franchises.find((f) => f.id === franchiseId)
+  const { formatCurrency, formatDate, formatNumber } = useRegionFormatting(
+    franchise?.region,
+  )
 
   const displayCompanies = franchiseId
     ? companies.filter((c) => c.franchiseId === franchiseId)
@@ -223,8 +230,8 @@ export function AdminSeasonalTab({ franchiseId }: { franchiseId?: string }) {
         `"${getCompanyName(event.companyId)}"`,
         formatDate(event.startDate),
         formatDate(event.endDate),
-        event.clickCount || 0,
-        event.price || event.billingAmount || 0,
+        formatNumber(event.clickCount || 0),
+        formatCurrency(event.price || event.billingAmount || 0),
       ],
     ]
       .map((e) => e.join(','))
@@ -252,7 +259,7 @@ export function AdminSeasonalTab({ franchiseId }: { franchiseId?: string }) {
         <p><strong>Advertiser:</strong> ${getCompanyName(event.companyId)}</p>
         <p><strong>Start Date:</strong> ${formatDate(event.startDate)}</p>
         <p><strong>End Date:</strong> ${formatDate(event.endDate)}</p>
-        <p><strong>Total Clicks:</strong> ${event.clickCount || 0}</p>
+        <p><strong>Total Clicks:</strong> ${formatNumber(event.clickCount || 0)}</p>
         <p><strong>Invoice Value:</strong> ${formatCurrency(event.price || event.billingAmount)}</p>
         <script>window.print(); window.close();</script>
         </body></html>

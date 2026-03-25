@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
+import { useRegionFormatting } from '@/hooks/useRegionFormatting'
 import {
   Card,
   CardContent,
@@ -32,9 +33,22 @@ import { DollarSign, Plus, Edit2, Trash2 } from 'lucide-react'
 import { Advertisement } from '@/lib/types'
 
 export function FranchiseeAdsTab({ franchiseId }: { franchiseId?: string }) {
-  const { ads, createAd, updateAd, deleteAd, platformSettings, companies } =
-    useCouponStore()
-  const { t, formatCurrency } = useLanguage()
+  const {
+    ads,
+    createAd,
+    updateAd,
+    deleteAd,
+    platformSettings,
+    companies,
+    franchises,
+  } = useCouponStore()
+  const { t } = useLanguage()
+
+  const franchise = franchises.find((f) => f.id === franchiseId)
+  const { formatCurrency, formatNumber } = useRegionFormatting(
+    franchise?.region,
+  )
+
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingAd, setEditingAd] = useState<Advertisement | null>(null)
 
@@ -98,11 +112,11 @@ export function FranchiseeAdsTab({ franchiseId }: { franchiseId?: string }) {
         price: adFormData.price,
         franchiseId,
         companyId: hqCompany?.id || 'admin_created',
-        region: 'Regional',
+        region: franchise?.region || 'Regional',
         category: 'Outros',
         billingType: 'fixed',
         placement: 'sidebar',
-        status: 'pending', // Franchisee created ads might start as pending
+        status: 'pending',
         views: 0,
         clicks: 0,
         startDate: new Date().toISOString(),
@@ -129,7 +143,7 @@ export function FranchiseeAdsTab({ franchiseId }: { franchiseId?: string }) {
               )}
             </p>
             <h3 className="text-2xl font-bold">
-              {formatCurrency(totalRevenue, 'BRL')}
+              {formatCurrency(totalRevenue)}
             </h3>
           </CardContent>
         </Card>
@@ -147,7 +161,7 @@ export function FranchiseeAdsTab({ franchiseId }: { franchiseId?: string }) {
               ).replace('{rate}', String(royaltyRate))}
             </p>
             <h3 className="text-2xl font-bold">
-              {formatCurrency(totalRoyalties, 'BRL')}
+              {formatCurrency(totalRoyalties)}
             </h3>
           </CardContent>
         </Card>
@@ -221,10 +235,10 @@ export function FranchiseeAdsTab({ franchiseId }: { franchiseId?: string }) {
                       </Badge>
                     </TableCell>
                     <TableCell className="font-medium">
-                      {formatCurrency(revenue, 'BRL')}
+                      {formatCurrency(revenue)}
                     </TableCell>
                     <TableCell className="font-bold text-orange-600">
-                      {formatCurrency(royalties, 'BRL')}
+                      {formatCurrency(royalties)}
                     </TableCell>
                     <TableCell className="text-right">
                       <Button
@@ -344,10 +358,7 @@ export function FranchiseeAdsTab({ franchiseId }: { franchiseId?: string }) {
             <div className="p-3 bg-orange-50 rounded-lg border border-orange-100 mt-2">
               <p className="text-sm font-medium text-orange-800">
                 {t('franchisee.ads.royalties_due', 'Royalties Devidos')}:{' '}
-                {formatCurrency(
-                  (adFormData.price || 0) * (royaltyRate / 100),
-                  'BRL',
-                )}
+                {formatCurrency((adFormData.price || 0) * (royaltyRate / 100))}
               </p>
               <p className="text-xs text-orange-600 mt-1">
                 {t(

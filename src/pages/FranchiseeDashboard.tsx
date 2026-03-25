@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { Navigate } from 'react-router-dom'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
+import { useRegionFormatting } from '@/hooks/useRegionFormatting'
 import {
   LayoutDashboard,
   Store,
@@ -75,12 +76,15 @@ export default function FranchiseeDashboard() {
     users,
     platformSettings,
   } = useCouponStore()
-  const { formatCurrency, formatDate, t } = useLanguage()
+  const { t } = useLanguage()
   const [activeTab, setActiveTab] = useState('overview')
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const myFranchise =
     franchises.find((f) => f.ownerId === user?.id) || franchises[0]
+
+  const { formatCurrency, formatDate, formatNumber, currency } =
+    useRegionFormatting(myFranchise?.region)
 
   // --- Data Calculations for Overview & Leads ---
   const franchiseCompanies = useMemo(
@@ -309,7 +313,7 @@ export default function FranchiseeDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-black text-slate-800">
-              {formatCurrency(totalSales, 'BRL')}
+              {formatCurrency(totalSales)}
             </div>
             <p className="text-xs text-emerald-600 mt-1 font-medium">
               {t('franchisee.overview.sales_desc', 'Volume transacionado')}
@@ -325,7 +329,7 @@ export default function FranchiseeDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-black text-slate-800">
-              {totalLeads}
+              {formatNumber(totalLeads)}
             </div>
             <p className="text-xs text-slate-400 mt-1 font-medium">
               {t('franchisee.overview.leads_desc', 'Clientes adquiridos')}
@@ -341,7 +345,7 @@ export default function FranchiseeDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-black text-slate-800">
-              {activeCampaigns}
+              {formatNumber(activeCampaigns)}
             </div>
             <p className="text-xs text-slate-400 mt-1 font-medium">
               {t(
@@ -360,7 +364,7 @@ export default function FranchiseeDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-black text-orange-600">
-              {formatCurrency(totalRoyalties, 'BRL')}
+              {formatCurrency(totalRoyalties)}
             </div>
             <p className="text-xs text-slate-400 mt-1 font-medium">
               {t(
@@ -509,7 +513,7 @@ export default function FranchiseeDashboard() {
                 {t('franchisee.settings.currency', 'Moeda Padrão')}
               </Label>
               <Input
-                value={myFranchise.region.includes('US') ? 'USD' : 'BRL'}
+                value={currency}
                 disabled
                 className="bg-slate-100 font-medium"
               />
@@ -522,7 +526,7 @@ export default function FranchiseeDashboard() {
                 )}
               </Label>
               <Input
-                value={`${royaltyRate}%`}
+                value={`${formatNumber(royaltyRate)}%`}
                 disabled
                 className="bg-slate-100 font-medium text-orange-600"
               />

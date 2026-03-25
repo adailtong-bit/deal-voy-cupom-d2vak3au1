@@ -1,5 +1,6 @@
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
+import { useRegionFormatting } from '@/hooks/useRegionFormatting'
 import {
   Card,
   CardContent,
@@ -13,8 +14,11 @@ import { CrawlerSourcesTab } from './CrawlerSourcesTab'
 import { CrawlerPromotionsTab } from './CrawlerPromotionsTab'
 
 export function PromotionCrawler({ franchiseId }: { franchiseId?: string }) {
-  const { user, discoveredPromotions } = useCouponStore()
+  const { user, discoveredPromotions, franchises } = useCouponStore()
   const { t } = useLanguage()
+
+  const franchise = franchises.find((f) => f.id === franchiseId)
+  const { formatNumber } = useRegionFormatting(franchise?.region)
 
   const pendingPromotionsCount = discoveredPromotions.filter((p) => {
     if (p.status !== 'pending') return false
@@ -50,7 +54,7 @@ export function PromotionCrawler({ franchiseId }: { franchiseId?: string }) {
                 {t(
                   'franchisee.crawler.promotions',
                   'Ofertas Importadas',
-                ).replace('{count}', String(pendingPromotionsCount))}
+                ).replace('{count}', formatNumber(pendingPromotionsCount))}
               </TabsTrigger>
             </TabsList>
 

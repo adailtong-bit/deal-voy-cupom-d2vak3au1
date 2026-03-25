@@ -1,11 +1,18 @@
 import { useCouponStore } from '@/stores/CouponContext'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useLanguage } from '@/stores/LanguageContext'
+import { useRegionFormatting } from '@/hooks/useRegionFormatting'
 import { DollarSign, Users, ShoppingCart, TrendingUp } from 'lucide-react'
 
 export function DataInsightsTab({ franchiseId }: { franchiseId?: string }) {
-  const { validationLogs, users, adInvoices, companies } = useCouponStore()
-  const { formatCurrency, t } = useLanguage()
+  const { validationLogs, users, adInvoices, companies, franchises } =
+    useCouponStore()
+  const { t } = useLanguage()
+
+  const franchise = franchises.find((f) => f.id === franchiseId)
+  const { formatCurrency, formatNumber } = useRegionFormatting(
+    franchise?.region,
+  )
 
   const displayCompanies = franchiseId
     ? companies.filter((c) => c.franchiseId === franchiseId)
@@ -84,7 +91,9 @@ export function DataInsightsTab({ franchiseId }: { franchiseId?: string }) {
             <p className="text-sm font-medium text-muted-foreground">
               {t('franchisee.insights.active_subs', 'Assinaturas Ativas')}
             </p>
-            <h3 className="text-2xl font-bold">{activeSubscriptions}</h3>
+            <h3 className="text-2xl font-bold">
+              {formatNumber(activeSubscriptions)}
+            </h3>
             <p className="text-xs text-muted-foreground mt-1">
               {t(
                 'franchisee.insights.premium_vip',

@@ -1,5 +1,6 @@
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
+import { useRegionFormatting } from '@/hooks/useRegionFormatting'
 import {
   Card,
   CardContent,
@@ -32,7 +33,11 @@ import {
 
 export function AdminCategoriesTab({ franchiseId }: { franchiseId?: string }) {
   const { t } = useLanguage()
-  const { platformSettings, updatePlatformSettings } = useCouponStore()
+  const { platformSettings, updatePlatformSettings, franchises } =
+    useCouponStore()
+
+  const franchise = franchises.find((f) => f.id === franchiseId)
+  const { formatNumber } = useRegionFormatting(franchise?.region)
 
   const mainCategories = platformSettings.mainCategories || []
 
@@ -92,7 +97,10 @@ export function AdminCategoriesTab({ franchiseId }: { franchiseId?: string }) {
           <CardDescription>
             {t('admin.mainCategoriesDesc', 'Select up to 4 main categories.')}
             <br />
-            <strong>{mainCategories.length} / 4</strong> selecionadas.
+            <strong>
+              {formatNumber(mainCategories.length)} / {formatNumber(4)}
+            </strong>{' '}
+            selecionadas.
           </CardDescription>
         </CardHeader>
         <CardContent>

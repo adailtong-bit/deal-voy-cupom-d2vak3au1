@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
 import { useLanguage } from '@/stores/LanguageContext'
+import { useRegionFormatting } from '@/hooks/useRegionFormatting'
 import { useCouponStore } from '@/stores/CouponContext'
 import { PartnerPolicy } from '@/lib/types'
 
@@ -36,7 +37,11 @@ export function PartnerPoliciesTab({ franchiseId }: { franchiseId?: string }) {
     companies,
     updatePartnerPolicy,
     deletePartnerPolicy,
+    franchises,
   } = useCouponStore()
+
+  const franchise = franchises.find((f) => f.id === franchiseId)
+  const { formatNumber } = useRegionFormatting(franchise?.region)
 
   const displayCompanies = franchiseId
     ? companies.filter((c) => c.franchiseId === franchiseId)
@@ -126,8 +131,8 @@ export function PartnerPoliciesTab({ franchiseId }: { franchiseId?: string }) {
                 <TableCell className="font-medium">
                   {getCompanyName(policy.companyId)}
                 </TableCell>
-                <TableCell>{policy.commissionRate}%</TableCell>
-                <TableCell>{policy.cashbackRate}%</TableCell>
+                <TableCell>{formatNumber(policy.commissionRate)}%</TableCell>
+                <TableCell>{formatNumber(policy.cashbackRate)}%</TableCell>
                 <TableCell>
                   {t(`admin.${policy.billingModel.toLowerCase()}`) ||
                     policy.billingModel}

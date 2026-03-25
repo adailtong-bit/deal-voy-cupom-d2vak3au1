@@ -16,6 +16,8 @@ import {
 } from '@/components/ui/chart'
 import { DollarSign, TrendingUp, Users, Activity } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
+import { useRegionFormatting } from '@/hooks/useRegionFormatting'
+import { useCouponStore } from '@/stores/CouponContext'
 
 const dummyData = [
   { partner: 'Sabor', coupons: 145, credits: 1250, margin: 350 },
@@ -38,7 +40,13 @@ export function AdminMonetizationTab({
 }: {
   franchiseId?: string
 }) {
-  const { t, formatCurrency } = useLanguage()
+  const { t } = useLanguage()
+  const { franchises } = useCouponStore()
+  const franchise = franchises.find((f) => f.id === franchiseId)
+  const { formatCurrency, formatNumber } = useRegionFormatting(
+    franchise?.region,
+  )
+
   const totals = useMemo(() => {
     return dummyData.reduce(
       (acc, curr) => ({
@@ -89,7 +97,9 @@ export function AdminMonetizationTab({
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totals.coupons}</div>
+            <div className="text-2xl font-bold">
+              {formatNumber(totals.coupons)}
+            </div>
             <p className="text-xs text-muted-foreground">+24%</p>
           </CardContent>
         </Card>
@@ -101,7 +111,9 @@ export function AdminMonetizationTab({
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{dummyData.length}</div>
+            <div className="text-2xl font-bold">
+              {formatNumber(dummyData.length)}
+            </div>
             <p className="text-xs text-muted-foreground">
               {t('franchisee.monetization.active_plural', 'Ativos')}
             </p>

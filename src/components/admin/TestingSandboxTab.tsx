@@ -8,9 +8,14 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { MapPin, User, Building, Store } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
+import { useRegionFormatting } from '@/hooks/useRegionFormatting'
+import { useCouponStore } from '@/stores/CouponContext'
 
 export function TestingSandboxTab({ franchiseId }: { franchiseId?: string }) {
   const { t } = useLanguage()
+  const { franchises } = useCouponStore()
+  const franchise = franchises.find((f) => f.id === franchiseId)
+  const { formatNumber } = useRegionFormatting(franchise?.region)
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -52,7 +57,7 @@ export function TestingSandboxTab({ franchiseId }: { franchiseId?: string }) {
               <span className="text-muted-foreground">
                 {t('franchisee.sandbox.age', 'Idade')}
               </span>
-              <span className="font-medium text-right">28</span>
+              <span className="font-medium text-right">{formatNumber(28)}</span>
             </div>
             <div className="grid grid-cols-2 gap-2 border-b pb-2">
               <span className="text-muted-foreground">

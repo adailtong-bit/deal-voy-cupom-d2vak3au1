@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
+import { useRegionFormatting } from '@/hooks/useRegionFormatting'
 import {
   Table,
   TableBody,
@@ -30,8 +31,12 @@ import { Search, Users, Target, BarChart3, Download } from 'lucide-react'
 import { CATEGORIES } from '@/lib/data'
 
 export function AdminCRM({ franchiseId }: { franchiseId?: string }) {
-  const { users, validationLogs, coupons, companies } = useCouponStore()
-  const { formatDate, t } = useLanguage()
+  const { users, validationLogs, coupons, companies, franchises } =
+    useCouponStore()
+  const { t } = useLanguage()
+
+  const franchise = franchises.find((f) => f.id === franchiseId)
+  const { formatDate, formatNumber } = useRegionFormatting(franchise?.region)
 
   const [searchQuery, setSearchQuery] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('all')
@@ -194,7 +199,9 @@ export function AdminCRM({ franchiseId }: { franchiseId?: string }) {
               <p className="text-sm font-medium text-muted-foreground">
                 {t('franchisee.crm.total_users', 'Total de Usuários')}
               </p>
-              <h3 className="text-2xl font-bold">{displayUsers.length}</h3>
+              <h3 className="text-2xl font-bold">
+                {formatNumber(displayUsers.length)}
+              </h3>
             </div>
           </CardContent>
         </Card>
@@ -207,7 +214,9 @@ export function AdminCRM({ franchiseId }: { franchiseId?: string }) {
               <p className="text-sm font-medium text-muted-foreground">
                 {t('franchisee.crm.active_users', 'Usuários Ativos')}
               </p>
-              <h3 className="text-2xl font-bold">{activeUsersCount}</h3>
+              <h3 className="text-2xl font-bold">
+                {formatNumber(activeUsersCount)}
+              </h3>
             </div>
           </CardContent>
         </Card>
@@ -220,7 +229,9 @@ export function AdminCRM({ franchiseId }: { franchiseId?: string }) {
               <p className="text-sm font-medium text-muted-foreground">
                 {t('franchisee.crm.total_redemptions', 'Total de Resgates')}
               </p>
-              <h3 className="text-2xl font-bold">{totalRedemptions}</h3>
+              <h3 className="text-2xl font-bold">
+                {formatNumber(totalRedemptions)}
+              </h3>
             </div>
           </CardContent>
         </Card>
@@ -371,7 +382,7 @@ export function AdminCRM({ franchiseId }: { franchiseId?: string }) {
                       </Badge>
                     </TableCell>
                     <TableCell className="font-bold">
-                      {u.totalRedemptions}
+                      {formatNumber(u.totalRedemptions)}
                     </TableCell>
                     <TableCell>
                       <Badge variant="secondary">{u.topCategory}</Badge>
