@@ -345,6 +345,7 @@ export interface User {
   subscriptionTier?: SubscriptionTier
   avatar?: string
   birthday?: string
+  documentNumber?: string
   region?: string
   companyId?: string
   agencyId?: string
@@ -356,7 +357,7 @@ export interface User {
   phone?: string
   preferences?: UserPreferences
   partnerId?: string
-  gender?: 'male' | 'female' | 'non-binary' | 'prefer-not-to-say'
+  gender?: 'male' | 'female' | 'non-binary' | 'other' | 'prefer-not-to-say'
   staffRole?: string
   status?: 'active' | 'inactive' | 'invited'
 }

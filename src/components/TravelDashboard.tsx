@@ -412,7 +412,12 @@ export function TravelDashboard({
                             onClick={() => setCancellingBookingId(booking.id)}
                           >
                             <XCircle className="w-3.5 h-3.5 mr-1.5" />
-                            {t('common.cancel', 'Desistir')}
+                            {['confirmed', 'paid'].includes(booking.status)
+                              ? t(
+                                  'travel.request_cancel',
+                                  'Solicitar Cancelamento',
+                                )
+                              : t('common.cancel', 'Desistir')}
                           </Button>
                         </div>
                       )}
@@ -582,11 +587,25 @@ export function TravelDashboard({
             <AlertDialogTitle>
               {t('travel.confirm_cancel_title', 'Você tem certeza?')}
             </AlertDialogTitle>
-            <AlertDialogDescription>
-              {t(
-                'travel.confirm_cancel_desc',
-                'Esta ação cancelará sua reserva. A loja parceira será notificada. Deseja prosseguir?',
-              )}
+            <AlertDialogDescription className="space-y-3">
+              <p>
+                {t(
+                  'travel.confirm_cancel_desc',
+                  'Esta ação cancelará sua reserva. A loja parceira será notificada. Deseja prosseguir?',
+                )}
+              </p>
+              {cancellingBookingId &&
+                ['confirmed', 'paid'].includes(
+                  myBookings.find((b) => b.id === cancellingBookingId)
+                    ?.status || '',
+                ) && (
+                  <p className="text-amber-600 font-medium text-sm bg-amber-50 p-2 rounded-md border border-amber-200">
+                    {t(
+                      'travel.refund_policy_note',
+                      'Nota: O reembolso seguirá a política de cancelamento do parceiro. O status refletirá o processo de estorno.',
+                    )}
+                  </p>
+                )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -27,6 +27,7 @@ export default function Profile() {
     phone: user?.phone || '',
     birthday: user?.birthday || '',
     gender: user?.gender || '',
+    documentNumber: user?.documentNumber || '',
     country: user?.country || '',
     state: user?.state || '',
     city: user?.city || '',
@@ -52,12 +53,13 @@ export default function Profile() {
     if (formData.phone) score++
     if (formData.birthday) score++
     if (formData.gender) score++
+    if (formData.documentNumber) score++
     if (formData.country) score++
     if (formData.state) score++
     if (formData.city) score++
     if (formData.zipCode) score++
     if (formData.categories.length > 0) score++
-    return Math.round((score / 9) * 100)
+    return Math.round((score / 10) * 100)
   }, [formData])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -92,6 +94,7 @@ export default function Profile() {
       phone: formData.phone,
       birthday: formData.birthday,
       gender: formData.gender as User['gender'],
+      documentNumber: formData.documentNumber,
       country: formData.country,
       state: formData.state,
       city: formData.city,
@@ -131,7 +134,7 @@ export default function Profile() {
               <p className="text-xs text-slate-500">
                 {t(
                   'profile.complete_prompt',
-                  'Complete seu perfil para receber ofertas mais relevantes baseadas na sua região e interesses.',
+                  'Complete seu perfil para receber ofertas mais relevantes baseadas na sua região e interesses. Informações como Data de Nascimento e Documento são obrigatórias para reservas.',
                 )}
               </p>
             </div>
@@ -146,7 +149,7 @@ export default function Profile() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label>{t('profile.name', 'Nome')}</Label>
+              <Label>{t('profile.name', 'Nome Completo')}</Label>
               <Input
                 name="name"
                 value={formData.name}
@@ -162,14 +165,27 @@ export default function Profile() {
                 className="bg-slate-50 text-slate-500"
               />
             </div>
-            <div className="space-y-2">
-              <Label>{t('profile.phone', 'Telefone')}</Label>
-              <Input
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                placeholder="+55 11 99999-9999"
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>{t('profile.phone', 'Telefone')}</Label>
+                <Input
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  placeholder="+55 11 99999-9999"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>
+                  {t('profile.document', 'Documento (CPF / Passaporte)')}
+                </Label>
+                <Input
+                  name="documentNumber"
+                  value={formData.documentNumber}
+                  onChange={handleChange}
+                  placeholder="Ex: 123.456.789-00"
+                />
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -209,6 +225,9 @@ export default function Profile() {
                     </SelectItem>
                     <SelectItem value="non-binary">
                       {t('gender.nb', 'Não-binário')}
+                    </SelectItem>
+                    <SelectItem value="other">
+                      {t('gender.other', 'Outro')}
                     </SelectItem>
                     <SelectItem value="prefer-not-to-say">
                       {t('gender.none', 'Prefiro não dizer')}
