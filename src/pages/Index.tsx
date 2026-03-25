@@ -10,6 +10,7 @@ import { AdSpace } from '@/components/AdSpace'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { CATEGORIES } from '@/lib/data'
 import { cn } from '@/lib/utils'
+import { toast } from 'sonner'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -49,6 +50,7 @@ export default function Index() {
     userLocation,
     reservedIds,
     platformSettings,
+    reserveCoupon,
   } = useCouponStore()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
@@ -58,6 +60,19 @@ export default function Index() {
       navigate(-1)
     } else {
       navigate('/vendor')
+    }
+  }
+
+  const handleCardClick = (id: string) => {
+    trackSeasonalClick(id)
+    navigate(`/voucher/${id}`)
+  }
+
+  const handleReserveSeasonal = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation()
+    const success = reserveCoupon(id)
+    if (success) {
+      toast.success('Voucher reservado com sucesso!')
     }
   }
 
@@ -299,7 +314,7 @@ export default function Index() {
                     <Card
                       key={event.id}
                       className="overflow-hidden border-primary/20 hover:border-primary/50 transition-all hover:shadow-md group cursor-pointer"
-                      onClick={() => trackSeasonalClick(event.id)}
+                      onClick={() => handleCardClick(event.id)}
                     >
                       <div className="flex flex-col sm:flex-row h-full">
                         {event.image && (
@@ -343,14 +358,14 @@ export default function Index() {
                               </span>
                             </div>
                             <Button
-                              asChild
                               className="w-full gap-2 font-bold shadow-sm transition-transform hover:-translate-y-0.5"
                               size="lg"
+                              onClick={(e) =>
+                                handleReserveSeasonal(e, event.id)
+                              }
                             >
-                              <Link to={`/voucher/${event.id}`}>
-                                <Ticket className="h-5 w-5" />
-                                {t('home.get_voucher', 'Resgatar Voucher')}
-                              </Link>
+                              <Ticket className="h-5 w-5" />
+                              {t('home.reserve_voucher', 'Reservar')}
                             </Button>
                           </div>
                         </div>
