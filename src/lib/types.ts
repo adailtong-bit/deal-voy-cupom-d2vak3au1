@@ -89,6 +89,10 @@ export interface Coupon {
   terms?: string
   address?: string
   instructions?: string
+  translations?: Record<
+    string,
+    { title?: string; description?: string; instructions?: string }
+  >
   coordinates: {
     lat: number
     lng: number
@@ -141,6 +145,11 @@ export interface SeasonalEvent {
   startDate: string
   endDate: string
   description: string
+  instructions?: string
+  translations?: Record<
+    string,
+    { title?: string; description?: string; instructions?: string }
+  >
   type: 'sale' | 'holiday' | 'event'
   coordinates?: {
     lat: number

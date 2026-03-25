@@ -26,7 +26,7 @@ import { useLanguage } from '@/stores/LanguageContext'
 export default function Voucher() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { t, formatDate } = useLanguage()
+  const { t, formatDate, language } = useLanguage()
   const {
     user,
     coupons,
@@ -59,24 +59,42 @@ export default function Voucher() {
     !!coupon?.externalUrl ||
     !!event?.externalUrl
   const externalUrl = coupon?.externalUrl || event?.externalUrl
-  const title = coupon?.title || event?.title || ''
+
+  const baseTitle = coupon?.title || event?.title || ''
+  const title =
+    coupon?.translations?.[language]?.title ||
+    event?.translations?.[language]?.title ||
+    baseTitle
+
   const storeName =
     coupon?.storeName ||
     event?.companyId ||
     t('vouchers.partner_store', 'Loja Parceira')
-  const instructions =
-    coupon?.instructions ||
-    (isOnline
-      ? t(
-          'voucher_detail.instructions_online',
-          'Acesse a oferta online clicando no botão abaixo. Se aplicável, o código de desconto já será copiado ou aplicado automaticamente no site do lojista.',
-        )
-      : t(
-          'voucher_detail.instructions_offline',
-          'Apresente este código ao lojista no momento do pagamento para aplicar o benefício. O código é único e válido para apenas uma utilização.',
-        ))
 
-  const description = coupon?.description || event?.description || ''
+  const baseDescription = coupon?.description || event?.description || ''
+  const description =
+    coupon?.translations?.[language]?.description ||
+    event?.translations?.[language]?.description ||
+    baseDescription
+
+  const baseInstructions = coupon?.instructions || event?.instructions || ''
+  const translatedInstructions =
+    coupon?.translations?.[language]?.instructions ||
+    event?.translations?.[language]?.instructions ||
+    baseInstructions
+
+  const defaultInstructions = isOnline
+    ? t(
+        'voucher_detail.instructions_online',
+        'Acesse a oferta online clicando no botão abaixo. Se aplicável, o código de desconto já será copiado ou aplicado automaticamente no site do lojista.',
+      )
+    : t(
+        'voucher_detail.instructions_offline',
+        'Apresente este código ao lojista no momento do pagamento para aplicar o benefício. O código é único e válido para apenas uma utilização.',
+      )
+
+  const instructions = translatedInstructions || defaultInstructions
+
   const discount =
     coupon?.discount ||
     (event?.type === 'sale'

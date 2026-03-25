@@ -190,10 +190,11 @@ const generateSeasonalEvents = (): SeasonalEvent[] => {
 
     events.push({
       id: `se-${i}`,
-      title: `Campaign ${i} - ${status.toUpperCase()}`,
+      title: `Campanha ${i} - ${status.toUpperCase()}`,
       startDate: startDate.toISOString(),
       endDate: endDate.toISOString(),
-      description: `Special promotional campaign ${i} with exclusive discounts across multiple channels.`,
+      description: `Campanha promocional especial ${i} com descontos exclusivos em vários canais.`,
+      instructions: `Resgate este código promocional durante a campanha sazonal. Apenas um uso por pessoa.`,
       type: i % 2 === 0 ? 'sale' : 'event',
       companyId: `c${(i % 5) + 1}`,
       franchiseId: i % 2 === 0 ? 'f1' : 'f2',
@@ -213,6 +214,23 @@ const generateSeasonalEvents = (): SeasonalEvent[] => {
             )
           : [],
       totalAvailable: status === 'active' ? (i % 4 === 0 ? 0 : 50) : undefined,
+      translations: {
+        en: {
+          title: `Campaign ${i} - ${status.toUpperCase()}`,
+          description: `Special promotional campaign ${i} with exclusive discounts across multiple channels.`,
+          instructions: `Redeem this promotional code during the seasonal campaign. Single use per person.`,
+        },
+        pt: {
+          title: `Campanha ${i} - ${status.toUpperCase()}`,
+          description: `Campanha promocional especial ${i} com descontos exclusivos em vários canais.`,
+          instructions: `Resgate este código promocional durante a campanha sazonal. Apenas um uso por pessoa.`,
+        },
+        es: {
+          title: `Campaña ${i} - ${status.toUpperCase()}`,
+          description: `Campaña promocional especial ${i} con descuentos exclusivos en varios canales.`,
+          instructions: `Canjee este código promocional durante la campaña de temporada. Un solo uso por persona.`,
+        },
+      },
     })
   }
   return events
@@ -308,6 +326,29 @@ const generateCoupons = (): Coupon[] => {
     instructions:
       'Clique em Comprar Agora. O código será copiado e o desconto será aplicado no checkout da Amazon.',
     targetAudience: 'all',
+    translations: {
+      en: {
+        title: 'Echo Dot (5th Gen)',
+        description:
+          'Smart speaker with Alexa. Use the code for an additional 20% discount at checkout.',
+        instructions:
+          'Click Buy Now. The code will be copied and the discount will be applied at Amazon checkout.',
+      },
+      es: {
+        title: 'Echo Dot (5ª Generación)',
+        description:
+          'Altavoz inteligente con Alexa. Usa el código para un 20% de descuento adicional en el carrito.',
+        instructions:
+          'Haz clic en Comprar Ahora. El código se copiará y el descuento se aplicará en la caja de Amazon.',
+      },
+      pt: {
+        title: 'Echo Dot (5ª Geração)',
+        description:
+          'Smart speaker com Alexa. Use o código para 20% de desconto adicional no checkout.',
+        instructions:
+          'Clique em Comprar Agora. O código será copiado e o desconto será aplicado no checkout da Amazon.',
+      },
+    },
   })
 
   coupons.push({
@@ -341,6 +382,29 @@ const generateCoupons = (): Coupon[] => {
     instructions:
       'Resgate online. Não esqueça de colar o código promocional no carrinho de compras.',
     targetAudience: 'all',
+    translations: {
+      en: {
+        title: 'Bluetooth Headphones',
+        description:
+          'Wireless headphones with noise cancellation. Exclusive online offer for partner dropshipping.',
+        instructions:
+          'Redeem online. Do not forget to paste the promotional code in the shopping cart.',
+      },
+      es: {
+        title: 'Auriculares Bluetooth',
+        description:
+          'Auriculares inalámbricos con cancelación de ruido. Oferta en línea exclusiva para dropshipping asociado.',
+        instructions:
+          'Canjear en línea. No olvide pegar el código promocional en el carrito de compras.',
+      },
+      pt: {
+        title: 'Fones de Ouvido Bluetooth',
+        description:
+          'Fones sem fio com cancelamento de ruído. Oferta exclusiva online para dropshipping parceiro.',
+        instructions:
+          'Resgate online. Não esqueça de colar o código promocional no carrinho de compras.',
+      },
+    },
   })
 
   // Physical Store Offers
@@ -351,7 +415,7 @@ const generateCoupons = (): Coupon[] => {
     franchiseId: 'f1',
     title: '50% Nike',
     description:
-      'Exclusive 50% discount on all running shoes. Single use only.',
+      'Desconto exclusivo de 50% em todos os tênis de corrida. Apenas um uso.',
     discount: '50% OFF',
     category: 'Moda',
     distance: 150,
@@ -381,6 +445,29 @@ const generateCoupons = (): Coupon[] => {
     alertRadius: 200,
     proximityAlertsSent: 120,
     redeemedViaAlert: 45,
+    translations: {
+      en: {
+        title: '50% Nike',
+        description:
+          'Exclusive 50% discount on all running shoes. Single use only.',
+        instructions:
+          'Present this code at the store checkout to apply the discount. Valid only for selected items.',
+      },
+      es: {
+        title: '50% Nike',
+        description:
+          'Descuento exclusivo del 50% en todas las zapatillas de running. Un solo uso.',
+        instructions:
+          'Presente este código en la caja de la tienda para aplicar el descuento. Válido solo para artículos seleccionados.',
+      },
+      pt: {
+        title: '50% Nike',
+        description:
+          'Desconto exclusivo de 50% em todos os tênis de corrida. Apenas um uso.',
+        instructions:
+          'Apresente este código no caixa da loja para aplicar o desconto. Válido apenas para itens selecionados.',
+      },
+    },
   })
 
   for (let i = 1; i <= 30; i++) {
@@ -424,15 +511,31 @@ const generateCoupons = (): Coupon[] => {
       discountStr = isUS ? `${5 + (i % 20)} OFF` : `R$ ${10 + (i % 30)} OFF`
     else discountStr = isUS ? 'Free Shipping' : 'Frete Grátis'
 
+    const titleEn = isUS ? `Super Deal ${i}` : `Unmissable Offer ${i}`
+    const descEn = isUS
+      ? `Amazing discount on all items in section ${i}. Explore more!`
+      : `Incredible discount on all items in section ${i}. Come check it out!`
+    const instEn = `Present this code at the establishment checkout to redeem your offer. Make sure the code is visible.`
+
+    const titlePt = isUS ? `Super Oferta ${i}` : `Oferta Imperdível ${i}`
+    const descPt = isUS
+      ? `Desconto incrível em todos os itens da seção ${i}. Explore mais!`
+      : `Desconto incrível em todos os itens da seção ${i}. Venha conferir!`
+    const instPt = `Apresente este código no caixa do estabelecimento para resgatar sua oferta. Certifique-se de que o código esteja visível.`
+
+    const titleEs = isUS ? `Súper Oferta ${i}` : `Oferta Imperdible ${i}`
+    const descEs = isUS
+      ? `¡Increíble descuento en todos los artículos de la sección ${i}. ¡Explora más!`
+      : `¡Descuento increíble en todos los artículos de la sección ${i}. ¡Ven a verlo!`
+    const instEs = `Presente este código en la caja del establecimiento para canjear su oferta. Asegúrese de que el código sea visible.`
+
     coupons.push({
       id: `cpn-${i}`,
       storeName: isUS ? `Store #${i} USA` : `Loja #${i} BR`,
       companyId: isUS ? `c${i + 5}` : `c${i}`,
       franchiseId: isUS ? 'f2' : 'f1',
-      title: isUS ? `Super Deal ${i}` : `Oferta Imperdível ${i}`,
-      description: isUS
-        ? `Amazing discount on all items in section ${i}. Explore more!`
-        : `Desconto incrível em todos os itens da seção ${i}. Venha conferir!`,
+      title: titlePt,
+      description: descPt,
       discount: discountStr,
       category: categories[i % categories.length],
       distance: 100 * i,
@@ -459,7 +562,7 @@ const generateCoupons = (): Coupon[] => {
         ? `${1000 + i} Ocean Drive, Miami, FL`
         : `Av. Paulista, ${1000 + i}, São Paulo, SP`,
       offerType: 'in-store',
-      instructions: `Apresente este código no caixa do ${isUS ? 'estabelecimento' : 'estabelecimento'} para resgatar sua oferta. Certifique-se de que o código esteja visível.`,
+      instructions: instPt,
       targetAudience: i % 5 === 0 ? 'preferred' : 'all',
       enableProximityAlerts: i % 4 === 0,
       alertRadius: 100 + (i % 5) * 50,
@@ -478,6 +581,11 @@ const generateCoupons = (): Coupon[] => {
               },
             ]
           : [],
+      translations: {
+        en: { title: titleEn, description: descEn, instructions: instEn },
+        pt: { title: titlePt, description: descPt, instructions: instPt },
+        es: { title: titleEs, description: descEs, instructions: instEs },
+      },
     })
   }
 
@@ -487,8 +595,9 @@ const generateCoupons = (): Coupon[] => {
       id: 'cpn_ny_f1',
       companyId: 'c_ny_hq',
       franchiseId: 'f_ny',
-      title: 'NY Empire State Discount',
-      description: 'Exclusive NY Franchise Deal',
+      title: 'Desconto NY Empire State',
+      description: 'Oferta Exclusiva da Franquia de NY',
+      instructions: 'Apresente na recepção para resgatar sua oferta.',
       discount: '20% OFF',
       category: 'Outros',
       distance: 5,
@@ -507,13 +616,31 @@ const generateCoupons = (): Coupon[] => {
       storeName: 'Deal Voy NY HQ',
       targetAudience: 'all',
       currency: 'USD',
+      translations: {
+        en: {
+          title: 'NY Empire State Discount',
+          description: 'Exclusive NY Franchise Deal',
+          instructions: 'Show at the front desk to redeem your offer.',
+        },
+        pt: {
+          title: 'Desconto NY Empire State',
+          description: 'Oferta Exclusiva da Franquia de NY',
+          instructions: 'Apresente na recepção para resgatar sua oferta.',
+        },
+        es: {
+          title: 'Descuento NY Empire State',
+          description: 'Oferta Exclusiva de la Franquicia de NY',
+          instructions: 'Mostrar en la recepción para canjear su oferta.',
+        },
+      },
     },
     {
       id: 'cpn_ny_f2',
       companyId: 'c_ny_hq',
       franchiseId: 'f_ny',
-      title: 'Manhattan Weekend Special',
-      description: 'Weekend special for Manhattan',
+      title: 'Especial de Fim de Semana em Manhattan',
+      description: 'Especial de fim de semana para Manhattan.',
+      instructions: 'Apresente este código no checkout.',
       discount: '$15.00 OFF',
       category: 'Outros',
       distance: 2,
@@ -532,13 +659,31 @@ const generateCoupons = (): Coupon[] => {
       storeName: 'Deal Voy NY HQ',
       targetAudience: 'all',
       currency: 'USD',
+      translations: {
+        en: {
+          title: 'Manhattan Weekend Special',
+          description: 'Weekend special for Manhattan.',
+          instructions: 'Present this code at checkout.',
+        },
+        pt: {
+          title: 'Especial de Fim de Semana em Manhattan',
+          description: 'Especial de fim de semana para Manhattan.',
+          instructions: 'Apresente este código no checkout.',
+        },
+        es: {
+          title: 'Especial de Fin de Semana en Manhattan',
+          description: 'Especial de fin de semana para Manhattan.',
+          instructions: 'Presente este código en la caja.',
+        },
+      },
     },
     {
       id: 'cpn_ny_f3',
       companyId: 'c_ny_hq',
       franchiseId: 'f_ny',
-      title: 'Big Apple First Purchase',
-      description: 'First purchase discount in NY',
+      title: 'Desconto de Primeira Compra Big Apple',
+      description: 'Desconto para primeira compra em NY.',
+      instructions: 'Válido apenas para novos clientes.',
       discount: '10% OFF',
       category: 'Outros',
       distance: 10,
@@ -557,13 +702,31 @@ const generateCoupons = (): Coupon[] => {
       storeName: 'Deal Voy NY HQ',
       targetAudience: 'all',
       currency: 'USD',
+      translations: {
+        en: {
+          title: 'Big Apple First Purchase',
+          description: 'First purchase discount in NY.',
+          instructions: 'Valid only for new customers.',
+        },
+        pt: {
+          title: 'Desconto de Primeira Compra Big Apple',
+          description: 'Desconto para primeira compra em NY.',
+          instructions: 'Válido apenas para novos clientes.',
+        },
+        es: {
+          title: 'Descuento de Primera Compra Big Apple',
+          description: 'Descuento para primera compra en NY.',
+          instructions: 'Válido solo para clientes nuevos.',
+        },
+      },
     },
     {
       id: 'cpn_ny_m1',
       companyId: 'c_ny_1',
       franchiseId: 'f_ny',
-      title: 'Brooklyn Coffee Buy 1 Get 1',
-      description: 'Morning coffee special - Buy one coffee, get one free.',
+      title: 'Compre 1 Leve 2 - Brooklyn Coffee',
+      description: 'Especial matinal - Compre um café, ganhe outro grátis.',
+      instructions: 'Mostre o cupom no balcão.',
       discount: 'BOGO',
       category: 'Alimentação',
       distance: 1,
@@ -582,13 +745,32 @@ const generateCoupons = (): Coupon[] => {
       storeName: 'Brooklyn Coffee',
       targetAudience: 'all',
       currency: 'USD',
+      translations: {
+        en: {
+          title: 'Brooklyn Coffee Buy 1 Get 1',
+          description: 'Morning coffee special - Buy one coffee, get one free.',
+          instructions: 'Show coupon at the counter.',
+        },
+        pt: {
+          title: 'Compre 1 Leve 2 - Brooklyn Coffee',
+          description: 'Especial matinal - Compre um café, ganhe outro grátis.',
+          instructions: 'Mostre o cupom no balcão.',
+        },
+        es: {
+          title: 'Compra 1 Lleva 2 - Brooklyn Coffee',
+          description:
+            'Especial de la mañana - Compra un café, llévate otro gratis.',
+          instructions: 'Mostrar el cupón en el mostrador.',
+        },
+      },
     },
     {
       id: 'cpn_ny_m2',
       companyId: 'c_ny_2',
       franchiseId: 'f_ny',
-      title: 'Queens Pizza 20% Off',
-      description: 'Pizza and soda combo discount',
+      title: '20% Off Queens Pizza',
+      description: 'Desconto em combo de pizza e refrigerante.',
+      instructions: 'Apresente este código no caixa da pizzaria.',
       discount: '20% OFF',
       category: 'Alimentação',
       distance: 3,
@@ -611,13 +793,31 @@ const generateCoupons = (): Coupon[] => {
       alertRadius: 150,
       proximityAlertsSent: 45,
       redeemedViaAlert: 12,
+      translations: {
+        en: {
+          title: 'Queens Pizza 20% Off',
+          description: 'Pizza and soda combo discount.',
+          instructions: 'Present this code at the pizza place checkout.',
+        },
+        pt: {
+          title: '20% Off Queens Pizza',
+          description: 'Desconto em combo de pizza e refrigerante.',
+          instructions: 'Apresente este código no caixa da pizzaria.',
+        },
+        es: {
+          title: '20% Off Queens Pizza',
+          description: 'Descuento en combo de pizza y refresco.',
+          instructions: 'Presente este código en la caja de la pizzería.',
+        },
+      },
     },
     {
       id: 'cpn_ny_m3',
       companyId: 'c_ny_3',
       franchiseId: 'f_ny',
-      title: 'Guest Pass Discount',
-      description: 'Discounted gym pass',
+      title: 'Passe de Convidado',
+      description: 'Passe de academia com desconto.',
+      instructions: 'Mostre na recepção da academia.',
       discount: '50% OFF',
       category: 'Lazer',
       distance: 8,
@@ -636,6 +836,23 @@ const generateCoupons = (): Coupon[] => {
       storeName: 'Bronx Fitness',
       targetAudience: 'all',
       currency: 'USD',
+      translations: {
+        en: {
+          title: 'Guest Pass Discount',
+          description: 'Discounted gym pass.',
+          instructions: 'Show at the gym reception.',
+        },
+        pt: {
+          title: 'Passe de Convidado',
+          description: 'Passe de academia com desconto.',
+          instructions: 'Mostre na recepção da academia.',
+        },
+        es: {
+          title: 'Pase de Invitado',
+          description: 'Pase de gimnasio con descuento.',
+          instructions: 'Mostrar en la recepción del gimnasio.',
+        },
+      },
     },
   )
 
