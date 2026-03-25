@@ -71,7 +71,7 @@ export function CreateTripWizard({
   const handleCreate = () => {
     if (!title.trim()) {
       toast.error(
-        t('travel.trip_name_required', 'O nome da viagem é obrigatório'),
+        t('travel.trip_name_required', 'O nome do roteiro é obrigatório'),
       )
       return
     }
@@ -91,10 +91,10 @@ export function CreateTripWizard({
     const newTrip: Itinerary = {
       id: Math.random().toString(36).substring(2, 9),
       title,
-      description: `${t('travel.new_adventure', 'Uma nova aventura explorando')} ${interests.length ? interests.join(', ') : t('travel.all', 'tudo')}.`,
+      description: `${t('travel.new_adventure', 'Um novo roteiro explorando')} ${interests.length ? interests.join(', ') : t('travel.all', 'tudo')}.`,
       stops: [],
       days: tripDays,
-      tags: interests.length ? interests : [t('common.new', 'Nova')],
+      tags: interests.length ? interests : [t('common.new', 'Novo')],
       duration: `${numDays} ${t('travel.days', 'Dias')}`,
       totalSavings: 0,
       image: `https://img.usecurling.com/p/800/400?q=${encodeURIComponent(title || 'travel')}`,
@@ -133,7 +133,7 @@ export function CreateTripWizard({
             <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
               <div className="space-y-2">
                 <Label>
-                  {t('travel.destination_name', 'Nome ou Destino da Viagem')}
+                  {t('travel.destination_name', 'Nome do Roteiro ou Destino')}
                 </Label>
                 <Input
                   placeholder={t(
@@ -270,7 +270,7 @@ export function CreateTripWizard({
           ) : (
             <Button onClick={handleCreate} className="bg-primary">
               <Check className="w-4 h-4 mr-2" />{' '}
-              {t('travel.create_trip', 'Criar Viagem')}
+              {t('travel.create_trip', 'Criar Roteiro')}
             </Button>
           )}
         </DialogFooter>

@@ -11,7 +11,7 @@ export function MobileNav() {
     { icon: Home, label: t('nav.home', 'Início'), path: '/' },
     { icon: Compass, label: t('nav.explore', 'Explorar'), path: '/explore' },
     { icon: Ticket, label: t('nav.vouchers', 'Vouchers'), path: '/vouchers' },
-    { icon: Map, label: t('nav.travel', 'Viagens'), path: '/travel' },
+    { icon: Map, label: t('nav.travel', 'Experiências'), path: '/travel' },
     { icon: User, label: t('nav.profile', 'Perfil'), path: '/profile' },
   ]
 

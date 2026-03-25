@@ -71,7 +71,7 @@ export function TravelDashboard({
 
   const handleDeleteTrip = (id: string) => {
     deleteItinerary(id)
-    toast.success(t('travel.trip_deleted', 'Trip deleted'))
+    toast.success(t('travel.trip_deleted', 'Roteiro deletado'))
   }
 
   const handleCreateNew = () => {
@@ -174,7 +174,7 @@ export function TravelDashboard({
             value="discover"
             className="rounded-lg py-2.5 px-6 font-semibold text-base sm:flex-1 data-[state=active]:bg-white data-[state=active]:shadow-sm"
           >
-            {t('travel.discover_hub', 'Hub de Descobertas')}
+            {t('travel.discover_hub', 'Hub de Viagens e Experiências')}
           </TabsTrigger>
           <TabsTrigger
             value="bookings"
@@ -186,7 +186,7 @@ export function TravelDashboard({
             value="trips"
             className="rounded-lg py-2.5 px-6 font-semibold text-base sm:flex-1 data-[state=active]:bg-white data-[state=active]:shadow-sm"
           >
-            {t('travel.my_trips', 'Minhas Viagens')}
+            {t('travel.my_trips', 'Roteiros de Compras')}
           </TabsTrigger>
         </TabsList>
 
@@ -227,7 +227,7 @@ export function TravelDashboard({
               <p className="text-muted-foreground mb-6 max-w-md mx-auto">
                 {t(
                   'travel.no_bookings_desc',
-                  'Você ainda não solicitou nenhuma reserva através do Hub de Descobertas.',
+                  'Você ainda não solicitou nenhuma reserva através do Hub de Experiências.',
                 )}
               </p>
             </div>
@@ -324,12 +324,12 @@ export function TravelDashboard({
             <div>
               <h1 className="text-3xl font-extrabold text-slate-900 flex items-center gap-3">
                 <Luggage className="h-8 w-8 text-primary" />
-                {t('travel.my_trips', 'Minhas Viagens')}
+                {t('travel.my_trips', 'Roteiros de Compras')}
               </h1>
               <p className="text-muted-foreground mt-1">
                 {t(
                   'travel.organize_trips',
-                  'Organize suas próximas viagens e atividades com facilidade.',
+                  'Organize seus próximos roteiros de compras e atividades com facilidade.',
                 )}
               </p>
             </div>
@@ -339,7 +339,7 @@ export function TravelDashboard({
               onClick={handleCreateNew}
             >
               <Plus className="h-5 w-5 mr-2" />{' '}
-              {t('travel.new_trip', 'Nova Viagem')}
+              {t('travel.new_trip', 'Novo Roteiro')}
             </Button>
           </div>
 
@@ -347,16 +347,16 @@ export function TravelDashboard({
             <div className="text-center py-20 bg-slate-50 rounded-2xl border border-dashed">
               <Luggage className="h-16 w-16 mx-auto text-slate-300 mb-4" />
               <h3 className="text-xl font-bold text-slate-700 mb-2">
-                {t('travel.no_trips', 'Nenhuma viagem planejada')}
+                {t('travel.no_trips', 'Nenhum roteiro planejado')}
               </h3>
               <p className="text-muted-foreground mb-6 max-w-md mx-auto">
                 {t(
                   'travel.no_trips_desc',
-                  'Comece a planejar suas próximas férias, viagem de fim de semana ou negócios aqui.',
+                  'Comece a planejar seus próximos roteiros de compras, férias ou escapada aqui.',
                 )}
               </p>
               <Button onClick={handleCreateNew}>
-                {t('travel.create_first_trip', 'Criar sua primeira viagem')}
+                {t('travel.create_first_trip', 'Criar seu primeiro roteiro')}
               </Button>
             </div>
           ) : (
@@ -400,7 +400,7 @@ export function TravelDashboard({
                             }}
                           >
                             <Trash2 className="h-4 w-4 mr-2" />{' '}
-                            {t('travel.delete_trip', 'Deletar Viagem')}
+                            {t('travel.delete_trip', 'Deletar Roteiro')}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>

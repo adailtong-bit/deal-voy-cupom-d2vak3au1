@@ -33,7 +33,7 @@ export function TravelDetail({
   const handleDeleteTrip = () => {
     deleteItinerary(activeTrip.id)
     onBack()
-    toast.success(t('travel.trip_deleted', 'Trip deleted'))
+    toast.success(t('travel.trip_deleted', 'Roteiro deletado'))
   }
 
   const handleAddActivity = (coupon: Coupon) => {
@@ -94,7 +94,7 @@ export function TravelDetail({
             className="gap-2 -ml-3 text-slate-600 hover:text-slate-900"
           >
             <ArrowLeft className="h-4 w-4" />{' '}
-            {t('travel.back_to_trips', 'Back to Trips')}
+            {t('travel.back_to_trips', 'Voltar para Roteiros')}
           </Button>
           <Button
             variant="outline"
