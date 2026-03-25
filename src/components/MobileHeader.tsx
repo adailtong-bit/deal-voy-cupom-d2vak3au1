@@ -8,7 +8,6 @@ import {
   Settings,
   Gift,
   Ticket,
-  BarChart3,
   Filter,
   MapPin,
   Globe,
@@ -228,6 +227,21 @@ export function MobileHeader() {
                     >
                       <Building className="h-5 w-5 text-primary" />
                       Franchise Dashboard
+                    </Link>
+                  </>
+                )}
+
+                {user?.role === 'shopkeeper' && (
+                  <>
+                    <div className="my-2 border-t border-slate-100"></div>
+
+                    <Link
+                      to="/vendor"
+                      onClick={() => setIsMenuOpen(false)}
+                      className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-base font-bold text-primary bg-primary/5 hover:bg-primary/10 transition-colors"
+                    >
+                      <Building className="h-5 w-5 text-primary" />
+                      Painel do Lojista
                     </Link>
                   </>
                 )}

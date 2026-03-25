@@ -89,6 +89,14 @@ export function DesktopHeader() {
                 Dashboard
               </Link>
             )}
+            {user?.role === 'shopkeeper' && (
+              <Link
+                to="/vendor"
+                className="transition-colors text-primary hover:text-primary/80 font-bold"
+              >
+                Painel do Lojista
+              </Link>
+            )}
           </nav>
         </div>
         <div className="flex items-center gap-4">

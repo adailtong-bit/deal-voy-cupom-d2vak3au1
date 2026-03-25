@@ -132,6 +132,7 @@ interface CouponContextType {
   reserveCoupon: (id: string) => boolean
   cancelReservation: (id: string) => void
   addCoupon: (coupon: Coupon) => void
+  deleteCoupon: (id: string) => void
   isSaved: (id: string) => boolean
   isReserved: (id: string) => boolean
   isInTrip: (id: string) => boolean
@@ -145,8 +146,8 @@ interface CouponContextType {
   makeBooking: (booking: Omit<Booking, 'id' | 'status'>) => void
   updateBooking: (id: string, data: Partial<Booking>) => void
   cancelBooking: (id: string) => void
-  payBooking: (id: string) => void
   approveBooking: (id: string, price: number) => void
+  payBooking: (id: string) => void
   redeemPoints: (amount: number, type: 'points' | 'fetch') => boolean
   earnPoints: (amount: number, title: string) => void
   addABTest: (test: ABTest) => void
@@ -621,6 +622,12 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   }
 
   const addCoupon = (coupon: Coupon) => setCoupons((prev) => [coupon, ...prev])
+
+  const deleteCoupon = (id: string) => {
+    setCoupons((prev) => prev.filter((c) => c.id !== id))
+    logSystemAction('Campaign Deleted', `Deleted campaign ${id}`)
+    toast.success('Promoção excluída com sucesso')
+  }
 
   const addReview = (
     id: string,
@@ -1783,6 +1790,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         reserveCoupon,
         cancelReservation,
         addCoupon,
+        deleteCoupon,
         isSaved,
         isReserved,
         isInTrip,

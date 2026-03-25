@@ -7,9 +7,6 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { ExternalLink } from 'lucide-react'
-import { Link } from 'react-router-dom'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useCouponStore } from '@/stores/CouponContext'
 
@@ -64,76 +61,6 @@ export function OrdersTable({ orders }: any) {
                         ? 'Cancelado'
                         : o.status}
                 </Badge>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
-  )
-}
-
-export function OffersTable({ offers }: any) {
-  const { formatDate } = useLanguage()
-
-  if (!offers || offers.length === 0)
-    return (
-      <div className="text-center p-12 text-muted-foreground border border-dashed rounded-lg bg-white">
-        Nenhuma oferta encontrada.
-      </div>
-    )
-
-  return (
-    <div className="rounded-lg border bg-white shadow-sm overflow-hidden animate-fade-in-up">
-      <Table>
-        <TableHeader className="bg-slate-50">
-          <TableRow>
-            <TableHead className="font-semibold">Nome da Campanha</TableHead>
-            <TableHead className="font-semibold">Desconto</TableHead>
-            <TableHead className="font-semibold">Resgatados</TableHead>
-            <TableHead className="font-semibold">Status</TableHead>
-            <TableHead className="font-semibold">Expira em</TableHead>
-            <TableHead className="font-semibold text-right">Ações</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {offers.map((o: any) => (
-            <TableRow key={o.id} className="hover:bg-slate-50/50">
-              <TableCell className="font-semibold text-slate-800 max-w-[200px] truncate">
-                {o.title}
-              </TableCell>
-              <TableCell className="text-primary font-bold">
-                {o.discount}
-              </TableCell>
-              <TableCell className="text-slate-600">
-                <span className="font-medium text-slate-900">
-                  {o.reservedCount || 0}
-                </span>{' '}
-                / {o.totalLimit || o.totalAvailable || '∞'}
-              </TableCell>
-              <TableCell>
-                <Badge
-                  variant={o.status === 'active' ? 'default' : 'secondary'}
-                >
-                  {o.status === 'active'
-                    ? 'Ativo'
-                    : o.status === 'expired'
-                      ? 'Expirado'
-                      : o.status === 'used'
-                        ? 'Usado'
-                        : o.status}
-                </Badge>
-              </TableCell>
-              <TableCell className="text-slate-500 text-sm">
-                {o.expiryDate ? formatDate(o.expiryDate) : 'N/D'}
-              </TableCell>
-              <TableCell className="text-right">
-                <Button asChild variant="outline" size="sm" className="h-8">
-                  <Link to={`/voucher/${o.id}`} target="_blank">
-                    <ExternalLink className="w-3.5 h-3.5 mr-1.5" /> Acessar
-                    Página
-                  </Link>
-                </Button>
               </TableCell>
             </TableRow>
           ))}

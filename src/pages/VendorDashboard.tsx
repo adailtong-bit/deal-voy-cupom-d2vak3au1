@@ -16,11 +16,8 @@ import { VendorAnalytics } from '@/components/VendorAnalytics'
 import { CouponValidation } from '@/components/CouponValidation'
 import { VendorStats } from '@/components/vendor/VendorStats'
 import { CreateCampaignDialog } from '@/components/vendor/CreateCampaignDialog'
-import {
-  OrdersTable,
-  OffersTable,
-  HistoryTable,
-} from '@/components/vendor/VendorTables'
+import { OrdersTable, HistoryTable } from '@/components/vendor/VendorTables'
+import { VendorCampaignsTab } from '@/components/vendor/VendorCampaignsTab'
 import { BehavioralTriggersTab } from '@/components/vendor/BehavioralTriggersTab'
 import { VendorSettingsTab } from '@/components/vendor/VendorSettingsTab'
 import { VendorCustomersTab } from '@/components/vendor/VendorCustomersTab'
@@ -82,16 +79,17 @@ export default function VendorDashboard() {
             {t('vendor.overview', 'Visão Geral')}
           </TabsTrigger>
           <TabsTrigger
+            value="offers"
+            className="py-2.5 px-4 font-semibold data-[state=active]:shadow-sm"
+          >
+            <ShoppingBag className="h-4 w-4 mr-2 text-emerald-500" /> Minhas
+            Promoções
+          </TabsTrigger>
+          <TabsTrigger
             value="customers"
             className="py-2.5 px-4 font-semibold data-[state=active]:shadow-sm"
           >
             <Users className="h-4 w-4 mr-2 text-blue-500" /> CRM / Leads
-          </TabsTrigger>
-          <TabsTrigger
-            value="offers"
-            className="py-2.5 px-4 font-semibold data-[state=active]:shadow-sm"
-          >
-            <ShoppingBag className="h-4 w-4 mr-2 text-emerald-500" /> Campanhas
           </TabsTrigger>
           <TabsTrigger
             value="orders"
@@ -140,6 +138,9 @@ export default function VendorDashboard() {
         <TabsContent value="overview" className="mt-4">
           <VendorAnalytics />
         </TabsContent>
+        <TabsContent value="offers" className="mt-4">
+          <VendorCampaignsTab coupons={coupons} company={myCompany} />
+        </TabsContent>
         <TabsContent value="customers" className="mt-4">
           <VendorCustomersTab company={myCompany} />
         </TabsContent>
@@ -148,9 +149,6 @@ export default function VendorDashboard() {
         </TabsContent>
         <TabsContent value="orders" className="mt-4">
           <OrdersTable orders={myBookings} />
-        </TabsContent>
-        <TabsContent value="offers" className="mt-4">
-          <OffersTable offers={coupons} />
         </TabsContent>
         <TabsContent value="behavioral" className="mt-4">
           <BehavioralTriggersTab coupons={coupons} />
