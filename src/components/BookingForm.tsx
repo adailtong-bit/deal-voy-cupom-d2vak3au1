@@ -51,6 +51,8 @@ export function BookingForm({
       couponId: coupon?.id || offer?.id || '',
       storeName: coupon?.storeName || offer?.provider || '',
       date: type === 'car' ? pickupDate : date,
+      endDate:
+        type === 'hotel' ? endDate : type === 'car' ? returnDate : undefined,
       time: type === 'car' ? pickupTime : type === 'ticket' ? '10:00' : time,
       guests: type === 'car' ? 1 : parseInt(guests),
       source: offer?.source || 'organic',

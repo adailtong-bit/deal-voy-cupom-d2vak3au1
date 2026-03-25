@@ -207,6 +207,7 @@ export interface Booking {
   franchiseId?: string
   storeName: string
   date: string
+  endDate?: string
   time: string
   guests: number
   status: 'confirmed' | 'cancelled' | 'paid' | 'pending'

@@ -23,6 +23,7 @@ import {
   Shield,
   ShoppingBag,
   Plane,
+  Edit,
 } from 'lucide-react'
 import {
   DropdownMenu,
@@ -31,12 +32,24 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 import { CreateTripWizard } from './CreateTripWizard'
 import { TravelDiscoveryHub } from './TravelDiscoveryHub'
+import { EditBookingDialog } from './EditBookingDialog'
 import { formatDate, cn } from '@/lib/utils'
+import { Booking } from '@/lib/types'
 
 interface TravelDashboardProps {
   onSelectTrip: (id: string) => void
@@ -48,9 +61,21 @@ export function TravelDashboard({
   onCreateNew,
 }: TravelDashboardProps) {
   const { t } = useLanguage()
-  const { itineraries, user, deleteItinerary, bookings } = useCouponStore()
+  const {
+    itineraries,
+    user,
+    deleteItinerary,
+    bookings,
+    updateBooking,
+    cancelBooking,
+  } = useCouponStore()
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [searchParams, setSearchParams] = useSearchParams()
+
+  const [editingBooking, setEditingBooking] = useState<Booking | null>(null)
+  const [cancellingBookingId, setCancellingBookingId] = useState<string | null>(
+    null,
+  )
 
   const activeTab = searchParams.get('tab') || 'discover'
 
@@ -82,6 +107,17 @@ export function TravelDashboard({
     } else {
       setIsCreateOpen(true)
     }
+  }
+
+  const handleCancelConfirm = () => {
+    if (cancellingBookingId) {
+      cancelBooking(cancellingBookingId)
+      setCancellingBookingId(null)
+    }
+  }
+
+  const handleEditSave = (id: string, data: Partial<Booking>) => {
+    updateBooking(id, data)
   }
 
   const getStatusBadge = (status: string) => {
@@ -238,7 +274,12 @@ export function TravelDashboard({
               {myBookings.map((booking) => (
                 <Card
                   key={booking.id}
-                  className="flex flex-col border-slate-200 shadow-sm hover:shadow-md transition-shadow"
+                  className={cn(
+                    'flex flex-col border-slate-200 transition-shadow',
+                    booking.status === 'cancelled'
+                      ? 'bg-slate-50 opacity-75'
+                      : 'bg-white shadow-sm hover:shadow-md',
+                  )}
                 >
                   <CardContent className="p-5 flex flex-col h-full">
                     <div className="flex items-start justify-between mb-4">
@@ -259,13 +300,26 @@ export function TravelDashboard({
                     </div>
 
                     <div className="space-y-3 mb-5 flex-1">
-                      <div className="flex items-center gap-2 text-sm text-slate-600">
-                        <Calendar className="w-4 h-4 text-slate-400" />
-                        <span>
-                          {formatDate(booking.date)}{' '}
-                          {booking.time &&
-                            ` ${t('common.at', 'às')} ${booking.time}`}
-                        </span>
+                      <div className="flex items-start gap-2 text-sm text-slate-600">
+                        <Calendar className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
+                        <div className="flex flex-col">
+                          <span>
+                            <strong className="font-semibold text-slate-700">
+                              {t('travel.start', 'Início')}:
+                            </strong>{' '}
+                            {formatDate(booking.date)}{' '}
+                            {booking.time &&
+                              ` ${t('common.at', 'às')} ${booking.time}`}
+                          </span>
+                          {booking.endDate && (
+                            <span>
+                              <strong className="font-semibold text-slate-700">
+                                {t('travel.end', 'Fim')}:
+                              </strong>{' '}
+                              {formatDate(booking.endDate)}
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <div className="flex items-center gap-2 text-sm text-slate-600">
                         <Users className="w-4 h-4 text-slate-400" />
@@ -289,26 +343,51 @@ export function TravelDashboard({
                       )}
                     </div>
 
-                    <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
-                      <span className="text-xs font-semibold text-slate-500 uppercase">
-                        {t('travel.source_offer', 'Fonte da Oferta')}
-                      </span>
-                      {booking.source === 'partner' ? (
-                        <Badge
-                          variant="secondary"
-                          className="bg-purple-100 text-purple-800 hover:bg-purple-200 shadow-none border-none"
-                        >
-                          <Megaphone className="w-3 h-3 mr-1" />{' '}
-                          {t('travel.source_partner', 'Parceiro')}
-                        </Badge>
-                      ) : (
-                        <Badge
-                          variant="outline"
-                          className="bg-slate-50 text-slate-600 shadow-none border-slate-200"
-                        >
-                          <Search className="w-3 h-3 mr-1" />{' '}
-                          {t('travel.source_organic', 'Orgânico')}
-                        </Badge>
+                    <div className="pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-semibold text-slate-500 uppercase">
+                          {t('travel.source_offer', 'Fonte da Oferta')}
+                        </span>
+                        {booking.source === 'partner' ? (
+                          <Badge
+                            variant="secondary"
+                            className="bg-purple-100 text-purple-800 hover:bg-purple-200 shadow-none border-none text-[10px] px-1.5"
+                          >
+                            <Megaphone className="w-3 h-3 mr-1" />{' '}
+                            {t('travel.source_partner', 'Parceiro')}
+                          </Badge>
+                        ) : (
+                          <Badge
+                            variant="outline"
+                            className="bg-slate-50 text-slate-600 shadow-none border-slate-200 text-[10px] px-1.5"
+                          >
+                            <Search className="w-3 h-3 mr-1" />{' '}
+                            {t('travel.source_organic', 'Orgânico')}
+                          </Badge>
+                        )}
+                      </div>
+
+                      {booking.status !== 'cancelled' && (
+                        <div className="flex items-center gap-2 ml-auto w-full sm:w-auto justify-end mt-2 sm:mt-0">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 text-xs text-slate-600 flex-1 sm:flex-none"
+                            onClick={() => setEditingBooking(booking)}
+                          >
+                            <Edit className="w-3.5 h-3.5 mr-1.5" />
+                            {t('common.edit', 'Editar')}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 text-xs text-red-600 hover:text-red-700 hover:bg-red-50 flex-1 sm:flex-none"
+                            onClick={() => setCancellingBookingId(booking.id)}
+                          >
+                            <XCircle className="w-3.5 h-3.5 mr-1.5" />
+                            {t('common.cancel', 'Desistir')}
+                          </Button>
+                        </div>
                       )}
                     </div>
                   </CardContent>
@@ -460,6 +539,42 @@ export function TravelDashboard({
           onCreated={(t) => onSelectTrip(t.id)}
         />
       )}
+
+      <EditBookingDialog
+        booking={editingBooking}
+        onClose={() => setEditingBooking(null)}
+        onSave={handleEditSave}
+      />
+
+      <AlertDialog
+        open={!!cancellingBookingId}
+        onOpenChange={(open) => !open && setCancellingBookingId(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {t('travel.confirm_cancel_title', 'Você tem certeza?')}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t(
+                'travel.confirm_cancel_desc',
+                'Esta ação cancelará sua reserva. A loja parceira será notificada. Deseja prosseguir?',
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>
+              {t('common.cancel', 'Voltar')}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleCancelConfirm}
+              className="bg-red-600 text-white hover:bg-red-700"
+            >
+              {t('travel.confirm_cancel', 'Sim, Cancelar Reserva')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

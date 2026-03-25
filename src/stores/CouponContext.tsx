@@ -143,6 +143,8 @@ interface CouponContextType {
   voteCoupon: (id: string, type: 'up' | 'down') => void
   reportCoupon: (id: string, issue: string) => void
   makeBooking: (booking: Omit<Booking, 'id' | 'status'>) => void
+  updateBooking: (id: string, data: Partial<Booking>) => void
+  cancelBooking: (id: string) => void
   redeemPoints: (amount: number, type: 'points' | 'fetch') => boolean
   earnPoints: (amount: number, title: string) => void
   addABTest: (test: ABTest) => void
@@ -268,6 +270,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       couponId: 'h1',
       storeName: 'Family Resorts',
       date: '2025-05-10',
+      endDate: '2025-05-15',
       time: '14:00',
       guests: 4,
       status: 'confirmed',
@@ -725,6 +728,26 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       },
       ...prev,
     ])
+  }
+
+  const updateBooking = (id: string, data: Partial<Booking>) => {
+    setBookings((prev) =>
+      prev.map((b) => (b.id === id ? { ...b, ...data } : b)),
+    )
+    toast.success(
+      t('travel.booking_updated', 'Reserva atualizada com sucesso!'),
+    )
+    logSystemAction('Booking Updated', `Booking ${id} updated`)
+  }
+
+  const cancelBooking = (id: string) => {
+    setBookings((prev) =>
+      prev.map((b) => (b.id === id ? { ...b, status: 'cancelled' } : b)),
+    )
+    toast.success(
+      t('travel.booking_cancelled', 'Reserva cancelada com sucesso.'),
+    )
+    logSystemAction('Booking Cancelled', `Booking ${id} cancelled`)
   }
 
   const earnPoints = (amount: number, title: string) => {
@@ -1700,6 +1723,8 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         voteCoupon,
         reportCoupon,
         makeBooking,
+        updateBooking,
+        cancelBooking,
         redeemPoints,
         earnPoints,
         addABTest,
