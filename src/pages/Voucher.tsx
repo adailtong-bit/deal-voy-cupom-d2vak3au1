@@ -162,33 +162,41 @@ export default function Voucher() {
   const handleShare = async () => {
     const shareUrl = window.location.href
 
-    const fallbackCopy = () => {
+    const fallbackCopy = async () => {
       try {
-        navigator.clipboard.writeText(shareUrl)
+        await navigator.clipboard.writeText(shareUrl)
         toast.success(
-          t('voucher_detail.share_success', 'Link copiado para compartilhar!'),
+          t(
+            'voucher_detail.share_fallback_success',
+            'Link copiado para a área de transferência!',
+          ),
         )
       } catch (err) {
         console.error('Fallback copy failed', err)
       }
     }
 
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title,
-          text: description,
-          url: shareUrl,
-        })
-      } catch (error: any) {
-        console.error('Error sharing', error)
-        // Check if the user aborted the action themselves. If not, fallback to copy to clipboard.
-        if (error.name !== 'AbortError') {
-          fallbackCopy()
-        }
+    const shareData = {
+      title,
+      text: description,
+      url: shareUrl,
+    }
+
+    try {
+      if (
+        navigator.share &&
+        (!navigator.canShare || navigator.canShare(shareData))
+      ) {
+        await navigator.share(shareData)
+      } else {
+        await fallbackCopy()
       }
-    } else {
-      fallbackCopy()
+    } catch (error: any) {
+      console.error('Error sharing', error)
+      // Check if the user aborted the action themselves. If not, fallback to copy to clipboard.
+      if (error.name !== 'AbortError') {
+        await fallbackCopy()
+      }
     }
   }
 
