@@ -127,7 +127,7 @@ export function CouponCard({
                 </span>
                 <span className="flex items-center gap-1 text-orange-600 font-medium">
                   <Clock className="h-3 w-3" />
-                  {t('vouchers.exp', 'Exp.')}
+                  {t('vouchers.expires', 'Expira em')}
                 </span>
               </div>
               <div className="flex items-center justify-between sm:justify-end gap-2">
@@ -246,7 +246,7 @@ export function CouponCard({
               </span>
               <span className="flex items-center gap-0.5 sm:gap-1 text-orange-600 font-medium">
                 <Clock className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                {t('vouchers.exp', 'Exp.')}
+                {t('vouchers.expires', 'Expira em')}
               </span>
             </div>
 

@@ -68,7 +68,7 @@ export default function Explore() {
         <div className="relative flex-1 shadow-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder={t('nav.search', 'Buscar ofertas...')}
+            placeholder={t('explore.search_placeholder', 'Buscar cupons...')}
             className="pl-9 bg-white"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -120,7 +120,10 @@ export default function Explore() {
             <div className="text-center flex flex-col items-center gap-3">
               <MapIcon className="h-10 w-10 text-slate-400" />
               <p className="text-slate-500 font-medium">
-                Visualização do mapa interativa em breve.
+                {t(
+                  'explore.map_coming_soon',
+                  'Visualização do mapa interativa em breve.',
+                )}
               </p>
             </div>
           </div>
@@ -132,7 +135,7 @@ export default function Explore() {
               <Search className="h-10 w-10 text-slate-300" />
             </div>
             <h3 className="text-lg font-semibold text-slate-800 mb-1">
-              Nenhuma oferta encontrada
+              {t('explore.empty_title', 'Nenhum cupom encontrado')}
             </h3>
             <p className="text-slate-500">
               {t(
@@ -149,7 +152,7 @@ export default function Explore() {
                 }}
                 className="mt-2 text-primary"
               >
-                Limpar filtros
+                {t('explore.clear_filters', 'Limpar filtros')}
               </Button>
             )}
           </div>
