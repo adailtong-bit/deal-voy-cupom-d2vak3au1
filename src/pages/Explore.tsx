@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils'
 
 export default function Explore() {
   const { t, language } = useLanguage()
-  const { coupons } = useCouponStore()
+  const { coupons, user } = useCouponStore()
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list')
   const [search, setSearch] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
@@ -79,13 +79,15 @@ export default function Explore() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <Button
-          variant="outline"
-          className="hidden sm:flex bg-white shadow-sm gap-2 text-slate-600 font-medium"
-        >
-          <Radar className="h-4 w-4 text-primary" />
-          {t('explore.offer_radar', 'Radar de Ofertas')}
-        </Button>
+        {user && (
+          <Button
+            variant="outline"
+            className="hidden sm:flex bg-white shadow-sm gap-2 text-slate-600 font-medium"
+          >
+            <Radar className="h-4 w-4 text-primary" />
+            {t('explore.offer_radar', 'Radar de Ofertas')}
+          </Button>
+        )}
         <Button
           variant="outline"
           size="icon"

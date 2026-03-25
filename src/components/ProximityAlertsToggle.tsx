@@ -38,7 +38,7 @@ function getDistanceMeters(
 
 export function ProximityAlertsToggle() {
   const { t } = useLanguage()
-  const { coupons, platformSettings, reservedIds } = useCouponStore()
+  const { user, coupons, platformSettings, reservedIds } = useCouponStore()
   const [isActive, setIsActive] = useState(
     () => localStorage.getItem('globalRadar') === 'true',
   )
@@ -51,13 +51,13 @@ export function ProximityAlertsToggle() {
   const masterEnabled = platformSettings.globalProximityAlertsEnabled !== false
 
   useEffect(() => {
-    if (isActive && masterEnabled) {
+    if (isActive && masterEnabled && user) {
       startTracking()
     } else {
       stopTracking()
     }
     return () => stopTracking()
-  }, [isActive, masterEnabled, coupons, reservedIds])
+  }, [isActive, masterEnabled, coupons, reservedIds, user])
 
   const startTracking = () => {
     if (watchIdRef.current) return
@@ -214,7 +214,7 @@ export function ProximityAlertsToggle() {
     )
   }
 
-  if (!isSupported || !masterEnabled) return null
+  if (!isSupported || !masterEnabled || !user) return null
 
   return (
     <>
