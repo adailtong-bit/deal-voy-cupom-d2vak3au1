@@ -84,6 +84,47 @@ export const translations: Record<Language, any> = {
         'Tente usar outros termos de busca ou navegue pelas categorias disponíveis.',
       clear_search: 'Limpar Busca e Filtros',
     },
+    marketing: {
+      super_offer: 'Super Oferta',
+      unmissable_offer: 'Oferta Imperdível',
+      special_offer: 'Oferta Especial',
+    },
+    proximity: {
+      alerts_title: 'Radar de Ofertas',
+      alerts_title_active: 'Radar de Ofertas - Ativado',
+      alerts_title_disabled: 'Radar de Ofertas - Desativado',
+      status_active: 'Buscando lojas próximas...',
+      status_inactive: 'Desativado',
+      nearby_alert: 'Oferta Próxima!',
+      nearby_toast_desc: 'Você está bem perto, não perca essa oportunidade!',
+      alerts_disabled: 'Radar de Ofertas desativado.',
+      alerts_enabled:
+        'Radar ativado! Avisaremos quando você estiver perto de promoções.',
+      location_error: 'Não foi possível acessar a localização.',
+      onboarding_title: 'Ativar Radar de Proximidade',
+      onboarding_desc:
+        'Para receber alertas automáticos das lojas ao seu redor, precisamos de duas permissões:',
+      perm_location_title: 'Localização (Sempre)',
+      perm_location_desc:
+        'Permite monitorar sua distância das lojas e ativar os alertas silenciosamente.',
+      perm_notif_title: 'Notificações',
+      perm_notif_desc:
+        'Avisa você imediatamente com o celular bloqueado ao passar perto das promoções.',
+      grant_permissions: 'Conceder Permissões',
+      permission_blocked_title: 'Permissões Bloqueadas',
+      permission_blocked_desc:
+        'Seu navegador bloqueou o acesso à localização ou notificações. Para usar o Radar, você precisa permitir o acesso manualmente.',
+      how_to_resolve: 'Como resolver no navegador:',
+      resolve_step_1: 'Clique no ícone de',
+      resolve_step_1_lock: 'cadeado',
+      resolve_step_1_rest:
+        'ao lado da barra de endereço (onde aparece a URL do site).',
+      resolve_step_2:
+        'Acesse Configurações do site ou gerencie as permissões na lista.',
+      resolve_step_3: 'Altere "Localização" e "Notificações" para Permitir.',
+      resolve_step_4: 'Recarregue a página e tente ativar o Radar novamente.',
+      understood: 'Entendi',
+    },
     dashboard: {
       management_panel: 'Seu Painel de Gerenciamento',
       your_campaigns: 'Suas Campanhas Ativas',
@@ -796,6 +837,10 @@ export const translations: Record<Language, any> = {
       int_nightlife: 'Vida Noturna',
       int_relaxation: 'Relaxamento',
       int_adventure: 'Aventura',
+      room_type: 'Tipo de Quarto',
+      standard_room: 'Quarto Padrão',
+      offers_section: 'Ofertas',
+      experiences_section: 'Experiências',
     },
   },
   en: {
@@ -880,6 +925,46 @@ export const translations: Record<Language, any> = {
       try_another_search:
         'Try using other search terms or browse the available categories.',
       clear_search: 'Clear Search and Filters',
+    },
+    marketing: {
+      super_offer: 'Super Offer',
+      unmissable_offer: 'Unmissable Offer',
+      special_offer: 'Special Offer',
+    },
+    proximity: {
+      alerts_title: 'Offers Radar',
+      alerts_title_active: 'Offers Radar - Active',
+      alerts_title_disabled: 'Offers Radar - Disabled',
+      status_active: 'Scanning nearby stores...',
+      status_inactive: 'Disabled',
+      nearby_alert: 'Nearby Offer!',
+      nearby_toast_desc: "You are very close, don't miss this opportunity!",
+      alerts_disabled: 'Offers Radar disabled.',
+      alerts_enabled:
+        'Radar activated! We will notify you when near promotions.',
+      location_error: 'Could not access location.',
+      onboarding_title: 'Activate Proximity Radar',
+      onboarding_desc:
+        'To receive automatic alerts from stores around you, we need two permissions:',
+      perm_location_title: 'Location (Always)',
+      perm_location_desc:
+        'Allows us to monitor your distance from stores and trigger alerts silently.',
+      perm_notif_title: 'Notifications',
+      perm_notif_desc:
+        'Notifies you immediately even with locked phone when passing by promotions.',
+      grant_permissions: 'Grant Permissions',
+      permission_blocked_title: 'Permissions Blocked',
+      permission_blocked_desc:
+        'Your browser has blocked access to location or notifications. To use the Radar, you must allow access manually.',
+      how_to_resolve: 'How to resolve in the browser:',
+      resolve_step_1: 'Click the',
+      resolve_step_1_lock: 'padlock',
+      resolve_step_1_rest:
+        'icon next to the address bar (where the site URL appears).',
+      resolve_step_2: 'Access Site Settings or manage permissions in the list.',
+      resolve_step_3: 'Change "Location" and "Notifications" to Allow.',
+      resolve_step_4: 'Reload the page and try activating the Radar again.',
+      understood: 'Understood',
     },
     dashboard: {
       management_panel: 'Your Management Panel',
@@ -1590,6 +1675,10 @@ export const translations: Record<Language, any> = {
       int_nightlife: 'Nightlife',
       int_relaxation: 'Relaxation',
       int_adventure: 'Adventure',
+      room_type: 'Room Type',
+      standard_room: 'Standard Room',
+      offers_section: 'Offers',
+      experiences_section: 'Experiences',
     },
   },
   es: {
@@ -1674,6 +1763,48 @@ export const translations: Record<Language, any> = {
       try_another_search:
         'Intenta usar otros términos de búsqueda o explora las categorías disponibles.',
       clear_search: 'Limpiar Búsqueda y Filtros',
+    },
+    marketing: {
+      super_offer: 'Súper Oferta',
+      unmissable_offer: 'Oferta Imperdible',
+      special_offer: 'Oferta Especial',
+    },
+    proximity: {
+      alerts_title: 'Radar de Ofertas',
+      alerts_title_active: 'Radar de Ofertas - Activo',
+      alerts_title_disabled: 'Radar de Ofertas - Desactivado',
+      status_active: 'Buscando tiendas cercanas...',
+      status_inactive: 'Desactivado',
+      nearby_alert: '¡Oferta Cercana!',
+      nearby_toast_desc: '¡Estás muy cerca, no pierdas esta oportunidad!',
+      alerts_disabled: 'Radar de Ofertas desactivado.',
+      alerts_enabled:
+        '¡Radar activado! Te avisaremos cuando estés cerca de promociones.',
+      location_error: 'No se pudo acceder a la ubicación.',
+      onboarding_title: 'Activar Radar de Proximidad',
+      onboarding_desc:
+        'Para recibir alertas automáticas de tiendas a tu alrededor, necesitamos dos permisos:',
+      perm_location_title: 'Ubicación (Siempre)',
+      perm_location_desc:
+        'Permite monitorear tu distancia de las tiendas y activar alertas silenciosamente.',
+      perm_notif_title: 'Notificaciones',
+      perm_notif_desc:
+        'Te avisa inmediatamente con el celular bloqueado al pasar cerca de promociones.',
+      grant_permissions: 'Conceder Permisos',
+      permission_blocked_title: 'Permisos Bloqueados',
+      permission_blocked_desc:
+        'Tu navegador ha bloqueado el acceso a la ubicación o notificaciones. Para usar el Radar, debes permitir el acceso manualmente.',
+      how_to_resolve: 'Cómo resolver en el navegador:',
+      resolve_step_1: 'Haz clic en el icono de',
+      resolve_step_1_lock: 'candado',
+      resolve_step_1_rest:
+        'junto a la barra de direcciones (donde aparece la URL del sitio).',
+      resolve_step_2:
+        'Accede a la Configuración del sitio o gestiona los permisos en la lista.',
+      resolve_step_3: 'Cambia "Ubicación" y "Notificaciones" a Permitir.',
+      resolve_step_4:
+        'Recarga la página e intenta activar el Radar nuevamente.',
+      understood: 'Entendido',
     },
     dashboard: {
       management_panel: 'Tu Panel de Gestión',
@@ -2384,6 +2515,10 @@ export const translations: Record<Language, any> = {
       int_nightlife: 'Vida Nocturna',
       int_relaxation: 'Relajación',
       int_adventure: 'Aventura',
+      room_type: 'Tipo de Habitación',
+      standard_room: 'Habitación Estándar',
+      offers_section: 'Ofertas',
+      experiences_section: 'Experiencias',
     },
   },
 }

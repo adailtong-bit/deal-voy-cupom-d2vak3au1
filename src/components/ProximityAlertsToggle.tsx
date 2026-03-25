@@ -139,9 +139,12 @@ export function ProximityAlertsToggle() {
       }
     } else {
       toast.success(`${coupon.storeName}: ${coupon.discount} OFF.`, {
-        description: 'Você está bem perto, não perca essa oportunidade!',
+        description: t(
+          'proximity.nearby_toast_desc',
+          'Você está bem perto, não perca essa oportunidade!',
+        ),
         action: {
-          label: 'Ver Oferta',
+          label: t('common.view', 'Ver Oferta'),
           onClick: () => {
             window.location.href = `/voucher/${coupon.id}`
           },
@@ -242,7 +245,15 @@ export function ProximityAlertsToggle() {
               htmlFor="global-proximity-alerts"
               className="font-bold text-sm cursor-pointer leading-none text-slate-800"
             >
-              {t('proximity.alerts_title', 'Radar de Ofertas')}
+              {isActive
+                ? t(
+                    'proximity.alerts_title_active',
+                    'Radar de Ofertas - Ativado',
+                  )
+                : t(
+                    'proximity.alerts_title_disabled',
+                    'Radar de Ofertas - Desativado',
+                  )}
             </Label>
             <span className="text-[10px] text-slate-500 font-medium mt-1 w-28 sm:w-auto truncate">
               {isActive
@@ -331,33 +342,50 @@ export function ProximityAlertsToggle() {
               <Lock className="h-6 w-6 text-red-600" />
             </div>
             <DialogTitle className="text-center text-xl text-slate-800">
-              Permissões Bloqueadas
+              {t('proximity.permission_blocked_title', 'Permissões Bloqueadas')}
             </DialogTitle>
             <DialogDescription className="text-center pt-2">
-              Seu navegador bloqueou o acesso à localização ou notificações.
-              Para usar o Radar, você precisa permitir o acesso manualmente.
+              {t(
+                'proximity.permission_blocked_desc',
+                'Seu navegador bloqueou o acesso à localização ou notificações. Para usar o Radar, você precisa permitir o acesso manualmente.',
+              )}
             </DialogDescription>
           </DialogHeader>
 
           <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 mt-4 text-sm text-slate-700 space-y-3">
-            <p className="font-semibold">Como resolver no navegador:</p>
+            <p className="font-semibold">
+              {t('proximity.how_to_resolve', 'Como resolver no navegador:')}
+            </p>
             <ol className="list-decimal pl-5 space-y-2 text-slate-600">
               <li>
-                Clique no ícone de{' '}
+                {t('proximity.resolve_step_1', 'Clique no ícone de')}{' '}
                 <strong>
-                  cadeado <Lock className="inline w-3 h-3" />
+                  {t('proximity.resolve_step_1_lock', 'cadeado')}{' '}
+                  <Lock className="inline w-3 h-3" />
                 </strong>{' '}
-                ao lado da barra de endereço (onde aparece a URL do site).
+                {t(
+                  'proximity.resolve_step_1_rest',
+                  'ao lado da barra de endereço (onde aparece a URL do site).',
+                )}
               </li>
               <li>
-                Acesse <strong>Configurações do site</strong> ou gerencie as
-                permissões na lista.
+                {t(
+                  'proximity.resolve_step_2',
+                  'Acesse Configurações do site ou gerencie as permissões na lista.',
+                )}
               </li>
               <li>
-                Altere "Localização" e "Notificações" para{' '}
-                <strong>Permitir</strong>.
+                {t(
+                  'proximity.resolve_step_3',
+                  'Altere "Localização" e "Notificações" para Permitir.',
+                )}
               </li>
-              <li>Recarregue a página e tente ativar o Radar novamente.</li>
+              <li>
+                {t(
+                  'proximity.resolve_step_4',
+                  'Recarregue a página e tente ativar o Radar novamente.',
+                )}
+              </li>
             </ol>
           </div>
 
@@ -366,7 +394,7 @@ export function ProximityAlertsToggle() {
               onClick={() => setShowPermissionError(false)}
               className="w-full font-bold h-11"
             >
-              Entendi
+              {t('proximity.understood', 'Entendi')}
             </Button>
           </DialogFooter>
         </DialogContent>

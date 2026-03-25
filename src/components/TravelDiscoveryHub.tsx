@@ -81,7 +81,8 @@ export function TravelDiscoveryHub({
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-2xl font-bold text-slate-900">
-            {t('hub.explore_opportunities', 'Explore Oportunidades')}
+            {t('travel.experiences_section', 'Experiências')} &{' '}
+            {t('travel.offers_section', 'Ofertas')}
           </h2>
           <p className="text-muted-foreground mt-1">
             {t(
@@ -213,6 +214,18 @@ export function TravelDiscoveryHub({
                       </Badge>
                     )}
                   </div>
+                  <div className="absolute top-3 right-3 flex flex-col gap-1.5 items-end">
+                    {offer.rating && offer.rating >= 4.8 && (
+                      <Badge className="bg-orange-500 hover:bg-orange-600 text-white border-none shadow-sm font-bold">
+                        {t('marketing.unmissable_offer', 'Oferta Imperdível')}
+                      </Badge>
+                    )}
+                    {offer.price && offer.price < 100 && (
+                      <Badge className="bg-red-500 hover:bg-red-600 text-white border-none shadow-sm font-bold">
+                        {t('marketing.super_offer', 'Super Oferta')}
+                      </Badge>
+                    )}
+                  </div>
                   <div className="absolute bottom-3 left-3 right-3 flex justify-between items-end">
                     <div className="bg-white/95 text-slate-900 px-2.5 py-1 rounded-md text-sm font-extrabold shadow-sm">
                       {offer.currency} {offer.price}
@@ -226,7 +239,7 @@ export function TravelDiscoveryHub({
                   </div>
                 </div>
                 <CardContent className="p-5 flex flex-col flex-1 bg-white">
-                  <div className="mb-3">
+                  <div className="mb-2">
                     <p className="text-xs text-primary font-bold mb-1 uppercase tracking-wider">
                       {offer.provider}
                     </p>
@@ -234,7 +247,20 @@ export function TravelDiscoveryHub({
                       {offer.title}
                     </h3>
                   </div>
-                  <p className="text-sm text-slate-600 line-clamp-2 mb-5 flex-1">
+
+                  {offer.type === 'hotel' && (
+                    <div className="flex items-center gap-1.5 mt-1 mb-2 text-xs font-medium text-slate-600 bg-slate-50 p-1.5 rounded-md border border-slate-100">
+                      <Hotel className="w-3.5 h-3.5 text-primary" />
+                      <span>
+                        {t('travel.room_type', 'Tipo de Quarto')}:{' '}
+                        <strong className="text-slate-800">
+                          {t('travel.standard_room', 'Quarto Padrão')}
+                        </strong>
+                      </span>
+                    </div>
+                  )}
+
+                  <p className="text-sm text-slate-600 line-clamp-2 mb-5 flex-1 mt-1">
                     {offer.description}
                   </p>
                   <div className="flex items-center justify-between text-xs font-medium text-slate-500 mb-5 bg-slate-50 p-2 rounded-md border border-slate-100">
@@ -315,7 +341,7 @@ export function TravelDiscoveryHub({
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3 gap-x-4 text-sm">
                     <div>
-                      <span className="text-slate-500 block text-xs">
+                      <span className="text-slate-500 block text-xs mb-0.5">
                         {t('hub.provider', 'Fornecedor')}
                       </span>
                       <span className="font-semibold text-slate-800">
@@ -323,13 +349,23 @@ export function TravelDiscoveryHub({
                       </span>
                     </div>
                     <div>
-                      <span className="text-slate-500 block text-xs">
+                      <span className="text-slate-500 block text-xs mb-0.5">
                         {t('hub.destination', 'Destino')}
                       </span>
                       <span className="font-semibold text-slate-800">
                         {detailsOffer.destination}
                       </span>
                     </div>
+                    {detailsOffer.type === 'hotel' && (
+                      <div>
+                        <span className="text-slate-500 block text-xs mb-0.5">
+                          {t('travel.room_type', 'Tipo de Quarto')}
+                        </span>
+                        <span className="font-semibold text-slate-800">
+                          {t('travel.standard_room', 'Quarto Padrão')}
+                        </span>
+                      </div>
+                    )}
                     {detailsOffer.rating && (
                       <div>
                         <span className="text-slate-500 block text-xs mb-0.5">
