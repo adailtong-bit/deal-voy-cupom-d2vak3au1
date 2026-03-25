@@ -40,7 +40,7 @@ export default function Voucher() {
     return (
       <div className="container py-16 text-center animate-fade-in">
         <h2 className="text-2xl font-bold mb-4 text-slate-800">
-          Voucher não encontrado
+          {t('voucher_detail.not_found', 'Voucher não encontrado')}
         </h2>
         <Button onClick={() => navigate(-1)}>
           {t('common.back', 'Voltar')}
@@ -56,17 +56,28 @@ export default function Voucher() {
     !!event?.externalUrl
   const externalUrl = coupon?.externalUrl || event?.externalUrl
   const title = coupon?.title || event?.title || ''
-  const storeName = coupon?.storeName || event?.companyId || 'Loja Parceira'
+  const storeName =
+    coupon?.storeName ||
+    event?.companyId ||
+    t('vouchers.partner_store', 'Loja Parceira')
   const instructions =
     coupon?.instructions ||
     (isOnline
-      ? 'Acesse a oferta online clicando no botão abaixo. Se aplicável, o código de desconto já será copiado ou aplicado automaticamente no site do lojista.'
-      : 'Apresente este código ao lojista no momento do pagamento para aplicar o benefício. O código é único e válido para apenas uma utilização.')
+      ? t(
+          'voucher_detail.instructions_online',
+          'Acesse a oferta online clicando no botão abaixo. Se aplicável, o código de desconto já será copiado ou aplicado automaticamente no site do lojista.',
+        )
+      : t(
+          'voucher_detail.instructions_offline',
+          'Apresente este código ao lojista no momento do pagamento para aplicar o benefício. O código é único e válido para apenas uma utilização.',
+        ))
 
   const description = coupon?.description || event?.description || ''
   const discount =
     coupon?.discount ||
-    (event?.type === 'sale' ? 'Promoção' : 'Evento Especial')
+    (event?.type === 'sale'
+      ? t('event.type.sale', 'Promoção')
+      : t('vouchers.special_event', 'Evento Especial'))
   const image = coupon?.image || event?.image
 
   const code =
@@ -94,7 +105,12 @@ export default function Voucher() {
     if (id) {
       const success = reserveCoupon(id)
       if (success) {
-        toast.success('Voucher reservado e salvo em "Meus Vouchers"!')
+        toast.success(
+          t(
+            'voucher_detail.reserved_success',
+            'Voucher reservado e salvo em "Meus Vouchers"!',
+          ),
+        )
         navigate('/vouchers')
       }
     }
@@ -102,9 +118,15 @@ export default function Voucher() {
 
   const handleCopyCode = () => {
     navigator.clipboard.writeText(code)
-    toast.success('Código copiado para a área de transferência!', {
-      duration: 3000,
-    })
+    toast.success(
+      t(
+        'voucher_detail.code_copied',
+        'Código copiado para a área de transferência!',
+      ),
+      {
+        duration: 3000,
+      },
+    )
   }
 
   const handleBuyNow = () => {
@@ -130,9 +152,15 @@ export default function Voucher() {
 
       if (code && code !== 'PREVIEW') {
         navigator.clipboard.writeText(code)
-        toast.info('Código copiado! Você será redirecionado para a loja.', {
-          duration: 3000,
-        })
+        toast.info(
+          t(
+            'voucher_detail.redirecting',
+            'Código copiado! Você será redirecionado para a loja.',
+          ),
+          {
+            duration: 3000,
+          },
+        )
       }
 
       if (id && !reserved && id !== 'preview') {
@@ -143,7 +171,9 @@ export default function Voucher() {
         window.open(url.toString(), '_blank')
       }, 500)
     } catch (e) {
-      toast.error('Erro ao abrir o link da oferta.')
+      toast.error(
+        t('voucher_detail.link_error', 'Erro ao abrir o link da oferta.'),
+      )
     }
   }
 
@@ -180,7 +210,8 @@ export default function Voucher() {
                 </Badge>
                 {isOnline && (
                   <Badge className="bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-sm px-2.5 py-0.5 border-none">
-                    <Globe className="w-3.5 h-3.5 mr-1" /> Online
+                    <Globe className="w-3.5 h-3.5 mr-1" />{' '}
+                    {t('vouchers.online', 'Online')}
                   </Badge>
                 )}
               </div>
@@ -218,15 +249,19 @@ export default function Voucher() {
 
                 <div className="bg-slate-50 p-5 rounded-xl text-left w-full mb-8 border border-slate-100 shadow-inner">
                   <h3 className="font-semibold text-slate-800 mb-2 flex items-center gap-2">
-                    <Ticket className="h-4 w-4 text-primary" /> Detalhes da
-                    Campanha
+                    <Ticket className="h-4 w-4 text-primary" />{' '}
+                    {t(
+                      'voucher_detail.campaign_details',
+                      'Detalhes da Campanha',
+                    )}
                   </h3>
                   <p className="text-sm text-slate-600 leading-relaxed">
                     {description}
                   </p>
                   {!isOnline && (
                     <p className="text-xs text-slate-400 mt-3 pt-3 border-t border-slate-200/60">
-                      Disponíveis: {available}
+                      {t('voucher_detail.available', 'Disponíveis:')}{' '}
+                      {available}
                     </p>
                   )}
                 </div>
@@ -239,11 +274,11 @@ export default function Voucher() {
                     onClick={handleBuyNow}
                   >
                     {isSoldOut ? (
-                      'Esgotado'
+                      t('vouchers.sold_out', 'Esgotado')
                     ) : (
                       <>
                         <ExternalLink className="mr-2 h-5 w-5" />
-                        Visitar Site da Loja
+                        {t('voucher_detail.visit_site', 'Visitar Site da Loja')}
                       </>
                     )}
                   </Button>
@@ -255,11 +290,11 @@ export default function Voucher() {
                     onClick={handleReserve}
                   >
                     {isSoldOut ? (
-                      'Esgotado'
+                      t('vouchers.sold_out', 'Esgotado')
                     ) : (
                       <>
                         <QrCode className="mr-2 h-5 w-5" />
-                        Reservar Voucher
+                        {t('voucher_detail.reserve', 'Reservar Voucher')}
                       </>
                     )}
                   </Button>
@@ -293,7 +328,7 @@ export default function Voucher() {
                   </Badge>
                   {isOnline && (
                     <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-200 border-none font-bold">
-                      Oferta Online
+                      {t('voucher_detail.online_offer', 'Oferta Online')}
                     </Badge>
                   )}
                 </div>
@@ -333,7 +368,10 @@ export default function Voucher() {
                                 <CheckCircle2 className="h-10 w-10 text-emerald-500" />
                               </div>
                               <span className="font-extrabold text-xl text-emerald-600 bg-white px-4 py-1 rounded-full shadow-sm">
-                                Já Utilizado
+                                {t(
+                                  'voucher_detail.already_used',
+                                  'Já Utilizado',
+                                )}
                               </span>
                             </div>
                           )}
@@ -343,7 +381,7 @@ export default function Voucher() {
 
                     <div className="bg-slate-50 border border-slate-100 px-6 py-4 rounded-xl w-full mb-6 flex flex-col items-center">
                       <span className="text-[10px] text-slate-400 uppercase tracking-widest font-bold mb-1.5">
-                        Código do Voucher
+                        {t('voucher_detail.voucher_code', 'Código do Voucher')}
                       </span>
                       <span
                         className={cn(
@@ -361,7 +399,7 @@ export default function Voucher() {
                   /* Online Store View (Code Box) */
                   <div className="bg-slate-50 border border-slate-200 p-5 rounded-xl w-full mb-6 relative">
                     <span className="text-[11px] text-slate-500 uppercase tracking-wider font-bold block mb-3 text-center">
-                      Código do Cupom
+                      {t('voucher_detail.coupon_code', 'Código do Cupom')}
                     </span>
                     <div className="flex items-center justify-between bg-white border border-slate-200 rounded-lg p-2.5 sm:p-3 shadow-sm">
                       <span className="text-xl sm:text-2xl font-mono tracking-widest font-black text-slate-800 ml-2">
@@ -372,14 +410,16 @@ export default function Voucher() {
                         size="icon"
                         onClick={handleCopyCode}
                         className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                        title="Copiar código"
+                        title={t('voucher_detail.copy_code', 'Copiar código')}
                       >
                         <Copy className="h-5 w-5" />
                       </Button>
                     </div>
                     <p className="text-[11px] text-slate-400 text-center mt-3 leading-tight">
-                      Copie o código acima e cole no carrinho de compras do
-                      site.
+                      {t(
+                        'voucher_detail.copy_instructions',
+                        'Copie o código acima e cole no carrinho de compras do site.',
+                      )}
                     </p>
                   </div>
                 )}
@@ -406,13 +446,16 @@ export default function Voucher() {
                 onClick={handleBuyNow}
                 className="w-full gap-2 font-bold h-14 text-base transition-all duration-300 rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:-translate-y-0.5"
               >
-                <ExternalLink className="h-5 w-5" /> Visitar Site da Loja
+                <ExternalLink className="h-5 w-5" />{' '}
+                {t('voucher_detail.visit_site', 'Visitar Site da Loja')}
               </Button>
             ) : (
               <>
                 <p className="text-xs text-slate-500 mb-3 text-center font-medium px-4">
-                  Ação exclusiva para testes: Simula a leitura do QR Code pelo
-                  aplicativo do lojista.
+                  {t(
+                    'voucher_detail.test_action',
+                    'Ação exclusiva para testes: Simula a leitura do QR Code pelo aplicativo do lojista.',
+                  )}
                 </p>
                 <Button
                   variant={isUsed ? 'secondary' : 'default'}
@@ -428,12 +471,19 @@ export default function Voucher() {
                 >
                   {isUsed ? (
                     <>
-                      <CheckCircle2 className="h-5 w-5" /> Voucher Validado
+                      <CheckCircle2 className="h-5 w-5" />{' '}
+                      {t(
+                        'voucher_detail.voucher_validated',
+                        'Voucher Validado',
+                      )}
                     </>
                   ) : (
                     <>
-                      <ScanLine className="h-5 w-5" /> Simular Leitura do
-                      Lojista
+                      <ScanLine className="h-5 w-5" />{' '}
+                      {t(
+                        'voucher_detail.simulate_scan',
+                        'Simular Leitura do Lojista',
+                      )}
                     </>
                   )}
                 </Button>
