@@ -176,6 +176,7 @@ export interface SeasonalEvent {
   externalUrl?: string
   affiliateConfig?: AffiliateConfig
   totalAvailable?: number
+  targetAudience?: 'all' | 'preferred'
 }
 
 export interface Notification {

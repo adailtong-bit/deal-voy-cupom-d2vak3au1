@@ -1,243 +1,306 @@
-import { useState, useMemo } from 'react'
-import { Calendar } from '@/components/ui/calendar'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useMemo } from 'react'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useCouponStore } from '@/stores/CouponContext'
-import { Calendar as CalendarIcon, Gift, Store, Ticket } from 'lucide-react'
+import {
+  Calendar as CalendarIcon,
+  Gift,
+  Store,
+  Ticket,
+  Clock,
+} from 'lucide-react'
+import { toast } from 'sonner'
+import { SeasonalEvent } from '@/lib/types'
+
+function SeasonalCampaignCard({
+  event,
+  isFuture,
+}: {
+  event: SeasonalEvent
+  isFuture: boolean
+}) {
+  const { t, formatDate, language } = useLanguage()
+  const { reserveCoupon, isReserved, companies, trackSeasonalClick } =
+    useCouponStore()
+
+  const reserved = isReserved(event.id)
+  const isSoldOut =
+    event.totalAvailable !== undefined && event.totalAvailable <= 0
+  const title = event.translations?.[language]?.title || event.title
+  const description =
+    event.translations?.[language]?.description || event.description
+  const companyName = companies.find((c) => c.id === event.companyId)?.name
+
+  const handleReserve = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (isFuture || reserved || isSoldOut) return
+    const success = reserveCoupon(event.id)
+    if (success) {
+      trackSeasonalClick(event.id)
+      toast.success(
+        t(
+          'seasonal.reserved_success',
+          'Voucher da campanha reservado com sucesso!',
+        ),
+      )
+    }
+  }
+
+  return (
+    <Card className="flex flex-col overflow-hidden hover:shadow-md transition-shadow h-full">
+      {event.image && (
+        <div className="relative h-48 w-full bg-muted shrink-0">
+          <img
+            src={event.image}
+            alt={title}
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute top-2 left-2 flex gap-1">
+            {event.type && (
+              <Badge
+                variant="secondary"
+                className="bg-white/90 text-black border-none shadow-sm font-semibold capitalize"
+              >
+                {t(`event.type.${event.type}`, event.type)}
+              </Badge>
+            )}
+          </div>
+          {isSoldOut && !isFuture && (
+            <div className="absolute top-2 right-2">
+              <Badge variant="destructive" className="shadow-sm">
+                {t('seasonal.exhausted', 'Esgotado')}
+              </Badge>
+            </div>
+          )}
+        </div>
+      )}
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg leading-tight line-clamp-2">
+          {title}
+        </CardTitle>
+        {companyName && (
+          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+            <Store className="h-3 w-3" />
+            {companyName}
+          </p>
+        )}
+      </CardHeader>
+      <CardContent className="flex-1 pb-4 flex flex-col">
+        <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
+          {description}
+        </p>
+        <div className="space-y-2 mt-auto">
+          <div className="flex items-center text-xs text-muted-foreground gap-1.5 font-medium">
+            <CalendarIcon className="h-3.5 w-3.5 text-primary" />
+            <span>
+              {formatDate(event.startDate)} - {formatDate(event.endDate)}
+            </span>
+          </div>
+          {event.totalAvailable !== undefined && (
+            <div className="flex items-center text-xs text-muted-foreground gap-1.5">
+              <Ticket className="h-3.5 w-3.5 text-orange-500" />
+              <span>
+                {event.totalAvailable}{' '}
+                {t('seasonal.vouchers_left', 'restantes')}
+              </span>
+            </div>
+          )}
+        </div>
+      </CardContent>
+      <CardFooter className="pt-0 mt-auto">
+        <Button
+          className="w-full transition-transform active:scale-95"
+          variant={isFuture ? 'secondary' : reserved ? 'outline' : 'default'}
+          disabled={isFuture || isSoldOut || reserved}
+          onClick={handleReserve}
+        >
+          {isFuture ? (
+            <>
+              <Clock className="w-4 h-4 mr-2" />{' '}
+              {t('seasonal.coming_soon', 'Em breve')}
+            </>
+          ) : reserved ? (
+            <>{t('seasonal.reserved', 'Reservado')}</>
+          ) : isSoldOut ? (
+            <>{t('seasonal.exhausted_btn', 'Vouchers Esgotados')}</>
+          ) : (
+            <>
+              <Gift className="w-4 h-4 mr-2" />{' '}
+              {t('seasonal.reserve_voucher', 'Reservar Voucher')}
+            </>
+          )}
+        </Button>
+      </CardFooter>
+    </Card>
+  )
+}
 
 export default function Seasonal() {
-  const { t, formatDate, language } = useLanguage()
-  const { seasonalEvents, companies, trackSeasonalClick } = useCouponStore()
-  const [date, setDate] = useState<Date | undefined>(new Date())
+  const { t } = useLanguage()
+  const { seasonalEvents, companies, user, selectedRegion } = useCouponStore()
+
+  const filteredEvents = useMemo(() => {
+    return seasonalEvents.filter((e) => {
+      if (
+        user?.role === 'user' &&
+        (e.status === 'draft' ||
+          e.status === 'archived' ||
+          e.status === 'rejected' ||
+          e.status === 'expired')
+      ) {
+        return false
+      }
+      if (e.status === 'expired') return false
+
+      let audienceMatch = true
+      if (e.targetAudience === 'preferred') {
+        const company = companies.find((comp) => comp.id === e.companyId)
+        const isMerchant =
+          user?.role === 'super_admin' ||
+          (user?.role === 'shopkeeper' && user.companyId === e.companyId) ||
+          (user?.role === 'franchisee' && user.franchiseId === e.franchiseId)
+        const isPreferred = company?.preferredCustomers?.includes(
+          user?.id || '',
+        )
+        audienceMatch = isMerchant || !!isPreferred
+      }
+
+      if (
+        user?.role === 'shopkeeper' &&
+        e.companyId &&
+        e.companyId !== user.companyId
+      ) {
+        return false
+      }
+      if (
+        user?.role === 'franchisee' &&
+        e.franchiseId &&
+        e.franchiseId !== user.franchiseId
+      ) {
+        return false
+      }
+      if (
+        selectedRegion !== 'Global' &&
+        e.region &&
+        e.region !== selectedRegion
+      ) {
+        return false
+      }
+
+      return audienceMatch
+    })
+  }, [seasonalEvents, user, companies, selectedRegion])
 
   const activeEvents = useMemo(() => {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
-    return seasonalEvents.filter((e) => {
-      if (e.status !== 'active') return false
-      const end = new Date(e.endDate)
-      end.setHours(23, 59, 59, 999)
-      return end >= today
-    })
-  }, [seasonalEvents])
-
-  const selectedEvent = useMemo(() => {
-    if (!date) return null
-    // Normalize selected date to ignore time for comparison
-    const searchDate = new Date(date)
-    searchDate.setHours(0, 0, 0, 0)
-
-    return activeEvents.find((e) => {
+    return filteredEvents.filter((e) => {
       const start = new Date(e.startDate)
       start.setHours(0, 0, 0, 0)
       const end = new Date(e.endDate)
       end.setHours(23, 59, 59, 999)
-      return searchDate >= start && searchDate <= end
+      return start <= today && end >= today
     })
-  }, [date, activeEvents])
+  }, [filteredEvents])
 
-  const upcomingEvents = useMemo(() => {
+  const futureEvents = useMemo(() => {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
-    return activeEvents.filter((e) => new Date(e.endDate) >= today)
-  }, [activeEvents])
-
-  const getCompanyName = (id?: string) => {
-    if (!id) return ''
-    return companies.find((c) => c.id === id)?.name || id
-  }
-
-  // Generate an array of dates to highlight on the calendar
-  const highlightDates = useMemo(() => {
-    const dates: Date[] = []
-    activeEvents.forEach((event) => {
-      let current = new Date(event.startDate)
-      current.setHours(0, 0, 0, 0)
-      const end = new Date(event.endDate)
-      end.setHours(0, 0, 0, 0)
-
-      while (current <= end) {
-        dates.push(new Date(current))
-        current.setDate(current.getDate() + 1)
-      }
+    return filteredEvents.filter((e) => {
+      const start = new Date(e.startDate)
+      start.setHours(0, 0, 0, 0)
+      return start > today
     })
-    return dates
-  }, [activeEvents])
-
-  const handleEventClick = (eventId: string, newDate: Date) => {
-    trackSeasonalClick(eventId)
-    setDate(newDate)
-  }
-
-  const selectedEventTitle =
-    selectedEvent?.translations?.[language]?.title || selectedEvent?.title
-  const selectedEventDesc =
-    selectedEvent?.translations?.[language]?.description ||
-    selectedEvent?.description
+  }, [filteredEvents])
 
   return (
-    <div className="container mx-auto px-4 py-8 mb-16 md:mb-0">
+    <div className="container mx-auto px-4 py-8 mb-16 md:mb-0 animate-in fade-in zoom-in-95 duration-500">
       <h1 className="text-3xl font-bold mb-8 flex items-center gap-2">
         <CalendarIcon className="h-8 w-8 text-primary" />
         {t('seasonal.title')}
       </h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <Card className="h-fit">
-          <CardHeader>
-            <CardTitle>{t('seasonal.calendar_title')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Calendar
-              mode="single"
-              selected={date}
-              onSelect={(d) => {
-                if (d) {
-                  setDate(d)
-                  const searchDate = new Date(d)
-                  searchDate.setHours(0, 0, 0, 0)
-                  const ev = activeEvents.find((e) => {
-                    const s = new Date(e.startDate)
-                    s.setHours(0, 0, 0, 0)
-                    const en = new Date(e.endDate)
-                    en.setHours(23, 59, 59, 999)
-                    return searchDate >= s && searchDate <= en
-                  })
-                  if (ev) trackSeasonalClick(ev.id)
-                } else {
-                  setDate(undefined)
-                }
-              }}
-              className="rounded-md border mx-auto"
-              modifiers={{
-                event: highlightDates,
-              }}
-              modifiersClassNames={{
-                event: 'bg-primary/20 font-bold text-primary',
-              }}
-            />
-          </CardContent>
-        </Card>
+      <Tabs defaultValue="active" className="w-full">
+        <TabsList className="grid w-full max-w-[400px] grid-cols-2 mb-8">
+          <TabsTrigger value="active" className="text-base">
+            {t('seasonal.active_tab', 'Ativas')}
+            <Badge
+              variant="secondary"
+              className="ml-2 bg-primary/10 text-primary"
+            >
+              {activeEvents.length}
+            </Badge>
+          </TabsTrigger>
+          <TabsTrigger value="future" className="text-base">
+            {t('seasonal.future_tab', 'Futuras')}
+            <Badge
+              variant="secondary"
+              className="ml-2 bg-primary/10 text-primary"
+            >
+              {futureEvents.length}
+            </Badge>
+          </TabsTrigger>
+        </TabsList>
 
-        <div className="space-y-6">
-          {selectedEvent ? (
-            <Card className="border-primary bg-primary/5 animate-in fade-in zoom-in-95 overflow-hidden">
-              {selectedEvent.image && (
-                <div className="w-full h-48 bg-muted relative">
-                  <img
-                    src={selectedEvent.image}
-                    alt={selectedEventTitle}
-                    className="w-full h-full object-cover"
-                  />
-                  {selectedEvent.images && selectedEvent.images.length > 0 && (
-                    <div className="absolute bottom-2 right-2 flex gap-1">
-                      {selectedEvent.images.slice(0, 3).map((img, idx) => (
-                        <img
-                          key={idx}
-                          src={img}
-                          alt=""
-                          className="w-10 h-10 border-2 border-white rounded-md object-cover shadow-sm"
-                        />
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-              <CardHeader>
-                <div className="flex justify-between items-start gap-4">
-                  <div>
-                    <CardTitle className="text-2xl text-primary">
-                      {selectedEventTitle}
-                    </CardTitle>
-                    {selectedEvent.companyId && (
-                      <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
-                        <Store className="h-4 w-4" />
-                        {getCompanyName(selectedEvent.companyId)}
-                      </p>
-                    )}
-                    {selectedEvent.vouchers &&
-                      selectedEvent.vouchers.length > 0 && (
-                        <Badge
-                          variant="outline"
-                          className="mt-2 bg-primary/10 text-primary border-primary/20"
-                        >
-                          <Ticket className="w-3 h-3 mr-1" />
-                          {selectedEvent.vouchers.length}{' '}
-                          {t('admin.vouchers', 'Vouchers')}
-                        </Badge>
-                      )}
-                  </div>
-                  <Badge variant="secondary">
-                    {t(`event.type.${selectedEvent.type}`, selectedEvent.type)}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-lg mb-4">{selectedEventDesc}</p>
-                <div className="flex items-center gap-2 font-medium text-sm">
-                  <CalendarIcon className="h-5 w-5 text-muted-foreground" />
-                  {formatDate(selectedEvent.startDate)} -{' '}
-                  {formatDate(selectedEvent.endDate)}
-                </div>
-              </CardContent>
-            </Card>
+        <TabsContent value="active" className="space-y-6 outline-none">
+          {activeEvents.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {activeEvents.map((e) => (
+                <SeasonalCampaignCard key={e.id} event={e} isFuture={false} />
+              ))}
+            </div>
           ) : (
             <Card className="bg-muted/50 border-dashed">
-              <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-                <Gift className="h-12 w-12 text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">
+              <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+                <Gift className="h-16 w-16 text-muted-foreground/50 mb-4" />
+                <h3 className="text-xl font-semibold mb-2">
+                  {t('seasonal.no_active', 'Nenhuma campanha ativa')}
+                </h3>
+                <p className="text-muted-foreground max-w-md">
                   {t(
-                    'seasonal.no_event',
-                    'Selecione uma data para ver os detalhes do evento.',
+                    'seasonal.no_active_desc',
+                    'No momento não temos campanhas ativas para o seu perfil ou região.',
                   )}
                 </p>
               </CardContent>
             </Card>
           )}
+        </TabsContent>
 
-          <div className="space-y-4">
-            <h3 className="font-bold text-lg">{t('seasonal.upcoming')}</h3>
-            {upcomingEvents.length > 0 ? (
-              upcomingEvents.map((event) => (
-                <div
-                  key={event.id}
-                  className="flex items-center p-4 rounded-lg border bg-card hover:bg-accent transition-colors cursor-pointer group"
-                  onClick={() =>
-                    handleEventClick(event.id, new Date(event.startDate))
-                  }
-                >
-                  <div className="flex-1">
-                    <h4 className="font-bold group-hover:text-primary transition-colors flex items-center gap-2">
-                      {event.translations?.[language]?.title || event.title}
-                      {event.vouchers && event.vouchers.length > 0 && (
-                        <Ticket className="w-3 h-3 text-primary" />
-                      )}
-                    </h4>
-                    <p className="text-xs text-muted-foreground">
-                      {formatDate(event.startDate)} -{' '}
-                      {formatDate(event.endDate)}
-                    </p>
-                    {event.companyId && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {t('hub.provider', 'Por:')}{' '}
-                        {getCompanyName(event.companyId)}
-                      </p>
-                    )}
-                  </div>
-                  <Badge variant="outline">
-                    {t(`event.type.${event.type}`, event.type)}
-                  </Badge>
-                </div>
-              ))
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                {t('common.none')}
-              </p>
-            )}
-          </div>
-        </div>
-      </div>
+        <TabsContent value="future" className="space-y-6 outline-none">
+          {futureEvents.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {futureEvents.map((e) => (
+                <SeasonalCampaignCard key={e.id} event={e} isFuture={true} />
+              ))}
+            </div>
+          ) : (
+            <Card className="bg-muted/50 border-dashed">
+              <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+                <Clock className="h-16 w-16 text-muted-foreground/50 mb-4" />
+                <h3 className="text-xl font-semibold mb-2">
+                  {t('seasonal.no_future', 'Nenhuma campanha futura')}
+                </h3>
+                <p className="text-muted-foreground max-w-md">
+                  {t(
+                    'seasonal.no_future_desc',
+                    'Fique de olho! Novas campanhas serão agendadas em breve.',
+                  )}
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }
