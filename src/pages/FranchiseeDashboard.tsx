@@ -75,7 +75,7 @@ export default function FranchiseeDashboard() {
     users,
     platformSettings,
   } = useCouponStore()
-  const { formatCurrency, formatDate } = useLanguage()
+  const { formatCurrency, formatDate, t } = useLanguage()
   const [activeTab, setActiveTab] = useState('overview')
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
@@ -133,7 +133,10 @@ export default function FranchiseeDashboard() {
         const u = users.find((user) => user.id === log.userId)
         return {
           id: log.id,
-          customerName: u?.name || log.customerName || 'Cliente Balcão',
+          customerName:
+            u?.name ||
+            log.customerName ||
+            t('franchisee.leads.counter', 'Cliente Balcão'),
           email: u?.email || 'N/A',
           phone: u?.phone || 'N/A',
           campaignName: log.couponTitle,
@@ -146,7 +149,7 @@ export default function FranchiseeDashboard() {
         (a, b) =>
           new Date(b.acquiredAt).getTime() - new Date(a.acquiredAt).getTime(),
       )
-  }, [franchiseLogs, users, companies])
+  }, [franchiseLogs, users, companies, t])
 
   if (user?.role !== 'franchisee' && user?.role !== 'super_admin') {
     return <Navigate to="/" replace />
@@ -156,7 +159,10 @@ export default function FranchiseeDashboard() {
     return (
       <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
         <p className="text-xl font-semibold text-slate-500">
-          Nenhuma franquia associada encontrada.
+          {t(
+            'franchisee.no_franchise',
+            'Nenhuma franquia associada encontrada.',
+          )}
         </p>
       </div>
     )
@@ -172,49 +178,109 @@ export default function FranchiseeDashboard() {
   // --- Navigation Structure ---
   const menuGroups = [
     {
-      title: 'Principal',
+      title: t('franchisee.menu.main', 'Principal'),
       items: [
-        { id: 'overview', label: 'Visão Geral', icon: LayoutDashboard },
-        { id: 'merchants', label: 'Lojistas Afiliados', icon: Store },
+        {
+          id: 'overview',
+          label: t('franchisee.menu.overview', 'Visão Geral'),
+          icon: LayoutDashboard,
+        },
+        {
+          id: 'merchants',
+          label: t('franchisee.menu.merchants', 'Lojistas Afiliados'),
+          icon: Store,
+        },
       ],
     },
     {
-      title: 'Financeiro',
+      title: t('franchisee.menu.financial', 'Financeiro'),
       items: [
-        { id: 'current-account', label: 'Conta Corrente', icon: Wallet },
-        { id: 'billing', label: 'Faturamento', icon: FileText },
-        { id: 'monetization', label: 'Monetização', icon: DollarSign },
+        {
+          id: 'current-account',
+          label: t('franchisee.menu.current_account', 'Conta Corrente'),
+          icon: Wallet,
+        },
+        {
+          id: 'billing',
+          label: t('franchisee.menu.billing', 'Faturamento'),
+          icon: FileText,
+        },
+        {
+          id: 'monetization',
+          label: t('franchisee.menu.monetization', 'Monetização'),
+          icon: DollarSign,
+        },
         {
           id: 'ads-royalties',
-          label: 'Publicidade & Royalties',
+          label: t('franchisee.menu.ads_royalties', 'Publicidade & Royalties'),
           icon: Megaphone,
         },
       ],
     },
     {
-      title: 'Operacional',
+      title: t('franchisee.menu.operational', 'Operacional'),
       items: [
-        { id: 'seasonal', label: 'Ofertas Sazonais', icon: CalendarDays },
-        { id: 'categories', label: 'Categorias', icon: LayoutGrid },
-        { id: 'interests', label: 'Interesses', icon: Tag },
-        { id: 'policies', label: 'Políticas de Parceiros', icon: Shield },
+        {
+          id: 'seasonal',
+          label: t('franchisee.menu.seasonal', 'Ofertas Sazonais'),
+          icon: CalendarDays,
+        },
+        {
+          id: 'categories',
+          label: t('franchisee.menu.categories', 'Categorias'),
+          icon: LayoutGrid,
+        },
+        {
+          id: 'interests',
+          label: t('franchisee.menu.interests', 'Interesses'),
+          icon: Tag,
+        },
+        {
+          id: 'policies',
+          label: t('franchisee.menu.policies', 'Políticas de Parceiros'),
+          icon: Shield,
+        },
       ],
     },
     {
-      title: 'Inteligência',
+      title: t('franchisee.menu.intelligence', 'Inteligência'),
       items: [
-        { id: 'crm', label: 'CRM', icon: Users },
-        { id: 'leads', label: 'Leads Capturados', icon: Target },
-        { id: 'crawler', label: 'Crawler de Ofertas', icon: Globe },
-        { id: 'insights', label: 'Data Insights', icon: BarChart3 },
+        { id: 'crm', label: t('franchisee.menu.crm', 'CRM'), icon: Users },
+        {
+          id: 'leads',
+          label: t('franchisee.menu.leads', 'Leads Capturados'),
+          icon: Target,
+        },
+        {
+          id: 'crawler',
+          label: t('franchisee.menu.crawler', 'Crawler de Ofertas'),
+          icon: Globe,
+        },
+        {
+          id: 'insights',
+          label: t('franchisee.menu.insights', 'Data Insights'),
+          icon: BarChart3,
+        },
       ],
     },
     {
-      title: 'Apoio & Configurações',
+      title: t('franchisee.menu.support', 'Apoio & Configurações'),
       items: [
-        { id: 'sandbox', label: 'Testing Sandbox', icon: Box },
-        { id: 'team', label: 'Equipe Local', icon: UsersRound },
-        { id: 'settings', label: 'Configurações', icon: Settings },
+        {
+          id: 'sandbox',
+          label: t('franchisee.menu.sandbox', 'Testing Sandbox'),
+          icon: Box,
+        },
+        {
+          id: 'team',
+          label: t('franchisee.menu.team', 'Equipe Local'),
+          icon: UsersRound,
+        },
+        {
+          id: 'settings',
+          label: t('franchisee.menu.settings', 'Configurações'),
+          icon: Settings,
+        },
       ],
     },
   ]
@@ -223,16 +289,21 @@ export default function FranchiseeDashboard() {
   const renderOverview = () => (
     <div className="space-y-6 animate-fade-in-up">
       <div>
-        <h2 className="text-2xl font-bold text-slate-800">Visão Geral</h2>
+        <h2 className="text-2xl font-bold text-slate-800">
+          {t('franchisee.overview.title', 'Visão Geral')}
+        </h2>
         <p className="text-muted-foreground">
-          Métricas consolidadas da região de {myFranchise.region}.
+          {t(
+            'franchisee.overview.desc',
+            `Métricas consolidadas da região de ${myFranchise.region}.`,
+          ).replace('{region}', myFranchise.region)}
         </p>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="shadow-sm border-slate-200">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-semibold text-slate-600 uppercase">
-              Vendas Regionais
+              {t('franchisee.overview.sales', 'Vendas Regionais')}
             </CardTitle>
             <CreditCard className="h-4 w-4 text-emerald-500" />
           </CardHeader>
@@ -241,14 +312,14 @@ export default function FranchiseeDashboard() {
               {formatCurrency(totalSales, 'BRL')}
             </div>
             <p className="text-xs text-emerald-600 mt-1 font-medium">
-              Volume transacionado
+              {t('franchisee.overview.sales_desc', 'Volume transacionado')}
             </p>
           </CardContent>
         </Card>
         <Card className="shadow-sm border-slate-200">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-semibold text-slate-600 uppercase">
-              Leads Capturados
+              {t('franchisee.overview.leads', 'Leads Capturados')}
             </CardTitle>
             <Users className="h-4 w-4 text-blue-500" />
           </CardHeader>
@@ -257,14 +328,14 @@ export default function FranchiseeDashboard() {
               {totalLeads}
             </div>
             <p className="text-xs text-slate-400 mt-1 font-medium">
-              Clientes adquiridos
+              {t('franchisee.overview.leads_desc', 'Clientes adquiridos')}
             </p>
           </CardContent>
         </Card>
         <Card className="shadow-sm border-slate-200">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-semibold text-slate-600 uppercase">
-              Campanhas Ativas
+              {t('franchisee.overview.campaigns', 'Campanhas Ativas')}
             </CardTitle>
             <Ticket className="h-4 w-4 text-orange-500" />
           </CardHeader>
@@ -273,14 +344,17 @@ export default function FranchiseeDashboard() {
               {activeCampaigns}
             </div>
             <p className="text-xs text-slate-400 mt-1 font-medium">
-              De {franchiseCoupons.length} no total
+              {t(
+                'franchisee.overview.campaigns_desc',
+                'De {total} no total',
+              ).replace('{total}', String(franchiseCoupons.length))}
             </p>
           </CardContent>
         </Card>
         <Card className="shadow-sm border-slate-200 border-l-4 border-l-orange-500">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-semibold text-slate-600 uppercase">
-              Royalties Devidos
+              {t('franchisee.overview.royalties', 'Royalties Devidos')}
             </CardTitle>
             <DollarSign className="h-4 w-4 text-orange-500" />
           </CardHeader>
@@ -289,7 +363,10 @@ export default function FranchiseeDashboard() {
               {formatCurrency(totalRoyalties, 'BRL')}
             </div>
             <p className="text-xs text-slate-400 mt-1 font-medium">
-              {royaltyRate}% sobre publicidade
+              {t(
+                'franchisee.overview.royalties_desc',
+                '{rate}% sobre publicidade',
+              ).replace('{rate}', String(royaltyRate))}
             </p>
           </CardContent>
         </Card>
@@ -300,9 +377,14 @@ export default function FranchiseeDashboard() {
   const renderLeads = () => (
     <div className="space-y-6 animate-fade-in-up">
       <div>
-        <h2 className="text-2xl font-bold text-slate-800">Leads Regionais</h2>
+        <h2 className="text-2xl font-bold text-slate-800">
+          {t('franchisee.leads.title', 'Leads Regionais')}
+        </h2>
         <p className="text-muted-foreground">
-          Clientes que interagiram com ofertas dos seus lojistas.
+          {t(
+            'franchisee.leads.desc',
+            'Clientes que interagiram com ofertas dos seus lojistas.',
+          )}
         </p>
       </div>
       <Card className="shadow-sm">
@@ -310,11 +392,19 @@ export default function FranchiseeDashboard() {
           <Table>
             <TableHeader className="bg-slate-50">
               <TableRow>
-                <TableHead>Cliente</TableHead>
-                <TableHead>Contato</TableHead>
-                <TableHead>Campanha Utilizada</TableHead>
-                <TableHead>Lojista</TableHead>
-                <TableHead>Data</TableHead>
+                <TableHead>
+                  {t('franchisee.leads.customer', 'Cliente')}
+                </TableHead>
+                <TableHead>
+                  {t('franchisee.leads.contact', 'Contato')}
+                </TableHead>
+                <TableHead>
+                  {t('franchisee.leads.campaign', 'Campanha Utilizada')}
+                </TableHead>
+                <TableHead>
+                  {t('franchisee.leads.merchant', 'Lojista')}
+                </TableHead>
+                <TableHead>{t('franchisee.leads.date', 'Data')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -339,7 +429,7 @@ export default function FranchiseeDashboard() {
                       )}
                       {lead.email === 'N/A' && lead.phone === 'N/A' && (
                         <span className="text-slate-400 italic">
-                          Não informado
+                          {t('franchisee.leads.not_informed', 'Não informado')}
                         </span>
                       )}
                     </div>
@@ -363,7 +453,10 @@ export default function FranchiseeDashboard() {
                     colSpan={5}
                     className="text-center py-8 text-slate-500"
                   >
-                    Nenhum lead capturado ainda.
+                    {t(
+                      'franchisee.leads.no_leads',
+                      'Nenhum lead capturado ainda.',
+                    )}
                   </TableCell>
                 </TableRow>
               )}
@@ -377,22 +470,32 @@ export default function FranchiseeDashboard() {
   const renderSettings = () => (
     <div className="space-y-6 animate-fade-in-up">
       <div>
-        <h2 className="text-2xl font-bold text-slate-800">Configurações</h2>
+        <h2 className="text-2xl font-bold text-slate-800">
+          {t('franchisee.settings.title', 'Configurações')}
+        </h2>
         <p className="text-muted-foreground">
-          Parâmetros operacionais da franquia.
+          {t(
+            'franchisee.settings.desc',
+            'Parâmetros operacionais da franquia.',
+          )}
         </p>
       </div>
       <Card className="max-w-2xl shadow-sm border-slate-200">
         <CardHeader className="bg-slate-50 border-b">
-          <CardTitle className="text-lg">Informações Contratuais</CardTitle>
+          <CardTitle className="text-lg">
+            {t('franchisee.settings.contract_info', 'Informações Contratuais')}
+          </CardTitle>
           <CardDescription>
-            Configurações gerenciadas pela rede Master.
+            {t(
+              'franchisee.settings.contract_desc',
+              'Configurações gerenciadas pela rede Master.',
+            )}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-5 pt-6">
           <div className="space-y-2">
             <Label className="font-semibold text-slate-700">
-              Região de Atuação
+              {t('franchisee.settings.region', 'Região de Atuação')}
             </Label>
             <Input
               value={myFranchise.region}
@@ -403,7 +506,7 @@ export default function FranchiseeDashboard() {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label className="font-semibold text-slate-700">
-                Moeda Padrão
+                {t('franchisee.settings.currency', 'Moeda Padrão')}
               </Label>
               <Input
                 value={myFranchise.region.includes('US') ? 'USD' : 'BRL'}
@@ -413,7 +516,10 @@ export default function FranchiseeDashboard() {
             </div>
             <div className="space-y-2">
               <Label className="font-semibold text-slate-700">
-                Taxa de Royalties (Publicidade)
+                {t(
+                  'franchisee.settings.royalty_rate',
+                  'Taxa de Royalties (Publicidade)',
+                )}
               </Label>
               <Input
                 value={`${royaltyRate}%`}
@@ -464,7 +570,7 @@ export default function FranchiseeDashboard() {
       >
         <div className="p-6 border-b flex-shrink-0">
           <h2 className="text-xl font-bold text-slate-800 tracking-tight">
-            Painel Regional
+            {t('franchisee.dashboard', 'Painel Regional')}
           </h2>
           <p className="text-sm font-medium text-primary mt-1 truncate">
             {myFranchise.name}

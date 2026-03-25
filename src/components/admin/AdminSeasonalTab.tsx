@@ -278,7 +278,7 @@ export function AdminSeasonalTab({ franchiseId }: { franchiseId?: string }) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
               <MousePointerClick className="h-5 w-5 text-primary" />
-              Clicks per Campaign
+              {t('franchisee.seasonal.clicks_chart', 'Clicks per Campaign')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -570,7 +570,10 @@ export function AdminSeasonalTab({ franchiseId }: { franchiseId?: string }) {
             </div>
             <div className="space-y-2">
               <Label>
-                Additional Images (Comma separated URLs or type and click Save)
+                {t(
+                  'franchisee.seasonal.additional_images',
+                  'Additional Images (Comma separated URLs)',
+                )}
               </Label>
               <Input
                 type="text"
@@ -631,7 +634,7 @@ export function AdminSeasonalTab({ franchiseId }: { franchiseId?: string }) {
             )}
           </div>
           <div className="bg-slate-50 p-3 rounded-lg text-xs text-muted-foreground text-center">
-            Valid until{' '}
+            {t('franchisee.seasonal.valid_until', 'Valid until')}{' '}
             {vouchersDialogEvent && formatDate(vouchersDialogEvent.endDate)}
           </div>
         </DialogContent>

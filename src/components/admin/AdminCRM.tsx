@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useCouponStore } from '@/stores/CouponContext'
+import { useLanguage } from '@/stores/LanguageContext'
 import {
   Table,
   TableBody,
@@ -27,11 +28,10 @@ import {
 import { Button } from '@/components/ui/button'
 import { Search, Users, Target, BarChart3, Download } from 'lucide-react'
 import { CATEGORIES } from '@/lib/data'
-import { useLanguage } from '@/stores/LanguageContext'
 
 export function AdminCRM({ franchiseId }: { franchiseId?: string }) {
   const { users, validationLogs, coupons, companies } = useCouponStore()
-  const { formatDate } = useLanguage()
+  const { formatDate, t } = useLanguage()
 
   const [searchQuery, setSearchQuery] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('all')
@@ -192,7 +192,7 @@ export function AdminCRM({ franchiseId }: { franchiseId?: string }) {
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">
-                Total Users
+                {t('franchisee.crm.total_users', 'Total de Usuários')}
               </p>
               <h3 className="text-2xl font-bold">{displayUsers.length}</h3>
             </div>
@@ -205,7 +205,7 @@ export function AdminCRM({ franchiseId }: { franchiseId?: string }) {
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">
-                Active Users
+                {t('franchisee.crm.active_users', 'Usuários Ativos')}
               </p>
               <h3 className="text-2xl font-bold">{activeUsersCount}</h3>
             </div>
@@ -218,7 +218,7 @@ export function AdminCRM({ franchiseId }: { franchiseId?: string }) {
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">
-                Total Redemptions
+                {t('franchisee.crm.total_redemptions', 'Total de Resgates')}
               </p>
               <h3 className="text-2xl font-bold">{totalRedemptions}</h3>
             </div>
@@ -231,7 +231,8 @@ export function AdminCRM({ franchiseId }: { franchiseId?: string }) {
               className="w-full gap-2"
               onClick={exportCSV}
             >
-              <Download className="h-4 w-4" /> Export CSV
+              <Download className="h-4 w-4" />{' '}
+              {t('admin.exportCsv', 'Export CSV')}
             </Button>
           </CardContent>
         </Card>
@@ -239,16 +240,20 @@ export function AdminCRM({ franchiseId }: { franchiseId?: string }) {
 
       <Card>
         <CardHeader>
-          <CardTitle>CRM & Segmentation</CardTitle>
+          <CardTitle>
+            {t('franchisee.crm.title', 'CRM e Segmentação')}
+          </CardTitle>
           <CardDescription>
-            Filter users by behavior, location, and consumption frequency.
-            Export data for marketing and sales.
+            {t(
+              'franchisee.crm.desc',
+              'Filtre usuários por comportamento, localização e frequência. Exporte dados para marketing.',
+            )}
           </CardDescription>
           <div className="grid grid-cols-1 sm:grid-cols-5 gap-4 mt-4">
             <div className="relative col-span-1 sm:col-span-2">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search users..."
+                placeholder={t('franchisee.crm.search', 'Buscar usuários...')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9"
@@ -256,10 +261,14 @@ export function AdminCRM({ franchiseId }: { franchiseId?: string }) {
             </div>
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
               <SelectTrigger>
-                <SelectValue placeholder="Category" />
+                <SelectValue
+                  placeholder={t('franchisee.crm.category', 'Categoria')}
+                />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
+                <SelectItem value="all">
+                  {t('franchisee.crm.all_categories', 'Todas as Categorias')}
+                </SelectItem>
                 {CATEGORIES.filter((c) => c.id !== 'all').map((c) => (
                   <SelectItem key={c.id} value={c.id}>
                     {c.label}
@@ -269,10 +278,14 @@ export function AdminCRM({ franchiseId }: { franchiseId?: string }) {
             </Select>
             <Select value={locationFilter} onValueChange={setLocationFilter}>
               <SelectTrigger>
-                <SelectValue placeholder="Location" />
+                <SelectValue
+                  placeholder={t('franchisee.crm.location', 'Localização')}
+                />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Locations</SelectItem>
+                <SelectItem value="all">
+                  {t('franchisee.crm.all_locations', 'Todas as Localizações')}
+                </SelectItem>
                 {locations.map((loc) => (
                   <SelectItem key={loc} value={loc}>
                     {loc}
@@ -282,14 +295,26 @@ export function AdminCRM({ franchiseId }: { franchiseId?: string }) {
             </Select>
             <Select value={frequencyFilter} onValueChange={setFrequencyFilter}>
               <SelectTrigger>
-                <SelectValue placeholder="Frequency" />
+                <SelectValue
+                  placeholder={t('franchisee.crm.frequency', 'Frequência')}
+                />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Any Frequency</SelectItem>
-                <SelectItem value="high">High (10+)</SelectItem>
-                <SelectItem value="medium">Medium (3-9)</SelectItem>
-                <SelectItem value="low">Low (1-2)</SelectItem>
-                <SelectItem value="none">None (0)</SelectItem>
+                <SelectItem value="all">
+                  {t('franchisee.crm.all_frequencies', 'Qualquer Frequência')}
+                </SelectItem>
+                <SelectItem value="high">
+                  {t('franchisee.crm.freq_high', 'Alta (10+)')}
+                </SelectItem>
+                <SelectItem value="medium">
+                  {t('franchisee.crm.freq_medium', 'Média (3-9)')}
+                </SelectItem>
+                <SelectItem value="low">
+                  {t('franchisee.crm.freq_low', 'Baixa (1-2)')}
+                </SelectItem>
+                <SelectItem value="none">
+                  {t('franchisee.crm.freq_none', 'Nenhuma (0)')}
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -298,11 +323,19 @@ export function AdminCRM({ franchiseId }: { franchiseId?: string }) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>User / Location</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Redemptions</TableHead>
-                <TableHead>Top Category</TableHead>
-                <TableHead>Last Active</TableHead>
+                <TableHead>
+                  {t('franchisee.crm.user_location', 'Usuário / Local')}
+                </TableHead>
+                <TableHead>{t('franchisee.crm.role', 'Papel')}</TableHead>
+                <TableHead>
+                  {t('franchisee.crm.redemptions', 'Resgates')}
+                </TableHead>
+                <TableHead>
+                  {t('franchisee.crm.top_category', 'Categoria Principal')}
+                </TableHead>
+                <TableHead>
+                  {t('franchisee.crm.last_active', 'Último Acesso')}
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -312,7 +345,10 @@ export function AdminCRM({ franchiseId }: { franchiseId?: string }) {
                     colSpan={5}
                     className="text-center py-8 text-muted-foreground"
                   >
-                    No users match the selected segments.
+                    {t(
+                      'franchisee.crm.no_users',
+                      'Nenhum usuário corresponde aos filtros.',
+                    )}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -340,11 +376,14 @@ export function AdminCRM({ franchiseId }: { franchiseId?: string }) {
                     <TableCell>
                       <Badge variant="secondary">{u.topCategory}</Badge>
                       <p className="text-xs text-muted-foreground mt-1 truncate max-w-[150px]">
-                        Prefers: {u.topMerchant}
+                        {t('franchisee.crm.prefers', 'Prefere:')}{' '}
+                        {u.topMerchant}
                       </p>
                     </TableCell>
                     <TableCell className="text-sm">
-                      {u.lastActive ? formatDate(u.lastActive) : 'Never'}
+                      {u.lastActive
+                        ? formatDate(u.lastActive)
+                        : t('franchisee.crm.never', 'Nunca')}
                     </TableCell>
                   </TableRow>
                 ))

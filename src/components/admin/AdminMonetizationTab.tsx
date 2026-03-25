@@ -38,7 +38,7 @@ export function AdminMonetizationTab({
 }: {
   franchiseId?: string
 }) {
-  const { t } = useLanguage()
+  const { t, formatCurrency } = useLanguage()
   const totals = useMemo(() => {
     return dummyData.reduce(
       (acc, curr) => ({
@@ -62,7 +62,7 @@ export function AdminMonetizationTab({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              R$ {totals.margin.toLocaleString()}
+              {formatCurrency(totals.margin)}
             </div>
             <p className="text-xs text-muted-foreground">+12%</p>
           </CardContent>
@@ -76,7 +76,7 @@ export function AdminMonetizationTab({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              R$ {totals.credits.toLocaleString()}
+              {formatCurrency(totals.credits)}
             </div>
             <p className="text-xs text-muted-foreground">+8%</p>
           </CardContent>
@@ -102,7 +102,9 @@ export function AdminMonetizationTab({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{dummyData.length}</div>
-            <p className="text-xs text-muted-foreground">Ativos</p>
+            <p className="text-xs text-muted-foreground">
+              {t('franchisee.monetization.active_plural', 'Ativos')}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -110,7 +112,12 @@ export function AdminMonetizationTab({
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Desempenho por Parceiro</CardTitle>
+            <CardTitle>
+              {t(
+                'franchisee.monetization.performance',
+                'Desempenho por Parceiro',
+              )}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-[300px] w-full">
@@ -153,7 +160,12 @@ export function AdminMonetizationTab({
 
         <Card>
           <CardHeader>
-            <CardTitle>Evolução de Uso e Receita</CardTitle>
+            <CardTitle>
+              {t(
+                'franchisee.monetization.evolution',
+                'Evolução de Uso e Receita',
+              )}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-[300px] w-full">

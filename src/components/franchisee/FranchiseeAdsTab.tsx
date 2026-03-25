@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useCouponStore } from '@/stores/CouponContext'
+import { useLanguage } from '@/stores/LanguageContext'
 import {
   Card,
   CardContent,
@@ -27,13 +28,13 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { formatCurrency } from '@/lib/utils'
 import { DollarSign, Plus, Edit2, Trash2 } from 'lucide-react'
 import { Advertisement } from '@/lib/types'
 
 export function FranchiseeAdsTab({ franchiseId }: { franchiseId?: string }) {
   const { ads, createAd, updateAd, deleteAd, platformSettings, companies } =
     useCouponStore()
+  const { t, formatCurrency } = useLanguage()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingAd, setEditingAd] = useState<Advertisement | null>(null)
 
@@ -122,7 +123,10 @@ export function FranchiseeAdsTab({ franchiseId }: { franchiseId?: string }) {
               </div>
             </div>
             <p className="text-sm font-medium text-muted-foreground">
-              Receita Total de Anúncios Regionais
+              {t(
+                'franchisee.ads.revenue',
+                'Receita Total de Anúncios Regionais',
+              )}
             </p>
             <h3 className="text-2xl font-bold">
               {formatCurrency(totalRevenue, 'BRL')}
@@ -137,7 +141,10 @@ export function FranchiseeAdsTab({ franchiseId }: { franchiseId?: string }) {
               </div>
             </div>
             <p className="text-sm font-medium text-muted-foreground">
-              Royalties Devidos ({royaltyRate}%)
+              {t(
+                'franchisee.ads.royalties',
+                'Royalties Devidos ({rate}%)',
+              ).replace('{rate}', String(royaltyRate))}
             </p>
             <h3 className="text-2xl font-bold">
               {formatCurrency(totalRoyalties, 'BRL')}
@@ -149,25 +156,36 @@ export function FranchiseeAdsTab({ franchiseId }: { franchiseId?: string }) {
       <Card>
         <CardHeader className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
           <div>
-            <CardTitle>Publicidade Regional</CardTitle>
+            <CardTitle>
+              {t('franchisee.ads.title', 'Publicidade Regional')}
+            </CardTitle>
             <CardDescription>
-              Crie e gerencie os anúncios exibidos exclusivamente na sua região.
+              {t(
+                'franchisee.ads.desc',
+                'Crie e gerencie os anúncios exibidos exclusivamente na sua região.',
+              )}
             </CardDescription>
           </div>
           <Button onClick={() => handleOpenDialog()}>
             <Plus className="mr-2 h-4 w-4" />
-            Criar Anúncio
+            {t('franchisee.ads.create', 'Criar Anúncio')}
           </Button>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Anúncio</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Receita</TableHead>
-                <TableHead>Royalties</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
+                <TableHead>{t('franchisee.ads.ad', 'Anúncio')}</TableHead>
+                <TableHead>{t('franchisee.ads.status', 'Status')}</TableHead>
+                <TableHead>
+                  {t('franchisee.ads.revenue_col', 'Receita')}
+                </TableHead>
+                <TableHead>
+                  {t('franchisee.ads.royalties_col', 'Royalties')}
+                </TableHead>
+                <TableHead className="text-right">
+                  {t('franchisee.ads.actions', 'Ações')}
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -196,9 +214,9 @@ export function FranchiseeAdsTab({ franchiseId }: { franchiseId?: string }) {
                         className="capitalize"
                       >
                         {ad.status === 'pending'
-                          ? 'Pendente'
+                          ? t('franchisee.ads.pending', 'Pendente')
                           : ad.status === 'active'
-                            ? 'Ativo'
+                            ? t('franchisee.ads.active', 'Ativo')
                             : ad.status}
                       </Badge>
                     </TableCell>
@@ -233,7 +251,10 @@ export function FranchiseeAdsTab({ franchiseId }: { franchiseId?: string }) {
                     colSpan={5}
                     className="text-center py-8 text-muted-foreground"
                   >
-                    Nenhum anúncio regional criado ainda.
+                    {t(
+                      'franchisee.ads.no_ads',
+                      'Nenhum anúncio regional criado ainda.',
+                    )}
                   </TableCell>
                 </TableRow>
               )}
@@ -246,32 +267,42 @@ export function FranchiseeAdsTab({ franchiseId }: { franchiseId?: string }) {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {editingAd ? 'Editar Anúncio Regional' : 'Criar Anúncio Regional'}
+              {editingAd
+                ? t('franchisee.ads.edit', 'Editar Anúncio Regional')
+                : t('franchisee.ads.create', 'Criar Anúncio Regional')}
             </DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
-              <Label>Título do Anúncio</Label>
+              <Label>
+                {t('franchisee.ads.form_title', 'Título do Anúncio')}
+              </Label>
               <Input
                 value={adFormData.title}
                 onChange={(e) =>
                   setAdFormData({ ...adFormData, title: e.target.value })
                 }
-                placeholder="Ex: Super Promoção de Inverno"
+                placeholder={t(
+                  'franchisee.ads.form_title_ph',
+                  'Ex: Super Promoção de Inverno',
+                )}
               />
             </div>
             <div className="space-y-2">
-              <Label>Descrição</Label>
+              <Label>{t('franchisee.ads.form_desc', 'Descrição')}</Label>
               <Textarea
                 value={adFormData.description}
                 onChange={(e) =>
                   setAdFormData({ ...adFormData, description: e.target.value })
                 }
-                placeholder="Detalhes adicionais sobre o anúncio"
+                placeholder={t(
+                  'franchisee.ads.form_desc_ph',
+                  'Detalhes adicionais sobre o anúncio',
+                )}
               />
             </div>
             <div className="space-y-2">
-              <Label>URL da Imagem</Label>
+              <Label>{t('franchisee.ads.form_image', 'URL da Imagem')}</Label>
               <Input
                 value={adFormData.image}
                 onChange={(e) =>
@@ -281,7 +312,9 @@ export function FranchiseeAdsTab({ franchiseId }: { franchiseId?: string }) {
               />
             </div>
             <div className="space-y-2">
-              <Label>URL de Destino (Link)</Label>
+              <Label>
+                {t('franchisee.ads.form_link', 'URL de Destino (Link)')}
+              </Label>
               <Input
                 value={adFormData.link}
                 onChange={(e) =>
@@ -291,7 +324,12 @@ export function FranchiseeAdsTab({ franchiseId }: { franchiseId?: string }) {
               />
             </div>
             <div className="space-y-2">
-              <Label>Receita Esperada (Para cálculo de Royalties)</Label>
+              <Label>
+                {t(
+                  'franchisee.ads.form_revenue',
+                  'Receita Esperada (Para cálculo de Royalties)',
+                )}
+              </Label>
               <Input
                 type="number"
                 value={adFormData.price}
@@ -305,22 +343,25 @@ export function FranchiseeAdsTab({ franchiseId }: { franchiseId?: string }) {
             </div>
             <div className="p-3 bg-orange-50 rounded-lg border border-orange-100 mt-2">
               <p className="text-sm font-medium text-orange-800">
-                Royalties Devidos:{' '}
+                {t('franchisee.ads.royalties_due', 'Royalties Devidos')}:{' '}
                 {formatCurrency(
                   (adFormData.price || 0) * (royaltyRate / 100),
                   'BRL',
                 )}
               </p>
               <p className="text-xs text-orange-600 mt-1">
-                A taxa padrão aplicada é de {royaltyRate}%.
+                {t(
+                  'franchisee.ads.rate_applied',
+                  'A taxa padrão aplicada é de {rate}%.',
+                ).replace('{rate}', String(royaltyRate))}
               </p>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-              Cancelar
+              {t('common.cancel', 'Cancelar')}
             </Button>
-            <Button onClick={handleSave}>Salvar</Button>
+            <Button onClick={handleSave}>{t('common.save', 'Salvar')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

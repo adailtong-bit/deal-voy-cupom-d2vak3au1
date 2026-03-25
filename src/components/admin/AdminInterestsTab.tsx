@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useCouponStore } from '@/stores/CouponContext'
+import { useLanguage } from '@/stores/LanguageContext'
 import {
   Card,
   CardContent,
@@ -21,6 +22,7 @@ import { Plus, Trash2, Edit2, Check, X, Tag } from 'lucide-react'
 
 export function AdminInterestsTab({ franchiseId }: { franchiseId?: string }) {
   const { platformSettings, updatePlatformSettings } = useCouponStore()
+  const { t } = useLanguage()
 
   const interests = platformSettings.availableInterests || []
   const [newLabel, setNewLabel] = useState('')
@@ -68,31 +70,45 @@ export function AdminInterestsTab({ franchiseId }: { franchiseId?: string }) {
     <div className="space-y-6 animate-fade-in-up">
       <Card>
         <CardHeader>
-          <CardTitle>Gerenciar Interesses</CardTitle>
+          <CardTitle>
+            {t('franchisee.interests.title', 'Gerenciar Interesses')}
+          </CardTitle>
           <CardDescription>
-            Adicione, edite ou remova as categorias de interesse que os usuários
-            podem selecionar em seus perfis.
+            {t(
+              'franchisee.interests.desc',
+              'Adicione, edite ou remova as categorias de interesse que os usuários podem selecionar em seus perfis.',
+            )}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex gap-4 mb-6">
             <Input
-              placeholder="Novo interesse (ex: Tecnologia)"
+              placeholder={t(
+                'franchisee.interests.new',
+                'Novo interesse (ex: Tecnologia)',
+              )}
               value={newLabel}
               onChange={(e) => setNewLabel(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
             />
             <Button onClick={handleAdd}>
-              <Plus className="h-4 w-4 mr-2" /> Adicionar
+              <Plus className="h-4 w-4 mr-2" />{' '}
+              {t('franchisee.interests.add', 'Adicionar')}
             </Button>
           </div>
 
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Nome do Interesse</TableHead>
-                <TableHead>ID (Sistema)</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
+                <TableHead>
+                  {t('franchisee.interests.name', 'Nome do Interesse')}
+                </TableHead>
+                <TableHead>
+                  {t('franchisee.interests.id', 'ID (Sistema)')}
+                </TableHead>
+                <TableHead className="text-right">
+                  {t('franchisee.interests.actions', 'Ações')}
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -164,7 +180,10 @@ export function AdminInterestsTab({ franchiseId }: { franchiseId?: string }) {
                     colSpan={3}
                     className="text-center py-8 text-muted-foreground"
                   >
-                    Nenhum interesse cadastrado.
+                    {t(
+                      'franchisee.interests.no_interests',
+                      'Nenhum interesse cadastrado.',
+                    )}
                   </TableCell>
                 </TableRow>
               )}

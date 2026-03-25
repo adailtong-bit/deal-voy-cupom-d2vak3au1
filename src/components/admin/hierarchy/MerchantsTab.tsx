@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useCouponStore } from '@/stores/CouponContext'
+import { useLanguage } from '@/stores/LanguageContext'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -25,6 +26,7 @@ import { cn } from '@/lib/utils'
 export function MerchantsTab({ franchiseId }: { franchiseId?: string }) {
   const { companies, franchises, addCompany, updateCompany, deleteCompany } =
     useCouponStore()
+  const { t } = useLanguage()
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingMerchant, setEditingMerchant] = useState<Company | null>(null)
@@ -68,8 +70,11 @@ export function MerchantsTab({ franchiseId }: { franchiseId?: string }) {
   }
 
   const getFranchiseName = (id?: string) => {
-    if (!id) return 'Independente'
-    return franchises.find((f) => f.id === id)?.name || 'Desconhecida'
+    if (!id) return t('franchisee.merchants.independent', 'Independente')
+    return (
+      franchises.find((f) => f.id === id)?.name ||
+      t('franchisee.merchants.unknown', 'Desconhecida')
+    )
   }
 
   const exportCsv = () => {
@@ -125,12 +130,18 @@ export function MerchantsTab({ franchiseId }: { franchiseId?: string }) {
           </div>
           <div>
             <h3 className="text-lg font-bold text-slate-800">
-              Diretório de Lojistas
+              {t('franchisee.merchants.title', 'Diretório de Lojistas')}
             </h3>
             <p className="text-sm text-slate-500">
               {franchiseId
-                ? 'Gerencie os lojistas vinculados à sua franquia.'
-                : 'Gerencie todos os lojistas (independentes e de franquias).'}
+                ? t(
+                    'franchisee.merchants.desc_franchise',
+                    'Gerencie os lojistas vinculados à sua franquia.',
+                  )
+                : t(
+                    'franchisee.merchants.desc_global',
+                    'Gerencie todos os lojistas (independentes e de franquias).',
+                  )}
             </p>
           </div>
         </div>
@@ -140,17 +151,20 @@ export function MerchantsTab({ franchiseId }: { franchiseId?: string }) {
             onClick={exportCsv}
             className="font-semibold"
           >
-            <FileText className="w-4 h-4 mr-2" /> CSV
+            <FileText className="w-4 h-4 mr-2" />{' '}
+            {t('franchisee.merchants.export_csv', 'CSV')}
           </Button>
           <Button
             variant="outline"
             onClick={exportPdf}
             className="font-semibold"
           >
-            <Download className="w-4 h-4 mr-2" /> PDF
+            <Download className="w-4 h-4 mr-2" />{' '}
+            {t('franchisee.merchants.export_pdf', 'PDF')}
           </Button>
           <Button onClick={() => handleOpenDialog()} className="font-bold">
-            <Plus className="w-4 h-4 mr-2" /> Adicionar Lojista
+            <Plus className="w-4 h-4 mr-2" />{' '}
+            {t('franchisee.merchants.add', 'Adicionar Lojista')}
           </Button>
         </div>
       </div>
@@ -160,27 +174,27 @@ export function MerchantsTab({ franchiseId }: { franchiseId?: string }) {
           <TableHeader className="bg-slate-50">
             <TableRow>
               <TableHead className="font-semibold text-slate-700">
-                Nome da Loja
+                {t('franchisee.merchants.name', 'Nome da Loja')}
               </TableHead>
               <TableHead className="font-semibold text-slate-700">
-                E-mail
+                {t('franchisee.merchants.email', 'E-mail')}
               </TableHead>
               <TableHead className="font-semibold text-slate-700">
-                Localização
+                {t('franchisee.merchants.location', 'Localização')}
               </TableHead>
               {!franchiseId && (
                 <TableHead className="font-semibold text-slate-700">
-                  Afiliação
+                  {t('franchisee.merchants.affiliation', 'Afiliação')}
                 </TableHead>
               )}
               <TableHead className="font-semibold text-slate-700">
-                Status
+                {t('franchisee.merchants.status', 'Status')}
               </TableHead>
               <TableHead className="font-semibold text-slate-700">
-                Credenciais
+                {t('franchisee.merchants.credentials', 'Credenciais')}
               </TableHead>
               <TableHead className="font-semibold text-slate-700 text-right">
-                Ações
+                {t('franchisee.merchants.actions', 'Ações')}
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -221,10 +235,10 @@ export function MerchantsTab({ franchiseId }: { franchiseId?: string }) {
                       )}
                     >
                       {c.status === 'active'
-                        ? 'Ativo'
+                        ? t('franchisee.merchants.active', 'Ativo')
                         : c.status === 'pending'
-                          ? 'Pendente'
-                          : 'Inativo'}
+                          ? t('franchisee.merchants.pending', 'Pendente')
+                          : t('franchisee.merchants.inactive', 'Inativo')}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -237,7 +251,9 @@ export function MerchantsTab({ franchiseId }: { franchiseId?: string }) {
                             : 'bg-slate-100 text-slate-600'
                         }
                       >
-                        {isSent ? 'Enviado' : 'Pendente'}
+                        {isSent
+                          ? t('franchisee.merchants.sent', 'Enviado')
+                          : t('franchisee.merchants.pending', 'Pendente')}
                       </Badge>
                       <Button
                         variant="ghost"
@@ -245,7 +261,9 @@ export function MerchantsTab({ franchiseId }: { franchiseId?: string }) {
                         className="h-6 px-2 text-xs text-primary hover:text-primary/80 font-bold hover:bg-primary/10"
                         onClick={() => handleSendCredentials(c)}
                       >
-                        {isSent ? 'Reenviar' : 'Enviar'}
+                        {isSent
+                          ? t('franchisee.merchants.resend', 'Reenviar')
+                          : t('franchisee.merchants.send', 'Enviar')}
                       </Button>
                     </div>
                   </TableCell>
@@ -276,7 +294,10 @@ export function MerchantsTab({ franchiseId }: { franchiseId?: string }) {
                   colSpan={franchiseId ? 6 : 7}
                   className="text-center py-12 text-slate-500 font-medium"
                 >
-                  Nenhum lojista encontrado.
+                  {t(
+                    'franchisee.merchants.no_merchants',
+                    'Nenhum lojista encontrado.',
+                  )}
                 </TableCell>
               </TableRow>
             )}
@@ -288,7 +309,9 @@ export function MerchantsTab({ franchiseId }: { franchiseId?: string }) {
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {editingMerchant ? 'Editar Lojista' : 'Cadastrar Lojista'}
+              {editingMerchant
+                ? t('franchisee.merchants.edit', 'Editar Lojista')
+                : t('franchisee.merchants.add', 'Cadastrar Lojista')}
             </DialogTitle>
           </DialogHeader>
           <AdvancedCompanyForm

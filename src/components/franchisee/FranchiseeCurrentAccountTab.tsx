@@ -17,7 +17,7 @@ export function FranchiseeCurrentAccountTab({
 }: {
   franchiseId: string
 }) {
-  const { formatCurrency, formatDate } = useLanguage()
+  const { formatCurrency, formatDate, t } = useLanguage()
   const { partnerInvoices, ads, platformSettings } = useCouponStore()
 
   const royaltyRate = platformSettings.franchiseRoyaltyRate || 15
@@ -29,7 +29,7 @@ export function FranchiseeCurrentAccountTab({
   const adIncomes = regionalAds.map((ad, i) => ({
     id: `ad_inc_${ad.id}`,
     date: ad.startDate || new Date().toISOString(),
-    desc: `Venda de Publicidade Regional: ${ad.title}`,
+    desc: `${t('franchisee.current_account.ad_sales')}: ${ad.title}`,
     amount: ad.price || ad.budget || 0,
     type: 'in',
     status: 'completed',
@@ -39,7 +39,7 @@ export function FranchiseeCurrentAccountTab({
   const royaltyPayments = regionalAds.map((ad, i) => ({
     id: `royalty_${ad.id}`,
     date: ad.startDate || new Date().toISOString(),
-    desc: `Repasse de Royalties (${royaltyRate}%): ${ad.title}`,
+    desc: `${t('franchisee.current_account.royalty_payment')} (${royaltyRate}%): ${ad.title}`,
     amount: (ad.price || ad.budget || 0) * (royaltyRate / 100),
     type: 'out',
     status: 'completed',
@@ -51,7 +51,7 @@ export function FranchiseeCurrentAccountTab({
     .map((inv) => ({
       id: `inv_${inv.id}`,
       date: inv.issueDate,
-      desc: `Faturamento Lojista: ${inv.referenceNumber}`,
+      desc: `${t('franchisee.current_account.merchant_invoice')}: ${inv.referenceNumber}`,
       amount: inv.totalCommission,
       type: 'in',
       status: 'completed',
@@ -66,7 +66,7 @@ export function FranchiseeCurrentAccountTab({
     allTransactions.push({
       id: 'initial',
       date: new Date(Date.now() - 30 * 86400000).toISOString(),
-      desc: 'Depósito Inicial / Saldo Anterior',
+      desc: t('franchisee.current_account.initial_deposit'),
       amount: 1000,
       type: 'in',
       status: 'completed',
@@ -91,7 +91,7 @@ export function FranchiseeCurrentAccountTab({
                 <Wallet className="h-5 w-5" />
               </div>
               <p className="text-sm font-medium text-muted-foreground">
-                Saldo Atual
+                {t('franchisee.current_account.balance')}
               </p>
             </div>
             <h3 className="text-2xl font-bold">{formatCurrency(balance)}</h3>
@@ -104,7 +104,7 @@ export function FranchiseeCurrentAccountTab({
                 <ArrowUpRight className="h-5 w-5" />
               </div>
               <p className="text-sm font-medium text-muted-foreground">
-                Entradas
+                {t('franchisee.current_account.inflows')}
               </p>
             </div>
             <h3 className="text-2xl font-bold text-green-600">
@@ -119,7 +119,7 @@ export function FranchiseeCurrentAccountTab({
                 <ArrowDownRight className="h-5 w-5" />
               </div>
               <p className="text-sm font-medium text-muted-foreground">
-                Saídas
+                {t('franchisee.current_account.outflows')}
               </p>
             </div>
             <h3 className="text-2xl font-bold text-red-600">
@@ -131,53 +131,57 @@ export function FranchiseeCurrentAccountTab({
 
       <Card>
         <CardHeader>
-          <CardTitle>Extrato Financeiro</CardTitle>
+          <CardTitle>{t('franchisee.current_account.statement')}</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Data</TableHead>
-                <TableHead>Descrição</TableHead>
-                <TableHead>Tipo</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Valor</TableHead>
+                <TableHead>{t('franchisee.current_account.date')}</TableHead>
+                <TableHead>
+                  {t('franchisee.current_account.description')}
+                </TableHead>
+                <TableHead>{t('franchisee.current_account.type')}</TableHead>
+                <TableHead>{t('franchisee.current_account.status')}</TableHead>
+                <TableHead className="text-right">
+                  {t('franchisee.current_account.amount')}
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {allTransactions.map((t) => (
-                <TableRow key={t.id}>
+              {allTransactions.map((tItem) => (
+                <TableRow key={tItem.id}>
                   <TableCell className="text-sm">
-                    {formatDate(t.date)}
+                    {formatDate(tItem.date)}
                   </TableCell>
-                  <TableCell className="font-medium">{t.desc}</TableCell>
+                  <TableCell className="font-medium">{tItem.desc}</TableCell>
                   <TableCell>
-                    {t.type === 'in' ? (
+                    {tItem.type === 'in' ? (
                       <Badge
                         variant="outline"
                         className="bg-green-50 text-green-700 border-green-200"
                       >
-                        Entrada
+                        {t('franchisee.current_account.in')}
                       </Badge>
                     ) : (
                       <Badge
                         variant="outline"
                         className="bg-red-50 text-red-700 border-red-200"
                       >
-                        Saída
+                        {t('franchisee.current_account.out')}
                       </Badge>
                     )}
                   </TableCell>
                   <TableCell>
                     <Badge className="bg-slate-100 text-slate-700 hover:bg-slate-100">
-                      Concluído
+                      {t('franchisee.current_account.completed')}
                     </Badge>
                   </TableCell>
                   <TableCell
-                    className={`text-right font-bold ${t.type === 'in' ? 'text-green-600' : 'text-red-600'}`}
+                    className={`text-right font-bold ${tItem.type === 'in' ? 'text-green-600' : 'text-red-600'}`}
                   >
-                    {t.type === 'in' ? '+' : '-'}
-                    {formatCurrency(t.amount)}
+                    {tItem.type === 'in' ? '+' : '-'}
+                    {formatCurrency(tItem.amount)}
                   </TableCell>
                 </TableRow>
               ))}

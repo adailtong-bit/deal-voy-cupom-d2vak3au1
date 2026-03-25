@@ -5,7 +5,7 @@ import { DollarSign, Users, ShoppingCart, TrendingUp } from 'lucide-react'
 
 export function DataInsightsTab({ franchiseId }: { franchiseId?: string }) {
   const { validationLogs, users, adInvoices, companies } = useCouponStore()
-  const { formatCurrency } = useLanguage()
+  const { formatCurrency, t } = useLanguage()
 
   const displayCompanies = franchiseId
     ? companies.filter((c) => c.franchiseId === franchiseId)
@@ -63,13 +63,14 @@ export function DataInsightsTab({ franchiseId }: { franchiseId?: string }) {
               </div>
             </div>
             <p className="text-sm font-medium text-muted-foreground">
-              Total Commissions
+              {t('franchisee.insights.total_commissions', 'Comissões Totais')}
             </p>
             <h3 className="text-2xl font-bold">
               {formatCurrency(totalCommissions)}
             </h3>
             <p className="text-xs text-green-600 flex items-center gap-1 mt-1">
-              <TrendingUp className="h-3 w-3" /> +12% this month
+              <TrendingUp className="h-3 w-3" />{' '}
+              {t('franchisee.insights.this_month', '+12% este mês')}
             </p>
           </CardContent>
         </Card>
@@ -81,11 +82,16 @@ export function DataInsightsTab({ franchiseId }: { franchiseId?: string }) {
               </div>
             </div>
             <p className="text-sm font-medium text-muted-foreground">
-              Active Subscriptions
+              {t('franchisee.insights.active_subs', 'Assinaturas Ativas')}
             </p>
             <h3 className="text-2xl font-bold">{activeSubscriptions}</h3>
             <p className="text-xs text-muted-foreground mt-1">
-              {premiumUsers} Premium, {vipUsers} VIP
+              {t(
+                'franchisee.insights.premium_vip',
+                '{premium} Premium, {vip} VIP',
+              )
+                .replace('{premium}', String(premiumUsers))
+                .replace('{vip}', String(vipUsers))}
             </p>
           </CardContent>
         </Card>
@@ -97,11 +103,11 @@ export function DataInsightsTab({ franchiseId }: { franchiseId?: string }) {
               </div>
             </div>
             <p className="text-sm font-medium text-muted-foreground">
-              Ad Revenue
+              {t('franchisee.insights.ad_revenue', 'Receita de Anúncios')}
             </p>
             <h3 className="text-2xl font-bold">{formatCurrency(adRevenue)}</h3>
             <p className="text-xs text-muted-foreground mt-1">
-              From internal campaigns
+              {t('franchisee.insights.ad_desc', 'De campanhas internas')}
             </p>
           </CardContent>
         </Card>
@@ -113,13 +119,16 @@ export function DataInsightsTab({ franchiseId }: { franchiseId?: string }) {
               </div>
             </div>
             <p className="text-sm font-medium text-muted-foreground">
-              Referral Payouts
+              {t('franchisee.insights.referral', 'Pagamentos de Indicação')}
             </p>
             <h3 className="text-2xl font-bold">
               {formatCurrency(referralPayouts)}
             </h3>
             <p className="text-xs text-muted-foreground mt-1">
-              Distributed to referrers
+              {t(
+                'franchisee.insights.referral_desc',
+                'Distribuído aos indicadores',
+              )}
             </p>
           </CardContent>
         </Card>
@@ -128,12 +137,18 @@ export function DataInsightsTab({ franchiseId }: { franchiseId?: string }) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="h-80 flex flex-col justify-center items-center bg-slate-50 border-dashed">
           <p className="text-muted-foreground">
-            Consumption Trends Chart Placeholder
+            {t(
+              'franchisee.insights.chart_consumption',
+              'Gráfico de Tendências de Consumo (Placeholder)',
+            )}
           </p>
         </Card>
         <Card className="h-80 flex flex-col justify-center items-center bg-slate-50 border-dashed">
           <p className="text-muted-foreground">
-            Brand Preferences Chart Placeholder
+            {t(
+              'franchisee.insights.chart_brand',
+              'Gráfico de Preferências de Marca (Placeholder)',
+            )}
           </p>
         </Card>
       </div>

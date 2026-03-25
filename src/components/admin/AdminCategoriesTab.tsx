@@ -99,7 +99,7 @@ export function AdminCategoriesTab({ franchiseId }: { franchiseId?: string }) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Categoria</TableHead>
+                <TableHead>{t('nav.categories', 'Categorias')}</TableHead>
                 <TableHead className="text-right">
                   {t('admin.mainCategory', 'Principal')}
                 </TableHead>
