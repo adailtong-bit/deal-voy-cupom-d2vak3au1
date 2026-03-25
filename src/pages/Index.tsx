@@ -150,7 +150,7 @@ export default function Index() {
   )
 
   return (
-    <div className="min-h-screen pb-20 md:pb-8 animate-fade-in bg-slate-50/30">
+    <div className="min-h-screen pb-20 md:pb-8 animate-fade-in bg-slate-50/30 flex flex-col">
       <AdSpace position="top" className="border-b bg-white" />
 
       <section className="bg-white pt-4 pb-3 px-4 border-b shadow-sm">
@@ -196,7 +196,7 @@ export default function Index() {
         </div>
       </section>
 
-      <div className="container mx-auto max-w-5xl px-4 mt-6">
+      <div className="container mx-auto max-w-5xl px-4 mt-6 flex-1">
         <div className="mb-8">
           <ScrollArea className="w-full whitespace-nowrap pb-4">
             <div className="flex w-max space-x-3 px-1 items-center">
@@ -451,6 +451,10 @@ export default function Index() {
             </div>
           )}
         </div>
+      </div>
+
+      <div className="mt-12 w-full">
+        <AdSpace position="bottom" className="border-t bg-white" />
       </div>
     </div>
   )

@@ -808,6 +808,26 @@ export const MOCK_ADS: Advertisement[] = [
     price: 500,
     currency: 'USD',
   },
+  {
+    id: 'ad4',
+    title: 'Liquidação de Inverno',
+    companyId: 'c2',
+    region: 'Global',
+    category: 'all',
+    billingType: 'fixed',
+    placement: 'bottom',
+    status: 'active',
+    views: 8000,
+    clicks: 950,
+    startDate: '2024-12-01',
+    endDate: '2025-12-31',
+    image: 'https://img.usecurling.com/p/800/200?q=winter%20sale',
+    link: 'https://example.com/winter-sale',
+    price: 50,
+    currency: 'BRL',
+    description: 'Promoção exclusiva de inverno nas lojas parceiras.',
+    durationDays: 30,
+  },
 ]
 
 export const MOCK_USERS: User[] = [
