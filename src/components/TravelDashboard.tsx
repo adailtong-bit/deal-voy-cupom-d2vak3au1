@@ -321,14 +321,41 @@ export function TravelDashboard({
                           )}
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-slate-600">
-                        <Users className="w-4 h-4 text-slate-400" />
-                        <span>
-                          {booking.guests}{' '}
-                          {booking.guests === 1
-                            ? t('travel.person', 'Pessoa')
-                            : t('travel.people', 'Pessoas')}
-                        </span>
+                      <div className="flex items-start gap-2 text-sm text-slate-600">
+                        <Users className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                        <div className="flex flex-col">
+                          {booking.adults !== undefined ? (
+                            <span className="leading-tight">
+                              {booking.adults}{' '}
+                              {booking.adults === 1
+                                ? t('booking.adult', 'Adulto')
+                                : t('booking.adults', 'Adultos')}
+                              {booking.childrenCount !== undefined &&
+                                booking.childrenCount > 0 && (
+                                  <>
+                                    , {booking.childrenCount}{' '}
+                                    {booking.childrenCount === 1
+                                      ? t('booking.child', 'Criança')
+                                      : t('booking.children', 'Crianças')}
+                                    {booking.childAges &&
+                                      booking.childAges.length > 0 && (
+                                        <span className="text-slate-500 whitespace-nowrap ml-1">
+                                          ({t('booking.age', 'Idade')}:{' '}
+                                          {booking.childAges.join(', ')})
+                                        </span>
+                                      )}
+                                  </>
+                                )}
+                            </span>
+                          ) : (
+                            <span>
+                              {booking.guests}{' '}
+                              {booking.guests === 1
+                                ? t('travel.person', 'Pessoa')
+                                : t('travel.people', 'Pessoas')}
+                            </span>
+                          )}
+                        </div>
                       </div>
                       {booking.requiresPrivacy && (
                         <div className="flex items-center gap-2 text-sm text-blue-700 font-medium bg-blue-50 p-2 rounded-md border border-blue-100">

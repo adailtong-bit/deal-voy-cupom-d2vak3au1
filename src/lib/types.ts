@@ -210,6 +210,9 @@ export interface Booking {
   endDate?: string
   time: string
   guests: number
+  adults?: number
+  childrenCount?: number
+  childAges?: number[]
   status: 'confirmed' | 'cancelled' | 'paid' | 'pending'
   price?: number
   userId?: string
