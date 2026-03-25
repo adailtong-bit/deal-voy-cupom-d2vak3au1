@@ -138,7 +138,7 @@ export default function VendorDashboard() {
             className="py-2.5 px-4 font-semibold data-[state=active]:shadow-sm"
           >
             <Scan className="h-4 w-4 mr-2" />{' '}
-            {t('vendor.validation', 'Validar')}
+            {t('vendor.validation_tab', 'Validar')}
           </TabsTrigger>
           <TabsTrigger
             value="history"
@@ -152,7 +152,7 @@ export default function VendorDashboard() {
             className="py-2.5 px-4 font-semibold data-[state=active]:shadow-sm"
           >
             <Zap className="h-4 w-4 mr-2 text-orange-500" />{' '}
-            {t('vendor.behavioral', 'Gatilhos')}
+            {t('vendor.behavioral_tab', 'Gatilhos')}
           </TabsTrigger>
           <TabsTrigger
             value="seasonal"
