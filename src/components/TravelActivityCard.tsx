@@ -80,7 +80,10 @@ export function TravelActivityCard({
     `https://www.amazon.com.br/s?k=${encodeURIComponent(stop.title)}`
 
   return (
-    <div className="flex gap-4 group">
+    <div
+      id={`stop-${stop.id}`}
+      className="flex gap-4 group transition-all duration-500 rounded-xl"
+    >
       <div className="w-16 sm:w-20 shrink-0 flex flex-col items-center pt-4">
         <span className="text-xs sm:text-sm font-bold text-slate-700 text-center leading-tight whitespace-pre-line">
           {mockTime}

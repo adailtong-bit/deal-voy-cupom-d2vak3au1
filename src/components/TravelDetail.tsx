@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
 import { Button } from '@/components/ui/button'
@@ -16,6 +16,7 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { TravelActivityCard } from './TravelActivityCard'
 import { DiscoverActivitiesSheet } from './DiscoverActivitiesSheet'
 import { ItineraryMap } from './ItineraryMap'
+import { ProximityAlertsToggle } from './ProximityAlertsToggle'
 import { Coupon } from '@/lib/types'
 import { toast } from 'sonner'
 import {
@@ -44,6 +45,36 @@ export function TravelDetail({
     activeTrip?.days?.[0]?.id || '',
   )
   const [isAddSheetOpen, setIsAddSheetOpen] = useState(false)
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const params = new URLSearchParams(window.location.search)
+      const stopId = params.get('stopId')
+      if (stopId && activeTrip) {
+        const day = activeTrip.days?.find((d) =>
+          d.stops.some((s) => s.id === stopId),
+        )
+        if (day) {
+          setActiveDayId(day.id)
+          setTimeout(() => {
+            const el = document.getElementById(`stop-${stopId}`)
+            if (el) {
+              el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+              el.classList.add('ring-2', 'ring-primary', 'ring-offset-2')
+              setTimeout(() => {
+                el.classList.remove('ring-2', 'ring-primary', 'ring-offset-2')
+              }, 3000)
+            }
+          }, 300)
+        }
+      }
+    }
+
+    window.addEventListener('popstate', handlePopState)
+    handlePopState()
+
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [activeTrip])
 
   if (!activeTrip) return null
 
@@ -156,7 +187,7 @@ export function TravelDetail({
               className="w-full h-full object-cover"
             />
           </div>
-          <div>
+          <div className="flex-1 w-full">
             <div className="flex items-center justify-center sm:justify-start gap-2 mb-2 text-sm font-bold uppercase tracking-wider text-primary">
               {isShopping ? (
                 <>
@@ -174,15 +205,21 @@ export function TravelDetail({
               {activeTrip.title}
             </h1>
             <div className="flex flex-wrap justify-center sm:justify-start items-center gap-4 text-slate-600 font-medium">
-              <span className="flex items-center gap-1.5 bg-white px-3 py-1 rounded-full shadow-sm border">
+              <span className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-full shadow-sm border">
                 <Calendar className="h-4 w-4 text-primary" />{' '}
                 {activeTrip.duration}
               </span>
-              <span className="flex items-center gap-1.5 bg-white px-3 py-1 rounded-full shadow-sm border">
+              <span className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-full shadow-sm border">
                 <MapPin className="h-4 w-4 text-orange-500" />{' '}
                 {activeTrip.stops.length}{' '}
                 {t('travel.total_activities', 'Total Activities')}
               </span>
+              {activeTrip.stops.length > 0 && (
+                <ProximityAlertsToggle
+                  stops={activeTrip.stops}
+                  tripId={activeTrip.id}
+                />
+              )}
             </div>
           </div>
         </div>
