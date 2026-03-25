@@ -1232,6 +1232,7 @@ export const MOCK_TRAVEL_OFFERS: TravelOffer[] = [
     region: 'US-FL',
     hasSeparatedRooms: true,
     source: 'partner',
+    roomTypeKey: 'travel.family_suite',
     translations: {
       en: {
         title: 'Orlando Family Suite',
@@ -1259,6 +1260,7 @@ export const MOCK_TRAVEL_OFFERS: TravelOffer[] = [
     region: 'US-FL',
     hasSeparatedRooms: false,
     source: 'organic',
+    roomTypeKey: 'travel.standard_room',
     translations: {
       en: {
         title: 'Standard Room',
@@ -1289,6 +1291,7 @@ export const MOCK_TRAVEL_OFFERS: TravelOffer[] = [
     region: 'US-FL',
     hasSeparatedRooms: true,
     source: 'partner',
+    roomTypeKey: 'travel.executive_apt',
     translations: {
       en: {
         title: 'Executive Apartment',
@@ -1319,6 +1322,7 @@ export const MOCK_TRAVEL_OFFERS: TravelOffer[] = [
     region: 'BR-SP',
     hasSeparatedRooms: false,
     source: 'organic',
+    roomTypeKey: 'travel.double_room',
     translations: {
       en: {
         title: 'Double Room',

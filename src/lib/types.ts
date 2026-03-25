@@ -591,6 +591,7 @@ export interface TravelOffer {
     string,
     { title?: string; description?: string; destination?: string }
   >
+  roomTypeKey?: string
 }
 
 export interface Region {

@@ -43,7 +43,7 @@ export function TravelDiscoveryHub({
   onBookingSuccess,
 }: TravelDiscoveryHubProps) {
   const { travelOffers } = useCouponStore()
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
   const [activeTab, setActiveTab] = useState('hotel')
   const [guests, setGuests] = useState('2')
   const [requirePrivacy, setRequirePrivacy] = useState(false)
@@ -75,6 +75,20 @@ export function TravelDiscoveryHub({
       return true
     })
   }, [travelOffers, activeTab, numGuests, requirePrivacy])
+
+  const getTranslated = (
+    offer: TravelOffer,
+    field: 'title' | 'description' | 'destination',
+  ) => {
+    if (
+      offer.translations &&
+      offer.translations[language] &&
+      offer.translations[language][field]
+    ) {
+      return offer.translations[language][field]
+    }
+    return offer[field]
+  }
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -191,7 +205,7 @@ export function TravelDiscoveryHub({
                 <div className="h-48 relative overflow-hidden bg-slate-100">
                   <img
                     src={offer.image}
-                    alt={offer.title}
+                    alt={getTranslated(offer, 'title')}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
@@ -244,7 +258,7 @@ export function TravelDiscoveryHub({
                       {offer.provider}
                     </p>
                     <h3 className="font-extrabold text-lg text-slate-900 leading-tight line-clamp-1">
-                      {offer.title}
+                      {getTranslated(offer, 'title')}
                     </h3>
                   </div>
 
@@ -254,19 +268,21 @@ export function TravelDiscoveryHub({
                       <span>
                         {t('travel.room_type', 'Tipo de Quarto')}:{' '}
                         <strong className="text-slate-800">
-                          {t('travel.standard_room', 'Quarto Padrão')}
+                          {offer.roomTypeKey
+                            ? t(offer.roomTypeKey)
+                            : t('travel.standard_room', 'Quarto Padrão')}
                         </strong>
                       </span>
                     </div>
                   )}
 
                   <p className="text-sm text-slate-600 line-clamp-2 mb-5 flex-1 mt-1">
-                    {offer.description}
+                    {getTranslated(offer, 'description')}
                   </p>
                   <div className="flex items-center justify-between text-xs font-medium text-slate-500 mb-5 bg-slate-50 p-2 rounded-md border border-slate-100">
                     <span className="flex items-center gap-1.5 line-clamp-1">
                       <MapPin className="h-3.5 w-3.5 text-slate-400 shrink-0" />{' '}
-                      {offer.destination}
+                      {getTranslated(offer, 'destination')}
                     </span>
                     {offer.rating && (
                       <StarRating
@@ -312,14 +328,14 @@ export function TravelDiscoveryHub({
             <>
               <DialogHeader>
                 <DialogTitle className="text-2xl font-extrabold text-slate-900 pr-6">
-                  {detailsOffer.title}
+                  {getTranslated(detailsOffer, 'title')}
                 </DialogTitle>
               </DialogHeader>
               <div className="relative h-56 w-full rounded-xl overflow-hidden mb-2 shadow-sm">
                 <img
                   src={detailsOffer.image}
                   className="object-cover w-full h-full"
-                  alt={detailsOffer.title}
+                  alt={getTranslated(detailsOffer, 'title')}
                 />
                 <div className="absolute bottom-3 right-3 bg-white/95 px-3 py-1.5 rounded-lg shadow-md font-extrabold text-lg text-slate-900">
                   {detailsOffer.currency} {detailsOffer.price}
@@ -331,7 +347,7 @@ export function TravelDiscoveryHub({
                     {t('hub.about_offer', 'Sobre a Oferta')}
                   </h4>
                   <p className="text-sm text-slate-600 leading-relaxed">
-                    {detailsOffer.description}
+                    {getTranslated(detailsOffer, 'description')}
                   </p>
                 </div>
 
@@ -353,7 +369,7 @@ export function TravelDiscoveryHub({
                         {t('hub.destination', 'Destino')}
                       </span>
                       <span className="font-semibold text-slate-800">
-                        {detailsOffer.destination}
+                        {getTranslated(detailsOffer, 'destination')}
                       </span>
                     </div>
                     {detailsOffer.type === 'hotel' && (
@@ -362,7 +378,9 @@ export function TravelDiscoveryHub({
                           {t('travel.room_type', 'Tipo de Quarto')}
                         </span>
                         <span className="font-semibold text-slate-800">
-                          {t('travel.standard_room', 'Quarto Padrão')}
+                          {detailsOffer.roomTypeKey
+                            ? t(detailsOffer.roomTypeKey)
+                            : t('travel.standard_room', 'Quarto Padrão')}
                         </span>
                       </div>
                     )}
