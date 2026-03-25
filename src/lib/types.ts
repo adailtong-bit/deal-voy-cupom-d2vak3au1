@@ -123,6 +123,8 @@ export interface Coupon {
   affiliateConfig?: AffiliateConfig
   enableProximityAlerts?: boolean
   alertRadius?: number
+  proximityAlertsSent?: number
+  redeemedViaAlert?: number
 }
 
 export type CategoryType = Coupon['category']

@@ -379,6 +379,8 @@ const generateCoupons = (): Coupon[] => {
     targetAudience: 'all',
     enableProximityAlerts: true,
     alertRadius: 200,
+    proximityAlertsSent: 120,
+    redeemedViaAlert: 45,
   })
 
   for (let i = 1; i <= 30; i++) {
@@ -461,6 +463,9 @@ const generateCoupons = (): Coupon[] => {
       targetAudience: i % 5 === 0 ? 'preferred' : 'all',
       enableProximityAlerts: i % 4 === 0,
       alertRadius: 100 + (i % 5) * 50,
+      proximityAlertsSent:
+        i % 4 === 0 ? Math.floor(Math.random() * 80) + 10 : 0,
+      redeemedViaAlert: i % 4 === 0 ? Math.floor(Math.random() * 20) + 2 : 0,
       behavioralTriggers:
         i === 1
           ? [
@@ -604,6 +609,8 @@ const generateCoupons = (): Coupon[] => {
       currency: 'USD',
       enableProximityAlerts: true,
       alertRadius: 150,
+      proximityAlertsSent: 45,
+      redeemedViaAlert: 12,
     },
     {
       id: 'cpn_ny_m3',

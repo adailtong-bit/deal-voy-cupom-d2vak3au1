@@ -10,7 +10,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog'
-import { Radar, MapPin, BellRing } from 'lucide-react'
+import { Radar, MapPin, BellRing, Lock } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useCouponStore } from '@/stores/CouponContext'
 import { toast } from 'sonner'
@@ -38,13 +38,14 @@ function getDistanceMeters(
 
 export function ProximityAlertsToggle() {
   const { t } = useLanguage()
-  const { coupons, platformSettings } = useCouponStore()
+  const { coupons, platformSettings, reservedIds } = useCouponStore()
   const [isActive, setIsActive] = useState(
     () => localStorage.getItem('globalRadar') === 'true',
   )
   const [showOnboarding, setShowOnboarding] = useState(false)
+  const [showPermissionError, setShowPermissionError] = useState(false)
   const watchIdRef = useRef<number | null>(null)
-  const notifiedStopsRef = useRef<Set<string>>(new Set())
+  const cooldownsRef = useRef<Record<string, number>>({})
 
   const isSupported = 'geolocation' in navigator && 'Notification' in window
   const masterEnabled = platformSettings.globalProximityAlertsEnabled !== false
@@ -56,7 +57,7 @@ export function ProximityAlertsToggle() {
       stopTracking()
     }
     return () => stopTracking()
-  }, [isActive, masterEnabled, coupons])
+  }, [isActive, masterEnabled, coupons, reservedIds])
 
   const startTracking = () => {
     if (watchIdRef.current) return
@@ -72,7 +73,15 @@ export function ProximityAlertsToggle() {
             coupon.status !== 'active'
           )
             return
-          if (notifiedStopsRef.current.has(coupon.id)) return
+
+          // Must have available vouchers or be reserved by the user
+          const isReserved = reservedIds.includes(coupon.id)
+          const isAvailable = (coupon.totalAvailable ?? 100) > 0
+          if (!isReserved && !isAvailable) return
+
+          // Cooldown logic: 1 hour (3600000 ms) per store/coupon
+          const lastNotified = cooldownsRef.current[coupon.id] || 0
+          if (Date.now() - lastNotified < 3600000) return
 
           const radius = coupon.alertRadius || 100
           const dist = getDistanceMeters(
@@ -84,7 +93,7 @@ export function ProximityAlertsToggle() {
 
           if (dist <= radius) {
             triggerNotification(coupon)
-            notifiedStopsRef.current.add(coupon.id)
+            cooldownsRef.current[coupon.id] = Date.now()
           }
         })
       },
@@ -94,13 +103,11 @@ export function ProximityAlertsToggle() {
           stopTracking()
           setIsActive(false)
           localStorage.setItem('globalRadar', 'false')
-          toast.error(
-            t('proximity.location_denied', 'Acesso à localização negado.'),
-          )
+          setShowPermissionError(true)
         }
       },
       {
-        enableHighAccuracy: false, // Save battery, acceptable accuracy
+        enableHighAccuracy: false, // Save battery
         maximumAge: 30000,
         timeout: 10000,
       },
@@ -152,12 +159,7 @@ export function ProximityAlertsToggle() {
       ) {
         setShowOnboarding(true)
       } else if (Notification.permission === 'denied') {
-        toast.error(
-          t(
-            'proximity.needs_permission',
-            'Por favor, habilite as notificações nas configurações do navegador.',
-          ),
-        )
+        setShowPermissionError(true)
       } else {
         requestAndStart()
       }
@@ -165,7 +167,7 @@ export function ProximityAlertsToggle() {
       stopTracking()
       setIsActive(false)
       localStorage.setItem('globalRadar', 'false')
-      notifiedStopsRef.current.clear()
+      cooldownsRef.current = {} // Reset cooldowns on manual toggle
       toast.info(t('proximity.alerts_disabled', 'Radar de Ofertas desativado.'))
     }
   }
@@ -177,13 +179,8 @@ export function ProximityAlertsToggle() {
       notifPerm = await Notification.requestPermission()
     }
 
-    if (notifPerm !== 'granted') {
-      toast.error(
-        t(
-          'proximity.notification_denied',
-          'Permissão de notificação negada. Ative nas configurações do navegador.',
-        ),
-      )
+    if (notifPerm === 'denied') {
+      setShowPermissionError(true)
       return
     }
 
@@ -200,12 +197,16 @@ export function ProximityAlertsToggle() {
       },
       (err) => {
         console.error(err)
-        toast.error(
-          t(
-            'proximity.location_denied',
-            'Acesso à localização negado. Habilite o GPS no seu dispositivo e permita o acesso.',
-          ),
-        )
+        if (err.code === err.PERMISSION_DENIED) {
+          setShowPermissionError(true)
+        } else {
+          toast.error(
+            t(
+              'proximity.location_error',
+              'Não foi possível acessar a localização.',
+            ),
+          )
+        }
       },
     )
   }
@@ -318,6 +319,54 @@ export function ProximityAlertsToggle() {
               className="w-full text-slate-500 hover:bg-slate-100"
             >
               {t('common.cancel', 'Agora não')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showPermissionError} onOpenChange={setShowPermissionError}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="mx-auto w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4">
+              <Lock className="h-6 w-6 text-red-600" />
+            </div>
+            <DialogTitle className="text-center text-xl text-slate-800">
+              Permissões Bloqueadas
+            </DialogTitle>
+            <DialogDescription className="text-center pt-2">
+              Seu navegador bloqueou o acesso à localização ou notificações.
+              Para usar o Radar, você precisa permitir o acesso manualmente.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 mt-4 text-sm text-slate-700 space-y-3">
+            <p className="font-semibold">Como resolver no navegador:</p>
+            <ol className="list-decimal pl-5 space-y-2 text-slate-600">
+              <li>
+                Clique no ícone de{' '}
+                <strong>
+                  cadeado <Lock className="inline w-3 h-3" />
+                </strong>{' '}
+                ao lado da barra de endereço (onde aparece a URL do site).
+              </li>
+              <li>
+                Acesse <strong>Configurações do site</strong> ou gerencie as
+                permissões na lista.
+              </li>
+              <li>
+                Altere "Localização" e "Notificações" para{' '}
+                <strong>Permitir</strong>.
+              </li>
+              <li>Recarregue a página e tente ativar o Radar novamente.</li>
+            </ol>
+          </div>
+
+          <DialogFooter className="mt-6">
+            <Button
+              onClick={() => setShowPermissionError(false)}
+              className="w-full font-bold h-11"
+            >
+              Entendi
             </Button>
           </DialogFooter>
         </DialogContent>
