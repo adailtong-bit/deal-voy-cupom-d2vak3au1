@@ -48,6 +48,27 @@ export function CouponCard({
   const description =
     coupon.translations?.[language]?.description || coupon.description
 
+  const now = new Date()
+  const startDateObj = coupon.startDate
+    ? new Date(`${coupon.startDate}T00:00:00`)
+    : null
+  const endDateObj =
+    coupon.endDate || coupon.expiryDate
+      ? new Date(`${coupon.endDate || coupon.expiryDate}T23:59:59`)
+      : null
+
+  const isScheduled = !!(startDateObj && now < startDateObj)
+  const isExpired = !!(endDateObj && now > endDateObj)
+  const isDisabled = isSoldOut || reserved || isExpired || isScheduled
+
+  const getButtonText = () => {
+    if (reserved) return t('vouchers.reserved', 'Reservado')
+    if (isSoldOut) return t('vouchers.sold_out', 'Esgotado')
+    if (isExpired) return t('vouchers.expired', 'Expirada')
+    if (isScheduled) return t('vouchers.scheduled', 'Agendada')
+    return t('vouchers.reserve', 'Reservar')
+  }
+
   const handleCardClick = () => {
     navigate(`/voucher/${coupon.id}`)
   }
@@ -61,7 +82,7 @@ export function CouponCard({
       return
     }
 
-    if (reserved || isSoldOut) return
+    if (isDisabled) return
 
     const success = reserveCoupon(coupon.id)
     if (success) {
@@ -93,11 +114,25 @@ export function CouponCard({
               <ImageOff className="h-6 w-6 text-slate-300" />
             )}
             <div className="absolute top-1.5 left-1.5 flex flex-col gap-1 z-10 items-start">
-              {isSoldOut ? (
+              {isSoldOut && (
                 <Badge className="bg-red-600 text-white shadow-sm font-bold backdrop-blur-sm text-[10px] h-5 px-1.5 py-0 border-none">
                   {t('vouchers.sold_out', 'Esgotado')}
                 </Badge>
-              ) : (
+              )}
+              {isExpired && !isSoldOut && (
+                <Badge
+                  variant="secondary"
+                  className="shadow-sm font-bold backdrop-blur-sm text-[10px] h-5 px-1.5 py-0 border-none"
+                >
+                  {t('vouchers.expired', 'Expirada')}
+                </Badge>
+              )}
+              {isScheduled && !isSoldOut && (
+                <Badge className="bg-blue-500 text-white hover:bg-blue-600 shadow-sm font-bold backdrop-blur-sm text-[10px] h-5 px-1.5 py-0 border-none">
+                  {t('vouchers.scheduled', 'Agendada')}
+                </Badge>
+              )}
+              {!isSoldOut && !isExpired && !isScheduled && (
                 <Badge className="bg-white/95 text-black hover:bg-white shadow-sm font-bold backdrop-blur-sm text-[10px] h-5 px-1.5 py-0">
                   {coupon.discount}
                 </Badge>
@@ -191,13 +226,9 @@ export function CouponCard({
                     reserved && 'pointer-events-none opacity-70',
                   )}
                   onClick={handleReserve}
-                  disabled={isSoldOut || reserved}
+                  disabled={isDisabled}
                 >
-                  {reserved
-                    ? t('vouchers.reserved', 'Reservado')
-                    : isSoldOut
-                      ? t('vouchers.sold_out', 'Esgotado')
-                      : t('vouchers.reserve', 'Reservar')}
+                  {getButtonText()}
                 </Button>
               </div>
             </div>
@@ -228,11 +259,25 @@ export function CouponCard({
             <ImageOff className="h-8 w-8 text-slate-300" />
           )}
           <div className="absolute top-1.5 left-1.5 flex flex-col gap-1 z-10 items-start">
-            {isSoldOut ? (
+            {isSoldOut && (
               <Badge className="bg-red-600 text-white shadow-sm font-bold backdrop-blur-sm text-[9px] sm:text-[10px] h-4 sm:h-5 px-1.5 py-0 border-none">
                 {t('vouchers.sold_out', 'Esgotado')}
               </Badge>
-            ) : (
+            )}
+            {isExpired && !isSoldOut && (
+              <Badge
+                variant="secondary"
+                className="shadow-sm font-bold backdrop-blur-sm text-[9px] sm:text-[10px] h-4 sm:h-5 px-1.5 py-0 border-none"
+              >
+                {t('vouchers.expired', 'Expirada')}
+              </Badge>
+            )}
+            {isScheduled && !isSoldOut && (
+              <Badge className="bg-blue-500 text-white hover:bg-blue-600 shadow-sm font-bold backdrop-blur-sm text-[9px] sm:text-[10px] h-4 sm:h-5 px-1.5 py-0 border-none">
+                {t('vouchers.scheduled', 'Agendada')}
+              </Badge>
+            )}
+            {!isSoldOut && !isExpired && !isScheduled && (
               <Badge className="bg-white/95 text-black hover:bg-white shadow-sm font-bold backdrop-blur-sm text-[9px] sm:text-[10px] h-4 sm:h-5 px-1.5 py-0">
                 {coupon.discount}
               </Badge>
@@ -328,13 +373,9 @@ export function CouponCard({
                   'pointer-events-none opacity-70 hover:translate-y-0',
               )}
               onClick={handleReserve}
-              disabled={isSoldOut || reserved}
+              disabled={isDisabled}
             >
-              {reserved
-                ? t('vouchers.reserved', 'Reservado')
-                : isSoldOut
-                  ? t('vouchers.sold_out', 'Esgotado')
-                  : t('vouchers.reserve', 'Reservar')}
+              {getButtonText()}
             </Button>
           </div>
         </CardContent>

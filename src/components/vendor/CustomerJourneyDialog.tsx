@@ -12,7 +12,7 @@ import { useLanguage } from '@/stores/LanguageContext'
 import { CouponCard } from '@/components/CouponCard'
 
 export function CustomerJourneyDialog({ coupon, open, onOpenChange }: any) {
-  const { t, language } = useLanguage()
+  const { t, language, formatDate } = useLanguage()
 
   if (!coupon) return null
 
@@ -20,6 +20,9 @@ export function CustomerJourneyDialog({ coupon, open, onOpenChange }: any) {
   const description =
     coupon.translations?.[language]?.description || coupon.description
   const isOnline = coupon.offerType === 'online' || !!coupon.externalUrl
+
+  const startDateStr = coupon.startDate
+  const endDateStr = coupon.endDate || coupon.expiryDate
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -83,6 +86,14 @@ export function CustomerJourneyDialog({ coupon, open, onOpenChange }: any) {
                     </p>
                   </div>
                   <div className="text-[11px] text-slate-600 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                    <span className="font-semibold text-slate-800 block mb-0.5">
+                      {t('vendor.journey.validity', 'Validade:')}
+                    </span>
+                    <span className="block mb-2">
+                      {startDateStr ? formatDate(startDateStr) : 'N/A'}{' '}
+                      {t('common.to', 'até')}{' '}
+                      {endDateStr ? formatDate(endDateStr) : 'N/A'}
+                    </span>
                     <span className="font-semibold text-slate-800 block mb-0.5">
                       {t('vendor.journey.rules', 'Regras:')}
                     </span>
@@ -165,6 +176,16 @@ export function CustomerJourneyDialog({ coupon, open, onOpenChange }: any) {
               </Card>
             </div>
           </div>
+        </div>
+
+        <div className="p-4 bg-white border-t border-slate-200 shrink-0 flex justify-end z-10">
+          <Button
+            onClick={() => onOpenChange(false)}
+            variant="outline"
+            className="font-semibold shadow-sm"
+          >
+            {t('common.back', 'Voltar')}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

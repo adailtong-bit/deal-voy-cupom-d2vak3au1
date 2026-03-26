@@ -1152,6 +1152,35 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       return { success: false, message: 'Coupon expired' }
     }
 
+    const now = new Date()
+    if (coupon.startDate) {
+      const startDateObj = new Date(`${coupon.startDate}T00:00:00`)
+      if (now < startDateObj) {
+        logSystemAction(
+          'Validation Failed',
+          `Attempted to use scheduled coupon ${coupon.id}`,
+          'warning',
+        )
+        return {
+          success: false,
+          message: 'Campaign not active yet (Scheduled)',
+        }
+      }
+    }
+
+    if (coupon.endDate || coupon.expiryDate) {
+      const endDateStr = coupon.endDate || coupon.expiryDate
+      const endDateObj = new Date(`${endDateStr}T23:59:59`)
+      if (now > endDateObj) {
+        logSystemAction(
+          'Validation Failed',
+          `Attempted to use expired coupon ${coupon.id}`,
+          'warning',
+        )
+        return { success: false, message: 'Coupon expired' }
+      }
+    }
+
     const customer = users.find((u) => u.email === customerEmail)
     const customerId = customer?.id || (customerEmail ? 'walk-in' : 'u_user')
 

@@ -62,6 +62,8 @@ export function VendorCampaignsTab({
     setIsDialogOpen(true)
   }
 
+  const now = new Date()
+
   return (
     <div className="space-y-6 animate-fade-in-up">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-2">
@@ -110,32 +112,47 @@ export function VendorCampaignsTab({
               ? 0
               : Math.min(100, Math.round((used / limit) * 100))
 
-            const expiryDateStr = coupon.endDate || coupon.expiryDate
-            const isExpired = expiryDateStr
-              ? new Date(expiryDateStr) < new Date()
-              : false
+            const startDateStr = coupon.startDate
+            const endDateStr = coupon.endDate || coupon.expiryDate
+
+            const startDateObj = startDateStr
+              ? new Date(`${startDateStr}T00:00:00`)
+              : null
+            const endDateObj = endDateStr
+              ? new Date(`${endDateStr}T23:59:59`)
+              : null
+
+            const isScheduled = !!(startDateObj && now < startDateObj)
+            const isExpired = !!(endDateObj && now > endDateObj)
             const isSoldOut = !isUnlimited && used >= limit
 
             let statusBadge = (
-              <Badge className="bg-emerald-500 border-none shadow-sm">
-                {t('vendor.campaigns_tab.active', 'Ativo')}
+              <Badge className="bg-emerald-500 hover:bg-emerald-600 border-none shadow-sm">
+                {t('vendor.campaigns_tab.active', 'Ativa')}
               </Badge>
             )
-            if (isExpired)
-              statusBadge = (
-                <Badge variant="secondary" className="shadow-sm">
-                  {t('vendor.campaigns_tab.expired', 'Expirado')}
-                </Badge>
-              )
-            else if (isSoldOut)
+            if (isSoldOut) {
               statusBadge = (
                 <Badge
                   variant="destructive"
-                  className="bg-red-500 border-none shadow-sm"
+                  className="bg-red-500 hover:bg-red-600 border-none shadow-sm"
                 >
                   {t('vendor.campaigns_tab.sold_out', 'Esgotado')}
                 </Badge>
               )
+            } else if (isExpired) {
+              statusBadge = (
+                <Badge variant="secondary" className="shadow-sm">
+                  {t('vendor.campaigns_tab.expired', 'Expirada')}
+                </Badge>
+              )
+            } else if (isScheduled) {
+              statusBadge = (
+                <Badge className="bg-blue-500 hover:bg-blue-600 border-none shadow-sm">
+                  {t('vendor.campaigns_tab.scheduled', 'Agendada')}
+                </Badge>
+              )
+            }
 
             return (
               <Card
@@ -158,10 +175,14 @@ export function VendorCampaignsTab({
                     </h3>
                     <div className="flex items-center gap-1.5 text-xs text-white/90 font-medium">
                       <CalendarIcon className="h-3.5 w-3.5" />
-                      {t('vendor.campaigns_tab.expires_in', 'Expira em')}:{' '}
-                      {expiryDateStr
-                        ? formatDate(expiryDateStr)
-                        : t('vendor.campaigns_tab.indefinite', 'Indeterminado')}
+                      {startDateStr && endDateStr
+                        ? `${formatDate(startDateStr)} - ${formatDate(endDateStr)}`
+                        : endDateStr
+                          ? `${t('vendor.campaigns_tab.expires_in', 'Expira em')}: ${formatDate(endDateStr)}`
+                          : t(
+                              'vendor.campaigns_tab.indefinite',
+                              'Indeterminado',
+                            )}
                     </div>
                   </div>
                 </div>
@@ -306,6 +327,17 @@ export function VendorCampaignsTab({
                           </h4>
                           <p className="text-sm text-slate-600">
                             {coupon.description}
+                          </p>
+                        </div>
+
+                        <div className="space-y-1">
+                          <h4 className="text-sm font-semibold text-slate-700">
+                            {t('vendor.campaigns_tab.validity', 'Validade')}
+                          </h4>
+                          <p className="text-sm text-slate-600">
+                            {startDateStr ? formatDate(startDateStr) : 'N/A'}{' '}
+                            {t('common.to', 'até')}{' '}
+                            {endDateStr ? formatDate(endDateStr) : 'N/A'}
                           </p>
                         </div>
 
