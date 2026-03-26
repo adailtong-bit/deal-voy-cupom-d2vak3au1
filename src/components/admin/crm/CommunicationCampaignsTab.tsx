@@ -60,6 +60,7 @@ import {
   Ticket,
   Edit2,
   Trash2,
+  Plus,
 } from 'lucide-react'
 import { CommunicationCampaign, TargetGroup } from '@/lib/types'
 import { toast } from 'sonner'
