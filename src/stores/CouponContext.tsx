@@ -390,6 +390,19 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       createdAt: new Date().toISOString(),
       leadCount: 12,
     },
+    {
+      id: 'tg-3',
+      name: 'Meus Clientes Fiéis',
+      description: 'Clientes locais que visitaram a loja mais de 5 vezes.',
+      companyId: 'c1',
+      filters: {
+        categories: [],
+        frequency: 'high',
+        location: '',
+      },
+      createdAt: new Date().toISOString(),
+      leadCount: 28,
+    },
   ])
 
   const [communicationCampaigns, setCommunicationCampaigns] = useState<
@@ -827,7 +840,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
 
   const createCommunicationCampaign = (campaign: CommunicationCampaign) => {
     setCommunicationCampaigns((prev) => [campaign, ...prev])
-    toast.success('Campanha de comunicação enviada/agendada com sucesso!')
+    toast.success('Campanha de comunicação agendada com sucesso!')
   }
 
   const updateCommunicationCampaign = (

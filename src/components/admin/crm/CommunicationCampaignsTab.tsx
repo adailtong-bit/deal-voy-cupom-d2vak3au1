@@ -38,20 +38,22 @@ import { Slider } from '@/components/ui/slider'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import {
   Send,
-  Plus,
   Smartphone,
   Mail,
   Bell,
   Globe,
   MapPin,
   Map,
+  Users,
 } from 'lucide-react'
 import { CommunicationCampaign } from '@/lib/types'
 
 export function CommunicationCampaignsTab({
   franchiseId,
+  companyId,
 }: {
   franchiseId?: string
+  companyId?: string
 }) {
   const {
     communicationCampaigns,
@@ -71,15 +73,19 @@ export function CommunicationCampaignsTab({
     content: '',
   })
 
-  const displayCampaigns = franchiseId
-    ? communicationCampaigns.filter((c) => c.franchiseId === franchiseId)
-    : communicationCampaigns
+  const displayCampaigns = companyId
+    ? communicationCampaigns.filter((c) => c.companyId === companyId)
+    : franchiseId
+      ? communicationCampaigns.filter((c) => c.franchiseId === franchiseId)
+      : communicationCampaigns
 
-  const availableGroups = franchiseId
-    ? targetGroups.filter(
-        (g) => g.franchiseId === franchiseId || !g.franchiseId,
-      )
-    : targetGroups
+  const availableGroups = companyId
+    ? targetGroups.filter((g) => g.companyId === companyId)
+    : franchiseId
+      ? targetGroups.filter(
+          (g) => g.franchiseId === franchiseId || !g.franchiseId,
+        )
+      : targetGroups
 
   const handleOpenDialog = () => {
     setFormData({
@@ -99,8 +105,9 @@ export function CommunicationCampaignsTab({
       id: Math.random().toString(),
       status: 'scheduled',
       createdAt: new Date().toISOString(),
-      scheduledAt: new Date(Date.now() + 3600000).toISOString(), // mock schedule 1h future
+      scheduledAt: new Date(Date.now() + 3600000).toISOString(),
       franchiseId: franchiseId,
+      companyId: companyId,
     })
     setIsDialogOpen(false)
   }
@@ -121,6 +128,14 @@ export function CommunicationCampaignsTab({
   const getTargetName = (id: string) =>
     targetGroups.find((g) => g.id === id)?.name || id
 
+  const selectedGroup = availableGroups.find(
+    (g) => g.id === formData.targetGroupId,
+  )
+  const baseLeads = selectedGroup?.leadCount || 0
+  const impactedLeads = Math.round(
+    baseLeads * ((formData.volumeImpact || 100) / 100),
+  )
+
   return (
     <div className="space-y-4 animate-fade-in">
       <Card>
@@ -132,7 +147,10 @@ export function CommunicationCampaignsTab({
               aumentar o engajamento.
             </CardDescription>
           </div>
-          <Button onClick={handleOpenDialog}>
+          <Button
+            onClick={handleOpenDialog}
+            disabled={availableGroups.length === 0}
+          >
             <Send className="mr-2 h-4 w-4" /> Novo Disparo
           </Button>
         </CardHeader>
@@ -171,7 +189,7 @@ export function CommunicationCampaignsTab({
                         variant={
                           camp.status === 'sent' ? 'default' : 'secondary'
                         }
-                        className="capitalize bg-emerald-500 hover:bg-emerald-600"
+                        className="capitalize bg-emerald-500 hover:bg-emerald-600 border-none"
                       >
                         {camp.status}
                       </Badge>
@@ -207,7 +225,7 @@ export function CommunicationCampaignsTab({
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
                 }
-                placeholder="Ex: Black Friday Push SP"
+                placeholder="Ex: Oferta Fim de Semana"
               />
             </div>
 
@@ -274,43 +292,64 @@ export function CommunicationCampaignsTab({
                   <Label className="text-muted-foreground">
                     Cobertura Geográfica
                   </Label>
-                  <RadioGroup
-                    value={formData.geographicScope}
-                    onValueChange={(v: any) =>
-                      setFormData({ ...formData, geographicScope: v })
-                    }
-                    className="flex flex-col sm:flex-row gap-4"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="local" id="r1" />
-                      <Label
-                        htmlFor="r1"
-                        className="flex items-center cursor-pointer font-normal"
-                      >
-                        <MapPin className="w-3.5 h-3.5 mr-1" /> Local (Cidade)
-                      </Label>
+                  {companyId ? (
+                    <div className="flex flex-col gap-2">
+                      <RadioGroup value="local" className="flex">
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="local" id="r_c1" />
+                          <Label
+                            htmlFor="r_c1"
+                            className="flex items-center cursor-pointer font-normal text-slate-800"
+                          >
+                            <MapPin className="w-3.5 h-3.5 mr-1" /> Local
+                            (Restrito à Loja)
+                          </Label>
+                        </div>
+                      </RadioGroup>
+                      <p className="text-[11px] text-slate-500">
+                        O alcance é automaticamente limitado aos clientes da sua
+                        região.
+                      </p>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="state" id="r2" />
-                      <Label
-                        htmlFor="r2"
-                        className="flex items-center cursor-pointer font-normal"
-                      >
-                        <Map className="w-3.5 h-3.5 mr-1" /> Estadual
-                      </Label>
-                    </div>
-                    {(!franchiseId || user?.role === 'super_admin') && (
+                  ) : (
+                    <RadioGroup
+                      value={formData.geographicScope}
+                      onValueChange={(v: any) =>
+                        setFormData({ ...formData, geographicScope: v })
+                      }
+                      className="flex flex-col sm:flex-row gap-4"
+                    >
                       <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="national" id="r3" />
+                        <RadioGroupItem value="local" id="r1" />
                         <Label
-                          htmlFor="r3"
+                          htmlFor="r1"
                           className="flex items-center cursor-pointer font-normal"
                         >
-                          <Globe className="w-3.5 h-3.5 mr-1" /> Nacional
+                          <MapPin className="w-3.5 h-3.5 mr-1" /> Local (Cidade)
                         </Label>
                       </div>
-                    )}
-                  </RadioGroup>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="state" id="r2" />
+                        <Label
+                          htmlFor="r2"
+                          className="flex items-center cursor-pointer font-normal"
+                        >
+                          <Map className="w-3.5 h-3.5 mr-1" /> Estadual
+                        </Label>
+                      </div>
+                      {(!franchiseId || user?.role === 'super_admin') && (
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="national" id="r3" />
+                          <Label
+                            htmlFor="r3"
+                            className="flex items-center cursor-pointer font-normal"
+                          >
+                            <Globe className="w-3.5 h-3.5 mr-1" /> Nacional
+                          </Label>
+                        </div>
+                      )}
+                    </RadioGroup>
+                  )}
                 </div>
 
                 <div className="space-y-4 pt-2">
@@ -357,6 +396,25 @@ export function CommunicationCampaignsTab({
               />
               <div className="text-right text-xs text-muted-foreground">
                 {formData.content?.length || 0} caracteres
+              </div>
+            </div>
+
+            <div className="bg-blue-50 p-3 rounded-lg border border-blue-100 flex items-start gap-3 mt-2">
+              <Users className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-blue-900">
+                  Resumo do Impacto
+                </p>
+                <p className="text-xs text-blue-700 mt-0.5">
+                  Esta campanha atingirá aproximadamente{' '}
+                  <strong>{impactedLeads}</strong> leads segmentados via{' '}
+                  {formData.channel === 'push'
+                    ? 'Push Notification'
+                    : formData.channel === 'email'
+                      ? 'E-mail'
+                      : 'SMS'}
+                  .
+                </p>
               </div>
             </div>
           </div>

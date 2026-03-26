@@ -816,6 +816,7 @@ export interface TargetGroup {
   name: string
   description: string
   franchiseId?: string
+  companyId?: string
   filters: {
     categories?: string[]
     frequency?: 'high' | 'medium' | 'low' | 'all'
@@ -831,6 +832,7 @@ export interface CommunicationCampaign {
   name: string
   targetGroupId: string
   franchiseId?: string
+  companyId?: string
   channel: 'email' | 'sms' | 'push'
   geographicScope: 'local' | 'state' | 'national'
   volumeImpact: number

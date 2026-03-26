@@ -38,7 +38,13 @@ import { Plus, Edit2, Trash2, Users } from 'lucide-react'
 import { TargetGroup } from '@/lib/types'
 import { CATEGORIES } from '@/lib/data'
 
-export function TargetGroupsTab({ franchiseId }: { franchiseId?: string }) {
+export function TargetGroupsTab({
+  franchiseId,
+  companyId,
+}: {
+  franchiseId?: string
+  companyId?: string
+}) {
   const {
     targetGroups,
     addTargetGroup,
@@ -56,9 +62,11 @@ export function TargetGroupsTab({ franchiseId }: { franchiseId?: string }) {
     filters: { categories: [], frequency: 'all', location: '' },
   })
 
-  const displayGroups = franchiseId
-    ? targetGroups.filter((g) => g.franchiseId === franchiseId)
-    : targetGroups
+  const displayGroups = companyId
+    ? targetGroups.filter((g) => g.companyId === companyId)
+    : franchiseId
+      ? targetGroups.filter((g) => g.franchiseId === franchiseId)
+      : targetGroups
 
   const handleOpenDialog = (group?: TargetGroup) => {
     if (group) {
@@ -83,7 +91,8 @@ export function TargetGroupsTab({ franchiseId }: { franchiseId?: string }) {
         ...(formData as TargetGroup),
         id: Math.random().toString(),
         createdAt: new Date().toISOString(),
-        franchiseId: franchiseId, // bind to franchise if applicable
+        franchiseId: franchiseId,
+        companyId: companyId,
         leadCount: Math.floor(Math.random() * 500) + 10, // Mock calculation
       })
     }
@@ -112,9 +121,11 @@ export function TargetGroupsTab({ franchiseId }: { franchiseId?: string }) {
                 <TableRow>
                   <TableHead>Nome do Grupo</TableHead>
                   <TableHead>Filtros Aplicados</TableHead>
-                  {!franchiseId && user?.role === 'super_admin' && (
-                    <TableHead>Franquia</TableHead>
-                  )}
+                  {!franchiseId &&
+                    !companyId &&
+                    user?.role === 'super_admin' && (
+                      <TableHead>Afiliação</TableHead>
+                    )}
                   <TableHead>Leads Estimados</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
@@ -160,15 +171,19 @@ export function TargetGroupsTab({ franchiseId }: { franchiseId?: string }) {
                         )}
                       </div>
                     </TableCell>
-                    {!franchiseId && user?.role === 'super_admin' && (
-                      <TableCell>
-                        {group.franchiseId ? (
-                          <Badge variant="secondary">Franquia</Badge>
-                        ) : (
-                          <Badge className="bg-blue-500">Global</Badge>
-                        )}
-                      </TableCell>
-                    )}
+                    {!franchiseId &&
+                      !companyId &&
+                      user?.role === 'super_admin' && (
+                        <TableCell>
+                          {group.companyId ? (
+                            <Badge className="bg-purple-500">Loja</Badge>
+                          ) : group.franchiseId ? (
+                            <Badge variant="secondary">Franquia</Badge>
+                          ) : (
+                            <Badge className="bg-blue-500">Global</Badge>
+                          )}
+                        </TableCell>
+                      )}
                     <TableCell>
                       <div className="flex items-center gap-1.5 font-bold text-slate-700">
                         <Users className="h-4 w-4 text-primary" />{' '}
