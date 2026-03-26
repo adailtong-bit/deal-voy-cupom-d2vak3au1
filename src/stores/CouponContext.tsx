@@ -446,18 +446,42 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     {
       id: 'sr-1',
       companyId: 'c1',
-      name: 'Fidelidade Ouro (Café)',
+      name: 'Geral (Varejo)',
+      instructions:
+        'Válido enquanto durarem os estoques. Não cumulativo com outras promoções. Indispensável a apresentação do voucher digital.',
       triggerType: 'visit',
-      threshold: 5,
-      reward: '1 Café Especial Grátis',
+      threshold: 1,
+      reward: 'Desconto Padrão',
     },
     {
       id: 'sr-2',
       companyId: 'c1',
-      name: 'Compra Alta (Desconto)',
+      name: 'Restaurante / Bar',
+      instructions:
+        'Válido para consumo no local. Não inclui taxa de serviço. Um voucher por mesa. Não cumulativo com outras promoções.',
       triggerType: 'amount_spent',
-      threshold: 150,
-      reward: '15% OFF na próxima compra',
+      threshold: 100,
+      reward: 'Bebida Grátis',
+    },
+    {
+      id: 'sr-3',
+      companyId: 'c1',
+      name: 'Serviços / Agendamento',
+      instructions:
+        'Necessário agendamento prévio. Sujeito a disponibilidade de horário. Tolerância de 15 minutos de atraso.',
+      triggerType: 'visit',
+      threshold: 3,
+      reward: '10% OFF no próximo serviço',
+    },
+    {
+      id: 'sr-4',
+      companyId: 'c1',
+      name: 'Delivery / Retirada',
+      instructions:
+        'Válido apenas para pedidos com retirada no balcão. Taxa de entrega não inclusa (se aplicável).',
+      triggerType: 'specific_action',
+      threshold: 1,
+      reward: 'Taxa de Entrega Grátis',
     },
   ])
 
@@ -895,19 +919,19 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
 
   const addStandardRule = (rule: StandardRule) => {
     setStandardRules((prev) => [rule, ...prev])
-    toast.success('Regra criada com sucesso!')
+    toast.success('Regra de Campanha criada com sucesso!')
   }
 
   const updateStandardRule = (id: string, data: Partial<StandardRule>) => {
     setStandardRules((prev) =>
       prev.map((r) => (r.id === id ? { ...r, ...data } : r)),
     )
-    toast.success('Regra atualizada com sucesso!')
+    toast.success('Regra de Campanha atualizada com sucesso!')
   }
 
   const deleteStandardRule = (id: string) => {
     setStandardRules((prev) => prev.filter((r) => r.id !== id))
-    toast.success('Regra excluída com sucesso!')
+    toast.success('Regra de Campanha excluída com sucesso!')
   }
 
   return React.createElement(

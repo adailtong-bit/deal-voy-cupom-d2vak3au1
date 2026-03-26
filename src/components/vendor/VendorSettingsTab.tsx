@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Store, Save, MapPin, Zap } from 'lucide-react'
+import { Store, Save, MapPin } from 'lucide-react'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
 import { COUNTRIES, LOCATION_DATA } from '@/lib/locationData'
@@ -301,96 +301,6 @@ export function VendorSettingsTab({ company }: any) {
               <MapPin className="h-4 w-4 text-primary shrink-0" />{' '}
               {formattedAddress}
             </p>
-          </div>
-        </div>
-
-        <div className="pt-6 border-t border-slate-100">
-          <div className="flex items-center gap-2 mb-4">
-            <Zap className="h-5 w-5 text-orange-500" />
-            <h3 className="text-lg font-semibold text-slate-800">
-              {t(
-                'vendor.settings_tab.default_rules',
-                'Regras Padrão (Fidelidade)',
-              )}
-            </h3>
-          </div>
-          <p className="text-sm text-slate-500 mb-4">
-            {t(
-              'vendor.settings_tab.default_rules_desc',
-              'Defina gatilhos e recompensas padrão que serão carregados automaticamente ao criar novas campanhas.',
-            )}
-          </p>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label className="text-slate-700">
-                {t(
-                  'vendor.settings_tab.trigger_type',
-                  'Tipo de Gatilho Padrão',
-                )}
-              </Label>
-              <Select
-                value={data.defaultTriggerType || 'visit'}
-                onValueChange={(v) => handleChange('defaultTriggerType', v)}
-              >
-                <SelectTrigger className="bg-white">
-                  <SelectValue
-                    placeholder={t(
-                      'vendor.settings_tab.select',
-                      'Selecione...',
-                    )}
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="visit">
-                    {t(
-                      'vendor.settings_tab.trigger_visit',
-                      'Número de Visitas',
-                    )}
-                  </SelectItem>
-                  <SelectItem value="amount_spent">
-                    {t('vendor.settings_tab.trigger_amount', 'Valor Gasto')}
-                  </SelectItem>
-                  <SelectItem value="specific_action">
-                    {t('vendor.settings_tab.trigger_action', 'Ação Específica')}
-                  </SelectItem>
-                  <SelectItem value="share">
-                    {t('vendor.settings_tab.trigger_share', 'Compartilhamento')}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label className="text-slate-700">
-                {t('vendor.settings_tab.trigger_goal', 'Meta Padrão')}
-              </Label>
-              <Input
-                type="number"
-                min="1"
-                value={data.defaultTriggerGoal || ''}
-                onChange={(e) =>
-                  handleChange(
-                    'defaultTriggerGoal',
-                    e.target.value ? Number(e.target.value) : undefined,
-                  )
-                }
-                className="bg-white"
-                placeholder="Ex: 5"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-slate-700">
-                {t('vendor.settings_tab.trigger_reward', 'Recompensa Padrão')}
-              </Label>
-              <Input
-                value={data.defaultTriggerReward || ''}
-                onChange={(e) =>
-                  handleChange('defaultTriggerReward', e.target.value)
-                }
-                className="bg-white"
-                placeholder="Ex: 1 Café Grátis"
-              />
-            </div>
           </div>
         </div>
 

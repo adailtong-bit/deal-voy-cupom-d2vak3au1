@@ -33,7 +33,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
@@ -54,25 +53,6 @@ const STORE_LOCATIONS = [
   'Filial - Zona Norte',
   'Shopping Cidade',
   'Unidade Express',
-]
-
-const RULES_TEMPLATES = [
-  {
-    label: 'Geral (Varejo)',
-    text: 'Válido enquanto durarem os estoques. Não cumulativo com outras promoções. Indispensável a apresentação do voucher digital.',
-  },
-  {
-    label: 'Restaurante / Bar',
-    text: 'Válido para consumo no local. Não inclui taxa de serviço. Um voucher por mesa. Não cumulativo com outras promoções.',
-  },
-  {
-    label: 'Serviços / Agendamento',
-    text: 'Necessário agendamento prévio. Sujeito a disponibilidade de horário. Tolerância de 15 minutos de atraso.',
-  },
-  {
-    label: 'Delivery / Retirada',
-    text: 'Válido apenas para pedidos com retirada no balcão. Taxa de entrega não inclusa (se aplicável).',
-  },
 ]
 
 const formSchema = z
@@ -328,12 +308,10 @@ export function CampaignFormDialog({
         enableProximityAlerts: false,
         alertRadius: 100,
         isSeasonal: false,
-        enableTrigger: !!(
-          company?.defaultTriggerGoal && company?.defaultTriggerReward
-        ),
-        triggerType: company?.defaultTriggerType || 'visit',
-        triggerThreshold: company?.defaultTriggerGoal || undefined,
-        triggerReward: company?.defaultTriggerReward || '',
+        enableTrigger: false,
+        triggerType: 'visit',
+        triggerThreshold: undefined,
+        triggerReward: '',
       })
     }
   }, [coupon, open, form, company])
@@ -516,30 +494,65 @@ export function CampaignFormDialog({
                               size="sm"
                               className="h-7 text-xs font-medium self-start sm:self-auto"
                             >
+                              <ListOrdered className="w-3.5 h-3.5 mr-1.5" />
                               {t(
-                                'vendor.form.insert_rules_template',
-                                'Inserir Regras Padrão',
+                                'vendor.form.insert_campaign_rule',
+                                'Inserir Regra de Campanha',
                               )}
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            {RULES_TEMPLATES.map((tpl, i) => (
+                            {myRules.map((rule) => (
                               <DropdownMenuItem
-                                key={i}
+                                key={rule.id}
                                 onClick={() => {
-                                  const currentVal =
-                                    form.getValues('instructions')
-                                  const newVal = currentVal
-                                    ? `${currentVal}\n\n${tpl.text}`
-                                    : tpl.text
-                                  form.setValue('instructions', newVal, {
+                                  if (rule.instructions) {
+                                    const currentVal =
+                                      form.getValues('instructions')
+                                    const newVal = currentVal
+                                      ? `${currentVal}\n\n${rule.instructions}`
+                                      : rule.instructions
+                                    form.setValue('instructions', newVal, {
+                                      shouldValidate: true,
+                                    })
+                                  }
+
+                                  form.setValue('enableTrigger', true, {
                                     shouldValidate: true,
                                   })
+                                  form.setValue(
+                                    'triggerType',
+                                    rule.triggerType,
+                                    {
+                                      shouldValidate: true,
+                                    },
+                                  )
+                                  form.setValue(
+                                    'triggerThreshold',
+                                    rule.threshold,
+                                    {
+                                      shouldValidate: true,
+                                    },
+                                  )
+                                  form.setValue('triggerReward', rule.reward, {
+                                    shouldValidate: true,
+                                  })
+                                  toast.success(
+                                    t(
+                                      'vendor.form.rule_applied',
+                                      'Regra de Campanha aplicada com sucesso!',
+                                    ),
+                                  )
                                 }}
                               >
-                                {tpl.label}
+                                {rule.name}
                               </DropdownMenuItem>
                             ))}
+                            {myRules.length === 0 && (
+                              <DropdownMenuItem disabled>
+                                Nenhuma regra cadastrada
+                              </DropdownMenuItem>
+                            )}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
@@ -860,56 +873,6 @@ export function CampaignFormDialog({
                         'Gatilhos e Metas (Fidelidade)',
                       )}
                     </div>
-                    {myRules.length > 0 && (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="h-8 text-xs font-semibold bg-white text-orange-700 hover:bg-orange-50 border-orange-200"
-                          >
-                            <ListOrdered className="w-3.5 h-3.5 mr-1.5" />
-                            {t('vendor.form.insert_rules', 'Inserir Regra')}
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>
-                            {t('vendor.form.saved_rules', 'Regras Salvas')}
-                          </DropdownMenuLabel>
-                          {myRules.map((rule) => (
-                            <DropdownMenuItem
-                              key={rule.id}
-                              onClick={() => {
-                                form.setValue('enableTrigger', true, {
-                                  shouldValidate: true,
-                                })
-                                form.setValue('triggerType', rule.triggerType, {
-                                  shouldValidate: true,
-                                })
-                                form.setValue(
-                                  'triggerThreshold',
-                                  rule.threshold,
-                                  { shouldValidate: true },
-                                )
-                                form.setValue('triggerReward', rule.reward, {
-                                  shouldValidate: true,
-                                })
-                                toast.success(
-                                  t(
-                                    'vendor.form.rule_applied',
-                                    'Regra aplicada com sucesso!',
-                                  ),
-                                )
-                              }}
-                            >
-                              <Zap className="w-3 h-3 mr-2 text-orange-500" />
-                              {rule.name}
-                            </DropdownMenuItem>
-                          ))}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    )}
                   </div>
                   <FormField
                     control={form.control}

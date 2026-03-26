@@ -63,6 +63,7 @@ export interface StandardRule {
   id: string
   companyId: string
   name: string
+  instructions?: string
   triggerType: 'visit' | 'share' | 'amount_spent' | 'specific_action'
   threshold: number
   reward: string

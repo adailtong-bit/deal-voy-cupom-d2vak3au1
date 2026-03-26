@@ -175,7 +175,7 @@ export default function VendorDashboard() {
             className="py-2.5 px-4 font-semibold data-[state=active]:shadow-sm"
           >
             <ListOrdered className="h-4 w-4 mr-2 text-amber-500" />{' '}
-            {t('vendor.rules', 'Regras Padrão')}
+            {t('vendor.rules', 'Regras de Campanha')}
           </TabsTrigger>
           <TabsTrigger
             value="behavioral"

@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
   SelectContent,
@@ -60,6 +61,7 @@ export function VendorRulesTab({ company }: { company: any }) {
   const [editingRule, setEditingRule] = useState<StandardRule | null>(null)
   const [formData, setFormData] = useState<Partial<StandardRule>>({
     name: '',
+    instructions: '',
     triggerType: 'visit',
     threshold: 1,
     reward: '',
@@ -75,6 +77,7 @@ export function VendorRulesTab({ company }: { company: any }) {
       setEditingRule(null)
       setFormData({
         name: '',
+        instructions: '',
         triggerType: 'visit',
         threshold: 1,
         reward: '',
@@ -121,12 +124,12 @@ export function VendorRulesTab({ company }: { company: any }) {
             </div>
             <div>
               <CardTitle className="text-xl">
-                {t('vendor.rules.title', 'Modelos de Gatilhos e Regras')}
+                {t('vendor.rules.title', 'Gerenciamento de Regras de Campanha')}
               </CardTitle>
               <CardDescription>
                 {t(
                   'vendor.rules.desc',
-                  'Gerencie regras de fidelidade padrão para utilizá-las rapidamente ao criar novas campanhas.',
+                  'Crie e gerencie os modelos de regras de campanha, incluindo instruções e gatilhos de fidelidade.',
                 )}
               </CardDescription>
             </div>
@@ -143,6 +146,9 @@ export function VendorRulesTab({ company }: { company: any }) {
                 <TableRow>
                   <TableHead className="font-semibold text-slate-700">
                     {t('vendor.rules.name', 'Nome da Regra')}
+                  </TableHead>
+                  <TableHead className="font-semibold text-slate-700">
+                    Instruções
                   </TableHead>
                   <TableHead className="font-semibold text-slate-700">
                     {t('vendor.rules.type', 'Tipo de Gatilho')}
@@ -163,6 +169,9 @@ export function VendorRulesTab({ company }: { company: any }) {
                   <TableRow key={rule.id} className="hover:bg-slate-50/50">
                     <TableCell className="font-medium text-slate-800">
                       {rule.name}
+                    </TableCell>
+                    <TableCell className="text-slate-600 truncate max-w-[200px]">
+                      {rule.instructions || 'N/A'}
                     </TableCell>
                     <TableCell className="text-slate-600">
                       {getTypeLabel(rule.triggerType)}
@@ -228,13 +237,13 @@ export function VendorRulesTab({ company }: { company: any }) {
                 {myRules.length === 0 && (
                   <TableRow>
                     <TableCell
-                      colSpan={5}
+                      colSpan={6}
                       className="text-center py-12 text-slate-500 border-dashed border-t"
                     >
                       <Zap className="h-8 w-8 text-slate-300 mx-auto mb-3" />
                       {t(
                         'vendor.rules.empty',
-                        'Nenhuma regra padrão cadastrada.',
+                        'Nenhuma regra de campanha cadastrada.',
                       )}
                     </TableCell>
                   </TableRow>
@@ -246,12 +255,12 @@ export function VendorRulesTab({ company }: { company: any }) {
       </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>
               {editingRule
-                ? t('vendor.rules.edit_rule', 'Editar Regra Padrão')
-                : t('vendor.rules.new_rule', 'Nova Regra Padrão')}
+                ? t('vendor.rules.edit_rule', 'Editar Regra de Campanha')
+                : t('vendor.rules.new_rule', 'Nova Regra de Campanha')}
             </DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -265,6 +274,22 @@ export function VendorRulesTab({ company }: { company: any }) {
                   setFormData({ ...formData, name: e.target.value })
                 }
                 placeholder={t('vendor.rules.name_ph', 'Ex: Fidelidade Ouro')}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>
+                {t(
+                  'vendor.rules.form_instructions',
+                  'Instruções (Termos da Oferta)',
+                )}
+              </Label>
+              <Textarea
+                value={formData.instructions || ''}
+                onChange={(e) =>
+                  setFormData({ ...formData, instructions: e.target.value })
+                }
+                placeholder="Ex: Válido apenas para consumo no local..."
+                className="resize-none"
               />
             </div>
             <div className="space-y-2">
