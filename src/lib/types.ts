@@ -53,7 +53,7 @@ export interface LoyaltyProgram {
 
 export interface BehavioralTrigger {
   id: string
-  type: 'visit' | 'share'
+  type: 'visit' | 'share' | 'amount_spent' | 'specific_action'
   threshold: number
   reward: string
   isActive: boolean
@@ -414,6 +414,9 @@ export interface Company {
   credentialsSent?: boolean
   documents?: CompanyDocument[]
   webhookUrl?: string
+  defaultTriggerType?: 'visit' | 'share' | 'amount_spent' | 'specific_action'
+  defaultTriggerGoal?: number
+  defaultTriggerReward?: string
 }
 
 export type AdBillingType = 'fixed' | 'cpc' | 'cpa'
