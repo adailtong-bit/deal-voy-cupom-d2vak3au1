@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useMemo } from 'react'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useRegionFormatting } from '@/hooks/useRegionFormatting'
@@ -91,14 +91,16 @@ export function AdminCRM({ franchiseId }: { franchiseId?: string }) {
       <Tabs defaultValue="profiles" className="w-full">
         <TabsList className="mb-4 flex flex-wrap h-auto p-1 bg-slate-100">
           <TabsTrigger value="profiles" className="py-2.5 px-4 font-semibold">
-            <Users className="h-4 w-4 mr-2" /> Perfis & Leads
+            <Users className="h-4 w-4 mr-2" />{' '}
+            {t('franchisee.crm.tabs.profiles', 'Perfis & Leads')}
           </TabsTrigger>
           <TabsTrigger value="groups" className="py-2.5 px-4 font-semibold">
-            <Target className="h-4 w-4 mr-2 text-primary" /> Segmentação (Alvos)
+            <Target className="h-4 w-4 mr-2 text-primary" />{' '}
+            {t('franchisee.crm.tabs.groups', 'Segmentação (Alvos)')}
           </TabsTrigger>
           <TabsTrigger value="campaigns" className="py-2.5 px-4 font-semibold">
-            <Megaphone className="h-4 w-4 mr-2 text-orange-500" /> Disparos
-            (Push/SMS/Email)
+            <Megaphone className="h-4 w-4 mr-2 text-orange-500" />{' '}
+            {t('franchisee.crm.tabs.campaigns', 'Disparos (Push/SMS/Email)')}
           </TabsTrigger>
         </TabsList>
 

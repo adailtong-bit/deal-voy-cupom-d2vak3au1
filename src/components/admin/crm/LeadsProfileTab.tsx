@@ -200,14 +200,22 @@ export function LeadsProfileTab({ franchiseId }: { franchiseId?: string }) {
     <Card className="animate-fade-in">
       <CardHeader className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
-          <CardTitle>Perfis de Consumo (Leads)</CardTitle>
+          <CardTitle>
+            {t(
+              'franchisee.leads.profile_tab_title',
+              'Perfis de Consumo (Leads)',
+            )}
+          </CardTitle>
           <CardDescription>
-            Visualize o comportamento de compra e identifique os melhores perfis
-            para suas campanhas.
+            {t(
+              'franchisee.leads.profile_tab_desc',
+              'Visualize o comportamento de compra e identifique os melhores perfis para suas campanhas.',
+            )}
           </CardDescription>
         </div>
         <Button variant="outline" className="gap-2" onClick={exportCSV}>
-          <Download className="h-4 w-4" /> Exportar Dados
+          <Download className="h-4 w-4" />{' '}
+          {t('franchisee.leads.export_data', 'Exportar Dados')}
         </Button>
       </CardHeader>
       <CardContent>
@@ -233,7 +241,7 @@ export function LeadsProfileTab({ franchiseId }: { franchiseId?: string }) {
               </SelectItem>
               {CATEGORIES.filter((c) => c.id !== 'all').map((c) => (
                 <SelectItem key={c.id} value={c.id}>
-                  {c.label}
+                  {t(c.translationKey, c.label)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -257,16 +265,29 @@ export function LeadsProfileTab({ franchiseId }: { franchiseId?: string }) {
           </Select>
           <Select value={profileFilter} onValueChange={setProfileFilter}>
             <SelectTrigger>
-              <SelectValue placeholder="Perfil de Consumo" />
+              <SelectValue
+                placeholder={t(
+                  'franchisee.leads.profile_filter',
+                  'Perfil de Consumo',
+                )}
+              />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Qualquer Perfil</SelectItem>
-              <SelectItem value="High Value">Alto Valor</SelectItem>
-              <SelectItem value="Frequent Buyer">
-                Comprador Frequente
+              <SelectItem value="all">
+                {t('franchisee.leads.any_profile', 'Qualquer Perfil')}
               </SelectItem>
-              <SelectItem value="Occasional">Ocasional</SelectItem>
-              <SelectItem value="Inactive">Inativo</SelectItem>
+              <SelectItem value="High Value">
+                {t('franchisee.leads.high_value', 'Alto Valor')}
+              </SelectItem>
+              <SelectItem value="Frequent Buyer">
+                {t('franchisee.leads.frequent_buyer', 'Comprador Frequente')}
+              </SelectItem>
+              <SelectItem value="Occasional">
+                {t('franchisee.leads.occasional', 'Ocasional')}
+              </SelectItem>
+              <SelectItem value="Inactive">
+                {t('franchisee.leads.inactive', 'Inativo')}
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -278,7 +299,9 @@ export function LeadsProfileTab({ franchiseId }: { franchiseId?: string }) {
                 <TableHead>
                   {t('franchisee.crm.user_location', 'Usuário / Local')}
                 </TableHead>
-                <TableHead>Perfil de Consumo</TableHead>
+                <TableHead>
+                  {t('franchisee.leads.profile_col', 'Perfil de Consumo')}
+                </TableHead>
                 <TableHead>
                   {t('franchisee.crm.redemptions', 'Resgates')}
                 </TableHead>
@@ -297,7 +320,10 @@ export function LeadsProfileTab({ franchiseId }: { franchiseId?: string }) {
                     colSpan={5}
                     className="text-center py-8 text-muted-foreground"
                   >
-                    Nenhum usuário corresponde aos filtros de perfil.
+                    {t(
+                      'franchisee.leads.no_profile_users',
+                      'Nenhum usuário corresponde aos filtros de perfil.',
+                    )}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -323,7 +349,10 @@ export function LeadsProfileTab({ franchiseId }: { franchiseId?: string }) {
                             className="bg-slate-50 border-slate-200 text-xs font-medium"
                           >
                             {getTagIcon(tag)}
-                            {tag}
+                            {t(
+                              `franchisee.leads.${tag.toLowerCase().replace(' ', '_')}`,
+                              tag,
+                            )}
                           </Badge>
                         ))}
                       </div>
@@ -333,10 +362,17 @@ export function LeadsProfileTab({ franchiseId }: { franchiseId?: string }) {
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline" className="bg-slate-50">
-                        {u.topCategory}
+                        {u.topCategory === 'None'
+                          ? t('common.none', 'Nenhum')
+                          : t(
+                              CATEGORIES.find((c) => c.id === u.topCategory)
+                                ?.translationKey || 'category.others',
+                              u.topCategory,
+                            )}
                       </Badge>
                       <p className="text-[10px] text-muted-foreground mt-1 truncate max-w-[150px]">
-                        Preferência: {u.topMerchant}
+                        {t('franchisee.leads.preference', 'Preferência:')}{' '}
+                        {u.topMerchant}
                       </p>
                     </TableCell>
                     <TableCell className="text-sm">

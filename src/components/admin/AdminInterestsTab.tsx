@@ -19,6 +19,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Plus, Trash2, Edit2, Check, X, Tag } from 'lucide-react'
+import { toast } from 'sonner'
 
 export function AdminInterestsTab({ franchiseId }: { franchiseId?: string }) {
   const { platformSettings, updatePlatformSettings } = useCouponStore()
@@ -26,16 +27,49 @@ export function AdminInterestsTab({ franchiseId }: { franchiseId?: string }) {
 
   const interests = platformSettings.availableInterests || []
   const [newLabel, setNewLabel] = useState('')
+  const [newId, setNewId] = useState('')
+  const [newIdManuallyEdited, setNewIdManuallyEdited] = useState(false)
+
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editLabel, setEditLabel] = useState('')
 
+  const handleLabelChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Mask: Prevent double spaces and start with letter
+    const val = e.target.value.replace(/\s{2,}/g, ' ')
+    setNewLabel(val)
+
+    if (!newIdManuallyEdited) {
+      setNewId(
+        val
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, '-')
+          .replace(/-+/g, '-'),
+      )
+    }
+  }
+
+  const handleIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNewIdManuallyEdited(true)
+    // Mask: Only lowercase letters, numbers, and hyphens
+    setNewId(
+      e.target.value
+        .toLowerCase()
+        .replace(/[^a-z0-9-]/g, '')
+        .replace(/-+/g, '-'),
+    )
+  }
+
   const handleAdd = () => {
-    if (!newLabel.trim()) return
-    const id = newLabel.trim().toLowerCase().replace(/\s+/g, '-')
-    if (interests.find((i) => i.id === id)) return // prevent duplicate ids
+    if (!newLabel.trim() || !newId.trim()) return
+    const cleanId = newId.trim().replace(/-$/, '') // remove trailing dash
+
+    if (interests.find((i) => i.id === cleanId)) {
+      toast.error(t('common.error', 'Ocorreu um erro'))
+      return
+    }
 
     const newInterest = {
-      id,
+      id: cleanId,
       label: newLabel.trim(),
       icon: 'Tag',
     }
@@ -43,6 +77,8 @@ export function AdminInterestsTab({ franchiseId }: { franchiseId?: string }) {
       availableInterests: [...interests, newInterest],
     })
     setNewLabel('')
+    setNewId('')
+    setNewIdManuallyEdited(false)
   }
 
   const handleDelete = (id: string) => {
@@ -58,9 +94,11 @@ export function AdminInterestsTab({ franchiseId }: { franchiseId?: string }) {
 
   const saveEdit = () => {
     if (!editLabel.trim()) return
+    // Mask edit label as well to prevent double spaces
+    const cleanLabel = editLabel.replace(/\s{2,}/g, ' ').trim()
     updatePlatformSettings({
       availableInterests: interests.map((i) =>
-        i.id === editingId ? { ...i, label: editLabel.trim() } : i,
+        i.id === editingId ? { ...i, label: cleanLabel } : i,
       ),
     })
     setEditingId(null)
@@ -81,17 +119,28 @@ export function AdminInterestsTab({ franchiseId }: { franchiseId?: string }) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-4 mb-6">
+          <div className="flex flex-col sm:flex-row gap-4 mb-6">
             <Input
               placeholder={t(
                 'franchisee.interests.new',
                 'Novo interesse (ex: Tecnologia)',
               )}
               value={newLabel}
-              onChange={(e) => setNewLabel(e.target.value)}
+              onChange={handleLabelChange}
               onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+              className="flex-1"
             />
-            <Button onClick={handleAdd}>
+            <Input
+              placeholder={t(
+                'franchisee.interests.new_id',
+                'ID (ex: tecnologia)',
+              )}
+              value={newId}
+              onChange={handleIdChange}
+              onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+              className="sm:w-48 bg-slate-50 font-mono text-sm"
+            />
+            <Button onClick={handleAdd} className="shrink-0">
               <Plus className="h-4 w-4 mr-2" />{' '}
               {t('franchisee.interests.add', 'Adicionar')}
             </Button>

@@ -92,15 +92,20 @@ export function AdminCategoriesTab({ franchiseId }: { franchiseId?: string }) {
       <Card>
         <CardHeader>
           <CardTitle>
-            {t('admin.categoryManagement', 'Category Management')}
+            {t('admin.categoryManagement', 'Gerenciamento de Categorias')}
           </CardTitle>
           <CardDescription>
-            {t('admin.mainCategoriesDesc', 'Select up to 4 main categories.')}
+            {t(
+              'admin.mainCategoriesDesc',
+              'Selecione até 4 categorias principais para exibir em destaque na página inicial.',
+            )}
             <br />
-            <strong>
-              {formatNumber(mainCategories.length)} / {formatNumber(4)}
-            </strong>{' '}
-            selecionadas.
+            <strong className="text-primary mt-1 inline-block">
+              {t('admin.selected_count', '{count} selecionadas.').replace(
+                '{count}',
+                `${formatNumber(mainCategories.length)} / ${formatNumber(4)}`,
+              )}
+            </strong>
           </CardDescription>
         </CardHeader>
         <CardContent>

@@ -55,7 +55,7 @@ export function StaffTab({ parentType = 'global', parentId }: StaffTabProps) {
   const [inviteData, setInviteData] = useState({
     name: '',
     email: '',
-    staffRole: 'Manager',
+    staffRole: t('franchisee.staff.default_manager', 'Manager'),
   })
 
   const staffList = users.filter((u) => {
@@ -74,7 +74,7 @@ export function StaffTab({ parentType = 'global', parentId }: StaffTabProps) {
       setFormData({
         name: '',
         email: '',
-        staffRole: 'Manager',
+        staffRole: t('franchisee.staff.default_manager', 'Manager'),
         status: 'active',
       })
     }
@@ -111,14 +111,18 @@ export function StaffTab({ parentType = 'global', parentId }: StaffTabProps) {
     addUser(newUser)
     toast.success(`Convite enviado para ${inviteData.email} com link seguro.`)
     setIsInviteDialogOpen(false)
-    setInviteData({ name: '', email: '', staffRole: 'Manager' })
+    setInviteData({
+      name: '',
+      email: '',
+      staffRole: t('franchisee.staff.default_manager', 'Manager'),
+    })
   }
 
   const getParentName = (u: User) => {
     if (u.companyId) return companies.find((c) => c.id === u.companyId)?.name
     if (u.franchiseId)
       return franchises.find((f) => f.id === u.franchiseId)?.name
-    return 'Global'
+    return t('franchisee.staff.global', 'Global')
   }
 
   return (
@@ -174,7 +178,9 @@ export function StaffTab({ parentType = 'global', parentId }: StaffTabProps) {
               <TableRow key={u.id}>
                 <TableCell className="font-medium">{u.name}</TableCell>
                 <TableCell>{u.email}</TableCell>
-                <TableCell>{u.staffRole || 'Staff'}</TableCell>
+                <TableCell>
+                  {u.staffRole || t('franchisee.staff.default_staff', 'Staff')}
+                </TableCell>
                 {parentType === 'global' && (
                   <TableCell>
                     <Badge variant="outline">{getParentName(u)}</Badge>
