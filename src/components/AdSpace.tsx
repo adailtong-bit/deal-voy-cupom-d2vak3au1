@@ -63,6 +63,7 @@ export function AdSpace({
                     `https://img.usecurling.com/p/400/100?q=${ad.category || 'ad'}`
                   }
                   alt={ad.title}
+                  crossOrigin="anonymous"
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   onError={() => setImgError(true)}
                 />
@@ -90,4 +91,3 @@ export function AdSpace({
     </div>
   )
 }
-

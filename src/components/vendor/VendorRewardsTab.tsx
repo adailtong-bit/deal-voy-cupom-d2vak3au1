@@ -99,16 +99,8 @@ export function VendorRewardsTab({ company }: { company: any }) {
   }
 
   const getTypeLabel = (type: string) => {
-    switch (type) {
-      case 'fixed_discount':
-        return 'Desconto Fixo'
-      case 'percentage':
-        return 'Percentual'
-      case 'item':
-        return 'Item Grátis'
-      default:
-        return type
-    }
+    const key = `vendor.rewards_module.type_${type.replace('fixed_discount', 'fixed').replace('percentage', 'percent').replace('item', 'item')}`
+    return t(key, type)
   }
 
   const isValid =
@@ -124,16 +116,22 @@ export function VendorRewardsTab({ company }: { company: any }) {
             </div>
             <div>
               <CardTitle className="text-xl">
-                Catálogo de Recompensas Aprovadas
+                {t(
+                  'vendor.rewards_module.title',
+                  'Catálogo de Recompensas Aprovadas',
+                )}
               </CardTitle>
               <CardDescription>
-                Gerencie os benefícios pré-aprovados que podem ser oferecidos
-                aos clientes no cumprimento de metas.
+                {t(
+                  'vendor.rewards_module.desc',
+                  'Gerencie os benefícios pré-aprovados que podem ser oferecidos aos clientes no cumprimento de metas.',
+                )}
               </CardDescription>
             </div>
           </div>
           <Button onClick={() => handleOpenDialog()} className="font-bold">
-            <Plus className="mr-2 h-4 w-4" /> Nova Recompensa
+            <Plus className="mr-2 h-4 w-4" />{' '}
+            {t('vendor.rewards_module.new', 'Nova Recompensa')}
           </Button>
         </CardHeader>
         <CardContent className="pt-6">
@@ -142,16 +140,19 @@ export function VendorRewardsTab({ company }: { company: any }) {
               <TableHeader className="bg-slate-50">
                 <TableRow>
                   <TableHead className="font-semibold text-slate-700">
-                    Título da Recompensa
+                    {t(
+                      'vendor.rewards_module.col_title',
+                      'Título da Recompensa',
+                    )}
                   </TableHead>
                   <TableHead className="font-semibold text-slate-700">
-                    Descrição
+                    {t('vendor.rewards_module.col_desc', 'Descrição')}
                   </TableHead>
                   <TableHead className="font-semibold text-slate-700">
-                    Tipo
+                    {t('vendor.rewards_module.col_type', 'Tipo')}
                   </TableHead>
                   <TableHead className="font-semibold text-slate-700">
-                    Custo Estimado
+                    {t('vendor.rewards_module.col_cost', 'Custo Estimado')}
                   </TableHead>
                   <TableHead className="text-right font-semibold text-slate-700">
                     {t('common.actions', 'Ações')}
@@ -196,12 +197,16 @@ export function VendorRewardsTab({ company }: { company: any }) {
                           <AlertDialogContent>
                             <AlertDialogHeader>
                               <AlertDialogTitle>
-                                Excluir Recompensa?
+                                {t(
+                                  'vendor.rewards_module.delete_title',
+                                  'Excluir Recompensa?',
+                                )}
                               </AlertDialogTitle>
                               <AlertDialogDescription>
-                                Esta ação não pode ser desfeita. Campanhas que
-                                já utilizam esta recompensa manterão os dados
-                                históricos.
+                                {t(
+                                  'vendor.rewards_module.delete_desc',
+                                  'Esta ação não pode ser desfeita. Campanhas que já utilizam esta recompensa manterão os dados históricos.',
+                                )}
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
@@ -230,7 +235,10 @@ export function VendorRewardsTab({ company }: { company: any }) {
                       className="text-center py-12 text-slate-500 border-dashed border-t"
                     >
                       <Gift className="h-8 w-8 text-slate-300 mx-auto mb-3" />
-                      Nenhuma recompensa cadastrada no catálogo.
+                      {t(
+                        'vendor.rewards_module.empty',
+                        'Nenhuma recompensa cadastrada no catálogo.',
+                      )}
                     </TableCell>
                   </TableRow>
                 )}
@@ -245,34 +253,47 @@ export function VendorRewardsTab({ company }: { company: any }) {
           <DialogHeader>
             <DialogTitle>
               {editingReward
-                ? 'Editar Recompensa'
-                : 'Nova Recompensa (Catálogo)'}
+                ? t('vendor.rewards_module.edit', 'Editar Recompensa')
+                : t(
+                    'vendor.rewards_module.new_dialog',
+                    'Nova Recompensa (Catálogo)',
+                  )}
             </DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
-              <Label>Título / Nome do Benefício</Label>
+              <Label>
+                {t(
+                  'vendor.rewards_module.form_title',
+                  'Título / Nome do Benefício',
+                )}
+              </Label>
               <Input
                 value={formData.title || ''}
                 onChange={(e) =>
                   setFormData({ ...formData, title: e.target.value })
                 }
-                placeholder="Ex: 15% OFF, Sobremesa Grátis"
               />
             </div>
             <div className="space-y-2">
-              <Label>Descrição (Uso Interno)</Label>
+              <Label>
+                {t(
+                  'vendor.rewards_module.form_desc',
+                  'Descrição (Uso Interno)',
+                )}
+              </Label>
               <Input
                 value={formData.description || ''}
                 onChange={(e) =>
                   setFormData({ ...formData, description: e.target.value })
                 }
-                placeholder="Detalhes ou regras específicas desta recompensa"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Tipo de Recompensa</Label>
+                <Label>
+                  {t('vendor.rewards_module.form_type', 'Tipo de Recompensa')}
+                </Label>
                 <Select
                   value={formData.type}
                   onValueChange={(v: any) =>
@@ -284,16 +305,21 @@ export function VendorRewardsTab({ company }: { company: any }) {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="fixed_discount">
-                      Desconto Fixo
+                      {t('vendor.rewards_module.type_fixed', 'Desconto Fixo')}
                     </SelectItem>
-                    <SelectItem value="percentage">Percentual</SelectItem>
-                    <SelectItem value="item">Item Grátis</SelectItem>
+                    <SelectItem value="percentage">
+                      {t('vendor.rewards_module.type_percent', 'Percentual')}
+                    </SelectItem>
+                    <SelectItem value="item">
+                      {t('vendor.rewards_module.type_item', 'Item Grátis')}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
                 <Label className="flex items-center gap-1.5">
-                  <DollarSign className="w-3.5 h-3.5" /> Custo Estimado
+                  <DollarSign className="w-3.5 h-3.5" />{' '}
+                  {t('vendor.rewards_module.form_cost', 'Custo Estimado')}
                 </Label>
                 <Input
                   type="number"

@@ -25,35 +25,20 @@ export function BehavioralTriggersTab({ coupons }: any) {
           <Zap className="h-8 w-8 text-slate-300" />
         </div>
         <h3 className="font-bold text-lg text-slate-700">
-          Lógica e Metas (Gatilhos)
+          {t('vendor.behavioral.empty_title', 'Lógica e Metas (Gatilhos)')}
         </h3>
         <p className="text-slate-500 text-sm max-w-sm mx-auto mt-1">
-          Você não possui campanhas com metas rastreáveis ativas. Adicione
-          gatilhos ao criar ou editar uma campanha para automatizar recompensas.
+          {t(
+            'vendor.behavioral.empty_desc',
+            'Você não possui campanhas com metas rastreáveis ativas. Adicione gatilhos ao criar ou editar uma campanha para automatizar recompensas.',
+          )}
         </p>
       </div>
     )
   }
 
   const getTypeLabel = (type: string) => {
-    switch (type) {
-      case 'share':
-        return 'Compartilhamentos'
-      case 'coupon_usage':
-        return 'Usos de Cupom'
-      case 'visualization':
-        return 'Visualizações'
-      case 'link_click':
-        return 'Cliques no Link'
-      case 'visit':
-        return 'Visitas'
-      case 'amount_spent':
-        return 'Valor Gasto'
-      case 'specific_action':
-        return 'Ação Específica'
-      default:
-        return type
-    }
+    return t(`triggers.${type}`, type)
   }
 
   return (
@@ -88,11 +73,15 @@ export function BehavioralTriggersTab({ coupons }: any) {
                 >
                   <div>
                     <p className="font-bold text-slate-800 capitalize flex items-center gap-1.5 mb-0.5">
-                      <Zap className="h-3.5 w-3.5 text-primary" /> Meta de{' '}
+                      <Zap className="h-3.5 w-3.5 text-primary" />{' '}
+                      {t('vendor.behavioral.goal_of', 'Meta de')}{' '}
                       {getTypeLabel(tTrigger.type)}
                     </p>
                     <p className="text-slate-500 font-medium mt-1">
-                      Ao atingir a meta de{' '}
+                      {t(
+                        'vendor.behavioral.upon_reaching',
+                        'Ao atingir a meta de',
+                      )}{' '}
                       <strong className="text-slate-700 bg-slate-100 px-1 rounded">
                         {tTrigger.threshold}
                       </strong>

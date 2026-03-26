@@ -121,24 +121,8 @@ export function VendorRulesTab({ company }: { company: any }) {
   }
 
   const getTypeLabel = (type?: string) => {
-    switch (type) {
-      case 'share':
-        return 'Compartilhamento'
-      case 'coupon_usage':
-        return 'Uso de Cupom'
-      case 'visualization':
-        return 'Visualização'
-      case 'link_click':
-        return 'Clique em Link'
-      case 'visit':
-        return 'Número de Visitas'
-      case 'amount_spent':
-        return 'Valor Gasto'
-      case 'specific_action':
-        return 'Ação Específica'
-      default:
-        return type || 'N/A'
-    }
+    if (!type) return 'N/A'
+    return t(`triggers.${type}`, type)
   }
 
   const isValid =
@@ -160,17 +144,22 @@ export function VendorRulesTab({ company }: { company: any }) {
             </div>
             <div>
               <CardTitle className="text-xl">
-                {t('vendor.rules.title', 'Gerenciamento de Regras de Campanha')}
+                {t(
+                  'vendor.rules_module.title',
+                  'Gerenciamento de Regras de Campanha',
+                )}
               </CardTitle>
               <CardDescription>
-                Configure os modelos de regras com metas, separando os textos
-                visuais da lógica que aprova e entrega a recompensa.
+                {t(
+                  'vendor.rules_module.desc',
+                  'Configure o Modelo com metas, separando os textos visuais da lógica que aprova e entrega a recompensa.',
+                )}
               </CardDescription>
             </div>
           </div>
           <Button onClick={() => handleOpenDialog()} className="font-bold">
             <Plus className="mr-2 h-4 w-4" />{' '}
-            {t('vendor.rules.new_rule', 'Nova Regra')}
+            {t('vendor.rules_module.new_rule', 'Nova Regra')}
           </Button>
         </CardHeader>
         <CardContent className="pt-6">
@@ -179,16 +168,19 @@ export function VendorRulesTab({ company }: { company: any }) {
               <TableHeader className="bg-slate-50">
                 <TableRow>
                   <TableHead className="font-semibold text-slate-700">
-                    Nome da Regra
+                    {t('vendor.rules_module.col_name', 'Nome da Regra')}
                   </TableHead>
                   <TableHead className="font-semibold text-slate-700">
-                    Lógica Ativa?
+                    {t('vendor.rules_module.col_logic', 'Lógica Ativa?')}
                   </TableHead>
                   <TableHead className="font-semibold text-slate-700">
-                    Meta (Gatilho)
+                    {t('vendor.rules_module.col_trigger', 'Meta (Gatilho)')}
                   </TableHead>
                   <TableHead className="font-semibold text-slate-700">
-                    Recompensa Vinculada
+                    {t(
+                      'vendor.rules_module.col_reward',
+                      'Recompensa Vinculada',
+                    )}
                   </TableHead>
                   <TableHead className="text-right font-semibold text-slate-700">
                     {t('common.actions', 'Ações')}
@@ -207,7 +199,12 @@ export function VendorRulesTab({ company }: { company: any }) {
                         <span
                           className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${logicActive ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'}`}
                         >
-                          {logicActive ? 'Sim' : 'Apenas Texto'}
+                          {logicActive
+                            ? t('vendor.rules_module.logic_yes', 'Sim')
+                            : t(
+                                'vendor.rules_module.logic_text',
+                                'Apenas Texto',
+                              )}
                         </span>
                       </TableCell>
                       <TableCell className="text-slate-600">
@@ -217,7 +214,7 @@ export function VendorRulesTab({ company }: { company: any }) {
                           </span>
                         ) : (
                           <span className="text-slate-400 italic">
-                            Desativado
+                            {t('vendor.rules_module.disabled', 'Desativado')}
                           </span>
                         )}
                       </TableCell>
@@ -229,7 +226,7 @@ export function VendorRulesTab({ company }: { company: any }) {
                           'N/A'
                         ) : (
                           <span className="text-slate-400 italic font-normal">
-                            Nenhuma
+                            {t('common.none', 'Nenhuma')}
                           </span>
                         )}
                       </TableCell>
@@ -257,13 +254,13 @@ export function VendorRulesTab({ company }: { company: any }) {
                               <AlertDialogHeader>
                                 <AlertDialogTitle>
                                   {t(
-                                    'vendor.rules.delete_title',
+                                    'vendor.rules_module.delete_title',
                                     'Excluir Regra?',
                                   )}
                                 </AlertDialogTitle>
                                 <AlertDialogDescription>
                                   {t(
-                                    'vendor.rules.delete_desc',
+                                    'vendor.rules_module.delete_desc',
                                     'Esta ação não pode ser desfeita. Campanhas que já utilizam esta regra não serão afetadas.',
                                   )}
                                 </AlertDialogDescription>
@@ -294,7 +291,7 @@ export function VendorRulesTab({ company }: { company: any }) {
                     >
                       <Zap className="h-8 w-8 text-slate-300 mx-auto mb-3" />
                       {t(
-                        'vendor.rules.empty',
+                        'vendor.rules_module.empty',
                         'Nenhuma regra de campanha cadastrada.',
                       )}
                     </TableCell>
@@ -311,49 +308,67 @@ export function VendorRulesTab({ company }: { company: any }) {
           <DialogHeader>
             <DialogTitle>
               {editingRule
-                ? t('vendor.rules.edit_rule', 'Editar Regra de Campanha')
-                : t('vendor.rules.new_rule', 'Nova Regra de Campanha')}
+                ? t('vendor.rules_module.edit_rule', 'Editar Regra de Campanha')
+                : t('vendor.rules_module.new_rule', 'Nova Regra de Campanha')}
             </DialogTitle>
           </DialogHeader>
           <div className="grid gap-5 py-4">
             <div className="space-y-2">
               <Label>
-                {t('vendor.rules.form_name', 'Nome da Regra (Uso Interno)')}
+                {t(
+                  'vendor.rules_module.form_name',
+                  'Nome da Regra (Uso Interno)',
+                )}
               </Label>
               <Input
                 value={formData.name || ''}
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
                 }
-                placeholder={t('vendor.rules.name_ph', 'Ex: Fidelidade Ouro')}
+                placeholder={t(
+                  'vendor.rules_module.name_ph',
+                  'Ex: Fidelidade Ouro',
+                )}
               />
             </div>
 
             <div className="space-y-2">
               <Label className="flex justify-between items-end">
-                <span>Instruções Visuais (Exibição para o Cliente)</span>
+                <span>
+                  {t(
+                    'vendor.rules_module.form_instructions',
+                    'Instruções Visuais (Exibição para o Cliente)',
+                  )}
+                </span>
               </Label>
               <Textarea
                 value={formData.instructions || ''}
                 onChange={(e) =>
                   setFormData({ ...formData, instructions: e.target.value })
                 }
-                placeholder="Ex: Compartilhe esta oferta com 3 amigos para liberar o desconto..."
                 className="resize-none"
               />
               <p className="text-xs text-muted-foreground mt-1">
-                Este texto será exibido no card da oferta.
+                {t(
+                  'vendor.rules_module.form_instructions_desc',
+                  'Este texto será exibido no card da oferta.',
+                )}
               </p>
             </div>
 
             <div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-lg">
               <div className="space-y-0.5">
                 <Label className="text-base font-semibold text-slate-800">
-                  Habilitar Lógica (Backend)
+                  {t(
+                    'vendor.rules_module.enable_logic',
+                    'Ativar Lógica (Backend)',
+                  )}
                 </Label>
                 <p className="text-xs text-slate-500">
-                  Se ativo, o sistema rastreará metas e liberará a recompensa
-                  definida.
+                  {t(
+                    'vendor.rules_module.enable_logic_desc',
+                    'Se ativo, o sistema rastreará metas e liberará a recompensa definida.',
+                  )}
                 </p>
               </div>
               <Switch
@@ -367,11 +382,16 @@ export function VendorRulesTab({ company }: { company: any }) {
             {formData.isLogicEnabled !== false && (
               <div className="space-y-4 pt-2 animate-in fade-in slide-in-from-top-2">
                 <h4 className="font-semibold text-sm text-slate-800 border-b pb-2">
-                  Parametrização de Metas e Recompensas
+                  {t(
+                    'vendor.rules_module.params_title',
+                    'Parametrização de Metas e Recompensas',
+                  )}
                 </h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Tipo de Meta</Label>
+                    <Label>
+                      {t('vendor.rules_module.trigger_type', 'Tipo de Meta')}
+                    </Label>
                     <Select
                       value={formData.triggerType || 'coupon_usage'}
                       onValueChange={(v: any) =>
@@ -382,21 +402,37 @@ export function VendorRulesTab({ company }: { company: any }) {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="share">Compartilhamento</SelectItem>
+                        <SelectItem value="share">
+                          {t('triggers.share', 'Compartilhamento')}
+                        </SelectItem>
                         <SelectItem value="coupon_usage">
-                          Uso de Cupom
+                          {t('triggers.coupon_usage', 'Uso de Cupom')}
                         </SelectItem>
                         <SelectItem value="visualization">
-                          Visualização
+                          {t('triggers.visualization', 'Visualização')}
                         </SelectItem>
                         <SelectItem value="link_click">
-                          Clique em Link
+                          {t('triggers.link_click', 'Clique no Link')}
+                        </SelectItem>
+                        <SelectItem value="visit">
+                          {t('triggers.visit', 'Número de Visitas')}
+                        </SelectItem>
+                        <SelectItem value="amount_spent">
+                          {t('triggers.amount_spent', 'Valor Gasto')}
+                        </SelectItem>
+                        <SelectItem value="specific_action">
+                          {t('triggers.specific_action', 'Ação Específica')}
                         </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label>Valor Alvo (Quantia)</Label>
+                    <Label>
+                      {t(
+                        'vendor.rules_module.trigger_threshold',
+                        'Valor Alvo (Quantia)',
+                      )}
+                    </Label>
                     <Input
                       type="number"
                       min="1"
@@ -409,12 +445,16 @@ export function VendorRulesTab({ company }: { company: any }) {
                             : undefined,
                         })
                       }
-                      placeholder="Ex: 5"
                     />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label>Recompensa a Conceder</Label>
+                  <Label>
+                    {t(
+                      'vendor.rules_module.reward_to_grant',
+                      'Recompensa a Conceder',
+                    )}
+                  </Label>
                   <Select
                     value={formData.rewardId || ''}
                     onValueChange={(v) =>
@@ -422,12 +462,15 @@ export function VendorRulesTab({ company }: { company: any }) {
                     }
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Selecione do catálogo..." />
+                      <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       {myRewards.length === 0 && (
                         <SelectItem value="none" disabled>
-                          Nenhuma recompensa aprovada no catálogo
+                          {t(
+                            'vendor.rules_module.reward_desc',
+                            'Nenhuma recompensa aprovada no catálogo',
+                          )}
                         </SelectItem>
                       )}
                       {myRewards.map((r) => (
@@ -438,18 +481,23 @@ export function VendorRulesTab({ company }: { company: any }) {
                     </SelectContent>
                   </Select>
                   <p className="text-[11px] text-muted-foreground mt-1">
-                    Apenas itens do Catálogo de Recompensas Aprovadas são
-                    listados.
+                    {t(
+                      'vendor.rules_module.reward_desc',
+                      'Apenas itens do Catálogo de Recompensas Aprovadas são listados.',
+                    )}
                   </p>
 
                   {selectedReward && selectedReward.estimatedCost >= 50 && (
                     <div className="flex items-center gap-2 text-amber-700 bg-amber-50 border border-amber-200 p-2.5 rounded-md text-xs font-semibold mt-3 animate-in fade-in">
                       <AlertTriangle className="h-4 w-4 shrink-0" />
                       <span>
-                        Aviso de Risco Financeiro: Esta recompensa tem um custo
-                        estimado alto (
-                        {formatCurrency(selectedReward.estimatedCost)}).
-                        Certifique-se de que a meta justifica o custo.
+                        {t(
+                          'vendor.rules_module.financial_risk',
+                          'Aviso de Risco Financeiro: Esta recompensa tem um custo estimado alto ({cost}). Certifique-se de que a meta justifica o custo.',
+                        ).replace(
+                          '{cost}',
+                          formatCurrency(selectedReward.estimatedCost),
+                        )}
                       </span>
                     </div>
                   )}

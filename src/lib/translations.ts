@@ -734,20 +734,21 @@ export const translations: Record<Language, any> = {
         delete_desc:
           'Esta ação não pode ser desfeita. Campanhas que já utilizam esta regra não serão afetadas.',
         empty: 'Nenhuma regra de campanha cadastrada.',
-        form_name: 'Nome da Regra',
+        form_name: 'Nome da Regra (Uso Interno)',
         name_ph: 'Ex: Fidelidade Ouro',
         form_instructions: 'Instruções Visuais (Exibição para o Cliente)',
         form_instructions_desc: 'Este texto será exibido no card da oferta.',
-        enable_logic: 'Ativar Lógica',
+        enable_logic: 'Ativar Lógica (Backend)',
         enable_logic_desc:
           'Se ativo, o sistema rastreará metas e liberará a recompensa definida.',
         params_title: 'Parametrização de Metas e Recompensas',
         trigger_type: 'Tipo de Meta',
         trigger_threshold: 'Valor Alvo (Quantia)',
-        reward_to_grant: 'Recompensa',
+        reward_to_grant: 'Recompensa a Conceder',
         reward_desc:
           'Apenas itens do Catálogo de Recompensas Aprovadas são listados.',
-        financial_risk: 'Aviso de Risco Financeiro:',
+        financial_risk:
+          'Aviso de Risco Financeiro: Esta recompensa tem um custo estimado alto ({cost}). Certifique-se de que a meta justifica o custo.',
       },
       rewards_module: {
         title: 'Catálogo de Recompensas Aprovadas',
@@ -1897,7 +1898,8 @@ export const translations: Record<Language, any> = {
         form_name: 'Rule Name',
         name_ph: 'e.g. Gold Loyalty',
         form_instructions: 'Visual Instructions (Customer Display)',
-        form_instructions_desc: 'This text will be displayed on the offer card.',
+        form_instructions_desc:
+          'This text will be displayed on the offer card.',
         enable_logic: 'Enable Logic',
         enable_logic_desc:
           'If active, the system will track goals and release the defined reward.',
@@ -1906,7 +1908,8 @@ export const translations: Record<Language, any> = {
         trigger_threshold: 'Target Value (Amount)',
         reward_to_grant: 'Reward',
         reward_desc: 'Only items from the Approved Rewards Catalog are listed.',
-        financial_risk: 'Financial Risk Warning:',
+        financial_risk:
+          'Financial Risk Warning: This reward has a high estimated cost ({cost}). Make sure the goal justifies the cost.',
       },
       rewards_module: {
         title: 'Approved Rewards Catalog',
@@ -2034,7 +2037,7 @@ export const translations: Record<Language, any> = {
         proximity_roi: 'Proximity Marketing (ROI)',
         proximity_roi_desc:
           'Performance of geolocation alerts triggered to nearby users.',
-        alerts_sent: 'Alerts Sent',
+        alerts_sent: 'Alertas Sent',
         alerts_redeemed: 'Coupons Redeemed via Alert',
         conversion: 'conversion',
       },
@@ -2307,7 +2310,7 @@ export const translations: Record<Language, any> = {
       destinations: 'Destinations',
       bookings: 'Bookings',
       tickets: 'Tickets',
-      int_gastronomy: 'Gastronomia',
+      int_gastronomy: 'Gastronomy',
       int_culture: 'Culture',
       int_shopping: 'Shopping',
       int_nightlife: 'Nightlife',
@@ -3042,8 +3045,8 @@ export const translations: Record<Language, any> = {
       rules_module: {
         title: 'Gestión de Reglas',
         desc: 'Configure el Modelo con metas, separando los textos visuales de la lógica que aprueba y entrega la recompensa.',
-        new_rule: 'Nueva Regra',
-        edit_rule: 'Editar Regra',
+        new_rule: 'Nueva Regla',
+        edit_rule: 'Editar Regla',
         col_name: 'Nombre de la Regla',
         col_logic: '¿Lógica Activa?',
         col_trigger: 'Meta (Gatilho)',
@@ -3069,7 +3072,8 @@ export const translations: Record<Language, any> = {
         reward_to_grant: 'Recompensa',
         reward_desc:
           'Solo se listan elementos del Catálogo de Recompensas Aprobadas.',
-        financial_risk: 'Advertencia de Riesgo Financiero:',
+        financial_risk:
+          'Advertencia de Riesgo Financiero: Esta recompensa tiene un costo estimado alto ({cost}). Asegúrese de que la meta justifique el costo.',
       },
       rewards_module: {
         title: 'Catálogo de Recompensas Aprobadas',
@@ -3488,4 +3492,3 @@ export const translations: Record<Language, any> = {
     },
   },
 }
-

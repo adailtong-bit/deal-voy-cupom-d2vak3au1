@@ -37,6 +37,7 @@ import {
   ChevronDown,
   ArrowLeft,
   Globe,
+  ImageOff,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 
@@ -76,6 +77,7 @@ export default function Index() {
   } = useCouponStore()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
+  const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({})
 
   const handleBack = () => {
     if (window.history.state && window.history.state.idx > 0) {
@@ -424,11 +426,24 @@ export default function Index() {
                         <div className="flex flex-col sm:flex-row h-full">
                           {event.image && (
                             <div className="w-full sm:w-2/5 h-48 sm:h-auto relative overflow-hidden bg-slate-100 shrink-0">
-                              <img
-                                src={event.image}
-                                alt={eventTitle}
-                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                              />
+                              {!imgErrors[event.id] ? (
+                                <img
+                                  src={event.image}
+                                  alt={eventTitle}
+                                  crossOrigin="anonymous"
+                                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                  onError={() =>
+                                    setImgErrors((prev) => ({
+                                      ...prev,
+                                      [event.id]: true,
+                                    }))
+                                  }
+                                />
+                              ) : (
+                                <div className="w-full h-full bg-slate-200 flex items-center justify-center">
+                                  <ImageOff className="h-8 w-8 text-slate-400" />
+                                </div>
+                              )}
                               <div className="absolute top-2 left-2 flex gap-1 flex-col items-start">
                                 <Badge
                                   variant="secondary"

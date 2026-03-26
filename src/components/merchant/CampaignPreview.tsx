@@ -1,7 +1,8 @@
+import { useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ImagePlus } from 'lucide-react'
+import { ImagePlus, ImageOff } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
 
 interface CampaignPreviewProps {
@@ -26,12 +27,19 @@ export function CampaignPreview({
   formattedDiscount,
 }: CampaignPreviewProps) {
   const { t, formatDate } = useLanguage()
+  const [imgError, setImgError] = useState(false)
 
   return (
     <Card className="overflow-hidden border-slate-200 shadow-sm w-full max-w-[340px] bg-white pointer-events-none">
-      {image ? (
+      {image && !imgError ? (
         <div className="aspect-video w-full relative">
-          <img src={image} alt="" className="w-full h-full object-cover" />
+          <img
+            src={image}
+            crossOrigin="anonymous"
+            alt=""
+            className="w-full h-full object-cover"
+            onError={() => setImgError(true)}
+          />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
           <Badge className="absolute bottom-2 left-2 bg-white/95 text-black hover:bg-white border-none shadow-sm">
             {formattedDiscount}
@@ -39,7 +47,11 @@ export function CampaignPreview({
         </div>
       ) : (
         <div className="aspect-video w-full relative bg-slate-100 flex items-center justify-center">
-          <ImagePlus className="w-8 h-8 text-slate-300" />
+          {image ? (
+            <ImageOff className="w-8 h-8 text-slate-300" />
+          ) : (
+            <ImagePlus className="w-8 h-8 text-slate-300" />
+          )}
           <Badge className="absolute bottom-2 left-2 bg-white/95 text-black hover:bg-white border-none shadow-sm">
             {formattedDiscount}
           </Badge>
