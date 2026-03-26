@@ -51,11 +51,28 @@ export interface LoyaltyProgram {
   reward: string
 }
 
+export interface RewardCatalogItem {
+  id: string
+  companyId: string
+  title: string
+  description?: string
+  type: 'fixed_discount' | 'percentage' | 'item'
+  estimatedCost: number
+}
+
 export interface BehavioralTrigger {
   id: string
-  type: 'visit' | 'share' | 'amount_spent' | 'specific_action'
+  type:
+    | 'share'
+    | 'coupon_usage'
+    | 'visualization'
+    | 'link_click'
+    | 'visit'
+    | 'amount_spent'
+    | 'specific_action'
   threshold: number
   reward: string
+  rewardId?: string
   isActive: boolean
 }
 
@@ -64,9 +81,18 @@ export interface StandardRule {
   companyId: string
   name: string
   instructions?: string
-  triggerType: 'visit' | 'share' | 'amount_spent' | 'specific_action'
-  threshold: number
-  reward: string
+  isLogicEnabled?: boolean
+  triggerType?:
+    | 'share'
+    | 'coupon_usage'
+    | 'visualization'
+    | 'link_click'
+    | 'visit'
+    | 'amount_spent'
+    | 'specific_action'
+  threshold?: number
+  reward?: string
+  rewardId?: string
 }
 
 export interface Coupon {

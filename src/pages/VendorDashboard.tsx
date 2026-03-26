@@ -14,6 +14,7 @@ import {
   Target,
   Send,
   ListOrdered,
+  Gift,
 } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useCouponStore } from '@/stores/CouponContext'
@@ -28,6 +29,7 @@ import { VendorSettingsTab } from '@/components/vendor/VendorSettingsTab'
 import { VendorCustomersTab } from '@/components/vendor/VendorCustomersTab'
 import { VendorSeasonalTab } from '@/components/vendor/VendorSeasonalTab'
 import { VendorRulesTab } from '@/components/vendor/VendorRulesTab'
+import { VendorRewardsTab } from '@/components/vendor/VendorRewardsTab'
 import { StaffTab } from '@/components/admin/hierarchy/StaffTab'
 import { TargetGroupsTab } from '@/components/admin/crm/TargetGroupsTab'
 import { CommunicationCampaignsTab } from '@/components/admin/crm/CommunicationCampaignsTab'
@@ -178,6 +180,12 @@ export default function VendorDashboard() {
             {t('vendor.rules', 'Regras de Campanha')}
           </TabsTrigger>
           <TabsTrigger
+            value="rewards"
+            className="py-2.5 px-4 font-semibold data-[state=active]:shadow-sm"
+          >
+            <Gift className="h-4 w-4 mr-2 text-pink-500" /> Recompensas
+          </TabsTrigger>
+          <TabsTrigger
             value="behavioral"
             className="py-2.5 px-4 font-semibold data-[state=active]:shadow-sm"
           >
@@ -224,6 +232,9 @@ export default function VendorDashboard() {
         </TabsContent>
         <TabsContent value="rules" className="mt-4">
           <VendorRulesTab company={myCompany} />
+        </TabsContent>
+        <TabsContent value="rewards" className="mt-4">
+          <VendorRewardsTab company={myCompany} />
         </TabsContent>
         <TabsContent value="seasonal" className="mt-4">
           <VendorSeasonalTab company={myCompany} />

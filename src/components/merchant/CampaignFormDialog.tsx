@@ -43,6 +43,7 @@ import {
   Radar,
   Zap,
   ListOrdered,
+  AlertTriangle,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { CampaignPreview } from './CampaignPreview'
@@ -97,10 +98,18 @@ const formSchema = z
     isSeasonal: z.boolean().default(false),
     enableTrigger: z.boolean().default(false),
     triggerType: z
-      .enum(['visit', 'share', 'amount_spent', 'specific_action'])
-      .default('visit'),
+      .enum([
+        'share',
+        'coupon_usage',
+        'visualization',
+        'link_click',
+        'visit',
+        'amount_spent',
+        'specific_action',
+      ])
+      .default('coupon_usage'),
     triggerThreshold: z.coerce.number().optional(),
-    triggerReward: z.string().optional(),
+    rewardId: z.string().optional(),
   })
   .refine((data) => new Date(data.endDate) >= new Date(data.startDate), {
     message: 'A data final deve ser posterior ou igual à inicial',
@@ -147,9 +156,8 @@ const formSchema = z
   )
   .refine(
     (data) =>
-      !data.enableTrigger ||
-      (data.triggerReward && data.triggerReward.trim().length > 0),
-    { message: 'Recompensa obrigatória', path: ['triggerReward'] },
+      !data.enableTrigger || (data.rewardId && data.rewardId.trim().length > 0),
+    { message: 'Recompensa obrigatória', path: ['rewardId'] },
   )
 
 type FormData = z.infer<typeof formSchema>
@@ -215,12 +223,13 @@ export function CampaignFormDialog({
   coupon?: any
   companyId: string
 }) {
-  const { addCoupon, updateCampaign, companies, standardRules } =
+  const { addCoupon, updateCampaign, companies, standardRules, rewardCatalog } =
     useCouponStore()
-  const { t } = useLanguage()
+  const { t, formatCurrency } = useLanguage()
   const company = companies.find((c) => c.id === companyId)
 
   const myRules = standardRules.filter((r) => r.companyId === companyId)
+  const myRewards = rewardCatalog.filter((r) => r.companyId === companyId)
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -245,16 +254,22 @@ export function CampaignFormDialog({
       alertRadius: 100,
       isSeasonal: false,
       enableTrigger: false,
-      triggerType: 'visit',
+      triggerType: 'coupon_usage',
       triggerThreshold: undefined,
-      triggerReward: '',
+      rewardId: '',
     },
   })
 
   const scope = form.watch('scope')
   const discountType = form.watch('discountType')
   const limitType = form.watch('limitType')
+  const enableTrigger = form.watch('enableTrigger')
+  const rewardId = form.watch('rewardId')
   const watchedVals = form.watch()
+
+  const selectedReward = rewardId
+    ? myRewards.find((r) => r.id === rewardId)
+    : null
 
   useEffect(() => {
     if (coupon && open) {
@@ -281,10 +296,10 @@ export function CampaignFormDialog({
         enableProximityAlerts: coupon.enableProximityAlerts || false,
         alertRadius: coupon.alertRadius || 100,
         isSeasonal: coupon.isSeasonal || false,
-        enableTrigger: !!bt,
-        triggerType: bt?.type || 'visit',
+        enableTrigger: !!bt && bt.isActive,
+        triggerType: (bt?.type as any) || 'coupon_usage',
         triggerThreshold: bt?.threshold || undefined,
-        triggerReward: bt?.reward || '',
+        rewardId: bt?.rewardId || '',
       })
     } else if (open) {
       form.reset({
@@ -309,9 +324,9 @@ export function CampaignFormDialog({
         alertRadius: 100,
         isSeasonal: false,
         enableTrigger: false,
-        triggerType: 'visit',
+        triggerType: 'coupon_usage',
         triggerThreshold: undefined,
-        triggerReward: '',
+        rewardId: '',
       })
     }
   }, [coupon, open, form, company])
@@ -330,13 +345,17 @@ export function CampaignFormDialog({
     const isUnlimited = data.limitType === 'unlimited'
     const totalLimit = isUnlimited ? undefined : data.totalLimit
 
+    const selectedRewardName =
+      myRewards.find((r) => r.id === data.rewardId)?.title || ''
+
     const triggers = data.enableTrigger
       ? [
           {
             id: coupon?.behavioralTriggers?.[0]?.id || Math.random().toString(),
             type: data.triggerType as any,
             threshold: data.triggerThreshold || 0,
-            reward: data.triggerReward || '',
+            rewardId: data.rewardId || '',
+            reward: selectedRewardName,
             isActive: true,
           },
         ]
@@ -517,26 +536,35 @@ export function CampaignFormDialog({
                                     })
                                   }
 
-                                  form.setValue('enableTrigger', true, {
+                                  const isLogic = rule.isLogicEnabled !== false
+
+                                  form.setValue('enableTrigger', isLogic, {
                                     shouldValidate: true,
                                   })
-                                  form.setValue(
-                                    'triggerType',
-                                    rule.triggerType,
-                                    {
+
+                                  if (isLogic && rule.triggerType) {
+                                    form.setValue(
+                                      'triggerType',
+                                      rule.triggerType,
+                                      {
+                                        shouldValidate: true,
+                                      },
+                                    )
+                                  }
+                                  if (isLogic && rule.threshold) {
+                                    form.setValue(
+                                      'triggerThreshold',
+                                      rule.threshold,
+                                      {
+                                        shouldValidate: true,
+                                      },
+                                    )
+                                  }
+                                  if (isLogic && rule.rewardId) {
+                                    form.setValue('rewardId', rule.rewardId, {
                                       shouldValidate: true,
-                                    },
-                                  )
-                                  form.setValue(
-                                    'triggerThreshold',
-                                    rule.threshold,
-                                    {
-                                      shouldValidate: true,
-                                    },
-                                  )
-                                  form.setValue('triggerReward', rule.reward, {
-                                    shouldValidate: true,
-                                  })
+                                    })
+                                  }
                                   toast.success(
                                     t(
                                       'vendor.form.rule_applied',
@@ -868,10 +896,7 @@ export function CampaignFormDialog({
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-orange-800 font-semibold">
                       <Zap className="w-5 h-5 text-orange-500" />
-                      {t(
-                        'vendor.form.triggers_title',
-                        'Gatilhos e Metas (Fidelidade)',
-                      )}
+                      Lógica de Campanha (Gatilhos e Metas)
                     </div>
                   </div>
                   <FormField
@@ -881,11 +906,12 @@ export function CampaignFormDialog({
                       <FormItem className="flex flex-row items-center justify-between rounded-lg border border-orange-200 bg-white p-4 shadow-sm">
                         <div className="space-y-0.5">
                           <FormLabel className="text-base cursor-pointer">
-                            {t(
-                              'vendor.form.activate_trigger',
-                              'Ativar Recompensa Automática',
-                            )}
+                            Ativar Lógica
                           </FormLabel>
+                          <p className="text-xs text-muted-foreground">
+                            Se ativo, o sistema rastreará a meta para conceder a
+                            recompensa automaticamente.
+                          </p>
                         </div>
                         <FormControl>
                           <Switch
@@ -898,16 +924,14 @@ export function CampaignFormDialog({
                     )}
                   />
 
-                  {form.watch('enableTrigger') && (
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 animate-in fade-in slide-in-from-top-2 pt-2">
+                  {enableTrigger && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 pt-2">
                       <FormField
                         control={form.control}
                         name="triggerType"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>
-                              {t('vendor.form.trigger_type', 'Tipo de Gatilho')}
-                            </FormLabel>
+                            <FormLabel>Tipo de Meta</FormLabel>
                             <Select
                               onValueChange={field.onChange}
                               defaultValue={field.value}
@@ -915,38 +939,21 @@ export function CampaignFormDialog({
                             >
                               <FormControl>
                                 <SelectTrigger className="bg-white">
-                                  <SelectValue
-                                    placeholder={t(
-                                      'vendor.form.select',
-                                      'Selecione...',
-                                    )}
-                                  />
+                                  <SelectValue />
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                <SelectItem value="visit">
-                                  {t(
-                                    'vendor.form.trigger_visit',
-                                    'Número de Visitas',
-                                  )}
-                                </SelectItem>
-                                <SelectItem value="amount_spent">
-                                  {t(
-                                    'vendor.form.trigger_amount',
-                                    'Valor Gasto',
-                                  )}
-                                </SelectItem>
-                                <SelectItem value="specific_action">
-                                  {t(
-                                    'vendor.form.trigger_action',
-                                    'Ação Específica',
-                                  )}
-                                </SelectItem>
                                 <SelectItem value="share">
-                                  {t(
-                                    'vendor.form.trigger_share',
-                                    'Compartilhamento',
-                                  )}
+                                  Compartilhamento
+                                </SelectItem>
+                                <SelectItem value="coupon_usage">
+                                  Uso de Cupom
+                                </SelectItem>
+                                <SelectItem value="visualization">
+                                  Visualização
+                                </SelectItem>
+                                <SelectItem value="link_click">
+                                  Clique em Link
                                 </SelectItem>
                               </SelectContent>
                             </Select>
@@ -959,12 +966,7 @@ export function CampaignFormDialog({
                         name="triggerThreshold"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>
-                              {t(
-                                'vendor.form.trigger_goal',
-                                'Meta para Disparo',
-                              )}
-                            </FormLabel>
+                            <FormLabel>Valor Alvo (Quantia)</FormLabel>
                             <FormControl>
                               <Input
                                 type="number"
@@ -981,21 +983,50 @@ export function CampaignFormDialog({
                       />
                       <FormField
                         control={form.control}
-                        name="triggerReward"
+                        name="rewardId"
                         render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>
-                              {t('vendor.form.trigger_reward', 'Recompensa')}
-                            </FormLabel>
-                            <FormControl>
-                              <Input
-                                className="bg-white"
-                                placeholder="Ex: 1 Café Grátis"
-                                {...field}
-                                value={field.value || ''}
-                              />
-                            </FormControl>
+                          <FormItem className="sm:col-span-2">
+                            <FormLabel>Recompensa a Conceder</FormLabel>
+                            <Select
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                              value={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger className="bg-white">
+                                  <SelectValue placeholder="Selecione do catálogo..." />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {myRewards.length === 0 && (
+                                  <SelectItem value="none" disabled>
+                                    Nenhuma recompensa aprovada no catálogo
+                                  </SelectItem>
+                                )}
+                                {myRewards.map((r) => (
+                                  <SelectItem key={r.id} value={r.id}>
+                                    {r.title}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                             <FormMessage />
+
+                            {selectedReward &&
+                              selectedReward.estimatedCost >= 50 && (
+                                <div className="flex items-center gap-2 text-amber-700 bg-amber-50 border border-amber-200 p-2.5 rounded-md text-xs font-semibold mt-3 animate-in fade-in">
+                                  <AlertTriangle className="h-4 w-4 shrink-0" />
+                                  <span>
+                                    Aviso de Risco: Esta recompensa tem um custo
+                                    estimado alto (
+                                    {formatCurrency(
+                                      selectedReward.estimatedCost,
+                                    )}
+                                    ). Certifique-se de que a meta justifica o
+                                    custo.
+                                  </span>
+                                </div>
+                              )}
                           </FormItem>
                         )}
                       />

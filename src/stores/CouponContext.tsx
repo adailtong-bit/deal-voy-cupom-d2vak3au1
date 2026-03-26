@@ -39,6 +39,7 @@ import {
   TargetGroup,
   CommunicationCampaign,
   StandardRule,
+  RewardCatalogItem,
 } from '@/lib/types'
 import {
   MOCK_COUPONS,
@@ -132,6 +133,7 @@ interface CouponContextType {
   targetGroups: TargetGroup[]
   communicationCampaigns: CommunicationCampaign[]
   standardRules: StandardRule[]
+  rewardCatalog: RewardCatalogItem[]
   setRegion: (regionCode: string) => void
   toggleSave: (id: string) => void
   toggleTrip: (id: string) => void
@@ -253,10 +255,16 @@ interface CouponContextType {
   updateFranchise: (id: string, data: Partial<Franchise>) => void
   deleteFranchise: (id: string) => void
 
-  // Standard Rules
+  // Standard Rules & Rewards
   addStandardRule: (rule: StandardRule) => void
   updateStandardRule: (id: string, data: Partial<StandardRule>) => void
   deleteStandardRule: (id: string) => void
+  addRewardCatalogItem: (item: RewardCatalogItem) => void
+  updateRewardCatalogItem: (
+    id: string,
+    data: Partial<RewardCatalogItem>,
+  ) => void
+  deleteRewardCatalogItem: (id: string) => void
 }
 
 const CouponContext = createContext<CouponContextType | undefined>(undefined)
@@ -442,6 +450,41 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     },
   ])
 
+  const [rewardCatalog, setRewardCatalog] = useState<RewardCatalogItem[]>([
+    {
+      id: 'rc-1',
+      companyId: 'c1',
+      title: 'Desconto Padrão 10%',
+      description: 'Válido para compras gerais',
+      type: 'percentage',
+      estimatedCost: 10,
+    },
+    {
+      id: 'rc-2',
+      companyId: 'c1',
+      title: 'Bebida Grátis',
+      description: 'Uma bebida a escolha',
+      type: 'item',
+      estimatedCost: 15,
+    },
+    {
+      id: 'rc-3',
+      companyId: 'c1',
+      title: '10% OFF no próximo serviço',
+      description: 'Retorno fidelidade',
+      type: 'percentage',
+      estimatedCost: 20,
+    },
+    {
+      id: 'rc-4',
+      companyId: 'c1',
+      title: 'R$ 50 OFF Exclusivo',
+      description: 'Desconto de alto valor',
+      type: 'fixed_discount',
+      estimatedCost: 50,
+    },
+  ])
+
   const [standardRules, setStandardRules] = useState<StandardRule[]>([
     {
       id: 'sr-1',
@@ -449,9 +492,11 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       name: 'Geral (Varejo)',
       instructions:
         'Válido enquanto durarem os estoques. Não cumulativo com outras promoções. Indispensável a apresentação do voucher digital.',
-      triggerType: 'visit',
+      isLogicEnabled: true,
+      triggerType: 'coupon_usage',
       threshold: 1,
-      reward: 'Desconto Padrão',
+      rewardId: 'rc-1',
+      reward: 'Desconto Padrão 10%',
     },
     {
       id: 'sr-2',
@@ -459,8 +504,10 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       name: 'Restaurante / Bar',
       instructions:
         'Válido para consumo no local. Não inclui taxa de serviço. Um voucher por mesa. Não cumulativo com outras promoções.',
+      isLogicEnabled: true,
       triggerType: 'amount_spent',
       threshold: 100,
+      rewardId: 'rc-2',
       reward: 'Bebida Grátis',
     },
     {
@@ -469,19 +516,19 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       name: 'Serviços / Agendamento',
       instructions:
         'Necessário agendamento prévio. Sujeito a disponibilidade de horário. Tolerância de 15 minutos de atraso.',
+      isLogicEnabled: true,
       triggerType: 'visit',
       threshold: 3,
+      rewardId: 'rc-3',
       reward: '10% OFF no próximo serviço',
     },
     {
       id: 'sr-4',
       companyId: 'c1',
-      name: 'Delivery / Retirada',
+      name: 'Instruções Apenas (Sem Lógica)',
       instructions:
         'Válido apenas para pedidos com retirada no balcão. Taxa de entrega não inclusa (se aplicável).',
-      triggerType: 'specific_action',
-      threshold: 1,
-      reward: 'Taxa de Entrega Grátis',
+      isLogicEnabled: false,
     },
   ])
 
@@ -934,6 +981,26 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     toast.success('Regra de Campanha excluída com sucesso!')
   }
 
+  const addRewardCatalogItem = (item: RewardCatalogItem) => {
+    setRewardCatalog((prev) => [item, ...prev])
+    toast.success('Recompensa adicionada ao catálogo!')
+  }
+
+  const updateRewardCatalogItem = (
+    id: string,
+    data: Partial<RewardCatalogItem>,
+  ) => {
+    setRewardCatalog((prev) =>
+      prev.map((r) => (r.id === id ? { ...r, ...data } : r)),
+    )
+    toast.success('Recompensa atualizada!')
+  }
+
+  const deleteRewardCatalogItem = (id: string) => {
+    setRewardCatalog((prev) => prev.filter((r) => r.id !== id))
+    toast.success('Recompensa removida do catálogo!')
+  }
+
   return React.createElement(
     CouponContext.Provider,
     {
@@ -988,6 +1055,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         targetGroups,
         communicationCampaigns,
         standardRules,
+        rewardCatalog,
         setRegion,
         toggleSave,
         toggleTrip,
@@ -1086,6 +1154,9 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         addStandardRule,
         updateStandardRule,
         deleteStandardRule,
+        addRewardCatalogItem,
+        updateRewardCatalogItem,
+        deleteRewardCatalogItem,
       },
     },
     children,
