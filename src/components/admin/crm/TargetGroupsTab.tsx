@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useCouponStore } from '@/stores/CouponContext'
 import {
   Table,
@@ -38,6 +38,18 @@ import { Plus, Edit2, Trash2, Users } from 'lucide-react'
 import { TargetGroup } from '@/lib/types'
 import { CATEGORIES } from '@/lib/data'
 
+const calculateAge = (birthday?: string) => {
+  if (!birthday) return null
+  const birthDate = new Date(birthday)
+  const today = new Date()
+  let age = today.getFullYear() - birthDate.getFullYear()
+  const m = today.getMonth() - birthDate.getMonth()
+  if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+    age--
+  }
+  return age
+}
+
 export function TargetGroupsTab({
   franchiseId,
   companyId,
@@ -51,6 +63,8 @@ export function TargetGroupsTab({
     updateTargetGroup,
     deleteTargetGroup,
     user,
+    users,
+    franchises,
   } = useCouponStore()
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -59,7 +73,14 @@ export function TargetGroupsTab({
   const [formData, setFormData] = useState<Partial<TargetGroup>>({
     name: '',
     description: '',
-    filters: { categories: [], frequency: 'all', location: '' },
+    filters: {
+      categories: [],
+      frequency: 'all',
+      location: '',
+      gender: 'all',
+      state: 'all',
+      city: 'all',
+    },
   })
 
   const displayGroups = companyId
@@ -67,6 +88,71 @@ export function TargetGroupsTab({
     : franchiseId
       ? targetGroups.filter((g) => g.franchiseId === franchiseId)
       : targetGroups
+
+  const availableStates = useMemo(() => {
+    return Array.from(new Set(users.map((u) => u.state).filter(Boolean))).sort()
+  }, [users])
+
+  const availableCities = useMemo(() => {
+    return Array.from(
+      new Set(
+        users
+          .filter(
+            (u) =>
+              !formData.filters?.state ||
+              formData.filters.state === 'all' ||
+              u.state === formData.filters.state,
+          )
+          .map((u) => u.city)
+          .filter(Boolean),
+      ),
+    ).sort()
+  }, [users, formData.filters?.state])
+
+  const matchingUsers = useMemo(() => {
+    return users.filter((u) => {
+      // Affiliation filtering
+      if (companyId && u.companyId !== companyId) return false
+      if (
+        franchiseId &&
+        !companyId &&
+        u.franchiseId !== franchiseId &&
+        u.region !== franchises.find((f) => f.id === franchiseId)?.region
+      )
+        return false
+
+      // Demographic: Gender
+      const fg = formData.filters?.gender
+      if (fg && fg !== 'all') {
+        if (fg === 'other') {
+          if (u.gender === 'male' || u.gender === 'female') return false
+        } else {
+          if (u.gender !== fg) return false
+        }
+      }
+
+      // Demographic: Age
+      const minAge = formData.filters?.minAge
+      const maxAge = formData.filters?.maxAge
+      if (minAge || maxAge) {
+        const age = calculateAge(u.birthday)
+        if (age === null) return false
+        if (minAge && age < minAge) return false
+        if (maxAge && age > maxAge) return false
+      }
+
+      // Geographic: State & City
+      const fs = formData.filters?.state
+      if (fs && fs !== 'all' && u.state !== fs) return false
+
+      const fc = formData.filters?.city
+      if (fc && fc !== 'all' && u.city !== fc) return false
+
+      return true
+    })
+  }, [users, companyId, franchiseId, franchises, formData.filters])
+
+  const estimatedLeads = matchingUsers.length
 
   const handleOpenDialog = (group?: TargetGroup) => {
     if (group) {
@@ -77,7 +163,14 @@ export function TargetGroupsTab({
       setFormData({
         name: '',
         description: '',
-        filters: { categories: [], frequency: 'all', location: '' },
+        filters: {
+          categories: [],
+          frequency: 'all',
+          location: '',
+          gender: 'all',
+          state: 'all',
+          city: 'all',
+        },
       })
     }
     setIsDialogOpen(true)
@@ -85,7 +178,10 @@ export function TargetGroupsTab({
 
   const handleSave = () => {
     if (editingGroup) {
-      updateTargetGroup(editingGroup.id, formData)
+      updateTargetGroup(editingGroup.id, {
+        ...formData,
+        leadCount: estimatedLeads,
+      })
     } else {
       addTargetGroup({
         ...(formData as TargetGroup),
@@ -93,7 +189,7 @@ export function TargetGroupsTab({
         createdAt: new Date().toISOString(),
         franchiseId: franchiseId,
         companyId: companyId,
-        leadCount: Math.floor(Math.random() * 500) + 10, // Mock calculation
+        leadCount: estimatedLeads,
       })
     }
     setIsDialogOpen(false)
@@ -106,8 +202,8 @@ export function TargetGroupsTab({
           <div>
             <CardTitle>Grupos de Segmentação (Alvos)</CardTitle>
             <CardDescription>
-              Crie segmentos baseados no perfil de consumo para usar em
-              campanhas de marketing.
+              Crie segmentos baseados em dados demográficos e de consumo para
+              usar em campanhas.
             </CardDescription>
           </div>
           <Button onClick={() => handleOpenDialog()}>
@@ -126,7 +222,7 @@ export function TargetGroupsTab({
                     user?.role === 'super_admin' && (
                       <TableHead>Afiliação</TableHead>
                     )}
-                  <TableHead>Leads Estimados</TableHead>
+                  <TableHead>Leads</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -142,7 +238,7 @@ export function TargetGroupsTab({
                       </p>
                     </TableCell>
                     <TableCell>
-                      <div className="flex flex-wrap gap-1">
+                      <div className="flex flex-wrap gap-1 max-w-[250px]">
                         {group.filters?.categories &&
                           group.filters.categories.length > 0 && (
                             <Badge
@@ -152,21 +248,37 @@ export function TargetGroupsTab({
                               Cat: {group.filters.categories[0]}
                             </Badge>
                           )}
-                        {group.filters?.frequency &&
-                          group.filters.frequency !== 'all' && (
+                        {group.filters?.gender &&
+                          group.filters.gender !== 'all' && (
                             <Badge
                               variant="outline"
                               className="bg-slate-50 text-[10px]"
                             >
-                              Freq: {group.filters.frequency}
+                              Gênero: {group.filters.gender}
                             </Badge>
                           )}
-                        {group.filters?.location && (
+                        {group.filters?.state &&
+                          group.filters.state !== 'all' && (
+                            <Badge
+                              variant="outline"
+                              className="bg-slate-50 text-[10px]"
+                            >
+                              Est: {group.filters.state}
+                            </Badge>
+                          )}
+                        {(group.filters?.minAge || group.filters?.maxAge) && (
                           <Badge
                             variant="outline"
                             className="bg-slate-50 text-[10px]"
                           >
-                            Loc: {group.filters.location}
+                            Idade:{' '}
+                            {group.filters.minAge
+                              ? `${group.filters.minAge}`
+                              : '0'}
+                            -
+                            {group.filters.maxAge
+                              ? `${group.filters.maxAge}`
+                              : '+'}
                           </Badge>
                         )}
                       </div>
@@ -225,7 +337,7 @@ export function TargetGroupsTab({
       </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {editingGroup ? 'Editar Grupo' : 'Criar Grupo de Segmentação'}
@@ -239,7 +351,7 @@ export function TargetGroupsTab({
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
                 }
-                placeholder="Ex: Amantes de Fast Food SP"
+                placeholder="Ex: Mulheres +25 SP"
               />
             </div>
             <div className="space-y-2">
@@ -255,8 +367,133 @@ export function TargetGroupsTab({
             </div>
 
             <div className="pt-4 border-t space-y-4">
-              <h4 className="font-semibold text-sm">Filtros de Perfil</h4>
+              <h4 className="font-semibold text-sm">Filtros Demográficos</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label>Gênero</Label>
+                  <Select
+                    value={formData.filters?.gender || 'all'}
+                    onValueChange={(v: any) =>
+                      setFormData({
+                        ...formData,
+                        filters: { ...formData.filters, gender: v },
+                      })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Todos" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+                      <SelectItem value="male">Masculino</SelectItem>
+                      <SelectItem value="female">Feminino</SelectItem>
+                      <SelectItem value="other">Outros</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Idade Mínima</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={formData.filters?.minAge || ''}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        filters: {
+                          ...formData.filters,
+                          minAge: e.target.value
+                            ? Number(e.target.value)
+                            : undefined,
+                        },
+                      })
+                    }
+                    placeholder="Ex: 18"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Idade Máxima</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={formData.filters?.maxAge || ''}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        filters: {
+                          ...formData.filters,
+                          maxAge: e.target.value
+                            ? Number(e.target.value)
+                            : undefined,
+                        },
+                      })
+                    }
+                    placeholder="Ex: 45"
+                  />
+                </div>
+              </div>
+            </div>
 
+            <div className="pt-4 border-t space-y-4">
+              <h4 className="font-semibold text-sm">Filtros Geográficos</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Estado</Label>
+                  <Select
+                    value={formData.filters?.state || 'all'}
+                    onValueChange={(v) =>
+                      setFormData({
+                        ...formData,
+                        filters: { ...formData.filters, state: v, city: 'all' },
+                      })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Todos" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos os Estados</SelectItem>
+                      {availableStates.map((s) => (
+                        <SelectItem key={s} value={s}>
+                          {s}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Cidade</Label>
+                  <Select
+                    value={formData.filters?.city || 'all'}
+                    onValueChange={(v) =>
+                      setFormData({
+                        ...formData,
+                        filters: { ...formData.filters, city: v },
+                      })
+                    }
+                    disabled={
+                      !formData.filters?.state ||
+                      formData.filters.state === 'all'
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Todas" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todas as Cidades</SelectItem>
+                      {availableCities.map((c) => (
+                        <SelectItem key={c} value={c}>
+                          {c}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-4 border-t space-y-4">
+              <h4 className="font-semibold text-sm">Filtros de Consumo</h4>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Categoria Preferida</Label>
@@ -276,7 +513,7 @@ export function TargetGroupsTab({
                       <SelectValue placeholder="Todas" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">Todas</SelectItem>
+                      <SelectItem value="all">Todas as Categorias</SelectItem>
                       {CATEGORIES.filter((c) => c.id !== 'all').map((c) => (
                         <SelectItem key={c.id} value={c.id}>
                           {c.label}
@@ -310,30 +547,20 @@ export function TargetGroupsTab({
                   </Select>
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label>Localização Específica (Estado ou Cidade)</Label>
-                <Input
-                  placeholder="Ex: São Paulo"
-                  value={formData.filters?.location || ''}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      filters: {
-                        ...formData.filters,
-                        location: e.target.value,
-                      },
-                    })
-                  }
-                />
-              </div>
             </div>
 
-            <div className="bg-blue-50 p-3 rounded-lg border border-blue-100 flex items-center justify-between mt-2">
-              <span className="text-sm font-medium text-blue-800">
-                Leads Estimados:
-              </span>
-              <span className="font-bold text-lg text-blue-600">
-                ~{Math.floor(Math.random() * 300) + 50}
+            <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 flex items-center justify-between mt-2">
+              <div className="space-y-1">
+                <span className="text-sm font-medium text-blue-800 flex items-center gap-2">
+                  <Users className="w-4 h-4" /> Leads Estimados (Contador
+                  Dinâmico)
+                </span>
+                <p className="text-xs text-blue-600">
+                  Total de usuários que correspondem aos filtros atuais.
+                </p>
+              </div>
+              <span className="font-black text-2xl text-blue-600">
+                {estimatedLeads}
               </span>
             </div>
           </div>

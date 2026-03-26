@@ -822,6 +822,11 @@ export interface TargetGroup {
     frequency?: 'high' | 'medium' | 'low' | 'all'
     location?: string
     minSpend?: number
+    gender?: 'male' | 'female' | 'other' | 'all'
+    minAge?: number
+    maxAge?: number
+    state?: string
+    city?: string
   }
   createdAt: string
   leadCount?: number
@@ -836,6 +841,11 @@ export interface CommunicationCampaign {
   channel: 'email' | 'sms' | 'push'
   geographicScope: 'local' | 'state' | 'national'
   volumeImpact: number
+  randomizationType?: 'percentage' | 'absolute'
+  randomizationValue?: number
+  linkedOfferId?: string
+  isExclusive?: boolean
+  groupingIdentifier?: string
   status: 'draft' | 'scheduled' | 'sent'
   content: string
   createdAt: string

@@ -35,6 +35,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Slider } from '@/components/ui/slider'
+import { Switch } from '@/components/ui/switch'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import {
   Send,
@@ -45,6 +46,7 @@ import {
   MapPin,
   Map,
   Users,
+  Ticket,
 } from 'lucide-react'
 import { CommunicationCampaign } from '@/lib/types'
 
@@ -60,24 +62,12 @@ export function CommunicationCampaignsTab({
     targetGroups,
     createCommunicationCampaign,
     user,
+    coupons,
   } = useCouponStore()
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
 
-  const [formData, setFormData] = useState<Partial<CommunicationCampaign>>({
-    name: '',
-    targetGroupId: '',
-    channel: 'push',
-    geographicScope: 'local',
-    volumeImpact: 100,
-    content: '',
-  })
-
-  const displayCampaigns = companyId
-    ? communicationCampaigns.filter((c) => c.companyId === companyId)
-    : franchiseId
-      ? communicationCampaigns.filter((c) => c.franchiseId === franchiseId)
-      : communicationCampaigns
+  const isMasterAdmin = user?.role === 'super_admin'
 
   const availableGroups = companyId
     ? targetGroups.filter((g) => g.companyId === companyId)
@@ -87,14 +77,38 @@ export function CommunicationCampaignsTab({
         )
       : targetGroups
 
+  const [formData, setFormData] = useState<Partial<CommunicationCampaign>>({
+    name: '',
+    targetGroupId: availableGroups[0]?.id || '',
+    channel: 'push',
+    geographicScope: 'local',
+    volumeImpact: 100,
+    randomizationType: 'percentage',
+    randomizationValue: 100,
+    content: '',
+    isExclusive: false,
+  })
+
+  const displayCampaigns = companyId
+    ? communicationCampaigns.filter((c) => c.companyId === companyId)
+    : franchiseId
+      ? communicationCampaigns.filter((c) => c.franchiseId === franchiseId)
+      : communicationCampaigns
+
+  const activeCoupons = coupons.filter(
+    (c) => c.status === 'active' && (!companyId || c.companyId === companyId),
+  )
+
   const handleOpenDialog = () => {
     setFormData({
       name: '',
       targetGroupId: availableGroups[0]?.id || '',
       channel: 'push',
       geographicScope: 'local',
-      volumeImpact: 100,
+      randomizationType: 'percentage',
+      randomizationValue: 100,
       content: '',
+      isExclusive: false,
     })
     setIsDialogOpen(true)
   }
@@ -132,9 +146,10 @@ export function CommunicationCampaignsTab({
     (g) => g.id === formData.targetGroupId,
   )
   const baseLeads = selectedGroup?.leadCount || 0
-  const impactedLeads = Math.round(
-    baseLeads * ((formData.volumeImpact || 100) / 100),
-  )
+  const impactedLeads =
+    formData.randomizationType === 'absolute'
+      ? Math.min(formData.randomizationValue || 0, baseLeads)
+      : Math.round(baseLeads * ((formData.randomizationValue || 100) / 100))
 
   return (
     <div className="space-y-4 animate-fade-in">
@@ -143,8 +158,7 @@ export function CommunicationCampaignsTab({
           <div>
             <CardTitle>Disparos & Campanhas</CardTitle>
             <CardDescription>
-              Crie campanhas multicanal focadas em grupos específicos para
-              aumentar o engajamento.
+              Crie campanhas multicanal vinculadas a grupos de segmentação.
             </CardDescription>
           </div>
           <Button
@@ -162,34 +176,47 @@ export function CommunicationCampaignsTab({
                   <TableHead>Campanha</TableHead>
                   <TableHead>Grupo Alvo</TableHead>
                   <TableHead>Canal</TableHead>
-                  <TableHead>Alcance</TableHead>
+                  <TableHead>Identificador</TableHead>
                   <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {displayCampaigns.map((camp) => (
                   <TableRow key={camp.id}>
-                    <TableCell className="font-semibold">{camp.name}</TableCell>
+                    <TableCell className="font-semibold">
+                      {camp.name}
+                      {camp.linkedOfferId && (
+                        <div className="flex items-center text-[10px] text-primary mt-1">
+                          <Ticket className="w-3 h-3 mr-1" /> Oferta Vinculada
+                        </div>
+                      )}
+                    </TableCell>
                     <TableCell>{getTargetName(camp.targetGroupId)}</TableCell>
                     <TableCell>
                       <Badge
                         variant="outline"
-                        className="capitalize flex items-center gap-1.5 w-fit"
+                        className="capitalize flex items-center gap-1.5 w-fit bg-slate-50"
                       >
                         {getChannelIcon(camp.channel)} {camp.channel}
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <span className="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-1 rounded">
-                        {camp.geographicScope} ({camp.volumeImpact}%)
-                      </span>
+                      {camp.isExclusive ? (
+                        <span className="font-mono text-xs text-slate-600 bg-slate-100 px-2 py-1 rounded border">
+                          {camp.groupingIdentifier}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-slate-400 italic">
+                          Global
+                        </span>
+                      )}
                     </TableCell>
                     <TableCell>
                       <Badge
                         variant={
                           camp.status === 'sent' ? 'default' : 'secondary'
                         }
-                        className="capitalize bg-emerald-500 hover:bg-emerald-600 border-none"
+                        className="capitalize"
                       >
                         {camp.status}
                       </Badge>
@@ -225,7 +252,7 @@ export function CommunicationCampaignsTab({
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
                 }
-                placeholder="Ex: Oferta Fim de Semana"
+                placeholder="Ex: Lembrete Promoção Inverno"
               />
             </div>
 
@@ -282,7 +309,67 @@ export function CommunicationCampaignsTab({
               </div>
             </div>
 
-            <div className="space-y-3 p-4 bg-slate-50 rounded-lg border border-slate-200">
+            <div className="space-y-2">
+              <Label>Oferta Vinculada (Opcional)</Label>
+              <Select
+                value={formData.linkedOfferId || 'none'}
+                onValueChange={(v) =>
+                  setFormData({
+                    ...formData,
+                    linkedOfferId: v === 'none' ? undefined : v,
+                  })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione uma oferta" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Nenhuma</SelectItem>
+                  {activeCoupons.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-slate-50 border rounded-lg gap-4">
+              <div className="space-y-0.5">
+                <Label className="font-semibold text-slate-800">
+                  Campanha Exclusiva
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Marque para gerar um identificador de agrupamento único para
+                  rastrear a origem exata.
+                </p>
+              </div>
+              <Switch
+                checked={formData.isExclusive || false}
+                onCheckedChange={(c) => {
+                  setFormData({
+                    ...formData,
+                    isExclusive: c,
+                    groupingIdentifier: c
+                      ? `GRP-${Math.random().toString(36).substring(2, 8).toUpperCase()}`
+                      : undefined,
+                  })
+                }}
+                className="shrink-0"
+              />
+            </div>
+            {formData.isExclusive && (
+              <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
+                <Label>Identificador de Agrupamento</Label>
+                <Input
+                  value={formData.groupingIdentifier || ''}
+                  readOnly
+                  className="bg-slate-100 font-mono text-slate-600 border-slate-200"
+                />
+              </div>
+            )}
+
+            <div className="space-y-3 p-4 bg-white rounded-lg border border-slate-200">
               <Label className="text-base font-semibold">
                 Configurações de Alcance
               </Label>
@@ -290,28 +377,9 @@ export function CommunicationCampaignsTab({
               <div className="space-y-4 mt-4">
                 <div className="space-y-2">
                   <Label className="text-muted-foreground">
-                    Cobertura Geográfica
+                    Escopo Geográfico (Permissões)
                   </Label>
-                  {companyId ? (
-                    <div className="flex flex-col gap-2">
-                      <RadioGroup value="local" className="flex">
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="local" id="r_c1" />
-                          <Label
-                            htmlFor="r_c1"
-                            className="flex items-center cursor-pointer font-normal text-slate-800"
-                          >
-                            <MapPin className="w-3.5 h-3.5 mr-1" /> Local
-                            (Restrito à Loja)
-                          </Label>
-                        </div>
-                      </RadioGroup>
-                      <p className="text-[11px] text-slate-500">
-                        O alcance é automaticamente limitado aos clientes da sua
-                        região.
-                      </p>
-                    </div>
-                  ) : (
+                  {isMasterAdmin ? (
                     <RadioGroup
                       value={formData.geographicScope}
                       onValueChange={(v: any) =>
@@ -325,7 +393,7 @@ export function CommunicationCampaignsTab({
                           htmlFor="r1"
                           className="flex items-center cursor-pointer font-normal"
                         >
-                          <MapPin className="w-3.5 h-3.5 mr-1" /> Local (Cidade)
+                          <MapPin className="w-3.5 h-3.5 mr-1" /> Local
                         </Label>
                       </div>
                       <div className="flex items-center space-x-2">
@@ -337,45 +405,101 @@ export function CommunicationCampaignsTab({
                           <Map className="w-3.5 h-3.5 mr-1" /> Estadual
                         </Label>
                       </div>
-                      {(!franchiseId || user?.role === 'super_admin') && (
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="national" id="r3" />
+                        <Label
+                          htmlFor="r3"
+                          className="flex items-center cursor-pointer font-normal"
+                        >
+                          <Globe className="w-3.5 h-3.5 mr-1" /> Nacional
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                  ) : (
+                    <div className="flex flex-col gap-2">
+                      <RadioGroup value="local" className="flex">
                         <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="national" id="r3" />
+                          <RadioGroupItem value="local" id="r_c1" disabled />
                           <Label
-                            htmlFor="r3"
-                            className="flex items-center cursor-pointer font-normal"
+                            htmlFor="r_c1"
+                            className="flex items-center cursor-not-allowed font-normal text-slate-800 opacity-70"
                           >
-                            <Globe className="w-3.5 h-3.5 mr-1" /> Nacional
+                            <MapPin className="w-3.5 h-3.5 mr-1" /> Local
+                            (Restrito à sua região)
                           </Label>
                         </div>
-                      )}
-                    </RadioGroup>
+                      </RadioGroup>
+                      <p className="text-[11px] text-slate-500">
+                        O alcance geográfico é bloqueado e limitado à sua praça
+                        de atuação.
+                      </p>
+                    </div>
                   )}
                 </div>
 
-                <div className="space-y-4 pt-2">
+                <div className="space-y-4 pt-4 border-t mt-4">
                   <div className="flex justify-between items-center">
                     <Label className="text-muted-foreground">
-                      Volume de Impacto (Randomização)
+                      Controle de Randomização (A/B Test)
                     </Label>
-                    <span className="font-bold text-primary">
-                      {formData.volumeImpact}% da base
-                    </span>
                   </div>
-                  <Slider
-                    defaultValue={[100]}
-                    value={[formData.volumeImpact || 100]}
-                    max={100}
-                    step={5}
-                    onValueChange={(vals) =>
-                      setFormData({ ...formData, volumeImpact: vals[0] })
-                    }
-                    className="py-2"
-                  />
-                  <p className="text-[10px] text-slate-500 leading-tight">
-                    Use esta opção para testes A/B ou para controlar o fluxo de
-                    clientes na loja, atingindo apenas uma parcela aleatória do
-                    grupo alvo.
-                  </p>
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                    <Select
+                      value={formData.randomizationType || 'percentage'}
+                      onValueChange={(v: any) =>
+                        setFormData({
+                          ...formData,
+                          randomizationType: v,
+                          randomizationValue: v === 'percentage' ? 100 : 1,
+                        })
+                      }
+                    >
+                      <SelectTrigger className="w-full sm:w-[160px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="percentage">
+                          Percentual (%)
+                        </SelectItem>
+                        <SelectItem value="absolute">
+                          Número Absoluto
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+
+                    {formData.randomizationType === 'absolute' ? (
+                      <Input
+                        type="number"
+                        min={1}
+                        className="w-full sm:w-[120px]"
+                        value={formData.randomizationValue || 1}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            randomizationValue: Number(e.target.value),
+                          })
+                        }
+                      />
+                    ) : (
+                      <div className="flex-1 flex items-center gap-4 w-full">
+                        <Slider
+                          value={[formData.randomizationValue || 100]}
+                          max={100}
+                          step={5}
+                          onValueChange={(vals) =>
+                            setFormData({
+                              ...formData,
+                              randomizationValue: vals[0],
+                            })
+                          }
+                          className="py-2"
+                        />
+                        <span className="font-bold text-primary w-12 text-right shrink-0">
+                          {formData.randomizationValue || 100}%
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -399,21 +523,25 @@ export function CommunicationCampaignsTab({
               </div>
             </div>
 
-            <div className="bg-blue-50 p-3 rounded-lg border border-blue-100 flex items-start gap-3 mt-2">
+            <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 flex items-start gap-3 mt-2">
               <Users className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
               <div>
                 <p className="text-sm font-semibold text-blue-900">
-                  Resumo do Impacto
+                  Resumo da Audiência
                 </p>
-                <p className="text-xs text-blue-700 mt-0.5">
-                  Esta campanha atingirá aproximadamente{' '}
-                  <strong>{impactedLeads}</strong> leads segmentados via{' '}
-                  {formData.channel === 'push'
-                    ? 'Push Notification'
-                    : formData.channel === 'email'
-                      ? 'E-mail'
-                      : 'SMS'}
-                  .
+                <p className="text-xs text-blue-800 mt-1 leading-relaxed">
+                  O grupo alvo selecionado possui{' '}
+                  <strong>{baseLeads} leads</strong>. Com a randomização de{' '}
+                  <strong>
+                    {formData.randomizationType === 'percentage'
+                      ? `${formData.randomizationValue}%`
+                      : formData.randomizationValue}
+                  </strong>
+                  , esta campanha será enviada para aproximadamente{' '}
+                  <strong className="text-blue-950 bg-blue-200 px-1 rounded">
+                    {impactedLeads}
+                  </strong>{' '}
+                  leads únicos.
                 </p>
               </div>
             </div>
