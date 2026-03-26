@@ -71,9 +71,16 @@ export function CustomerJourneyDialog({ coupon, open, onOpenChange }: any) {
                       className="w-full h-full object-cover"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                    <Badge className="absolute bottom-2 left-2 bg-white/95 text-black hover:bg-white">
-                      {coupon.discount}
-                    </Badge>
+                    <div className="absolute bottom-2 left-2 flex gap-1">
+                      <Badge className="bg-white/95 text-black hover:bg-white shadow-sm">
+                        {coupon.discount}
+                      </Badge>
+                      {coupon.isSeasonal && (
+                        <Badge className="bg-orange-500 text-white hover:bg-orange-600 border-none shadow-sm">
+                          {t('vouchers.seasonal_badge', 'Sazonal')}
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 )}
                 <CardContent className="p-4 space-y-3">

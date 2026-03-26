@@ -137,6 +137,11 @@ export function CouponCard({
                   {coupon.discount}
                 </Badge>
               )}
+              {coupon.isSeasonal && (
+                <Badge className="bg-orange-500 text-white hover:bg-orange-600 shadow-sm font-bold backdrop-blur-sm text-[9px] sm:text-[10px] h-4 sm:h-5 px-1.5 py-0 border-none mt-1">
+                  {t('vouchers.seasonal_badge', 'Sazonal')}
+                </Badge>
+              )}
             </div>
             {isOnline && (
               <Badge
@@ -280,6 +285,11 @@ export function CouponCard({
             {!isSoldOut && !isExpired && !isScheduled && (
               <Badge className="bg-white/95 text-black hover:bg-white shadow-sm font-bold backdrop-blur-sm text-[9px] sm:text-[10px] h-4 sm:h-5 px-1.5 py-0">
                 {coupon.discount}
+              </Badge>
+            )}
+            {coupon.isSeasonal && (
+              <Badge className="bg-orange-500 text-white hover:bg-orange-600 shadow-sm font-bold backdrop-blur-sm text-[9px] sm:text-[10px] h-4 sm:h-5 px-1.5 py-0 border-none">
+                {t('vouchers.seasonal_badge', 'Sazonal')}
               </Badge>
             )}
           </div>

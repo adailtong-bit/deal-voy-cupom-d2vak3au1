@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useSearchParams, Link } from 'react-router-dom'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Briefcase,
@@ -25,14 +25,19 @@ import { VendorSettingsTab } from '@/components/vendor/VendorSettingsTab'
 import { VendorCustomersTab } from '@/components/vendor/VendorCustomersTab'
 import { VendorSeasonalTab } from '@/components/vendor/VendorSeasonalTab'
 import { StaffTab } from '@/components/admin/hierarchy/StaffTab'
-import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 
 export default function VendorDashboard() {
   const { t } = useLanguage()
   const { user, companies, coupons: allCoupons, bookings } = useCouponStore()
-  const [activeTab, setActiveTab] = useState('overview')
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  const activeTab = searchParams.get('tab') || 'overview'
+
+  const setActiveTab = (tab: string) => {
+    setSearchParams({ tab })
+  }
 
   const myCompany =
     companies.find((c) => c.id === user?.companyId) || companies[0]
@@ -57,7 +62,7 @@ export default function VendorDashboard() {
 
   return (
     <div className="container mx-auto px-4 py-8 mb-16 md:mb-0 animate-fade-in-up">
-      <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+      <div className="flex flex-col md:flex-row items-center justify-between mb-6 gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
         <div>
           <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-2">
             <Briefcase className="h-8 w-8 text-primary" />{' '}
@@ -103,10 +108,8 @@ export default function VendorDashboard() {
         </Alert>
       )}
 
-      <VendorStats company={myCompany} activeCampaigns={coupons.length} />
-
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="mb-6 flex flex-wrap h-auto p-1 bg-slate-100/80 rounded-lg justify-start shadow-inner">
+        <TabsList className="mb-6 flex flex-wrap h-auto p-1 bg-slate-100/80 rounded-lg justify-start shadow-inner overflow-x-auto whitespace-nowrap scrollbar-hide">
           <TabsTrigger
             value="overview"
             className="py-2.5 px-4 font-semibold data-[state=active]:shadow-sm"
@@ -176,7 +179,8 @@ export default function VendorDashboard() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="mt-4">
+        <TabsContent value="overview" className="mt-4 space-y-8">
+          <VendorStats company={myCompany} activeCampaigns={coupons.length} />
           <VendorAnalytics />
         </TabsContent>
         <TabsContent value="offers" className="mt-4">

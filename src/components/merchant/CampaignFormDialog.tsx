@@ -36,7 +36,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
-import { ImagePlus, ExternalLink, Radar } from 'lucide-react'
+import { CalendarIcon, ImagePlus, ExternalLink, Radar } from 'lucide-react'
 import { toast } from 'sonner'
 import { CampaignPreview } from './CampaignPreview'
 
@@ -106,6 +106,7 @@ const formSchema = z
       .min(10, 'Mínimo de 10m')
       .max(5000, 'Máximo de 5000m')
       .optional(),
+    isSeasonal: z.boolean().default(false),
   })
   .refine((data) => new Date(data.endDate) >= new Date(data.startDate), {
     message: 'A data final deve ser posterior ou igual à inicial',
@@ -232,6 +233,7 @@ export function CampaignFormDialog({
       totalLimit: 100,
       enableProximityAlerts: false,
       alertRadius: 100,
+      isSeasonal: false,
     },
   })
 
@@ -263,6 +265,7 @@ export function CampaignFormDialog({
         totalLimit: coupon.totalLimit || coupon.totalAvailable || 100,
         enableProximityAlerts: coupon.enableProximityAlerts || false,
         alertRadius: coupon.alertRadius || 100,
+        isSeasonal: coupon.isSeasonal || false,
       })
     } else if (open) {
       form.reset()
@@ -302,6 +305,7 @@ export function CampaignFormDialog({
           : Math.max(0, (data.totalLimit || 100) - (coupon.reservedCount || 0)),
         enableProximityAlerts: data.enableProximityAlerts,
         alertRadius: data.enableProximityAlerts ? data.alertRadius : undefined,
+        isSeasonal: data.isSeasonal,
       })
     } else {
       addCoupon({
@@ -333,6 +337,7 @@ export function CampaignFormDialog({
         source: 'partner',
         enableProximityAlerts: data.enableProximityAlerts,
         alertRadius: data.enableProximityAlerts ? data.alertRadius : undefined,
+        isSeasonal: data.isSeasonal,
       })
     }
     onOpenChange(false)
@@ -929,6 +934,37 @@ export function CampaignFormDialog({
                     )}
                   />
                 </div>
+
+                <FormField
+                  control={form.control}
+                  name="isSeasonal"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border border-orange-200 bg-orange-50/50 p-4 shadow-sm mt-4">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-base cursor-pointer flex items-center gap-2 text-orange-900">
+                          <CalendarIcon className="w-5 h-5 text-orange-600" />
+                          {t(
+                            'vendor.form.is_seasonal',
+                            'Campanha Sazonal (Temática)',
+                          )}
+                        </FormLabel>
+                        <p className="text-xs text-orange-700/80">
+                          {t(
+                            'vendor.form.is_seasonal_desc',
+                            'Marque se esta for uma oferta temática (ex: Black Friday, Natal). Ela receberá um selo especial de destaque.',
+                          )}
+                        </p>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          className="data-[state=checked]:bg-orange-600"
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
               </div>
 
               <div className="flex justify-end gap-3 pt-6">

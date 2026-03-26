@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
 import { Button } from '@/components/ui/button'
@@ -11,6 +11,13 @@ import {
   AccordionTrigger,
   AccordionContent,
 } from '@/components/ui/accordion'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { CampaignFormDialog } from '@/components/merchant/CampaignFormDialog'
 import { CustomerJourneyDialog } from '@/components/vendor/CustomerJourneyDialog'
 import {
@@ -51,6 +58,7 @@ export function VendorCampaignsTab({
   const [editingCoupon, setEditingCoupon] = useState<any>(null)
   const [journeyCoupon, setJourneyCoupon] = useState<any>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [filter, setFilter] = useState<'all' | 'regular' | 'seasonal'>('all')
 
   const handleEdit = (coupon: any) => {
     setEditingCoupon(coupon)
@@ -64,6 +72,15 @@ export function VendorCampaignsTab({
 
   const now = new Date()
 
+  const filteredCoupons = useMemo(() => {
+    if (!coupons) return []
+    return coupons.filter((c) => {
+      if (filter === 'seasonal') return c.isSeasonal
+      if (filter === 'regular') return !c.isSeasonal
+      return true
+    })
+  }, [coupons, filter])
+
   return (
     <div className="space-y-6 animate-fade-in-up">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-2">
@@ -71,18 +88,43 @@ export function VendorCampaignsTab({
           <Megaphone className="h-5 w-5 text-primary" />
           {t('dashboard.your_campaigns', 'Suas Campanhas Ativas')}
         </h2>
-        {coupons && coupons.length > 0 && (
-          <Button
-            onClick={handleCreate}
-            className="font-bold shadow-md bg-primary hover:bg-primary/90"
-          >
-            <Plus className="w-4 h-4 mr-2" />{' '}
-            {t('vendor.campaigns_tab.create', 'Criar Campanha')}
-          </Button>
-        )}
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          {coupons && coupons.length > 0 && (
+            <Select value={filter} onValueChange={(v: any) => setFilter(v)}>
+              <SelectTrigger className="w-full sm:w-[180px] bg-white">
+                <SelectValue
+                  placeholder={t(
+                    'vendor.campaigns_tab.filter',
+                    'Filtrar por tipo',
+                  )}
+                />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">
+                  {t('vendor.campaigns_tab.filter_all', 'Todas')}
+                </SelectItem>
+                <SelectItem value="regular">
+                  {t('vendor.campaigns_tab.filter_regular', 'Regulares')}
+                </SelectItem>
+                <SelectItem value="seasonal">
+                  {t('vendor.campaigns_tab.filter_seasonal', 'Sazonais')}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+          {coupons && coupons.length > 0 && (
+            <Button
+              onClick={handleCreate}
+              className="font-bold shadow-md bg-primary hover:bg-primary/90"
+            >
+              <Plus className="w-4 h-4 mr-2" />{' '}
+              {t('vendor.campaigns_tab.create', 'Criar Campanha')}
+            </Button>
+          )}
+        </div>
       </div>
 
-      {!coupons || coupons.length === 0 ? (
+      {!filteredCoupons || filteredCoupons.length === 0 ? (
         <div className="py-16 text-center bg-white rounded-xl border border-dashed border-slate-300">
           <Megaphone className="h-12 w-12 text-slate-300 mx-auto mb-3" />
           <h3 className="text-lg font-semibold text-slate-700">
@@ -92,10 +134,15 @@ export function VendorCampaignsTab({
             )}
           </h3>
           <p className="text-slate-500 mt-1 max-w-md mx-auto mb-6">
-            {t(
-              'vendor.campaigns_tab.empty_desc',
-              'Você ainda não criou nenhuma campanha. Crie sua primeira campanha para atrair mais clientes e aumentar suas vendas.',
-            )}
+            {filter === 'all'
+              ? t(
+                  'vendor.campaigns_tab.empty_desc',
+                  'Você ainda não criou nenhuma campanha. Crie sua primeira campanha para atrair mais clientes e aumentar suas vendas.',
+                )
+              : t(
+                  'vendor.campaigns_tab.empty_filter_desc',
+                  'Nenhuma campanha corresponde ao filtro selecionado.',
+                )}
           </p>
           <Button onClick={handleCreate} className="font-bold shadow-md">
             <Plus className="w-4 h-4 mr-2" />{' '}
@@ -104,7 +151,7 @@ export function VendorCampaignsTab({
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 items-start">
-          {coupons.map((coupon) => {
+          {filteredCoupons.map((coupon) => {
             const isUnlimited = coupon.isUnlimited
             const limit = coupon.totalLimit || coupon.totalAvailable || 100
             const used = coupon.reservedCount || 0
@@ -168,7 +215,14 @@ export function VendorCampaignsTab({
                     />
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-                  <div className="absolute top-3 right-3">{statusBadge}</div>
+                  <div className="absolute top-3 right-3 flex flex-col items-end gap-1">
+                    {statusBadge}
+                    {coupon.isSeasonal && (
+                      <Badge className="bg-orange-500 hover:bg-orange-600 border-none shadow-sm text-white">
+                        {t('vouchers.seasonal_badge', 'Sazonal')}
+                      </Badge>
+                    )}
+                  </div>
                   <div className="absolute bottom-3 left-4 right-4">
                     <h3 className="text-lg font-bold text-white line-clamp-1 shadow-sm leading-tight mb-1">
                       {coupon.title}

@@ -78,6 +78,7 @@ export interface Coupon {
   isFeatured?: boolean
   isTrending?: boolean
   isSpecial?: boolean
+  isSeasonal?: boolean
   terms?: string
   address?: string
   instructions?: string
