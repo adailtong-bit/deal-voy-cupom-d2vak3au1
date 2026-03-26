@@ -15,7 +15,6 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -72,7 +71,8 @@ const formSchema = z
     fixedDiscount: z.string().optional(),
     startDate: z.string().min(1, 'Campo obrigatório.'),
     endDate: z.string().min(1, 'Campo obrigatório.'),
-    totalLimit: z.coerce.number().min(1, 'O limite deve ser maior que zero.'),
+    limitType: z.enum(['limited', 'unlimited']).default('limited'),
+    totalLimit: z.coerce.number().optional(),
     enableProximityAlerts: z.boolean().default(false),
     alertRadius: z.coerce
       .number()
@@ -107,6 +107,15 @@ const formSchema = z
       data.discountType !== 'fixed_spend' ||
       (!!data.fixedDiscount && data.fixedDiscount.trim().length > 0),
     { message: 'Valor inválido', path: ['fixedDiscount'] },
+  )
+  .refine(
+    (data) =>
+      data.limitType === 'unlimited' ||
+      (data.totalLimit && data.totalLimit > 0),
+    {
+      message: 'O limite deve ser maior que zero.',
+      path: ['totalLimit'],
+    },
   )
 
 type FormData = z.infer<typeof formSchema>
@@ -191,6 +200,7 @@ export function CampaignFormDialog({
       fixedDiscount: '',
       startDate: new Date().toISOString().split('T')[0],
       endDate: new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
+      limitType: 'limited',
       totalLimit: 100,
       enableProximityAlerts: false,
       alertRadius: 100,
@@ -199,6 +209,7 @@ export function CampaignFormDialog({
 
   const scope = form.watch('scope')
   const discountType = form.watch('discountType')
+  const limitType = form.watch('limitType')
   const watchedVals = form.watch()
 
   useEffect(() => {
@@ -219,6 +230,7 @@ export function CampaignFormDialog({
         endDate:
           coupon.endDate ||
           new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
+        limitType: coupon.isUnlimited ? 'unlimited' : 'limited',
         totalLimit: coupon.totalLimit || coupon.totalAvailable || 100,
         enableProximityAlerts: coupon.enableProximityAlerts || false,
         alertRadius: coupon.alertRadius || 100,
@@ -239,6 +251,9 @@ export function CampaignFormDialog({
       finalUrl = `https://${finalUrl}`
     }
 
+    const isUnlimited = data.limitType === 'unlimited'
+    const totalLimit = isUnlimited ? undefined : data.totalLimit
+
     if (coupon) {
       updateCampaign(coupon.id, {
         title: data.title,
@@ -250,11 +265,11 @@ export function CampaignFormDialog({
         address: data.scope === 'specific' ? data.specificStore : '',
         startDate: data.startDate,
         endDate: data.endDate,
-        totalLimit: data.totalLimit,
-        totalAvailable: Math.max(
-          0,
-          data.totalLimit - (coupon.reservedCount || 0),
-        ),
+        totalLimit: totalLimit,
+        isUnlimited: isUnlimited,
+        totalAvailable: isUnlimited
+          ? undefined
+          : Math.max(0, (data.totalLimit || 100) - (coupon.reservedCount || 0)),
         enableProximityAlerts: data.enableProximityAlerts,
         alertRadius: data.enableProximityAlerts ? data.alertRadius : undefined,
       })
@@ -275,13 +290,14 @@ export function CampaignFormDialog({
         address: data.scope === 'specific' ? data.specificStore : '',
         startDate: data.startDate,
         endDate: data.endDate,
-        totalLimit: data.totalLimit,
-        totalAvailable: data.totalLimit,
+        totalLimit: totalLimit,
+        isUnlimited: isUnlimited,
+        totalAvailable: totalLimit,
         reservedCount: 0,
         category: 'Outros',
         distance: 0,
         code: `CMP-${Math.floor(Math.random() * 10000)}`,
-        coordinates: { lat: -23.55052, lng: -46.633308 }, // default coords for demo
+        coordinates: { lat: -23.55052, lng: -46.633308 },
         status: 'active',
         source: 'partner',
         enableProximityAlerts: data.enableProximityAlerts,
@@ -335,6 +351,7 @@ export function CampaignFormDialog({
     offerType: watchedVals.companyUrl ? 'online' : 'in-store',
     externalUrl: watchedVals.companyUrl,
     source: 'partner',
+    isUnlimited: watchedVals.limitType === 'unlimited',
   } as any
 
   function formattedDiscountPreview(vals: any, fallback: string) {
@@ -749,23 +766,76 @@ export function CampaignFormDialog({
               <div className="space-y-4 pt-4 border-t">
                 <FormField
                   control={form.control}
-                  name="totalLimit"
+                  name="limitType"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="space-y-3">
                       <FormLabel>
-                        {t(
-                          'vendor.form.total_limit',
-                          'Limite Total de Utilizações',
-                        )}
+                        {t('vendor.form.voucher_limit', 'Limite de Vouchers')}
                       </FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} />
+                        <RadioGroup
+                          onValueChange={(val) => {
+                            field.onChange(val)
+                            if (val === 'unlimited') {
+                              form.setValue('totalLimit', undefined)
+                              form.clearErrors('totalLimit')
+                            }
+                          }}
+                          defaultValue={field.value}
+                          className="flex flex-col sm:flex-row gap-4"
+                        >
+                          <FormItem className="flex items-center space-x-2 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="unlimited" />
+                            </FormControl>
+                            <FormLabel className="font-normal cursor-pointer">
+                              {t(
+                                'vendor.form.unlimited',
+                                'Sem Limite (Infinito)',
+                              )}
+                            </FormLabel>
+                          </FormItem>
+                          <FormItem className="flex items-center space-x-2 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="limited" />
+                            </FormControl>
+                            <FormLabel className="font-normal cursor-pointer">
+                              {t('vendor.form.limited', 'Quantidade Limitada')}
+                            </FormLabel>
+                          </FormItem>
+                        </RadioGroup>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                <div className="grid grid-cols-2 gap-4">
+
+                {limitType === 'limited' && (
+                  <FormField
+                    control={form.control}
+                    name="totalLimit"
+                    render={({ field }) => (
+                      <FormItem className="animate-in fade-in slide-in-from-top-2">
+                        <FormLabel>
+                          {t(
+                            'vendor.form.total_limit',
+                            'Limite Total de Utilizações',
+                          )}
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            {...field}
+                            value={field.value || ''}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+
+                <div className="grid grid-cols-2 gap-4 pt-2">
                   <FormField
                     control={form.control}
                     name="startDate"

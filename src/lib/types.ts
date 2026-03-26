@@ -91,6 +91,7 @@ export interface Coupon {
   }
   totalAvailable?: number
   totalLimit?: number
+  isUnlimited?: boolean
   maxPerUser?: number
   reservedCount?: number
   menu?: MenuItem[]

@@ -5,6 +5,12 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
+import {
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionContent,
+} from '@/components/ui/accordion'
 import { CampaignFormDialog } from '@/components/merchant/CampaignFormDialog'
 import { CustomerJourneyDialog } from '@/components/vendor/CustomerJourneyDialog'
 import {
@@ -26,9 +32,12 @@ import {
   Plus,
   Trash2,
   Smartphone,
+  QrCode,
+  Globe,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { cn } from '@/lib/utils'
+import { CouponCard } from '@/components/CouponCard'
 
 export function VendorCampaignsTab({
   coupons,
@@ -92,17 +101,20 @@ export function VendorCampaignsTab({
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 items-start">
           {coupons.map((coupon) => {
+            const isUnlimited = coupon.isUnlimited
             const limit = coupon.totalLimit || coupon.totalAvailable || 100
             const used = coupon.reservedCount || 0
-            const progress = Math.min(100, Math.round((used / limit) * 100))
+            const progress = isUnlimited
+              ? 0
+              : Math.min(100, Math.round((used / limit) * 100))
 
             const expiryDateStr = coupon.endDate || coupon.expiryDate
             const isExpired = expiryDateStr
               ? new Date(expiryDateStr) < new Date()
               : false
-            const isSoldOut = used >= limit
+            const isSoldOut = !isUnlimited && used >= limit
 
             let statusBadge = (
               <Badge className="bg-emerald-500 border-none shadow-sm">
@@ -154,7 +166,7 @@ export function VendorCampaignsTab({
                   </div>
                 </div>
 
-                <CardContent className="pt-4 flex-1 flex flex-col gap-4 p-5">
+                <CardContent className="pt-4 flex-1 flex flex-col gap-4 p-5 pb-3">
                   <div className="flex justify-between items-center text-sm font-medium bg-slate-50 px-3.5 py-2.5 rounded-lg border border-slate-100">
                     <span className="text-slate-600">
                       {t('vendor.campaigns_tab.discount', 'Desconto:')}
@@ -175,12 +187,18 @@ export function VendorCampaignsTab({
                           isSoldOut ? 'text-red-500' : 'text-slate-600',
                         )}
                       >
-                        {used} / {limit}
+                        {isUnlimited
+                          ? `${used} ${t('vendor.campaigns_tab.utilized', 'utilizados')}`
+                          : `${used} / ${limit}`}
                       </span>
                     </div>
                     <Progress
-                      value={progress}
-                      className={cn('h-2', isSoldOut && '[&>div]:bg-red-500')}
+                      value={isUnlimited ? 100 : progress}
+                      className={cn(
+                        'h-2',
+                        isSoldOut && '[&>div]:bg-red-500',
+                        isUnlimited && '[&>div]:bg-emerald-400',
+                      )}
                     />
                   </div>
 
@@ -265,6 +283,78 @@ export function VendorCampaignsTab({
                       </div>
                     </div>
                   </div>
+
+                  <Accordion
+                    type="single"
+                    collapsible
+                    className="w-full border-t border-slate-100 mt-2"
+                  >
+                    <AccordionItem value="details" className="border-none">
+                      <AccordionTrigger className="py-3 text-sm text-primary hover:no-underline font-semibold rounded-lg">
+                        {t(
+                          'vendor.campaigns_tab.expand_details',
+                          'Ver Detalhes da Campanha',
+                        )}
+                      </AccordionTrigger>
+                      <AccordionContent className="pt-2 pb-4 space-y-6">
+                        <div className="space-y-1">
+                          <h4 className="text-sm font-semibold text-slate-700">
+                            {t(
+                              'vendor.campaigns_tab.desc_title',
+                              'Descrição da Campanha',
+                            )}
+                          </h4>
+                          <p className="text-sm text-slate-600">
+                            {coupon.description}
+                          </p>
+                        </div>
+
+                        <div className="space-y-2">
+                          <h4 className="text-sm font-semibold text-slate-700">
+                            {t(
+                              'vendor.campaigns_tab.preview_title',
+                              'Visualização do Voucher',
+                            )}
+                          </h4>
+                          <div className="max-w-[280px] pointer-events-none ring-1 ring-slate-200 rounded-xl overflow-hidden mx-auto bg-white shadow-sm">
+                            <CouponCard coupon={coupon} />
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <h4 className="text-sm font-semibold text-slate-700">
+                            {t(
+                              'vendor.campaigns_tab.redemption_title',
+                              'Interface de Resgate',
+                            )}
+                          </h4>
+                          <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex items-center justify-center">
+                            {coupon.offerType === 'online' ? (
+                              <div className="text-center space-y-2">
+                                <Globe className="w-6 h-6 text-primary mx-auto" />
+                                <p className="text-xs text-slate-600 font-medium">
+                                  {t(
+                                    'vendor.campaigns_tab.redemption_online',
+                                    'Resgate via Link Online / Código Promocional',
+                                  )}
+                                </p>
+                              </div>
+                            ) : (
+                              <div className="text-center space-y-2">
+                                <QrCode className="w-6 h-6 text-primary mx-auto" />
+                                <p className="text-xs text-slate-600 font-medium">
+                                  {t(
+                                    'vendor.campaigns_tab.redemption_qr',
+                                    'Validação Física via QR Code no PDV',
+                                  )}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
                 </CardContent>
               </Card>
             )
