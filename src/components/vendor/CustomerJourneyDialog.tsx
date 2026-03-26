@@ -64,7 +64,7 @@ export function CustomerJourneyDialog({ coupon, open, onOpenChange }: any) {
               </h3>
               <Card className="overflow-hidden border-slate-200 shadow-sm max-w-[340px] mx-auto sm:mx-0">
                 {coupon.image && (
-                  <div className="h-32 w-full relative">
+                  <div className="aspect-video w-full relative">
                     <img
                       src={coupon.image}
                       alt=""
@@ -97,7 +97,7 @@ export function CustomerJourneyDialog({ coupon, open, onOpenChange }: any) {
                     <span className="font-semibold text-slate-800 block mb-0.5">
                       {t('vendor.journey.rules', 'Regras:')}
                     </span>
-                    <span className="line-clamp-2">
+                    <span className="whitespace-pre-wrap block">
                       {coupon.instructions ||
                         t(
                           'vendor.journey.rules_default',

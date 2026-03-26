@@ -17,6 +17,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import {
@@ -47,6 +48,7 @@ const formSchema = z
     description: z
       .string()
       .min(10, 'Campo obrigatório. Mínimo de 10 caracteres.'),
+    instructions: z.string().optional(),
     image: z.string().optional(),
     companyUrl: z
       .string()
@@ -190,6 +192,7 @@ export function CampaignFormDialog({
     defaultValues: {
       title: '',
       description: '',
+      instructions: '',
       image: '',
       companyUrl: '',
       scope: 'network',
@@ -218,6 +221,7 @@ export function CampaignFormDialog({
       form.reset({
         title: coupon.title,
         description: coupon.description,
+        instructions: coupon.instructions || '',
         image: coupon.image || '',
         companyUrl: coupon.externalUrl || '',
         scope: coupon.address ? 'specific' : 'network',
@@ -258,6 +262,7 @@ export function CampaignFormDialog({
       updateCampaign(coupon.id, {
         title: data.title,
         description: data.description,
+        instructions: data.instructions,
         discount: formattedDiscount,
         image: data.image || coupon.image,
         externalUrl: finalUrl || coupon.externalUrl,
@@ -283,6 +288,7 @@ export function CampaignFormDialog({
             : company?.name || 'Loja',
         title: data.title,
         description: data.description,
+        instructions: data.instructions,
         discount: formattedDiscount,
         image: data.image || 'https://img.usecurling.com/p/400/300?q=sale',
         externalUrl: finalUrl,
@@ -336,6 +342,7 @@ export function CampaignFormDialog({
         'vendor.form.description',
         'A descrição da sua campanha aparecerá aqui.',
       ),
+    instructions: watchedVals.instructions || '',
     storeName:
       watchedVals.scope === 'specific' && watchedVals.specificStore
         ? watchedVals.specificStore
@@ -406,11 +413,34 @@ export function CampaignFormDialog({
                         {t('vendor.form.description', 'Descrição')}
                       </FormLabel>
                       <FormControl>
-                        <Input
+                        <Textarea
                           placeholder={t(
                             'vendor.form.description',
                             'A descrição da sua campanha aparecerá aqui.',
                           )}
+                          className="resize-none"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="instructions"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        {t('vendor.form.rules', 'Regras da Campanha')}
+                      </FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder={t(
+                            'vendor.form.rules_placeholder',
+                            'Descreva as condições, restrições e passo a passo para resgate...',
+                          )}
+                          className="resize-none min-h-[100px]"
                           {...field}
                         />
                       </FormControl>
@@ -454,9 +484,17 @@ export function CampaignFormDialog({
                   name="image"
                   render={({ field: { value, onChange, ...fieldProps } }) => (
                     <FormItem className="mt-4">
-                      <FormLabel className="flex items-center gap-2">
-                        <ImagePlus className="w-4 h-4 text-slate-500" />
-                        {t('vendor.form.image', 'Imagem da Campanha')}
+                      <FormLabel className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                          <ImagePlus className="w-4 h-4 text-slate-500" />
+                          {t('vendor.form.image', 'Imagem da Campanha')}
+                        </div>
+                        <span className="text-xs text-slate-500 font-normal">
+                          {t(
+                            'vendor.form.image_desc',
+                            'Recomendado: Proporção 16:9 (ex: 800x450px). Máx 2MB.',
+                          )}
+                        </span>
                       </FormLabel>
                       <FormControl>
                         <div className="space-y-3">
