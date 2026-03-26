@@ -428,7 +428,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       randomizationValue: 100,
       isExclusive: true,
       groupingIdentifier: 'GRP-WKND24',
-      status: 'sent',
+      status: 'active',
       content:
         'Não perca! 50% OFF em pizzas tamanho família neste fim de semana.',
       createdAt: new Date(Date.now() - 86400000).toISOString(),
@@ -836,7 +836,6 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   // Target Groups & Comms
   const addTargetGroup = (group: TargetGroup) => {
     setTargetGroups((prev) => [group, ...prev])
-    toast.success('Grupo de Segmentação criado com sucesso')
   }
 
   const updateTargetGroup = (id: string, data: Partial<TargetGroup>) => {
@@ -853,7 +852,6 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
 
   const createCommunicationCampaign = (campaign: CommunicationCampaign) => {
     setCommunicationCampaigns((prev) => [campaign, ...prev])
-    toast.success('Campanha de comunicação agendada com sucesso!')
   }
 
   const updateCommunicationCampaign = (

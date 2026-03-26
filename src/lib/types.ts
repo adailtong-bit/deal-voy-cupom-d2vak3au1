@@ -846,7 +846,7 @@ export interface CommunicationCampaign {
   linkedOfferId?: string
   isExclusive?: boolean
   groupingIdentifier?: string
-  status: 'draft' | 'scheduled' | 'sent'
+  status: 'draft' | 'scheduled' | 'sent' | 'active' | 'inactive'
   content: string
   createdAt: string
   scheduledAt?: string
