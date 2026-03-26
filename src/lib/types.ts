@@ -808,4 +808,3 @@ export interface FinancialTransaction {
   status: 'completed' | 'pending'
   sourceId?: string
 }
-

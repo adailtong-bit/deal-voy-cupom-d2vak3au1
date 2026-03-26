@@ -3,7 +3,15 @@ import { Coupon } from '@/lib/types'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Star, MapPin, Clock, ImageOff, Globe } from 'lucide-react'
+import {
+  Star,
+  MapPin,
+  Clock,
+  ImageOff,
+  Globe,
+  CheckCircle,
+  Sparkles,
+} from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { useLanguage } from '@/stores/LanguageContext'
@@ -31,6 +39,10 @@ export function CouponCard({
   const isSoldOut =
     coupon.totalAvailable !== undefined && coupon.totalAvailable <= 0
   const isOnline = coupon.offerType === 'online' || !!coupon.externalUrl
+
+  const isVerified = coupon.source === 'partner'
+  const isOrganic =
+    coupon.source === 'organic' || coupon.source === 'aggregated'
 
   const title = coupon.translations?.[language]?.title || coupon.title
   const description =
@@ -103,7 +115,7 @@ export function CouponCard({
           </div>
           <div className="flex-1 p-3 flex flex-col justify-between min-w-0">
             <div>
-              <div className="flex justify-between items-start mb-1">
+              <div className="flex justify-between items-start mb-0.5">
                 <h4 className="font-semibold text-sm sm:text-base truncate leading-tight flex-1 mr-2">
                   {title}
                 </h4>
@@ -114,9 +126,31 @@ export function CouponCard({
                   </div>
                 )}
               </div>
-              <p className="text-xs text-muted-foreground truncate">
-                {coupon.storeName}
-              </p>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 mt-0.5 mb-1.5">
+                <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
+                  {coupon.storeName}
+                </p>
+                <div className="flex items-center gap-1 shrink-0">
+                  {isVerified && (
+                    <span
+                      className="flex items-center text-[9px] font-bold text-blue-600 bg-blue-50 px-1 py-0.5 rounded"
+                      title={t('vouchers.verified', 'Verificado')}
+                    >
+                      <CheckCircle className="w-2.5 h-2.5 mr-0.5" />
+                      {t('vouchers.verified', 'Verificado')}
+                    </span>
+                  )}
+                  {isOrganic && (
+                    <span
+                      className="flex items-center text-[9px] font-bold text-slate-600 bg-slate-100 px-1 py-0.5 rounded"
+                      title={t('vouchers.discovered', 'Oferta Descoberta')}
+                    >
+                      <Sparkles className="w-2.5 h-2.5 mr-0.5" />
+                      {t('vouchers.discovered', 'Oferta Descoberta')}
+                    </span>
+                  )}
+                </div>
+              </div>
               <p className="text-[11px] sm:text-xs text-slate-500 mt-1 line-clamp-2">
                 {description}
               </p>
@@ -225,7 +259,7 @@ export function CouponCard({
           </div>
         </div>
         <CardContent className="p-2.5 sm:p-3 flex-1 flex flex-col">
-          <div className="flex justify-between items-start mb-1">
+          <div className="flex justify-between items-start mb-0.5">
             <h3 className="font-semibold text-xs sm:text-sm leading-tight line-clamp-2 flex-1 mr-1">
               {title}
             </h3>
@@ -236,9 +270,31 @@ export function CouponCard({
               </div>
             )}
           </div>
-          <p className="text-[10px] sm:text-xs text-muted-foreground mb-2 truncate">
-            {coupon.storeName}
-          </p>
+          <div className="flex flex-col gap-1 mt-0.5 mb-2">
+            <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
+              {coupon.storeName}
+            </p>
+            <div className="flex items-center gap-1 shrink-0">
+              {isVerified && (
+                <span
+                  className="flex items-center text-[9px] font-bold text-blue-600 bg-blue-50 px-1 py-0.5 rounded w-max"
+                  title={t('vouchers.verified', 'Verificado')}
+                >
+                  <CheckCircle className="w-2.5 h-2.5 mr-0.5" />
+                  {t('vouchers.verified', 'Verificado')}
+                </span>
+              )}
+              {isOrganic && (
+                <span
+                  className="flex items-center text-[9px] font-bold text-slate-600 bg-slate-100 px-1 py-0.5 rounded w-max"
+                  title={t('vouchers.discovered', 'Oferta Descoberta')}
+                >
+                  <Sparkles className="w-2.5 h-2.5 mr-0.5" />
+                  {t('vouchers.discovered', 'Oferta Descoberta')}
+                </span>
+              )}
+            </div>
+          </div>
 
           <div className="mt-auto pt-2 border-t flex flex-col gap-2.5">
             <div className="flex items-center justify-between text-[9px] sm:text-[10px] text-muted-foreground">

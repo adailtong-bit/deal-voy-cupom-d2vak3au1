@@ -334,6 +334,7 @@ export function CampaignFormDialog({
     status: 'active',
     offerType: watchedVals.companyUrl ? 'online' : 'in-store',
     externalUrl: watchedVals.companyUrl,
+    source: 'partner',
   } as any
 
   function formattedDiscountPreview(vals: any, fallback: string) {
@@ -368,7 +369,10 @@ export function CampaignFormDialog({
                       </FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="Digite o nome da campanha"
+                          placeholder={t(
+                            'vendor.form.campaign_title',
+                            'Nome da Campanha',
+                          )}
                           {...field}
                         />
                       </FormControl>
@@ -386,7 +390,10 @@ export function CampaignFormDialog({
                       </FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="Descreva os detalhes da oferta"
+                          placeholder={t(
+                            'vendor.form.description',
+                            'A descrição da sua campanha aparecerá aqui.',
+                          )}
                           {...field}
                         />
                       </FormControl>
@@ -420,9 +427,6 @@ export function CampaignFormDialog({
                           </Button>
                         </div>
                       </FormControl>
-                      <FormDescription>
-                        Link do site da loja para campanhas online (opcional).
-                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -485,9 +489,6 @@ export function CampaignFormDialog({
                           />
                         </div>
                       </FormControl>
-                      <FormDescription>
-                        Selecione uma imagem (Máx 2MB, JPG/PNG).
-                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -550,7 +551,12 @@ export function CampaignFormDialog({
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Selecione uma loja" />
+                              <SelectValue
+                                placeholder={t(
+                                  'vendor.form.select_store',
+                                  'Selecione a Loja',
+                                )}
+                              />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -701,10 +707,6 @@ export function CampaignFormDialog({
                               'Ativar Radar para esta Campanha',
                             )}
                           </FormLabel>
-                          <FormDescription className="text-xs">
-                            Envia uma notificação push quando usuários passarem
-                            perto da sua loja.
-                          </FormDescription>
                         </div>
                         <FormControl>
                           <Switch
@@ -736,9 +738,6 @@ export function CampaignFormDialog({
                               {...field}
                             />
                           </FormControl>
-                          <FormDescription className="text-blue-700/70 text-xs">
-                            Recomendamos entre 50m e 500m para melhor precisão.
-                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -822,11 +821,7 @@ export function CampaignFormDialog({
               <h3 className="font-bold text-lg mb-2 text-slate-800">
                 {t('vendor.form.preview', 'Pré-visualização da Campanha')}
               </h3>
-              <p className="text-sm text-slate-500 mb-6">
-                É assim que sua campanha aparecerá para os clientes no
-                aplicativo em tempo real.
-              </p>
-              <div className="max-w-[320px] mx-auto pointer-events-none">
+              <div className="max-w-[320px] mx-auto pointer-events-none mt-6">
                 <CouponCard coupon={previewCoupon} />
               </div>
             </div>

@@ -8,14 +8,11 @@ export function VendorStats({ company, activeCampaigns }: any) {
   const { validationLogs } = useCouponStore()
   const { t } = useLanguage()
 
-  const isNY = company?.region === 'US-NY'
-  const currency = isNY ? 'USD' : 'BRL'
-  const locale = isNY ? 'en-US' : 'pt-BR'
-
+  // Always force BRL currency format as per AC requirements
   const customFormat = (val: number) => {
-    return new Intl.NumberFormat(locale, {
+    return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
-      currency,
+      currency: 'BRL',
     }).format(val)
   }
 

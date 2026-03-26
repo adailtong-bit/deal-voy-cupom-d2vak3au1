@@ -20,6 +20,7 @@ import { Store, Save, MapPin } from 'lucide-react'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
 import { COUNTRIES, LOCATION_DATA } from '@/lib/locationData'
+import { PhoneInput } from '@/components/PhoneInput'
 import { toast } from 'sonner'
 
 export function VendorSettingsTab({ company }: any) {
@@ -123,10 +124,9 @@ export function VendorSettingsTab({ company }: any) {
             <Label className="text-slate-700">
               {t('vendor.settings_tab.business_phone', 'Telefone Comercial')}
             </Label>
-            <Input
+            <PhoneInput
               value={data.businessPhone || ''}
-              onChange={(e) => handleChange('businessPhone', e.target.value)}
-              placeholder="+55 11 99999-9999"
+              onChange={(val) => handleChange('businessPhone', val)}
               className="bg-white"
             />
           </div>

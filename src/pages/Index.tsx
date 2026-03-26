@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { AdSpace } from '@/components/AdSpace'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
-import { CATEGORIES } from '@/lib/data'
+import { CATEGORIES, POPULAR_DESTINATIONS } from '@/lib/data'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import {
@@ -39,6 +39,26 @@ import {
   Globe,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
+
+// Helper for Haversine distance
+function getDistanceFromLatLonInKm(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number,
+) {
+  const R = 6371 // Radius of the earth in km
+  const dLat = (lat2 - lat1) * (Math.PI / 180)
+  const dLon = (lon2 - lon1) * (Math.PI / 180)
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) *
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2)
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  return R * c
+}
 
 export default function Index() {
   const { t, formatDate, language } = useLanguage()
@@ -84,6 +104,47 @@ export default function Index() {
     }
   }
 
+  // Determine if search query contains a known destination
+  const searchLocationInfo = useMemo(() => {
+    const sq = searchQuery.toLowerCase()
+    if (!sq) return null
+
+    for (const [key, data] of Object.entries(POPULAR_DESTINATIONS)) {
+      if (
+        sq.includes(key.toLowerCase()) ||
+        sq.includes(data.label.toLowerCase())
+      ) {
+        return data
+      }
+    }
+    return null
+  }, [searchQuery])
+
+  // Map coupons with recalculated distances if fixed location or destination overridden
+  const couponsWithDistance = useMemo(() => {
+    const baseLoc = searchLocationInfo || userLocation
+    return coupons.map((c) => {
+      let dist = c.distance
+      const catLower = c.category.toLowerCase()
+      const titleLower = c.title.toLowerCase()
+      const isFixedPoint = ['hotel', 'parque', 'locadora', 'lazer'].some(
+        (cat) => catLower.includes(cat) || titleLower.includes(cat),
+      )
+
+      if (baseLoc && c.coordinates && (isFixedPoint || searchLocationInfo)) {
+        dist = Math.round(
+          getDistanceFromLatLonInKm(
+            baseLoc.lat,
+            baseLoc.lng,
+            c.coordinates.lat,
+            c.coordinates.lng,
+          ) * 1000,
+        )
+      }
+      return { ...c, distance: dist }
+    })
+  }, [coupons, searchLocationInfo, userLocation])
+
   const activeEvents = useMemo(() => {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
@@ -97,22 +158,44 @@ export default function Index() {
   }, [seasonalEvents, reservedIds])
 
   const filteredCoupons = useMemo(() => {
-    return coupons.filter((c) => {
+    return couponsWithDistance.filter((c) => {
       if (reservedIds.includes(c.id)) return false
 
       const title = c.translations?.[language]?.title || c.title
 
-      const matchesSearch =
-        title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        c.storeName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        c.category.toLowerCase().includes(searchQuery.toLowerCase())
+      let textToMatch = searchQuery.toLowerCase()
+      const isNearLocation = searchLocationInfo ? c.distance < 50000 : true
+
+      if (searchLocationInfo) {
+        textToMatch = textToMatch
+          .replace(searchLocationInfo.label.toLowerCase(), '')
+          .trim()
+        Object.keys(POPULAR_DESTINATIONS).forEach((k) => {
+          if (textToMatch.includes(k.toLowerCase())) {
+            textToMatch = textToMatch.replace(k.toLowerCase(), '').trim()
+          }
+        })
+      }
+
+      const matchesText =
+        textToMatch === '' ||
+        title.toLowerCase().includes(textToMatch) ||
+        c.storeName.toLowerCase().includes(textToMatch) ||
+        c.category.toLowerCase().includes(textToMatch)
 
       const matchesCategory =
         selectedCategory === 'all' || c.category === selectedCategory
 
-      return matchesSearch && matchesCategory
+      return isNearLocation && matchesText && matchesCategory
     })
-  }, [coupons, searchQuery, selectedCategory, reservedIds, language])
+  }, [
+    couponsWithDistance,
+    searchQuery,
+    selectedCategory,
+    reservedIds,
+    language,
+    searchLocationInfo,
+  ])
 
   const trendingCoupons = filteredCoupons
     .filter((c) => c.isTrending || (c.averageRating && c.averageRating > 4.5))
@@ -184,24 +267,29 @@ export default function Index() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t(
-                  'home.search_placeholder',
-                  'Buscar ofertas, lojas ou categorias...',
+                  'home.search_placeholder_new',
+                  'Para onde você vai? Buscar hotéis, parques, cupons...',
                 )}
                 className="pl-12 h-12 sm:h-14 text-base rounded-full shadow-sm bg-slate-50 border-slate-200 focus-visible:ring-primary/30 focus-visible:bg-white transition-all w-full"
               />
             </div>
 
-            {userLocation && (
-              <div className="flex items-center gap-1.5 text-sm font-medium text-slate-600 animate-fade-in pl-2">
-                <MapPin className="h-4 w-4 text-primary" />
-                <span>
-                  {t(
-                    'home.location_active',
-                    'Mostrando ofertas próximas a você',
-                  )}
-                </span>
-              </div>
-            )}
+            <div className="flex items-center gap-1.5 text-sm font-medium text-slate-600 animate-fade-in pl-2 mt-1">
+              <MapPin className="h-4 w-4 text-primary" />
+              <span>
+                {searchLocationInfo
+                  ? t(
+                      'home.location_override',
+                      `Mostrando ofertas perto de ${searchLocationInfo.label}`,
+                    ).replace('{location}', searchLocationInfo.label)
+                  : userLocation
+                    ? t(
+                        'home.location_active',
+                        'Mostrando ofertas próximas a você',
+                      )
+                    : t('home.detecting_location', 'Detectando localização...')}
+              </span>
+            </div>
           </div>
         </div>
       </section>
@@ -383,7 +471,7 @@ export default function Index() {
                                 }
                               >
                                 <Ticket className="h-5 w-5" />
-                                {t('home.reserve_voucher', 'Reservar')}
+                                {t('home.get_voucher', 'Resgatar Voucher')}
                               </Button>
                             </div>
                           </div>
@@ -444,7 +532,7 @@ export default function Index() {
                 <Search className="h-8 w-8 text-slate-400" />
               </div>
               <h3 className="text-lg font-bold text-slate-700">
-                {t('home.no_results', 'Nenhuma oferta encontrada')}
+                {t('home.no_offers', 'Nenhuma oferta encontrada no momento.')}
               </h3>
               <p className="text-slate-500 mt-1 max-w-md mx-auto px-4">
                 {selectedCategory !== 'all' && !searchQuery
