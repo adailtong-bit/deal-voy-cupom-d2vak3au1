@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { CampaignFormDialog } from '@/components/merchant/CampaignFormDialog'
+import { CustomerJourneyDialog } from '@/components/vendor/CustomerJourneyDialog'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,6 +25,7 @@ import {
   Megaphone,
   Plus,
   Trash2,
+  Smartphone,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { cn } from '@/lib/utils'
@@ -38,6 +40,7 @@ export function VendorCampaignsTab({
   const { formatDate, t } = useLanguage()
   const { deleteCoupon } = useCouponStore()
   const [editingCoupon, setEditingCoupon] = useState<any>(null)
+  const [journeyCoupon, setJourneyCoupon] = useState<any>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
 
   const handleEdit = (coupon: any) => {
@@ -181,70 +184,85 @@ export function VendorCampaignsTab({
                     />
                   </div>
 
-                  <div className="pt-4 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 mt-2">
+                  <div className="pt-4 flex flex-col gap-2 border-t border-slate-100 mt-2">
                     <Button
-                      asChild
-                      variant="ghost"
+                      variant="secondary"
                       size="sm"
-                      className="text-slate-500 hover:text-primary px-2"
+                      onClick={() => setJourneyCoupon(coupon)}
+                      className="w-full font-semibold bg-primary/5 text-primary hover:bg-primary/10 border border-primary/10"
                     >
-                      <Link to={`/voucher/${coupon.id}`}>
-                        <ExternalLink className="h-4 w-4 mr-1.5" />{' '}
-                        {t('vendor.campaigns_tab.view_customer', 'Ver cliente')}
-                      </Link>
+                      <Smartphone className="w-4 h-4 mr-2" />
+                      {t('vendor.campaigns_tab.view_journey', 'Ver Jornada')}
                     </Button>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center justify-between gap-2 mt-1">
                       <Button
-                        variant="outline"
+                        asChild
+                        variant="ghost"
                         size="sm"
-                        onClick={() => handleEdit(coupon)}
-                        className="text-slate-600 hover:text-primary hover:bg-primary/5"
+                        className="text-slate-500 hover:text-primary px-2"
                       >
-                        <Edit2 className="h-4 w-4 mr-1.5" />{' '}
-                        {t('vendor.campaigns_tab.edit', 'Editar')}
+                        <Link to={`/voucher/${coupon.id}`}>
+                          <ExternalLink className="h-4 w-4 mr-1.5" />{' '}
+                          {t(
+                            'vendor.campaigns_tab.view_customer',
+                            'Ver cliente',
+                          )}
+                        </Link>
                       </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="px-2.5 text-red-500 hover:text-red-600 hover:bg-red-50 border-red-100"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>
-                              {t(
-                                'vendor.campaigns_tab.delete_title',
-                                'Excluir Campanha?',
-                              )}
-                            </AlertDialogTitle>
-                            <AlertDialogDescription>
-                              {t(
-                                'vendor.campaigns_tab.delete_desc',
-                                'Esta ação não pode ser desfeita. A campanha será permanentemente removida e não estará mais acessível aos clientes.',
-                              )}
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>
-                              {t('common.cancel', 'Cancelar')}
-                            </AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => deleteCoupon(coupon.id)}
-                              className="bg-red-600 hover:bg-red-700 text-white font-bold"
+
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEdit(coupon)}
+                          className="text-slate-600 hover:text-primary hover:bg-primary/5"
+                        >
+                          <Edit2 className="h-4 w-4 mr-1.5" />{' '}
+                          {t('vendor.campaigns_tab.edit', 'Editar')}
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="px-2.5 text-red-500 hover:text-red-600 hover:bg-red-50 border-red-100"
                             >
-                              {t(
-                                'vendor.campaigns_tab.delete_confirm',
-                                'Excluir Campanha',
-                              )}
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>
+                                {t(
+                                  'vendor.campaigns_tab.delete_title',
+                                  'Excluir Campanha?',
+                                )}
+                              </AlertDialogTitle>
+                              <AlertDialogDescription>
+                                {t(
+                                  'vendor.campaigns_tab.delete_desc',
+                                  'Esta ação não pode ser desfeita. A campanha será permanentemente removida e não estará mais acessível aos clientes.',
+                                )}
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>
+                                {t('common.cancel', 'Cancelar')}
+                              </AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => deleteCoupon(coupon.id)}
+                                className="bg-red-600 hover:bg-red-700 text-white font-bold"
+                              >
+                                {t(
+                                  'vendor.campaigns_tab.delete_confirm',
+                                  'Excluir Campanha',
+                                )}
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
@@ -259,6 +277,12 @@ export function VendorCampaignsTab({
         onOpenChange={setIsDialogOpen}
         companyId={company?.id}
         coupon={editingCoupon}
+      />
+
+      <CustomerJourneyDialog
+        coupon={journeyCoupon}
+        open={!!journeyCoupon}
+        onOpenChange={(o: boolean) => !o && setJourneyCoupon(null)}
       />
     </div>
   )
