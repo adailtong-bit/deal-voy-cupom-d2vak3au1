@@ -28,11 +28,17 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
 import { ImagePlus, ExternalLink, Radar } from 'lucide-react'
-import { CouponCard } from '@/components/CouponCard'
 import { toast } from 'sonner'
+import { CampaignPreview } from './CampaignPreview'
 
 const STORE_LOCATIONS = [
   'Matriz - Centro',
@@ -40,6 +46,25 @@ const STORE_LOCATIONS = [
   'Filial - Zona Norte',
   'Shopping Cidade',
   'Unidade Express',
+]
+
+const RULES_TEMPLATES = [
+  {
+    label: 'Geral (Varejo)',
+    text: 'Válido enquanto durarem os estoques. Não cumulativo com outras promoções. Indispensável a apresentação do voucher digital.',
+  },
+  {
+    label: 'Restaurante / Bar',
+    text: 'Válido para consumo no local. Não inclui taxa de serviço. Um voucher por mesa. Não cumulativo com outras promoções.',
+  },
+  {
+    label: 'Serviços / Agendamento',
+    text: 'Necessário agendamento prévio. Sujeito a disponibilidade de horário. Tolerância de 15 minutos de atraso.',
+  },
+  {
+    label: 'Delivery / Retirada',
+    text: 'Válido apenas para pedidos com retirada no balcão. Taxa de entrega não inclusa (se aplicável).',
+  },
 ]
 
 const formSchema = z
@@ -332,43 +357,6 @@ export function CampaignFormDialog({
       ? `${watchedVals.discountPercentage || '0%'} OFF`
       : `Gaste ${watchedVals.minSpend || 'R$ 0,00'}, ganhe ${watchedVals.fixedDiscount || 'R$ 0,00'} OFF`
 
-  const previewCoupon = {
-    id: 'preview',
-    title:
-      watchedVals.title || t('vendor.form.campaign_title', 'Nome da Campanha'),
-    description:
-      watchedVals.description ||
-      t(
-        'vendor.form.description',
-        'A descrição da sua campanha aparecerá aqui.',
-      ),
-    instructions: watchedVals.instructions || '',
-    storeName:
-      watchedVals.scope === 'specific' && watchedVals.specificStore
-        ? watchedVals.specificStore
-        : company?.name || 'Nome da Empresa',
-    image: watchedVals.image || 'https://img.usecurling.com/p/400/300?q=sale',
-    discount: formattedDiscountPreview(watchedVals, formattedPreviewDiscount),
-    distance: 50,
-    expiryDate: watchedVals.endDate,
-    category: 'Outros',
-    code: 'PREVIEW',
-    coordinates: { lat: 0, lng: 0 },
-    status: 'active',
-    offerType: watchedVals.companyUrl ? 'online' : 'in-store',
-    externalUrl: watchedVals.companyUrl,
-    source: 'partner',
-    isUnlimited: watchedVals.limitType === 'unlimited',
-  } as any
-
-  function formattedDiscountPreview(vals: any, fallback: string) {
-    if (vals.discountType === 'percentage' && !vals.discountPercentage)
-      return '0% OFF'
-    if (vals.discountType === 'fixed_spend' && !vals.minSpend)
-      return 'Valor OFF'
-    return fallback
-  }
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
@@ -431,9 +419,45 @@ export function CampaignFormDialog({
                   name="instructions"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>
-                        {t('vendor.form.rules', 'Regras da Campanha')}
-                      </FormLabel>
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <FormLabel>
+                          {t('vendor.form.rules', 'Regras da Campanha')}
+                        </FormLabel>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="secondary"
+                              size="sm"
+                              className="h-7 text-xs font-medium self-start sm:self-auto"
+                            >
+                              {t(
+                                'vendor.form.insert_rules_template',
+                                'Inserir Regras Padrão',
+                              )}
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {RULES_TEMPLATES.map((tpl, i) => (
+                              <DropdownMenuItem
+                                key={i}
+                                onClick={() => {
+                                  const currentVal =
+                                    form.getValues('instructions')
+                                  const newVal = currentVal
+                                    ? `${currentVal}\n\n${tpl.text}`
+                                    : tpl.text
+                                  form.setValue('instructions', newVal, {
+                                    shouldValidate: true,
+                                  })
+                                }}
+                              >
+                                {tpl.label}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                       <FormControl>
                         <Textarea
                           placeholder={t(
@@ -924,14 +948,22 @@ export function CampaignFormDialog({
             </form>
           </Form>
 
-          <div className="bg-slate-50 p-6 rounded-xl border border-slate-200 hidden md:block relative h-full">
-            <div className="sticky top-6">
+          <div className="bg-slate-50 p-6 rounded-xl border border-slate-200 relative h-full">
+            <div className="md:sticky md:top-6">
               <h3 className="font-bold text-lg mb-4 text-slate-800 border-b border-slate-200 pb-2">
-                {t('dashboard.your_campaigns', 'Suas Campanhas Ativas')} -{' '}
                 {t('vendor.form.preview', 'Pré-visualização da Campanha')}
               </h3>
-              <div className="max-w-[320px] mx-auto pointer-events-none mt-6">
-                <CouponCard coupon={previewCoupon} />
+              <div className="mt-6 flex justify-center">
+                <CampaignPreview
+                  title={watchedVals.title}
+                  description={watchedVals.description}
+                  instructions={watchedVals.instructions}
+                  image={watchedVals.image}
+                  startDate={watchedVals.startDate}
+                  endDate={watchedVals.endDate}
+                  companyUrl={watchedVals.companyUrl}
+                  formattedDiscount={formattedPreviewDiscount}
+                />
               </div>
             </div>
           </div>

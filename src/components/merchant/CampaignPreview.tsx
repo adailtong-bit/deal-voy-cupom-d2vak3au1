@@ -1,0 +1,88 @@
+import { Card, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { ImagePlus } from 'lucide-react'
+import { useLanguage } from '@/stores/LanguageContext'
+
+interface CampaignPreviewProps {
+  title?: string
+  description?: string
+  instructions?: string
+  image?: string
+  startDate?: string
+  endDate?: string
+  companyUrl?: string
+  formattedDiscount: string
+}
+
+export function CampaignPreview({
+  title,
+  description,
+  instructions,
+  image,
+  startDate,
+  endDate,
+  companyUrl,
+  formattedDiscount,
+}: CampaignPreviewProps) {
+  const { t, formatDate } = useLanguage()
+
+  return (
+    <Card className="overflow-hidden border-slate-200 shadow-sm w-full max-w-[340px] bg-white pointer-events-none">
+      {image ? (
+        <div className="aspect-video w-full relative">
+          <img src={image} alt="" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+          <Badge className="absolute bottom-2 left-2 bg-white/95 text-black hover:bg-white border-none shadow-sm">
+            {formattedDiscount}
+          </Badge>
+        </div>
+      ) : (
+        <div className="aspect-video w-full relative bg-slate-100 flex items-center justify-center">
+          <ImagePlus className="w-8 h-8 text-slate-300" />
+          <Badge className="absolute bottom-2 left-2 bg-white/95 text-black hover:bg-white border-none shadow-sm">
+            {formattedDiscount}
+          </Badge>
+        </div>
+      )}
+      <CardContent className="p-4 space-y-3">
+        <div>
+          <h4 className="font-bold text-sm leading-tight mb-1 break-words">
+            {title || t('vendor.form.campaign_title', 'Nome da Campanha')}
+          </h4>
+          <p className="text-xs text-slate-500 line-clamp-2 break-words">
+            {description ||
+              t(
+                'vendor.form.description',
+                'A descrição da sua campanha aparecerá aqui.',
+              )}
+          </p>
+        </div>
+        <div className="text-[11px] text-slate-600 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+          <span className="font-semibold text-slate-800 block mb-0.5">
+            {t('vendor.journey.validity', 'Validade:')}
+          </span>
+          <span className="block mb-2">
+            {startDate ? formatDate(startDate) : 'N/A'} {t('common.to', 'até')}{' '}
+            {endDate ? formatDate(endDate) : 'N/A'}
+          </span>
+          <span className="font-semibold text-slate-800 block mb-0.5">
+            {t('vendor.journey.rules', 'Regras:')}
+          </span>
+          <span className="whitespace-pre-wrap block break-words">
+            {instructions ||
+              t(
+                'vendor.journey.rules_default',
+                'Apresente este código no caixa.',
+              )}
+          </span>
+        </div>
+        <Button className="w-full h-8 text-xs font-semibold" variant="default">
+          {companyUrl
+            ? t('vouchers.go_to_store', 'Acessar Loja Online')
+            : t('vouchers.reserve', 'Reservar')}
+        </Button>
+      </CardContent>
+    </Card>
+  )
+}
