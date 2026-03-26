@@ -38,6 +38,7 @@ import {
   SeasonalEvent,
   TargetGroup,
   CommunicationCampaign,
+  StandardRule,
 } from '@/lib/types'
 import {
   MOCK_COUPONS,
@@ -130,6 +131,7 @@ interface CouponContextType {
   usedVouchers: string[]
   targetGroups: TargetGroup[]
   communicationCampaigns: CommunicationCampaign[]
+  standardRules: StandardRule[]
   setRegion: (regionCode: string) => void
   toggleSave: (id: string) => void
   toggleTrip: (id: string) => void
@@ -250,6 +252,11 @@ interface CouponContextType {
   addFranchise: (franchise: Franchise) => void
   updateFranchise: (id: string, data: Partial<Franchise>) => void
   deleteFranchise: (id: string) => void
+
+  // Standard Rules
+  addStandardRule: (rule: StandardRule) => void
+  updateStandardRule: (id: string, data: Partial<StandardRule>) => void
+  deleteStandardRule: (id: string) => void
 }
 
 const CouponContext = createContext<CouponContextType | undefined>(undefined)
@@ -432,6 +439,25 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       content:
         'Não perca! 50% OFF em pizzas tamanho família neste fim de semana.',
       createdAt: new Date(Date.now() - 86400000).toISOString(),
+    },
+  ])
+
+  const [standardRules, setStandardRules] = useState<StandardRule[]>([
+    {
+      id: 'sr-1',
+      companyId: 'c1',
+      name: 'Fidelidade Ouro (Café)',
+      triggerType: 'visit',
+      threshold: 5,
+      reward: '1 Café Especial Grátis',
+    },
+    {
+      id: 'sr-2',
+      companyId: 'c1',
+      name: 'Compra Alta (Desconto)',
+      triggerType: 'amount_spent',
+      threshold: 150,
+      reward: '15% OFF na próxima compra',
     },
   ])
 
@@ -867,6 +893,23 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     setCommunicationCampaigns((prev) => prev.filter((c) => c.id !== id))
   }
 
+  const addStandardRule = (rule: StandardRule) => {
+    setStandardRules((prev) => [rule, ...prev])
+    toast.success('Regra criada com sucesso!')
+  }
+
+  const updateStandardRule = (id: string, data: Partial<StandardRule>) => {
+    setStandardRules((prev) =>
+      prev.map((r) => (r.id === id ? { ...r, ...data } : r)),
+    )
+    toast.success('Regra atualizada com sucesso!')
+  }
+
+  const deleteStandardRule = (id: string) => {
+    setStandardRules((prev) => prev.filter((r) => r.id !== id))
+    toast.success('Regra excluída com sucesso!')
+  }
+
   return React.createElement(
     CouponContext.Provider,
     {
@@ -920,6 +963,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         usedVouchers,
         targetGroups,
         communicationCampaigns,
+        standardRules,
         setRegion,
         toggleSave,
         toggleTrip,
@@ -1015,6 +1059,9 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         createCommunicationCampaign,
         updateCommunicationCampaign,
         deleteCommunicationCampaign,
+        addStandardRule,
+        updateStandardRule,
+        deleteStandardRule,
       },
     },
     children,

@@ -59,6 +59,15 @@ export interface BehavioralTrigger {
   isActive: boolean
 }
 
+export interface StandardRule {
+  id: string
+  companyId: string
+  name: string
+  triggerType: 'visit' | 'share' | 'amount_spent' | 'specific_action'
+  threshold: number
+  reward: string
+}
+
 export interface Coupon {
   id: string
   storeName: string

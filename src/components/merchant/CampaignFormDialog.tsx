@@ -33,10 +33,18 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
-import { CalendarIcon, ImagePlus, ExternalLink, Radar, Zap } from 'lucide-react'
+import {
+  CalendarIcon,
+  ImagePlus,
+  ExternalLink,
+  Radar,
+  Zap,
+  ListOrdered,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { CampaignPreview } from './CampaignPreview'
 
@@ -227,12 +235,16 @@ export function CampaignFormDialog({
   coupon?: any
   companyId: string
 }) {
-  const { addCoupon, updateCampaign, companies } = useCouponStore()
+  const { addCoupon, updateCampaign, companies, standardRules } =
+    useCouponStore()
   const { t } = useLanguage()
   const company = companies.find((c) => c.id === companyId)
 
+  const myRules = standardRules.filter((r) => r.companyId === companyId)
+
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
+    mode: 'onChange',
     defaultValues: {
       title: '',
       description: '',
@@ -840,11 +852,63 @@ export function CampaignFormDialog({
 
               <div className="space-y-4 pt-4 border-t">
                 <div className="p-4 bg-orange-50/50 rounded-xl border border-orange-100 space-y-4">
-                  <div className="flex items-center gap-2 text-orange-800 font-semibold">
-                    <Zap className="w-5 h-5 text-orange-500" />
-                    {t(
-                      'vendor.form.triggers_title',
-                      'Gatilhos e Metas (Fidelidade)',
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-orange-800 font-semibold">
+                      <Zap className="w-5 h-5 text-orange-500" />
+                      {t(
+                        'vendor.form.triggers_title',
+                        'Gatilhos e Metas (Fidelidade)',
+                      )}
+                    </div>
+                    {myRules.length > 0 && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-8 text-xs font-semibold bg-white text-orange-700 hover:bg-orange-50 border-orange-200"
+                          >
+                            <ListOrdered className="w-3.5 h-3.5 mr-1.5" />
+                            {t('vendor.form.insert_rules', 'Inserir Regra')}
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>
+                            {t('vendor.form.saved_rules', 'Regras Salvas')}
+                          </DropdownMenuLabel>
+                          {myRules.map((rule) => (
+                            <DropdownMenuItem
+                              key={rule.id}
+                              onClick={() => {
+                                form.setValue('enableTrigger', true, {
+                                  shouldValidate: true,
+                                })
+                                form.setValue('triggerType', rule.triggerType, {
+                                  shouldValidate: true,
+                                })
+                                form.setValue(
+                                  'triggerThreshold',
+                                  rule.threshold,
+                                  { shouldValidate: true },
+                                )
+                                form.setValue('triggerReward', rule.reward, {
+                                  shouldValidate: true,
+                                })
+                                toast.success(
+                                  t(
+                                    'vendor.form.rule_applied',
+                                    'Regra aplicada com sucesso!',
+                                  ),
+                                )
+                              }}
+                            >
+                              <Zap className="w-3 h-3 mr-2 text-orange-500" />
+                              {rule.name}
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     )}
                   </div>
                   <FormField
@@ -884,6 +948,7 @@ export function CampaignFormDialog({
                             <Select
                               onValueChange={field.onChange}
                               defaultValue={field.value}
+                              value={field.value}
                             >
                               <FormControl>
                                 <SelectTrigger className="bg-white">
@@ -1181,7 +1246,7 @@ export function CampaignFormDialog({
                 >
                   {t('vendor.form.cancel', 'Cancelar')}
                 </Button>
-                <Button type="submit">
+                <Button type="submit" disabled={!form.formState.isValid}>
                   {coupon
                     ? t('vendor.form.save', 'Salvar Alterações')
                     : t('vendor.form.create', 'Criar Campanha')}
