@@ -120,18 +120,13 @@ export default function Index() {
     return null
   }, [searchQuery])
 
-  // Map coupons with recalculated distances if fixed location or destination overridden
+  // Map coupons with recalculated distances if destination overridden
   const couponsWithDistance = useMemo(() => {
     const baseLoc = searchLocationInfo || userLocation
     return coupons.map((c) => {
       let dist = c.distance
-      const catLower = c.category.toLowerCase()
-      const titleLower = c.title.toLowerCase()
-      const isFixedPoint = ['hotel', 'parque', 'locadora', 'lazer'].some(
-        (cat) => catLower.includes(cat) || titleLower.includes(cat),
-      )
 
-      if (baseLoc && c.coordinates && (isFixedPoint || searchLocationInfo)) {
+      if (baseLoc && c.coordinates) {
         dist = Math.round(
           getDistanceFromLatLonInKm(
             baseLoc.lat,
@@ -158,7 +153,7 @@ export default function Index() {
   }, [seasonalEvents, reservedIds])
 
   const filteredCoupons = useMemo(() => {
-    return couponsWithDistance.filter((c) => {
+    const results = couponsWithDistance.filter((c) => {
       if (reservedIds.includes(c.id)) return false
 
       const title = c.translations?.[language]?.title || c.title
@@ -188,6 +183,11 @@ export default function Index() {
 
       return isNearLocation && matchesText && matchesCategory
     })
+
+    // Sort prioritizing nearest locations based on active geo-logic focus
+    results.sort((a, b) => a.distance - b.distance)
+
+    return results
   }, [
     couponsWithDistance,
     searchQuery,

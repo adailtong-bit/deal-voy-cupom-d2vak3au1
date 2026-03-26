@@ -818,7 +818,8 @@ export function CampaignFormDialog({
 
           <div className="bg-slate-50 p-6 rounded-xl border border-slate-200 hidden md:block relative h-full">
             <div className="sticky top-6">
-              <h3 className="font-bold text-lg mb-2 text-slate-800">
+              <h3 className="font-bold text-lg mb-4 text-slate-800 border-b border-slate-200 pb-2">
+                {t('dashboard.your_campaigns', 'Suas Campanhas Ativas')} -{' '}
                 {t('vendor.form.preview', 'Pré-visualização da Campanha')}
               </h3>
               <div className="max-w-[320px] mx-auto pointer-events-none mt-6">

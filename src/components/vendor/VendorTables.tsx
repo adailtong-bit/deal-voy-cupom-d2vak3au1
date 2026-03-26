@@ -82,7 +82,7 @@ export function OrdersTable({ orders }: any) {
 
 export function HistoryTable() {
   const { validationLogs, user, companies } = useCouponStore()
-  const { t } = useLanguage()
+  const { t, formatDate } = useLanguage()
   const myCompany =
     companies.find((c) => c.id === user?.companyId) || companies[0]
   const logs = validationLogs
@@ -122,7 +122,11 @@ export function HistoryTable() {
           {logs.map((l: any) => (
             <TableRow key={l.id} className="hover:bg-slate-50/50">
               <TableCell className="whitespace-nowrap text-slate-500 text-sm">
-                {new Date(l.validatedAt).toLocaleString('pt-BR')}
+                {formatDate(l.validatedAt)} {t('common.at', 'às')}{' '}
+                {new Date(l.validatedAt).toLocaleTimeString('pt-BR', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
               </TableCell>
               <TableCell className="font-medium text-slate-800 max-w-[200px] truncate">
                 {l.couponTitle}

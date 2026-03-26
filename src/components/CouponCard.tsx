@@ -145,7 +145,7 @@ export function CouponCard({
                       className="flex items-center text-[9px] font-bold text-slate-600 bg-slate-100 px-1 py-0.5 rounded"
                       title={t('vouchers.discovered', 'Oferta Descoberta')}
                     >
-                      <Sparkles className="w-2.5 h-2.5 mr-0.5" />
+                      <Sparkles className="w-2.5 h-2.5 mr-0.5 text-yellow-500" />
                       {t('vouchers.discovered', 'Oferta Descoberta')}
                     </span>
                   )}
@@ -289,7 +289,7 @@ export function CouponCard({
                   className="flex items-center text-[9px] font-bold text-slate-600 bg-slate-100 px-1 py-0.5 rounded w-max"
                   title={t('vouchers.discovered', 'Oferta Descoberta')}
                 >
-                  <Sparkles className="w-2.5 h-2.5 mr-0.5" />
+                  <Sparkles className="w-2.5 h-2.5 mr-0.5 text-yellow-500" />
                   {t('vouchers.discovered', 'Oferta Descoberta')}
                 </span>
               )}
