@@ -810,3 +810,32 @@ export interface FinancialTransaction {
   status: 'completed' | 'pending'
   sourceId?: string
 }
+
+export interface TargetGroup {
+  id: string
+  name: string
+  description: string
+  franchiseId?: string
+  filters: {
+    categories?: string[]
+    frequency?: 'high' | 'medium' | 'low' | 'all'
+    location?: string
+    minSpend?: number
+  }
+  createdAt: string
+  leadCount?: number
+}
+
+export interface CommunicationCampaign {
+  id: string
+  name: string
+  targetGroupId: string
+  franchiseId?: string
+  channel: 'email' | 'sms' | 'push'
+  geographicScope: 'local' | 'state' | 'national'
+  volumeImpact: number
+  status: 'draft' | 'scheduled' | 'sent'
+  content: string
+  createdAt: string
+  scheduledAt?: string
+}

@@ -247,13 +247,17 @@ export default function FranchiseeDashboard() {
       ],
     },
     {
-      title: t('franchisee.menu.intelligence', 'Inteligência'),
+      title: t('franchisee.menu.intelligence', 'Inteligência & CRM'),
       items: [
-        { id: 'crm', label: t('franchisee.menu.crm', 'CRM'), icon: Users },
+        {
+          id: 'crm',
+          label: t('franchisee.menu.crm', 'CRM & Campanhas'),
+          icon: Target,
+        },
         {
           id: 'leads',
           label: t('franchisee.menu.leads', 'Leads Capturados'),
-          icon: Target,
+          icon: Users,
         },
         {
           id: 'crawler',
