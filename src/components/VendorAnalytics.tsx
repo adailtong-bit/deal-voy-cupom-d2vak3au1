@@ -19,12 +19,13 @@ import {
   LineChart,
   Line,
 } from 'recharts'
-import { Radar } from 'lucide-react'
+import { Radar, Users, User, MapPin, Calendar } from 'lucide-react'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
+import { Badge } from '@/components/ui/badge'
 
 export function VendorAnalytics() {
-  const { validationLogs, user, companies, coupons } = useCouponStore()
+  const { validationLogs, user, companies, coupons, users } = useCouponStore()
   const { t } = useLanguage()
   const myCompany =
     companies.find((c) => c.id === user?.companyId) || companies[0]
@@ -57,6 +58,78 @@ export function VendorAnalytics() {
     (sum, c) => sum + (c.redeemedViaAlert || 0),
     0,
   )
+
+  // Demographics Calculation
+  const uniqueUserIds = Array.from(
+    new Set(myLogs.map((l) => l.userId).filter(Boolean)),
+  )
+  const myUsers = uniqueUserIds
+    .map((uid) => users.find((u) => u.id === uid))
+    .filter(Boolean) as any[]
+
+  const genderMap: any = {
+    male: t('vendor.analytics.male', 'Masculino'),
+    female: t('vendor.analytics.female', 'Feminino'),
+    'non-binary': t('vendor.analytics.non_binary', 'Não-binário'),
+    other: t('vendor.analytics.others', 'Outros'),
+    'prefer-not-to-say': 'N/D',
+  }
+
+  const genderCount = myUsers.reduce(
+    (acc, u) => {
+      const gKey = u.gender ? genderMap[u.gender] || u.gender : 'N/D'
+      acc[gKey] = (acc[gKey] || 0) + 1
+      return acc
+    },
+    {} as Record<string, number>,
+  )
+
+  const calculateAge = (b?: string) => {
+    if (!b) return null
+    const bd = new Date(b)
+    const td = new Date()
+    let age = td.getFullYear() - bd.getFullYear()
+    if (
+      td.getMonth() < bd.getMonth() ||
+      (td.getMonth() === bd.getMonth() && td.getDate() < bd.getDate())
+    ) {
+      age--
+    }
+    return age
+  }
+
+  const ageGroups: Record<string, number> = {
+    '18-25': 0,
+    '26-35': 0,
+    '36-45': 0,
+    '46-55': 0,
+    '55+': 0,
+    'N/D': 0,
+  }
+
+  const locationCount = myUsers.reduce(
+    (acc, u) => {
+      const loc =
+        u.city && u.state ? `${u.city}, ${u.state}` : u.state || u.city || 'N/D'
+      acc[loc] = (acc[loc] || 0) + 1
+      return acc
+    },
+    {} as Record<string, number>,
+  )
+
+  myUsers.forEach((u) => {
+    const age = calculateAge(u.birthday)
+    if (age === null) ageGroups['N/D']++
+    else if (age <= 25) ageGroups['18-25']++
+    else if (age <= 35) ageGroups['26-35']++
+    else if (age <= 45) ageGroups['36-45']++
+    else if (age <= 55) ageGroups['46-55']++
+    else ageGroups['55+']++
+  })
+
+  const topLocations = Object.entries(locationCount)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
 
   return (
     <div className="space-y-6 animate-fade-in-up">
@@ -150,6 +223,113 @@ export function VendorAnalytics() {
           </CardContent>
         </Card>
       </div>
+
+      <Card className="border-slate-200 shadow-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5 text-purple-500" />
+            {t(
+              'vendor.analytics.demographics',
+              'Perfil Demográfico dos Leads Ativos',
+            )}
+          </CardTitle>
+          <CardDescription>
+            {t(
+              'vendor.analytics.demographics_desc',
+              'Distribuição de gênero, idade e localização da sua base de clientes.',
+            )}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+              <h4 className="font-semibold text-sm text-slate-700 mb-3 flex items-center gap-2">
+                <User className="h-4 w-4 text-slate-500" />{' '}
+                {t('vendor.analytics.gender', 'Gênero')}
+              </h4>
+              <div className="space-y-2">
+                {Object.entries(genderCount).length === 0 && (
+                  <p className="text-sm text-slate-400">Sem dados</p>
+                )}
+                {Object.entries(genderCount).map(([g, c]) => (
+                  <div
+                    key={g}
+                    className="flex justify-between items-center text-sm"
+                  >
+                    <span className="capitalize text-slate-600 font-medium">
+                      {g === 'N/D'
+                        ? t('vendor.analytics.not_informed', 'Não Informado')
+                        : g}
+                    </span>
+                    <Badge variant="secondary" className="bg-white">
+                      {c}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+              <h4 className="font-semibold text-sm text-slate-700 mb-3 flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-slate-500" />{' '}
+                {t('vendor.analytics.age_range', 'Faixa Etária')}
+              </h4>
+              <div className="space-y-2">
+                {Object.entries(ageGroups).every(([_, c]) => c === 0) && (
+                  <p className="text-sm text-slate-400">Sem dados</p>
+                )}
+                {Object.entries(ageGroups)
+                  .filter(([_, c]) => c > 0)
+                  .map(([age, c]) => (
+                    <div
+                      key={age}
+                      className="flex justify-between items-center text-sm"
+                    >
+                      <span className="text-slate-600 font-medium">
+                        {age === 'N/D'
+                          ? t('vendor.analytics.not_informed', 'Não Informado')
+                          : `${age} ${t('common.years', 'anos')}`}
+                      </span>
+                      <Badge variant="secondary" className="bg-white">
+                        {c}
+                      </Badge>
+                    </div>
+                  ))}
+              </div>
+            </div>
+
+            <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+              <h4 className="font-semibold text-sm text-slate-700 mb-3 flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-slate-500" />{' '}
+                {t('vendor.analytics.top_locations', 'Principais Localizações')}
+              </h4>
+              <div className="space-y-2">
+                {topLocations.length === 0 && (
+                  <p className="text-sm text-slate-400">Sem dados</p>
+                )}
+                {topLocations.map(([loc, c]) => (
+                  <div
+                    key={loc}
+                    className="flex justify-between items-center text-sm"
+                  >
+                    <span
+                      className="text-slate-600 font-medium truncate mr-2"
+                      title={loc}
+                    >
+                      {loc === 'N/D'
+                        ? t('vendor.analytics.not_informed', 'Não Informado')
+                        : loc}
+                    </span>
+                    <Badge variant="secondary" className="bg-white">
+                      {c}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card className="border-slate-200 shadow-sm">
         <CardHeader>

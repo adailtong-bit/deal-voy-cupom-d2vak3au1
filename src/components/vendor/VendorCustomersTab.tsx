@@ -16,12 +16,33 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog'
-import { Mail, Phone } from 'lucide-react'
+import { Mail, Phone, MapPin, User as UserIcon, Calendar } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+
+const calculateAge = (birthday?: string) => {
+  if (!birthday) return null
+  const birthDate = new Date(birthday)
+  const today = new Date()
+  let age = today.getFullYear() - birthDate.getFullYear()
+  const m = today.getMonth() - birthDate.getMonth()
+  if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+    age--
+  }
+  return age
+}
 
 export function VendorCustomersTab({ company }: any) {
   const { validationLogs, users, coupons } = useCouponStore()
   const { formatDate, t } = useLanguage()
   const [selectedLead, setSelectedLead] = useState<any>(null)
+
+  const genderMap: Record<string, string> = {
+    male: t('vendor.customers_tab.male', 'Masculino'),
+    female: t('vendor.customers_tab.female', 'Feminino'),
+    'non-binary': t('vendor.customers_tab.non_binary', 'Não-binário'),
+    other: t('vendor.customers_tab.other', 'Outros'),
+    'prefer-not-to-say': 'N/D',
+  }
 
   const leads = useMemo(() => {
     const companyLogs = validationLogs.filter((l) => l.companyId === company.id)
@@ -67,6 +88,12 @@ export function VendorCustomersTab({ company }: any) {
             user?.name || lastActivity?.customerName || 'Cliente Desconhecido',
           email: user?.email || 'N/D',
           phone: user?.phone || 'N/D',
+          gender: user?.gender ? genderMap[user.gender] || user.gender : 'N/D',
+          age: calculateAge(user?.birthday),
+          location:
+            user?.city && user?.state
+              ? `${user.city}, ${user.state}`
+              : user?.state || user?.city || 'N/D',
           redemptions: userLogs.length,
           lastActive: lastActivity?.validatedAt,
           lastCampaign: lastActivity?.couponTitle,
@@ -79,7 +106,7 @@ export function VendorCustomersTab({ company }: any) {
           new Date(b.lastActive || 0).getTime() -
           new Date(a.lastActive || 0).getTime(),
       )
-  }, [validationLogs, company.id, users, coupons])
+  }, [validationLogs, company.id, users, coupons, t])
 
   if (leads.length === 0) {
     return (
@@ -104,20 +131,17 @@ export function VendorCustomersTab({ company }: any) {
               <TableHead className="font-semibold text-slate-700">
                 {t('vendor.customers_tab.contact', 'Contato')}
               </TableHead>
+              <TableHead className="font-semibold text-slate-700">
+                {t('vendor.customers_tab.profile', 'Perfil (Demográfico)')}
+              </TableHead>
+              <TableHead className="font-semibold text-slate-700">
+                {t('vendor.customers_tab.location', 'Localização')}
+              </TableHead>
               <TableHead className="font-semibold text-slate-700 text-center">
-                {t(
-                  'vendor.customers_tab.total_redemptions',
-                  'Total de Resgates',
-                )}
+                {t('vendor.customers_tab.total_redemptions', 'Resgates')}
               </TableHead>
               <TableHead className="font-semibold text-slate-700">
-                {t(
-                  'vendor.customers_tab.last_campaign',
-                  'Última Campanha Usada',
-                )}
-              </TableHead>
-              <TableHead className="font-semibold text-slate-700">
-                {t('vendor.customers_tab.last_active', 'Última Atividade')}
+                {t('vendor.customers_tab.last_campaign', 'Última Atividade')}
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -152,16 +176,50 @@ export function VendorCustomersTab({ company }: any) {
                     )}
                   </div>
                 </TableCell>
+                <TableCell>
+                  <div className="flex flex-col gap-1.5 items-start">
+                    <Badge
+                      variant="outline"
+                      className="bg-slate-50 text-[10px] uppercase font-bold tracking-wider text-slate-600 border-slate-200"
+                    >
+                      <UserIcon className="w-3 h-3 mr-1" /> {lead.gender}
+                    </Badge>
+                    <Badge
+                      variant="outline"
+                      className="bg-slate-50 text-[10px] uppercase font-bold tracking-wider text-slate-600 border-slate-200"
+                    >
+                      <Calendar className="w-3 h-3 mr-1" />{' '}
+                      {lead.age !== null
+                        ? `${lead.age} ${t('common.years', 'anos')}`
+                        : 'N/D'}
+                    </Badge>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-1.5 text-sm text-slate-600 font-medium">
+                    <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
+                    <span
+                      className="truncate max-w-[120px]"
+                      title={lead.location}
+                    >
+                      {lead.location}
+                    </span>
+                  </div>
+                </TableCell>
                 <TableCell className="text-center">
                   <span className="inline-flex items-center justify-center bg-primary/10 text-primary font-bold h-7 w-7 rounded-full text-xs">
                     {lead.redemptions}
                   </span>
                 </TableCell>
-                <TableCell className="text-slate-700 text-sm max-w-[200px] truncate font-medium">
-                  {lead.lastCampaign}
-                </TableCell>
-                <TableCell className="text-slate-500 text-sm">
-                  {lead.lastActive ? formatDate(lead.lastActive) : 'N/D'}
+                <TableCell>
+                  <div className="flex flex-col">
+                    <span className="text-slate-700 text-sm max-w-[160px] truncate font-medium">
+                      {lead.lastCampaign}
+                    </span>
+                    <span className="text-slate-500 text-xs mt-0.5">
+                      {lead.lastActive ? formatDate(lead.lastActive) : 'N/D'}
+                    </span>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
@@ -175,33 +233,67 @@ export function VendorCustomersTab({ company }: any) {
       >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Perfil de Consumo</DialogTitle>
+            <DialogTitle>
+              {t(
+                'vendor.customers_tab.consumption_profile',
+                'Perfil de Consumo',
+              )}
+            </DialogTitle>
             <DialogDescription>
-              Detalhes do lead e histórico de interação com sua loja.
+              {t(
+                'vendor.customers_tab.consumption_profile_desc',
+                'Detalhes do lead e histórico de interação com sua loja.',
+              )}
             </DialogDescription>
           </DialogHeader>
           {selectedLead && (
             <div className="space-y-6 py-2">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xl">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xl shrink-0">
                   {selectedLead.name.charAt(0).toUpperCase()}
                 </div>
-                <div>
-                  <h3 className="font-bold text-lg text-slate-800">
+                <div className="min-w-0">
+                  <h3 className="font-bold text-lg text-slate-800 truncate">
                     {selectedLead.name}
                   </h3>
-                  <p className="text-sm text-slate-500">
-                    {selectedLead.email !== 'N/D'
-                      ? selectedLead.email
-                      : selectedLead.phone}
-                  </p>
+                  <div className="flex flex-wrap items-center gap-2 mt-1.5">
+                    <Badge
+                      variant="secondary"
+                      className="text-[10px] bg-slate-100 text-slate-600 hover:bg-slate-100 uppercase tracking-wider font-bold"
+                    >
+                      <UserIcon className="w-3 h-3 mr-1" />{' '}
+                      {selectedLead.gender}
+                    </Badge>
+                    {selectedLead.age !== null && (
+                      <Badge
+                        variant="secondary"
+                        className="text-[10px] bg-slate-100 text-slate-600 hover:bg-slate-100 uppercase tracking-wider font-bold"
+                      >
+                        <Calendar className="w-3 h-3 mr-1" /> {selectedLead.age}{' '}
+                        {t('common.years', 'anos')}
+                      </Badge>
+                    )}
+                    {selectedLead.location !== 'N/D' && (
+                      <Badge
+                        variant="secondary"
+                        className="text-[10px] bg-slate-100 text-slate-600 hover:bg-slate-100 uppercase tracking-wider font-bold truncate max-w-[150px]"
+                        title={selectedLead.location}
+                      >
+                        <MapPin className="w-3 h-3 mr-1" />{' '}
+                        {selectedLead.location}
+                      </Badge>
+                    )}
+                  </div>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 shadow-sm">
                   <p className="text-xs text-slate-500 font-medium mb-1">
-                    Total de Resgates
+                    {t(
+                      'vendor.customers_tab.total_redemptions',
+                      'Total de Resgates',
+                    )}
                   </p>
                   <p className="text-xl font-bold text-slate-800">
                     {selectedLead.redemptions}
@@ -209,9 +301,15 @@ export function VendorCustomersTab({ company }: any) {
                 </div>
                 <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 shadow-sm">
                   <p className="text-xs text-slate-500 font-medium mb-1">
-                    Categoria Favorita
+                    {t(
+                      'vendor.customers_tab.favorite_category',
+                      'Categoria Favorita',
+                    )}
                   </p>
-                  <p className="text-lg font-bold text-slate-800 truncate">
+                  <p
+                    className="text-lg font-bold text-slate-800 truncate"
+                    title={selectedLead.topCategory}
+                  >
                     {selectedLead.topCategory}
                   </p>
                 </div>
@@ -219,7 +317,10 @@ export function VendorCustomersTab({ company }: any) {
 
               <div>
                 <h4 className="font-semibold text-sm text-slate-700 mb-3">
-                  Histórico de Ofertas Usadas
+                  {t(
+                    'vendor.customers_tab.history_title',
+                    'Histórico de Ofertas Usadas',
+                  )}
                 </h4>
                 <div className="space-y-2 max-h-[220px] overflow-y-auto pr-2 custom-scrollbar">
                   {selectedLead.history.map((h: any) => (
@@ -227,7 +328,7 @@ export function VendorCustomersTab({ company }: any) {
                       key={h.id}
                       className="flex justify-between items-center p-2.5 bg-white border border-slate-100 rounded-lg shadow-sm"
                     >
-                      <div className="overflow-hidden">
+                      <div className="overflow-hidden pr-2">
                         <p className="font-medium text-sm text-slate-800 truncate">
                           {h.couponTitle}
                         </p>
@@ -235,7 +336,7 @@ export function VendorCustomersTab({ company }: any) {
                           {h.category}
                         </p>
                       </div>
-                      <span className="text-xs font-medium text-slate-400 whitespace-nowrap ml-3">
+                      <span className="text-xs font-medium text-slate-400 whitespace-nowrap">
                         {formatDate(h.validatedAt)}
                       </span>
                     </div>
@@ -244,7 +345,10 @@ export function VendorCustomersTab({ company }: any) {
               </div>
 
               <p className="text-[11px] text-slate-500 text-center bg-slate-50 p-2 rounded">
-                Use estas informações para criar Grupos Alvo segmentados.
+                {t(
+                  'vendor.customers_tab.use_for_target_groups',
+                  'Use estas informações para criar Grupos Alvo segmentados na guia CRM.',
+                )}
               </p>
             </div>
           )}
