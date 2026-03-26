@@ -67,15 +67,7 @@ export interface Coupon {
   title: string
   description: string
   discount: string
-  category:
-    | 'Alimentação'
-    | 'Moda'
-    | 'Serviços'
-    | 'Eletrônicos'
-    | 'Lazer'
-    | 'Outros'
-    | 'Mercado'
-    | 'Beleza'
+  category: string
   distance: number
   expiryDate: string
   startDate?: string
@@ -129,6 +121,7 @@ export interface Coupon {
   alertRadius?: number
   proximityAlertsSent?: number
   redeemedViaAlert?: number
+  businessType?: string
 }
 
 export type CategoryType = Coupon['category']
@@ -289,7 +282,6 @@ export interface ABTest {
   endDate: string
   status: 'active' | 'completed' | 'draft'
   variantA: ABVariant
-  variantB: ABVariant
 }
 
 export interface DayPlan {
@@ -382,6 +374,7 @@ export interface Company {
   name: string
   legalName?: string
   category?: string
+  businessType?: string
   status: 'active' | 'pending' | 'rejected' | 'inactive'
   internalRef?: string
   email: string
@@ -815,3 +808,4 @@ export interface FinancialTransaction {
   status: 'completed' | 'pending'
   sourceId?: string
 }
+
