@@ -107,7 +107,6 @@ export function CouponCard({
                 src={coupon.image}
                 alt={title}
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                crossOrigin="anonymous"
                 onError={() => setImgError(true)}
               />
             ) : (
@@ -257,7 +256,6 @@ export function CouponCard({
               src={coupon.image}
               alt={title}
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-              crossOrigin="anonymous"
               onError={() => setImgError(true)}
             />
           ) : (
@@ -393,3 +391,4 @@ export function CouponCard({
     </div>
   )
 }
+

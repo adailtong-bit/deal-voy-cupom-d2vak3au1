@@ -205,7 +205,7 @@ const generateSeasonalEvents = (): SeasonalEvent[] => {
         status === 'active' || status === 'expired'
           ? Math.floor(Math.random() * 1000) + 100
           : 0,
-      image: `https://img.usecurling.com/p/600/400?q=campaign&seed=${i}`,
+      image: `https://img.usecurling.com/p/600/400?q=seasonal`, // Removed seed to ensure stability
       vouchers:
         status === 'active'
           ? Array.from({ length: 15 }).map(
@@ -303,7 +303,7 @@ const generateCoupons = (): Coupon[] => {
     category: 'Eletrônicos',
     distance: 0,
     expiryDate: '2025-12-31',
-    image: 'https://img.usecurling.com/p/600/400?q=smart%20speaker',
+    image: 'https://img.usecurling.com/p/600/400?q=speaker',
     logo: 'https://img.usecurling.com/i?q=amazon&color=solid-black&shape=fill',
     code: 'ALEXA20OFF',
     coordinates: { lat: 0, lng: 0 },
@@ -420,7 +420,7 @@ const generateCoupons = (): Coupon[] => {
     category: 'Moda',
     distance: 150,
     expiryDate: '2025-12-31',
-    image: 'https://img.usecurling.com/p/600/400?q=nike%20shoes',
+    image: 'https://img.usecurling.com/p/600/400?q=shoes',
     logo: 'https://img.usecurling.com/i?q=nike&color=black&shape=fill',
     code: 'NIKE-50-PROMO',
     coordinates: { lat: -23.55052, lng: -46.633308 },
@@ -540,7 +540,7 @@ const generateCoupons = (): Coupon[] => {
       category: categories[i % categories.length],
       distance: 100 * i,
       expiryDate: '2025-12-31',
-      image: `https://img.usecurling.com/p/600/400?q=${categories[i % categories.length]}&seed=${i}`,
+      image: `https://img.usecurling.com/p/600/400?q=offer`, // Removed seed
       logo: `https://img.usecurling.com/i?q=logo&color=${i % 2 === 0 ? 'red' : 'blue'}&seed=${i}`,
       code: `CODE-${i + 1000}`,
       coordinates: isUS
@@ -602,7 +602,7 @@ const generateCoupons = (): Coupon[] => {
       category: 'Outros',
       distance: 5,
       expiryDate: '2025-12-31',
-      image: 'https://img.usecurling.com/p/600/400?q=new%20york',
+      image: 'https://img.usecurling.com/p/600/400?q=city',
       code: 'NYEMP20',
       coordinates: { lat: 40.7128, lng: -74.006 },
       totalAvailable: 500,
@@ -979,7 +979,7 @@ export const MOCK_ADS: Advertisement[] = [
     clicks: 3400,
     startDate: '2024-12-01',
     endDate: '2025-01-31',
-    image: 'https://img.usecurling.com/p/800/200?q=burger%20ad',
+    image: 'https://img.usecurling.com/p/800/200?q=burger',
     link: 'https://burgerking.com.br',
     description: 'Promoção regional de verão para Burger King.',
     price: 29.9,
@@ -1020,7 +1020,7 @@ export const MOCK_ADS: Advertisement[] = [
     clicks: 150,
     startDate: '2024-12-01',
     endDate: '2025-01-31',
-    image: 'https://img.usecurling.com/p/800/400?q=new%20york',
+    image: 'https://img.usecurling.com/p/800/400?q=city',
     link: 'https://ny-local.com',
     price: 500,
     currency: 'USD',
@@ -1038,7 +1038,7 @@ export const MOCK_ADS: Advertisement[] = [
     clicks: 950,
     startDate: '2024-12-01',
     endDate: '2025-12-31',
-    image: 'https://img.usecurling.com/p/800/200?q=winter%20sale',
+    image: 'https://img.usecurling.com/p/800/200?q=winter',
     link: 'https://example.com/winter-sale',
     price: 50,
     currency: 'BRL',
@@ -1225,7 +1225,7 @@ export const MOCK_TRAVEL_OFFERS: TravelOffer[] = [
     description: 'Espaçosa suíte com 2 quartos separados e sala de estar.',
     price: 850,
     currency: 'USD',
-    image: 'https://img.usecurling.com/p/300/200?q=hotel%20suite',
+    image: 'https://img.usecurling.com/p/300/200?q=hotel',
     destination: 'Orlando, FL',
     rating: 4.8,
     link: 'https://booking.com',
@@ -1253,7 +1253,7 @@ export const MOCK_TRAVEL_OFFERS: TravelOffer[] = [
     description: 'Quarto padrão com 2 camas queen.',
     price: 120,
     currency: 'USD',
-    image: 'https://img.usecurling.com/p/300/200?q=hotel%20room',
+    image: 'https://img.usecurling.com/p/300/200?q=room',
     destination: 'Orlando, FL',
     rating: 3.5,
     link: 'https://booking.com',
@@ -1284,7 +1284,7 @@ export const MOCK_TRAVEL_OFFERS: TravelOffer[] = [
       'Apartamento executivo com quarto separado e área de trabalho.',
     price: 450,
     currency: 'USD',
-    image: 'https://img.usecurling.com/p/300/200?q=luxury%20apartment',
+    image: 'https://img.usecurling.com/p/300/200?q=apartment',
     destination: 'Miami, FL',
     rating: 4.9,
     link: 'https://booking.com',
@@ -1315,7 +1315,7 @@ export const MOCK_TRAVEL_OFFERS: TravelOffer[] = [
     description: 'Quarto confortável no centro da cidade.',
     price: 180,
     currency: 'BRL',
-    image: 'https://img.usecurling.com/p/300/200?q=hotel%20city',
+    image: 'https://img.usecurling.com/p/300/200?q=city',
     destination: 'São Paulo, SP',
     rating: 4.0,
     link: 'https://booking.com',
@@ -1345,7 +1345,7 @@ export const MOCK_TRAVEL_OFFERS: TravelOffer[] = [
     description: '1-Day Park-to-Park ticket for an unforgettable adventure.',
     price: 150,
     currency: 'USD',
-    image: 'https://img.usecurling.com/p/300/200?q=theme%20park',
+    image: 'https://img.usecurling.com/p/300/200?q=park',
     destination: 'Orlando, FL',
     rating: 4.9,
     link: 'https://universalorlando.com',
@@ -1404,7 +1404,7 @@ export const MOCK_CAR_RENTALS: CarRental[] = Array.from({ length: 15 }).map(
     pricePerDay: 100 + i * 5,
     status: i % 5 === 0 ? 'rented' : 'available',
     location: i % 2 === 0 ? 'São Paulo, SP' : 'Miami, FL',
-    image: `https://img.usecurling.com/p/300/200?q=car%20${i % 2 === 0 ? 'sedan' : 'convertible'}&seed=${i}`,
+    image: `https://img.usecurling.com/p/300/200?q=car`, // Removed seed
     agencyId: 'agency1',
   }),
 )
@@ -1554,7 +1554,7 @@ export const MOCK_DISCOVERED_PROMOTIONS: DiscoveredPromotion[] = [
     discount: '$20 OFF',
     description: 'Discounted tickets for the whole family.',
     expiryDate: '2025-10-31',
-    image: 'https://img.usecurling.com/p/300/200?q=theme%20park',
+    image: 'https://img.usecurling.com/p/300/200?q=park',
     storeName: 'Orlando Parks',
     status: 'pending',
     region: 'US-FL',
@@ -1823,3 +1823,4 @@ export const MOCK_FINANCIAL_TRANSACTIONS: FinancialTransaction[] = [
     status: 'completed',
   },
 ]
+
