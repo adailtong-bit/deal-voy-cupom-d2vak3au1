@@ -8,12 +8,19 @@ import { CreditCard, Users, Ticket, DollarSign } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { CouponPerformance } from '@/components/shared/CouponPerformance'
 
+import { useEffect } from 'react'
+import { Download, FileText } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { exportToCSV, exportToPDF } from '@/lib/exportUtils'
+import { useNotification } from '@/stores/NotificationContext'
+
 export function FranchiseeOverviewTab({
   franchiseId,
 }: {
   franchiseId: string
 }) {
   const { t } = useLanguage()
+  const { addNotification, notifications } = useNotification()
   const {
     franchises,
     companies,
@@ -82,6 +89,94 @@ export function FranchiseeOverviewTab({
   )
   const totalRoyalties = adRevenue * (royaltyRate / 100)
 
+  useEffect(() => {
+    if (!myFranchise || franchiseCoupons.length === 0) return
+
+    // Check if alert already exists to prevent spam
+    if (notifications.some((n) => n.title.includes('High Performance'))) return
+
+    // Find best performing coupon
+    const bestCoupon = franchiseCoupons.reduce((best, current) => {
+      const currentClicks = current.visitCount || 0
+      const bestClicks = best?.visitCount || 0
+      return currentClicks > bestClicks ? current : best
+    }, franchiseCoupons[0])
+
+    // Generate alert if performance is notably high
+    if (bestCoupon && (bestCoupon.visitCount || 0) >= 10) {
+      addNotification({
+        title: `🚀 High Performance Alert!`,
+        message: `The offer "${bestCoupon.title}" is performing exceptionally well in ${myFranchise.region} with high click ratios. Check out the analytics to optimize further!`,
+        type: 'alert',
+        link: `/voucher/${bestCoupon.id}`,
+        priority: 'high',
+      })
+    }
+  }, [franchiseCoupons, myFranchise, notifications, addNotification])
+
+  const handleExportCSV = () => {
+    const headers = [
+      'Coupon Name',
+      'Category',
+      'Total Clicks',
+      'Total Redemptions',
+      'Conversion Rate (%)',
+      'Region',
+    ]
+    const rows = franchiseCoupons.map((c) => {
+      const clicks = c.visitCount || 0
+      const redemptions = franchiseLogs.filter(
+        (log) => log.couponId === c.id,
+      ).length
+      const cr = clicks > 0 ? ((redemptions / clicks) * 100).toFixed(2) : '0.00'
+      return [
+        c.title,
+        c.category,
+        clicks.toString(),
+        redemptions.toString(),
+        cr,
+        c.region || myFranchise?.region || '',
+      ]
+    })
+    exportToCSV(
+      headers,
+      rows,
+      `performance_report_${myFranchise?.region || 'franchise'}.csv`,
+    )
+  }
+
+  const handleExportPDF = () => {
+    const headers = [
+      'Coupon Name',
+      'Category',
+      'Total Clicks',
+      'Total Redemptions',
+      'Conversion Rate (%)',
+      'Region',
+    ]
+    const rows = franchiseCoupons.map((c) => {
+      const clicks = c.visitCount || 0
+      const redemptions = franchiseLogs.filter(
+        (log) => log.couponId === c.id,
+      ).length
+      const cr = clicks > 0 ? ((redemptions / clicks) * 100).toFixed(2) : '0.00'
+      return [
+        c.title,
+        c.category,
+        clicks.toString(),
+        redemptions.toString(),
+        cr,
+        c.region || myFranchise?.region || '',
+      ]
+    })
+    exportToPDF(
+      headers,
+      rows,
+      `performance_report_${myFranchise?.region || 'franchise'}.pdf`,
+      `Performance Report - ${myFranchise?.region || 'Franchise'}`,
+    )
+  }
+
   if (!myFranchise) return null
 
   return (
@@ -91,19 +186,41 @@ export function FranchiseeOverviewTab({
         !isFranchisee && 'min-w-0 max-w-full',
       )}
     >
-      <div className="min-w-0">
-        <h2 className="text-2xl font-bold text-slate-800 truncate">
-          {t('franchisee.overview.title', 'Visão Geral')}
-        </h2>
-        <p className="text-muted-foreground line-clamp-2 sm:line-clamp-none">
-          {t(
-            'franchisee.overview.desc',
-            `Métricas consolidadas da região de ${myFranchise.region}.`,
-          ).replace(
-            '{region}',
-            myFranchise.region || myFranchise.addressCountry || '',
-          )}
-        </p>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 min-w-0 w-full bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+        <div className="min-w-0 flex-1">
+          <h2 className="text-2xl font-bold text-slate-800 truncate">
+            {t('franchisee.overview.title', 'Visão Geral')}
+          </h2>
+          <p className="text-muted-foreground line-clamp-2 sm:line-clamp-none">
+            {t(
+              'franchisee.overview.desc',
+              `Métricas consolidadas da região de ${myFranchise.region}.`,
+            ).replace(
+              '{region}',
+              myFranchise.region || myFranchise.addressCountry || '',
+            )}
+          </p>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportCSV}
+            className="font-medium"
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Export CSV
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportPDF}
+            className="font-medium"
+          >
+            <FileText className="w-4 h-4 mr-2" />
+            Export PDF
+          </Button>
+        </div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 min-w-0">
         <Card className="shadow-sm border-slate-200 min-w-0 overflow-hidden">

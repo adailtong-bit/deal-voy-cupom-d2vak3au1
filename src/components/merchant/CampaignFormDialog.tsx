@@ -44,6 +44,7 @@ import {
   Zap,
   ListOrdered,
   AlertTriangle,
+  Sparkles,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { CampaignPreview } from './CampaignPreview'
@@ -300,6 +301,20 @@ export function CampaignFormDialog({
   const selectedReward = rewardId
     ? myRewards.find((r) => r.id === rewardId)
     : null
+
+  const suggestedDiscount = useMemo(() => {
+    const map: Record<string, string> = {
+      Alimentação: '20',
+      Moda: '30',
+      Serviços: '15',
+      Eletrônicos: '10',
+      Lazer: '25',
+      Mercado: '5',
+      Beleza: '20',
+      Outros: '15',
+    }
+    return map[watchedVals.category || 'Outros'] || '15'
+  }, [watchedVals.category])
 
   const [manualCategory, setManualCategory] = useState(false)
   const watchTitle = form.watch('title')
@@ -1049,34 +1064,66 @@ export function CampaignFormDialog({
                     />
 
                     {discountType === 'percentage' && (
-                      <FormField
-                        control={form.control}
-                        name="discountPercentage"
-                        render={({ field }) => (
-                          <FormItem className="animate-in fade-in slide-in-from-top-2 p-4 border rounded-lg bg-white">
-                            <FormLabel>
+                      <div className="animate-in fade-in slide-in-from-top-2 p-4 border rounded-lg bg-white space-y-4">
+                        <FormField
+                          control={form.control}
+                          name="discountPercentage"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>
+                                {t(
+                                  'vendor.form.discount_percentage',
+                                  '% de Desconto',
+                                )}
+                              </FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="0%"
+                                  className="w-full sm:w-1/2"
+                                  {...field}
+                                  onChange={(e) => {
+                                    let raw = e.target.value.replace(/\D/g, '')
+                                    if (!raw) return field.onChange('')
+                                    if (parseInt(raw) > 100) raw = '100'
+                                    field.onChange(`${raw}%`)
+                                  }}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <div className="flex items-center gap-3 mt-2 p-3 bg-indigo-50 border border-indigo-100 rounded-lg animate-fade-in w-full">
+                          <Sparkles className="w-5 h-5 text-indigo-500 shrink-0" />
+                          <div className="text-sm text-indigo-900 flex-1 leading-tight">
+                            <strong>
                               {t(
-                                'vendor.form.discount_percentage',
-                                '% de Desconto',
+                                'vendor.form.ai_suggestion',
+                                'AI Pricing Assistant:',
                               )}
-                            </FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="0%"
-                                className="w-full sm:w-1/2"
-                                {...field}
-                                onChange={(e) => {
-                                  let raw = e.target.value.replace(/\D/g, '')
-                                  if (!raw) return field.onChange('')
-                                  if (parseInt(raw) > 100) raw = '100'
-                                  field.onChange(`${raw}%`)
-                                }}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                            </strong>{' '}
+                            Based on <strong>{watchedVals.category}</strong>{' '}
+                            history, we recommend{' '}
+                            <strong>{suggestedDiscount}%</strong> for optimal
+                            conversion.
+                          </div>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="secondary"
+                            className="bg-indigo-100 text-indigo-700 hover:bg-indigo-200 shrink-0 font-semibold"
+                            onClick={() => {
+                              form.setValue(
+                                'discountPercentage',
+                                suggestedDiscount + '%',
+                                { shouldValidate: true },
+                              )
+                            }}
+                          >
+                            {t('vendor.form.apply', 'Apply')}
+                          </Button>
+                        </div>
+                      </div>
                     )}
 
                     {discountType === 'fixed_spend' && (

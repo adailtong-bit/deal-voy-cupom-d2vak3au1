@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import {
-  Bell,
   Search,
   Home,
   Menu,
@@ -46,6 +45,7 @@ import logoUrl from '@/assets/whatsapp-image-2026-01-25-at-5.34.51-am-1-9b370.jp
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
 import { CATEGORIES } from '@/lib/data'
+import { NotificationPopover } from '@/components/shared/NotificationPopover'
 
 export function MobileHeader() {
   const { user, logout } = useCouponStore()
@@ -280,16 +280,7 @@ export function MobileHeader() {
         <div className="flex items-center gap-2">
           {user ? (
             <>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-slate-600 hover:text-primary"
-                asChild
-              >
-                <Link to="/notifications">
-                  <Bell className="h-5 w-5" />
-                </Link>
-              </Button>
+              <NotificationPopover />
               <DropdownMenu>
                 <DropdownMenuTrigger className="outline-none">
                   <Avatar className="h-8 w-8 border cursor-pointer hover:opacity-80 transition-opacity">

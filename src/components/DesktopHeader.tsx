@@ -1,5 +1,6 @@
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { Search, Bell, Home, User, LogOut } from 'lucide-react'
+import { Search, Home, User, LogOut } from 'lucide-react'
+import { NotificationPopover } from '@/components/shared/NotificationPopover'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { LanguageSelector } from '@/components/LanguageSelector'
@@ -138,11 +139,7 @@ export function DesktopHeader() {
 
           {user ? (
             <>
-              <Button variant="ghost" size="icon" asChild>
-                <Link to="/notifications">
-                  <Bell className="h-5 w-5" />
-                </Link>
-              </Button>
+              <NotificationPopover />
               <DropdownMenu>
                 <DropdownMenuTrigger className="outline-none">
                   <Avatar className="h-9 w-9 transition-transform hover:scale-105 border cursor-pointer">

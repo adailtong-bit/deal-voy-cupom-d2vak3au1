@@ -23,6 +23,9 @@ import {
 } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { CouponPerformance } from '@/components/shared/CouponPerformance'
+import { Download, FileText } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { exportToCSV, exportToPDF } from '@/lib/exportUtils'
 
 export function PerformanceDashboardTab() {
   const {
@@ -72,8 +75,98 @@ export function PerformanceDashboardTab() {
 
   const pendingCompanies = companies.filter((c) => c.status === 'pending')
 
+  const handleExportCSV = () => {
+    const headers = [
+      'Coupon Name',
+      'Category',
+      'Total Clicks',
+      'Total Redemptions',
+      'Conversion Rate (%)',
+      'Region',
+    ]
+    const rows = coupons.map((c) => {
+      const clicks = c.visitCount || 0
+      const redemptions = validationLogs.filter(
+        (log) => log.couponId === c.id,
+      ).length
+      const cr = clicks > 0 ? ((redemptions / clicks) * 100).toFixed(2) : '0.00'
+      return [
+        c.title,
+        c.category,
+        clicks.toString(),
+        redemptions.toString(),
+        cr,
+        c.region || 'All',
+      ]
+    })
+    exportToCSV(headers, rows, `admin_performance_report.csv`)
+  }
+
+  const handleExportPDF = () => {
+    const headers = [
+      'Coupon Name',
+      'Category',
+      'Total Clicks',
+      'Total Redemptions',
+      'Conversion Rate (%)',
+      'Region',
+    ]
+    const rows = coupons.map((c) => {
+      const clicks = c.visitCount || 0
+      const redemptions = validationLogs.filter(
+        (log) => log.couponId === c.id,
+      ).length
+      const cr = clicks > 0 ? ((redemptions / clicks) * 100).toFixed(2) : '0.00'
+      return [
+        c.title,
+        c.category,
+        clicks.toString(),
+        redemptions.toString(),
+        cr,
+        c.region || 'All',
+      ]
+    })
+    exportToPDF(
+      headers,
+      rows,
+      `admin_performance_report.pdf`,
+      `System Performance Report`,
+    )
+  }
+
   return (
     <div className="space-y-6 animate-fade-in-up">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+        <div>
+          <h2 className="text-xl font-bold text-slate-800">
+            Performance Analytics
+          </h2>
+          <p className="text-muted-foreground text-sm">
+            System-wide coupon and franchise performance overview
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportCSV}
+            className="font-medium"
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Export CSV
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportPDF}
+            className="font-medium"
+          >
+            <FileText className="w-4 h-4 mr-2" />
+            Export PDF
+          </Button>
+        </div>
+      </div>
+
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
