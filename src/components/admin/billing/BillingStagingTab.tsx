@@ -34,7 +34,7 @@ import {
 } from '@/components/ui/select'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useRegionFormatting } from '@/hooks/useRegionFormatting'
-import { PartnerInvoice } from '@/lib/types'
+import { PartnerInvoice, Franchise, Company } from '@/lib/types'
 import { Send, Trash2, Edit2, CalendarIcon } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -46,6 +46,63 @@ import { Calendar } from '@/components/ui/calendar'
 import { format } from 'date-fns'
 import { cn } from '@/lib/utils'
 
+function InvoiceRow({
+  inv,
+  franchises,
+  companies,
+  onEdit,
+  onSend,
+  onCancel,
+}: any) {
+  const target =
+    inv.targetType === 'franchise'
+      ? franchises.find((f: any) => f.id === inv.franchiseId)
+      : companies.find((c: any) => c.id === inv.companyId)
+
+  const targetName = target?.name || inv.id
+  const targetRegion = target?.region || target?.addressCountry
+
+  const { formatCurrency, formatShortDate } = useRegionFormatting(targetRegion)
+
+  return (
+    <TableRow>
+      <TableCell className="font-medium text-xs">
+        {inv.referenceNumber}
+      </TableCell>
+      <TableCell className="max-w-[200px] truncate">{targetName}</TableCell>
+      <TableCell className="text-xs whitespace-nowrap">
+        {formatShortDate(inv.periodStart)} - {formatShortDate(inv.periodEnd)}
+      </TableCell>
+      <TableCell>{inv.transactionCount}</TableCell>
+      <TableCell className="text-right font-bold whitespace-nowrap">
+        {formatCurrency(inv.totalCommission)}
+      </TableCell>
+      <TableCell className="text-right whitespace-nowrap">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => onEdit(inv)}
+          className="mr-1 text-slate-500 hover:text-primary hover:bg-primary/5"
+        >
+          <Edit2 className="h-4 w-4" />
+        </Button>
+        <Button onClick={() => onSend(inv.id)} size="sm" className="mr-2">
+          <Send className="w-3 h-3 mr-2" />
+          Enviar
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => onCancel(inv.id)}
+          className="text-red-500 hover:text-red-600 hover:bg-red-50"
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </TableCell>
+    </TableRow>
+  )
+}
+
 export function BillingStagingTab({ franchiseId }: { franchiseId?: string }) {
   const {
     partnerInvoices,
@@ -56,9 +113,7 @@ export function BillingStagingTab({ franchiseId }: { franchiseId?: string }) {
     user,
   } = useCouponStore()
   const myFranchise = franchises.find((f) => f.id === franchiseId)
-  const { formatCurrency, formatShortDate } = useRegionFormatting(
-    myFranchise?.region,
-  )
+  const { formatShortDate } = useRegionFormatting(myFranchise?.region)
 
   const isSuperAdmin = user?.role === 'super_admin'
 
@@ -73,13 +128,6 @@ export function BillingStagingTab({ franchiseId }: { franchiseId?: string }) {
     }
     return true
   })
-
-  const getTargetName = (inv: PartnerInvoice) => {
-    if (inv.targetType === 'franchise') {
-      return franchises.find((f) => f.id === inv.franchiseId)?.name || inv.id
-    }
-    return companies.find((c) => c.id === inv.companyId)?.name || inv.id
-  }
 
   const handleSend = (id: string) => {
     updatePartnerInvoiceStatus(id, 'pending')
@@ -127,6 +175,39 @@ export function BillingStagingTab({ franchiseId }: { franchiseId?: string }) {
       ? franchises
       : companies.filter((c) => isSuperAdmin || c.franchiseId === franchiseId)
 
+  const selectedCollectorEntity = availableCollectors.find(
+    (c) => c.id === editData.collectorId,
+  )
+  const selectedTargetEntity = availableTargets.find(
+    (t) =>
+      t.id ===
+      (editData.targetType === 'franchise'
+        ? editData.franchiseId
+        : editData.companyId),
+  )
+
+  const editingRegion =
+    (selectedTargetEntity as Franchise | Company)?.region ||
+    (selectedTargetEntity as Franchise | Company)?.addressCountry
+  const { formatCurrency: editFormatCurrency } =
+    useRegionFormatting(editingRegion)
+
+  const formatAddress = (entity: any) => {
+    if (!entity) return 'N/A'
+    if (entity.id === 'app_owner') return 'Sede Global'
+    const parts = [
+      entity.addressStreet,
+      entity.addressNumber,
+      entity.addressComplement,
+      entity.addressNeighborhood,
+      entity.addressCity,
+      entity.addressState,
+      entity.addressZip,
+      entity.addressCountry,
+    ].filter(Boolean)
+    return parts.length > 0 ? parts.join(', ') : 'Endereço não cadastrado'
+  }
+
   return (
     <Card className="min-w-0 w-full animate-fade-in-up">
       <CardHeader>
@@ -151,48 +232,15 @@ export function BillingStagingTab({ franchiseId }: { franchiseId?: string }) {
             </TableHeader>
             <TableBody>
               {stagingInvoices.map((inv) => (
-                <TableRow key={inv.id}>
-                  <TableCell className="font-medium text-xs">
-                    {inv.referenceNumber}
-                  </TableCell>
-                  <TableCell className="max-w-[200px] truncate">
-                    {getTargetName(inv)}
-                  </TableCell>
-                  <TableCell className="text-xs whitespace-nowrap">
-                    {formatShortDate(inv.periodStart)} -{' '}
-                    {formatShortDate(inv.periodEnd)}
-                  </TableCell>
-                  <TableCell>{inv.transactionCount}</TableCell>
-                  <TableCell className="text-right font-bold whitespace-nowrap">
-                    {formatCurrency(inv.totalCommission)}
-                  </TableCell>
-                  <TableCell className="text-right whitespace-nowrap">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => openEdit(inv)}
-                      className="mr-1 text-slate-500 hover:text-primary hover:bg-primary/5"
-                    >
-                      <Edit2 className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      onClick={() => handleSend(inv.id)}
-                      size="sm"
-                      className="mr-2"
-                    >
-                      <Send className="w-3 h-3 mr-2" />
-                      Enviar
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleCancel(inv.id)}
-                      className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
+                <InvoiceRow
+                  key={inv.id}
+                  inv={inv}
+                  franchises={franchises}
+                  companies={companies}
+                  onEdit={openEdit}
+                  onSend={handleSend}
+                  onCancel={handleCancel}
+                />
               ))}
               {stagingInvoices.length === 0 && (
                 <TableRow>
@@ -238,6 +286,23 @@ export function BillingStagingTab({ franchiseId }: { franchiseId?: string }) {
                     ))}
                   </SelectContent>
                 </Select>
+                {selectedCollectorEntity && (
+                  <div className="text-sm text-muted-foreground bg-slate-50 p-3 rounded-md border mt-2 space-y-1">
+                    <p>
+                      <strong className="text-slate-700">Nome:</strong>{' '}
+                      {selectedCollectorEntity.name}
+                    </p>
+                    <p>
+                      <strong className="text-slate-700">Contato:</strong>{' '}
+                      {(selectedCollectorEntity as Franchise | Company)
+                        .contactPerson || 'N/A'}
+                    </p>
+                    <p>
+                      <strong className="text-slate-700">Endereço:</strong>{' '}
+                      {formatAddress(selectedCollectorEntity)}
+                    </p>
+                  </div>
+                )}
               </div>
               <div className="space-y-2">
                 <Label>Cobrado (Pagador)</Label>
@@ -267,6 +332,23 @@ export function BillingStagingTab({ franchiseId }: { franchiseId?: string }) {
                     ))}
                   </SelectContent>
                 </Select>
+                {selectedTargetEntity && (
+                  <div className="text-sm text-muted-foreground bg-slate-50 p-3 rounded-md border mt-2 space-y-1">
+                    <p>
+                      <strong className="text-slate-700">Nome:</strong>{' '}
+                      {selectedTargetEntity.name}
+                    </p>
+                    <p>
+                      <strong className="text-slate-700">Contato:</strong>{' '}
+                      {(selectedTargetEntity as Franchise | Company)
+                        .contactPerson || 'N/A'}
+                    </p>
+                    <p>
+                      <strong className="text-slate-700">Endereço:</strong>{' '}
+                      {formatAddress(selectedTargetEntity)}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -323,16 +405,11 @@ export function BillingStagingTab({ franchiseId }: { franchiseId?: string }) {
                 </Popover>
               </div>
               <div className="space-y-2">
-                <Label>Valor Total (R$)</Label>
+                <Label>Valor Total</Label>
                 <Input
-                  type="number"
-                  value={editData.totalCommission || 0}
-                  onChange={(e) =>
-                    setEditData({
-                      ...editData,
-                      totalCommission: Number(e.target.value),
-                    })
-                  }
+                  value={editFormatCurrency(editData.totalCommission || 0)}
+                  disabled
+                  className="bg-slate-100 font-bold text-slate-700"
                 />
               </div>
             </div>
