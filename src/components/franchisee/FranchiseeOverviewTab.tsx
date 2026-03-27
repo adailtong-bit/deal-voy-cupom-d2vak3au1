@@ -6,6 +6,7 @@ import { useCouponStore } from '@/stores/CouponContext'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { CreditCard, Users, Ticket, DollarSign } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { CouponPerformance } from '@/components/shared/CouponPerformance'
 
 export function FranchiseeOverviewTab({
   franchiseId,
@@ -176,6 +177,8 @@ export function FranchiseeOverviewTab({
           </CardContent>
         </Card>
       </div>
+
+      <CouponPerformance franchiseId={myFranchise.id} />
     </div>
   )
 }

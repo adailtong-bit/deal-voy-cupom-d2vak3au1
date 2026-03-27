@@ -22,6 +22,7 @@ import {
   CheckCircle,
 } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { CouponPerformance } from '@/components/shared/CouponPerformance'
 
 export function PerformanceDashboardTab() {
   const {
@@ -252,6 +253,8 @@ export function PerformanceDashboardTab() {
           </Card>
         </div>
       </div>
+
+      <CouponPerformance />
     </div>
   )
 }
