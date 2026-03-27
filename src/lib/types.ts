@@ -896,7 +896,7 @@ export interface CommunicationCampaign {
   targetGroupId: string
   franchiseId?: string
   companyId?: string
-  channel: 'email' | 'sms' | 'push'
+  channel: 'email' | 'sms' | 'push' | 'whatsapp'
   geographicScope: 'local' | 'state' | 'national'
   volumeImpact: number
   randomizationType?: 'percentage' | 'absolute'
@@ -905,6 +905,8 @@ export interface CommunicationCampaign {
   isExclusive?: boolean
   groupingIdentifier?: string
   status: 'draft' | 'scheduled' | 'sent' | 'active' | 'inactive'
+  clicks?: number
+  redemptions?: number
   content: string
   createdAt: string
   scheduledAt?: string

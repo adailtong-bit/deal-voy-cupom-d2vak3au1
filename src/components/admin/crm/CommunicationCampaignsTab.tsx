@@ -53,18 +53,19 @@ import {
   Smartphone,
   Mail,
   Bell,
-  Globe,
-  MapPin,
-  Map as MapIcon,
   Users,
   Ticket,
   Edit2,
   Trash2,
   Plus,
+  MessageCircle,
+  Save,
+  Library,
+  TrendingUp,
+  MousePointerClick,
 } from 'lucide-react'
 import { CommunicationCampaign, TargetGroup } from '@/lib/types'
 import { toast } from 'sonner'
-import { CATEGORIES } from '@/lib/data'
 
 export function CommunicationCampaignsTab({
   franchiseId,
@@ -92,6 +93,30 @@ export function CommunicationCampaignsTab({
     'existing',
   )
 
+  // Template Library State
+  const [templates, setTemplates] = useState<
+    { id: string; name: string; content: string }[]
+  >(() => {
+    const saved = localStorage.getItem('crm_message_templates')
+    if (saved) return JSON.parse(saved)
+    return [
+      {
+        id: 't1',
+        name: 'Boas-vindas Padrão',
+        content:
+          'Olá! Bem-vindo ao nosso programa. Aproveite os cupons disponíveis na nossa plataforma!',
+      },
+      {
+        id: 't2',
+        name: 'Lembrete de Oferta',
+        content:
+          'Sua oferta favorita está prestes a expirar. Não perca tempo e resgate agora mesmo.',
+      },
+    ]
+  })
+  const [isSavingTemplate, setIsSavingTemplate] = useState(false)
+  const [newTemplateName, setNewTemplateName] = useState('')
+
   const isMasterAdmin = user?.role === 'super_admin'
 
   const availableGroups = companyId
@@ -105,7 +130,7 @@ export function CommunicationCampaignsTab({
   const [formData, setFormData] = useState<Partial<CommunicationCampaign>>({
     name: '',
     targetGroupId: availableGroups[0]?.id || '',
-    channel: 'push',
+    channel: 'whatsapp',
     geographicScope: 'local',
     volumeImpact: 100,
     randomizationType: 'percentage',
@@ -148,7 +173,7 @@ export function CommunicationCampaignsTab({
       setFormData({
         name: '',
         targetGroupId: availableGroups[0]?.id || '',
-        channel: 'push',
+        channel: 'whatsapp',
         geographicScope: 'local',
         randomizationType: 'percentage',
         randomizationValue: 100,
@@ -206,14 +231,31 @@ export function CommunicationCampaignsTab({
     setIsDialogOpen(false)
   }
 
+  const handleSaveTemplate = () => {
+    if (!newTemplateName || !formData.content) return
+    const newTemplate = {
+      id: Math.random().toString(),
+      name: newTemplateName,
+      content: formData.content,
+    }
+    const updated = [...templates, newTemplate]
+    setTemplates(updated)
+    localStorage.setItem('crm_message_templates', JSON.stringify(updated))
+    setIsSavingTemplate(false)
+    setNewTemplateName('')
+    toast.success('Template salvo na biblioteca!')
+  }
+
   const getChannelIcon = (channel: string) => {
     switch (channel) {
       case 'email':
-        return <Mail className="w-4 h-4" />
+        return <Mail className="w-4 h-4 text-blue-600" />
       case 'sms':
-        return <Smartphone className="w-4 h-4" />
+        return <Smartphone className="w-4 h-4 text-slate-600" />
       case 'push':
-        return <Bell className="w-4 h-4" />
+        return <Bell className="w-4 h-4 text-purple-600" />
+      case 'whatsapp':
+        return <MessageCircle className="w-4 h-4 text-green-600" />
       default:
         return null
     }
@@ -251,14 +293,124 @@ export function CommunicationCampaignsTab({
     ).sort()
   }, [users, newTargetGroup.filters?.state])
 
+  // Dashboard Metrics calculation
+  const getMockMetrics = (camp: CommunicationCampaign) => {
+    if (camp.clicks !== undefined)
+      return { clicks: camp.clicks, redemptions: camp.redemptions || 0 }
+    const base =
+      camp.id.charCodeAt(0) +
+      (camp.id.length > 1 ? camp.id.charCodeAt(camp.id.length - 1) : 0)
+    const clicks = (base % 50) + 10 // pseudo-random stable
+    const redemptions = Math.floor(clicks * 0.25)
+    return { clicks, redemptions }
+  }
+
+  const dashboardStats = displayCampaigns.reduce(
+    (acc, camp) => {
+      if (
+        ['whatsapp', 'email'].includes(camp.channel) &&
+        (camp.status === 'sent' || camp.status === 'active')
+      ) {
+        acc.total += 1
+        const metrics = getMockMetrics(camp)
+        acc.clicks += metrics.clicks
+        acc.redemptions += metrics.redemptions
+      }
+      return acc
+    },
+    { total: 0, clicks: 0, redemptions: 0 },
+  )
+
+  const conversionRate =
+    dashboardStats.clicks > 0
+      ? ((dashboardStats.redemptions / dashboardStats.clicks) * 100).toFixed(1)
+      : '0.0'
+
   return (
     <div className="space-y-4 animate-fade-in">
+      {/* Dashboard de Conversão */}
+      <div className="mb-6 space-y-4">
+        <div>
+          <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-primary" /> Dashboard de
+            Conversão de Disparos
+          </h3>
+          <p className="text-sm text-slate-500">
+            Métricas de engajamento para campanhas programadas de Email e
+            WhatsApp
+          </p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+          <Card className="bg-white border-slate-200 shadow-sm">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                Disparos Realizados
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-slate-800">
+                {dashboardStats.total}
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-1">
+                Via WhatsApp e Email
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="bg-white border-slate-200 shadow-sm">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                Cliques Totais
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-blue-600">
+                {dashboardStats.clicks}
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-1">
+                Interações nos links enviados
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="bg-white border-slate-200 shadow-sm">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                Resgates Gerados
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-emerald-600">
+                {dashboardStats.redemptions}
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-1">
+                Ofertas vinculadas utilizadas
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="bg-white border-slate-200 shadow-sm">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                Taxa de Conversão
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-purple-600">
+                {conversionRate}%
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-1">
+                Resgates baseados em cliques
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
       <Card>
         <CardHeader className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
           <div>
-            <CardTitle>Disparos & Campanhas</CardTitle>
+            <CardTitle>Gestão de Disparos & Campanhas</CardTitle>
             <CardDescription>
-              Crie campanhas multicanal vinculadas a grupos de segmentação.
+              Crie campanhas multicanal vinculadas a grupos de segmentação e
+              templates de mensagens.
             </CardDescription>
           </div>
           <Button onClick={() => handleOpenDialog()}>
@@ -266,7 +418,7 @@ export function CommunicationCampaignsTab({
           </Button>
         </CardHeader>
         <CardContent>
-          <div className="border rounded-md">
+          <div className="border rounded-md overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -274,6 +426,7 @@ export function CommunicationCampaignsTab({
                   <TableHead>Grupo Alvo</TableHead>
                   <TableHead>Canal</TableHead>
                   <TableHead>Identificador</TableHead>
+                  <TableHead>Métricas</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
@@ -314,6 +467,25 @@ export function CommunicationCampaignsTab({
                         ) : (
                           <span className="text-xs text-slate-400 italic">
                             Global
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {['whatsapp', 'email'].includes(camp.channel) &&
+                        (camp.status === 'sent' || camp.status === 'active') ? (
+                          <div className="flex flex-col text-[11px] text-slate-600 space-y-1">
+                            <span className="flex items-center gap-1.5">
+                              <MousePointerClick className="w-3 h-3 text-blue-500" />{' '}
+                              {getMockMetrics(camp).clicks} cliques
+                            </span>
+                            <span className="flex items-center gap-1.5">
+                              <Ticket className="w-3 h-3 text-emerald-500" />{' '}
+                              {getMockMetrics(camp).redemptions} resgates
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">
+                            -
                           </span>
                         )}
                       </TableCell>
@@ -407,7 +579,7 @@ export function CommunicationCampaignsTab({
                 {displayCampaigns.length === 0 && (
                   <TableRow>
                     <TableCell
-                      colSpan={6}
+                      colSpan={7}
                       className="text-center py-8 text-muted-foreground"
                     >
                       Nenhuma campanha de comunicação criada.
@@ -461,7 +633,7 @@ export function CommunicationCampaignsTab({
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Data de Disparo (Agendamento)</Label>
+                <Label>Agendamento de Campanhas (Data e Hora)</Label>
                 <Input
                   type="datetime-local"
                   value={formatDatetimeLocal(formData.scheduledAt)}
@@ -485,19 +657,27 @@ export function CommunicationCampaignsTab({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="whatsapp">
+                      <span className="flex items-center">
+                        <MessageCircle className="w-4 h-4 mr-2 text-green-600" />{' '}
+                        WhatsApp
+                      </span>
+                    </SelectItem>
                     <SelectItem value="push">
                       <span className="flex items-center">
-                        <Bell className="w-4 h-4 mr-2" /> Push Notification
+                        <Bell className="w-4 h-4 mr-2 text-purple-600" /> Push
+                        Notification
                       </span>
                     </SelectItem>
                     <SelectItem value="email">
                       <span className="flex items-center">
-                        <Mail className="w-4 h-4 mr-2" /> Email
+                        <Mail className="w-4 h-4 mr-2 text-blue-600" /> Email
                       </span>
                     </SelectItem>
                     <SelectItem value="sms">
                       <span className="flex items-center">
-                        <Smartphone className="w-4 h-4 mr-2" /> SMS
+                        <Smartphone className="w-4 h-4 mr-2 text-slate-600" />{' '}
+                        SMS
                       </span>
                     </SelectItem>
                   </SelectContent>
@@ -866,7 +1046,69 @@ export function CommunicationCampaignsTab({
               </div>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-3 pt-4 border-t">
+              <div className="flex justify-between items-center">
+                <Label className="flex items-center gap-2 text-base">
+                  <Library className="w-4 h-4" /> Biblioteca de Templates
+                </Label>
+                <div className="flex gap-2">
+                  {isSavingTemplate ? (
+                    <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-md border border-slate-200">
+                      <Input
+                        className="h-7 text-xs w-36 px-2 bg-white"
+                        placeholder="Nome do Template..."
+                        value={newTemplateName}
+                        onChange={(e) => setNewTemplateName(e.target.value)}
+                        autoFocus
+                      />
+                      <Button
+                        size="sm"
+                        className="h-7 px-3 text-xs"
+                        onClick={handleSaveTemplate}
+                      >
+                        Salvar
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-7 w-7 text-slate-500 hover:text-slate-800"
+                        onClick={() => setIsSavingTemplate(false)}
+                      >
+                        X
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={!formData.content}
+                      onClick={() => setIsSavingTemplate(true)}
+                    >
+                      <Save className="w-3 h-3 mr-2" /> Salvar Mensagem Atual
+                    </Button>
+                  )}
+                </div>
+              </div>
+              <Select
+                onValueChange={(v) => {
+                  const t = templates.find((x) => x.id === v)
+                  if (t) setFormData({ ...formData, content: t.content })
+                }}
+              >
+                <SelectTrigger className="bg-slate-50 border-slate-200 text-slate-600">
+                  <SelectValue placeholder="Selecione um template salvo para carregar..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {templates.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>
+                      {t.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2 mt-2">
               <Label>Conteúdo da Mensagem</Label>
               <Textarea
                 value={formData.content}
@@ -878,7 +1120,7 @@ export function CommunicationCampaignsTab({
                     ? 'Título curto e mensagem direta...'
                     : 'Escreva sua mensagem...'
                 }
-                className="resize-none h-24"
+                className="resize-none h-28"
               />
               <div className="text-right text-xs text-muted-foreground">
                 {formData.content?.length || 0} caracteres
