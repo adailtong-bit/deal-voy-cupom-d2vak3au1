@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/popover'
 import { AdminCRM } from '@/components/admin/AdminCRM'
 import { PromotionCrawler } from '@/components/admin/PromotionCrawler'
-import { AdminAdsManager } from '@/components/admin/ads/AdminAdsManager'
+import { AdminAdsManager } from '@/components/admin/AdminAdsManager'
 import { AdminNetworkAdsTab } from '@/components/admin/AdminNetworkAdsTab'
 import { DataInsightsTab } from '@/components/admin/DataInsightsTab'
 import { AdminMonetizationTab } from '@/components/admin/AdminMonetizationTab'
@@ -114,12 +114,15 @@ export default function AdminDashboard() {
           <h1 className="text-3xl font-bold tracking-tight">
             {isSuperAdmin
               ? t('admin.dashboardTitle')
-              : 'Franchise Management Dashboard'}
+              : t('franchisee.dashboard', 'Painel Regional')}
           </h1>
           <p className="text-muted-foreground mt-2">
             {isSuperAdmin
               ? t('admin.dashboardDesc')
-              : 'Gerencie sua rede de lojistas e colaboradores locais.'}
+              : t(
+                  'franchisee.settings.desc',
+                  'Gerencie sua rede de lojistas e colaboradores locais.',
+                )}
           </p>
         </div>
 
@@ -145,7 +148,7 @@ export default function AdminDashboard() {
             >
               <div className="flex items-center justify-between p-4 border-b bg-slate-50 rounded-t-lg">
                 <span className="font-semibold text-slate-800">
-                  Admin Notifications
+                  {t('nav.notifications', 'Notificações')}
                 </span>
                 <Button
                   variant="ghost"
@@ -196,7 +199,7 @@ export default function AdminDashboard() {
                 })}
                 {notifications.length === 0 && (
                   <div className="p-8 text-center text-sm text-muted-foreground">
-                    All caught up! No new alerts.
+                    {t('common.none', 'Nenhum')}
                   </div>
                 )}
               </div>
@@ -227,7 +230,7 @@ export default function AdminDashboard() {
               <TabsTrigger value="ads">{t('admin.ads')}</TabsTrigger>
               <TabsTrigger value="network-ads" className="gap-2">
                 <Megaphone className="h-4 w-4" />
-                Publicidade de Rede
+                {t('admin.network_ads', 'Publicidade de Rede')}
               </TabsTrigger>
               <TabsTrigger value="insights">{t('admin.insights')}</TabsTrigger>
               <TabsTrigger value="sandbox">

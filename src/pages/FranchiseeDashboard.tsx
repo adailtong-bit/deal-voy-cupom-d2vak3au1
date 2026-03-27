@@ -84,7 +84,7 @@ export default function FranchiseeDashboard() {
     franchises.find((f) => f.ownerId === user?.id) || franchises[0]
 
   const { formatCurrency, formatDate, formatNumber, currency } =
-    useRegionFormatting(myFranchise?.region)
+    useRegionFormatting(myFranchise?.region, myFranchise?.addressCountry)
 
   // --- Data Calculations for Overview & Leads ---
   const franchiseCompanies = useMemo(
@@ -304,7 +304,10 @@ export default function FranchiseeDashboard() {
           {t(
             'franchisee.overview.desc',
             `Métricas consolidadas da região de ${myFranchise.region}.`,
-          ).replace('{region}', myFranchise.region)}
+          ).replace(
+            '{region}',
+            myFranchise.region || myFranchise.addressCountry || '',
+          )}
         </p>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -506,7 +509,7 @@ export default function FranchiseeDashboard() {
               {t('franchisee.settings.region', 'Região de Atuação')}
             </Label>
             <Input
-              value={myFranchise.region}
+              value={myFranchise.region || myFranchise.addressCountry || ''}
               disabled
               className="bg-slate-100 font-medium"
             />

@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useCouponStore } from '@/stores/CouponContext'
+import { useLanguage } from '@/stores/LanguageContext'
 import {
   Card,
   CardContent,
@@ -34,13 +35,14 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { formatCurrency } from '@/lib/utils'
+import { useRegionFormatting } from '@/hooks/useRegionFormatting'
 import { DollarSign, Edit2, Trash2 } from 'lucide-react'
 import { Advertisement } from '@/lib/types'
 
 export function AdminNetworkAdsTab() {
-  const { ads, franchises, platformSettings, updateAd, deleteAd } =
+  const { ads, franchises, platformSettings, updateAd, deleteAd, user } =
     useCouponStore()
+  const { t } = useLanguage()
   const [filterFranchise, setFilterFranchise] = useState('all')
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingAd, setEditingAd] = useState<Advertisement | null>(null)
@@ -53,6 +55,8 @@ export function AdminNetworkAdsTab() {
     price: 0,
     status: 'active',
   })
+
+  const { formatCurrency } = useRegionFormatting(user?.region, user?.country)
 
   const royaltyRate = platformSettings.franchiseRoyaltyRate || 15
 
@@ -102,10 +106,13 @@ export function AdminNetworkAdsTab() {
               </div>
             </div>
             <p className="text-sm font-medium text-muted-foreground">
-              Receita Total de Anúncios Regionais
+              {t(
+                'franchisee.ads.revenue',
+                'Receita Total de Anúncios Regionais',
+              )}
             </p>
             <h3 className="text-2xl font-bold">
-              {formatCurrency(totalRevenue, 'BRL')}
+              {formatCurrency(totalRevenue)}
             </h3>
           </CardContent>
         </Card>
@@ -117,10 +124,13 @@ export function AdminNetworkAdsTab() {
               </div>
             </div>
             <p className="text-sm font-medium text-muted-foreground">
-              Royalties Devidos/Pagos ({royaltyRate}%)
+              {t(
+                'franchisee.ads.royalties',
+                'Royalties Devidos ({rate}%)',
+              ).replace('{rate}', String(royaltyRate))}
             </p>
             <h3 className="text-2xl font-bold">
-              {formatCurrency(totalRoyalties, 'BRL')}
+              {formatCurrency(totalRoyalties)}
             </h3>
           </CardContent>
         </Card>
@@ -129,19 +139,23 @@ export function AdminNetworkAdsTab() {
       <Card>
         <CardHeader className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
           <div>
-            <CardTitle>Publicidade de Rede</CardTitle>
+            <CardTitle>
+              {t('admin.network_ads', 'Publicidade de Rede')}
+            </CardTitle>
             <CardDescription>
-              Acompanhe anúncios gerados por franqueados e os respectivos
-              royalties.
+              {t(
+                'admin.network_ads_desc',
+                'Acompanhe anúncios gerados por franqueados e os respectivos royalties.',
+              )}
             </CardDescription>
           </div>
           <div className="w-full sm:w-64">
             <Select value={filterFranchise} onValueChange={setFilterFranchise}>
               <SelectTrigger>
-                <SelectValue placeholder="Filtrar por Franquia" />
+                <SelectValue placeholder={t('common.all', 'Todas')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todas as Franquias</SelectItem>
+                <SelectItem value="all">{t('common.all', 'Todas')}</SelectItem>
                 {franchises.map((f) => (
                   <SelectItem key={f.id} value={f.id}>
                     {f.name}
@@ -155,19 +169,30 @@ export function AdminNetworkAdsTab() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Anúncio</TableHead>
-                <TableHead>Franquia</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Receita</TableHead>
-                <TableHead>Royalties</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
+                <TableHead>{t('franchisee.ads.ad', 'Anúncio')}</TableHead>
+                <TableHead>{t('admin.partner', 'Franquia')}</TableHead>
+                <TableHead>{t('franchisee.ads.status', 'Status')}</TableHead>
+                <TableHead>
+                  {t('franchisee.ads.revenue_col', 'Receita')}
+                </TableHead>
+                <TableHead>
+                  {t('franchisee.ads.royalties_col', 'Royalties')}
+                </TableHead>
+                <TableHead className="text-right">
+                  {t('franchisee.ads.actions', 'Ações')}
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredAds.map((ad) => {
-                const franchise = franchises.find(
+                const adFranchise = franchises.find(
                   (f) => f.id === ad.franchiseId,
                 )
+                const { formatCurrency: formatLocalCurrency } =
+                  useRegionFormatting(
+                    adFranchise?.region,
+                    adFranchise?.addressCountry,
+                  )
                 const revenue = ad.price || ad.budget || 0
                 const royalties = revenue * (royaltyRate / 100)
                 return (
@@ -183,7 +208,8 @@ export function AdminNetworkAdsTab() {
                       </div>
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {franchise?.name || 'Desconhecida'}
+                      {adFranchise?.name ||
+                        t('franchisee.merchants.unknown', 'Desconhecida')}
                     </TableCell>
                     <TableCell>
                       <Badge
@@ -192,18 +218,14 @@ export function AdminNetworkAdsTab() {
                         }
                         className="capitalize"
                       >
-                        {ad.status === 'pending'
-                          ? 'Pendente'
-                          : ad.status === 'active'
-                            ? 'Ativo'
-                            : ad.status}
+                        {t(`admin.${ad.status}`, ad.status)}
                       </Badge>
                     </TableCell>
                     <TableCell className="font-medium">
-                      {formatCurrency(revenue, 'BRL')}
+                      {formatLocalCurrency(revenue)}
                     </TableCell>
                     <TableCell className="font-bold text-green-600">
-                      {formatCurrency(royalties, 'BRL')}
+                      {formatLocalCurrency(royalties)}
                     </TableCell>
                     <TableCell className="text-right">
                       <Button
@@ -230,7 +252,10 @@ export function AdminNetworkAdsTab() {
                     colSpan={6}
                     className="text-center py-8 text-muted-foreground"
                   >
-                    Nenhum anúncio regional encontrado.
+                    {t(
+                      'franchisee.ads.no_ads',
+                      'Nenhum anúncio regional encontrado.',
+                    )}
                   </TableCell>
                 </TableRow>
               )}
@@ -242,11 +267,15 @@ export function AdminNetworkAdsTab() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Editar Anúncio Regional</DialogTitle>
+            <DialogTitle>
+              {t('franchisee.ads.edit', 'Editar Anúncio Regional')}
+            </DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
-              <Label>Título</Label>
+              <Label>
+                {t('franchisee.ads.form_title', 'Título do Anúncio')}
+              </Label>
               <Input
                 value={adFormData.title}
                 onChange={(e) =>
@@ -255,7 +284,7 @@ export function AdminNetworkAdsTab() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Descrição</Label>
+              <Label>{t('franchisee.ads.form_desc', 'Descrição')}</Label>
               <Textarea
                 value={adFormData.description}
                 onChange={(e) =>
@@ -264,7 +293,7 @@ export function AdminNetworkAdsTab() {
               />
             </div>
             <div className="space-y-2">
-              <Label>URL da Imagem</Label>
+              <Label>{t('franchisee.ads.form_image', 'URL da Imagem')}</Label>
               <Input
                 value={adFormData.image}
                 onChange={(e) =>
@@ -273,7 +302,9 @@ export function AdminNetworkAdsTab() {
               />
             </div>
             <div className="space-y-2">
-              <Label>URL de Destino (Link)</Label>
+              <Label>
+                {t('franchisee.ads.form_link', 'URL de Destino (Link)')}
+              </Label>
               <Input
                 value={adFormData.link}
                 onChange={(e) =>
@@ -283,7 +314,7 @@ export function AdminNetworkAdsTab() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Receita (Preço)</Label>
+                <Label>{t('franchisee.ads.form_revenue', 'Receita')}</Label>
                 <Input
                   type="number"
                   value={adFormData.price}
@@ -296,7 +327,7 @@ export function AdminNetworkAdsTab() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Status</Label>
+                <Label>{t('admin.status', 'Status')}</Label>
                 <Select
                   value={adFormData.status}
                   onValueChange={(v: any) =>
@@ -307,9 +338,15 @@ export function AdminNetworkAdsTab() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="active">Ativo</SelectItem>
-                    <SelectItem value="paused">Pausado</SelectItem>
-                    <SelectItem value="pending">Pendente</SelectItem>
+                    <SelectItem value="active">
+                      {t('admin.active', 'Ativo')}
+                    </SelectItem>
+                    <SelectItem value="paused">
+                      {t('admin.paused', 'Pausado')}
+                    </SelectItem>
+                    <SelectItem value="pending">
+                      {t('admin.pending', 'Pendente')}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -317,9 +354,9 @@ export function AdminNetworkAdsTab() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-              Cancelar
+              {t('common.cancel', 'Cancelar')}
             </Button>
-            <Button onClick={handleSave}>Salvar</Button>
+            <Button onClick={handleSave}>{t('common.save', 'Salvar')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

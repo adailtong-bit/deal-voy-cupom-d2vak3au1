@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useCouponStore } from '@/stores/CouponContext'
+import { useLanguage } from '@/stores/LanguageContext'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -24,6 +25,7 @@ import { toast } from 'sonner'
 export function FranchisesTab() {
   const { franchises, addFranchise, updateFranchise, deleteFranchise } =
     useCouponStore()
+  const { t } = useLanguage()
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingFranchise, setEditingFranchise] = useState<Franchise | null>(
@@ -97,27 +99,35 @@ export function FranchisesTab() {
 
   const handleSendCredentials = (f: Franchise) => {
     updateFranchise(f.id, { credentialsSent: true })
-    toast.success(`Credentials emailed to Franchise Partner`)
+    toast.success(
+      t('common.success', 'Credentials emailed to Franchise Partner'),
+    )
   }
 
   return (
     <div className="space-y-4 animate-fade-in-up">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-card p-4 rounded-lg border gap-4">
         <div>
-          <h3 className="text-lg font-bold">Franchise Network</h3>
+          <h3 className="text-lg font-bold">
+            {t('admin.hierarchy.franchises', 'Franchise Network')}
+          </h3>
           <p className="text-sm text-muted-foreground">
-            Manage your master franchises and their primary contacts.
+            {t(
+              'admin.hierarchy.franchises_desc',
+              'Manage your master franchises and their primary contacts.',
+            )}
           </p>
         </div>
         <div className="flex flex-wrap gap-2 w-full sm:w-auto">
           <Button variant="outline" onClick={exportCsv}>
-            <FileText className="w-4 h-4 mr-2" /> CSV
+            <FileText className="w-4 h-4 mr-2" /> {t('admin.exportCsv', 'CSV')}
           </Button>
           <Button variant="outline" onClick={exportPdf}>
-            <Download className="w-4 h-4 mr-2" /> PDF
+            <Download className="w-4 h-4 mr-2" /> {t('admin.exportPdf', 'PDF')}
           </Button>
           <Button onClick={() => handleOpenDialog()}>
-            <Plus className="w-4 h-4 mr-2" /> Add Franchise
+            <Plus className="w-4 h-4 mr-2" />{' '}
+            {t('common.create_new', 'Add Franchise')}
           </Button>
         </div>
       </div>
@@ -126,13 +136,17 @@ export function FranchisesTab() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Franchise Name</TableHead>
-              <TableHead>CNPJ / Tax ID</TableHead>
-              <TableHead>Contact</TableHead>
-              <TableHead>Region</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Credentials</TableHead>
-              <TableHead className="text-right">Action</TableHead>
+              <TableHead>{t('admin.title', 'Franchise Name')}</TableHead>
+              <TableHead>Tax ID</TableHead>
+              <TableHead>{t('profile.phone', 'Contact')}</TableHead>
+              <TableHead>{t('profile.state', 'Region')}</TableHead>
+              <TableHead>{t('admin.status', 'Status')}</TableHead>
+              <TableHead>
+                {t('franchisee.merchants.credentials', 'Credentials')}
+              </TableHead>
+              <TableHead className="text-right">
+                {t('common.actions', 'Action')}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -149,13 +163,13 @@ export function FranchisesTab() {
                     </p>
                   </TableCell>
                   <TableCell>
-                    {f.region || f.addressState || f.address}
+                    {f.region || f.addressState || f.addressCountry}
                   </TableCell>
                   <TableCell>
                     <Badge
                       variant={f.status === 'active' ? 'default' : 'secondary'}
                     >
-                      {f.status}
+                      {t(`admin.${f.status}`, f.status)}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -168,7 +182,9 @@ export function FranchisesTab() {
                             : 'text-slate-600'
                         }
                       >
-                        {isSent ? 'Sent' : 'Pending'}
+                        {isSent
+                          ? t('admin.sent', 'Sent')
+                          : t('admin.pending', 'Pending')}
                       </Badge>
                       <Button
                         variant="ghost"
@@ -176,7 +192,9 @@ export function FranchisesTab() {
                         className="h-6 px-2 text-xs text-blue-600 hover:text-blue-700 font-medium"
                         onClick={() => handleSendCredentials(f)}
                       >
-                        {isSent ? 'Resend' : 'Send'}
+                        {isSent
+                          ? t('franchisee.merchants.resend', 'Resend')
+                          : t('franchisee.merchants.send', 'Send')}
                       </Button>
                     </div>
                   </TableCell>
@@ -208,7 +226,9 @@ export function FranchisesTab() {
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {editingFranchise ? 'Editar Franquia' : 'Cadastrar Franquia'}
+              {editingFranchise
+                ? t('common.edit', 'Editar Franquia')
+                : t('common.create_new', 'Cadastrar Franquia')}
             </DialogTitle>
           </DialogHeader>
           <AdvancedCompanyForm

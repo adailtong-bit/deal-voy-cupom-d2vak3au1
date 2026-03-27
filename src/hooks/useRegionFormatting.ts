@@ -1,21 +1,41 @@
 import { useMemo } from 'react'
 
-export function useRegionFormatting(regionCode?: string) {
+export function useRegionFormatting(regionCode?: string, country?: string) {
   return useMemo(() => {
     let locale = 'pt-BR'
     let currency = 'BRL'
     let distanceUnit = 'km'
 
-    if (regionCode) {
-      if (regionCode.includes('US')) {
-        locale = 'en-US'
-        currency = 'USD'
-        distanceUnit = 'mi'
-      } else if (regionCode.includes('EU') || regionCode.includes('FR')) {
-        locale = 'fr-FR'
-        currency = 'EUR'
-        distanceUnit = 'km'
-      }
+    const targetScope = (country || regionCode || '').toUpperCase()
+
+    if (targetScope.includes('US') || targetScope.includes('USA')) {
+      locale = 'en-US'
+      currency = 'USD'
+      distanceUnit = 'mi'
+    } else if (
+      targetScope.includes('ESPANHA') ||
+      targetScope.includes('SPAIN') ||
+      targetScope === 'ES'
+    ) {
+      locale = 'es-ES'
+      currency = 'EUR'
+      distanceUnit = 'km'
+    } else if (targetScope.includes('PORTUGAL') || targetScope === 'PT') {
+      locale = 'pt-PT'
+      currency = 'EUR'
+      distanceUnit = 'km'
+    } else if (
+      targetScope.includes('EU') ||
+      targetScope.includes('FRANCE') ||
+      targetScope.includes('FR')
+    ) {
+      locale = 'fr-FR'
+      currency = 'EUR'
+      distanceUnit = 'km'
+    } else {
+      locale = 'pt-BR'
+      currency = 'BRL'
+      distanceUnit = 'km'
     }
 
     const formatCurrency = (amount: number | null | undefined) => {
@@ -65,5 +85,5 @@ export function useRegionFormatting(regionCode?: string) {
       formatNumber,
       formatDistance,
     }
-  }, [regionCode])
+  }, [regionCode, country])
 }

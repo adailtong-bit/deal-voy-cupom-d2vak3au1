@@ -109,7 +109,12 @@ export function StaffTab({ parentType = 'global', parentId }: StaffTabProps) {
       status: 'invited',
     }
     addUser(newUser)
-    toast.success(`Convite enviado para ${inviteData.email} com link seguro.`)
+    toast.success(
+      t(
+        'common.success',
+        `Convite enviado para ${inviteData.email} com link seguro.`,
+      ),
+    )
     setIsInviteDialogOpen(false)
     setInviteData({
       name: '',

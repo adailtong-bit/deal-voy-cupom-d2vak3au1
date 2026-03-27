@@ -118,7 +118,7 @@ export function MerchantsTab({ franchiseId }: { franchiseId?: string }) {
 
   const handleSendCredentials = (c: Company) => {
     updateCompany(c.id, { credentialsSent: true })
-    toast.success(`Credenciais enviadas para ${c.email}`)
+    toast.success(t('common.success', `Credenciais enviadas para ${c.email}`))
   }
 
   return (
@@ -209,7 +209,9 @@ export function MerchantsTab({ franchiseId }: { franchiseId?: string }) {
                   <TableCell className="text-slate-600 font-medium">
                     {c.email}
                   </TableCell>
-                  <TableCell className="text-slate-600">{c.region}</TableCell>
+                  <TableCell className="text-slate-600">
+                    {c.region || c.addressCountry}
+                  </TableCell>
                   {!franchiseId && (
                     <TableCell>
                       <Badge

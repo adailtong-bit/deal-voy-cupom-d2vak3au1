@@ -601,6 +601,7 @@ export interface Franchise {
   addressCity?: string
   addressState?: string
   addressZip?: string
+  addressCountry?: string
   paymentMethod?: string
   billingFrequency?: string
   address?: string

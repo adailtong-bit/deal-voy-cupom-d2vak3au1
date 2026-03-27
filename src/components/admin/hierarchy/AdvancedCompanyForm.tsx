@@ -22,6 +22,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { PhoneInput } from '@/components/PhoneInput'
 import { useCouponStore } from '@/stores/CouponContext'
+import { useLanguage } from '@/stores/LanguageContext'
 import { toast } from 'sonner'
 import {
   Building,
@@ -42,11 +43,14 @@ export function AdvancedCompanyForm({
   onCancel,
 }: any) {
   const { franchises } = useCouponStore()
+  const { t } = useLanguage()
+
   const [data, setData] = useState<any>({
     status: 'active',
     paymentMethod: 'credit_card',
     billingFrequency: 'monthly',
     documents: [],
+    addressCountry: 'BR',
     ...initialData,
   })
 
@@ -59,9 +63,9 @@ export function AdvancedCompanyForm({
         email: initialData.email || initialData.contactEmail || '',
         franchiseId: initialData.franchiseId || franchiseId || 'independent',
         documents: initialData.documents || [],
+        addressCountry: initialData.addressCountry || 'BR',
       })
     } else if (franchiseId) {
-      // Auto assign if a new merchant is created from a franchise context
       setData((prev: any) => ({ ...prev, franchiseId }))
     }
   }, [initialData, franchiseId])
@@ -80,7 +84,7 @@ export function AdvancedCompanyForm({
         uploadDate: new Date().toISOString(),
       }
       setData({ ...data, documents: [...(data.documents || []), newDoc] })
-      toast.success('Documento carregado com sucesso.')
+      toast.success(t('common.success', 'Documento carregado com sucesso.'))
     }
   }
 
@@ -89,12 +93,14 @@ export function AdvancedCompanyForm({
       ...data,
       documents: data.documents?.filter((d: CompanyDocument) => d.id !== id),
     })
-    toast.success('Documento removido.')
+    toast.success(t('common.success', 'Documento removido.'))
   }
 
   const save = () => {
-    if (!data.name || !data.legalName || !data.email || !data.taxId) {
-      return toast.error('Preencha os campos obrigatórios (*).')
+    if (!data.name || !data.email || !data.addressCountry) {
+      return toast.error(
+        t('common.error', 'Preencha os campos obrigatórios (*).'),
+      )
     }
     onSave(data)
   }
@@ -104,13 +110,16 @@ export function AdvancedCompanyForm({
       <Tabs defaultValue="controle" className="w-full">
         <TabsList className="grid w-full grid-cols-4 mb-4 bg-slate-100/80 p-1">
           <TabsTrigger value="controle" className="font-semibold">
-            <Building className="h-4 w-4 mr-2 text-primary" /> Controle
+            <Building className="h-4 w-4 mr-2 text-primary" />{' '}
+            {t('admin.overview', 'Controle')}
           </TabsTrigger>
           <TabsTrigger value="contato" className="font-semibold">
-            <UserCircle className="h-4 w-4 mr-2 text-blue-500" /> Contato
+            <UserCircle className="h-4 w-4 mr-2 text-blue-500" />{' '}
+            {t('profile.personalInfo', 'Contato')}
           </TabsTrigger>
           <TabsTrigger value="cobranca" className="font-semibold">
-            <Receipt className="h-4 w-4 mr-2 text-emerald-500" /> Cobrança
+            <Receipt className="h-4 w-4 mr-2 text-emerald-500" />{' '}
+            {t('admin.billing', 'Cobrança')}
           </TabsTrigger>
           <TabsTrigger value="documentos" className="font-semibold">
             <FileText className="h-4 w-4 mr-2 text-orange-500" /> Documentos
@@ -122,7 +131,7 @@ export function AdvancedCompanyForm({
           className="grid grid-cols-2 gap-5 animate-in fade-in-50 pt-2"
         >
           <div className="space-y-1.5">
-            <Label className="text-slate-700">Razão Social *</Label>
+            <Label className="text-slate-700">Razão Social</Label>
             <Input
               value={data.legalName || ''}
               onChange={(e) => onChange('legalName', e.target.value)}
@@ -138,15 +147,30 @@ export function AdvancedCompanyForm({
             />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-slate-700">Categoria</Label>
-            <Input
-              value={data.category || ''}
-              onChange={(e) => onChange('category', e.target.value)}
-              className="bg-slate-50"
-            />
+            <Label className="text-slate-700">
+              {t('vendor.settings_tab.country', 'País')} *
+            </Label>
+            <Select
+              value={data.addressCountry || ''}
+              onValueChange={(v) => onChange('addressCountry', v)}
+            >
+              <SelectTrigger className="bg-slate-50">
+                <SelectValue
+                  placeholder={t('vendor.settings_tab.select', 'Selecione...')}
+                />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="BR">Brasil</SelectItem>
+                <SelectItem value="US">Estados Unidos</SelectItem>
+                <SelectItem value="ES">Espanha</SelectItem>
+                <SelectItem value="PT">Portugal</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-1.5">
-            <Label className="text-slate-700">Status</Label>
+            <Label className="text-slate-700">
+              {t('admin.status', 'Status')}
+            </Label>
             <Select
               value={data.status}
               onValueChange={(v) => onChange('status', v)}
@@ -155,9 +179,13 @@ export function AdvancedCompanyForm({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="active">Ativo</SelectItem>
+                <SelectItem value="active">
+                  {t('admin.active', 'Ativo')}
+                </SelectItem>
                 <SelectItem value="inactive">Inativo</SelectItem>
-                <SelectItem value="pending">Pendente</SelectItem>
+                <SelectItem value="pending">
+                  {t('admin.pending', 'Pendente')}
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -170,7 +198,6 @@ export function AdvancedCompanyForm({
             />
           </div>
 
-          {/* Data Isolation: Hide franchise selector if a franchise context (franchiseId prop) is provided */}
           {type === 'merchant' && !franchiseId && (
             <div className="space-y-1.5">
               <Label className="text-slate-700">Entidade Pai (Franquia)</Label>
@@ -235,10 +262,13 @@ export function AdvancedCompanyForm({
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-slate-700">Telefone</Label>
+              <Label className="text-slate-700">
+                {t('profile.phone', 'Telefone')}
+              </Label>
               <PhoneInput
                 value={data.businessPhone || ''}
                 onChange={(v) => onChange('businessPhone', v)}
+                countryCode={data.addressCountry}
               />
             </div>
             <div className="space-y-1.5">
@@ -246,38 +276,7 @@ export function AdvancedCompanyForm({
               <PhoneInput
                 value={data.whatsapp || ''}
                 onChange={(v) => onChange('whatsapp', v)}
-              />
-            </div>
-          </div>
-          <h4 className="text-sm font-bold text-slate-800 border-b border-slate-200 pb-2 mt-6">
-            Contato Secundário
-          </h4>
-          <div className="grid grid-cols-3 gap-5 pt-2">
-            <div className="space-y-1.5">
-              <Label className="text-slate-700">Nome</Label>
-              <Input
-                value={data.secondaryContactName || ''}
-                onChange={(e) =>
-                  onChange('secondaryContactName', e.target.value)
-                }
-                className="bg-slate-50"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-slate-700">Email</Label>
-              <Input
-                value={data.secondaryContactEmail || ''}
-                onChange={(e) =>
-                  onChange('secondaryContactEmail', e.target.value)
-                }
-                className="bg-slate-50"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-slate-700">Telefone</Label>
-              <PhoneInput
-                value={data.secondaryContactPhone || ''}
-                onChange={(v) => onChange('secondaryContactPhone', v)}
+                countryCode={data.addressCountry}
               />
             </div>
           </div>
@@ -289,24 +288,20 @@ export function AdvancedCompanyForm({
         >
           <div className="grid grid-cols-2 gap-5">
             <div className="space-y-1.5">
-              <Label className="text-slate-700">CNPJ / Tax ID *</Label>
+              <Label className="text-slate-700">
+                Tax ID / Documento (CNPJ/EIN)
+              </Label>
               <Input
                 value={data.taxId || ''}
-                maxLength={18}
-                onChange={(e) => {
-                  let v = e.target.value.replace(/\D/g, '').slice(0, 14)
-                  v = v.replace(/^(\d{2})(\d)/, '$1.$2')
-                  v = v.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
-                  v = v.replace(/\.(\d{3})(\d)/, '.$1/$2')
-                  v = v.replace(/(\d{4})(\d)/, '$1-$2')
-                  onChange('taxId', v)
-                }}
-                placeholder="00.000.000/0000-00"
-                className="bg-slate-50 font-mono tracking-wider"
+                onChange={(e) => onChange('taxId', e.target.value)}
+                placeholder="Documento fiscal..."
+                className="bg-slate-50 font-mono"
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-slate-700">Inscrição Estadual</Label>
+              <Label className="text-slate-700">
+                Inscrição Estadual / Registro
+              </Label>
               <Input
                 value={data.stateRegistration || ''}
                 onChange={(e) => onChange('stateRegistration', e.target.value)}
@@ -323,7 +318,9 @@ export function AdvancedCompanyForm({
             </div>
             <div className="grid grid-cols-2 gap-3 space-y-0">
               <div className="space-y-1.5">
-                <Label className="text-slate-700">Agência</Label>
+                <Label className="text-slate-700">
+                  Agência / Routing Number
+                </Label>
                 <Input
                   value={data.bankAgency || ''}
                   onChange={(e) => onChange('bankAgency', e.target.value)}
@@ -358,9 +355,11 @@ export function AdvancedCompanyForm({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="monthly">Mensal</SelectItem>
-                  <SelectItem value="quarterly">Trimestral</SelectItem>
-                  <SelectItem value="annually">Anual</SelectItem>
+                  <SelectItem value="monthly">Mensal / Monthly</SelectItem>
+                  <SelectItem value="quarterly">
+                    Trimestral / Quarterly
+                  </SelectItem>
+                  <SelectItem value="annually">Anual / Annually</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -379,17 +378,12 @@ export function AdvancedCompanyForm({
           </h4>
           <div className="grid grid-cols-3 gap-5 pt-2">
             <div className="space-y-1.5">
-              <Label className="text-slate-700">CEP</Label>
+              <Label className="text-slate-700">
+                {t('profile.zip', 'CEP / Zip Code')}
+              </Label>
               <Input
                 value={data.addressZip || ''}
-                maxLength={9}
-                onChange={(e) => {
-                  let v = e.target.value.replace(/\D/g, '')
-                  if (v.length > 8) v = v.slice(0, 8)
-                  v = v.replace(/^(\d{5})(\d{0,3})/, '$1-$2')
-                  onChange('addressZip', v)
-                }}
-                placeholder="00000-000"
+                onChange={(e) => onChange('addressZip', e.target.value)}
                 className="bg-slate-50"
               />
             </div>
@@ -428,7 +422,9 @@ export function AdvancedCompanyForm({
               />
             </div>
             <div className="space-y-1.5 col-span-2">
-              <Label className="text-slate-700">Cidade</Label>
+              <Label className="text-slate-700">
+                {t('profile.city', 'Cidade')}
+              </Label>
               <Input
                 value={data.addressCity || ''}
                 onChange={(e) => onChange('addressCity', e.target.value)}
@@ -436,13 +432,14 @@ export function AdvancedCompanyForm({
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-slate-700">UF / Estado</Label>
+              <Label className="text-slate-700">
+                {t('profile.state', 'Estado')}
+              </Label>
               <Input
                 value={data.addressState || ''}
                 maxLength={2}
                 className="uppercase bg-slate-50"
                 onChange={(e) => onChange('addressState', e.target.value)}
-                placeholder="SP, FL..."
               />
             </div>
           </div>
@@ -509,7 +506,7 @@ export function AdvancedCompanyForm({
                     Data de Envio
                   </TableHead>
                   <TableHead className="font-semibold text-slate-700 text-right">
-                    Ações
+                    {t('common.actions', 'Ações')}
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -574,10 +571,10 @@ export function AdvancedCompanyForm({
           onClick={onCancel}
           className="font-semibold px-6"
         >
-          Cancelar
+          {t('common.cancel', 'Cancelar')}
         </Button>
         <Button onClick={save} className="font-bold px-8 shadow-md">
-          Salvar Dados
+          {t('common.save', 'Salvar Dados')}
         </Button>
       </div>
     </div>
