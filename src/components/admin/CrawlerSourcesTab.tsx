@@ -21,10 +21,11 @@ import { Switch } from '@/components/ui/switch'
 import { Play } from 'lucide-react'
 import { toast } from 'sonner'
 import { useCouponStore } from '@/stores/CouponContext'
+import { CATEGORIES } from '@/lib/data'
 
 export function CrawlerSourcesTab() {
   const { t } = useLanguage()
-  const { triggerScan } = useCouponStore()
+  const { triggerScan, seasonalEvents } = useCouponStore()
 
   const [searchType, setSearchType] = useState('region')
   const [region, setRegion] = useState('')
@@ -41,6 +42,11 @@ export function CrawlerSourcesTab() {
     )
     triggerScan('custom')
   }
+
+  const activeSeasonalEvents = seasonalEvents.filter(
+    (e) => e.status === 'active',
+  )
+  const manageableCategories = CATEGORIES.filter((c) => c.id !== 'all')
 
   return (
     <div className="space-y-6">
@@ -116,18 +122,11 @@ export function CrawlerSourcesTab() {
                   <SelectItem value="all">
                     {t('common.all', 'Todas')}
                   </SelectItem>
-                  <SelectItem value="hotel">
-                    {t('franchisee.crawler.cat_hotel', 'Hotel')}
-                  </SelectItem>
-                  <SelectItem value="hostel">
-                    {t('franchisee.crawler.cat_hostel', 'Hostel')}
-                  </SelectItem>
-                  <SelectItem value="car_rental">
-                    {t('franchisee.crawler.cat_car_rental', 'Locação de carro')}
-                  </SelectItem>
-                  <SelectItem value="museums">
-                    {t('franchisee.crawler.cat_museums', 'Museus')}
-                  </SelectItem>
+                  {manageableCategories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>
+                      {t(cat.translationKey, cat.label)}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -144,9 +143,19 @@ export function CrawlerSourcesTab() {
                   <SelectItem value="none">
                     {t('common.none', 'Nenhum')}
                   </SelectItem>
-                  <SelectItem value="black_friday">Black Friday</SelectItem>
-                  <SelectItem value="christmas">Natal (Christmas)</SelectItem>
-                  <SelectItem value="local">Feriados Locais</SelectItem>
+                  {activeSeasonalEvents.map((event) => (
+                    <SelectItem key={event.id} value={event.id}>
+                      {event.title}
+                    </SelectItem>
+                  ))}
+                  {activeSeasonalEvents.length === 0 && (
+                    <SelectItem value="no_campaigns" disabled>
+                      {t(
+                        'franchisee.crawler.no_campaigns',
+                        'Nenhuma campanha ativa',
+                      )}
+                    </SelectItem>
+                  )}
                 </SelectContent>
               </Select>
             </div>
