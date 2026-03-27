@@ -66,6 +66,7 @@ export function BillingGenerationTab({
   >(availableTargetTypes[0] as any)
   const [selectedTargetId, setSelectedTargetId] = useState('')
   const [openTargetCombo, setOpenTargetCombo] = useState(false)
+  const [invoiceRef, setInvoiceRef] = useState('')
 
   const displayCompanies = franchiseId
     ? companies.filter((c) => c.franchiseId === franchiseId)
@@ -136,9 +137,10 @@ export function BillingGenerationTab({
     const itemsToBill = filteredItems.filter((i) =>
       selectedItemIds.includes(i.id),
     )
-    if (itemsToBill.length === 0) return
+    if (itemsToBill.length === 0 || !invoiceRef.trim()) return
 
     generatePartnerInvoice({
+      referenceNumber: invoiceRef.trim(),
       targetType: selectedTargetType,
       companyId: selectedTargetType === 'merchant' ? selectedTargetId : '',
       franchiseId: selectedTargetType === 'franchise' ? selectedTargetId : '',
@@ -150,8 +152,15 @@ export function BillingGenerationTab({
       status: 'draft',
     })
     setSelectedItemIds([])
+    setInvoiceRef('')
     setMockItems((prev) => prev.filter((i) => !selectedItemIds.includes(i.id)))
   }
+
+  const selectedTargetName = useMemo(() => {
+    const target = targets.find((t) => t.id === selectedTargetId)
+    if (!target) return 'Selecione o destinatário...'
+    return `${target.name} - ${target.taxId ? target.taxId : 'Sem Doc'}`
+  }, [targets, selectedTargetId])
 
   return (
     <Card className="min-w-0 w-full animate-fade-in-up">
@@ -185,15 +194,13 @@ export function BillingGenerationTab({
               <Button
                 variant="outline"
                 role="combobox"
-                className="w-full sm:w-[300px] justify-between"
+                className="w-full sm:w-[400px] justify-between"
               >
-                {selectedTargetId
-                  ? targets.find((t) => t.id === selectedTargetId)?.name
-                  : 'Selecione o destinatário...'}
+                <span className="truncate">{selectedTargetName}</span>
                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[300px] p-0">
+            <PopoverContent className="w-[400px] p-0">
               <Command>
                 <CommandInput placeholder="Buscar destinatário..." />
                 <CommandList>
@@ -211,13 +218,18 @@ export function BillingGenerationTab({
                       >
                         <Check
                           className={cn(
-                            'mr-2 h-4 w-4',
+                            'mr-2 h-4 w-4 shrink-0',
                             selectedTargetId === tgt.id
                               ? 'opacity-100'
                               : 'opacity-0',
                           )}
                         />
-                        {tgt.name}
+                        <div className="flex flex-col truncate">
+                          <span className="truncate">{tgt.name}</span>
+                          <span className="text-xs text-muted-foreground truncate">
+                            {tgt.taxId ? `Doc: ${tgt.taxId}` : 'Sem documento'}
+                          </span>
+                        </div>
                       </CommandItem>
                     ))}
                   </CommandGroup>
@@ -229,32 +241,34 @@ export function BillingGenerationTab({
 
         {selectedTargetId && (
           <>
-            <div className="flex flex-col md:flex-row gap-4 items-start md:items-center bg-slate-50 p-4 rounded-lg border">
-              <Filter className="h-5 w-5 text-slate-500 shrink-0" />
-              <Select
-                value={itemFilterStatus}
-                onValueChange={setItemFilterStatus}
-              >
-                <SelectTrigger className="w-full md:w-[180px]">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="open">Abertos</SelectItem>
-                  <SelectItem value="pending">Pendentes</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="flex flex-col md:flex-row gap-4 items-start md:items-center bg-slate-50 p-4 rounded-lg border flex-wrap">
+              <div className="flex items-center gap-2 w-full md:w-auto">
+                <Filter className="h-5 w-5 text-slate-500 shrink-0" />
+                <Select
+                  value={itemFilterStatus}
+                  onValueChange={setItemFilterStatus}
+                >
+                  <SelectTrigger className="w-full md:w-[150px]">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="open">Abertos</SelectItem>
+                    <SelectItem value="pending">Pendentes</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <Input
                 placeholder="Buscar por ID..."
                 value={itemFilterId}
                 onChange={(e) => setItemFilterId(e.target.value)}
-                className="w-full md:w-[200px]"
+                className="w-full md:w-[180px]"
               />
               <Select
                 value={itemFilterPeriod}
                 onValueChange={setItemFilterPeriod}
               >
-                <SelectTrigger className="w-full md:w-[180px]">
+                <SelectTrigger className="w-full md:w-[150px]">
                   <SelectValue placeholder="Período" />
                 </SelectTrigger>
                 <SelectContent>
@@ -265,13 +279,21 @@ export function BillingGenerationTab({
                   <SelectItem value="year">Este Ano</SelectItem>
                 </SelectContent>
               </Select>
-              <Button
-                onClick={handleGenerateInvoice}
-                disabled={selectedItemIds.length === 0}
-                className="w-full md:w-auto md:ml-auto whitespace-nowrap"
-              >
-                Gerar Fatura ({selectedItemIds.length})
-              </Button>
+              <div className="flex items-center gap-2 w-full md:w-auto md:ml-auto">
+                <Input
+                  placeholder="Nº da Fatura (Ref)..."
+                  value={invoiceRef}
+                  onChange={(e) => setInvoiceRef(e.target.value)}
+                  className="w-full md:w-[180px]"
+                />
+                <Button
+                  onClick={handleGenerateInvoice}
+                  disabled={selectedItemIds.length === 0 || !invoiceRef.trim()}
+                  className="w-full md:w-auto whitespace-nowrap"
+                >
+                  Gerar Fatura ({selectedItemIds.length})
+                </Button>
+              </div>
             </div>
 
             <div className="border rounded-md">

@@ -221,6 +221,7 @@ export function BillingStagingTab({ franchiseId }: { franchiseId?: string }) {
               <div className="space-y-2">
                 <Label>Cobrador (Recebedor)</Label>
                 <Select
+                  disabled
                   value={editData.collectorId}
                   onValueChange={(v) =>
                     setEditData({ ...editData, collectorId: v })
@@ -241,6 +242,7 @@ export function BillingStagingTab({ franchiseId }: { franchiseId?: string }) {
               <div className="space-y-2">
                 <Label>Cobrado (Pagador)</Label>
                 <Select
+                  disabled
                   value={
                     editData.targetType === 'franchise'
                       ? editData.franchiseId

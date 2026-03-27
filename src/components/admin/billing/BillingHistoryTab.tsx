@@ -26,6 +26,8 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
@@ -53,6 +55,7 @@ export function BillingHistoryTab({ franchiseId }: { franchiseId?: string }) {
 
   const [searchQuery, setSearchQuery] = useState('')
   const [periodFilter, setPeriodFilter] = useState('all')
+  const [revenueTypeFilter, setRevenueTypeFilter] = useState('all')
 
   const companyIds = franchiseId
     ? companies.filter((c) => c.franchiseId === franchiseId).map((c) => c.id)
@@ -81,6 +84,11 @@ export function BillingHistoryTab({ franchiseId }: { franchiseId?: string }) {
     )
       return false
 
+    if (revenueTypeFilter !== 'all') {
+      const revType = i.targetType === 'franchise' ? 'royalties' : 'commissions'
+      if (revType !== revenueTypeFilter) return false
+    }
+
     if (periodFilter !== 'all') {
       const d = new Date(i.issueDate)
       const now = new Date()
@@ -94,12 +102,62 @@ export function BillingHistoryTab({ franchiseId }: { franchiseId?: string }) {
           Math.floor(d.getMonth() / 3) === Math.floor(now.getMonth() / 3) &&
           d.getFullYear() === now.getFullYear()
         )
+      if (periodFilter === 'semester')
+        return (
+          Math.floor(d.getMonth() / 6) === Math.floor(now.getMonth() / 6) &&
+          d.getFullYear() === now.getFullYear()
+        )
       if (periodFilter === 'year') return d.getFullYear() === now.getFullYear()
+      if (periodFilter === 'fiscal_period') {
+        const fiscalYearStart = new Date(now.getFullYear(), 3, 1)
+        if (now < fiscalYearStart)
+          fiscalYearStart.setFullYear(now.getFullYear() - 1)
+        return d >= fiscalYearStart
+      }
     }
     return true
   })
 
-  const handleExport = (standard: 'BR' | 'US' | 'Global') => {
+  const handleExport = (
+    standard: 'BR' | 'US' | 'Global',
+    format: 'csv' | 'json' = 'csv',
+  ) => {
+    if (format === 'json') {
+      let data: any[] = []
+      if (standard === 'BR') {
+        data = historyInvoices.map((i) => ({
+          Referencia: i.referenceNumber,
+          Destinatario: getTargetName(i),
+          TipoReceita: i.targetType === 'franchise' ? 'Royalties' : 'Comissoes',
+          PeriodoInicio: formatDate(i.periodStart),
+          PeriodoFim: formatDate(i.periodEnd),
+          ValorBRL: i.totalCommission,
+          Status: i.status,
+        }))
+      } else {
+        data = historyInvoices.map((i) => ({
+          Reference: i.referenceNumber,
+          Recipient: getTargetName(i),
+          RevenueType:
+            i.targetType === 'franchise' ? 'Royalties' : 'Commissions',
+          PeriodStart: formatDate(i.periodStart),
+          PeriodEnd: formatDate(i.periodEnd),
+          Amount: i.totalCommission,
+          Status: i.status,
+        }))
+      }
+      const blob = new Blob([JSON.stringify(data, null, 2)], {
+        type: 'application/json;charset=utf-8;',
+      })
+      const link = document.createElement('a')
+      link.href = URL.createObjectURL(blob)
+      link.setAttribute('download', `export_faturas_${standard}.json`)
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      return
+    }
+
     let csv = ''
     if (standard === 'BR') {
       csv =
@@ -177,8 +235,21 @@ export function BillingHistoryTab({ franchiseId }: { franchiseId?: string }) {
               placeholder="Buscar Ref ou Empresa..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full sm:w-[200px]"
+              className="w-full sm:w-[180px]"
             />
+            <Select
+              value={revenueTypeFilter}
+              onValueChange={setRevenueTypeFilter}
+            >
+              <SelectTrigger className="w-full sm:w-[140px]">
+                <SelectValue placeholder="Tipo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as Receitas</SelectItem>
+                <SelectItem value="royalties">Royalties</SelectItem>
+                <SelectItem value="commissions">Comissões</SelectItem>
+              </SelectContent>
+            </Select>
             <Select value={periodFilter} onValueChange={setPeriodFilter}>
               <SelectTrigger className="w-full sm:w-[140px]">
                 <SelectValue placeholder="Período" />
@@ -187,7 +258,9 @@ export function BillingHistoryTab({ franchiseId }: { franchiseId?: string }) {
                 <SelectItem value="all">Todo o período</SelectItem>
                 <SelectItem value="month">Este Mês</SelectItem>
                 <SelectItem value="quarter">Este Trimestre</SelectItem>
+                <SelectItem value="semester">Este Semestre</SelectItem>
                 <SelectItem value="year">Este Ano</SelectItem>
+                <SelectItem value="fiscal_period">Período Fiscal</SelectItem>
               </SelectContent>
             </Select>
             <DropdownMenu>
@@ -198,14 +271,30 @@ export function BillingHistoryTab({ franchiseId }: { franchiseId?: string }) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => handleExport('BR')}>
-                  Padrão BR (ERP)
+                <DropdownMenuLabel>Padrão BR (SPED)</DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => handleExport('BR', 'csv')}>
+                  Exportar CSV (BR)
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleExport('US')}>
-                  Padrão US (GAAP)
+                <DropdownMenuItem onClick={() => handleExport('BR', 'json')}>
+                  Exportar JSON (BR)
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleExport('Global')}>
-                  Padrão Global (IFRS)
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel>Padrão US (GAAP)</DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => handleExport('US', 'csv')}>
+                  Exportar CSV (US)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExport('US', 'json')}>
+                  Exportar JSON (US)
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel>Padrão Global (IFRS)</DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => handleExport('Global', 'csv')}>
+                  Exportar CSV (Global)
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => handleExport('Global', 'json')}
+                >
+                  Exportar JSON (Global)
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
