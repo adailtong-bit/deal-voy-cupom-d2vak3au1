@@ -219,6 +219,7 @@ interface CouponContextType {
     id: string,
     status: PartnerInvoice['status'],
   ) => void
+  updatePartnerInvoice: (id: string, data: Partial<PartnerInvoice>) => void
   reconcilePartnerInvoice: (refNumber: string) => boolean
   addSeasonalEvent: (event: SeasonalEvent) => void
   updateSeasonalEvent: (id: string, event: Partial<SeasonalEvent>) => void
@@ -952,6 +953,9 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       issueDate: data.issueDate || new Date().toISOString(),
       transactionCount: data.transactionCount || 1,
       items: data.items || [],
+      collectorId: data.collectorId,
+      description: data.description,
+      paymentInstructions: data.paymentInstructions,
     }
     setPartnerInvoices((prev) => [newInvoice, ...prev])
     toast.success('Fatura gerada com sucesso e adicionada à área de staging.')
@@ -963,6 +967,12 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   ) => {
     setPartnerInvoices((prev) =>
       prev.map((i) => (i.id === id ? { ...i, status } : i)),
+    )
+  }
+
+  const updatePartnerInvoice = (id: string, data: Partial<PartnerInvoice>) => {
+    setPartnerInvoices((prev) =>
+      prev.map((i) => (i.id === id ? { ...i, ...data } : i)),
     )
   }
 
@@ -1208,6 +1218,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         deletePartnerPolicy,
         generatePartnerInvoice,
         updatePartnerInvoiceStatus,
+        updatePartnerInvoice,
         reconcilePartnerInvoice,
         addSeasonalEvent,
         updateSeasonalEvent,

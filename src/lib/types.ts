@@ -831,6 +831,9 @@ export interface PartnerInvoice {
   issueDate: string
   transactionCount: number
   items?: any[]
+  collectorId?: string
+  description?: string
+  paymentInstructions?: string
 }
 
 export interface WebhookLog {
