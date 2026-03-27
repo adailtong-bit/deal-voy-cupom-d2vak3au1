@@ -62,11 +62,17 @@ export function BillingHistoryTab({ franchiseId }: { franchiseId?: string }) {
     setIsViewOpen(true)
   }
 
+  const getFullDescription = (inv: PartnerInvoice) => {
+    const periodText = `${t('franchisee.billing.period_label', 'Período:')} ${formatDate(inv.periodStart)} ${t('common.to', 'a')} ${formatDate(inv.periodEnd)}`
+    return inv.description ? `${inv.description}\n\n${periodText}` : periodText
+  }
+
   const exportPdf = (inv: PartnerInvoice) => {
     const w = window.open('', '_blank')
     if (w) {
       const billerName = inv.billerName || getFranchiseName(inv.franchiseId)
       const customerName = inv.customerName || getCompanyName(inv.companyId)
+      const fullDescription = getFullDescription(inv)
 
       w.document.write(`
         <html><head><title>Invoice - ${inv.referenceNumber}</title>
@@ -107,6 +113,11 @@ export function BillingHistoryTab({ franchiseId }: { franchiseId?: string }) {
             </div>
           </div>
 
+          <div style="margin-bottom: 20px; padding: 15px; background: #f9f9f9; border-radius: 8px; border: 1px solid #eee;">
+            <h3 style="margin-bottom: 10px;">${t('franchisee.billing.description', 'Descrição / Notas')}</h3>
+            <pre style="font-family: inherit; margin: 0; white-space: pre-wrap; font-size: 14px; color: #555;">${fullDescription}</pre>
+          </div>
+
           <table>
             <tr>
               <th>Description</th>
@@ -128,7 +139,7 @@ export function BillingHistoryTab({ franchiseId }: { franchiseId?: string }) {
             inv.paymentInstructions
               ? `
             <div style="margin-top: 40px; padding: 15px; background: #f0f8ff; border-left: 4px solid #0066cc;">
-              <h4>Payment Instructions</h4>
+              <h4 style="margin-top: 0;">Payment Instructions</h4>
               <pre style="font-family: inherit; margin: 0; white-space: pre-wrap;">${inv.paymentInstructions}</pre>
             </div>
           `
@@ -427,16 +438,14 @@ export function BillingHistoryTab({ franchiseId }: { franchiseId?: string }) {
                 </div>
               </div>
 
-              {viewingInv.description && (
-                <div className="space-y-1">
-                  <p className="text-sm font-semibold text-slate-700">
-                    {t('franchisee.billing.description', 'Descrição / Notas')}
-                  </p>
-                  <p className="text-sm text-slate-600 bg-slate-50 p-3 rounded-md">
-                    {viewingInv.description}
-                  </p>
-                </div>
-              )}
+              <div className="space-y-1">
+                <p className="text-sm font-semibold text-slate-700">
+                  {t('franchisee.billing.description', 'Descrição / Notas')}
+                </p>
+                <p className="text-sm text-slate-600 bg-slate-50 p-3 rounded-md whitespace-pre-wrap">
+                  {getFullDescription(viewingInv)}
+                </p>
+              </div>
 
               {viewingInv.paymentInstructions && (
                 <div className="space-y-1">
