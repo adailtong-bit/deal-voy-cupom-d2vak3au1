@@ -53,7 +53,7 @@ export function CrawlerAnalysisSheet({
     if (promo) {
       let expiry = promo.expiryDate
       if (!expiry) {
-        const date = new Date()
+        const date = promo.capturedAt ? new Date(promo.capturedAt) : new Date()
         date.setDate(date.getDate() + 30)
         expiry = date.toISOString()
       }

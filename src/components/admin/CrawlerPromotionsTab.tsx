@@ -86,7 +86,9 @@ export function CrawlerPromotionsTab() {
       if (promo) {
         let expiry = promo.expiryDate
         if (!expiry) {
-          const date = new Date()
+          const date = promo.capturedAt
+            ? new Date(promo.capturedAt)
+            : new Date()
           date.setDate(date.getDate() + 30)
           expiry = date.toISOString()
         }
@@ -119,7 +121,7 @@ export function CrawlerPromotionsTab() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="flex items-center gap-3">
           <h3 className="text-lg font-bold">
-            {t('franchisee.crawler.found_offers', 'Ofertas Encontradas')}
+            {t('franchisee.crawler.imported_offers', 'Ofertas Importadas')}
           </h3>
           <Badge variant="secondary">
             {pendingPromotions.length} {t('common.pending', 'Pendentes')}
