@@ -86,7 +86,7 @@ export function DesktopHeader() {
                 to="/franchisee"
                 className="transition-colors text-primary hover:text-primary/80 font-bold"
               >
-                Dashboard
+                {t('nav.franchisee', 'Painel Regional')}
               </Link>
             )}
             {user?.role === 'shopkeeper' && (
@@ -94,7 +94,7 @@ export function DesktopHeader() {
                 to="/vendor"
                 className="transition-colors text-primary hover:text-primary/80 font-bold"
               >
-                Painel do Lojista
+                {t('nav.vendor', 'Painel do Lojista')}
               </Link>
             )}
           </nav>
@@ -172,3 +172,4 @@ export function DesktopHeader() {
     </header>
   )
 }
+

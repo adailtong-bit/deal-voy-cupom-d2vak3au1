@@ -226,7 +226,7 @@ export function MobileHeader() {
                       className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-base font-bold text-primary bg-primary/5 hover:bg-primary/10 transition-colors"
                     >
                       <Building className="h-5 w-5 text-primary" />
-                      Franchise Dashboard
+                      {t('nav.franchisee', 'Painel Regional')}
                     </Link>
                   </>
                 )}
@@ -241,7 +241,7 @@ export function MobileHeader() {
                       className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-base font-bold text-primary bg-primary/5 hover:bg-primary/10 transition-colors"
                     >
                       <Building className="h-5 w-5 text-primary" />
-                      Painel do Lojista
+                      {t('nav.vendor', 'Painel do Lojista')}
                     </Link>
                   </>
                 )}
@@ -333,3 +333,4 @@ export function MobileHeader() {
     </header>
   )
 }
+
