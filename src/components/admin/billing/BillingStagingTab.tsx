@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useRegionFormatting } from '@/hooks/useRegionFormatting'
@@ -18,15 +19,34 @@ import {
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Send, Edit2, Trash2 } from 'lucide-react'
+import { PartnerInvoice } from '@/lib/types'
 
 export function BillingStagingTab({ franchiseId }: { franchiseId?: string }) {
   const { t } = useLanguage()
-  const { partnerInvoices, companies, franchises, updatePartnerInvoiceStatus } =
-    useCouponStore()
+  const {
+    partnerInvoices,
+    companies,
+    franchises,
+    updatePartnerInvoiceStatus,
+    updatePartnerInvoice,
+  } = useCouponStore()
 
   const franchise = franchises.find((f) => f.id === franchiseId)
   const { formatCurrency, formatDate } = useRegionFormatting(franchise?.region)
+
+  const [isEditOpen, setIsEditOpen] = useState(false)
+  const [editingInv, setEditingInv] = useState<PartnerInvoice | null>(null)
+  const [editForm, setEditForm] = useState<Partial<PartnerInvoice>>({})
 
   const stagingInvoices = partnerInvoices
     .filter((i) => i.status === 'draft' || i.status === 'pending')
@@ -34,6 +54,19 @@ export function BillingStagingTab({ franchiseId }: { franchiseId?: string }) {
 
   const getCompanyName = (id: string) =>
     companies.find((c) => c.id === id)?.name || id
+
+  const handleEdit = (inv: PartnerInvoice) => {
+    setEditingInv(inv)
+    setEditForm(inv)
+    setIsEditOpen(true)
+  }
+
+  const saveEdit = () => {
+    if (editingInv) {
+      updatePartnerInvoice(editingInv.id, editForm)
+    }
+    setIsEditOpen(false)
+  }
 
   return (
     <Card className="w-full min-w-0 overflow-hidden shadow-sm border-slate-200">
@@ -71,7 +104,7 @@ export function BillingStagingTab({ franchiseId }: { franchiseId?: string }) {
                 <TableHead className="whitespace-nowrap font-semibold text-slate-700">
                   {t('franchisee.billing.status', 'Status')}
                 </TableHead>
-                <TableHead className="text-right whitespace-nowrap font-semibold text-slate-700 pr-4 sm:pr-6">
+                <TableHead className="text-right whitespace-nowrap font-semibold text-slate-700 pr-4 sm:pr-6 w-[1%]">
                   {t('franchisee.billing.actions', 'Ações')}
                 </TableHead>
               </TableRow>
@@ -107,8 +140,8 @@ export function BillingStagingTab({ franchiseId }: { franchiseId?: string }) {
                         : t('franchisee.billing.pending', 'Pendente')}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right whitespace-nowrap pr-4 sm:pr-6">
-                    <div className="flex justify-end gap-1 sm:gap-2 items-center flex-nowrap">
+                  <TableCell className="text-right whitespace-nowrap pr-4 sm:pr-6 w-[1%]">
+                    <div className="flex justify-end gap-1 sm:gap-2 items-center flex-nowrap shrink-0">
                       <Button
                         variant="ghost"
                         size="sm"
@@ -130,6 +163,7 @@ export function BillingStagingTab({ franchiseId }: { franchiseId?: string }) {
                         variant="ghost"
                         size="icon"
                         className="shrink-0 h-8 w-8 sm:h-9 sm:w-9 text-slate-500 hover:text-primary hover:bg-primary/10 transition-colors"
+                        onClick={() => handleEdit(inv)}
                         title={t('common.edit', 'Editar')}
                       >
                         <Edit2 className="h-4 w-4" />
@@ -138,6 +172,9 @@ export function BillingStagingTab({ franchiseId }: { franchiseId?: string }) {
                         variant="ghost"
                         size="icon"
                         className="shrink-0 h-8 w-8 sm:h-9 sm:w-9 text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                        onClick={() =>
+                          updatePartnerInvoiceStatus(inv.id, 'canceled')
+                        }
                         title={t('common.delete', 'Excluir')}
                       >
                         <Trash2 className="h-4 w-4" />
@@ -170,6 +207,52 @@ export function BillingStagingTab({ franchiseId }: { franchiseId?: string }) {
           </Table>
         </div>
       </CardContent>
+
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {t('franchisee.billing.edit_invoice', 'Editar Fatura')}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label>
+                {t('franchisee.billing.total_commission', 'Total (Comissão)')}
+              </Label>
+              <Input
+                type="number"
+                value={editForm.totalCommission || 0}
+                onChange={(e) =>
+                  setEditForm({
+                    ...editForm,
+                    totalCommission: Number(e.target.value),
+                  })
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>{t('franchisee.billing.due_date', 'Vencimento')}</Label>
+              <Input
+                type="date"
+                value={editForm.dueDate?.split('T')[0] || ''}
+                onChange={(e) =>
+                  setEditForm({
+                    ...editForm,
+                    dueDate: new Date(e.target.value).toISOString(),
+                  })
+                }
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditOpen(false)}>
+              {t('common.cancel', 'Cancelar')}
+            </Button>
+            <Button onClick={saveEdit}>{t('common.save', 'Salvar')}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   )
 }

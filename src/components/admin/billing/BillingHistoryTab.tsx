@@ -35,7 +35,7 @@ export function BillingHistoryTab({ franchiseId }: { franchiseId?: string }) {
         i.status === 'sent' ||
         i.status === 'paid' ||
         i.status === 'overdue' ||
-        i.status === 'cancelled',
+        i.status === 'canceled',
     )
     .filter((i) => (franchiseId ? i.franchiseId === franchiseId : true))
 
@@ -75,7 +75,7 @@ export function BillingHistoryTab({ franchiseId }: { franchiseId?: string }) {
                 <TableHead className="whitespace-nowrap font-semibold text-slate-700">
                   {t('franchisee.billing.status', 'Status')}
                 </TableHead>
-                <TableHead className="text-right whitespace-nowrap font-semibold text-slate-700 pr-4 sm:pr-6">
+                <TableHead className="text-right whitespace-nowrap font-semibold text-slate-700 pr-4 sm:pr-6 w-[1%]">
                   {t('franchisee.billing.actions', 'Ações')}
                 </TableHead>
               </TableRow>
@@ -116,7 +116,7 @@ export function BillingHistoryTab({ franchiseId }: { franchiseId?: string }) {
                           'bg-emerald-500 hover:bg-emerald-600 text-white border-transparent',
                         inv.status === 'sent' &&
                           'bg-blue-100 text-blue-700 hover:bg-blue-200 border-transparent',
-                        inv.status === 'cancelled' &&
+                        inv.status === 'canceled' &&
                           'bg-slate-100 text-slate-500 border-transparent',
                       )}
                     >
@@ -126,12 +126,12 @@ export function BillingHistoryTab({ franchiseId }: { franchiseId?: string }) {
                           ? t('franchisee.billing.overdue', 'Em Atraso')
                           : inv.status === 'sent'
                             ? t('franchisee.billing.sent', 'Enviado')
-                            : t('franchisee.billing.cancelled', 'Cancelado')}
+                            : t('franchisee.billing.canceled', 'Cancelado')}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right whitespace-nowrap pr-4 sm:pr-6">
-                    <div className="flex justify-end gap-1 sm:gap-2 items-center flex-nowrap">
-                      {inv.status !== 'paid' && inv.status !== 'cancelled' && (
+                  <TableCell className="text-right whitespace-nowrap pr-4 sm:pr-6 w-[1%]">
+                    <div className="flex justify-end gap-1 sm:gap-2 items-center flex-nowrap shrink-0">
+                      {inv.status !== 'paid' && inv.status !== 'canceled' && (
                         <Button
                           variant="ghost"
                           size="sm"

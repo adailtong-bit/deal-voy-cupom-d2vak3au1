@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useCouponStore } from '@/stores/CouponContext'
 import {
@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
-import { Play, Settings2, FileText } from 'lucide-react'
+import { Play, Settings2, FileText, AlertCircle } from 'lucide-react'
 import { toast } from 'sonner'
 
 export function BillingGenerationTab({
@@ -28,16 +28,59 @@ export function BillingGenerationTab({
   franchiseId?: string
 }) {
   const { t } = useLanguage()
-  const { generatePartnerInvoice, companies } = useCouponStore()
+  const { generatePartnerInvoice, companies, partnerInvoices } =
+    useCouponStore()
   const [period, setPeriod] = useState('last_month')
   const [targetType, setTargetType] = useState('all')
 
-  const availableCompanies = franchiseId
-    ? companies.filter((c) => c.franchiseId === franchiseId)
-    : companies
+  const availableCompanies = useMemo(
+    () =>
+      franchiseId
+        ? companies.filter((c) => c.franchiseId === franchiseId)
+        : companies,
+    [companies, franchiseId],
+  )
+
+  const { start, end } = useMemo(() => {
+    const now = new Date()
+    if (period === 'last_month') {
+      return {
+        start: new Date(now.getFullYear(), now.getMonth() - 1, 1),
+        end: new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59),
+      }
+    }
+    if (period === 'current_month') {
+      return {
+        start: new Date(now.getFullYear(), now.getMonth(), 1),
+        end: now,
+      }
+    }
+    // For custom, defaults to now
+    return { start: now, end: now }
+  }, [period])
+
+  const pendingCompanies = useMemo(() => {
+    const startMonth = start.getMonth()
+    const startYear = start.getFullYear()
+    return availableCompanies.filter((c) => {
+      const hasInvoice = partnerInvoices.some((inv) => {
+        const invDate = new Date(inv.periodStart)
+        return (
+          inv.companyId === c.id &&
+          invDate.getMonth() === startMonth &&
+          invDate.getFullYear() === startYear
+        )
+      })
+      return !hasInvoice
+    })
+  }, [availableCompanies, partnerInvoices, start])
+
+  const isBlocked =
+    pendingCompanies.length === 0 && availableCompanies.length > 0
 
   const handleGenerate = () => {
-    if (availableCompanies.length === 0) {
+    if (isBlocked) return
+    if (pendingCompanies.length === 0) {
       toast.error(
         t(
           'franchisee.billing.no_partners_error',
@@ -47,19 +90,19 @@ export function BillingGenerationTab({
       return
     }
 
-    const targetCompany = availableCompanies[0]
-
-    generatePartnerInvoice({
-      franchiseId,
-      companyId: targetCompany.id,
-      totalCommission: Math.floor(Math.random() * 2000) + 150,
-      totalCashback: Math.floor(Math.random() * 500) + 50,
-      totalSales: Math.floor(Math.random() * 10000) + 1000,
-      transactionCount: Math.floor(Math.random() * 100) + 10,
-      status: 'draft',
-      periodStart: new Date(Date.now() - 30 * 86400000).toISOString(),
-      periodEnd: new Date().toISOString(),
-      targetType: 'merchant',
+    pendingCompanies.forEach((targetCompany) => {
+      generatePartnerInvoice({
+        franchiseId,
+        companyId: targetCompany.id,
+        totalCommission: Math.floor(Math.random() * 2000) + 150,
+        totalCashback: Math.floor(Math.random() * 500) + 50,
+        totalSales: Math.floor(Math.random() * 10000) + 1000,
+        transactionCount: Math.floor(Math.random() * 100) + 10,
+        status: 'draft',
+        periodStart: start.toISOString(),
+        periodEnd: end.toISOString(),
+        targetType: 'merchant',
+      })
     })
 
     toast.success(
@@ -182,6 +225,24 @@ export function BillingGenerationTab({
             </strong>
           </p>
         </div>
+
+        {isBlocked && (
+          <div className="bg-amber-50 border border-amber-100 rounded-lg p-4 flex gap-3 text-sm text-amber-800">
+            <AlertCircle className="h-5 w-5 shrink-0 text-amber-500" />
+            <p>
+              <strong>
+                {t(
+                  'franchisee.billing.already_generated',
+                  'Faturas já geradas.',
+                )}
+              </strong>{' '}
+              {t(
+                'franchisee.billing.already_generated_desc',
+                'Todas as faturas para os lojistas ativos neste período já foram criadas e estão na área de preparação ou histórico.',
+              )}
+            </p>
+          </div>
+        )}
       </CardContent>
       <CardFooter className="p-6 pt-0 bg-white border-t border-slate-100 flex flex-col sm:flex-row justify-end gap-3 mt-6">
         <Button
@@ -192,6 +253,7 @@ export function BillingGenerationTab({
         </Button>
         <Button
           onClick={handleGenerate}
+          disabled={isBlocked}
           className="font-bold shadow-md w-full sm:w-auto"
         >
           <Play className="h-4 w-4 mr-2 fill-current" />
