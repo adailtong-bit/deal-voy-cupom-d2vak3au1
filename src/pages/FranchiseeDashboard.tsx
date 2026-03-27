@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Navigate, useSearchParams, Link } from 'react-router-dom'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useRegionFormatting } from '@/hooks/useRegionFormatting'
@@ -77,7 +77,8 @@ export default function FranchiseeDashboard() {
     platformSettings,
   } = useCouponStore()
   const { t } = useLanguage()
-  const [activeTab, setActiveTab] = useState('overview')
+  const [searchParams] = useSearchParams()
+  const activeTab = searchParams.get('tab') || 'overview'
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const myFranchise =
@@ -247,11 +248,11 @@ export default function FranchiseeDashboard() {
       ],
     },
     {
-      title: t('franchisee.menu.intelligence', 'Inteligência & CRM'),
+      title: t('franchisee.menu.intelligence', 'Inteligência'),
       items: [
         {
           id: 'crm',
-          label: t('franchisee.menu.crm', 'CRM & Campanhas'),
+          label: t('franchisee.menu.crm', 'CRM'),
           icon: Target,
         },
         {
@@ -544,11 +545,6 @@ export default function FranchiseeDashboard() {
     </div>
   )
 
-  const handleTabChange = (id: string) => {
-    setActiveTab(id)
-    setIsMobileMenuOpen(false)
-  }
-
   return (
     <div className="flex flex-col md:flex-row min-h-[calc(100vh-4rem)] bg-slate-50/50">
       {/* Mobile Header for Sidebar Toggle */}
@@ -557,7 +553,9 @@ export default function FranchiseeDashboard() {
           <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
             <LayoutDashboard className="w-4 h-4 text-primary" />
           </div>
-          <span className="font-bold text-slate-800">Franquia</span>
+          <span className="font-bold text-slate-800">
+            {t('franchisee.dashboard', 'Painel Regional')}
+          </span>
         </div>
         <Button
           variant="ghost"
@@ -597,9 +595,10 @@ export default function FranchiseeDashboard() {
                 </h4>
                 <nav className="space-y-1">
                   {group.items.map((item) => (
-                    <button
+                    <Link
                       key={item.id}
-                      onClick={() => handleTabChange(item.id)}
+                      to={`/franchisee?tab=${item.id}`}
+                      onClick={() => setIsMobileMenuOpen(false)}
                       className={cn(
                         'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all w-full text-left',
                         activeTab === item.id
@@ -616,7 +615,7 @@ export default function FranchiseeDashboard() {
                         )}
                       />
                       <span className="truncate">{item.label}</span>
-                    </button>
+                    </Link>
                   ))}
                 </nav>
               </div>
