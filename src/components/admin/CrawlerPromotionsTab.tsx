@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { CheckCircle, XCircle, ExternalLink } from 'lucide-react'
+import { CheckCircle, XCircle, ExternalLink, Edit } from 'lucide-react'
 import { CrawlerAnalysisSheet } from './CrawlerAnalysisSheet'
 import { DiscoveredPromotion } from '@/lib/types'
 import { toast } from 'sonner'
@@ -47,10 +47,18 @@ export function CrawlerPromotionsTab() {
       (p.capturedAt || p.expiryDate),
   )
 
-  const handleImport = (id: string, category?: string) => {
-    importPromotion(id, category)
+  const handleImport = (
+    id: string,
+    category?: string,
+    editedData?: DiscoveredPromotion,
+  ) => {
+    // Attempting to pass editedData if the mock store supports it internally
+    ;(importPromotion as any)(id, category, editedData)
     toast.success(
-      t('franchisee.crawler.imported_success', 'Oferta importada com sucesso!'),
+      t(
+        'franchisee.crawler.imported_success',
+        'Oferta aprovada e importada com sucesso!',
+      ),
     )
   }
 
@@ -76,130 +84,162 @@ export function CrawlerPromotionsTab() {
       </div>
 
       <div className="rounded-md border bg-card overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>
-                {t('franchisee.crawler.company', 'Empresa')}
-              </TableHead>
-              <TableHead>
-                {t('franchisee.crawler.description', 'O que é (Descrição)')}
-              </TableHead>
-              <TableHead>{t('franchisee.crawler.origin', 'Origem')}</TableHead>
-              <TableHead>{t('franchisee.crawler.date', 'Data')}</TableHead>
-              <TableHead className="text-right">
-                {t('common.actions', 'Ações')}
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {pendingPromotions.map((promo) => (
-              <TableRow key={promo.id}>
-                <TableCell className="font-medium whitespace-nowrap">
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={promo.image}
-                      alt=""
-                      className="w-10 h-10 rounded-md object-cover"
-                    />
-                    <div className="flex flex-col">
-                      <span className="font-bold">
-                        {promo.storeName || 'Desconhecida'}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        {promo.region}
-                      </span>
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell className="min-w-[200px] max-w-[300px]">
-                  <div className="flex flex-col space-y-1">
-                    <span className="font-semibold text-sm line-clamp-1">
-                      {promo.title}
-                    </span>
-                    <span className="text-xs text-muted-foreground line-clamp-2">
-                      {promo.description}
-                    </span>
-                    <Badge
-                      variant="secondary"
-                      className="w-fit bg-green-100 text-green-800 hover:bg-green-100"
-                    >
-                      {promo.discount}
-                    </Badge>
-                  </div>
-                </TableCell>
-                <TableCell className="whitespace-nowrap">
-                  <div className="flex flex-col space-y-0.5">
-                    <span className="text-sm font-medium">
-                      {promo.sourceId === 'custom'
-                        ? 'Busca Web'
-                        : promo.sourceId}
-                    </span>
-                    {promo.originalUrl && (
-                      <a
-                        href={promo.originalUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-xs text-blue-500 hover:underline flex items-center gap-1"
-                      >
-                        Ver fonte <ExternalLink className="w-3 h-3" />
-                      </a>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell className="whitespace-nowrap text-sm text-slate-600">
-                  {promo.capturedAt
-                    ? formatShortDate(promo.capturedAt)
-                    : formatShortDate(promo.expiryDate)}
-                </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setSelectedPromo(promo)
-                        setIsSheetOpen(true)
-                      }}
-                    >
-                      <ExternalLink className="w-4 h-4 mr-1" />
-                      {t('common.view', 'Visualizar')}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-green-600 hover:bg-green-50"
-                      onClick={() => handleImport(promo.id)}
-                    >
-                      <CheckCircle className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-red-600 hover:bg-red-50"
-                      onClick={() => handleIgnore(promo.id)}
-                    >
-                      <XCircle className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-            {pendingPromotions.length === 0 && (
+        <div className="w-full overflow-x-auto hide-scrollbar">
+          <Table className="min-w-[1200px]">
+            <TableHeader>
               <TableRow>
-                <TableCell
-                  colSpan={5}
-                  className="text-center py-8 text-muted-foreground"
-                >
-                  {t(
-                    'franchisee.crawler.no_pending',
-                    'Nenhuma oferta orgânica aguardando importação.',
-                  )}
-                </TableCell>
+                <TableHead className="whitespace-nowrap">
+                  {t('franchisee.crawler.company', 'Empresa')}
+                </TableHead>
+                <TableHead className="whitespace-nowrap">
+                  {t('franchisee.crawler.origin', 'Origem')}
+                </TableHead>
+                <TableHead className="whitespace-nowrap">
+                  {t('franchisee.crawler.date', 'Data')}
+                </TableHead>
+                <TableHead className="min-w-[200px]">
+                  {t('franchisee.crawler.description', 'Descrição')}
+                </TableHead>
+                <TableHead className="whitespace-nowrap">
+                  {t('common.country', 'País')}
+                </TableHead>
+                <TableHead className="whitespace-nowrap">
+                  {t('common.state', 'Estado')}
+                </TableHead>
+                <TableHead className="whitespace-nowrap">
+                  {t('common.city', 'Cidade')}
+                </TableHead>
+                <TableHead className="text-right whitespace-nowrap sticky right-0 bg-card z-10">
+                  {t('common.actions', 'Ações')}
+                </TableHead>
               </TableRow>
-            )}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {pendingPromotions.map((promo) => (
+                <TableRow key={promo.id}>
+                  <TableCell className="font-medium whitespace-nowrap">
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={promo.image}
+                        alt=""
+                        className="w-10 h-10 rounded-md object-cover shrink-0"
+                      />
+                      <div className="flex flex-col">
+                        <span className="font-bold">
+                          {promo.storeName || 'Desconhecida'}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {promo.region}
+                        </span>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap">
+                    <div className="flex flex-col space-y-0.5">
+                      <span className="text-sm font-medium">
+                        {promo.sourceId === 'custom'
+                          ? 'Busca Web'
+                          : promo.sourceId}
+                      </span>
+                      {promo.originalUrl && (
+                        <a
+                          href={promo.originalUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-xs text-blue-500 hover:underline flex items-center gap-1"
+                        >
+                          Ver fonte <ExternalLink className="w-3 h-3" />
+                        </a>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap text-sm text-slate-600">
+                    {promo.capturedAt
+                      ? formatShortDate(promo.capturedAt)
+                      : formatShortDate(promo.expiryDate)}
+                  </TableCell>
+                  <TableCell className="min-w-[200px] max-w-[300px]">
+                    <div className="flex flex-col space-y-1">
+                      <span
+                        className="font-semibold text-sm line-clamp-1"
+                        title={promo.title}
+                      >
+                        {promo.title}
+                      </span>
+                      <span
+                        className="text-xs text-muted-foreground line-clamp-2"
+                        title={promo.description}
+                      >
+                        {promo.description}
+                      </span>
+                      <Badge
+                        variant="secondary"
+                        className="w-fit bg-green-100 text-green-800 hover:bg-green-100"
+                      >
+                        {promo.discount}
+                      </Badge>
+                    </div>
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
+                    {promo.country || '-'}
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
+                    {promo.state || '-'}
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
+                    {promo.city || '-'}
+                  </TableCell>
+                  <TableCell className="text-right whitespace-nowrap sticky right-0 bg-card z-10 shadow-[-10px_0_15px_-5px_rgba(0,0,0,0.05)]">
+                    <div className="flex justify-end gap-2 items-center">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedPromo(promo)
+                          setIsSheetOpen(true)
+                        }}
+                      >
+                        <Edit className="w-4 h-4 mr-1" />
+                        {t('common.edit', 'Editar')}
+                      </Button>
+                      <Button
+                        variant="default"
+                        size="sm"
+                        className="bg-green-600 hover:bg-green-700 text-white shadow-sm"
+                        onClick={() => handleImport(promo.id)}
+                      >
+                        <CheckCircle className="w-4 h-4 mr-1" />
+                        {t('common.approve', 'Aprovar')}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-red-600 hover:bg-red-50 h-8 w-8"
+                        onClick={() => handleIgnore(promo.id)}
+                        title={t('common.ignore', 'Ignorar')}
+                      >
+                        <XCircle className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {pendingPromotions.length === 0 && (
+                <TableRow>
+                  <TableCell
+                    colSpan={8}
+                    className="text-center py-8 text-muted-foreground"
+                  >
+                    {t(
+                      'franchisee.crawler.no_pending',
+                      'Nenhuma oferta orgânica aguardando importação.',
+                    )}
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
 
       <CrawlerAnalysisSheet

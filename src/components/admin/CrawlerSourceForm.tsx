@@ -31,6 +31,9 @@ export function CrawlerSourceForm({
     url: '',
     type: 'web',
     region: userRegion || 'Global',
+    country: '',
+    state: '',
+    city: '',
     scanRadius: 50,
   })
 
@@ -41,6 +44,9 @@ export function CrawlerSourceForm({
         url: initialData.url,
         type: initialData.type,
         region: initialData.region,
+        country: initialData.country || '',
+        state: initialData.state || '',
+        city: initialData.city || '',
         scanRadius: initialData.scanRadius,
       })
     }
@@ -53,6 +59,9 @@ export function CrawlerSourceForm({
       url: formData.url,
       type: formData.type as 'web' | 'api' | 'app',
       region: formData.region,
+      country: formData.country,
+      state: formData.state,
+      city: formData.city,
       scanRadius: formData.scanRadius,
     })
   }
@@ -112,6 +121,36 @@ export function CrawlerSourceForm({
               ))}
             </SelectContent>
           </Select>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="space-y-2">
+          <Label>País</Label>
+          <Input
+            value={formData.country}
+            onChange={(e) =>
+              setFormData({ ...formData, country: e.target.value })
+            }
+            placeholder="Ex: Brasil"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>Estado</Label>
+          <Input
+            value={formData.state}
+            onChange={(e) =>
+              setFormData({ ...formData, state: e.target.value })
+            }
+            placeholder="Ex: SP"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>Cidade</Label>
+          <Input
+            value={formData.city}
+            onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+            placeholder="Ex: São Paulo"
+          />
         </div>
       </div>
       <div className="space-y-2">

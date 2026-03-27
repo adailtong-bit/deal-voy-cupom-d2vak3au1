@@ -733,6 +733,9 @@ export interface CrawlerSource {
   url: string
   type: 'api' | 'web' | 'app'
   region: string
+  country?: string
+  state?: string
+  city?: string
   scanRadius: number
   lastScan?: string
   status: 'active' | 'paused'
@@ -754,6 +757,9 @@ export interface DiscoveredPromotion {
   storeName: string
   status: 'pending' | 'imported' | 'ignored'
   region: string
+  country?: string
+  state?: string
+  city?: string
   category: string
   capturedAt?: string
   rawData?: Record<string, any>

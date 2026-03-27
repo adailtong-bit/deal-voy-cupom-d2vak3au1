@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Sheet,
   SheetContent,
@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
@@ -26,7 +27,11 @@ interface CrawlerAnalysisSheetProps {
   promo: DiscoveredPromotion | null
   open: boolean
   onClose: () => void
-  onImport: (id: string, category?: string) => void
+  onImport: (
+    id: string,
+    category?: string,
+    editedData?: DiscoveredPromotion,
+  ) => void
   onIgnore: (id: string) => void
 }
 
@@ -39,37 +44,56 @@ export function CrawlerAnalysisSheet({
 }: CrawlerAnalysisSheetProps) {
   const { t } = useLanguage()
   const [importCategory, setImportCategory] = useState<string>('all')
+  const [editedPromo, setEditedPromo] = useState<DiscoveredPromotion | null>(
+    null,
+  )
 
-  if (!promo) return null
+  useEffect(() => {
+    if (promo) {
+      setEditedPromo({ ...promo })
+      setImportCategory('all')
+    } else {
+      setEditedPromo(null)
+    }
+  }, [promo, open])
+
+  if (!promo || !editedPromo) return null
 
   const previewCoupon: Coupon = {
-    id: promo.id,
-    storeName: promo.storeName,
-    title: promo.title,
-    description: promo.description,
-    discount: promo.discount,
+    id: editedPromo.id,
+    storeName: editedPromo.storeName,
+    title: editedPromo.title,
+    description: editedPromo.description,
+    discount: editedPromo.discount,
     category: (importCategory !== 'all'
       ? importCategory
-      : promo.category) as any,
+      : editedPromo.category) as any,
     distance: 0,
-    expiryDate: promo.expiryDate,
-    image: promo.image,
+    expiryDate: editedPromo.expiryDate,
+    image: editedPromo.image,
     code: 'PREVIEW-CODE',
     coordinates: { lat: 0, lng: 0 },
     status: 'active',
     source: 'organic',
-    region: promo.region,
-    price: promo.price,
-    currency: promo.currency,
+    region: editedPromo.region,
+    country: editedPromo.country,
+    state: editedPromo.state,
+    city: editedPromo.city,
+    price: editedPromo.price,
+    currency: editedPromo.currency,
   }
 
   const handleImport = () => {
-    onImport(promo.id, importCategory !== 'all' ? importCategory : undefined)
+    onImport(
+      editedPromo.id,
+      importCategory !== 'all' ? importCategory : undefined,
+      editedPromo,
+    )
     onClose()
   }
 
   const handleIgnore = () => {
-    onIgnore(promo.id)
+    onIgnore(editedPromo.id)
     onClose()
   }
 
@@ -81,24 +105,119 @@ export function CrawlerAnalysisSheet({
       >
         <SheetHeader className="mb-6">
           <SheetTitle>
-            {t('franchisee.crawler.analysis_title', 'Análise da Promoção')}
+            {t(
+              'franchisee.crawler.analysis_title',
+              'Revisar e Editar Promoção',
+            )}
           </SheetTitle>
           <SheetDescription>
             {t(
               'franchisee.crawler.analysis_desc',
-              'Revise os dados extraídos antes de aprovar e importar a oferta.',
+              'Revise e edite os dados extraídos antes de aprovar e importar a oferta para o catálogo ativo.',
             )}
           </SheetDescription>
         </SheetHeader>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
-          <div className="flex flex-col">
-            <h3 className="font-semibold mb-3 text-sm text-muted-foreground uppercase tracking-wider">
-              {t('franchisee.crawler.raw_data', 'Dados Brutos Extraídos')}
-            </h3>
-            <ScrollArea className="flex-1 bg-slate-950 text-green-400 p-4 rounded-lg font-mono text-xs shadow-inner">
-              <pre>{JSON.stringify(promo.rawData || promo, null, 2)}</pre>
-            </ScrollArea>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full pb-10">
+          <div className="flex flex-col space-y-6">
+            <div>
+              <h3 className="font-semibold mb-3 text-sm text-muted-foreground uppercase tracking-wider">
+                {t('common.edit_details', 'Editar Detalhes')}
+              </h3>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>{t('franchisee.crawler.company', 'Empresa')}</Label>
+                  <Input
+                    value={editedPromo.storeName}
+                    onChange={(e) =>
+                      setEditedPromo({
+                        ...editedPromo,
+                        storeName: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>{t('common.title', 'Título da Oferta')}</Label>
+                  <Input
+                    value={editedPromo.title}
+                    onChange={(e) =>
+                      setEditedPromo({ ...editedPromo, title: e.target.value })
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>{t('common.description', 'Descrição')}</Label>
+                  <textarea
+                    value={editedPromo.description}
+                    onChange={(e) =>
+                      setEditedPromo({
+                        ...editedPromo,
+                        description: e.target.value,
+                      })
+                    }
+                    rows={3}
+                    className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>{t('common.discount', 'Desconto')}</Label>
+                    <Input
+                      value={editedPromo.discount}
+                      onChange={(e) =>
+                        setEditedPromo({
+                          ...editedPromo,
+                          discount: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>{t('common.country', 'País')}</Label>
+                    <Input
+                      value={editedPromo.country || ''}
+                      onChange={(e) =>
+                        setEditedPromo({
+                          ...editedPromo,
+                          country: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>{t('common.state', 'Estado')}</Label>
+                    <Input
+                      value={editedPromo.state || ''}
+                      onChange={(e) =>
+                        setEditedPromo({
+                          ...editedPromo,
+                          state: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>{t('common.city', 'Cidade')}</Label>
+                    <Input
+                      value={editedPromo.city || ''}
+                      onChange={(e) =>
+                        setEditedPromo({ ...editedPromo, city: e.target.value })
+                      }
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col flex-1 min-h-[150px]">
+              <h3 className="font-semibold mb-3 text-sm text-muted-foreground uppercase tracking-wider">
+                {t('franchisee.crawler.raw_data', 'Dados Brutos Extraídos')}
+              </h3>
+              <ScrollArea className="flex-1 bg-slate-950 text-green-400 p-4 rounded-lg font-mono text-xs shadow-inner min-h-[150px]">
+                <pre>{JSON.stringify(promo.rawData || promo, null, 2)}</pre>
+              </ScrollArea>
+            </div>
           </div>
 
           <div className="flex flex-col">
@@ -151,7 +270,7 @@ export function CrawlerAnalysisSheet({
                     {t('franchisee.crawler.ignore', 'Ignorar')}
                   </Button>
                   <Button
-                    className="flex-1 bg-green-600 hover:bg-green-700"
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white"
                     onClick={handleImport}
                   >
                     <CheckCircle className="h-4 w-4 mr-2" />{' '}
