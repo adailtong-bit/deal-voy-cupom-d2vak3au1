@@ -79,8 +79,12 @@ export function TestingSandboxTab({ franchiseId }: { franchiseId?: string }) {
                 {t('franchisee.sandbox.interests', 'Interesses')}
               </span>
               <div className="flex flex-wrap gap-2">
-                <Badge variant="secondary">Gastronomia</Badge>
-                <Badge variant="secondary">Tecnologia</Badge>
+                <Badge variant="secondary">
+                  {t('category.food', 'Gastronomia')}
+                </Badge>
+                <Badge variant="secondary">
+                  {t('category.electronics', 'Tecnologia')}
+                </Badge>
               </div>
             </div>
           </CardContent>
@@ -113,7 +117,9 @@ export function TestingSandboxTab({ franchiseId }: { franchiseId?: string }) {
               <span className="text-muted-foreground">
                 {t('franchisee.sandbox.category', 'Categoria')}
               </span>
-              <span className="font-medium text-right">Turismo</span>
+              <span className="font-medium text-right">
+                {t('category.leisure', 'Turismo')}
+              </span>
             </div>
             <div className="grid grid-cols-[1fr_2fr] gap-2 border-b pb-2">
               <span className="text-muted-foreground flex items-center gap-1">

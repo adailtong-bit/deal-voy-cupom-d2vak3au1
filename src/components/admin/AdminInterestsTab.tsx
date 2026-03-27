@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
+import { CATEGORIES } from '@/lib/data'
 import {
   Card,
   CardContent,
@@ -104,6 +105,39 @@ export function AdminInterestsTab({ franchiseId }: { franchiseId?: string }) {
     setEditingId(null)
   }
 
+  const getTranslatedInterest = (interest: { id: string; label: string }) => {
+    const cat = CATEGORIES.find(
+      (c) =>
+        c.id.toLowerCase() === interest.id.toLowerCase() ||
+        c.label.toLowerCase() === interest.label.toLowerCase() ||
+        interest.id.includes(c.id.toLowerCase()) ||
+        interest.id.includes(c.label.toLowerCase()),
+    )
+    if (cat) {
+      return t(cat.translationKey, interest.label)
+    }
+
+    const lowerId = interest.id.toLowerCase()
+    const lowerLabel = interest.label.toLowerCase()
+
+    if (lowerId === 'lazer' || lowerLabel === 'lazer') {
+      return t('category.leisure', 'Leisure')
+    }
+    if (
+      lowerId === 'eletronicos' ||
+      lowerId === 'eletrônicos' ||
+      lowerLabel === 'eletronicos' ||
+      lowerLabel === 'eletrônicos'
+    ) {
+      return t('category.electronics', 'Electronics')
+    }
+    if (lowerId === 'beleza' || lowerLabel === 'beleza') {
+      return t('category.beauty', 'Beauty')
+    }
+
+    return interest.label
+  }
+
   return (
     <div className="space-y-6 animate-fade-in-up">
       <Card>
@@ -174,7 +208,7 @@ export function AdminInterestsTab({ franchiseId }: { franchiseId?: string }) {
                     ) : (
                       <div className="flex items-center gap-2">
                         <Tag className="h-4 w-4 text-muted-foreground" />
-                        {interest.label}
+                        {getTranslatedInterest(interest)}
                       </div>
                     )}
                   </TableCell>

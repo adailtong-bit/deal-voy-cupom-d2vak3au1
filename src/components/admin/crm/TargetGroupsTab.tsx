@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useCouponStore } from '@/stores/CouponContext'
+import { useLanguage } from '@/stores/LanguageContext'
 import {
   Table,
   TableBody,
@@ -66,6 +67,8 @@ export function TargetGroupsTab({
     users,
     franchises,
   } = useCouponStore()
+
+  const { t } = useLanguage()
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingGroup, setEditingGroup] = useState<TargetGroup | null>(null)
@@ -200,14 +203,22 @@ export function TargetGroupsTab({
       <Card>
         <CardHeader className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
           <div>
-            <CardTitle>Grupos de Segmentação (Alvos)</CardTitle>
+            <CardTitle>
+              {t(
+                'admin.crm_tabs.target_groups_title',
+                'Grupos de Segmentação (Alvos)',
+              )}
+            </CardTitle>
             <CardDescription>
-              Crie segmentos baseados em dados demográficos e de consumo para
-              usar em campanhas.
+              {t(
+                'admin.crm_tabs.target_groups_desc',
+                'Crea segmentos basados en datos demográficos y de consumo para usar en campañas.',
+              )}
             </CardDescription>
           </div>
           <Button onClick={() => handleOpenDialog()}>
-            <Plus className="mr-2 h-4 w-4" /> Novo Grupo
+            <Plus className="mr-2 h-4 w-4" />{' '}
+            {t('admin.crm_tabs.new_group', 'Novo Grupo')}
           </Button>
         </CardHeader>
         <CardContent>
@@ -215,15 +226,23 @@ export function TargetGroupsTab({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Nome do Grupo</TableHead>
-                  <TableHead>Filtros Aplicados</TableHead>
+                  <TableHead>
+                    {t('admin.crm_tabs.group_name', 'Nome do Grupo')}
+                  </TableHead>
+                  <TableHead>
+                    {t('admin.crm_tabs.applied_filters', 'Filtros Aplicados')}
+                  </TableHead>
                   {!franchiseId &&
                     !companyId &&
                     user?.role === 'super_admin' && (
-                      <TableHead>Afiliação</TableHead>
+                      <TableHead>
+                        {t('admin.crm_tabs.affiliation', 'Afiliação')}
+                      </TableHead>
                     )}
-                  <TableHead>Leads</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
+                  <TableHead>{t('admin.crm_tabs.leads', 'Leads')}</TableHead>
+                  <TableHead className="text-right">
+                    {t('common.actions', 'Ações')}
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -245,7 +264,14 @@ export function TargetGroupsTab({
                               variant="outline"
                               className="bg-slate-50 text-[10px]"
                             >
-                              Cat: {group.filters.categories[0]}
+                              Cat:{' '}
+                              {t(
+                                CATEGORIES.find(
+                                  (c) => c.id === group.filters!.categories![0],
+                                )?.translationKey ||
+                                  `category.${group.filters!.categories![0].toLowerCase()}`,
+                                group.filters.categories[0],
+                              )}
                             </Badge>
                           )}
                         {group.filters?.gender &&
@@ -326,7 +352,7 @@ export function TargetGroupsTab({
                       colSpan={5}
                       className="text-center py-8 text-muted-foreground"
                     >
-                      Nenhum grupo de segmentação criado.
+                      {t('common.none', 'Nenhum grupo de segmentação criado.')}
                     </TableCell>
                   </TableRow>
                 )}
@@ -340,12 +366,17 @@ export function TargetGroupsTab({
         <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {editingGroup ? 'Editar Grupo' : 'Criar Grupo de Segmentação'}
+              {editingGroup
+                ? t('admin.crm_tabs.edit_group', 'Editar Grupo')
+                : t(
+                    'admin.crm_tabs.create_group',
+                    'Criar Grupo de Segmentação',
+                  )}
             </DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
-              <Label>Nome do Grupo</Label>
+              <Label>{t('admin.crm_tabs.group_name', 'Nome do Grupo')}</Label>
               <Input
                 value={formData.name}
                 onChange={(e) =>
@@ -355,7 +386,7 @@ export function TargetGroupsTab({
               />
             </div>
             <div className="space-y-2">
-              <Label>Descrição</Label>
+              <Label>{t('admin.crm_tabs.group_desc', 'Descrição')}</Label>
               <Textarea
                 value={formData.description}
                 onChange={(e) =>
@@ -367,10 +398,12 @@ export function TargetGroupsTab({
             </div>
 
             <div className="pt-4 border-t space-y-4">
-              <h4 className="font-semibold text-sm">Filtros Demográficos</h4>
+              <h4 className="font-semibold text-sm">
+                {t('admin.crm_tabs.demo_filters', 'Filtros Demográficos')}
+              </h4>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label>Gênero</Label>
+                  <Label>{t('admin.crm_tabs.gender', 'Gênero')}</Label>
                   <Select
                     value={formData.filters?.gender || 'all'}
                     onValueChange={(v: any) =>
@@ -381,10 +414,12 @@ export function TargetGroupsTab({
                     }
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Todos" />
+                      <SelectValue placeholder={t('common.all', 'Todos')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">Todos</SelectItem>
+                      <SelectItem value="all">
+                        {t('common.all', 'Todos')}
+                      </SelectItem>
                       <SelectItem value="male">Masculino</SelectItem>
                       <SelectItem value="female">Feminino</SelectItem>
                       <SelectItem value="other">Outros</SelectItem>
@@ -392,7 +427,7 @@ export function TargetGroupsTab({
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Idade Mínima</Label>
+                  <Label>{t('admin.crm_tabs.min_age', 'Idade Mínima')}</Label>
                   <Input
                     type="number"
                     min={0}
@@ -412,7 +447,7 @@ export function TargetGroupsTab({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Idade Máxima</Label>
+                  <Label>{t('admin.crm_tabs.max_age', 'Idade Máxima')}</Label>
                   <Input
                     type="number"
                     min={0}
@@ -435,10 +470,12 @@ export function TargetGroupsTab({
             </div>
 
             <div className="pt-4 border-t space-y-4">
-              <h4 className="font-semibold text-sm">Filtros Geográficos</h4>
+              <h4 className="font-semibold text-sm">
+                {t('admin.crm_tabs.geo_filters', 'Filtros Geográficos')}
+              </h4>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Estado</Label>
+                  <Label>{t('admin.crm_tabs.state', 'Estado')}</Label>
                   <Select
                     value={formData.filters?.state || 'all'}
                     onValueChange={(v) =>
@@ -449,10 +486,12 @@ export function TargetGroupsTab({
                     }
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Todos" />
+                      <SelectValue placeholder={t('common.all', 'Todos')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">Todos os Estados</SelectItem>
+                      <SelectItem value="all">
+                        {t('common.all', 'Todos os Estados')}
+                      </SelectItem>
                       {availableStates.map((s) => (
                         <SelectItem key={s} value={s}>
                           {s}
@@ -462,7 +501,7 @@ export function TargetGroupsTab({
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Cidade</Label>
+                  <Label>{t('admin.crm_tabs.city', 'Cidade')}</Label>
                   <Select
                     value={formData.filters?.city || 'all'}
                     onValueChange={(v) =>
@@ -477,10 +516,12 @@ export function TargetGroupsTab({
                     }
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Todas" />
+                      <SelectValue placeholder={t('common.all', 'Todas')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">Todas as Cidades</SelectItem>
+                      <SelectItem value="all">
+                        {t('common.all', 'Todas as Cidades')}
+                      </SelectItem>
                       {availableCities.map((c) => (
                         <SelectItem key={c} value={c}>
                           {c}
@@ -493,10 +534,14 @@ export function TargetGroupsTab({
             </div>
 
             <div className="pt-4 border-t space-y-4">
-              <h4 className="font-semibold text-sm">Filtros de Consumo</h4>
+              <h4 className="font-semibold text-sm">
+                {t('admin.crm_tabs.consumption_filters', 'Filtros de Consumo')}
+              </h4>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Categoria Preferida</Label>
+                  <Label>
+                    {t('admin.crm_tabs.pref_category', 'Categoria Preferida')}
+                  </Label>
                   <Select
                     value={formData.filters?.categories?.[0] || 'all'}
                     onValueChange={(v) =>
@@ -510,20 +555,24 @@ export function TargetGroupsTab({
                     }
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Todas" />
+                      <SelectValue placeholder={t('common.all', 'Todas')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">Todas as Categorias</SelectItem>
+                      <SelectItem value="all">
+                        {t('common.all', 'Todas as Categorias')}
+                      </SelectItem>
                       {CATEGORIES.filter((c) => c.id !== 'all').map((c) => (
                         <SelectItem key={c.id} value={c.id}>
-                          {c.label}
+                          {t(c.translationKey, c.label)}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Frequência de Compra</Label>
+                  <Label>
+                    {t('admin.crm_tabs.purchase_freq', 'Frequência de Compra')}
+                  </Label>
                   <Select
                     value={formData.filters?.frequency || 'all'}
                     onValueChange={(v: any) =>
@@ -534,7 +583,7 @@ export function TargetGroupsTab({
                     }
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Qualquer" />
+                      <SelectValue placeholder={t('common.any', 'Qualquer')} />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Qualquer Frequência</SelectItem>
@@ -552,8 +601,8 @@ export function TargetGroupsTab({
             <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 flex items-center justify-between mt-2">
               <div className="space-y-1">
                 <span className="text-sm font-medium text-blue-800 flex items-center gap-2">
-                  <Users className="w-4 h-4" /> Leads Estimados (Contador
-                  Dinâmico)
+                  <Users className="w-4 h-4" />{' '}
+                  {t('admin.crm_tabs.est_leads', 'Leads Estimados')}
                 </span>
                 <p className="text-xs text-blue-600">
                   Total de usuários que correspondem aos filtros atuais.
@@ -566,10 +615,10 @@ export function TargetGroupsTab({
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-              Cancelar
+              {t('common.cancel', 'Cancelar')}
             </Button>
             <Button onClick={handleSave} disabled={!formData.name}>
-              Salvar Grupo
+              {t('common.save', 'Salvar Grupo')}
             </Button>
           </DialogFooter>
         </DialogContent>
