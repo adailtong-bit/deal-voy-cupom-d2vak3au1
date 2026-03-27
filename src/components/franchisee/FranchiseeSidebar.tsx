@@ -147,7 +147,7 @@ export function FranchiseeSidebar({
   return (
     <aside
       className={cn(
-        'fixed inset-y-0 left-0 z-50 w-64 bg-white border-r shadow-lg transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 flex flex-col',
+        'fixed inset-y-0 left-0 z-50 w-64 bg-white border-r shadow-lg transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 flex flex-col h-full',
         isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full',
       )}
     >

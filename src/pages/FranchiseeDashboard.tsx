@@ -53,9 +53,9 @@ export default function FranchiseeDashboard() {
   }
 
   return (
-    <div className="flex flex-col md:flex-row min-h-[calc(100vh-4rem)] bg-slate-50/50">
+    <div className="flex flex-col md:flex-row h-[calc(100vh-3.5rem)] md:h-[calc(100vh-4rem)] bg-slate-50/50 overflow-hidden relative">
       {/* Mobile Header for Sidebar Toggle */}
-      <div className="md:hidden flex items-center justify-between bg-white border-b p-4 sticky top-0 z-40 shadow-sm">
+      <div className="md:hidden flex items-center justify-between bg-white border-b p-4 z-40 shadow-sm shrink-0">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
             <LayoutDashboard className="w-4 h-4 text-primary" />
@@ -93,7 +93,7 @@ export default function FranchiseeDashboard() {
       )}
 
       {/* Main Content */}
-      <main className="flex-1 w-full pb-20 md:pb-8 overflow-y-auto p-4 sm:p-6 lg:p-8">
+      <main className="flex-1 w-full pb-20 md:pb-8 overflow-auto p-4 sm:p-6 lg:p-8">
         <div className="max-w-6xl mx-auto">
           {activeTab === 'overview' && (
             <FranchiseeOverviewTab franchiseId={myFranchise.id} />
