@@ -37,7 +37,16 @@ import {
 } from '@/components/ui/command'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Check, ChevronsUpDown, Filter } from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
+import { Check, ChevronsUpDown, Filter, AlertCircle } from 'lucide-react'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useRegionFormatting } from '@/hooks/useRegionFormatting'
@@ -48,8 +57,13 @@ export function BillingGenerationTab({
 }: {
   franchiseId?: string
 }) {
-  const { user, franchises, companies, generatePartnerInvoice } =
-    useCouponStore()
+  const {
+    user,
+    franchises,
+    companies,
+    partnerInvoices,
+    generatePartnerInvoice,
+  } = useCouponStore()
   const { t } = useLanguage()
   const myFranchise = franchises.find((f) => f.id === franchiseId)
   const { formatCurrency, formatShortDate } = useRegionFormatting(
@@ -66,7 +80,11 @@ export function BillingGenerationTab({
   >(availableTargetTypes[0] as any)
   const [selectedTargetId, setSelectedTargetId] = useState('')
   const [openTargetCombo, setOpenTargetCombo] = useState(false)
-  const [invoiceRef, setInvoiceRef] = useState('')
+
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false)
+  const [dueDate, setDueDate] = useState<string>(
+    new Date(Date.now() + 15 * 86400000).toISOString().split('T')[0],
+  )
 
   const displayCompanies = franchiseId
     ? companies.filter((c) => c.franchiseId === franchiseId)
@@ -99,48 +117,76 @@ export function BillingGenerationTab({
     setMockItems(items)
   }, [selectedTargetId, selectedTargetType])
 
-  const filteredItems = useMemo(() => {
-    return mockItems.filter((item) => {
-      if (itemFilterStatus !== 'all' && item.status !== itemFilterStatus)
-        return false
-      if (
-        itemFilterId &&
-        !item.id.toLowerCase().includes(itemFilterId.toLowerCase())
-      )
-        return false
-      if (itemFilterPeriod !== 'all') {
-        const d = new Date(item.date)
-        const now = new Date()
-        if (itemFilterPeriod === 'month')
-          return (
-            d.getMonth() === now.getMonth() &&
-            d.getFullYear() === now.getFullYear()
-          )
-        if (itemFilterPeriod === 'quarter')
-          return (
-            Math.floor(d.getMonth() / 3) === Math.floor(now.getMonth() / 3) &&
-            d.getFullYear() === now.getFullYear()
-          )
-        if (itemFilterPeriod === 'semester')
-          return (
-            Math.floor(d.getMonth() / 6) === Math.floor(now.getMonth() / 6) &&
-            d.getFullYear() === now.getFullYear()
-          )
-        if (itemFilterPeriod === 'year')
-          return d.getFullYear() === now.getFullYear()
-      }
-      return true
+  const billedItemIds = useMemo(() => {
+    const ids = new Set<string>()
+    partnerInvoices.forEach((inv) => {
+      inv.items?.forEach((item) => {
+        if (item.id) ids.add(item.id)
+      })
     })
-  }, [mockItems, itemFilterStatus, itemFilterId, itemFilterPeriod])
+    return ids
+  }, [partnerInvoices])
+
+  const filteredItems = useMemo(() => {
+    return mockItems
+      .map((item) => ({
+        ...item,
+        isBilled: billedItemIds.has(item.id),
+      }))
+      .filter((item) => {
+        if (itemFilterStatus !== 'all' && item.status !== itemFilterStatus)
+          return false
+        if (
+          itemFilterId &&
+          !item.id.toLowerCase().includes(itemFilterId.toLowerCase())
+        )
+          return false
+        if (itemFilterPeriod !== 'all') {
+          const d = new Date(item.date)
+          const now = new Date()
+          if (itemFilterPeriod === 'month')
+            return (
+              d.getMonth() === now.getMonth() &&
+              d.getFullYear() === now.getFullYear()
+            )
+          if (itemFilterPeriod === 'quarter')
+            return (
+              Math.floor(d.getMonth() / 3) === Math.floor(now.getMonth() / 3) &&
+              d.getFullYear() === now.getFullYear()
+            )
+          if (itemFilterPeriod === 'semester')
+            return (
+              Math.floor(d.getMonth() / 6) === Math.floor(now.getMonth() / 6) &&
+              d.getFullYear() === now.getFullYear()
+            )
+          if (itemFilterPeriod === 'year')
+            return d.getFullYear() === now.getFullYear()
+        }
+        return true
+      })
+  }, [
+    mockItems,
+    itemFilterStatus,
+    itemFilterId,
+    itemFilterPeriod,
+    billedItemIds,
+  ])
+
+  const nextInvoiceNumber = useMemo(() => {
+    const prefix = 'INV'
+    const year = new Date().getFullYear()
+    const count = partnerInvoices.length + 1
+    return `${prefix}-${year}-${count.toString().padStart(4, '0')}`
+  }, [partnerInvoices.length])
 
   const handleGenerateInvoice = () => {
-    const itemsToBill = filteredItems.filter((i) =>
-      selectedItemIds.includes(i.id),
+    const itemsToBill = filteredItems.filter(
+      (i) => selectedItemIds.includes(i.id) && !i.isBilled,
     )
-    if (itemsToBill.length === 0 || !invoiceRef.trim()) return
+    if (itemsToBill.length === 0) return
 
     generatePartnerInvoice({
-      referenceNumber: invoiceRef.trim(),
+      referenceNumber: nextInvoiceNumber,
       targetType: selectedTargetType,
       companyId: selectedTargetType === 'merchant' ? selectedTargetId : '',
       franchiseId: selectedTargetType === 'franchise' ? selectedTargetId : '',
@@ -150,10 +196,10 @@ export function BillingGenerationTab({
       periodEnd: itemsToBill[0]?.date,
       items: itemsToBill,
       status: 'draft',
+      dueDate: new Date(dueDate).toISOString(),
     })
+    setIsConfirmDialogOpen(false)
     setSelectedItemIds([])
-    setInvoiceRef('')
-    setMockItems((prev) => prev.filter((i) => !selectedItemIds.includes(i.id)))
   }
 
   const selectedTargetName = useMemo(() => {
@@ -161,6 +207,82 @@ export function BillingGenerationTab({
     if (!target) return 'Selecione o destinatário...'
     return `${target.name} - ${target.taxId ? target.taxId : 'Sem Doc'}`
   }, [targets, selectedTargetId])
+
+  const formatAddress = (
+    street?: string,
+    num?: string,
+    city?: string,
+    state?: string,
+  ) => {
+    const parts = [street, num].filter(Boolean).join(', ')
+    const loc = [city, state].filter(Boolean).join('/')
+    return [parts, loc].filter(Boolean).join(' - ') || 'Endereço não informado'
+  }
+
+  const getIssuerDetails = () => {
+    if (myFranchise) {
+      return {
+        name: myFranchise.legalName || myFranchise.name,
+        address: formatAddress(
+          myFranchise.addressStreet,
+          myFranchise.addressNumber,
+          myFranchise.addressCity,
+          myFranchise.addressState,
+        ),
+        contact: myFranchise.contactPerson || 'N/A',
+        phone: myFranchise.businessPhone || myFranchise.whatsapp || 'N/A',
+        email: myFranchise.billingEmail || myFranchise.contactEmail || 'N/A',
+      }
+    }
+    return {
+      name: 'Deal Voy (Platform HQ)',
+      address: 'Av. Paulista, 1000 - São Paulo/SP',
+      contact: 'Admin',
+      phone: '+55 11 99999-9999',
+      email: 'billing@dealvoy.com',
+    }
+  }
+
+  const getClientDetails = () => {
+    if (selectedTargetType === 'franchise') {
+      const f = franchises.find((f) => f.id === selectedTargetId)
+      return {
+        name: f?.legalName || f?.name || '',
+        address: formatAddress(
+          f?.addressStreet,
+          f?.addressNumber,
+          f?.addressCity,
+          f?.addressState,
+        ),
+        contact: f?.contactPerson || 'N/A',
+        phone: f?.businessPhone || f?.whatsapp || 'N/A',
+        email: f?.billingEmail || f?.contactEmail || 'N/A',
+      }
+    } else {
+      const c = companies.find((c) => c.id === selectedTargetId)
+      return {
+        name: c?.legalName || c?.name || '',
+        address: formatAddress(
+          c?.addressStreet,
+          c?.addressNumber,
+          c?.addressCity,
+          c?.addressState,
+        ),
+        contact: c?.contactPerson || 'N/A',
+        phone: c?.businessPhone || c?.whatsapp || 'N/A',
+        email: c?.billingEmail || c?.email || 'N/A',
+      }
+    }
+  }
+
+  const issuer = getIssuerDetails()
+  const client = getClientDetails()
+
+  const availableItems = filteredItems.filter((i) => !i.isBilled)
+  const selectedAmount = selectedItemIds.reduce((acc, id) => {
+    const item = mockItems.find((i) => i.id === id)
+    return acc + (item ? item.amount : 0)
+  }, 0)
 
   return (
     <Card className="min-w-0 w-full animate-fade-in-up">
@@ -178,6 +300,7 @@ export function BillingGenerationTab({
               onValueChange={(v: any) => {
                 setSelectedTargetType(v)
                 setSelectedTargetId('')
+                setSelectedItemIds([])
               }}
             >
               <SelectTrigger className="w-[180px]">
@@ -279,19 +402,19 @@ export function BillingGenerationTab({
                   <SelectItem value="year">Este Ano</SelectItem>
                 </SelectContent>
               </Select>
-              <div className="flex items-center gap-2 w-full md:w-auto md:ml-auto">
-                <Input
-                  placeholder="Nº da Fatura (Ref)..."
-                  value={invoiceRef}
-                  onChange={(e) => setInvoiceRef(e.target.value)}
-                  className="w-full md:w-[180px]"
-                />
+              <div className="flex items-center gap-4 w-full md:w-auto md:ml-auto">
+                <div className="text-sm font-medium text-slate-500">
+                  Fatura:{' '}
+                  <span className="text-slate-900 font-bold">
+                    {nextInvoiceNumber}
+                  </span>
+                </div>
                 <Button
-                  onClick={handleGenerateInvoice}
-                  disabled={selectedItemIds.length === 0 || !invoiceRef.trim()}
+                  onClick={() => setIsConfirmDialogOpen(true)}
+                  disabled={selectedItemIds.length === 0}
                   className="w-full md:w-auto whitespace-nowrap"
                 >
-                  Gerar Fatura ({selectedItemIds.length})
+                  Revisar Fatura ({selectedItemIds.length})
                 </Button>
               </div>
             </div>
@@ -303,12 +426,13 @@ export function BillingGenerationTab({
                     <TableHead className="w-[50px]">
                       <Checkbox
                         checked={
-                          selectedItemIds.length === filteredItems.length &&
-                          filteredItems.length > 0
+                          selectedItemIds.length === availableItems.length &&
+                          availableItems.length > 0
                         }
+                        disabled={availableItems.length === 0}
                         onCheckedChange={(c) => {
                           if (c)
-                            setSelectedItemIds(filteredItems.map((i) => i.id))
+                            setSelectedItemIds(availableItems.map((i) => i.id))
                           else setSelectedItemIds([])
                         }}
                       />
@@ -322,10 +446,14 @@ export function BillingGenerationTab({
                 </TableHeader>
                 <TableBody>
                   {filteredItems.map((item) => (
-                    <TableRow key={item.id}>
+                    <TableRow
+                      key={item.id}
+                      className={cn(item.isBilled && 'bg-slate-50 opacity-60')}
+                    >
                       <TableCell>
                         <Checkbox
                           checked={selectedItemIds.includes(item.id)}
+                          disabled={item.isBilled}
                           onCheckedChange={(c) => {
                             if (c)
                               setSelectedItemIds((prev) => [...prev, item.id])
@@ -341,10 +469,25 @@ export function BillingGenerationTab({
                       </TableCell>
                       <TableCell>{formatShortDate(item.date)}</TableCell>
                       <TableCell>{item.description}</TableCell>
-                      <TableCell className="capitalize">
-                        {item.status}
+                      <TableCell>
+                        {item.isBilled ? (
+                          <Badge variant="outline" className="bg-slate-200">
+                            Faturado
+                          </Badge>
+                        ) : (
+                          <Badge
+                            variant={
+                              item.status === 'pending'
+                                ? 'secondary'
+                                : 'default'
+                            }
+                            className="capitalize"
+                          >
+                            {item.status}
+                          </Badge>
+                        )}
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right font-medium">
                         {formatCurrency(item.amount)}
                       </TableCell>
                     </TableRow>
@@ -365,6 +508,141 @@ export function BillingGenerationTab({
             </div>
           </>
         )}
+
+        <Dialog
+          open={isConfirmDialogOpen}
+          onOpenChange={setIsConfirmDialogOpen}
+        >
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-xl">
+                Revisar e Confirmar Fatura
+              </DialogTitle>
+              <DialogDescription>
+                Confirme as informações de faturamento e dados de contato.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4">
+              <Card className="shadow-sm">
+                <CardHeader className="pb-3 bg-slate-50 border-b">
+                  <CardTitle className="text-sm font-semibold text-slate-700">
+                    Cobrador (Emissor)
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-4 text-sm space-y-2">
+                  <div className="grid grid-cols-[80px_1fr] gap-1">
+                    <span className="text-slate-500 font-medium">Nome:</span>
+                    <span className="font-semibold text-slate-800">
+                      {issuer.name}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-[80px_1fr] gap-1">
+                    <span className="text-slate-500 font-medium">
+                      Endereço:
+                    </span>
+                    <span className="text-slate-700">{issuer.address}</span>
+                  </div>
+                  <div className="grid grid-cols-[80px_1fr] gap-1">
+                    <span className="text-slate-500 font-medium">Contato:</span>
+                    <span className="text-slate-700">{issuer.contact}</span>
+                  </div>
+                  <div className="grid grid-cols-[80px_1fr] gap-1">
+                    <span className="text-slate-500 font-medium">
+                      Telefone:
+                    </span>
+                    <span className="text-slate-700">{issuer.phone}</span>
+                  </div>
+                  <div className="grid grid-cols-[80px_1fr] gap-1">
+                    <span className="text-slate-500 font-medium">E-mail:</span>
+                    <span className="text-slate-700">{issuer.email}</span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="shadow-sm">
+                <CardHeader className="pb-3 bg-slate-50 border-b">
+                  <CardTitle className="text-sm font-semibold text-slate-700">
+                    Cobrado (Cliente)
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-4 text-sm space-y-2">
+                  <div className="grid grid-cols-[80px_1fr] gap-1">
+                    <span className="text-slate-500 font-medium">Nome:</span>
+                    <span className="font-semibold text-slate-800">
+                      {client.name}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-[80px_1fr] gap-1">
+                    <span className="text-slate-500 font-medium">
+                      Endereço:
+                    </span>
+                    <span className="text-slate-700">{client.address}</span>
+                  </div>
+                  <div className="grid grid-cols-[80px_1fr] gap-1">
+                    <span className="text-slate-500 font-medium">Contato:</span>
+                    <span className="text-slate-700">{client.contact}</span>
+                  </div>
+                  <div className="grid grid-cols-[80px_1fr] gap-1">
+                    <span className="text-slate-500 font-medium">
+                      Telefone:
+                    </span>
+                    <span className="text-slate-700">{client.phone}</span>
+                  </div>
+                  <div className="grid grid-cols-[80px_1fr] gap-1">
+                    <span className="text-slate-500 font-medium">E-mail:</span>
+                    <span className="text-slate-700">{client.email}</span>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-2 border-t mt-2 pt-6">
+              <div className="space-y-2">
+                <Label className="text-slate-600">Nº da Fatura (Ref)</Label>
+                <Input
+                  value={nextInvoiceNumber}
+                  readOnly
+                  className="bg-slate-100 font-mono text-slate-600 cursor-not-allowed"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-slate-600">Data de Vencimento</Label>
+                <Input
+                  type="date"
+                  value={dueDate}
+                  onChange={(e) => setDueDate(e.target.value)}
+                  className="font-medium"
+                />
+              </div>
+              <div className="space-y-2 sm:col-span-2">
+                <Label className="text-slate-600 font-bold">Valor Total</Label>
+                <div className="relative">
+                  <Input
+                    value={formatCurrency(selectedAmount)}
+                    readOnly
+                    className="bg-slate-100 font-bold text-lg text-slate-800 pl-10 cursor-not-allowed"
+                  />
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span className="text-slate-500 text-lg font-bold">R$</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter className="mt-6 border-t pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setIsConfirmDialogOpen(false)}
+              >
+                Cancelar
+              </Button>
+              <Button onClick={handleGenerateInvoice} className="font-semibold">
+                Gerar Fatura Definitiva
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
   )
