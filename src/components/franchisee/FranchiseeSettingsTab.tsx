@@ -42,31 +42,28 @@ export function FranchiseeSettingsTab({
     >
       <div className="min-w-0">
         <h2 className="text-2xl font-bold text-slate-800 truncate">
-          {t('franchisee.settings.title', 'Configurações')}
+          {t('franchisee.settings.title', 'Settings')}
         </h2>
         <p className="text-muted-foreground truncate">
-          {t(
-            'franchisee.settings.desc',
-            'Parâmetros operacionais da franquia.',
-          )}
+          {t('franchisee.settings.desc', 'Franchise operational parameters.')}
         </p>
       </div>
       <Card className="max-w-2xl shadow-sm border-slate-200 min-w-0 w-full">
         <CardHeader className="bg-slate-50 border-b min-w-0">
           <CardTitle className="text-lg truncate">
-            {t('franchisee.settings.contract_info', 'Informações Contratuais')}
+            {t('franchisee.settings.contract_info', 'Contract Information')}
           </CardTitle>
           <CardDescription className="line-clamp-2">
             {t(
               'franchisee.settings.contract_desc',
-              'Configurações gerenciadas pela rede Master.',
+              'Settings managed by the Master network.',
             )}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-5 pt-6 min-w-0">
           <div className="space-y-2 min-w-0">
             <Label className="font-semibold text-slate-700 truncate block">
-              {t('franchisee.settings.region', 'Região de Atuação')}
+              {t('franchisee.settings.region', 'Operating Region')}
             </Label>
             <Input
               value={myFranchise.region || myFranchise.addressCountry || ''}
@@ -77,7 +74,7 @@ export function FranchiseeSettingsTab({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 min-w-0">
             <div className="space-y-2 min-w-0">
               <Label className="font-semibold text-slate-700 truncate block">
-                {t('franchisee.settings.currency', 'Moeda Padrão')}
+                {t('franchisee.settings.currency', 'Default Currency')}
               </Label>
               <Input
                 value={currency}
@@ -90,12 +87,12 @@ export function FranchiseeSettingsTab({
                 className="font-semibold text-slate-700 truncate block"
                 title={t(
                   'franchisee.settings.royalty_rate',
-                  'Taxa de Royalties (Publicidade)',
+                  'Royalty Rate (Advertising)',
                 )}
               >
                 {t(
                   'franchisee.settings.royalty_rate',
-                  'Taxa de Royalties (Publicidade)',
+                  'Royalty Rate (Advertising)',
                 )}
               </Label>
               <Input

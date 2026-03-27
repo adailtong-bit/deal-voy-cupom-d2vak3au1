@@ -37,82 +37,82 @@ export function FranchiseeSidebar({
 
   const menuGroups = [
     {
-      title: t('franchisee.menu.main', 'Principal'),
+      title: t('franchisee.menu.main', 'Main'),
       items: [
         {
           id: 'overview',
-          label: t('franchisee.menu.overview', 'Visão Geral'),
+          label: t('franchisee.menu.overview', 'Overview'),
           icon: LayoutDashboard,
         },
         {
           id: 'merchants',
-          label: t('franchisee.menu.merchants', 'Lojistas Afiliados'),
+          label: t('franchisee.menu.merchants', 'Affiliated Merchants'),
           icon: Store,
         },
       ],
     },
     {
-      title: t('franchisee.menu.financial', 'Financeiro'),
+      title: t('franchisee.menu.financial', 'Financial'),
       items: [
         {
           id: 'current-account',
-          label: t('franchisee.menu.current_account', 'Conta Corrente'),
+          label: t('franchisee.menu.current_account', 'Current Account'),
           icon: Wallet,
         },
         {
           id: 'billing',
-          label: t('franchisee.menu.billing', 'Faturamento'),
+          label: t('franchisee.menu.billing', 'Billing'),
           icon: FileText,
         },
         {
           id: 'monetization',
-          label: t('franchisee.menu.monetization', 'Monetização'),
+          label: t('franchisee.menu.monetization', 'Monetization'),
           icon: DollarSign,
         },
         {
           id: 'ads-royalties',
-          label: t('franchisee.menu.ads_royalties', 'Publicidade & Royalties'),
+          label: t('franchisee.menu.ads_royalties', 'Ads & Royalties'),
           icon: Megaphone,
         },
       ],
     },
     {
-      title: t('franchisee.menu.operational', 'Operacional'),
+      title: t('franchisee.menu.operational', 'Operational'),
       items: [
         {
           id: 'seasonal',
-          label: t('franchisee.menu.seasonal', 'Ofertas Sazonais'),
+          label: t('franchisee.menu.seasonal', 'Seasonal Offers'),
           icon: CalendarDays,
         },
         {
           id: 'categories',
-          label: t('franchisee.menu.categories', 'Categorias'),
+          label: t('franchisee.menu.categories', 'Categories'),
           icon: LayoutGrid,
         },
         {
           id: 'interests',
-          label: t('franchisee.menu.interests', 'Interesses'),
+          label: t('franchisee.menu.interests', 'Interests'),
           icon: Tag,
         },
         {
           id: 'policies',
-          label: t('franchisee.menu.policies', 'Políticas de Parceiros'),
+          label: t('franchisee.menu.policies', 'Partner Policies'),
           icon: Shield,
         },
       ],
     },
     {
-      title: t('franchisee.menu.intelligence', 'Inteligência'),
+      title: t('franchisee.menu.intelligence', 'Intelligence'),
       items: [
         { id: 'crm', label: t('franchisee.menu.crm', 'CRM'), icon: Target },
         {
           id: 'leads',
-          label: t('franchisee.menu.leads', 'Leads Capturados'),
+          label: t('franchisee.menu.leads', 'Captured Leads'),
           icon: Users,
         },
         {
           id: 'crawler',
-          label: t('franchisee.menu.crawler', 'Crawler de Ofertas'),
+          label: t('franchisee.menu.crawler', 'Offers Crawler'),
           icon: Globe,
         },
         {
@@ -123,7 +123,7 @@ export function FranchiseeSidebar({
       ],
     },
     {
-      title: t('franchisee.menu.support', 'Apoio & Configurações'),
+      title: t('franchisee.menu.support', 'Support & Settings'),
       items: [
         {
           id: 'sandbox',
@@ -132,12 +132,12 @@ export function FranchiseeSidebar({
         },
         {
           id: 'team',
-          label: t('franchisee.menu.team', 'Equipe Local'),
+          label: t('franchisee.menu.team', 'Local Team'),
           icon: UsersRound,
         },
         {
           id: 'settings',
-          label: t('franchisee.menu.settings', 'Configurações'),
+          label: t('franchisee.menu.settings', 'Settings'),
           icon: Settings,
         },
       ],
@@ -153,7 +153,7 @@ export function FranchiseeSidebar({
     >
       <div className="p-6 border-b flex-shrink-0 min-w-0">
         <h2 className="text-xl font-bold text-slate-800 tracking-tight truncate">
-          {t('franchisee.dashboard', 'Painel Regional')}
+          {t('franchisee.dashboard', 'Regional Panel')}
         </h2>
         <p className="text-sm font-medium text-primary mt-1 truncate">
           {myFranchise.name}

@@ -25,6 +25,7 @@ import TravelPage from '@/pages/TravelPage'
 import Explore from '@/pages/Explore'
 import Profile from '@/pages/Profile'
 import Login from '@/pages/Login'
+import { useEffect } from 'react'
 import { UserRole } from '@/lib/types'
 
 function RequireAuth({
@@ -51,12 +52,37 @@ function RequireAuth({
   return <>{children}</>
 }
 
+function GlobalLanguageSync() {
+  const { user } = useCouponStore()
+  const { setLanguage } = useLanguage()
+
+  useEffect(() => {
+    if (user?.country) {
+      const countryLower = user.country.toLowerCase()
+      if (countryLower === 'brasil' || countryLower === 'brazil') {
+        setLanguage('pt')
+      } else if (
+        ['spain', 'mexico', 'argentina', 'colombia', 'chile', 'peru'].includes(
+          countryLower,
+        )
+      ) {
+        setLanguage('es')
+      } else {
+        setLanguage('en')
+      }
+    }
+  }, [user?.country, setLanguage])
+
+  return null
+}
+
 export default function App() {
   return (
     <LanguageProvider>
       <NotificationProvider>
         <CouponProvider>
           <BrowserRouter>
+            <GlobalLanguageSync />
             <Routes>
               <Route element={<Layout />}>
                 <Route path="/" element={<Index />} />

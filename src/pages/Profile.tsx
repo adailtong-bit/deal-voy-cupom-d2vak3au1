@@ -112,10 +112,10 @@ export default function Profile() {
     <div className="container py-8 max-w-4xl mx-auto animate-fade-in-up mb-16 md:mb-0 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-slate-800">
-          {t('profile.title', 'Meu Perfil')}
+          {t('profile.title', 'My Profile')}
         </h1>
         <Button onClick={handleSave}>
-          {t('profile.save', 'Salvar Alterações')}
+          {t('profile.save', 'Save Changes')}
         </Button>
       </div>
 
@@ -126,7 +126,7 @@ export default function Profile() {
             <div className="flex-1 w-full space-y-4 pt-2">
               <div className="flex justify-between items-center text-sm mb-1">
                 <span className="font-medium text-slate-700">
-                  {t('profile.completion', 'Completude do Perfil')}
+                  {t('profile.completion', 'Profile Completion')}
                 </span>
                 <span className="font-bold text-primary">{progress}%</span>
               </div>
@@ -134,7 +134,7 @@ export default function Profile() {
               <p className="text-xs text-slate-500">
                 {t(
                   'profile.complete_prompt',
-                  'Complete seu perfil para receber ofertas mais relevantes baseadas na sua região e interesses. Informações como Data de Nascimento e Documento são obrigatórias para reservas.',
+                  'Complete your profile to receive more relevant offers based on your region and interests. Information like Date of Birth and ID are mandatory for bookings.',
                 )}
               </p>
             </div>
@@ -145,20 +145,22 @@ export default function Profile() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>{t('profile.personal', 'Dados Pessoais')}</CardTitle>
+            <CardTitle>
+              {t('profile.personal', 'Personal Information')}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label>{t('profile.name', 'Nome Completo')}</Label>
+              <Label>{t('profile.name', 'Full Name')}</Label>
               <Input
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                placeholder="Seu nome completo"
+                placeholder="Your full name"
               />
             </div>
             <div className="space-y-2">
-              <Label>{t('profile.email', 'E-mail')}</Label>
+              <Label>{t('profile.email', 'Email')}</Label>
               <Input
                 value={user.email}
                 disabled
@@ -167,23 +169,23 @@ export default function Profile() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>{t('profile.phone', 'Telefone')}</Label>
+                <Label>{t('profile.phone', 'Phone')}</Label>
                 <Input
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
-                  placeholder="+55 11 99999-9999"
+                  placeholder="+1 555 123-4567"
                 />
               </div>
               <div className="space-y-2">
                 <Label>
-                  {t('profile.document', 'Documento (CPF / Passaporte)')}
+                  {t('profile.document', 'Document (ID / Passport)')}
                 </Label>
                 <Input
                   name="documentNumber"
                   value={formData.documentNumber}
                   onChange={handleChange}
-                  placeholder="Ex: 123.456.789-00"
+                  placeholder="e.g.: 123.456.789-00"
                 />
               </div>
             </div>
@@ -193,13 +195,13 @@ export default function Profile() {
         <Card>
           <CardHeader>
             <CardTitle>
-              {t('profile.demographics', 'Demografia & Localização')}
+              {t('profile.demographics', 'Demographics & Location')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>{t('profile.birthday', 'Data de Nasc.')}</Label>
+                <Label>{t('profile.birthday', 'Date of Birth')}</Label>
                 <Input
                   type="date"
                   name="birthday"
@@ -208,29 +210,31 @@ export default function Profile() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>{t('profile.gender', 'Gênero')}</Label>
+                <Label>{t('profile.gender', 'Gender')}</Label>
                 <Select
                   value={formData.gender}
                   onValueChange={(v) => setFormData({ ...formData, gender: v })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione..." />
+                    <SelectValue
+                      placeholder={t('common.select', 'Select...')}
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="male">
-                      {t('gender.male', 'Masculino')}
+                      {t('gender.male', 'Male')}
                     </SelectItem>
                     <SelectItem value="female">
-                      {t('gender.female', 'Feminino')}
+                      {t('gender.female', 'Female')}
                     </SelectItem>
                     <SelectItem value="non-binary">
-                      {t('gender.nb', 'Não-binário')}
+                      {t('gender.nb', 'Non-binary')}
                     </SelectItem>
                     <SelectItem value="other">
-                      {t('gender.other', 'Outro')}
+                      {t('gender.other', 'Other')}
                     </SelectItem>
                     <SelectItem value="prefer-not-to-say">
-                      {t('gender.none', 'Prefiro não dizer')}
+                      {t('gender.none', 'Prefer not to say')}
                     </SelectItem>
                   </SelectContent>
                 </Select>
@@ -239,8 +243,9 @@ export default function Profile() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>{t('profile.country', 'País')}</Label>
+                <Label>{t('profile.country', 'Country')}</Label>
                 <Select
+                  required
                   value={formData.country}
                   onValueChange={(v) =>
                     setFormData({
@@ -252,7 +257,9 @@ export default function Profile() {
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione..." />
+                    <SelectValue
+                      placeholder={t('common.select', 'Select...')}
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     {COUNTRIES.map((c) => (
@@ -265,7 +272,7 @@ export default function Profile() {
               </div>
 
               <div className="space-y-2">
-                <Label>{t('profile.state', 'Estado')}</Label>
+                <Label>{t('profile.state', 'State')}</Label>
                 <Select
                   value={formData.state}
                   onValueChange={(v) =>
@@ -274,7 +281,9 @@ export default function Profile() {
                   disabled={!formData.country || availableStates.length === 0}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione..." />
+                    <SelectValue
+                      placeholder={t('common.select', 'Select...')}
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     {availableStates.map((s) => (
@@ -289,14 +298,16 @@ export default function Profile() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>{t('profile.city', 'Cidade')}</Label>
+                <Label>{t('profile.city', 'City')}</Label>
                 <Select
                   value={formData.city}
                   onValueChange={(v) => setFormData({ ...formData, city: v })}
                   disabled={!formData.state || availableCities.length === 0}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione..." />
+                    <SelectValue
+                      placeholder={t('common.select', 'Select...')}
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     {availableCities.map((c) => (
@@ -309,12 +320,12 @@ export default function Profile() {
               </div>
 
               <div className="space-y-2">
-                <Label>{t('profile.zip', 'CEP / Zip Code')}</Label>
+                <Label>{t('profile.zip', 'Zip / Postal Code')}</Label>
                 <Input
                   name="zipCode"
                   value={formData.zipCode}
                   onChange={handleZipChange}
-                  placeholder="Ex: 00000-000"
+                  placeholder="e.g.: 10001"
                 />
               </div>
             </div>
@@ -323,7 +334,7 @@ export default function Profile() {
 
         <Card className="md:col-span-2">
           <CardHeader>
-            <CardTitle>{t('profile.interests', 'Interesses')}</CardTitle>
+            <CardTitle>{t('profile.interests', 'Interests')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

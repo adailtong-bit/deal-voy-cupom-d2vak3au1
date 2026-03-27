@@ -4,6 +4,14 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { DialogFooter } from '@/components/ui/dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { COUNTRIES } from '@/lib/locationData'
 import { useLanguage } from '@/stores/LanguageContext'
 
 interface Props {
@@ -31,6 +39,7 @@ export function AdvancedCompanyForm({
     contactDepartment: '',
     billingEmail: '',
     stateRegistration: '',
+    addressCountry: 'USA',
   })
 
   useEffect(() => {
@@ -65,6 +74,27 @@ export function AdvancedCompanyForm({
               setFormData({ ...formData, email: e.target.value })
             }
           />
+        </div>
+        <div className="space-y-2">
+          <Label>{t('profile.country', 'País')}</Label>
+          <Select
+            required
+            value={formData.addressCountry}
+            onValueChange={(v) =>
+              setFormData({ ...formData, addressCountry: v })
+            }
+          >
+            <SelectTrigger>
+              <SelectValue placeholder={t('common.select', 'Selecione...')} />
+            </SelectTrigger>
+            <SelectContent>
+              {COUNTRIES?.map((c) => (
+                <SelectItem key={c} value={c}>
+                  {c}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <div className="space-y-2">
           <Label>{t('admin.company.contact_name', 'Nome do Contato')}</Label>

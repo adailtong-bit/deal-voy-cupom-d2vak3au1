@@ -43,10 +43,7 @@ export default function FranchiseeDashboard() {
     return (
       <div className="flex h-[calc(100vh-4rem)] items-center justify-center w-full max-w-full">
         <p className="text-xl font-semibold text-slate-500">
-          {t(
-            'franchisee.no_franchise',
-            'Nenhuma franquia associada encontrada.',
-          )}
+          {t('franchisee.no_franchise', 'No associated franchise found.')}
         </p>
       </div>
     )
@@ -61,7 +58,7 @@ export default function FranchiseeDashboard() {
             <LayoutDashboard className="w-4 h-4 text-primary" />
           </div>
           <span className="font-bold text-slate-800 truncate">
-            {t('franchisee.dashboard', 'Painel Regional')}
+            {t('franchisee.dashboard', 'Regional Panel')}
           </span>
         </div>
         <Button

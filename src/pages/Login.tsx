@@ -47,25 +47,27 @@ export default function Login() {
       <Card>
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">
-            {t('auth.login', 'Entrar')}
+            {t('auth.login', 'Sign In')}
           </CardTitle>
-          <CardDescription>Acesse sua conta para continuar.</CardDescription>
+          <CardDescription>
+            {t('auth.login_desc', 'Access your account to continue.')}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">{t('auth.email', 'E-mail')}</Label>
+              <Label htmlFor="email">{t('auth.email', 'Email')}</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="usuario@dealvoy.com"
+                placeholder="user@dealvoy.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
             <Button type="submit" className="w-full">
-              {t('auth.login', 'Entrar')}
+              {t('auth.login', 'Sign In')}
             </Button>
           </form>
           <div className="mt-6 flex flex-col gap-3">
@@ -75,7 +77,7 @@ export default function Login() {
               </div>
               <div className="relative flex justify-center text-xs uppercase">
                 <span className="bg-card px-2 text-muted-foreground font-medium">
-                  Acesso Rápido (Demonstração)
+                  {t('auth.demo_access', 'Quick Access (Demo)')}
                 </span>
               </div>
             </div>
@@ -85,7 +87,7 @@ export default function Login() {
                 handleQuickLogin('admin@dealvoy.com', 'super_admin', '/admin')
               }
             >
-              Acessar como Admin
+              {t('auth.quick_admin', 'Login as Admin')}
             </Button>
             <Button
               variant="outline"
@@ -93,7 +95,7 @@ export default function Login() {
                 handleQuickLogin('shop@dealvoy.com', 'shopkeeper', '/vendor')
               }
             >
-              Acessar como Lojista
+              {t('auth.quick_vendor', 'Login as Vendor')}
             </Button>
             <Button
               variant="outline"
@@ -102,13 +104,13 @@ export default function Login() {
               }
               className="border-primary/20 text-primary hover:bg-primary/5"
             >
-              Acessar como Franqueado NY
+              {t('auth.quick_ny', 'Login as NY Franchisee')}
             </Button>
             <Button
               variant="outline"
               onClick={() => handleQuickLogin('user@dealvoy.com', 'user', '/')}
             >
-              Acessar como Usuário
+              {t('auth.quick_user', 'Login as User')}
             </Button>
           </div>
         </CardContent>

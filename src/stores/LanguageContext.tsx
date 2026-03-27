@@ -33,7 +33,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     if (saved && (saved === 'pt' || saved === 'en' || saved === 'es')) {
       return saved as Language
     }
-    return 'pt'
+    return 'en'
   })
 
   useEffect(() => {
@@ -79,13 +79,13 @@ export function useLanguage() {
   const context = useContext(LanguageContext)
   if (!context) {
     return {
-      language: 'pt',
+      language: 'en',
       setLanguage: () => {},
       t: (k: string, fallback?: string) => fallback || k,
       formatCurrency: (a: number | undefined | null, c?: string) =>
-        utilsFormatCurrency(a, c, 'pt-BR'),
-      formatDate: (d: string | Date) => utilsFormatDate(d, 'pt-BR'),
-      locale: 'pt-BR',
+        utilsFormatCurrency(a, c, 'en-US'),
+      formatDate: (d: string | Date) => utilsFormatDate(d, 'en-US'),
+      locale: 'en-US',
     }
   }
   return context
