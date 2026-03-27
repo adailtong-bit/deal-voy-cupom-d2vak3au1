@@ -36,7 +36,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Send, Edit2, Trash2 } from 'lucide-react'
+import { Send, Edit2, Trash2, Download } from 'lucide-react'
 import { PartnerInvoice } from '@/lib/types'
 
 export function BillingStagingTab({ franchiseId }: { franchiseId?: string }) {
@@ -63,6 +63,9 @@ export function BillingStagingTab({ franchiseId }: { franchiseId?: string }) {
   const getCompanyName = (id: string) =>
     companies.find((c) => c.id === id)?.name || id
 
+  const getFranchiseName = (id?: string) =>
+    id ? franchises.find((f) => f.id === id)?.name || id : 'Platform'
+
   const handleEdit = (inv: PartnerInvoice) => {
     setEditingInv(inv)
     setEditForm(inv)
@@ -74,6 +77,86 @@ export function BillingStagingTab({ franchiseId }: { franchiseId?: string }) {
       updatePartnerInvoice(editingInv.id, editForm)
     }
     setIsEditOpen(false)
+  }
+
+  const exportPdf = (inv: PartnerInvoice) => {
+    const w = window.open('', '_blank')
+    if (w) {
+      const billerName = inv.billerName || getFranchiseName(inv.franchiseId)
+      const customerName = inv.customerName || getCompanyName(inv.companyId)
+
+      w.document.write(`
+        <html><head><title>Invoice - ${inv.referenceNumber}</title>
+        <style>
+          body { font-family: sans-serif; padding: 40px; line-height: 1.6; color: #333; }
+          .header { display: flex; justify-content: space-between; border-bottom: 2px solid #eee; padding-bottom: 20px; margin-bottom: 20px; }
+          .details { display: flex; justify-content: space-between; margin-bottom: 30px; gap: 20px; }
+          .box { flex: 1; padding: 15px; background: #f9f9f9; border-radius: 8px; border: 1px solid #eee; }
+          table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+          th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+          th { background-color: #f5f5f5; }
+          .total { text-align: right; font-size: 1.2em; margin-top: 20px; font-weight: bold; }
+          h3 { margin-top: 0; color: #555; font-size: 14px; text-transform: uppercase; }
+        </style></head>
+        <body>
+          <div class="header">
+            <h2>INVOICE</h2>
+            <div style="text-align: right;">
+              <strong>Ref:</strong> ${inv.referenceNumber}<br/>
+              <strong>Issue Date:</strong> ${formatDate(inv.issueDate)}<br/>
+              <strong>Due Date:</strong> ${formatDate(inv.dueDate)}<br/>
+              <strong>Status:</strong> ${inv.status.toUpperCase()}
+            </div>
+          </div>
+          
+          <div class="details">
+            <div class="box">
+              <h3>Biller (Cobrador)</h3>
+              <strong>${billerName}</strong><br/>
+              ${inv.billerTaxId ? `Tax ID: ${inv.billerTaxId}<br/>` : ''}
+              ${inv.billerAddress ? `${inv.billerAddress}<br/>` : ''}
+            </div>
+            <div class="box">
+              <h3>Customer (Cobrado)</h3>
+              <strong>${customerName}</strong><br/>
+              ${inv.customerTaxId ? `Tax ID: ${inv.customerTaxId}<br/>` : ''}
+              ${inv.customerAddress ? `${inv.customerAddress}<br/>` : ''}
+            </div>
+          </div>
+
+          <table>
+            <tr>
+              <th>Description</th>
+              <th>Period</th>
+              <th>Amount</th>
+            </tr>
+            <tr>
+              <td>Commissions (${inv.transactionCount} transactions)</td>
+              <td>${formatDate(inv.periodStart)} - ${formatDate(inv.periodEnd)}</td>
+              <td>${formatCurrency(inv.totalCommission)}</td>
+            </tr>
+          </table>
+          
+          <div class="total">
+            Total Due: ${formatCurrency(inv.totalCommission)}
+          </div>
+          
+          ${
+            inv.paymentInstructions
+              ? `
+            <div style="margin-top: 40px; padding: 15px; background: #f0f8ff; border-left: 4px solid #0066cc;">
+              <h4>Payment Instructions</h4>
+              <pre style="font-family: inherit; margin: 0; white-space: pre-wrap;">${inv.paymentInstructions}</pre>
+            </div>
+          `
+              : ''
+          }
+          
+          <script>window.print(); window.close();</script>
+        </body></html>
+      `)
+      w.document.close()
+    }
   }
 
   return (
@@ -171,6 +254,15 @@ export function BillingStagingTab({ franchiseId }: { franchiseId?: string }) {
                         variant="ghost"
                         size="icon"
                         className="shrink-0 h-8 w-8 sm:h-9 sm:w-9 text-slate-500 hover:text-primary hover:bg-primary/10 transition-colors"
+                        onClick={() => exportPdf(inv)}
+                        title={t('common.download', 'Download PDF')}
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="shrink-0 h-8 w-8 sm:h-9 sm:w-9 text-slate-500 hover:text-primary hover:bg-primary/10 transition-colors"
                         onClick={() => handleEdit(inv)}
                         title={t('common.edit', 'Editar')}
                       >
@@ -249,6 +341,89 @@ export function BillingStagingTab({ franchiseId }: { franchiseId?: string }) {
                     </SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+            </div>
+
+            {/* Cobrador e Cobrado */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-slate-50 rounded-lg border border-slate-200">
+              <div className="space-y-4">
+                <h4 className="font-semibold text-slate-700 border-b pb-2">
+                  {t('franchisee.billing.biller_info', 'Dados do Cobrador')}
+                </h4>
+                <div className="space-y-2">
+                  <Label>
+                    {t('franchisee.billing.name', 'Nome/Razão Social')}
+                  </Label>
+                  <Input
+                    value={editForm.billerName || ''}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, billerName: e.target.value })
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>{t('franchisee.billing.tax_id', 'CNPJ/CPF')}</Label>
+                  <Input
+                    value={editForm.billerTaxId || ''}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, billerTaxId: e.target.value })
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>{t('franchisee.billing.address', 'Endereço')}</Label>
+                  <Input
+                    value={editForm.billerAddress || ''}
+                    onChange={(e) =>
+                      setEditForm({
+                        ...editForm,
+                        billerAddress: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h4 className="font-semibold text-slate-700 border-b pb-2">
+                  {t('franchisee.billing.customer_info', 'Dados do Cobrado')}
+                </h4>
+                <div className="space-y-2">
+                  <Label>
+                    {t('franchisee.billing.name', 'Nome/Razão Social')}
+                  </Label>
+                  <Input
+                    value={editForm.customerName || ''}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, customerName: e.target.value })
+                    }
+                    placeholder={getCompanyName(editForm.companyId || '')}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>{t('franchisee.billing.tax_id', 'CNPJ/CPF')}</Label>
+                  <Input
+                    value={editForm.customerTaxId || ''}
+                    onChange={(e) =>
+                      setEditForm({
+                        ...editForm,
+                        customerTaxId: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>{t('franchisee.billing.address', 'Endereço')}</Label>
+                  <Input
+                    value={editForm.customerAddress || ''}
+                    onChange={(e) =>
+                      setEditForm({
+                        ...editForm,
+                        customerAddress: e.target.value,
+                      })
+                    }
+                  />
+                </div>
               </div>
             </div>
 

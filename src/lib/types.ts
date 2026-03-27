@@ -834,6 +834,12 @@ export interface PartnerInvoice {
   collectorId?: string
   description?: string
   paymentInstructions?: string
+  billerName?: string
+  billerTaxId?: string
+  billerAddress?: string
+  customerName?: string
+  customerTaxId?: string
+  customerAddress?: string
 }
 
 export interface WebhookLog {

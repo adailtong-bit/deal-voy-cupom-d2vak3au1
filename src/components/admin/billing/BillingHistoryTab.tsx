@@ -54,9 +54,92 @@ export function BillingHistoryTab({ franchiseId }: { franchiseId?: string }) {
   const getCompanyName = (id: string) =>
     companies.find((c) => c.id === id)?.name || id
 
+  const getFranchiseName = (id?: string) =>
+    id ? franchises.find((f) => f.id === id)?.name || id : 'Platform'
+
   const handleView = (inv: PartnerInvoice) => {
     setViewingInv(inv)
     setIsViewOpen(true)
+  }
+
+  const exportPdf = (inv: PartnerInvoice) => {
+    const w = window.open('', '_blank')
+    if (w) {
+      const billerName = inv.billerName || getFranchiseName(inv.franchiseId)
+      const customerName = inv.customerName || getCompanyName(inv.companyId)
+
+      w.document.write(`
+        <html><head><title>Invoice - ${inv.referenceNumber}</title>
+        <style>
+          body { font-family: sans-serif; padding: 40px; line-height: 1.6; color: #333; }
+          .header { display: flex; justify-content: space-between; border-bottom: 2px solid #eee; padding-bottom: 20px; margin-bottom: 20px; }
+          .details { display: flex; justify-content: space-between; margin-bottom: 30px; gap: 20px; }
+          .box { flex: 1; padding: 15px; background: #f9f9f9; border-radius: 8px; border: 1px solid #eee; }
+          table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+          th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+          th { background-color: #f5f5f5; }
+          .total { text-align: right; font-size: 1.2em; margin-top: 20px; font-weight: bold; }
+          h3 { margin-top: 0; color: #555; font-size: 14px; text-transform: uppercase; }
+        </style></head>
+        <body>
+          <div class="header">
+            <h2>INVOICE</h2>
+            <div style="text-align: right;">
+              <strong>Ref:</strong> ${inv.referenceNumber}<br/>
+              <strong>Issue Date:</strong> ${formatDate(inv.issueDate)}<br/>
+              <strong>Due Date:</strong> ${formatDate(inv.dueDate)}<br/>
+              <strong>Status:</strong> ${inv.status.toUpperCase()}
+            </div>
+          </div>
+          
+          <div class="details">
+            <div class="box">
+              <h3>Biller (Cobrador)</h3>
+              <strong>${billerName}</strong><br/>
+              ${inv.billerTaxId ? `Tax ID: ${inv.billerTaxId}<br/>` : ''}
+              ${inv.billerAddress ? `${inv.billerAddress}<br/>` : ''}
+            </div>
+            <div class="box">
+              <h3>Customer (Cobrado)</h3>
+              <strong>${customerName}</strong><br/>
+              ${inv.customerTaxId ? `Tax ID: ${inv.customerTaxId}<br/>` : ''}
+              ${inv.customerAddress ? `${inv.customerAddress}<br/>` : ''}
+            </div>
+          </div>
+
+          <table>
+            <tr>
+              <th>Description</th>
+              <th>Period</th>
+              <th>Amount</th>
+            </tr>
+            <tr>
+              <td>Commissions (${inv.transactionCount} transactions)</td>
+              <td>${formatDate(inv.periodStart)} - ${formatDate(inv.periodEnd)}</td>
+              <td>${formatCurrency(inv.totalCommission)}</td>
+            </tr>
+          </table>
+          
+          <div class="total">
+            Total Due: ${formatCurrency(inv.totalCommission)}
+          </div>
+          
+          ${
+            inv.paymentInstructions
+              ? `
+            <div style="margin-top: 40px; padding: 15px; background: #f0f8ff; border-left: 4px solid #0066cc;">
+              <h4>Payment Instructions</h4>
+              <pre style="font-family: inherit; margin: 0; white-space: pre-wrap;">${inv.paymentInstructions}</pre>
+            </div>
+          `
+              : ''
+          }
+          
+          <script>window.print(); window.close();</script>
+        </body></html>
+      `)
+      w.document.close()
+    }
   }
 
   return (
@@ -171,6 +254,7 @@ export function BillingHistoryTab({ franchiseId }: { franchiseId?: string }) {
                         variant="ghost"
                         size="icon"
                         className="shrink-0 h-8 w-8 sm:h-9 sm:w-9 text-slate-500 hover:text-primary hover:bg-primary/10 transition-colors"
+                        onClick={() => exportPdf(inv)}
                         title={t('common.download', 'Download PDF')}
                       >
                         <Download className="h-4 w-4" />
@@ -223,31 +307,61 @@ export function BillingHistoryTab({ franchiseId }: { franchiseId?: string }) {
           </DialogHeader>
           {viewingInv && (
             <div className="grid gap-6 py-4">
-              <div className="flex justify-between items-center bg-slate-50 p-4 rounded-lg border border-slate-100">
-                <div>
-                  <p className="text-sm text-slate-500">
-                    {t('franchisee.billing.partner', 'Parceiro')}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                  <h4 className="text-xs font-bold text-slate-500 mb-2 uppercase tracking-wider">
+                    {t('franchisee.billing.biller', 'Cobrador')}
+                  </h4>
+                  <p className="text-sm font-bold text-slate-800">
+                    {viewingInv.billerName ||
+                      getFranchiseName(viewingInv.franchiseId)}
                   </p>
-                  <p className="font-bold text-lg">
-                    {getCompanyName(viewingInv.companyId)}
-                  </p>
+                  {viewingInv.billerTaxId && (
+                    <p className="text-sm text-slate-600 mt-1">
+                      Doc: {viewingInv.billerTaxId}
+                    </p>
+                  )}
+                  {viewingInv.billerAddress && (
+                    <p className="text-sm text-slate-600 mt-1">
+                      {viewingInv.billerAddress}
+                    </p>
+                  )}
                 </div>
-                <div className="text-right">
-                  <Badge
-                    className={cn(
-                      'capitalize',
-                      viewingInv.status === 'paid'
-                        ? 'bg-emerald-500 text-white'
-                        : viewingInv.status === 'overdue'
-                          ? 'bg-destructive text-white'
-                          : 'bg-slate-500 text-white',
-                    )}
-                  >
-                    {t(
-                      `franchisee.billing.${viewingInv.status}`,
-                      viewingInv.status,
-                    )}
-                  </Badge>
+                <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 relative">
+                  <div className="absolute top-4 right-4">
+                    <Badge
+                      className={cn(
+                        'capitalize',
+                        viewingInv.status === 'paid'
+                          ? 'bg-emerald-500 text-white'
+                          : viewingInv.status === 'overdue'
+                            ? 'bg-destructive text-white'
+                            : 'bg-slate-500 text-white',
+                      )}
+                    >
+                      {t(
+                        `franchisee.billing.${viewingInv.status}`,
+                        viewingInv.status,
+                      )}
+                    </Badge>
+                  </div>
+                  <h4 className="text-xs font-bold text-slate-500 mb-2 uppercase tracking-wider">
+                    {t('franchisee.billing.customer', 'Cobrado')}
+                  </h4>
+                  <p className="text-sm font-bold text-slate-800 pr-16">
+                    {viewingInv.customerName ||
+                      getCompanyName(viewingInv.companyId)}
+                  </p>
+                  {viewingInv.customerTaxId && (
+                    <p className="text-sm text-slate-600 mt-1">
+                      Doc: {viewingInv.customerTaxId}
+                    </p>
+                  )}
+                  {viewingInv.customerAddress && (
+                    <p className="text-sm text-slate-600 mt-1">
+                      {viewingInv.customerAddress}
+                    </p>
+                  )}
                 </div>
               </div>
 
