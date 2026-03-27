@@ -121,7 +121,7 @@ export function DesktopHeader() {
               value={searchQuery}
               onChange={handleSearchChange}
               placeholder={t('nav.search', 'Buscar...')}
-              className="h-8 w-40 md:w-48 lg:w-56 rounded-full border border-input bg-slate-50/50 pl-8 pr-4 text-xs transition-all focus:w-64 focus:bg-white focus:ring-2 focus:ring-primary/20 outline-none placeholder:text-muted-foreground/70"
+              className="h-8 w-32 md:w-40 lg:w-48 rounded-full border border-input bg-slate-50/50 pl-8 pr-4 text-xs transition-all focus:w-56 lg:focus:w-64 focus:bg-white focus:ring-2 focus:ring-primary/20 outline-none placeholder:text-muted-foreground/70"
             />
           </div>
           <LanguageSelector />

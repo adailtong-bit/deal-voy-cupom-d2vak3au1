@@ -143,7 +143,7 @@ export function StaffTab({ parentType = 'global', parentId }: StaffTabProps) {
   }
 
   return (
-    <div className="space-y-4 animate-fade-in-up">
+    <div className="space-y-4 animate-fade-in-up min-w-0 w-full">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-card p-4 rounded-lg border gap-4">
         <div>
           <h3 className="text-lg font-bold">
@@ -168,7 +168,7 @@ export function StaffTab({ parentType = 'global', parentId }: StaffTabProps) {
         </div>
       </div>
 
-      <div className="rounded-md border bg-card overflow-hidden">
+      <div className="rounded-md border bg-card overflow-hidden min-w-0 w-full">
         <Table>
           <TableHeader>
             <TableRow>

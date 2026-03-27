@@ -88,8 +88,8 @@ export function AdminCategoriesTab({ franchiseId }: { franchiseId?: string }) {
   const manageableCategories = CATEGORIES.filter((c) => c.id !== 'all')
 
   return (
-    <div className="space-y-6 animate-fade-in-up">
-      <Card>
+    <div className="space-y-6 animate-fade-in-up min-w-0 w-full">
+      <Card className="min-w-0 overflow-hidden">
         <CardHeader>
           <CardTitle>
             {t('admin.categoryManagement', 'Gerenciamento de Categorias')}
@@ -108,7 +108,7 @@ export function AdminCategoriesTab({ franchiseId }: { franchiseId?: string }) {
             </strong>
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0 sm:p-6 sm:pt-0 overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>

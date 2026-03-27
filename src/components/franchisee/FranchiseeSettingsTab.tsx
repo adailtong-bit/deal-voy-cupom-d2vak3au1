@@ -30,7 +30,7 @@ export function FranchiseeSettingsTab({
   if (!myFranchise) return null
 
   return (
-    <div className="space-y-6 animate-fade-in-up">
+    <div className="space-y-6 animate-fade-in-up min-w-0 w-full">
       <div>
         <h2 className="text-2xl font-bold text-slate-800">
           {t('franchisee.settings.title', 'Configurações')}
@@ -42,7 +42,7 @@ export function FranchiseeSettingsTab({
           )}
         </p>
       </div>
-      <Card className="max-w-2xl shadow-sm border-slate-200">
+      <Card className="max-w-2xl shadow-sm border-slate-200 min-w-0">
         <CardHeader className="bg-slate-50 border-b">
           <CardTitle className="text-lg">
             {t('franchisee.settings.contract_info', 'Informações Contratuais')}

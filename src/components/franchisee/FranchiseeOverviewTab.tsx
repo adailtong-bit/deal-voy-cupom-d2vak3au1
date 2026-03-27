@@ -80,7 +80,7 @@ export function FranchiseeOverviewTab({
   if (!myFranchise) return null
 
   return (
-    <div className="space-y-6 animate-fade-in-up">
+    <div className="space-y-6 animate-fade-in-up min-w-0 w-full">
       <div>
         <h2 className="text-2xl font-bold text-slate-800">
           {t('franchisee.overview.title', 'Visão Geral')}

@@ -18,7 +18,7 @@ export function TestingSandboxTab({ franchiseId }: { franchiseId?: string }) {
   const { formatNumber } = useRegionFormatting(franchise?.region)
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in min-w-0 w-full">
       <div>
         <h2 className="text-2xl font-bold">
           {t('franchisee.sandbox.title', 'Sandbox de Testes')}
@@ -33,7 +33,7 @@ export function TestingSandboxTab({ franchiseId }: { franchiseId?: string }) {
 
       <div className="grid gap-6 md:grid-cols-3">
         {/* Individual Profile */}
-        <Card>
+        <Card className="min-w-0">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <User className="h-5 w-5 text-primary" />
@@ -46,7 +46,7 @@ export function TestingSandboxTab({ franchiseId }: { franchiseId?: string }) {
               )}
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4 text-sm">
+          <CardContent className="space-y-4 text-sm overflow-x-auto">
             <div className="grid grid-cols-2 gap-2 border-b pb-2">
               <span className="text-muted-foreground">
                 {t('franchisee.sandbox.name', 'Nome')}
@@ -70,7 +70,10 @@ export function TestingSandboxTab({ franchiseId }: { franchiseId?: string }) {
                 <MapPin className="h-3 w-3" />{' '}
                 {t('franchisee.sandbox.location', 'Localização')}
               </span>
-              <span className="font-medium text-right">
+              <span
+                className="font-medium text-right truncate"
+                title="Brazil > São Paulo > São Paulo > CEP: 01001-000"
+              >
                 Brazil &gt; São Paulo &gt; São Paulo &gt; CEP: 01001-000
               </span>
             </div>
@@ -91,7 +94,7 @@ export function TestingSandboxTab({ franchiseId }: { franchiseId?: string }) {
         </Card>
 
         {/* Company Profile */}
-        <Card>
+        <Card className="min-w-0">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Building className="h-5 w-5 text-blue-500" />
@@ -104,7 +107,7 @@ export function TestingSandboxTab({ franchiseId }: { franchiseId?: string }) {
               )}
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4 text-sm">
+          <CardContent className="space-y-4 text-sm overflow-x-auto">
             <div className="grid grid-cols-2 gap-2 border-b pb-2">
               <span className="text-muted-foreground">
                 {t('franchisee.sandbox.name', 'Nome')}
@@ -126,7 +129,10 @@ export function TestingSandboxTab({ franchiseId }: { franchiseId?: string }) {
                 <MapPin className="h-3 w-3" />{' '}
                 {t('franchisee.sandbox.location', 'Localização')}
               </span>
-              <span className="font-medium text-right">
+              <span
+                className="font-medium text-right truncate"
+                title="Portugal > Lisboa > Lisboa > ZIP: 1000-001"
+              >
                 Portugal &gt; Lisboa &gt; Lisboa &gt; ZIP: 1000-001
               </span>
             </div>
@@ -142,7 +148,7 @@ export function TestingSandboxTab({ franchiseId }: { franchiseId?: string }) {
         </Card>
 
         {/* Franchise Profile */}
-        <Card>
+        <Card className="min-w-0">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Store className="h-5 w-5 text-orange-500" />
@@ -155,12 +161,15 @@ export function TestingSandboxTab({ franchiseId }: { franchiseId?: string }) {
               )}
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4 text-sm">
+          <CardContent className="space-y-4 text-sm overflow-x-auto">
             <div className="grid grid-cols-2 gap-2 border-b pb-2">
               <span className="text-muted-foreground">
                 {t('franchisee.sandbox.name', 'Nome')}
               </span>
-              <span className="font-medium text-right">
+              <span
+                className="font-medium text-right truncate"
+                title="Burger Hub - Unidade Centro"
+              >
                 Burger Hub - Unidade Centro
               </span>
             </div>
@@ -168,7 +177,12 @@ export function TestingSandboxTab({ franchiseId }: { franchiseId?: string }) {
               <span className="text-muted-foreground">
                 {t('franchisee.sandbox.parent_brand', 'Marca Principal')}
               </span>
-              <span className="font-medium text-right">Burger Hub Global</span>
+              <span
+                className="font-medium text-right truncate"
+                title="Burger Hub Global"
+              >
+                Burger Hub Global
+              </span>
             </div>
             <div className="grid grid-cols-2 gap-2 border-b pb-2">
               <span className="text-muted-foreground">
@@ -181,7 +195,10 @@ export function TestingSandboxTab({ franchiseId }: { franchiseId?: string }) {
                 <MapPin className="h-3 w-3" />{' '}
                 {t('franchisee.sandbox.location', 'Localização')}
               </span>
-              <span className="font-medium text-right">
+              <span
+                className="font-medium text-right truncate"
+                title="Brazil > Rio de Janeiro > Rio de Janeiro > CEP: 20040-002"
+              >
                 Brazil &gt; Rio de Janeiro &gt; Rio de Janeiro &gt; CEP:
                 20040-002
               </span>

@@ -136,9 +136,9 @@ export function FranchiseeAdsTab({ franchiseId }: { franchiseId?: string }) {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in-up">
+    <div className="space-y-6 animate-fade-in-up min-w-0 w-full">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card className="border-l-4 border-l-blue-500">
+        <Card className="border-l-4 border-l-blue-500 min-w-0">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="p-3 bg-blue-100 rounded-full text-blue-600">
@@ -156,7 +156,7 @@ export function FranchiseeAdsTab({ franchiseId }: { franchiseId?: string }) {
             </h3>
           </CardContent>
         </Card>
-        <Card className="border-l-4 border-l-orange-500">
+        <Card className="border-l-4 border-l-orange-500 min-w-0">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="p-3 bg-orange-100 rounded-full text-orange-600">
@@ -176,7 +176,7 @@ export function FranchiseeAdsTab({ franchiseId }: { franchiseId?: string }) {
         </Card>
       </div>
 
-      <Card>
+      <Card className="min-w-0 overflow-hidden">
         <CardHeader className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
           <div>
             <CardTitle>
@@ -194,7 +194,7 @@ export function FranchiseeAdsTab({ franchiseId }: { franchiseId?: string }) {
             {t('franchisee.ads.create', 'Criar Anúncio')}
           </Button>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0 sm:p-6 sm:pt-0 overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>

@@ -82,7 +82,7 @@ export function FranchiseeLeadsTab({ franchiseId }: { franchiseId: string }) {
   }, [franchiseLogs, users, companies, t, searchQuery])
 
   return (
-    <div className="space-y-6 animate-fade-in-up">
+    <div className="space-y-6 animate-fade-in-up min-w-0 w-full">
       <div>
         <h2 className="text-2xl font-bold text-slate-800">
           {t('franchisee.leads.title', 'Leads Regionais')}
@@ -94,7 +94,7 @@ export function FranchiseeLeadsTab({ franchiseId }: { franchiseId: string }) {
           )}
         </p>
       </div>
-      <Card className="shadow-sm">
+      <Card className="shadow-sm min-w-0 overflow-hidden">
         <CardContent className="p-0">
           <Table>
             <TableHeader className="bg-slate-50">

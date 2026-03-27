@@ -29,8 +29,8 @@ export function PromotionCrawler({ franchiseId }: { franchiseId?: string }) {
   }).length
 
   return (
-    <div className="space-y-6">
-      <Card>
+    <div className="space-y-6 min-w-0 w-full">
+      <Card className="min-w-0 overflow-hidden">
         <CardHeader>
           <CardTitle>
             {t('franchisee.crawler.title', 'Gerenciamento de Crawler')}
@@ -42,9 +42,9 @@ export function PromotionCrawler({ franchiseId }: { franchiseId?: string }) {
             )}
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="sources">
-            <TabsList className="mb-6 w-full justify-start h-auto p-1 bg-slate-100">
+        <CardContent className="p-4 sm:p-6">
+          <Tabs defaultValue="sources" className="min-w-0">
+            <TabsList className="mb-6 w-full justify-start h-auto p-1 bg-slate-100 flex-wrap">
               <TabsTrigger value="sources" className="py-2 px-4">
                 <Globe className="h-4 w-4 mr-2" />{' '}
                 {t('franchisee.crawler.sources', 'Fontes de Dados')}
@@ -58,11 +58,17 @@ export function PromotionCrawler({ franchiseId }: { franchiseId?: string }) {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="sources" className="animate-in fade-in-50">
+            <TabsContent
+              value="sources"
+              className="animate-in fade-in-50 min-w-0"
+            >
               <CrawlerSourcesTab />
             </TabsContent>
 
-            <TabsContent value="promotions" className="animate-in fade-in-50">
+            <TabsContent
+              value="promotions"
+              className="animate-in fade-in-50 min-w-0"
+            >
               <CrawlerPromotionsTab />
             </TabsContent>
           </Tabs>

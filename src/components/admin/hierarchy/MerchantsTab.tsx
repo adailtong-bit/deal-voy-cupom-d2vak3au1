@@ -134,7 +134,7 @@ export function MerchantsTab({ franchiseId }: { franchiseId?: string }) {
   }
 
   return (
-    <div className="space-y-4 animate-fade-in-up">
+    <div className="space-y-4 animate-fade-in-up min-w-0 w-full">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-5 rounded-xl border border-slate-200 shadow-sm gap-4">
         <div className="flex items-center gap-3">
           <div className="p-2.5 bg-primary/10 rounded-lg text-primary hidden sm:block">
@@ -181,7 +181,7 @@ export function MerchantsTab({ franchiseId }: { franchiseId?: string }) {
         </div>
       </div>
 
-      <div className="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+      <div className="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm min-w-0 w-full">
         <Table>
           <TableHeader className="bg-slate-50">
             <TableRow>

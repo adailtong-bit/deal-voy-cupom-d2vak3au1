@@ -100,9 +100,9 @@ export function FranchiseeCurrentAccountTab({
   const balance = inflows - outflows
 
   return (
-    <div className="space-y-6 animate-fade-in-up">
+    <div className="space-y-6 animate-fade-in-up min-w-0 w-full">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
+        <Card className="min-w-0">
           <CardContent className="p-6">
             <div className="flex items-center gap-3 mb-2">
               <div className="p-2 bg-slate-100 rounded-full text-slate-600">
@@ -115,7 +115,7 @@ export function FranchiseeCurrentAccountTab({
             <h3 className="text-2xl font-bold">{formatCurrency(balance)}</h3>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="min-w-0">
           <CardContent className="p-6">
             <div className="flex items-center gap-3 mb-2">
               <div className="p-2 bg-green-100 rounded-full text-green-600">
@@ -130,7 +130,7 @@ export function FranchiseeCurrentAccountTab({
             </h3>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="min-w-0">
           <CardContent className="p-6">
             <div className="flex items-center gap-3 mb-2">
               <div className="p-2 bg-red-100 rounded-full text-red-600">
@@ -147,11 +147,11 @@ export function FranchiseeCurrentAccountTab({
         </Card>
       </div>
 
-      <Card>
+      <Card className="min-w-0 overflow-hidden">
         <CardHeader>
           <CardTitle>{t('franchisee.current_account.statement')}</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0 sm:p-6 sm:pt-0 overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>

@@ -114,7 +114,7 @@ export function PartnerPoliciesTab({ franchiseId }: { franchiseId?: string }) {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in-up">
+    <div className="space-y-6 animate-fade-in-up min-w-0 w-full">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold tracking-tight">
           {t('admin.policies')}
@@ -125,7 +125,7 @@ export function PartnerPoliciesTab({ franchiseId }: { franchiseId?: string }) {
         </Button>
       </div>
 
-      <div className="rounded-md border bg-card">
+      <div className="rounded-md border bg-card overflow-hidden min-w-0 w-full">
         <Table>
           <TableHeader>
             <TableRow>

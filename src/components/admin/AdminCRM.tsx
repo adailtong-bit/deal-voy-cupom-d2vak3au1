@@ -39,48 +39,48 @@ export function AdminCRM({ franchiseId }: { franchiseId?: string }) {
   }).length
 
   return (
-    <div className="space-y-6 animate-fade-in-up">
+    <div className="space-y-6 animate-fade-in-up min-w-0 w-full">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="border-l-4 border-l-blue-500">
+        <Card className="border-l-4 border-l-blue-500 min-w-0">
           <CardContent className="p-4 flex items-center gap-4">
             <div className="p-3 bg-blue-100 rounded-full text-blue-600">
               <Users className="h-6 w-6" />
             </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-muted-foreground truncate">
                 {t('franchisee.crm.total_users', 'Total de Usuários')}
               </p>
-              <h3 className="text-2xl font-bold">
+              <h3 className="text-2xl font-bold truncate">
                 {formatNumber(displayUsers.length)}
               </h3>
             </div>
           </CardContent>
         </Card>
-        <Card className="border-l-4 border-l-green-500">
+        <Card className="border-l-4 border-l-green-500 min-w-0">
           <CardContent className="p-4 flex items-center gap-4">
             <div className="p-3 bg-green-100 rounded-full text-green-600">
               <BarChart3 className="h-6 w-6" />
             </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-muted-foreground truncate">
                 {t('franchisee.crm.active_users', 'Usuários Ativos')}
               </p>
-              <h3 className="text-2xl font-bold">
+              <h3 className="text-2xl font-bold truncate">
                 {formatNumber(activeUsersCount)}
               </h3>
             </div>
           </CardContent>
         </Card>
-        <Card className="border-l-4 border-l-purple-500">
+        <Card className="border-l-4 border-l-purple-500 min-w-0">
           <CardContent className="p-4 flex items-center gap-4">
             <div className="p-3 bg-purple-100 rounded-full text-purple-600">
               <Target className="h-6 w-6" />
             </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-muted-foreground truncate">
                 {t('franchisee.crm.total_redemptions', 'Total de Resgates')}
               </p>
-              <h3 className="text-2xl font-bold">
+              <h3 className="text-2xl font-bold truncate">
                 {formatNumber(totalRedemptions)}
               </h3>
             </div>
@@ -88,8 +88,8 @@ export function AdminCRM({ franchiseId }: { franchiseId?: string }) {
         </Card>
       </div>
 
-      <Tabs defaultValue="profiles" className="w-full">
-        <TabsList className="mb-4 flex flex-wrap h-auto p-1 bg-slate-100">
+      <Tabs defaultValue="profiles" className="w-full min-w-0">
+        <TabsList className="mb-4 flex flex-wrap h-auto p-1 bg-slate-100 min-w-0">
           <TabsTrigger value="profiles" className="py-2.5 px-4 font-semibold">
             <Users className="h-4 w-4 mr-2" />{' '}
             {t('franchisee.crm.tabs.profiles', 'Perfis & Leads')}
@@ -104,15 +104,15 @@ export function AdminCRM({ franchiseId }: { franchiseId?: string }) {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="profiles" className="mt-0">
+        <TabsContent value="profiles" className="mt-0 min-w-0">
           <LeadsProfileTab franchiseId={franchiseId} />
         </TabsContent>
 
-        <TabsContent value="groups" className="mt-0">
+        <TabsContent value="groups" className="mt-0 min-w-0">
           <TargetGroupsTab franchiseId={franchiseId} />
         </TabsContent>
 
-        <TabsContent value="campaigns" className="mt-0">
+        <TabsContent value="campaigns" className="mt-0 min-w-0">
           <CommunicationCampaignsTab franchiseId={franchiseId} />
         </TabsContent>
       </Tabs>

@@ -126,7 +126,7 @@ export function PartnerBillingTab({ franchiseId }: { franchiseId?: string }) {
     .reduce((acc, i) => acc + i.totalCommission, 0)
 
   return (
-    <div className="space-y-6 animate-fade-in-up">
+    <div className="space-y-6 animate-fade-in-up min-w-0 w-full">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold tracking-tight">
           {t('admin.invoices')}
@@ -138,7 +138,7 @@ export function PartnerBillingTab({ franchiseId }: { franchiseId?: string }) {
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <Card>
+        <Card className="min-w-0">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               {t('admin.paid')}
@@ -150,7 +150,7 @@ export function PartnerBillingTab({ franchiseId }: { franchiseId?: string }) {
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="min-w-0">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               {t('admin.sent')}
@@ -162,7 +162,7 @@ export function PartnerBillingTab({ franchiseId }: { franchiseId?: string }) {
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="min-w-0">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               {t('admin.draft')}
@@ -176,7 +176,7 @@ export function PartnerBillingTab({ franchiseId }: { franchiseId?: string }) {
         </Card>
       </div>
 
-      <div className="rounded-md border bg-card overflow-hidden">
+      <div className="rounded-md border bg-card overflow-hidden min-w-0 w-full">
         <Table>
           <TableHeader>
             <TableRow>

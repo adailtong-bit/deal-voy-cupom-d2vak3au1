@@ -60,9 +60,9 @@ export function DataInsightsTab({ franchiseId }: { franchiseId?: string }) {
   const referralPayouts = totalCashbackDistributed * 0.15
 
   return (
-    <div className="space-y-6 animate-fade-in-up">
+    <div className="space-y-6 animate-fade-in-up min-w-0 w-full">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
+        <Card className="min-w-0">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="p-3 bg-green-100 rounded-full text-green-600">
@@ -72,7 +72,7 @@ export function DataInsightsTab({ franchiseId }: { franchiseId?: string }) {
             <p className="text-sm font-medium text-muted-foreground">
               {t('franchisee.insights.total_commissions', 'Comissões Totais')}
             </p>
-            <h3 className="text-2xl font-bold">
+            <h3 className="text-2xl font-bold truncate">
               {formatCurrency(totalCommissions)}
             </h3>
             <p className="text-xs text-green-600 flex items-center gap-1 mt-1">
@@ -81,7 +81,7 @@ export function DataInsightsTab({ franchiseId }: { franchiseId?: string }) {
             </p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="min-w-0">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="p-3 bg-blue-100 rounded-full text-blue-600">
@@ -91,10 +91,10 @@ export function DataInsightsTab({ franchiseId }: { franchiseId?: string }) {
             <p className="text-sm font-medium text-muted-foreground">
               {t('franchisee.insights.active_subs', 'Assinaturas Ativas')}
             </p>
-            <h3 className="text-2xl font-bold">
+            <h3 className="text-2xl font-bold truncate">
               {formatNumber(activeSubscriptions)}
             </h3>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-xs text-muted-foreground mt-1 truncate">
               {t(
                 'franchisee.insights.premium_vip',
                 '{premium} Premium, {vip} VIP',
@@ -104,7 +104,7 @@ export function DataInsightsTab({ franchiseId }: { franchiseId?: string }) {
             </p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="min-w-0">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="p-3 bg-purple-100 rounded-full text-purple-600">
@@ -114,13 +114,15 @@ export function DataInsightsTab({ franchiseId }: { franchiseId?: string }) {
             <p className="text-sm font-medium text-muted-foreground">
               {t('franchisee.insights.ad_revenue', 'Receita de Anúncios')}
             </p>
-            <h3 className="text-2xl font-bold">{formatCurrency(adRevenue)}</h3>
+            <h3 className="text-2xl font-bold truncate">
+              {formatCurrency(adRevenue)}
+            </h3>
             <p className="text-xs text-muted-foreground mt-1">
               {t('franchisee.insights.ad_desc', 'De campanhas internas')}
             </p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="min-w-0">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="p-3 bg-orange-100 rounded-full text-orange-600">
@@ -130,10 +132,10 @@ export function DataInsightsTab({ franchiseId }: { franchiseId?: string }) {
             <p className="text-sm font-medium text-muted-foreground">
               {t('franchisee.insights.referral', 'Pagamentos de Indicação')}
             </p>
-            <h3 className="text-2xl font-bold">
+            <h3 className="text-2xl font-bold truncate">
               {formatCurrency(referralPayouts)}
             </h3>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-xs text-muted-foreground mt-1 truncate">
               {t(
                 'franchisee.insights.referral_desc',
                 'Distribuído aos indicadores',
@@ -143,17 +145,17 @@ export function DataInsightsTab({ franchiseId }: { franchiseId?: string }) {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="h-80 flex flex-col justify-center items-center bg-slate-50 border-dashed">
-          <p className="text-muted-foreground">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 min-w-0">
+        <Card className="h-80 flex flex-col justify-center items-center bg-slate-50 border-dashed min-w-0">
+          <p className="text-muted-foreground text-center px-4">
             {t(
               'franchisee.insights.chart_consumption',
               'Gráfico de Tendências de Consumo (Placeholder)',
             )}
           </p>
         </Card>
-        <Card className="h-80 flex flex-col justify-center items-center bg-slate-50 border-dashed">
-          <p className="text-muted-foreground">
+        <Card className="h-80 flex flex-col justify-center items-center bg-slate-50 border-dashed min-w-0">
+          <p className="text-muted-foreground text-center px-4">
             {t(
               'franchisee.insights.chart_brand',
               'Gráfico de Preferências de Marca (Placeholder)',

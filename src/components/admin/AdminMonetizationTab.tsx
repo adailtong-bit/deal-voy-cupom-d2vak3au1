@@ -62,9 +62,9 @@ export function AdminMonetizationTab({
   }, [])
 
   return (
-    <div className="space-y-6 animate-fade-in-up">
+    <div className="space-y-6 animate-fade-in-up min-w-0 w-full">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
+        <Card className="min-w-0">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               {t('admin.margins')}
@@ -78,7 +78,7 @@ export function AdminMonetizationTab({
             <p className="text-xs text-muted-foreground">+12%</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="min-w-0">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               {t('admin.totalCredits')}
@@ -92,7 +92,7 @@ export function AdminMonetizationTab({
             <p className="text-xs text-muted-foreground">+8%</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="min-w-0">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               {t('admin.volume')}
@@ -106,7 +106,7 @@ export function AdminMonetizationTab({
             <p className="text-xs text-muted-foreground">+24%</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="min-w-0">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               {t('admin.partnerStores')}
@@ -125,7 +125,7 @@ export function AdminMonetizationTab({
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-        <Card className="md:col-span-2 border-slate-200">
+        <Card className="md:col-span-2 border-slate-200 min-w-0">
           <CardHeader className="bg-slate-50/50 border-b">
             <CardTitle className="flex items-center gap-2">
               <Radar className="h-5 w-5 text-primary" />
@@ -156,7 +156,7 @@ export function AdminMonetizationTab({
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="min-w-0">
           <CardHeader>
             <CardTitle>
               {t(
@@ -166,7 +166,7 @@ export function AdminMonetizationTab({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-[300px] w-full">
+            <div className="h-[300px] w-full min-w-0">
               <ChartContainer
                 config={{
                   margin: {
@@ -204,7 +204,7 @@ export function AdminMonetizationTab({
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="min-w-0">
           <CardHeader>
             <CardTitle>
               {t(
@@ -214,7 +214,7 @@ export function AdminMonetizationTab({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-[300px] w-full">
+            <div className="h-[300px] w-full min-w-0">
               <ChartContainer
                 config={{
                   revenue: {

@@ -174,7 +174,7 @@ export function AdminSeasonalTab({ franchiseId }: { franchiseId?: string }) {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in-up">
+    <div className="space-y-6 animate-fade-in-up min-w-0 w-full">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold tracking-tight">
           {t('admin.seasonal')}
@@ -186,7 +186,7 @@ export function AdminSeasonalTab({ franchiseId }: { franchiseId?: string }) {
       </div>
 
       {chartData.length > 0 && (
-        <Card>
+        <Card className="min-w-0">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
               <MousePointerClick className="h-5 w-5 text-primary" />
@@ -194,7 +194,7 @@ export function AdminSeasonalTab({ franchiseId }: { franchiseId?: string }) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-[200px] w-full">
+            <div className="h-[200px] w-full min-w-0">
               <ChartContainer
                 config={{
                   clicks: {
@@ -228,7 +228,7 @@ export function AdminSeasonalTab({ franchiseId }: { franchiseId?: string }) {
         </Card>
       )}
 
-      <div className="rounded-md border bg-card">
+      <div className="rounded-md border bg-card overflow-hidden min-w-0 w-full">
         <Table>
           <TableHeader>
             <TableRow>

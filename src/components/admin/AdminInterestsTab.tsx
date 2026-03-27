@@ -152,8 +152,8 @@ export function AdminInterestsTab({ franchiseId }: { franchiseId?: string }) {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in-up">
-      <Card>
+    <div className="space-y-6 animate-fade-in-up min-w-0 w-full">
+      <Card className="min-w-0 overflow-hidden">
         <CardHeader>
           <CardTitle>
             {t('franchisee.interests.title', 'Gerenciar Interesses')}
@@ -165,7 +165,7 @@ export function AdminInterestsTab({ franchiseId }: { franchiseId?: string }) {
             )}
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 sm:p-6 overflow-x-auto">
           <div className="flex flex-col sm:flex-row gap-4 mb-6">
             <Input
               placeholder={t(
