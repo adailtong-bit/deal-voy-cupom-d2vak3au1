@@ -94,8 +94,8 @@ export default function FranchiseeDashboard() {
       )}
 
       {/* Main Content */}
-      <main className="flex-1 h-full overflow-auto bg-slate-50/50 custom-scrollbar relative">
-        <div className="p-4 sm:p-5 lg:p-6 pb-20 md:pb-8 min-w-full w-fit mx-auto flex flex-col">
+      <main className="flex-1 h-full overflow-y-auto bg-slate-50/50 custom-scrollbar relative">
+        <div className="p-4 sm:p-5 lg:p-6 pb-20 md:pb-8 w-full max-w-full mx-auto flex flex-col">
           {activeTab === 'overview' && (
             <FranchiseeOverviewTab franchiseId={myFranchise.id} />
           )}
