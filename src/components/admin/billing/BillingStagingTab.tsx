@@ -1,5 +1,6 @@
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
+import { useLanguage } from '@/stores/LanguageContext'
+import { useCouponStore } from '@/stores/CouponContext'
+import { useRegionFormatting } from '@/hooks/useRegionFormatting'
 import {
   Card,
   CardContent,
@@ -15,248 +16,153 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog'
-import { Label } from '@/components/ui/label'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { useCouponStore } from '@/stores/CouponContext'
-import { useRegionFormatting } from '@/hooks/useRegionFormatting'
-import { PartnerInvoice, Franchise, Company } from '@/lib/types'
-import { Send, Trash2, Edit2, CalendarIcon } from 'lucide-react'
-import { toast } from 'sonner'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
-import { Calendar } from '@/components/ui/calendar'
-import { format } from 'date-fns'
-import { cn } from '@/lib/utils'
-
-function InvoiceRow({
-  inv,
-  franchises,
-  companies,
-  onEdit,
-  onSend,
-  onCancel,
-}: any) {
-  const target =
-    inv.targetType === 'franchise'
-      ? franchises.find((f: any) => f.id === inv.franchiseId)
-      : companies.find((c: any) => c.id === inv.companyId)
-
-  const targetName = target?.name || inv.id
-  const targetRegion = target?.region || target?.addressCountry
-
-  const { formatCurrency, formatShortDate } = useRegionFormatting(targetRegion)
-
-  return (
-    <TableRow>
-      <TableCell className="font-medium text-xs">
-        {inv.referenceNumber}
-      </TableCell>
-      <TableCell className="max-w-[200px] truncate">{targetName}</TableCell>
-      <TableCell className="text-xs whitespace-nowrap">
-        {formatShortDate(inv.periodStart)} - {formatShortDate(inv.periodEnd)}
-      </TableCell>
-      <TableCell>{inv.transactionCount}</TableCell>
-      <TableCell className="text-right font-bold whitespace-nowrap">
-        {formatCurrency(inv.totalCommission)}
-      </TableCell>
-      <TableCell className="text-right">
-        <div className="flex flex-wrap items-center justify-end gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onEdit(inv)}
-            className="h-8 w-8 text-slate-500 hover:text-primary hover:bg-primary/5 shrink-0"
-            title="Editar"
-          >
-            <Edit2 className="h-4 w-4" />
-          </Button>
-          <Button
-            onClick={() => onSend(inv.id)}
-            size="sm"
-            className="h-8 shrink-0 whitespace-nowrap"
-          >
-            <Send className="w-3 h-3 sm:mr-1.5" />
-            <span className="hidden sm:inline">Enviar</span>
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onCancel(inv.id)}
-            className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 shrink-0"
-            title="Cancelar"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
-      </TableCell>
-    </TableRow>
-  )
-}
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Send, Edit2, Trash2 } from 'lucide-react'
 
 export function BillingStagingTab({ franchiseId }: { franchiseId?: string }) {
-  const {
-    partnerInvoices,
-    companies,
-    franchises,
-    updatePartnerInvoiceStatus,
-    updatePartnerInvoice,
-    user,
-  } = useCouponStore()
-  const myFranchise = franchises.find((f) => f.id === franchiseId)
-  const { formatShortDate } = useRegionFormatting(myFranchise?.region)
+  const { t } = useLanguage()
+  const { partnerInvoices, companies, franchises, updatePartnerInvoiceStatus } =
+    useCouponStore()
 
-  const isSuperAdmin = user?.role === 'super_admin'
+  const franchise = franchises.find((f) => f.id === franchiseId)
+  const { formatCurrency, formatDate } = useRegionFormatting(franchise?.region)
 
-  const companyIds = franchiseId
-    ? companies.filter((c) => c.franchiseId === franchiseId).map((c) => c.id)
-    : companies.map((c) => c.id)
+  const stagingInvoices = partnerInvoices
+    .filter((i) => i.status === 'draft' || i.status === 'pending')
+    .filter((i) => (franchiseId ? i.franchiseId === franchiseId : true))
 
-  const stagingInvoices = partnerInvoices.filter((i) => {
-    if (i.status !== 'draft') return false
-    if (franchiseId) {
-      return i.targetType === 'merchant' && companyIds.includes(i.companyId)
-    }
-    return true
-  })
-
-  const handleSend = (id: string) => {
-    updatePartnerInvoiceStatus(id, 'pending')
-    toast.success('Fatura enviada e movida para o Histórico.')
-  }
-
-  const handleCancel = (id: string) => {
-    updatePartnerInvoiceStatus(id, 'canceled')
-    toast.success('Fatura cancelada.')
-  }
-
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [editingInvoice, setEditingInvoice] = useState<PartnerInvoice | null>(
-    null,
-  )
-  const [editData, setEditData] = useState<Partial<PartnerInvoice>>({})
-
-  const openEdit = (inv: PartnerInvoice) => {
-    setEditingInvoice(inv)
-    setEditData({
-      ...inv,
-      collectorId: inv.collectorId || (franchiseId ? franchiseId : 'app_owner'),
-      description:
-        inv.description ||
-        `Faturamento do período ${formatShortDate(inv.periodStart)} a ${formatShortDate(inv.periodEnd)}`,
-      paymentInstructions: inv.paymentInstructions || '',
-      dueDate: inv.dueDate || new Date().toISOString(),
-    })
-    setIsEditDialogOpen(true)
-  }
-
-  const saveEdit = () => {
-    if (editingInvoice) {
-      updatePartnerInvoice(editingInvoice.id, editData)
-      setIsEditDialogOpen(false)
-    }
-  }
-
-  const availableCollectors = isSuperAdmin
-    ? [{ id: 'app_owner', name: 'App Owner (Global)' }, ...franchises]
-    : [myFranchise].filter(Boolean)
-
-  const availableTargets =
-    editData.targetType === 'franchise'
-      ? franchises
-      : companies.filter((c) => isSuperAdmin || c.franchiseId === franchiseId)
-
-  const selectedCollectorEntity = availableCollectors.find(
-    (c) => c.id === editData.collectorId,
-  )
-  const selectedTargetEntity = availableTargets.find(
-    (t) =>
-      t.id ===
-      (editData.targetType === 'franchise'
-        ? editData.franchiseId
-        : editData.companyId),
-  )
-
-  const editingRegion =
-    (selectedTargetEntity as Franchise | Company)?.region ||
-    (selectedTargetEntity as Franchise | Company)?.addressCountry
-  const { formatCurrency: editFormatCurrency } =
-    useRegionFormatting(editingRegion)
-
-  const formatAddress = (entity: any) => {
-    if (!entity) return 'N/A'
-    if (entity.id === 'app_owner') return 'Sede Global'
-    const parts = [
-      entity.addressStreet,
-      entity.addressNumber,
-      entity.addressComplement,
-      entity.addressNeighborhood,
-      entity.addressCity,
-      entity.addressState,
-      entity.addressZip,
-      entity.addressCountry,
-    ].filter(Boolean)
-    return parts.length > 0 ? parts.join(', ') : 'Endereço não cadastrado'
-  }
+  const getCompanyName = (id: string) =>
+    companies.find((c) => c.id === id)?.name || id
 
   return (
-    <Card className="min-w-0 w-full animate-fade-in-up">
-      <CardHeader>
-        <CardTitle>Área de Preparação (Rascunhos)</CardTitle>
-        <CardDescription>
-          Revise, edite e aprove as faturas geradas antes de enviá-las
-          oficialmente aos destinatários.
+    <Card className="w-full min-w-0 overflow-hidden shadow-sm border-slate-200">
+      <CardHeader className="min-w-0 pb-4 border-b border-slate-100 bg-white">
+        <CardTitle className="truncate text-lg sm:text-xl text-slate-800">
+          {t(
+            'franchisee.billing.staging_title',
+            'Área de Preparação (Rascunhos)',
+          )}
+        </CardTitle>
+        <CardDescription className="truncate text-slate-500">
+          {t(
+            'franchisee.billing.staging_desc',
+            'Faturas geradas aguardando revisão ou envio aos parceiros.',
+          )}
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <div className="border rounded-md">
-          <Table>
-            <TableHeader>
+      <CardContent className="p-0 w-full bg-white">
+        <div className="w-full overflow-x-auto min-w-0 custom-scrollbar">
+          <Table className="w-full min-w-[750px]">
+            <TableHeader className="bg-slate-50/80">
               <TableRow>
-                <TableHead>Ref</TableHead>
-                <TableHead>Destinatário</TableHead>
-                <TableHead>Período</TableHead>
-                <TableHead>Itens</TableHead>
-                <TableHead className="text-right">Valor Total</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
+                <TableHead className="whitespace-nowrap font-semibold text-slate-700 pl-4 sm:pl-6">
+                  {t('franchisee.billing.reference', 'Referência')}
+                </TableHead>
+                <TableHead className="whitespace-nowrap font-semibold text-slate-700">
+                  {t('franchisee.billing.partner', 'Parceiro')}
+                </TableHead>
+                <TableHead className="whitespace-nowrap font-semibold text-slate-700">
+                  {t('franchisee.billing.period', 'Período')}
+                </TableHead>
+                <TableHead className="whitespace-nowrap font-semibold text-slate-700">
+                  {t('franchisee.billing.value', 'Valor')}
+                </TableHead>
+                <TableHead className="whitespace-nowrap font-semibold text-slate-700">
+                  {t('franchisee.billing.status', 'Status')}
+                </TableHead>
+                <TableHead className="text-right whitespace-nowrap font-semibold text-slate-700 pr-4 sm:pr-6">
+                  {t('franchisee.billing.actions', 'Ações')}
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {stagingInvoices.map((inv) => (
-                <InvoiceRow
+                <TableRow
                   key={inv.id}
-                  inv={inv}
-                  franchises={franchises}
-                  companies={companies}
-                  onEdit={openEdit}
-                  onSend={handleSend}
-                  onCancel={handleCancel}
-                />
+                  className="hover:bg-slate-50/50 transition-colors"
+                >
+                  <TableCell className="font-medium whitespace-nowrap text-slate-700 pl-4 sm:pl-6">
+                    {inv.referenceNumber}
+                  </TableCell>
+                  <TableCell
+                    className="whitespace-nowrap max-w-[180px] sm:max-w-[200px] truncate font-medium text-slate-900"
+                    title={getCompanyName(inv.companyId)}
+                  >
+                    {getCompanyName(inv.companyId)}
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap text-sm text-slate-600">
+                    {formatDate(inv.periodStart)} - {formatDate(inv.periodEnd)}
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap font-bold text-slate-800">
+                    {formatCurrency(inv.totalCommission)}
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap">
+                    <Badge
+                      variant={inv.status === 'draft' ? 'secondary' : 'outline'}
+                      className="capitalize bg-slate-100 text-slate-700 hover:bg-slate-200 border-transparent"
+                    >
+                      {inv.status === 'draft'
+                        ? t('franchisee.billing.draft', 'Rascunho')
+                        : t('franchisee.billing.pending', 'Pendente')}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right whitespace-nowrap pr-4 sm:pr-6">
+                    <div className="flex justify-end gap-1 sm:gap-2 items-center flex-nowrap">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="shrink-0 h-8 px-2 sm:h-9 sm:px-3 text-blue-600 hover:text-blue-700 hover:bg-blue-50 font-semibold transition-colors"
+                        onClick={() =>
+                          updatePartnerInvoiceStatus(inv.id, 'sent')
+                        }
+                        title={t(
+                          'franchisee.billing.send_invoice',
+                          'Enviar Fatura',
+                        )}
+                      >
+                        <Send className="h-4 w-4 sm:mr-1.5" />
+                        <span className="hidden sm:inline">
+                          {t('franchisee.billing.send', 'Enviar')}
+                        </span>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="shrink-0 h-8 w-8 sm:h-9 sm:w-9 text-slate-500 hover:text-primary hover:bg-primary/10 transition-colors"
+                        title={t('common.edit', 'Editar')}
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="shrink-0 h-8 w-8 sm:h-9 sm:w-9 text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                        title={t('common.delete', 'Excluir')}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
               ))}
               {stagingInvoices.length === 0 && (
                 <TableRow>
                   <TableCell
                     colSpan={6}
-                    className="text-center py-8 text-muted-foreground"
+                    className="text-center py-12 text-slate-500 font-medium"
                   >
-                    Nenhuma fatura em preparação.
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center">
+                        <Edit2 className="h-6 w-6 text-slate-400" />
+                      </div>
+                      <p>
+                        {t(
+                          'franchisee.billing.no_staging',
+                          'Nenhuma fatura em preparação no momento.',
+                        )}
+                      </p>
+                    </div>
                   </TableCell>
                 </TableRow>
               )}
@@ -264,190 +170,6 @@ export function BillingStagingTab({ franchiseId }: { franchiseId?: string }) {
           </Table>
         </div>
       </CardContent>
-
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              Editar Fatura - {editingInvoice?.referenceNumber}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Cobrador (Recebedor)</Label>
-                <Select
-                  disabled
-                  value={editData.collectorId}
-                  onValueChange={(v) =>
-                    setEditData({ ...editData, collectorId: v })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o cobrador" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableCollectors.map((c: any) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {selectedCollectorEntity && (
-                  <div className="text-sm text-muted-foreground bg-slate-50 p-3 rounded-md border mt-2 space-y-1">
-                    <p>
-                      <strong className="text-slate-700">Nome:</strong>{' '}
-                      {selectedCollectorEntity.name}
-                    </p>
-                    <p>
-                      <strong className="text-slate-700">Contato:</strong>{' '}
-                      {(selectedCollectorEntity as Franchise | Company)
-                        .contactPerson || 'N/A'}
-                    </p>
-                    <p>
-                      <strong className="text-slate-700">Endereço:</strong>{' '}
-                      {formatAddress(selectedCollectorEntity)}
-                    </p>
-                  </div>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label>Cobrado (Pagador)</Label>
-                <Select
-                  disabled
-                  value={
-                    editData.targetType === 'franchise'
-                      ? editData.franchiseId
-                      : editData.companyId
-                  }
-                  onValueChange={(v) => {
-                    if (editData.targetType === 'franchise') {
-                      setEditData({ ...editData, franchiseId: v })
-                    } else {
-                      setEditData({ ...editData, companyId: v })
-                    }
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o cobrado" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableTargets.map((c: any) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {selectedTargetEntity && (
-                  <div className="text-sm text-muted-foreground bg-slate-50 p-3 rounded-md border mt-2 space-y-1">
-                    <p>
-                      <strong className="text-slate-700">Nome:</strong>{' '}
-                      {selectedTargetEntity.name}
-                    </p>
-                    <p>
-                      <strong className="text-slate-700">Contato:</strong>{' '}
-                      {(selectedTargetEntity as Franchise | Company)
-                        .contactPerson || 'N/A'}
-                    </p>
-                    <p>
-                      <strong className="text-slate-700">Endereço:</strong>{' '}
-                      {formatAddress(selectedTargetEntity)}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>O que está sendo cobrado (Descrição)</Label>
-              <Textarea
-                value={editData.description || ''}
-                onChange={(e) =>
-                  setEditData({ ...editData, description: e.target.value })
-                }
-                placeholder="Ex: Faturamento referente a comissões e royalties do período..."
-                rows={3}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2 flex flex-col">
-                <Label>Data de Vencimento</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant={'outline'}
-                      className={cn(
-                        'w-full justify-start text-left font-normal',
-                        !editData.dueDate && 'text-muted-foreground',
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {editData.dueDate ? (
-                        format(new Date(editData.dueDate), 'dd/MM/yyyy')
-                      ) : (
-                        <span>Selecione uma data</span>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={
-                        editData.dueDate
-                          ? new Date(editData.dueDate)
-                          : undefined
-                      }
-                      onSelect={(date) =>
-                        date &&
-                        setEditData({
-                          ...editData,
-                          dueDate: date.toISOString(),
-                        })
-                      }
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-              <div className="space-y-2">
-                <Label>Valor Total</Label>
-                <Input
-                  value={editFormatCurrency(editData.totalCommission || 0)}
-                  disabled
-                  className="bg-slate-100 font-bold text-slate-700"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Como Pagar (Instruções de Pagamento)</Label>
-              <Textarea
-                value={editData.paymentInstructions || ''}
-                onChange={(e) =>
-                  setEditData({
-                    ...editData,
-                    paymentInstructions: e.target.value,
-                  })
-                }
-                placeholder="Ex: Link do Stripe, Pix, ou dados bancários..."
-                rows={3}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsEditDialogOpen(false)}
-            >
-              Cancelar
-            </Button>
-            <Button onClick={saveEdit}>Salvar Alterações</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </Card>
   )
 }
