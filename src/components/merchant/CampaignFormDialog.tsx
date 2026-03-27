@@ -57,7 +57,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 
 const STORE_LOCATIONS = [
   'Matriz - Centro',
