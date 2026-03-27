@@ -50,7 +50,13 @@ export function CrawlerAnalysisSheet({
 
   useEffect(() => {
     if (promo) {
-      setEditedPromo({ ...promo })
+      let expiry = promo.expiryDate
+      if (!expiry) {
+        const date = new Date()
+        date.setDate(date.getDate() + 30)
+        expiry = date.toISOString()
+      }
+      setEditedPromo({ ...promo, expiryDate: expiry })
       setImportCategory('all')
     } else {
       setEditedPromo(null)
@@ -171,6 +177,35 @@ export function CrawlerAnalysisSheet({
                           discount: e.target.value,
                         })
                       }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>
+                      {t('common.expiry_date', 'Data de Expiração')}
+                    </Label>
+                    <Input
+                      type="date"
+                      value={
+                        editedPromo.expiryDate
+                          ? editedPromo.expiryDate.split('T')[0]
+                          : ''
+                      }
+                      onChange={(e) => {
+                        const val = e.target.value
+                        if (val) {
+                          const date = new Date(val)
+                          date.setUTCHours(23, 59, 59, 999)
+                          setEditedPromo({
+                            ...editedPromo,
+                            expiryDate: date.toISOString(),
+                          })
+                        } else {
+                          setEditedPromo({
+                            ...editedPromo,
+                            expiryDate: '',
+                          })
+                        }
+                      }}
                     />
                   </div>
                   <div className="space-y-2">
