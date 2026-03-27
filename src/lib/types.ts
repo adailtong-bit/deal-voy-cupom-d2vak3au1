@@ -812,6 +812,8 @@ export interface PartnerInvoice {
   id: string
   referenceNumber: string
   companyId: string
+  franchiseId?: string
+  targetType?: 'franchise' | 'merchant' | 'company'
   periodStart: string
   periodEnd: string
   totalSales: number
@@ -828,6 +830,7 @@ export interface PartnerInvoice {
   dueDate: string
   issueDate: string
   transactionCount: number
+  items?: any[]
 }
 
 export interface WebhookLog {

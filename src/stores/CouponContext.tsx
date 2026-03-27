@@ -24,7 +24,6 @@ import {
   CarRental,
   SystemLog,
   UserPreferences,
-  ReviewReply,
   BehavioralTrigger,
   CrawlerSource,
   DiscoveredPromotion,
@@ -215,11 +214,7 @@ interface CouponContextType {
   updatePlatformSettings: (settings: Partial<PlatformSettings>) => void
   updatePartnerPolicy: (policy: PartnerPolicy) => void
   deletePartnerPolicy: (id: string) => void
-  generatePartnerInvoice: (
-    companyId: string,
-    startDate: string,
-    endDate: string,
-  ) => void
+  generatePartnerInvoice: (data: Partial<PartnerInvoice>) => void
   updatePartnerInvoiceStatus: (
     id: string,
     status: PartnerInvoice['status'],
@@ -938,15 +933,39 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   }
   const updatePartnerPolicy = (policy: PartnerPolicy) => {}
   const deletePartnerPolicy = (id: string) => {}
-  const generatePartnerInvoice = (
-    companyId: string,
-    startDate: string,
-    endDate: string,
-  ) => {}
+
+  const generatePartnerInvoice = (data: Partial<PartnerInvoice>) => {
+    const newInvoice: PartnerInvoice = {
+      id: Math.random().toString(),
+      referenceNumber: `INV-${new Date().getFullYear()}-${Math.floor(Math.random() * 10000)}`,
+      companyId: data.companyId || '',
+      franchiseId: data.franchiseId || '',
+      targetType: data.targetType || 'merchant',
+      periodStart: data.periodStart || new Date().toISOString(),
+      periodEnd: data.periodEnd || new Date().toISOString(),
+      totalSales: data.totalSales || 0,
+      totalCommission: data.totalCommission || 0,
+      totalCashback: data.totalCashback || 0,
+      status: data.status || 'draft',
+      dueDate:
+        data.dueDate || new Date(Date.now() + 15 * 86400000).toISOString(),
+      issueDate: data.issueDate || new Date().toISOString(),
+      transactionCount: data.transactionCount || 1,
+      items: data.items || [],
+    }
+    setPartnerInvoices((prev) => [newInvoice, ...prev])
+    toast.success('Fatura gerada com sucesso e adicionada à área de staging.')
+  }
+
   const updatePartnerInvoiceStatus = (
     id: string,
     status: PartnerInvoice['status'],
-  ) => {}
+  ) => {
+    setPartnerInvoices((prev) =>
+      prev.map((i) => (i.id === id ? { ...i, status } : i)),
+    )
+  }
+
   const reconcilePartnerInvoice = (refNumber: string) => {
     return true
   }
