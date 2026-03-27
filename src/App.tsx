@@ -5,7 +5,7 @@ import {
   Navigate,
   useLocation,
 } from 'react-router-dom'
-import { LanguageProvider } from '@/stores/LanguageContext'
+import { LanguageProvider, useLanguage } from '@/stores/LanguageContext'
 import { NotificationProvider } from '@/stores/NotificationContext'
 import { CouponProvider, useCouponStore } from '@/stores/CouponContext'
 import { Toaster } from 'sonner'
