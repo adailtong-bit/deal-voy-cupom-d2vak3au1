@@ -42,7 +42,7 @@ export default function FranchiseeDashboard() {
 
   if (!myFranchise) {
     return (
-      <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
+      <div className="flex h-[calc(100vh-4rem)] items-center justify-center w-full max-w-full">
         <p className="text-xl font-semibold text-slate-500">
           {t(
             'franchisee.no_franchise',
@@ -54,14 +54,14 @@ export default function FranchiseeDashboard() {
   }
 
   return (
-    <div className="flex flex-col md:flex-row h-[calc(100vh-3.5rem)] md:h-[calc(100vh-4rem)] bg-slate-50/50 overflow-hidden relative">
+    <div className="flex flex-col md:flex-row h-[calc(100vh-3.5rem)] md:h-[calc(100vh-4rem)] bg-slate-50/50 overflow-hidden relative w-full max-w-full">
       {/* Mobile Header for Sidebar Toggle */}
-      <div className="md:hidden flex items-center justify-between bg-white border-b p-4 z-40 shadow-sm shrink-0">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+      <div className="md:hidden flex items-center justify-between bg-white border-b p-4 z-40 shadow-sm shrink-0 w-full max-w-full">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center shrink-0">
             <LayoutDashboard className="w-4 h-4 text-primary" />
           </div>
-          <span className="font-bold text-slate-800">
+          <span className="font-bold text-slate-800 truncate">
             {t('franchisee.dashboard', 'Painel Regional')}
           </span>
         </div>
@@ -69,6 +69,7 @@ export default function FranchiseeDashboard() {
           variant="ghost"
           size="icon"
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="shrink-0"
         >
           {isMobileMenuOpen ? (
             <X className="h-6 w-6" />
@@ -94,7 +95,7 @@ export default function FranchiseeDashboard() {
       )}
 
       {/* Main Content */}
-      <main className="flex-1 min-w-0 h-full flex flex-col relative overflow-hidden bg-slate-50/50">
+      <main className="flex-1 min-w-0 h-full flex flex-col relative overflow-hidden bg-slate-50/50 max-w-full">
         <ScrollArea className="h-full w-full [&_[data-radix-scroll-area-viewport]]:min-w-0">
           <div className="p-4 sm:p-6 lg:p-8 pb-20 md:pb-8 w-full max-w-[1400px] mx-auto min-w-0 flex flex-col">
             {activeTab === 'overview' && (

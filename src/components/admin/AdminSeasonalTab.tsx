@@ -174,27 +174,32 @@ export function AdminSeasonalTab({ franchiseId }: { franchiseId?: string }) {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in-up min-w-0 w-full">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold tracking-tight">
+    <div className="space-y-6 animate-fade-in-up min-w-0 w-full max-w-full">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 min-w-0">
+        <h2 className="text-xl font-semibold tracking-tight truncate">
           {t('admin.seasonal')}
         </h2>
-        <Button onClick={() => handleOpenDialog()}>
+        <Button
+          onClick={() => handleOpenDialog()}
+          className="shrink-0 w-full sm:w-auto"
+        >
           <Plus className="mr-2 h-4 w-4" />
           {t('admin.addSeasonal')}
         </Button>
       </div>
 
       {chartData.length > 0 && (
-        <Card className="min-w-0">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <MousePointerClick className="h-5 w-5 text-primary" />
-              {t('franchisee.seasonal.clicks_chart', 'Clicks per Campaign')}
+        <Card className="min-w-0 overflow-hidden">
+          <CardHeader className="min-w-0">
+            <CardTitle className="flex items-center gap-2 text-lg truncate">
+              <MousePointerClick className="h-5 w-5 text-primary shrink-0" />
+              <span className="truncate">
+                {t('franchisee.seasonal.clicks_chart', 'Clicks per Campaign')}
+              </span>
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="h-[200px] w-full min-w-0">
+          <CardContent className="min-w-0">
+            <div className="h-[200px] w-full min-w-0 overflow-hidden">
               <ChartContainer
                 config={{
                   clicks: {
@@ -212,9 +217,16 @@ export function AdminSeasonalTab({ franchiseId }: { franchiseId?: string }) {
                     dataKey="name"
                     tickLine={false}
                     axisLine={false}
-                    fontSize={12}
+                    fontSize={10}
+                    tick={{ fontSize: 10 }}
                   />
-                  <YAxis tickLine={false} axisLine={false} fontSize={12} />
+                  <YAxis
+                    tickLine={false}
+                    axisLine={false}
+                    fontSize={10}
+                    tick={{ fontSize: 10 }}
+                    width={30}
+                  />
                   <ChartTooltip content={<ChartTooltipContent />} />
                   <Bar
                     dataKey="clicks"
@@ -232,11 +244,21 @@ export function AdminSeasonalTab({ franchiseId }: { franchiseId?: string }) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>{t('admin.title')}</TableHead>
-              <TableHead>{t('admin.partner')}</TableHead>
-              <TableHead>{t('admin.period')}</TableHead>
-              <TableHead>{t('admin.status')}</TableHead>
-              <TableHead className="text-right">{t('admin.action')}</TableHead>
+              <TableHead className="whitespace-nowrap">
+                {t('admin.title')}
+              </TableHead>
+              <TableHead className="whitespace-nowrap">
+                {t('admin.partner')}
+              </TableHead>
+              <TableHead className="whitespace-nowrap">
+                {t('admin.period')}
+              </TableHead>
+              <TableHead className="whitespace-nowrap">
+                {t('admin.status')}
+              </TableHead>
+              <TableHead className="text-right whitespace-nowrap">
+                {t('admin.action')}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -246,21 +268,23 @@ export function AdminSeasonalTab({ franchiseId }: { franchiseId?: string }) {
                 isExpiringSoon(event.endDate || event.expiryDate)
               return (
                 <TableRow key={event.id}>
-                  <TableCell className="font-medium">
+                  <TableCell className="font-medium whitespace-nowrap min-w-[200px]">
                     <div className="flex items-center gap-2">
                       {event.image && (
                         <img
                           src={event.image}
                           alt=""
-                          className="w-10 h-10 rounded-md object-cover"
+                          className="w-10 h-10 rounded-md object-cover shrink-0"
                         />
                       )}
-                      <div className="flex flex-col">
-                        <span>{event.title}</span>
+                      <div className="flex flex-col min-w-0">
+                        <span className="truncate max-w-[150px] sm:max-w-[200px]">
+                          {event.title}
+                        </span>
                         {expiring && (
                           <Badge
                             variant="outline"
-                            className="w-fit mt-1 border-orange-500 text-orange-600 text-[10px] px-1 py-0"
+                            className="w-fit mt-1 border-orange-500 text-orange-600 text-[10px] px-1 py-0 whitespace-nowrap shrink-0"
                           >
                             <AlertCircle className="w-3 h-3 mr-1" />
                             {t(
@@ -272,17 +296,22 @@ export function AdminSeasonalTab({ franchiseId }: { franchiseId?: string }) {
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell>{getCompanyName(event.companyId)}</TableCell>
-                  <TableCell className="text-sm">
+                  <TableCell
+                    className="whitespace-nowrap max-w-[150px] truncate"
+                    title={getCompanyName(event.companyId)}
+                  >
+                    {getCompanyName(event.companyId)}
+                  </TableCell>
+                  <TableCell className="text-sm whitespace-nowrap">
                     {formatDate(event.startDate || '')} -{' '}
                     {formatDate(event.endDate || event.expiryDate)}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="whitespace-nowrap">
                     <Badge variant={getStatusBadgeVariant(event.status)}>
                       {t(`admin.${event.status || 'active'}`)}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right whitespace-nowrap">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" className="h-8 w-8 p-0">

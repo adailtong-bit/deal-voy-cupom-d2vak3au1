@@ -134,17 +134,17 @@ export function MerchantsTab({ franchiseId }: { franchiseId?: string }) {
   }
 
   return (
-    <div className="space-y-4 animate-fade-in-up min-w-0 w-full">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-5 rounded-xl border border-slate-200 shadow-sm gap-4">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-primary/10 rounded-lg text-primary hidden sm:block">
+    <div className="space-y-4 animate-fade-in-up min-w-0 w-full max-w-full">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-sm gap-4 min-w-0 w-full">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="p-2.5 bg-primary/10 rounded-lg text-primary hidden sm:block shrink-0">
             <Store className="h-6 w-6" />
           </div>
-          <div>
-            <h3 className="text-lg font-bold text-slate-800">
+          <div className="min-w-0">
+            <h3 className="text-lg font-bold text-slate-800 truncate">
               {t('franchisee.merchants.title', 'Diretório de Lojistas')}
             </h3>
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-slate-500 truncate">
               {franchiseId
                 ? t(
                     'franchisee.merchants.desc_franchise',
@@ -157,11 +157,11 @@ export function MerchantsTab({ franchiseId }: { franchiseId?: string }) {
             </p>
           </div>
         </div>
-        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto shrink-0">
           <Button
             variant="outline"
             onClick={exportCsv}
-            className="font-semibold"
+            className="font-semibold flex-1 sm:flex-none"
           >
             <FileText className="w-4 h-4 mr-2" />{' '}
             {t('franchisee.merchants.export_csv', 'CSV')}
@@ -169,12 +169,15 @@ export function MerchantsTab({ franchiseId }: { franchiseId?: string }) {
           <Button
             variant="outline"
             onClick={exportPdf}
-            className="font-semibold"
+            className="font-semibold flex-1 sm:flex-none"
           >
             <Download className="w-4 h-4 mr-2" />{' '}
             {t('franchisee.merchants.export_pdf', 'PDF')}
           </Button>
-          <Button onClick={() => handleOpenDialog()} className="font-bold">
+          <Button
+            onClick={() => handleOpenDialog()}
+            className="font-bold w-full sm:w-auto"
+          >
             <Plus className="w-4 h-4 mr-2" />{' '}
             {t('franchisee.merchants.add', 'Adicionar Lojista')}
           </Button>
@@ -185,27 +188,27 @@ export function MerchantsTab({ franchiseId }: { franchiseId?: string }) {
         <Table>
           <TableHeader className="bg-slate-50">
             <TableRow>
-              <TableHead className="font-semibold text-slate-700">
+              <TableHead className="font-semibold text-slate-700 whitespace-nowrap">
                 {t('franchisee.merchants.name', 'Nome da Loja')}
               </TableHead>
-              <TableHead className="font-semibold text-slate-700">
+              <TableHead className="font-semibold text-slate-700 whitespace-nowrap">
                 {t('franchisee.merchants.email', 'E-mail')}
               </TableHead>
-              <TableHead className="font-semibold text-slate-700">
+              <TableHead className="font-semibold text-slate-700 whitespace-nowrap">
                 {t('franchisee.merchants.location', 'Localização')}
               </TableHead>
               {!franchiseId && (
-                <TableHead className="font-semibold text-slate-700">
+                <TableHead className="font-semibold text-slate-700 whitespace-nowrap">
                   {t('franchisee.merchants.affiliation', 'Afiliação')}
                 </TableHead>
               )}
-              <TableHead className="font-semibold text-slate-700">
+              <TableHead className="font-semibold text-slate-700 whitespace-nowrap">
                 {t('franchisee.merchants.status', 'Status')}
               </TableHead>
-              <TableHead className="font-semibold text-slate-700">
+              <TableHead className="font-semibold text-slate-700 whitespace-nowrap">
                 {t('franchisee.merchants.credentials', 'Credenciais')}
               </TableHead>
-              <TableHead className="font-semibold text-slate-700 text-right">
+              <TableHead className="font-semibold text-slate-700 text-right whitespace-nowrap">
                 {t('franchisee.merchants.actions', 'Ações')}
               </TableHead>
             </TableRow>
@@ -215,17 +218,17 @@ export function MerchantsTab({ franchiseId }: { franchiseId?: string }) {
               const isSent = c.credentialsSent || c.status === 'active'
               return (
                 <TableRow key={c.id} className="hover:bg-slate-50/80">
-                  <TableCell className="font-bold text-slate-800">
+                  <TableCell className="font-bold text-slate-800 whitespace-nowrap">
                     {c.name}
                   </TableCell>
-                  <TableCell className="text-slate-600 font-medium">
+                  <TableCell className="text-slate-600 font-medium whitespace-nowrap">
                     {c.email}
                   </TableCell>
-                  <TableCell className="text-slate-600">
+                  <TableCell className="text-slate-600 whitespace-nowrap">
                     {c.region || c.addressCountry}
                   </TableCell>
                   {!franchiseId && (
-                    <TableCell>
+                    <TableCell className="whitespace-nowrap">
                       <Badge
                         variant="outline"
                         className="bg-slate-100 text-slate-700"
@@ -234,7 +237,7 @@ export function MerchantsTab({ franchiseId }: { franchiseId?: string }) {
                       </Badge>
                     </TableCell>
                   )}
-                  <TableCell>
+                  <TableCell className="whitespace-nowrap">
                     <Badge
                       variant={
                         c.status === 'active'
@@ -255,7 +258,7 @@ export function MerchantsTab({ franchiseId }: { franchiseId?: string }) {
                           : t('franchisee.merchants.inactive', 'Inativo')}
                     </Badge>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="whitespace-nowrap">
                     <div className="flex items-center gap-2">
                       <Badge
                         variant={isSent ? 'default' : 'secondary'}
@@ -281,7 +284,7 @@ export function MerchantsTab({ franchiseId }: { franchiseId?: string }) {
                       </Button>
                     </div>
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right whitespace-nowrap">
                     <Button
                       variant="ghost"
                       size="icon"

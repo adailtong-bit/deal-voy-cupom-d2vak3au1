@@ -114,12 +114,15 @@ export function PartnerPoliciesTab({ franchiseId }: { franchiseId?: string }) {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in-up min-w-0 w-full">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold tracking-tight">
+    <div className="space-y-6 animate-fade-in-up min-w-0 w-full max-w-full">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 min-w-0">
+        <h2 className="text-xl font-semibold tracking-tight truncate">
           {t('admin.policies')}
         </h2>
-        <Button onClick={() => handleOpenDialog()}>
+        <Button
+          onClick={() => handleOpenDialog()}
+          className="shrink-0 w-full sm:w-auto"
+        >
           <Plus className="mr-2 h-4 w-4" />
           {t('admin.addPolicy')}
         </Button>
@@ -129,26 +132,43 @@ export function PartnerPoliciesTab({ franchiseId }: { franchiseId?: string }) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>{t('admin.partner')}</TableHead>
-              <TableHead>{t('admin.commission')}</TableHead>
-              <TableHead>{t('admin.cashback')}</TableHead>
-              <TableHead>{t('admin.billingModel')}</TableHead>
-              <TableHead className="text-right">{t('admin.action')}</TableHead>
+              <TableHead className="whitespace-nowrap">
+                {t('admin.partner')}
+              </TableHead>
+              <TableHead className="whitespace-nowrap">
+                {t('admin.commission')}
+              </TableHead>
+              <TableHead className="whitespace-nowrap">
+                {t('admin.cashback')}
+              </TableHead>
+              <TableHead className="whitespace-nowrap">
+                {t('admin.billingModel')}
+              </TableHead>
+              <TableHead className="text-right whitespace-nowrap">
+                {t('admin.action')}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {displayPolicies.map((policy) => (
               <TableRow key={policy.id}>
-                <TableCell className="font-medium">
+                <TableCell
+                  className="font-medium whitespace-nowrap max-w-[200px] truncate"
+                  title={getCompanyName(policy.companyId)}
+                >
                   {getCompanyName(policy.companyId)}
                 </TableCell>
-                <TableCell>{formatNumber(policy.commissionRate)}%</TableCell>
-                <TableCell>{formatNumber(policy.cashbackRate)}%</TableCell>
-                <TableCell>
+                <TableCell className="whitespace-nowrap">
+                  {formatNumber(policy.commissionRate)}%
+                </TableCell>
+                <TableCell className="whitespace-nowrap">
+                  {formatNumber(policy.cashbackRate)}%
+                </TableCell>
+                <TableCell className="whitespace-nowrap">
                   {t(`admin.${policy.billingModel.toLowerCase()}`) ||
                     policy.billingModel}
                 </TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-right whitespace-nowrap">
                   <Button
                     variant="ghost"
                     size="icon"
@@ -181,7 +201,7 @@ export function PartnerPoliciesTab({ franchiseId }: { franchiseId?: string }) {
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>
               {editingPolicy ? t('admin.editPolicy') : t('admin.addPolicy')}

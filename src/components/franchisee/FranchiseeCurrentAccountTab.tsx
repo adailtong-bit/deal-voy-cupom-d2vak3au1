@@ -100,68 +100,78 @@ export function FranchiseeCurrentAccountTab({
   const balance = inflows - outflows
 
   return (
-    <div className="space-y-6 animate-fade-in-up min-w-0 w-full">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="min-w-0">
+    <div className="space-y-6 animate-fade-in-up min-w-0 w-full max-w-full">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 min-w-0">
+        <Card className="min-w-0 overflow-hidden">
           <CardContent className="p-6">
             <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-slate-100 rounded-full text-slate-600">
+              <div className="p-2 bg-slate-100 rounded-full text-slate-600 shrink-0">
                 <Wallet className="h-5 w-5" />
               </div>
-              <p className="text-sm font-medium text-muted-foreground">
+              <p className="text-sm font-medium text-muted-foreground truncate">
                 {t('franchisee.current_account.balance')}
               </p>
             </div>
-            <h3 className="text-2xl font-bold">{formatCurrency(balance)}</h3>
+            <h3 className="text-2xl font-bold truncate">
+              {formatCurrency(balance)}
+            </h3>
           </CardContent>
         </Card>
-        <Card className="min-w-0">
+        <Card className="min-w-0 overflow-hidden">
           <CardContent className="p-6">
             <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-green-100 rounded-full text-green-600">
+              <div className="p-2 bg-green-100 rounded-full text-green-600 shrink-0">
                 <ArrowUpRight className="h-5 w-5" />
               </div>
-              <p className="text-sm font-medium text-muted-foreground">
+              <p className="text-sm font-medium text-muted-foreground truncate">
                 {t('franchisee.current_account.inflows')}
               </p>
             </div>
-            <h3 className="text-2xl font-bold text-green-600">
+            <h3 className="text-2xl font-bold text-green-600 truncate">
               {formatCurrency(inflows)}
             </h3>
           </CardContent>
         </Card>
-        <Card className="min-w-0">
+        <Card className="min-w-0 overflow-hidden">
           <CardContent className="p-6">
             <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-red-100 rounded-full text-red-600">
+              <div className="p-2 bg-red-100 rounded-full text-red-600 shrink-0">
                 <ArrowDownRight className="h-5 w-5" />
               </div>
-              <p className="text-sm font-medium text-muted-foreground">
+              <p className="text-sm font-medium text-muted-foreground truncate">
                 {t('franchisee.current_account.outflows')}
               </p>
             </div>
-            <h3 className="text-2xl font-bold text-red-600">
+            <h3 className="text-2xl font-bold text-red-600 truncate">
               {formatCurrency(outflows)}
             </h3>
           </CardContent>
         </Card>
       </div>
 
-      <Card className="min-w-0 overflow-hidden">
-        <CardHeader>
-          <CardTitle>{t('franchisee.current_account.statement')}</CardTitle>
+      <Card className="min-w-0 w-full overflow-hidden">
+        <CardHeader className="min-w-0">
+          <CardTitle className="truncate">
+            {t('franchisee.current_account.statement')}
+          </CardTitle>
         </CardHeader>
         <CardContent className="p-0 sm:p-6 sm:pt-0 overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>{t('franchisee.current_account.date')}</TableHead>
-                <TableHead>
+                <TableHead className="whitespace-nowrap">
+                  {t('franchisee.current_account.date')}
+                </TableHead>
+                <TableHead className="whitespace-nowrap">
                   {t('franchisee.current_account.description')}
                 </TableHead>
-                <TableHead>{t('franchisee.current_account.type')}</TableHead>
-                <TableHead>{t('franchisee.current_account.status')}</TableHead>
-                <TableHead className="text-right">
+                <TableHead className="whitespace-nowrap">
+                  {t('franchisee.current_account.type')}
+                </TableHead>
+                <TableHead className="whitespace-nowrap">
+                  {t('franchisee.current_account.status')}
+                </TableHead>
+                <TableHead className="text-right whitespace-nowrap">
                   {t('franchisee.current_account.amount')}
                 </TableHead>
               </TableRow>
@@ -169,11 +179,15 @@ export function FranchiseeCurrentAccountTab({
             <TableBody>
               {allTransactions.map((tItem) => (
                 <TableRow key={tItem.id}>
-                  <TableCell className="text-sm">
+                  <TableCell className="text-sm whitespace-nowrap">
                     {formatDate(tItem.date)}
                   </TableCell>
-                  <TableCell className="font-medium">{tItem.desc}</TableCell>
-                  <TableCell>
+                  <TableCell className="font-medium whitespace-nowrap min-w-[200px]">
+                    <span className="truncate block max-w-[250px] sm:max-w-xs">
+                      {tItem.desc}
+                    </span>
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap">
                     {tItem.type === 'in' ? (
                       <Badge
                         variant="outline"
@@ -190,13 +204,13 @@ export function FranchiseeCurrentAccountTab({
                       </Badge>
                     )}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="whitespace-nowrap">
                     <Badge className="bg-slate-100 text-slate-700 hover:bg-slate-100">
                       {t('franchisee.current_account.completed')}
                     </Badge>
                   </TableCell>
                   <TableCell
-                    className={`text-right font-bold ${tItem.type === 'in' ? 'text-green-600' : 'text-red-600'}`}
+                    className={`text-right font-bold whitespace-nowrap ${tItem.type === 'in' ? 'text-green-600' : 'text-red-600'}`}
                   >
                     {tItem.type === 'in' ? '+' : '-'}
                     {formatCurrency(tItem.amount)}

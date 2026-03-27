@@ -126,50 +126,53 @@ export function PartnerBillingTab({ franchiseId }: { franchiseId?: string }) {
     .reduce((acc, i) => acc + i.totalCommission, 0)
 
   return (
-    <div className="space-y-6 animate-fade-in-up min-w-0 w-full">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold tracking-tight">
+    <div className="space-y-6 animate-fade-in-up min-w-0 w-full max-w-full">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 min-w-0">
+        <h2 className="text-xl font-semibold tracking-tight truncate">
           {t('admin.invoices')}
         </h2>
-        <Button onClick={() => setIsDialogOpen(true)}>
+        <Button
+          onClick={() => setIsDialogOpen(true)}
+          className="shrink-0 w-full sm:w-auto"
+        >
           <Plus className="mr-2 h-4 w-4" />
           {t('admin.createInvoice')}
         </Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card className="min-w-0">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+      <div className="grid gap-4 md:grid-cols-3 min-w-0">
+        <Card className="min-w-0 overflow-hidden">
+          <CardHeader className="pb-2 min-w-0">
+            <CardTitle className="text-sm font-medium text-muted-foreground truncate">
               {t('admin.paid')}
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+          <CardContent className="min-w-0">
+            <div className="text-2xl font-bold text-green-600 truncate">
               {formatCurrency(paidAmount)}
             </div>
           </CardContent>
         </Card>
-        <Card className="min-w-0">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+        <Card className="min-w-0 overflow-hidden">
+          <CardHeader className="pb-2 min-w-0">
+            <CardTitle className="text-sm font-medium text-muted-foreground truncate">
               {t('admin.sent')}
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
+          <CardContent className="min-w-0">
+            <div className="text-2xl font-bold text-blue-600 truncate">
               {formatCurrency(sentAmount)}
             </div>
           </CardContent>
         </Card>
-        <Card className="min-w-0">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+        <Card className="min-w-0 overflow-hidden">
+          <CardHeader className="pb-2 min-w-0">
+            <CardTitle className="text-sm font-medium text-muted-foreground truncate">
               {t('admin.draft')}
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-muted-foreground">
+          <CardContent className="min-w-0">
+            <div className="text-2xl font-bold text-muted-foreground truncate">
               {formatCurrency(draftAmount)}
             </div>
           </CardContent>
@@ -180,28 +183,47 @@ export function PartnerBillingTab({ franchiseId }: { franchiseId?: string }) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>ID</TableHead>
-              <TableHead>{t('admin.partner')}</TableHead>
-              <TableHead>{t('admin.period')}</TableHead>
-              <TableHead>{t('admin.amount')}</TableHead>
-              <TableHead>{t('admin.status')}</TableHead>
-              <TableHead className="text-right">{t('admin.action')}</TableHead>
+              <TableHead className="whitespace-nowrap">ID</TableHead>
+              <TableHead className="whitespace-nowrap">
+                {t('admin.partner')}
+              </TableHead>
+              <TableHead className="whitespace-nowrap">
+                {t('admin.period')}
+              </TableHead>
+              <TableHead className="whitespace-nowrap">
+                {t('admin.amount')}
+              </TableHead>
+              <TableHead className="whitespace-nowrap">
+                {t('admin.status')}
+              </TableHead>
+              <TableHead className="text-right whitespace-nowrap">
+                {t('admin.action')}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {displayInvoices.map((invoice) => (
               <TableRow key={invoice.id}>
-                <TableCell className="font-medium text-xs">
+                <TableCell className="font-medium text-xs whitespace-nowrap">
                   {invoice.referenceNumber}
                 </TableCell>
-                <TableCell>{getCompanyName(invoice.companyId)}</TableCell>
-                <TableCell className="text-xs">
+                <TableCell
+                  className="whitespace-nowrap max-w-[150px] truncate"
+                  title={getCompanyName(invoice.companyId)}
+                >
+                  {getCompanyName(invoice.companyId)}
+                </TableCell>
+                <TableCell className="text-xs whitespace-nowrap">
                   {formatShortDate(invoice.periodStart)} -{' '}
                   {formatShortDate(invoice.periodEnd)}
                 </TableCell>
-                <TableCell>{formatCurrency(invoice.totalCommission)}</TableCell>
-                <TableCell>{getStatusBadge(invoice.status)}</TableCell>
-                <TableCell className="text-right">
+                <TableCell className="whitespace-nowrap">
+                  {formatCurrency(invoice.totalCommission)}
+                </TableCell>
+                <TableCell className="whitespace-nowrap">
+                  {getStatusBadge(invoice.status)}
+                </TableCell>
+                <TableCell className="text-right whitespace-nowrap">
                   <div className="flex justify-end gap-2">
                     {invoice.status === 'draft' && (
                       <Button
@@ -243,7 +265,7 @@ export function PartnerBillingTab({ franchiseId }: { franchiseId?: string }) {
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>{t('admin.createInvoice')}</DialogTitle>
           </DialogHeader>

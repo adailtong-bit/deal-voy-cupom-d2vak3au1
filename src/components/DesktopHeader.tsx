@@ -41,25 +41,25 @@ export function DesktopHeader() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 hidden md:block">
-      <div className="container flex h-16 items-center justify-between">
-        <div className="flex items-center gap-8">
+      <div className="container flex h-16 items-center justify-between gap-4 max-w-full">
+        <div className="flex items-center gap-4 lg:gap-8 min-w-0 overflow-hidden">
           <Link
             to="/"
-            className="flex items-center gap-3 transition-transform hover:opacity-90"
+            className="flex items-center gap-2 lg:gap-3 transition-transform hover:opacity-90 shrink-0"
           >
             <img
               src={logoUrl}
               alt="Deal voy cupom"
-              className="h-10 w-10 rounded-full object-cover shadow-sm border border-slate-200"
+              className="h-10 w-10 rounded-full object-cover shadow-sm border border-slate-200 shrink-0"
             />
-            <span className="font-bold text-xl text-primary tracking-tight">
+            <span className="font-bold text-xl text-primary tracking-tight hidden lg:inline-block">
               Deal Voy
             </span>
           </Link>
-          <nav className="flex items-center gap-6 text-sm font-semibold">
+          <nav className="flex items-center gap-3 lg:gap-6 text-sm font-semibold shrink-0 overflow-x-auto hide-scrollbar">
             <Link
               to="/"
-              className="flex items-center gap-1.5 transition-colors hover:text-primary"
+              className="flex items-center gap-1.5 transition-colors hover:text-primary whitespace-nowrap"
             >
               <Home className="h-4 w-4" />
               {t('nav.home', 'Início')}
@@ -67,30 +67,33 @@ export function DesktopHeader() {
             {user && (
               <Link
                 to="/vouchers"
-                className="transition-colors hover:text-primary"
+                className="transition-colors hover:text-primary whitespace-nowrap"
               >
                 {t('nav.vouchers', 'Meus Vouchers')}
               </Link>
             )}
             <Link
               to="/explore"
-              className="transition-colors hover:text-primary"
+              className="transition-colors hover:text-primary whitespace-nowrap"
             >
               {t('nav.explore', 'Explorar')}
             </Link>
             <Link
               to="/seasonal"
-              className="transition-colors hover:text-primary"
+              className="transition-colors hover:text-primary whitespace-nowrap"
             >
               {t('nav.seasonal', 'Sazonal')}
             </Link>
-            <Link to="/travel" className="transition-colors hover:text-primary">
+            <Link
+              to="/travel"
+              className="transition-colors hover:text-primary whitespace-nowrap"
+            >
               {t('nav.travel', 'Experiências')}
             </Link>
             {user?.role === 'super_admin' && (
               <Link
                 to="/admin"
-                className="transition-colors text-primary hover:text-primary/80 font-bold"
+                className="transition-colors text-primary hover:text-primary/80 font-bold whitespace-nowrap"
               >
                 {t('nav.admin', 'Admin')}
               </Link>
@@ -98,7 +101,7 @@ export function DesktopHeader() {
             {user?.role === 'franchisee' && (
               <Link
                 to="/franchisee"
-                className="transition-colors text-primary hover:text-primary/80 font-bold"
+                className="transition-colors text-primary hover:text-primary/80 font-bold whitespace-nowrap"
               >
                 {t('nav.franchisee', 'Painel Regional')}
               </Link>
@@ -106,22 +109,22 @@ export function DesktopHeader() {
             {user?.role === 'shopkeeper' && (
               <Link
                 to="/vendor"
-                className="transition-colors text-primary hover:text-primary/80 font-bold"
+                className="transition-colors text-primary hover:text-primary/80 font-bold whitespace-nowrap"
               >
                 {t('nav.vendor', 'Painel do Lojista')}
               </Link>
             )}
           </nav>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="relative group hidden sm:block">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground transition-colors group-focus-within:text-primary" />
+        <div className="flex items-center gap-2 lg:gap-4 shrink-0">
+          <div className="relative group hidden md:block">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground transition-colors group-focus-within:text-primary" />
             <input
               type="search"
               value={searchQuery}
               onChange={handleSearchChange}
               placeholder={t('nav.search', 'Buscar...')}
-              className="h-8 w-32 md:w-40 lg:w-48 rounded-full border border-input bg-slate-50/50 pl-8 pr-4 text-xs transition-all focus:w-56 lg:focus:w-64 focus:bg-white focus:ring-2 focus:ring-primary/20 outline-none placeholder:text-muted-foreground/70"
+              className="h-8 w-20 lg:w-28 rounded-full border border-input bg-slate-50/50 pl-8 pr-3 text-xs transition-all focus:w-48 lg:focus:w-64 focus:bg-white focus:ring-2 focus:ring-primary/20 outline-none placeholder:text-muted-foreground/70"
             />
           </div>
           <LanguageSelector />
@@ -178,7 +181,7 @@ export function DesktopHeader() {
             <Button
               asChild
               variant="default"
-              className="font-bold rounded-full px-6"
+              className="font-bold rounded-full px-4 lg:px-6 shrink-0"
             >
               <Link to="/login">{t('auth.login', 'Entrar')}</Link>
             </Button>

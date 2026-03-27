@@ -88,13 +88,13 @@ export function AdminCategoriesTab({ franchiseId }: { franchiseId?: string }) {
   const manageableCategories = CATEGORIES.filter((c) => c.id !== 'all')
 
   return (
-    <div className="space-y-6 animate-fade-in-up min-w-0 w-full">
-      <Card className="min-w-0 overflow-hidden">
-        <CardHeader>
-          <CardTitle>
+    <div className="space-y-6 animate-fade-in-up min-w-0 w-full max-w-full">
+      <Card className="min-w-0 overflow-hidden w-full">
+        <CardHeader className="min-w-0">
+          <CardTitle className="truncate">
             {t('admin.categoryManagement', 'Gerenciamento de Categorias')}
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="line-clamp-2">
             {t(
               'admin.mainCategoriesDesc',
               'Selecione até 4 categorias principais para exibir em destaque na página inicial.',
@@ -108,12 +108,14 @@ export function AdminCategoriesTab({ franchiseId }: { franchiseId?: string }) {
             </strong>
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-0 sm:p-6 sm:pt-0 overflow-x-auto">
+        <CardContent className="p-0 sm:p-6 sm:pt-0 overflow-x-auto min-w-0">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>{t('nav.categories', 'Categorias')}</TableHead>
-                <TableHead className="text-right">
+                <TableHead className="whitespace-nowrap">
+                  {t('nav.categories', 'Categorias')}
+                </TableHead>
+                <TableHead className="text-right whitespace-nowrap">
                   {t('admin.mainCategory', 'Principal')}
                 </TableHead>
               </TableRow>
@@ -123,15 +125,15 @@ export function AdminCategoriesTab({ franchiseId }: { franchiseId?: string }) {
                 const isMain = mainCategories.includes(cat.id)
                 return (
                   <TableRow key={cat.id}>
-                    <TableCell className="flex items-center gap-3">
-                      <div className="p-2 bg-slate-100 rounded-md text-slate-600">
+                    <TableCell className="flex items-center gap-3 whitespace-nowrap">
+                      <div className="p-2 bg-slate-100 rounded-md text-slate-600 shrink-0">
                         {getIcon(cat.icon)}
                       </div>
-                      <span className="font-medium">
+                      <span className="font-medium truncate">
                         {t(cat.translationKey, cat.label)}
                       </span>
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right whitespace-nowrap">
                       <Switch
                         checked={isMain}
                         onCheckedChange={(checked) =>

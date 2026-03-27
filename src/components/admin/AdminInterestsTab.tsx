@@ -152,21 +152,21 @@ export function AdminInterestsTab({ franchiseId }: { franchiseId?: string }) {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in-up min-w-0 w-full">
-      <Card className="min-w-0 overflow-hidden">
-        <CardHeader>
-          <CardTitle>
+    <div className="space-y-6 animate-fade-in-up min-w-0 w-full max-w-full">
+      <Card className="min-w-0 overflow-hidden w-full">
+        <CardHeader className="min-w-0">
+          <CardTitle className="truncate">
             {t('franchisee.interests.title', 'Gerenciar Interesses')}
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="line-clamp-2">
             {t(
               'franchisee.interests.desc',
               'Adicione, edite ou remova as categorias de interesse que os usuários podem selecionar em seus perfis.',
             )}
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-4 sm:p-6 overflow-x-auto">
-          <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <CardContent className="p-4 sm:p-6 overflow-x-auto min-w-0">
+          <div className="flex flex-col sm:flex-row gap-4 mb-6 min-w-0">
             <Input
               placeholder={t(
                 'franchisee.interests.new',
@@ -175,7 +175,7 @@ export function AdminInterestsTab({ franchiseId }: { franchiseId?: string }) {
               value={newLabel}
               onChange={handleLabelChange}
               onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-              className="flex-1"
+              className="flex-1 min-w-[200px]"
             />
             <Input
               placeholder={t(
@@ -185,9 +185,9 @@ export function AdminInterestsTab({ franchiseId }: { franchiseId?: string }) {
               value={newId}
               onChange={handleIdChange}
               onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-              className="sm:w-48 bg-slate-50 font-mono text-sm"
+              className="sm:w-48 bg-slate-50 font-mono text-sm shrink-0"
             />
-            <Button onClick={handleAdd} className="shrink-0">
+            <Button onClick={handleAdd} className="shrink-0 w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />{' '}
               {t('franchisee.interests.add', 'Adicionar')}
             </Button>
@@ -196,13 +196,13 @@ export function AdminInterestsTab({ franchiseId }: { franchiseId?: string }) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>
+                <TableHead className="whitespace-nowrap">
                   {t('franchisee.interests.name', 'Nome do Interesse')}
                 </TableHead>
-                <TableHead>
+                <TableHead className="whitespace-nowrap">
                   {t('franchisee.interests.id', 'ID (Sistema)')}
                 </TableHead>
-                <TableHead className="text-right">
+                <TableHead className="text-right whitespace-nowrap">
                   {t('franchisee.interests.actions', 'Ações')}
                 </TableHead>
               </TableRow>
@@ -210,7 +210,7 @@ export function AdminInterestsTab({ franchiseId }: { franchiseId?: string }) {
             <TableBody>
               {interests.map((interest) => (
                 <TableRow key={interest.id}>
-                  <TableCell className="font-medium">
+                  <TableCell className="font-medium whitespace-nowrap">
                     {editingId === interest.id ? (
                       <Input
                         value={editLabel}
@@ -220,15 +220,20 @@ export function AdminInterestsTab({ franchiseId }: { franchiseId?: string }) {
                       />
                     ) : (
                       <div className="flex items-center gap-2">
-                        <Tag className="h-4 w-4 text-muted-foreground" />
-                        {getTranslatedInterest(interest)}
+                        <Tag className="h-4 w-4 text-muted-foreground shrink-0" />
+                        <span className="truncate">
+                          {getTranslatedInterest(interest)}
+                        </span>
                       </div>
                     )}
                   </TableCell>
-                  <TableCell className="text-muted-foreground font-mono text-xs">
+                  <TableCell
+                    className="text-muted-foreground font-mono text-xs whitespace-nowrap max-w-[150px] truncate"
+                    title={interest.id}
+                  >
                     {interest.id}
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right whitespace-nowrap">
                     {editingId === interest.id ? (
                       <div className="flex justify-end gap-2">
                         <Button

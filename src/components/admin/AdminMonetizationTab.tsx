@@ -62,83 +62,85 @@ export function AdminMonetizationTab({
   }, [])
 
   return (
-    <div className="space-y-6 animate-fade-in-up min-w-0 w-full">
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="min-w-0">
+    <div className="space-y-6 animate-fade-in-up min-w-0 w-full max-w-full">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 min-w-0">
+        <Card className="min-w-0 overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="text-sm font-medium truncate">
               {t('admin.margins')}
             </CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <DollarSign className="h-4 w-4 text-muted-foreground shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="min-w-0">
+            <div className="text-2xl font-bold truncate">
               {formatCurrency(totals.margin)}
             </div>
             <p className="text-xs text-muted-foreground">+12%</p>
           </CardContent>
         </Card>
-        <Card className="min-w-0">
+        <Card className="min-w-0 overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="text-sm font-medium truncate">
               {t('admin.totalCredits')}
             </CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <TrendingUp className="h-4 w-4 text-muted-foreground shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="min-w-0">
+            <div className="text-2xl font-bold truncate">
               {formatCurrency(totals.credits)}
             </div>
             <p className="text-xs text-muted-foreground">+8%</p>
           </CardContent>
         </Card>
-        <Card className="min-w-0">
+        <Card className="min-w-0 overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="text-sm font-medium truncate">
               {t('admin.volume')}
             </CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
+            <Activity className="h-4 w-4 text-muted-foreground shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="min-w-0">
+            <div className="text-2xl font-bold truncate">
               {formatNumber(totals.coupons)}
             </div>
             <p className="text-xs text-muted-foreground">+24%</p>
           </CardContent>
         </Card>
-        <Card className="min-w-0">
+        <Card className="min-w-0 overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="text-sm font-medium truncate">
               {t('admin.partnerStores')}
             </CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <Users className="h-4 w-4 text-muted-foreground shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="min-w-0">
+            <div className="text-2xl font-bold truncate">
               {formatNumber(dummyData.length)}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground truncate">
               {t('franchisee.monetization.active_plural', 'Ativos')}
             </p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card className="md:col-span-2 border-slate-200 min-w-0">
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-2 min-w-0">
+        <Card className="lg:col-span-2 border-slate-200 min-w-0 overflow-hidden">
           <CardHeader className="bg-slate-50/50 border-b">
-            <CardTitle className="flex items-center gap-2">
-              <Radar className="h-5 w-5 text-primary" />
-              Configurações Globais da Plataforma
+            <CardTitle className="flex items-center gap-2 truncate text-base sm:text-lg">
+              <Radar className="h-5 w-5 text-primary shrink-0" />
+              <span className="truncate">
+                Configurações Globais da Plataforma
+              </span>
             </CardTitle>
           </CardHeader>
-          <CardContent className="pt-6 space-y-4">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-white rounded-lg border border-slate-200 shadow-sm gap-4">
-              <div className="space-y-1">
-                <Label className="text-base font-semibold text-slate-800">
+          <CardContent className="pt-6 space-y-4 min-w-0 overflow-x-hidden">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-white rounded-lg border border-slate-200 shadow-sm gap-4 min-w-0">
+              <div className="space-y-1 min-w-0">
+                <Label className="text-sm sm:text-base font-semibold text-slate-800 block truncate">
                   Master Switch de Alertas de Proximidade
                 </Label>
-                <p className="text-sm text-slate-500">
+                <p className="text-xs sm:text-sm text-slate-500 line-clamp-2 sm:line-clamp-none">
                   Habilita ou desativa a tecnologia de Geofencing e Radar para
                   toda a base de usuários e lojistas simultaneamente.
                 </p>
@@ -156,17 +158,17 @@ export function AdminMonetizationTab({
           </CardContent>
         </Card>
 
-        <Card className="min-w-0">
+        <Card className="min-w-0 overflow-hidden">
           <CardHeader>
-            <CardTitle>
+            <CardTitle className="truncate">
               {t(
                 'franchisee.monetization.performance',
                 'Desempenho por Parceiro',
               )}
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="h-[300px] w-full min-w-0">
+          <CardContent className="min-w-0 p-2 sm:p-6 sm:pt-0">
+            <div className="h-[300px] w-full min-w-0 overflow-hidden">
               <ChartContainer
                 config={{
                   margin: {
@@ -185,8 +187,18 @@ export function AdminMonetizationTab({
                     vertical={false}
                     className="stroke-muted"
                   />
-                  <XAxis dataKey="partner" tickLine={false} axisLine={false} />
-                  <YAxis tickLine={false} axisLine={false} />
+                  <XAxis
+                    dataKey="partner"
+                    tickLine={false}
+                    axisLine={false}
+                    tick={{ fontSize: 12 }}
+                  />
+                  <YAxis
+                    tickLine={false}
+                    axisLine={false}
+                    tick={{ fontSize: 12 }}
+                    width={40}
+                  />
                   <ChartTooltip content={<ChartTooltipContent />} />
                   <Bar
                     dataKey="credits"
@@ -204,17 +216,17 @@ export function AdminMonetizationTab({
           </CardContent>
         </Card>
 
-        <Card className="min-w-0">
+        <Card className="min-w-0 overflow-hidden">
           <CardHeader>
-            <CardTitle>
+            <CardTitle className="truncate">
               {t(
                 'franchisee.monetization.evolution',
                 'Evolução de Uso e Receita',
               )}
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="h-[300px] w-full min-w-0">
+          <CardContent className="min-w-0 p-2 sm:p-6 sm:pt-0">
+            <div className="h-[300px] w-full min-w-0 overflow-hidden">
               <ChartContainer
                 config={{
                   revenue: {
@@ -233,13 +245,26 @@ export function AdminMonetizationTab({
                     vertical={false}
                     className="stroke-muted"
                   />
-                  <XAxis dataKey="date" tickLine={false} axisLine={false} />
-                  <YAxis yAxisId="left" tickLine={false} axisLine={false} />
+                  <XAxis
+                    dataKey="date"
+                    tickLine={false}
+                    axisLine={false}
+                    tick={{ fontSize: 12 }}
+                  />
+                  <YAxis
+                    yAxisId="left"
+                    tickLine={false}
+                    axisLine={false}
+                    tick={{ fontSize: 12 }}
+                    width={40}
+                  />
                   <YAxis
                     yAxisId="right"
                     orientation="right"
                     tickLine={false}
                     axisLine={false}
+                    tick={{ fontSize: 12 }}
+                    width={40}
                   />
                   <ChartTooltip content={<ChartTooltipContent />} />
                   <Line

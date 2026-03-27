@@ -136,60 +136,63 @@ export function FranchiseeAdsTab({ franchiseId }: { franchiseId?: string }) {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in-up min-w-0 w-full">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card className="border-l-4 border-l-blue-500 min-w-0">
+    <div className="space-y-6 animate-fade-in-up min-w-0 w-full max-w-full">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 min-w-0">
+        <Card className="border-l-4 border-l-blue-500 min-w-0 overflow-hidden">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="p-3 bg-blue-100 rounded-full text-blue-600">
                 <DollarSign className="h-6 w-6" />
               </div>
             </div>
-            <p className="text-sm font-medium text-muted-foreground">
+            <p className="text-sm font-medium text-muted-foreground truncate">
               {t(
                 'franchisee.ads.revenue',
                 'Receita Total de Anúncios Regionais',
               )}
             </p>
-            <h3 className="text-2xl font-bold">
+            <h3 className="text-2xl font-bold truncate">
               {formatCurrency(totalRevenue)}
             </h3>
           </CardContent>
         </Card>
-        <Card className="border-l-4 border-l-orange-500 min-w-0">
+        <Card className="border-l-4 border-l-orange-500 min-w-0 overflow-hidden">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="p-3 bg-orange-100 rounded-full text-orange-600">
                 <DollarSign className="h-6 w-6" />
               </div>
             </div>
-            <p className="text-sm font-medium text-muted-foreground">
+            <p className="text-sm font-medium text-muted-foreground truncate">
               {t(
                 'franchisee.ads.royalties',
                 'Royalties Devidos ({rate}%)',
               ).replace('{rate}', String(royaltyRate))}
             </p>
-            <h3 className="text-2xl font-bold">
+            <h3 className="text-2xl font-bold truncate">
               {formatCurrency(totalRoyalties)}
             </h3>
           </CardContent>
         </Card>
       </div>
 
-      <Card className="min-w-0 overflow-hidden">
-        <CardHeader className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-          <div>
-            <CardTitle>
+      <Card className="min-w-0 w-full overflow-hidden">
+        <CardHeader className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 min-w-0">
+          <div className="min-w-0">
+            <CardTitle className="truncate">
               {t('franchisee.ads.title', 'Publicidade Regional')}
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="line-clamp-2 sm:line-clamp-none">
               {t(
                 'franchisee.ads.desc',
                 'Crie e gerencie os anúncios exibidos exclusivamente na sua região.',
               )}
             </CardDescription>
           </div>
-          <Button onClick={() => handleOpenDialog()}>
+          <Button
+            onClick={() => handleOpenDialog()}
+            className="shrink-0 w-full sm:w-auto"
+          >
             <Plus className="mr-2 h-4 w-4" />
             {t('franchisee.ads.create', 'Criar Anúncio')}
           </Button>
@@ -198,15 +201,19 @@ export function FranchiseeAdsTab({ franchiseId }: { franchiseId?: string }) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>{t('franchisee.ads.ad', 'Anúncio')}</TableHead>
-                <TableHead>{t('franchisee.ads.status', 'Status')}</TableHead>
-                <TableHead>
+                <TableHead className="whitespace-nowrap">
+                  {t('franchisee.ads.ad', 'Anúncio')}
+                </TableHead>
+                <TableHead className="whitespace-nowrap">
+                  {t('franchisee.ads.status', 'Status')}
+                </TableHead>
+                <TableHead className="whitespace-nowrap">
                   {t('franchisee.ads.revenue_col', 'Receita')}
                 </TableHead>
-                <TableHead>
+                <TableHead className="whitespace-nowrap">
                   {t('franchisee.ads.royalties_col', 'Royalties')}
                 </TableHead>
-                <TableHead className="text-right">
+                <TableHead className="text-right whitespace-nowrap">
                   {t('franchisee.ads.actions', 'Ações')}
                 </TableHead>
               </TableRow>
@@ -217,19 +224,21 @@ export function FranchiseeAdsTab({ franchiseId }: { franchiseId?: string }) {
                 const royalties = revenue * (royaltyRate / 100)
                 return (
                   <TableRow key={ad.id}>
-                    <TableCell>
+                    <TableCell className="whitespace-nowrap min-w-[200px]">
                       <div className="flex items-center gap-3">
                         <img
                           src={ad.image}
                           alt={ad.title}
-                          className="w-12 h-8 rounded object-cover"
+                          className="w-12 h-8 rounded object-cover shrink-0"
                         />
-                        <div className="flex flex-col">
-                          <span className="font-medium">{ad.title}</span>
+                        <div className="flex flex-col min-w-0">
+                          <span className="font-medium truncate max-w-[150px] sm:max-w-xs">
+                            {ad.title}
+                          </span>
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="whitespace-nowrap">
                       <Badge
                         variant={
                           ad.status === 'active' ? 'default' : 'secondary'
@@ -243,13 +252,13 @@ export function FranchiseeAdsTab({ franchiseId }: { franchiseId?: string }) {
                             : ad.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="font-medium">
+                    <TableCell className="font-medium whitespace-nowrap">
                       {formatCurrency(revenue)}
                     </TableCell>
-                    <TableCell className="font-bold text-orange-600">
+                    <TableCell className="font-bold text-orange-600 whitespace-nowrap">
                       {formatCurrency(royalties)}
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right whitespace-nowrap">
                       <Button
                         variant="ghost"
                         size="icon"
@@ -287,7 +296,7 @@ export function FranchiseeAdsTab({ franchiseId }: { franchiseId?: string }) {
       </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>
               {editingAd

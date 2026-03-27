@@ -30,54 +30,60 @@ export function FranchiseeSettingsTab({
   if (!myFranchise) return null
 
   return (
-    <div className="space-y-6 animate-fade-in-up min-w-0 w-full">
-      <div>
-        <h2 className="text-2xl font-bold text-slate-800">
+    <div className="space-y-6 animate-fade-in-up min-w-0 w-full max-w-full">
+      <div className="min-w-0">
+        <h2 className="text-2xl font-bold text-slate-800 truncate">
           {t('franchisee.settings.title', 'Configurações')}
         </h2>
-        <p className="text-muted-foreground">
+        <p className="text-muted-foreground truncate">
           {t(
             'franchisee.settings.desc',
             'Parâmetros operacionais da franquia.',
           )}
         </p>
       </div>
-      <Card className="max-w-2xl shadow-sm border-slate-200 min-w-0">
-        <CardHeader className="bg-slate-50 border-b">
-          <CardTitle className="text-lg">
+      <Card className="max-w-2xl shadow-sm border-slate-200 min-w-0 w-full">
+        <CardHeader className="bg-slate-50 border-b min-w-0">
+          <CardTitle className="text-lg truncate">
             {t('franchisee.settings.contract_info', 'Informações Contratuais')}
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="line-clamp-2">
             {t(
               'franchisee.settings.contract_desc',
               'Configurações gerenciadas pela rede Master.',
             )}
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-5 pt-6">
-          <div className="space-y-2">
-            <Label className="font-semibold text-slate-700">
+        <CardContent className="space-y-5 pt-6 min-w-0">
+          <div className="space-y-2 min-w-0">
+            <Label className="font-semibold text-slate-700 truncate block">
               {t('franchisee.settings.region', 'Região de Atuação')}
             </Label>
             <Input
               value={myFranchise.region || myFranchise.addressCountry || ''}
               disabled
-              className="bg-slate-100 font-medium"
+              className="bg-slate-100 font-medium w-full"
             />
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="font-semibold text-slate-700">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 min-w-0">
+            <div className="space-y-2 min-w-0">
+              <Label className="font-semibold text-slate-700 truncate block">
                 {t('franchisee.settings.currency', 'Moeda Padrão')}
               </Label>
               <Input
                 value={currency}
                 disabled
-                className="bg-slate-100 font-medium"
+                className="bg-slate-100 font-medium w-full"
               />
             </div>
-            <div className="space-y-2">
-              <Label className="font-semibold text-slate-700">
+            <div className="space-y-2 min-w-0">
+              <Label
+                className="font-semibold text-slate-700 truncate block"
+                title={t(
+                  'franchisee.settings.royalty_rate',
+                  'Taxa de Royalties (Publicidade)',
+                )}
+              >
                 {t(
                   'franchisee.settings.royalty_rate',
                   'Taxa de Royalties (Publicidade)',
@@ -86,7 +92,7 @@ export function FranchiseeSettingsTab({
               <Input
                 value={`${formatNumber(royaltyRate)}%`}
                 disabled
-                className="bg-slate-100 font-medium text-orange-600"
+                className="bg-slate-100 font-medium text-orange-600 w-full"
               />
             </div>
           </div>

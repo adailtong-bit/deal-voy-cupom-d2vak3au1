@@ -18,12 +18,12 @@ export function TestingSandboxTab({ franchiseId }: { franchiseId?: string }) {
   const { formatNumber } = useRegionFormatting(franchise?.region)
 
   return (
-    <div className="space-y-6 animate-fade-in min-w-0 w-full">
-      <div>
-        <h2 className="text-2xl font-bold">
+    <div className="space-y-6 animate-fade-in min-w-0 w-full max-w-full">
+      <div className="min-w-0">
+        <h2 className="text-2xl font-bold truncate">
           {t('franchisee.sandbox.title', 'Sandbox de Testes')}
         </h2>
-        <p className="text-muted-foreground">
+        <p className="text-muted-foreground truncate">
           {t(
             'franchisee.sandbox.desc',
             'Perfis de teste predefinidos para validação e lógica geográfica.',
@@ -31,44 +31,52 @@ export function TestingSandboxTab({ franchiseId }: { franchiseId?: string }) {
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 min-w-0">
         {/* Individual Profile */}
-        <Card className="min-w-0">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <User className="h-5 w-5 text-primary" />
-              {t('franchisee.sandbox.individual', 'Perfil Individual')}
+        <Card className="min-w-0 overflow-hidden">
+          <CardHeader className="min-w-0">
+            <CardTitle className="flex items-center gap-2 truncate">
+              <User className="h-5 w-5 text-primary shrink-0" />
+              <span className="truncate">
+                {t('franchisee.sandbox.individual', 'Perfil Individual')}
+              </span>
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="truncate">
               {t(
                 'franchisee.sandbox.ind_desc',
                 'Teste de cenário para usuário final',
               )}
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4 text-sm overflow-x-auto">
-            <div className="grid grid-cols-2 gap-2 border-b pb-2">
-              <span className="text-muted-foreground">
+          <CardContent className="space-y-4 text-sm overflow-x-auto min-w-0">
+            <div className="grid grid-cols-2 gap-2 border-b pb-2 min-w-0">
+              <span className="text-muted-foreground truncate">
                 {t('franchisee.sandbox.name', 'Nome')}
               </span>
-              <span className="font-medium text-right">Carlos Silva</span>
+              <span className="font-medium text-right truncate">
+                Carlos Silva
+              </span>
             </div>
-            <div className="grid grid-cols-2 gap-2 border-b pb-2">
-              <span className="text-muted-foreground">
+            <div className="grid grid-cols-2 gap-2 border-b pb-2 min-w-0">
+              <span className="text-muted-foreground truncate">
                 {t('franchisee.sandbox.age', 'Idade')}
               </span>
-              <span className="font-medium text-right">{formatNumber(28)}</span>
+              <span className="font-medium text-right truncate">
+                {formatNumber(28)}
+              </span>
             </div>
-            <div className="grid grid-cols-2 gap-2 border-b pb-2">
-              <span className="text-muted-foreground">
+            <div className="grid grid-cols-2 gap-2 border-b pb-2 min-w-0">
+              <span className="text-muted-foreground truncate">
                 {t('franchisee.sandbox.gender', 'Gênero')}
               </span>
-              <span className="font-medium text-right">Male</span>
+              <span className="font-medium text-right truncate">Male</span>
             </div>
-            <div className="grid grid-cols-[1fr_2fr] gap-2 border-b pb-2">
-              <span className="text-muted-foreground flex items-center gap-1">
-                <MapPin className="h-3 w-3" />{' '}
-                {t('franchisee.sandbox.location', 'Localização')}
+            <div className="grid grid-cols-[1fr_2fr] gap-2 border-b pb-2 min-w-0">
+              <span className="text-muted-foreground flex items-center gap-1 truncate">
+                <MapPin className="h-3 w-3 shrink-0" />{' '}
+                <span className="truncate">
+                  {t('franchisee.sandbox.location', 'Localização')}
+                </span>
               </span>
               <span
                 className="font-medium text-right truncate"
@@ -77,15 +85,15 @@ export function TestingSandboxTab({ franchiseId }: { franchiseId?: string }) {
                 Brazil &gt; São Paulo &gt; São Paulo &gt; CEP: 01001-000
               </span>
             </div>
-            <div className="pt-2">
-              <span className="text-muted-foreground block mb-2">
+            <div className="pt-2 min-w-0">
+              <span className="text-muted-foreground block mb-2 truncate">
                 {t('franchisee.sandbox.interests', 'Interesses')}
               </span>
               <div className="flex flex-wrap gap-2">
-                <Badge variant="secondary">
+                <Badge variant="secondary" className="truncate max-w-full">
                   {t('category.food', 'Gastronomia')}
                 </Badge>
-                <Badge variant="secondary">
+                <Badge variant="secondary" className="truncate max-w-full">
                   {t('category.electronics', 'Tecnologia')}
                 </Badge>
               </div>
@@ -94,40 +102,44 @@ export function TestingSandboxTab({ franchiseId }: { franchiseId?: string }) {
         </Card>
 
         {/* Company Profile */}
-        <Card className="min-w-0">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Building className="h-5 w-5 text-blue-500" />
-              {t('franchisee.sandbox.company', 'Perfil de Empresa')}
+        <Card className="min-w-0 overflow-hidden">
+          <CardHeader className="min-w-0">
+            <CardTitle className="flex items-center gap-2 truncate">
+              <Building className="h-5 w-5 text-blue-500 shrink-0" />
+              <span className="truncate">
+                {t('franchisee.sandbox.company', 'Perfil de Empresa')}
+              </span>
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="truncate">
               {t(
                 'franchisee.sandbox.comp_desc',
                 'Teste de cenário para parceiro B2B',
               )}
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4 text-sm overflow-x-auto">
-            <div className="grid grid-cols-2 gap-2 border-b pb-2">
-              <span className="text-muted-foreground">
+          <CardContent className="space-y-4 text-sm overflow-x-auto min-w-0">
+            <div className="grid grid-cols-2 gap-2 border-b pb-2 min-w-0">
+              <span className="text-muted-foreground truncate">
                 {t('franchisee.sandbox.name', 'Nome')}
               </span>
-              <span className="font-medium text-right">
+              <span className="font-medium text-right truncate">
                 Global Travel Agency
               </span>
             </div>
-            <div className="grid grid-cols-2 gap-2 border-b pb-2">
-              <span className="text-muted-foreground">
+            <div className="grid grid-cols-2 gap-2 border-b pb-2 min-w-0">
+              <span className="text-muted-foreground truncate">
                 {t('franchisee.sandbox.category', 'Categoria')}
               </span>
-              <span className="font-medium text-right">
+              <span className="font-medium text-right truncate">
                 {t('category.leisure', 'Turismo')}
               </span>
             </div>
-            <div className="grid grid-cols-[1fr_2fr] gap-2 border-b pb-2">
-              <span className="text-muted-foreground flex items-center gap-1">
-                <MapPin className="h-3 w-3" />{' '}
-                {t('franchisee.sandbox.location', 'Localização')}
+            <div className="grid grid-cols-[1fr_2fr] gap-2 border-b pb-2 min-w-0">
+              <span className="text-muted-foreground flex items-center gap-1 truncate">
+                <MapPin className="h-3 w-3 shrink-0" />{' '}
+                <span className="truncate">
+                  {t('franchisee.sandbox.location', 'Localização')}
+                </span>
               </span>
               <span
                 className="font-medium text-right truncate"
@@ -136,8 +148,8 @@ export function TestingSandboxTab({ franchiseId }: { franchiseId?: string }) {
                 Portugal &gt; Lisboa &gt; Lisboa &gt; ZIP: 1000-001
               </span>
             </div>
-            <div className="grid grid-cols-2 gap-2 pt-2">
-              <span className="text-muted-foreground">
+            <div className="grid grid-cols-2 gap-2 pt-2 min-w-0">
+              <span className="text-muted-foreground truncate">
                 {t('franchisee.sandbox.status', 'Status')}
               </span>
               <div className="text-right">
@@ -148,22 +160,24 @@ export function TestingSandboxTab({ franchiseId }: { franchiseId?: string }) {
         </Card>
 
         {/* Franchise Profile */}
-        <Card className="min-w-0">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Store className="h-5 w-5 text-orange-500" />
-              {t('franchisee.sandbox.franchise', 'Perfil de Franquia')}
+        <Card className="min-w-0 overflow-hidden">
+          <CardHeader className="min-w-0">
+            <CardTitle className="flex items-center gap-2 truncate">
+              <Store className="h-5 w-5 text-orange-500 shrink-0" />
+              <span className="truncate">
+                {t('franchisee.sandbox.franchise', 'Perfil de Franquia')}
+              </span>
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="truncate">
               {t(
                 'franchisee.sandbox.fran_desc',
                 'Teste de cenário para multi-filiais',
               )}
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4 text-sm overflow-x-auto">
-            <div className="grid grid-cols-2 gap-2 border-b pb-2">
-              <span className="text-muted-foreground">
+          <CardContent className="space-y-4 text-sm overflow-x-auto min-w-0">
+            <div className="grid grid-cols-2 gap-2 border-b pb-2 min-w-0">
+              <span className="text-muted-foreground truncate">
                 {t('franchisee.sandbox.name', 'Nome')}
               </span>
               <span
@@ -173,8 +187,8 @@ export function TestingSandboxTab({ franchiseId }: { franchiseId?: string }) {
                 Burger Hub - Unidade Centro
               </span>
             </div>
-            <div className="grid grid-cols-2 gap-2 border-b pb-2">
-              <span className="text-muted-foreground">
+            <div className="grid grid-cols-2 gap-2 border-b pb-2 min-w-0">
+              <span className="text-muted-foreground truncate">
                 {t('franchisee.sandbox.parent_brand', 'Marca Principal')}
               </span>
               <span
@@ -184,16 +198,18 @@ export function TestingSandboxTab({ franchiseId }: { franchiseId?: string }) {
                 Burger Hub Global
               </span>
             </div>
-            <div className="grid grid-cols-2 gap-2 border-b pb-2">
-              <span className="text-muted-foreground">
+            <div className="grid grid-cols-2 gap-2 border-b pb-2 min-w-0">
+              <span className="text-muted-foreground truncate">
                 {t('franchisee.sandbox.franchise_id', 'ID da Franquia')}
               </span>
-              <span className="font-mono text-right">FR-001</span>
+              <span className="font-mono text-right truncate">FR-001</span>
             </div>
-            <div className="grid grid-cols-[1fr_2fr] gap-2 pt-2">
-              <span className="text-muted-foreground flex items-center gap-1">
-                <MapPin className="h-3 w-3" />{' '}
-                {t('franchisee.sandbox.location', 'Localização')}
+            <div className="grid grid-cols-[1fr_2fr] gap-2 pt-2 min-w-0">
+              <span className="text-muted-foreground flex items-center gap-1 truncate">
+                <MapPin className="h-3 w-3 shrink-0" />{' '}
+                <span className="truncate">
+                  {t('franchisee.sandbox.location', 'Localização')}
+                </span>
               </span>
               <span
                 className="font-medium text-right truncate"

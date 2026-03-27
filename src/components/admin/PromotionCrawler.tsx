@@ -29,28 +29,34 @@ export function PromotionCrawler({ franchiseId }: { franchiseId?: string }) {
   }).length
 
   return (
-    <div className="space-y-6 min-w-0 w-full">
-      <Card className="min-w-0 overflow-hidden">
-        <CardHeader>
-          <CardTitle>
+    <div className="space-y-6 min-w-0 w-full max-w-full">
+      <Card className="min-w-0 overflow-hidden w-full max-w-full">
+        <CardHeader className="min-w-0">
+          <CardTitle className="truncate">
             {t('franchisee.crawler.title', 'Gerenciamento de Crawler')}
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="truncate">
             {t(
               'franchisee.crawler.desc',
               'Configure fontes externas para capturar e importar ofertas para a plataforma.',
             )}
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-4 sm:p-6">
-          <Tabs defaultValue="sources" className="min-w-0">
-            <TabsList className="mb-6 w-full justify-start h-auto p-1 bg-slate-100 flex-wrap">
-              <TabsTrigger value="sources" className="py-2 px-4">
-                <Globe className="h-4 w-4 mr-2" />{' '}
+        <CardContent className="p-4 sm:p-6 min-w-0 overflow-x-hidden">
+          <Tabs defaultValue="sources" className="min-w-0 w-full">
+            <TabsList className="mb-6 w-full justify-start h-auto p-1 bg-slate-100 flex-wrap overflow-x-auto hide-scrollbar">
+              <TabsTrigger
+                value="sources"
+                className="py-2 px-4 whitespace-nowrap"
+              >
+                <Globe className="h-4 w-4 mr-2 shrink-0" />
                 {t('franchisee.crawler.sources', 'Fontes de Dados')}
               </TabsTrigger>
-              <TabsTrigger value="promotions" className="py-2 px-4">
-                <Box className="h-4 w-4 mr-2" />{' '}
+              <TabsTrigger
+                value="promotions"
+                className="py-2 px-4 whitespace-nowrap"
+              >
+                <Box className="h-4 w-4 mr-2 shrink-0" />
                 {t(
                   'franchisee.crawler.promotions',
                   'Ofertas Importadas',
@@ -60,14 +66,14 @@ export function PromotionCrawler({ franchiseId }: { franchiseId?: string }) {
 
             <TabsContent
               value="sources"
-              className="animate-in fade-in-50 min-w-0"
+              className="animate-in fade-in-50 min-w-0 w-full"
             >
               <CrawlerSourcesTab />
             </TabsContent>
 
             <TabsContent
               value="promotions"
-              className="animate-in fade-in-50 min-w-0"
+              className="animate-in fade-in-50 min-w-0 w-full"
             >
               <CrawlerPromotionsTab />
             </TabsContent>

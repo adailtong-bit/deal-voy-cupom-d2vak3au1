@@ -143,25 +143,32 @@ export function StaffTab({ parentType = 'global', parentId }: StaffTabProps) {
   }
 
   return (
-    <div className="space-y-4 animate-fade-in-up min-w-0 w-full">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-card p-4 rounded-lg border gap-4">
-        <div>
-          <h3 className="text-lg font-bold">
+    <div className="space-y-4 animate-fade-in-up min-w-0 w-full max-w-full">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-card p-4 rounded-lg border gap-4 min-w-0 w-full">
+        <div className="min-w-0">
+          <h3 className="text-lg font-bold truncate">
             {t('franchisee.staff.title', 'Equipe')}
           </h3>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground truncate">
             {t(
               'franchisee.staff.desc',
               'Gerencie o acesso e as funções dos funcionários na sua organização.',
             )}
           </p>
         </div>
-        <div className="flex gap-2 w-full sm:w-auto">
-          <Button variant="outline" onClick={() => setIsInviteDialogOpen(true)}>
+        <div className="flex gap-2 w-full sm:w-auto shrink-0">
+          <Button
+            variant="outline"
+            onClick={() => setIsInviteDialogOpen(true)}
+            className="flex-1 sm:flex-none"
+          >
             <Mail className="w-4 h-4 mr-2" />{' '}
             {t('franchisee.staff.invite', 'Convidar Usuário')}
           </Button>
-          <Button onClick={() => handleOpenDialog()}>
+          <Button
+            onClick={() => handleOpenDialog()}
+            className="flex-1 sm:flex-none"
+          >
             <Plus className="w-4 h-4 mr-2" />{' '}
             {t('franchisee.staff.add', 'Adicionar Membro')}
           </Button>
@@ -172,20 +179,24 @@ export function StaffTab({ parentType = 'global', parentId }: StaffTabProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>
+              <TableHead className="whitespace-nowrap">
                 {t('franchisee.staff.name', 'Nome do Funcionário')}
               </TableHead>
-              <TableHead>{t('franchisee.staff.email', 'E-mail')}</TableHead>
-              <TableHead>
+              <TableHead className="whitespace-nowrap">
+                {t('franchisee.staff.email', 'E-mail')}
+              </TableHead>
+              <TableHead className="whitespace-nowrap">
                 {t('franchisee.staff.role', 'Função / Cargo')}
               </TableHead>
               {parentType === 'global' && (
-                <TableHead>
+                <TableHead className="whitespace-nowrap">
                   {t('franchisee.staff.affiliation', 'Afiliação')}
                 </TableHead>
               )}
-              <TableHead>{t('franchisee.staff.status', 'Status')}</TableHead>
-              <TableHead className="text-right">
+              <TableHead className="whitespace-nowrap">
+                {t('franchisee.staff.status', 'Status')}
+              </TableHead>
+              <TableHead className="text-right whitespace-nowrap">
                 {t('franchisee.staff.action', 'Ação')}
               </TableHead>
             </TableRow>
@@ -193,17 +204,24 @@ export function StaffTab({ parentType = 'global', parentId }: StaffTabProps) {
           <TableBody>
             {staffList.map((u) => (
               <TableRow key={u.id}>
-                <TableCell className="font-medium">{u.name}</TableCell>
-                <TableCell>{u.email}</TableCell>
-                <TableCell>
+                <TableCell className="font-medium whitespace-nowrap">
+                  {u.name}
+                </TableCell>
+                <TableCell className="whitespace-nowrap">{u.email}</TableCell>
+                <TableCell className="whitespace-nowrap">
                   {u.staffRole || t('franchisee.staff.default_staff', 'Staff')}
                 </TableCell>
                 {parentType === 'global' && (
-                  <TableCell>
-                    <Badge variant="outline">{getParentName(u)}</Badge>
+                  <TableCell className="whitespace-nowrap">
+                    <Badge
+                      variant="outline"
+                      className="truncate max-w-[150px] block"
+                    >
+                      {getParentName(u)}
+                    </Badge>
                   </TableCell>
                 )}
-                <TableCell>
+                <TableCell className="whitespace-nowrap">
                   <Badge
                     variant={
                       u.status === 'invited'
@@ -216,7 +234,7 @@ export function StaffTab({ parentType = 'global', parentId }: StaffTabProps) {
                     {t(`franchisee.staff.${u.status || 'active'}`)}
                   </Badge>
                 </TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-right whitespace-nowrap">
                   <Button
                     variant="ghost"
                     size="icon"
@@ -238,7 +256,7 @@ export function StaffTab({ parentType = 'global', parentId }: StaffTabProps) {
             {staffList.length === 0 && (
               <TableRow>
                 <TableCell
-                  colSpan={6}
+                  colSpan={parentType === 'global' ? 6 : 5}
                   className="text-center py-6 text-muted-foreground"
                 >
                   {t(
@@ -253,7 +271,7 @@ export function StaffTab({ parentType = 'global', parentId }: StaffTabProps) {
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>
               {editingStaff
@@ -262,7 +280,7 @@ export function StaffTab({ parentType = 'global', parentId }: StaffTabProps) {
             </DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>{t('franchisee.staff.form_name', 'Nome')}</Label>
                 <Input
@@ -283,7 +301,7 @@ export function StaffTab({ parentType = 'global', parentId }: StaffTabProps) {
                 />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>
                   {t('franchisee.staff.form_role', 'Cargo / Função')}
@@ -342,7 +360,7 @@ export function StaffTab({ parentType = 'global', parentId }: StaffTabProps) {
       </Dialog>
 
       <Dialog open={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>
               {t('franchisee.staff.send_invite', 'Enviar Convite')}

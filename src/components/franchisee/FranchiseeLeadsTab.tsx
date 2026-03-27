@@ -82,56 +82,58 @@ export function FranchiseeLeadsTab({ franchiseId }: { franchiseId: string }) {
   }, [franchiseLogs, users, companies, t, searchQuery])
 
   return (
-    <div className="space-y-6 animate-fade-in-up min-w-0 w-full">
-      <div>
-        <h2 className="text-2xl font-bold text-slate-800">
+    <div className="space-y-6 animate-fade-in-up min-w-0 w-full max-w-full">
+      <div className="min-w-0">
+        <h2 className="text-2xl font-bold text-slate-800 truncate">
           {t('franchisee.leads.title', 'Leads Regionais')}
         </h2>
-        <p className="text-muted-foreground">
+        <p className="text-muted-foreground line-clamp-2 sm:line-clamp-none">
           {t(
             'franchisee.leads.desc',
             'Clientes que interagiram com ofertas dos seus lojistas.',
           )}
         </p>
       </div>
-      <Card className="shadow-sm min-w-0 overflow-hidden">
-        <CardContent className="p-0">
+      <Card className="shadow-sm min-w-0 w-full overflow-hidden">
+        <CardContent className="p-0 sm:p-0 overflow-x-auto">
           <Table>
             <TableHeader className="bg-slate-50">
               <TableRow>
-                <TableHead>
+                <TableHead className="whitespace-nowrap">
                   {t('franchisee.leads.customer', 'Cliente')}
                 </TableHead>
-                <TableHead>
+                <TableHead className="whitespace-nowrap">
                   {t('franchisee.leads.contact', 'Contato')}
                 </TableHead>
-                <TableHead>
+                <TableHead className="whitespace-nowrap">
                   {t('franchisee.leads.campaign', 'Campanha Utilizada')}
                 </TableHead>
-                <TableHead>
+                <TableHead className="whitespace-nowrap">
                   {t('franchisee.leads.merchant', 'Lojista')}
                 </TableHead>
-                <TableHead>{t('franchisee.leads.date', 'Data')}</TableHead>
+                <TableHead className="whitespace-nowrap">
+                  {t('franchisee.leads.date', 'Data')}
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {leadsList.map((lead) => (
                 <TableRow key={lead.id}>
-                  <TableCell className="font-medium text-slate-900">
+                  <TableCell className="font-medium text-slate-900 whitespace-nowrap">
                     {lead.customerName}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="whitespace-nowrap">
                     <div className="flex flex-col gap-1 text-sm text-slate-600">
                       {lead.email !== 'N/A' && (
-                        <span className="flex items-center gap-1.5">
-                          <Mail className="h-3 w-3 text-slate-400" />{' '}
-                          {lead.email}
+                        <span className="flex items-center gap-1.5 truncate max-w-[200px]">
+                          <Mail className="h-3 w-3 text-slate-400 shrink-0" />{' '}
+                          <span className="truncate">{lead.email}</span>
                         </span>
                       )}
                       {lead.phone !== 'N/A' && (
-                        <span className="flex items-center gap-1.5">
-                          <Phone className="h-3 w-3 text-slate-400" />{' '}
-                          {lead.phone}
+                        <span className="flex items-center gap-1.5 truncate max-w-[200px]">
+                          <Phone className="h-3 w-3 text-slate-400 shrink-0" />{' '}
+                          <span className="truncate">{lead.phone}</span>
                         </span>
                       )}
                       {lead.email === 'N/A' && lead.phone === 'N/A' && (
@@ -141,12 +143,15 @@ export function FranchiseeLeadsTab({ franchiseId }: { franchiseId: string }) {
                       )}
                     </div>
                   </TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="bg-slate-50">
+                  <TableCell className="whitespace-nowrap">
+                    <Badge
+                      variant="outline"
+                      className="bg-slate-50 max-w-[150px] truncate block"
+                    >
                       {lead.campaignName}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-slate-700 font-medium">
+                  <TableCell className="text-slate-700 font-medium whitespace-nowrap max-w-[150px] truncate">
                     {lead.storeName}
                   </TableCell>
                   <TableCell className="text-slate-500 text-sm whitespace-nowrap">

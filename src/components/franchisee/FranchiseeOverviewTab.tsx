@@ -80,12 +80,12 @@ export function FranchiseeOverviewTab({
   if (!myFranchise) return null
 
   return (
-    <div className="space-y-6 animate-fade-in-up min-w-0 w-full">
-      <div>
-        <h2 className="text-2xl font-bold text-slate-800">
+    <div className="space-y-6 animate-fade-in-up min-w-0 w-full max-w-full">
+      <div className="min-w-0">
+        <h2 className="text-2xl font-bold text-slate-800 truncate">
           {t('franchisee.overview.title', 'Visão Geral')}
         </h2>
-        <p className="text-muted-foreground">
+        <p className="text-muted-foreground line-clamp-2 sm:line-clamp-none">
           {t(
             'franchisee.overview.desc',
             `Métricas consolidadas da região de ${myFranchise.region}.`,
@@ -95,51 +95,51 @@ export function FranchiseeOverviewTab({
           )}
         </p>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="shadow-sm border-slate-200">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-semibold text-slate-600 uppercase">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 min-w-0">
+        <Card className="shadow-sm border-slate-200 min-w-0 overflow-hidden">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 min-w-0">
+            <CardTitle className="text-sm font-semibold text-slate-600 uppercase truncate">
               {t('franchisee.overview.sales', 'Vendas Regionais')}
             </CardTitle>
-            <CreditCard className="h-4 w-4 text-emerald-500" />
+            <CreditCard className="h-4 w-4 text-emerald-500 shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-black text-slate-800">
+          <CardContent className="min-w-0">
+            <div className="text-2xl font-black text-slate-800 truncate">
               {formatCurrency(totalSales)}
             </div>
-            <p className="text-xs text-emerald-600 mt-1 font-medium">
+            <p className="text-xs text-emerald-600 mt-1 font-medium truncate">
               {t('franchisee.overview.sales_desc', 'Volume transacionado')}
             </p>
           </CardContent>
         </Card>
-        <Card className="shadow-sm border-slate-200">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-semibold text-slate-600 uppercase">
+        <Card className="shadow-sm border-slate-200 min-w-0 overflow-hidden">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 min-w-0">
+            <CardTitle className="text-sm font-semibold text-slate-600 uppercase truncate">
               {t('franchisee.overview.leads', 'Leads Capturados')}
             </CardTitle>
-            <Users className="h-4 w-4 text-blue-500" />
+            <Users className="h-4 w-4 text-blue-500 shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-black text-slate-800">
+          <CardContent className="min-w-0">
+            <div className="text-2xl font-black text-slate-800 truncate">
               {formatNumber(totalLeads)}
             </div>
-            <p className="text-xs text-slate-400 mt-1 font-medium">
+            <p className="text-xs text-slate-400 mt-1 font-medium truncate">
               {t('franchisee.overview.leads_desc', 'Clientes adquiridos')}
             </p>
           </CardContent>
         </Card>
-        <Card className="shadow-sm border-slate-200">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-semibold text-slate-600 uppercase">
+        <Card className="shadow-sm border-slate-200 min-w-0 overflow-hidden">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 min-w-0">
+            <CardTitle className="text-sm font-semibold text-slate-600 uppercase truncate">
               {t('franchisee.overview.campaigns', 'Campanhas Ativas')}
             </CardTitle>
-            <Ticket className="h-4 w-4 text-orange-500" />
+            <Ticket className="h-4 w-4 text-orange-500 shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-black text-slate-800">
+          <CardContent className="min-w-0">
+            <div className="text-2xl font-black text-slate-800 truncate">
               {formatNumber(activeCampaigns)}
             </div>
-            <p className="text-xs text-slate-400 mt-1 font-medium">
+            <p className="text-xs text-slate-400 mt-1 font-medium truncate">
               {t(
                 'franchisee.overview.campaigns_desc',
                 'De {total} no total',
@@ -147,18 +147,18 @@ export function FranchiseeOverviewTab({
             </p>
           </CardContent>
         </Card>
-        <Card className="shadow-sm border-slate-200 border-l-4 border-l-orange-500">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-semibold text-slate-600 uppercase">
+        <Card className="shadow-sm border-slate-200 border-l-4 border-l-orange-500 min-w-0 overflow-hidden">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 min-w-0">
+            <CardTitle className="text-sm font-semibold text-slate-600 uppercase truncate">
               {t('franchisee.overview.royalties', 'Royalties Devidos')}
             </CardTitle>
-            <DollarSign className="h-4 w-4 text-orange-500" />
+            <DollarSign className="h-4 w-4 text-orange-500 shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-black text-orange-600">
+          <CardContent className="min-w-0">
+            <div className="text-2xl font-black text-orange-600 truncate">
               {formatCurrency(totalRoyalties)}
             </div>
-            <p className="text-xs text-slate-400 mt-1 font-medium">
+            <p className="text-xs text-slate-400 mt-1 font-medium truncate">
               {t(
                 'franchisee.overview.royalties_desc',
                 '{rate}% sobre publicidade',

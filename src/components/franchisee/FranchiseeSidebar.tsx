@@ -151,8 +151,8 @@ export function FranchiseeSidebar({
         isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full',
       )}
     >
-      <div className="p-6 border-b flex-shrink-0">
-        <h2 className="text-xl font-bold text-slate-800 tracking-tight">
+      <div className="p-6 border-b flex-shrink-0 min-w-0">
+        <h2 className="text-xl font-bold text-slate-800 tracking-tight truncate">
           {t('franchisee.dashboard', 'Painel Regional')}
         </h2>
         <p className="text-sm font-medium text-primary mt-1 truncate">
@@ -160,11 +160,11 @@ export function FranchiseeSidebar({
         </p>
       </div>
 
-      <ScrollArea className="flex-1 w-full min-h-0">
+      <ScrollArea className="flex-1 w-full min-w-0">
         <div className="p-4 space-y-6 overflow-x-hidden">
           {menuGroups.map((group, idx) => (
             <div key={idx} className="space-y-2">
-              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider px-2">
+              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider px-2 truncate">
                 {group.title}
               </h4>
               <nav className="space-y-1">
