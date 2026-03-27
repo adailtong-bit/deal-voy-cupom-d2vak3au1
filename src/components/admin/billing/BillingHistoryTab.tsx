@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useRegionFormatting } from '@/hooks/useRegionFormatting'
@@ -18,7 +19,15 @@ import {
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
 import { CheckCircle2, Download, Eye, AlertCircle } from 'lucide-react'
+import { PartnerInvoice } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
 export function BillingHistoryTab({ franchiseId }: { franchiseId?: string }) {
@@ -28,6 +37,9 @@ export function BillingHistoryTab({ franchiseId }: { franchiseId?: string }) {
 
   const franchise = franchises.find((f) => f.id === franchiseId)
   const { formatCurrency, formatDate } = useRegionFormatting(franchise?.region)
+
+  const [isViewOpen, setIsViewOpen] = useState(false)
+  const [viewingInv, setViewingInv] = useState<PartnerInvoice | null>(null)
 
   const historyInvoices = partnerInvoices
     .filter(
@@ -41,6 +53,11 @@ export function BillingHistoryTab({ franchiseId }: { franchiseId?: string }) {
 
   const getCompanyName = (id: string) =>
     companies.find((c) => c.id === id)?.name || id
+
+  const handleView = (inv: PartnerInvoice) => {
+    setViewingInv(inv)
+    setIsViewOpen(true)
+  }
 
   return (
     <Card className="w-full min-w-0 overflow-hidden shadow-sm border-slate-200">
@@ -162,6 +179,7 @@ export function BillingHistoryTab({ franchiseId }: { franchiseId?: string }) {
                         variant="ghost"
                         size="icon"
                         className="shrink-0 h-8 w-8 sm:h-9 sm:w-9 text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition-colors"
+                        onClick={() => handleView(inv)}
                         title={t('common.view', 'Visualizar')}
                       >
                         <Eye className="h-4 w-4" />
@@ -194,6 +212,140 @@ export function BillingHistoryTab({ franchiseId }: { franchiseId?: string }) {
           </Table>
         </div>
       </CardContent>
+
+      <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {t('franchisee.billing.view_invoice', 'Detalhes da Fatura')} -{' '}
+              {viewingInv?.referenceNumber}
+            </DialogTitle>
+          </DialogHeader>
+          {viewingInv && (
+            <div className="grid gap-6 py-4">
+              <div className="flex justify-between items-center bg-slate-50 p-4 rounded-lg border border-slate-100">
+                <div>
+                  <p className="text-sm text-slate-500">
+                    {t('franchisee.billing.partner', 'Parceiro')}
+                  </p>
+                  <p className="font-bold text-lg">
+                    {getCompanyName(viewingInv.companyId)}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <Badge
+                    className={cn(
+                      'capitalize',
+                      viewingInv.status === 'paid'
+                        ? 'bg-emerald-500 text-white'
+                        : viewingInv.status === 'overdue'
+                          ? 'bg-destructive text-white'
+                          : 'bg-slate-500 text-white',
+                    )}
+                  >
+                    {t(
+                      `franchisee.billing.${viewingInv.status}`,
+                      viewingInv.status,
+                    )}
+                  </Badge>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div>
+                  <p className="text-xs text-slate-500 uppercase font-semibold">
+                    {t('franchisee.billing.issue_date', 'Data de Emissão')}
+                  </p>
+                  <p className="font-medium">
+                    {formatDate(viewingInv.issueDate)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500 uppercase font-semibold">
+                    {t('franchisee.billing.due_date', 'Vencimento')}
+                  </p>
+                  <p className="font-medium text-red-600">
+                    {formatDate(viewingInv.dueDate)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500 uppercase font-semibold">
+                    {t('franchisee.billing.period_start', 'Início')}
+                  </p>
+                  <p className="font-medium">
+                    {formatDate(viewingInv.periodStart)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500 uppercase font-semibold">
+                    {t('franchisee.billing.period_end', 'Fim')}
+                  </p>
+                  <p className="font-medium">
+                    {formatDate(viewingInv.periodEnd)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-slate-50 rounded-lg border border-slate-100 p-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <p className="text-sm text-slate-500">
+                    {t('franchisee.billing.total_sales', 'Total de Vendas')}
+                  </p>
+                  <p className="font-bold text-xl text-slate-700">
+                    {formatCurrency(viewingInv.totalSales)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-slate-500">
+                    {t('franchisee.billing.total_cashback', 'Cashback')}
+                  </p>
+                  <p className="font-bold text-xl text-slate-700">
+                    {formatCurrency(viewingInv.totalCashback)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-slate-500">
+                    {t('franchisee.billing.total_commission', 'Comissão')}
+                  </p>
+                  <p className="font-bold text-xl text-emerald-600">
+                    {formatCurrency(viewingInv.totalCommission)}
+                  </p>
+                </div>
+              </div>
+
+              {viewingInv.description && (
+                <div className="space-y-1">
+                  <p className="text-sm font-semibold text-slate-700">
+                    {t('franchisee.billing.description', 'Descrição / Notas')}
+                  </p>
+                  <p className="text-sm text-slate-600 bg-slate-50 p-3 rounded-md">
+                    {viewingInv.description}
+                  </p>
+                </div>
+              )}
+
+              {viewingInv.paymentInstructions && (
+                <div className="space-y-1">
+                  <p className="text-sm font-semibold text-slate-700">
+                    {t(
+                      'franchisee.billing.payment_instructions',
+                      'Instruções de Pagamento',
+                    )}
+                  </p>
+                  <p className="text-sm text-slate-600 bg-slate-50 p-3 rounded-md whitespace-pre-wrap">
+                    {viewingInv.paymentInstructions}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsViewOpen(false)}>
+              {t('common.close', 'Fechar')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   )
 }

@@ -28,6 +28,14 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Send, Edit2, Trash2 } from 'lucide-react'
 import { PartnerInvoice } from '@/lib/types'
 
@@ -209,37 +217,178 @@ export function BillingStagingTab({ franchiseId }: { franchiseId?: string }) {
       </CardContent>
 
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {t('franchisee.billing.edit_invoice', 'Editar Fatura')}
+              {t('franchisee.billing.edit_invoice', 'Editar Fatura Detalhada')}
             </DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
+          <div className="grid gap-6 py-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>{t('franchisee.billing.reference', 'Referência')}</Label>
+                <Input value={editForm.referenceNumber || ''} disabled />
+              </div>
+              <div className="space-y-2">
+                <Label>{t('franchisee.billing.status', 'Status')}</Label>
+                <Select
+                  value={editForm.status}
+                  onValueChange={(v: any) =>
+                    setEditForm({ ...editForm, status: v })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="draft">
+                      {t('franchisee.billing.draft', 'Rascunho')}
+                    </SelectItem>
+                    <SelectItem value="pending">
+                      {t('franchisee.billing.pending', 'Pendente')}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>
+                  {t('franchisee.billing.issue_date', 'Data de Emissão')}
+                </Label>
+                <Input
+                  type="date"
+                  value={editForm.issueDate?.split('T')[0] || ''}
+                  onChange={(e) =>
+                    setEditForm({
+                      ...editForm,
+                      issueDate: new Date(e.target.value).toISOString(),
+                    })
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>{t('franchisee.billing.due_date', 'Vencimento')}</Label>
+                <Input
+                  type="date"
+                  value={editForm.dueDate?.split('T')[0] || ''}
+                  onChange={(e) =>
+                    setEditForm({
+                      ...editForm,
+                      dueDate: new Date(e.target.value).toISOString(),
+                    })
+                  }
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>
+                  {t('franchisee.billing.period_start', 'Início do Período')}
+                </Label>
+                <Input
+                  type="date"
+                  value={editForm.periodStart?.split('T')[0] || ''}
+                  onChange={(e) =>
+                    setEditForm({
+                      ...editForm,
+                      periodStart: new Date(e.target.value).toISOString(),
+                    })
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>
+                  {t('franchisee.billing.period_end', 'Fim do Período')}
+                </Label>
+                <Input
+                  type="date"
+                  value={editForm.periodEnd?.split('T')[0] || ''}
+                  onChange={(e) =>
+                    setEditForm({
+                      ...editForm,
+                      periodEnd: new Date(e.target.value).toISOString(),
+                    })
+                  }
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label>
+                  {t('franchisee.billing.total_sales', 'Total de Vendas')}
+                </Label>
+                <Input
+                  type="number"
+                  value={editForm.totalSales || 0}
+                  onChange={(e) =>
+                    setEditForm({
+                      ...editForm,
+                      totalSales: Number(e.target.value),
+                    })
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>
+                  {t('franchisee.billing.total_commission', 'Comissão')}
+                </Label>
+                <Input
+                  type="number"
+                  value={editForm.totalCommission || 0}
+                  onChange={(e) =>
+                    setEditForm({
+                      ...editForm,
+                      totalCommission: Number(e.target.value),
+                    })
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>
+                  {t('franchisee.billing.total_cashback', 'Cashback')}
+                </Label>
+                <Input
+                  type="number"
+                  value={editForm.totalCashback || 0}
+                  onChange={(e) =>
+                    setEditForm({
+                      ...editForm,
+                      totalCashback: Number(e.target.value),
+                    })
+                  }
+                />
+              </div>
+            </div>
+
             <div className="space-y-2">
               <Label>
-                {t('franchisee.billing.total_commission', 'Total (Comissão)')}
+                {t('franchisee.billing.description', 'Descrição / Notas')}
               </Label>
-              <Input
-                type="number"
-                value={editForm.totalCommission || 0}
+              <Textarea
+                value={editForm.description || ''}
                 onChange={(e) =>
-                  setEditForm({
-                    ...editForm,
-                    totalCommission: Number(e.target.value),
-                  })
+                  setEditForm({ ...editForm, description: e.target.value })
                 }
               />
             </div>
+
             <div className="space-y-2">
-              <Label>{t('franchisee.billing.due_date', 'Vencimento')}</Label>
-              <Input
-                type="date"
-                value={editForm.dueDate?.split('T')[0] || ''}
+              <Label>
+                {t(
+                  'franchisee.billing.payment_instructions',
+                  'Instruções de Pagamento',
+                )}
+              </Label>
+              <Textarea
+                value={editForm.paymentInstructions || ''}
                 onChange={(e) =>
                   setEditForm({
                     ...editForm,
-                    dueDate: new Date(e.target.value).toISOString(),
+                    paymentInstructions: e.target.value,
                   })
                 }
               />
