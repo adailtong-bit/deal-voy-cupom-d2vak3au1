@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import {
   Bell,
   Search,
@@ -52,11 +52,24 @@ export function MobileHeader() {
   const { t, language, setLanguage } = useLanguage()
   const navigate = useNavigate()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const searchQuery = searchParams.get('q') || ''
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     setIsMenuOpen(false)
+  }
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value
+    setSearchParams(
+      (prev) => {
+        if (val) prev.set('q', val)
+        else prev.delete('q')
+        return prev
+      },
+      { replace: true },
+    )
   }
 
   const handleLogout = () => {
@@ -103,9 +116,9 @@ export function MobileHeader() {
                 <Input
                   type="search"
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={handleSearchChange}
                   placeholder={t('nav.search', 'Buscar ofertas...')}
-                  className="w-full pl-9 bg-slate-50 border-slate-200 h-11 rounded-xl"
+                  className="w-full pl-9 bg-slate-50 border-slate-200 h-10 rounded-xl text-sm transition-all focus:bg-white"
                 />
               </form>
 

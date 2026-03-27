@@ -1,3 +1,4 @@
+import { useSearchParams } from 'react-router-dom'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useRegionFormatting } from '@/hooks/useRegionFormatting'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -21,6 +22,8 @@ export function FranchiseeCurrentAccountTab({
   const { t } = useLanguage()
   const { partnerInvoices, ads, platformSettings, franchises } =
     useCouponStore()
+  const [searchParams] = useSearchParams()
+  const searchQuery = (searchParams.get('q') || '').toLowerCase()
 
   const franchise = franchises.find((f) => f.id === franchiseId)
   const { formatCurrency, formatDate } = useRegionFormatting(franchise?.region)
@@ -62,13 +65,15 @@ export function FranchiseeCurrentAccountTab({
       status: 'completed',
     }))
 
-  const allTransactions = [...adIncomes, ...royaltyPayments, ...paidInvoices]
-    .filter((t) => t.amount > 0)
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+  const allTransactionsUnfiltered = [
+    ...adIncomes,
+    ...royaltyPayments,
+    ...paidInvoices,
+  ]
 
   // Add dummy initial balance if empty for better visualization
-  if (allTransactions.length === 0) {
-    allTransactions.push({
+  if (allTransactionsUnfiltered.length === 0) {
+    allTransactionsUnfiltered.push({
       id: 'initial',
       date: new Date(Date.now() - 30 * 86400000).toISOString(),
       desc: t('franchisee.current_account.initial_deposit'),
@@ -77,6 +82,14 @@ export function FranchiseeCurrentAccountTab({
       status: 'completed',
     })
   }
+
+  const allTransactions = allTransactionsUnfiltered
+    .filter((t) => t.amount > 0)
+    .filter((t) => {
+      if (!searchQuery) return true
+      return t.desc.toLowerCase().includes(searchQuery)
+    })
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 
   const inflows = allTransactions
     .filter((t) => t.type === 'in')
@@ -190,6 +203,16 @@ export function FranchiseeCurrentAccountTab({
                   </TableCell>
                 </TableRow>
               ))}
+              {allTransactions.length === 0 && (
+                <TableRow>
+                  <TableCell
+                    colSpan={5}
+                    className="text-center py-8 text-muted-foreground"
+                  >
+                    {t('common.none', 'Nenhum registro encontrado.')}
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </CardContent>

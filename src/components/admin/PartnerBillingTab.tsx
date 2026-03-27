@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { FileText, Plus, CheckCircle, Clock, Send } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -40,6 +41,8 @@ export function PartnerBillingTab({ franchiseId }: { franchiseId?: string }) {
     generatePartnerInvoice,
     franchises,
   } = useCouponStore()
+  const [searchParams] = useSearchParams()
+  const searchQuery = (searchParams.get('q') || '').toLowerCase()
 
   const franchise = franchises.find((f) => f.id === franchiseId)
   const { formatCurrency, formatShortDate } = useRegionFormatting(
@@ -51,9 +54,21 @@ export function PartnerBillingTab({ franchiseId }: { franchiseId?: string }) {
     : companies
   const companyIds = displayCompanies.map((c) => c.id)
 
-  const displayInvoices = franchiseId
-    ? partnerInvoices.filter((i) => companyIds.includes(i.companyId))
-    : partnerInvoices
+  const getCompanyName = (id: string) =>
+    displayCompanies.find((c) => c.id === id)?.name || id
+
+  const displayInvoices = (
+    franchiseId
+      ? partnerInvoices.filter((i) => companyIds.includes(i.companyId))
+      : partnerInvoices
+  ).filter((i) => {
+    if (!searchQuery) return true
+    const compName = getCompanyName(i.companyId).toLowerCase()
+    return (
+      compName.includes(searchQuery) ||
+      i.referenceNumber.toLowerCase().includes(searchQuery)
+    )
+  })
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [newInvoice, setNewInvoice] = useState({
@@ -99,9 +114,6 @@ export function PartnerBillingTab({ franchiseId }: { franchiseId?: string }) {
         )
     }
   }
-
-  const getCompanyName = (id: string) =>
-    displayCompanies.find((c) => c.id === id)?.name || id
 
   const paidAmount = displayInvoices
     .filter((i) => i.status === 'paid')

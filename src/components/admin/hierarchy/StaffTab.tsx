@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
 import { Button } from '@/components/ui/button'
@@ -40,6 +41,8 @@ export function StaffTab({ parentType = 'global', parentId }: StaffTabProps) {
   const { users, addUser, updateUser, deleteUser, companies, franchises } =
     useCouponStore()
   const { t } = useLanguage()
+  const [searchParams] = useSearchParams()
+  const searchQuery = (searchParams.get('q') || '').toLowerCase()
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false)
@@ -58,12 +61,21 @@ export function StaffTab({ parentType = 'global', parentId }: StaffTabProps) {
     staffRole: t('franchisee.staff.default_manager', 'Manager'),
   })
 
-  const staffList = users.filter((u) => {
-    if (u.role !== 'staff') return false
-    if (parentType === 'company' && u.companyId !== parentId) return false
-    if (parentType === 'franchise' && u.franchiseId !== parentId) return false
-    return true
-  })
+  const staffList = users
+    .filter((u) => {
+      if (u.role !== 'staff') return false
+      if (parentType === 'company' && u.companyId !== parentId) return false
+      if (parentType === 'franchise' && u.franchiseId !== parentId) return false
+      return true
+    })
+    .filter((u) => {
+      if (!searchQuery) return true
+      return (
+        u.name.toLowerCase().includes(searchQuery) ||
+        u.email.toLowerCase().includes(searchQuery) ||
+        (u.staffRole && u.staffRole.toLowerCase().includes(searchQuery))
+      )
+    })
 
   const handleOpenDialog = (staff?: User) => {
     if (staff) {
@@ -231,7 +243,7 @@ export function StaffTab({ parentType = 'global', parentId }: StaffTabProps) {
                 >
                   {t(
                     'franchisee.staff.no_staff',
-                    'Nenhum membro da equipe registrado.',
+                    'Nenhum membro da equipe encontrado.',
                   )}
                 </TableCell>
               </TableRow>

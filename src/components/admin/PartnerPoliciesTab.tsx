@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Plus, Edit2, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -39,6 +40,8 @@ export function PartnerPoliciesTab({ franchiseId }: { franchiseId?: string }) {
     deletePartnerPolicy,
     franchises,
   } = useCouponStore()
+  const [searchParams] = useSearchParams()
+  const searchQuery = (searchParams.get('q') || '').toLowerCase()
 
   const franchise = franchises.find((f) => f.id === franchiseId)
   const { formatNumber } = useRegionFormatting(franchise?.region)
@@ -48,9 +51,20 @@ export function PartnerPoliciesTab({ franchiseId }: { franchiseId?: string }) {
     : companies
   const companyIds = displayCompanies.map((c) => c.id)
 
-  const displayPolicies = franchiseId
-    ? partnerPolicies.filter((p) => companyIds.includes(p.companyId))
-    : partnerPolicies
+  const getCompanyName = (id: string) =>
+    displayCompanies.find((c) => c.id === id)?.name || id
+
+  const displayPolicies = (
+    franchiseId
+      ? partnerPolicies.filter((p) => companyIds.includes(p.companyId))
+      : partnerPolicies
+  ).filter((p) => {
+    if (!searchQuery) return true
+    return (
+      getCompanyName(p.companyId).toLowerCase().includes(searchQuery) ||
+      p.billingModel.toLowerCase().includes(searchQuery)
+    )
+  })
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingPolicy, setEditingPolicy] = useState<PartnerPolicy | null>(null)
@@ -98,9 +112,6 @@ export function PartnerPoliciesTab({ franchiseId }: { franchiseId?: string }) {
   const handleDelete = (id: string) => {
     deletePartnerPolicy(id)
   }
-
-  const getCompanyName = (id: string) =>
-    displayCompanies.find((c) => c.id === id)?.name || id
 
   return (
     <div className="space-y-6 animate-fade-in-up">

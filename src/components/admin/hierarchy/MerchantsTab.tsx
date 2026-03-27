@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
 import { Button } from '@/components/ui/button'
@@ -27,13 +28,24 @@ export function MerchantsTab({ franchiseId }: { franchiseId?: string }) {
   const { companies, franchises, addCompany, updateCompany, deleteCompany } =
     useCouponStore()
   const { t } = useLanguage()
+  const [searchParams] = useSearchParams()
+  const searchQuery = (searchParams.get('q') || '').toLowerCase()
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingMerchant, setEditingMerchant] = useState<Company | null>(null)
 
-  const displayCompanies = franchiseId
-    ? companies.filter((c) => c.franchiseId === franchiseId)
-    : companies
+  const displayCompanies = (
+    franchiseId
+      ? companies.filter((c) => c.franchiseId === franchiseId)
+      : companies
+  ).filter((c) => {
+    if (!searchQuery) return true
+    return (
+      c.name.toLowerCase().includes(searchQuery) ||
+      c.email.toLowerCase().includes(searchQuery) ||
+      (c.region && c.region.toLowerCase().includes(searchQuery))
+    )
+  })
 
   const handleOpenDialog = (merchant?: Company) => {
     if (merchant) {

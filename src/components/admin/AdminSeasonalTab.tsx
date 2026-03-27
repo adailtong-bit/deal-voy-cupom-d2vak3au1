@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import {
   Plus,
   Edit2,
@@ -44,6 +45,8 @@ export function AdminSeasonalTab({ franchiseId }: { franchiseId?: string }) {
   const { t } = useLanguage()
   const { coupons, companies, franchises, updateCampaign, deleteCoupon } =
     useCouponStore()
+  const [searchParams] = useSearchParams()
+  const searchQuery = (searchParams.get('q') || '').toLowerCase()
 
   const franchise = franchises.find((f) => f.id === franchiseId)
   const { formatCurrency, formatDate, formatNumber } = useRegionFormatting(
@@ -55,17 +58,30 @@ export function AdminSeasonalTab({ franchiseId }: { franchiseId?: string }) {
     : companies
   const companyIds = displayCompanies.map((c) => c.id)
 
-  const activeEvents = coupons.filter((e) => {
-    if (!e.isSeasonal) return false
-    if (e.status === 'archived') return false
-    if (franchiseId) {
+  const getCompanyName = (id?: string) => {
+    if (!id || id === 'none') return '-'
+    return displayCompanies.find((c) => c.id === id)?.name || id
+  }
+
+  const activeEvents = coupons
+    .filter((e) => {
+      if (!e.isSeasonal) return false
+      if (e.status === 'archived') return false
+      if (franchiseId) {
+        return (
+          e.franchiseId === franchiseId ||
+          (e.companyId && companyIds.includes(e.companyId))
+        )
+      }
+      return true
+    })
+    .filter((e) => {
+      if (!searchQuery) return true
       return (
-        e.franchiseId === franchiseId ||
-        (e.companyId && companyIds.includes(e.companyId))
+        e.title.toLowerCase().includes(searchQuery) ||
+        getCompanyName(e.companyId).toLowerCase().includes(searchQuery)
       )
-    }
-    return true
-  })
+    })
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingEvent, setEditingEvent] = useState<any>(null)
@@ -73,11 +89,6 @@ export function AdminSeasonalTab({ franchiseId }: { franchiseId?: string }) {
   const handleOpenDialog = (event?: any) => {
     setEditingEvent(event || null)
     setIsDialogOpen(true)
-  }
-
-  const getCompanyName = (id?: string) => {
-    if (!id || id === 'none') return '-'
-    return displayCompanies.find((c) => c.id === id)?.name || id
   }
 
   const chartData = activeEvents.map((e) => ({

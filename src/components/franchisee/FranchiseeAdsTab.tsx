@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useRegionFormatting } from '@/hooks/useRegionFormatting'
@@ -43,11 +44,11 @@ export function FranchiseeAdsTab({ franchiseId }: { franchiseId?: string }) {
     franchises,
   } = useCouponStore()
   const { t } = useLanguage()
+  const [searchParams] = useSearchParams()
+  const searchQuery = (searchParams.get('q') || '').toLowerCase()
 
   const franchise = franchises.find((f) => f.id === franchiseId)
-  const { formatCurrency, formatNumber } = useRegionFormatting(
-    franchise?.region,
-  )
+  const { formatCurrency } = useRegionFormatting(franchise?.region)
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingAd, setEditingAd] = useState<Advertisement | null>(null)
@@ -63,8 +64,16 @@ export function FranchiseeAdsTab({ franchiseId }: { franchiseId?: string }) {
   const royaltyRate = platformSettings.franchiseRoyaltyRate || 15
 
   const myAds = useMemo(() => {
-    return ads.filter((a) => a.franchiseId === franchiseId)
-  }, [ads, franchiseId])
+    return ads
+      .filter((a) => a.franchiseId === franchiseId)
+      .filter((a) => {
+        if (!searchQuery) return true
+        return (
+          a.title.toLowerCase().includes(searchQuery) ||
+          (a.description && a.description.toLowerCase().includes(searchQuery))
+        )
+      })
+  }, [ads, franchiseId, searchQuery])
 
   const totalRevenue = myAds.reduce(
     (sum, ad) => sum + (ad.price || ad.budget || 0),

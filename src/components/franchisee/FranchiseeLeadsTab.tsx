@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useRegionFormatting } from '@/hooks/useRegionFormatting'
 import { useCouponStore } from '@/stores/CouponContext'
@@ -17,6 +18,8 @@ import { Mail, Phone } from 'lucide-react'
 export function FranchiseeLeadsTab({ franchiseId }: { franchiseId: string }) {
   const { t } = useLanguage()
   const { validationLogs, users, companies, franchises } = useCouponStore()
+  const [searchParams] = useSearchParams()
+  const searchQuery = (searchParams.get('q') || '').toLowerCase()
 
   const myFranchise = franchises.find((f) => f.id === franchiseId)
   const { formatDate } = useRegionFormatting(
@@ -62,11 +65,21 @@ export function FranchiseeLeadsTab({ franchiseId }: { franchiseId: string }) {
           acquiredAt: log.validatedAt,
         }
       })
+      .filter((lead) => {
+        if (!searchQuery) return true
+        return (
+          lead.customerName.toLowerCase().includes(searchQuery) ||
+          lead.email.toLowerCase().includes(searchQuery) ||
+          lead.phone.toLowerCase().includes(searchQuery) ||
+          lead.campaignName.toLowerCase().includes(searchQuery) ||
+          lead.storeName.toLowerCase().includes(searchQuery)
+        )
+      })
       .sort(
         (a, b) =>
           new Date(b.acquiredAt).getTime() - new Date(a.acquiredAt).getTime(),
       )
-  }, [franchiseLogs, users, companies, t])
+  }, [franchiseLogs, users, companies, t, searchQuery])
 
   return (
     <div className="space-y-6 animate-fade-in-up">

@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Search, Bell, Home, User, LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -19,6 +19,20 @@ export function DesktopHeader() {
   const { user, logout } = useCouponStore()
   const { t } = useLanguage()
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const searchQuery = searchParams.get('q') || ''
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value
+    setSearchParams(
+      (prev) => {
+        if (val) prev.set('q', val)
+        else prev.delete('q')
+        return prev
+      },
+      { replace: true },
+    )
+  }
 
   const handleLogout = () => {
     logout()
@@ -100,12 +114,14 @@ export function DesktopHeader() {
           </nav>
         </div>
         <div className="flex items-center gap-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <div className="relative group hidden sm:block">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground transition-colors group-focus-within:text-primary" />
             <input
               type="search"
+              value={searchQuery}
+              onChange={handleSearchChange}
               placeholder={t('nav.search', 'Buscar...')}
-              className="h-9 w-64 rounded-full border border-input bg-slate-50 pl-9 pr-4 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:bg-white transition-all"
+              className="h-8 w-40 md:w-48 lg:w-56 rounded-full border border-input bg-slate-50/50 pl-8 pr-4 text-xs transition-all focus:w-64 focus:bg-white focus:ring-2 focus:ring-primary/20 outline-none placeholder:text-muted-foreground/70"
             />
           </div>
           <LanguageSelector />

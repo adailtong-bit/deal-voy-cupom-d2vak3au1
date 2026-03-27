@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
 import { CATEGORIES } from '@/lib/data'
@@ -25,8 +26,17 @@ import { toast } from 'sonner'
 export function AdminInterestsTab({ franchiseId }: { franchiseId?: string }) {
   const { platformSettings, updatePlatformSettings } = useCouponStore()
   const { t } = useLanguage()
+  const [searchParams] = useSearchParams()
+  const searchQuery = (searchParams.get('q') || '').toLowerCase()
 
-  const interests = platformSettings.availableInterests || []
+  const interests = (platformSettings.availableInterests || []).filter((i) => {
+    if (!searchQuery) return true
+    return (
+      i.label.toLowerCase().includes(searchQuery) ||
+      i.id.toLowerCase().includes(searchQuery)
+    )
+  })
+
   const [newLabel, setNewLabel] = useState('')
   const [newId, setNewId] = useState('')
   const [newIdManuallyEdited, setNewIdManuallyEdited] = useState(false)
@@ -63,8 +73,9 @@ export function AdminInterestsTab({ franchiseId }: { franchiseId?: string }) {
   const handleAdd = () => {
     if (!newLabel.trim() || !newId.trim()) return
     const cleanId = newId.trim().replace(/-$/, '') // remove trailing dash
+    const allInterests = platformSettings.availableInterests || []
 
-    if (interests.find((i) => i.id === cleanId)) {
+    if (allInterests.find((i) => i.id === cleanId)) {
       toast.error(t('common.error', 'Ocorreu um erro'))
       return
     }
@@ -75,7 +86,7 @@ export function AdminInterestsTab({ franchiseId }: { franchiseId?: string }) {
       icon: 'Tag',
     }
     updatePlatformSettings({
-      availableInterests: [...interests, newInterest],
+      availableInterests: [...allInterests, newInterest],
     })
     setNewLabel('')
     setNewId('')
@@ -83,8 +94,9 @@ export function AdminInterestsTab({ franchiseId }: { franchiseId?: string }) {
   }
 
   const handleDelete = (id: string) => {
+    const allInterests = platformSettings.availableInterests || []
     updatePlatformSettings({
-      availableInterests: interests.filter((i) => i.id !== id),
+      availableInterests: allInterests.filter((i) => i.id !== id),
     })
   }
 
@@ -95,10 +107,11 @@ export function AdminInterestsTab({ franchiseId }: { franchiseId?: string }) {
 
   const saveEdit = () => {
     if (!editLabel.trim()) return
+    const allInterests = platformSettings.availableInterests || []
     // Mask edit label as well to prevent double spaces
     const cleanLabel = editLabel.replace(/\s{2,}/g, ' ').trim()
     updatePlatformSettings({
-      availableInterests: interests.map((i) =>
+      availableInterests: allInterests.map((i) =>
         i.id === editingId ? { ...i, label: cleanLabel } : i,
       ),
     })
@@ -265,7 +278,7 @@ export function AdminInterestsTab({ franchiseId }: { franchiseId?: string }) {
                   >
                     {t(
                       'franchisee.interests.no_interests',
-                      'Nenhum interesse cadastrado.',
+                      'Nenhum interesse encontrado.',
                     )}
                   </TableCell>
                 </TableRow>
