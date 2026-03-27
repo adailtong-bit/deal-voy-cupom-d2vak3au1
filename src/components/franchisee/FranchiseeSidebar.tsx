@@ -147,7 +147,7 @@ export function FranchiseeSidebar({
   return (
     <aside
       className={cn(
-        'fixed inset-y-0 left-0 z-50 w-64 bg-white border-r shadow-lg transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 flex flex-col h-full',
+        'fixed inset-y-0 left-0 z-50 w-64 bg-white border-r shadow-lg transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 flex flex-col h-full shrink-0',
         isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full',
       )}
     >
@@ -161,7 +161,7 @@ export function FranchiseeSidebar({
       </div>
 
       <ScrollArea className="flex-1 w-full min-h-0">
-        <div className="p-4 space-y-6">
+        <div className="p-4 space-y-6 overflow-x-hidden">
           {menuGroups.map((group, idx) => (
             <div key={idx} className="space-y-2">
               <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider px-2">

@@ -4,6 +4,7 @@ import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
 import { LayoutDashboard, Menu, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { ScrollArea } from '@/components/ui/scroll-area'
 
 import { FranchiseeSidebar } from '@/components/franchisee/FranchiseeSidebar'
 import { FranchiseeOverviewTab } from '@/components/franchisee/FranchiseeOverviewTab'
@@ -93,66 +94,68 @@ export default function FranchiseeDashboard() {
       )}
 
       {/* Main Content */}
-      <main className="flex-1 w-full pb-20 md:pb-8 overflow-auto p-4 sm:p-6 lg:p-8">
-        <div className="max-w-6xl mx-auto">
-          {activeTab === 'overview' && (
-            <FranchiseeOverviewTab franchiseId={myFranchise.id} />
-          )}
-          {activeTab === 'merchants' && (
-            <MerchantsTab franchiseId={myFranchise.id} />
-          )}
+      <main className="flex-1 min-w-0 h-full flex flex-col relative">
+        <ScrollArea className="flex-1 w-full">
+          <div className="p-4 sm:p-6 lg:p-8 pb-20 md:pb-8 max-w-6xl mx-auto w-full overflow-x-hidden">
+            {activeTab === 'overview' && (
+              <FranchiseeOverviewTab franchiseId={myFranchise.id} />
+            )}
+            {activeTab === 'merchants' && (
+              <MerchantsTab franchiseId={myFranchise.id} />
+            )}
 
-          {/* Financeiro */}
-          {activeTab === 'current-account' && (
-            <FranchiseeCurrentAccountTab franchiseId={myFranchise.id} />
-          )}
-          {activeTab === 'billing' && (
-            <PartnerBillingTab franchiseId={myFranchise.id} />
-          )}
-          {activeTab === 'monetization' && (
-            <AdminMonetizationTab franchiseId={myFranchise.id} />
-          )}
-          {activeTab === 'ads-royalties' && (
-            <FranchiseeAdsTab franchiseId={myFranchise.id} />
-          )}
+            {/* Financeiro */}
+            {activeTab === 'current-account' && (
+              <FranchiseeCurrentAccountTab franchiseId={myFranchise.id} />
+            )}
+            {activeTab === 'billing' && (
+              <PartnerBillingTab franchiseId={myFranchise.id} />
+            )}
+            {activeTab === 'monetization' && (
+              <AdminMonetizationTab franchiseId={myFranchise.id} />
+            )}
+            {activeTab === 'ads-royalties' && (
+              <FranchiseeAdsTab franchiseId={myFranchise.id} />
+            )}
 
-          {/* Operacional */}
-          {activeTab === 'seasonal' && (
-            <AdminSeasonalTab franchiseId={myFranchise.id} />
-          )}
-          {activeTab === 'categories' && (
-            <AdminCategoriesTab franchiseId={myFranchise.id} />
-          )}
-          {activeTab === 'interests' && (
-            <AdminInterestsTab franchiseId={myFranchise.id} />
-          )}
-          {activeTab === 'policies' && (
-            <PartnerPoliciesTab franchiseId={myFranchise.id} />
-          )}
+            {/* Operacional */}
+            {activeTab === 'seasonal' && (
+              <AdminSeasonalTab franchiseId={myFranchise.id} />
+            )}
+            {activeTab === 'categories' && (
+              <AdminCategoriesTab franchiseId={myFranchise.id} />
+            )}
+            {activeTab === 'interests' && (
+              <AdminInterestsTab franchiseId={myFranchise.id} />
+            )}
+            {activeTab === 'policies' && (
+              <PartnerPoliciesTab franchiseId={myFranchise.id} />
+            )}
 
-          {/* Inteligência */}
-          {activeTab === 'crm' && <AdminCRM franchiseId={myFranchise.id} />}
-          {activeTab === 'leads' && (
-            <FranchiseeLeadsTab franchiseId={myFranchise.id} />
-          )}
-          {activeTab === 'crawler' && (
-            <PromotionCrawler franchiseId={myFranchise.id} />
-          )}
-          {activeTab === 'insights' && (
-            <DataInsightsTab franchiseId={myFranchise.id} />
-          )}
+            {/* Inteligência */}
+            {activeTab === 'crm' && <AdminCRM franchiseId={myFranchise.id} />}
+            {activeTab === 'leads' && (
+              <FranchiseeLeadsTab franchiseId={myFranchise.id} />
+            )}
+            {activeTab === 'crawler' && (
+              <PromotionCrawler franchiseId={myFranchise.id} />
+            )}
+            {activeTab === 'insights' && (
+              <DataInsightsTab franchiseId={myFranchise.id} />
+            )}
 
-          {/* Apoio */}
-          {activeTab === 'sandbox' && (
-            <TestingSandboxTab franchiseId={myFranchise.id} />
-          )}
-          {activeTab === 'team' && (
-            <StaffTab parentType="franchise" parentId={myFranchise.id} />
-          )}
-          {activeTab === 'settings' && (
-            <FranchiseeSettingsTab franchiseId={myFranchise.id} />
-          )}
-        </div>
+            {/* Apoio */}
+            {activeTab === 'sandbox' && (
+              <TestingSandboxTab franchiseId={myFranchise.id} />
+            )}
+            {activeTab === 'team' && (
+              <StaffTab parentType="franchise" parentId={myFranchise.id} />
+            )}
+            {activeTab === 'settings' && (
+              <FranchiseeSettingsTab franchiseId={myFranchise.id} />
+            )}
+          </div>
+        </ScrollArea>
       </main>
     </div>
   )
