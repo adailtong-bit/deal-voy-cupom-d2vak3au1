@@ -16,6 +16,13 @@ import { CheckCircle, XCircle, ExternalLink, Edit } from 'lucide-react'
 import { CrawlerAnalysisSheet } from './CrawlerAnalysisSheet'
 import { DiscoveredPromotion } from '@/lib/types'
 import { toast } from 'sonner'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 export function CrawlerPromotionsTab() {
   const { t } = useLanguage()
@@ -37,8 +44,10 @@ export function CrawlerPromotionsTab() {
   const [selectedPromo, setSelectedPromo] =
     useState<DiscoveredPromotion | null>(null)
   const [isSheetOpen, setIsSheetOpen] = useState(false)
+  const [filterState, setFilterState] = useState<string>('all')
+  const [filterCity, setFilterCity] = useState<string>('all')
 
-  const pendingPromotions = discoveredPromotions.filter(
+  const basePendingPromotions = discoveredPromotions.filter(
     (p) =>
       p.status === 'pending' &&
       p.storeName?.trim() &&
@@ -47,13 +56,46 @@ export function CrawlerPromotionsTab() {
       (p.capturedAt || p.expiryDate),
   )
 
+  const allStates = Array.from(
+    new Set(basePendingPromotions.map((p) => p.state).filter(Boolean)),
+  ).sort() as string[]
+
+  const allCities = Array.from(
+    new Set(
+      basePendingPromotions
+        .filter((p) => filterState === 'all' || p.state === filterState)
+        .map((p) => p.city)
+        .filter(Boolean),
+    ),
+  ).sort() as string[]
+
+  const pendingPromotions = basePendingPromotions.filter((p) => {
+    if (filterState !== 'all' && p.state !== filterState) return false
+    if (filterCity !== 'all' && p.city !== filterCity) return false
+    return true
+  })
+
   const handleImport = (
     id: string,
     category?: string,
     editedData?: DiscoveredPromotion,
   ) => {
+    let finalData = editedData
+    if (!finalData) {
+      const promo = basePendingPromotions.find((p) => p.id === id)
+      if (promo) {
+        let expiry = promo.expiryDate
+        if (!expiry) {
+          const date = new Date()
+          date.setDate(date.getDate() + 30)
+          expiry = date.toISOString()
+        }
+        finalData = { ...promo, expiryDate: expiry }
+      }
+    }
+
     // Attempting to pass editedData if the mock store supports it internally
-    ;(importPromotion as any)(id, category, editedData)
+    ;(importPromotion as any)(id, category, finalData)
     toast.success(
       t(
         'franchisee.crawler.imported_success',
@@ -74,13 +116,55 @@ export function CrawlerPromotionsTab() {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-bold">
-          {t('franchisee.crawler.found_offers', 'Ofertas Encontradas')}
-        </h3>
-        <Badge variant="secondary">
-          {pendingPromotions.length} {t('common.pending', 'Pendentes')}
-        </Badge>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex items-center gap-3">
+          <h3 className="text-lg font-bold">
+            {t('franchisee.crawler.found_offers', 'Ofertas Encontradas')}
+          </h3>
+          <Badge variant="secondary">
+            {pendingPromotions.length} {t('common.pending', 'Pendentes')}
+          </Badge>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+          <Select
+            value={filterState}
+            onValueChange={(val) => {
+              setFilterState(val)
+              setFilterCity('all')
+            }}
+          >
+            <SelectTrigger className="w-full sm:w-[180px] bg-background">
+              <SelectValue placeholder={t('common.state', 'Estado')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">
+                {t('common.all_states', 'Todos os Estados')}
+              </SelectItem>
+              {allStates.map((s) => (
+                <SelectItem key={s} value={s}>
+                  {s}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={filterCity} onValueChange={setFilterCity}>
+            <SelectTrigger className="w-full sm:w-[180px] bg-background">
+              <SelectValue placeholder={t('common.city', 'Cidade')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">
+                {t('common.all_cities', 'Todas as Cidades')}
+              </SelectItem>
+              {allCities.map((c) => (
+                <SelectItem key={c} value={c}>
+                  {c}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="rounded-md border bg-card overflow-hidden">

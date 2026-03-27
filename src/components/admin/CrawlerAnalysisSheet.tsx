@@ -22,6 +22,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { CheckCircle, XCircle } from 'lucide-react'
 import { CATEGORIES } from '@/lib/data'
 import { useLanguage } from '@/stores/LanguageContext'
+import { LOCATION_DATA, COUNTRIES } from '@/lib/locationData'
 
 interface CrawlerAnalysisSheetProps {
   promo: DiscoveredPromotion | null
@@ -210,36 +211,114 @@ export function CrawlerAnalysisSheet({
                   </div>
                   <div className="space-y-2">
                     <Label>{t('common.country', 'País')}</Label>
-                    <Input
+                    <Select
                       value={editedPromo.country || ''}
-                      onChange={(e) =>
+                      onValueChange={(val) => {
                         setEditedPromo({
                           ...editedPromo,
-                          country: e.target.value,
+                          country: val,
+                          state: '',
+                          city: '',
                         })
-                      }
-                    />
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue
+                          placeholder={t('common.select', 'Selecione')}
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Array.from(
+                          new Set(
+                            [...COUNTRIES, editedPromo.country].filter(Boolean),
+                          ),
+                        ).map((c) => (
+                          <SelectItem key={c as string} value={c as string}>
+                            {c as string}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-2">
                     <Label>{t('common.state', 'Estado')}</Label>
-                    <Input
+                    <Select
                       value={editedPromo.state || ''}
-                      onChange={(e) =>
+                      onValueChange={(val) => {
                         setEditedPromo({
                           ...editedPromo,
-                          state: e.target.value,
+                          state: val,
+                          city: '',
                         })
-                      }
-                    />
+                      }}
+                      disabled={!editedPromo.country}
+                    >
+                      <SelectTrigger>
+                        <SelectValue
+                          placeholder={t('common.select', 'Selecione')}
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Array.from(
+                          new Set(
+                            [
+                              ...(editedPromo.country &&
+                              LOCATION_DATA[editedPromo.country]
+                                ? Object.keys(
+                                    LOCATION_DATA[editedPromo.country].states,
+                                  )
+                                : []),
+                              editedPromo.state,
+                            ].filter(Boolean),
+                          ),
+                        ).map((s) => (
+                          <SelectItem key={s as string} value={s as string}>
+                            {s as string}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-2">
                     <Label>{t('common.city', 'Cidade')}</Label>
-                    <Input
+                    <Select
                       value={editedPromo.city || ''}
-                      onChange={(e) =>
-                        setEditedPromo({ ...editedPromo, city: e.target.value })
-                      }
-                    />
+                      onValueChange={(val) => {
+                        setEditedPromo({
+                          ...editedPromo,
+                          city: val,
+                        })
+                      }}
+                      disabled={!editedPromo.state || !editedPromo.country}
+                    >
+                      <SelectTrigger>
+                        <SelectValue
+                          placeholder={t('common.select', 'Selecione')}
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Array.from(
+                          new Set(
+                            [
+                              ...(editedPromo.country &&
+                              editedPromo.state &&
+                              LOCATION_DATA[editedPromo.country]?.states[
+                                editedPromo.state
+                              ]
+                                ? LOCATION_DATA[editedPromo.country].states[
+                                    editedPromo.state
+                                  ]
+                                : []),
+                              editedPromo.city,
+                            ].filter(Boolean),
+                          ),
+                        ).map((c) => (
+                          <SelectItem key={c as string} value={c as string}>
+                            {c as string}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
               </div>
