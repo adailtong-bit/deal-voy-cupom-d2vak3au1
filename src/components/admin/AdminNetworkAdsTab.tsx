@@ -37,7 +37,73 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useRegionFormatting } from '@/hooks/useRegionFormatting'
 import { DollarSign, Edit2, Trash2 } from 'lucide-react'
-import { Advertisement } from '@/lib/types'
+import { Advertisement, Franchise } from '@/lib/types'
+
+interface AdRowProps {
+  ad: Advertisement
+  royaltyRate: number
+  franchises: Franchise[]
+  handleEdit: (ad: Advertisement) => void
+  deleteAd: (id: string) => void
+  t: (key: string, fallback?: string) => string
+}
+
+function AdRow({
+  ad,
+  royaltyRate,
+  franchises,
+  handleEdit,
+  deleteAd,
+  t,
+}: AdRowProps) {
+  const adFranchise = franchises.find((f) => f.id === ad.franchiseId)
+  const { formatCurrency: formatLocalCurrency } = useRegionFormatting(
+    adFranchise?.region,
+    adFranchise?.addressCountry,
+  )
+  const revenue = ad.price || ad.budget || 0
+  const royalties = revenue * (royaltyRate / 100)
+
+  return (
+    <TableRow>
+      <TableCell>
+        <div className="flex items-center gap-3">
+          <img
+            src={ad.image}
+            alt={ad.title}
+            className="w-12 h-8 rounded object-cover"
+          />
+          <span className="font-medium block">{ad.title}</span>
+        </div>
+      </TableCell>
+      <TableCell className="text-muted-foreground">
+        {adFranchise?.name || t('franchisee.merchants.unknown', 'Desconhecida')}
+      </TableCell>
+      <TableCell>
+        <Badge
+          variant={ad.status === 'active' ? 'default' : 'secondary'}
+          className="capitalize"
+        >
+          {t(`admin.${ad.status}`, ad.status)}
+        </Badge>
+      </TableCell>
+      <TableCell className="font-medium">
+        {formatLocalCurrency(revenue)}
+      </TableCell>
+      <TableCell className="font-bold text-green-600">
+        {formatLocalCurrency(royalties)}
+      </TableCell>
+      <TableCell className="text-right">
+        <Button variant="ghost" size="icon" onClick={() => handleEdit(ad)}>
+          <Edit2 className="h-4 w-4 text-muted-foreground" />
+        </Button>
+        <Button variant="ghost" size="icon" onClick={() => deleteAd(ad.id)}>
+          <Trash2 className="h-4 w-4 text-destructive" />
+        </Button>
+      </TableCell>
+    </TableRow>
+  )
+}
 
 export function AdminNetworkAdsTab() {
   const { ads, franchises, platformSettings, updateAd, deleteAd, user } =
@@ -184,68 +250,17 @@ export function AdminNetworkAdsTab() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredAds.map((ad) => {
-                const adFranchise = franchises.find(
-                  (f) => f.id === ad.franchiseId,
-                )
-                const { formatCurrency: formatLocalCurrency } =
-                  useRegionFormatting(
-                    adFranchise?.region,
-                    adFranchise?.addressCountry,
-                  )
-                const revenue = ad.price || ad.budget || 0
-                const royalties = revenue * (royaltyRate / 100)
-                return (
-                  <TableRow key={ad.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <img
-                          src={ad.image}
-                          alt={ad.title}
-                          className="w-12 h-8 rounded object-cover"
-                        />
-                        <span className="font-medium block">{ad.title}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {adFranchise?.name ||
-                        t('franchisee.merchants.unknown', 'Desconhecida')}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          ad.status === 'active' ? 'default' : 'secondary'
-                        }
-                        className="capitalize"
-                      >
-                        {t(`admin.${ad.status}`, ad.status)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {formatLocalCurrency(revenue)}
-                    </TableCell>
-                    <TableCell className="font-bold text-green-600">
-                      {formatLocalCurrency(royalties)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEdit(ad)}
-                      >
-                        <Edit2 className="h-4 w-4 text-muted-foreground" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => deleteAd(ad.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
+              {filteredAds.map((ad) => (
+                <AdRow
+                  key={ad.id}
+                  ad={ad}
+                  royaltyRate={royaltyRate}
+                  franchises={franchises}
+                  handleEdit={handleEdit}
+                  deleteAd={deleteAd}
+                  t={t}
+                />
+              ))}
               {filteredAds.length === 0 && (
                 <TableRow>
                   <TableCell
