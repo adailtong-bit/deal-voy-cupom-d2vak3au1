@@ -15,10 +15,12 @@ import { StaffTab } from './hierarchy/StaffTab'
 import { PendingApprovalsTab } from './hierarchy/PendingApprovalsTab'
 import { AuditLogsTab } from './hierarchy/AuditLogsTab'
 import { PerformanceDashboardTab } from './hierarchy/PerformanceDashboardTab'
+import { useRegionFormatting } from '@/hooks/useRegionFormatting'
 
 export function AdminHierarchyTab() {
   const { user, franchises, companies } = useCouponStore()
   const { t } = useLanguage()
+  const { formatNumber } = useRegionFormatting(user?.region, user?.country)
 
   const isSuperAdmin = user?.role === 'super_admin'
   const myFranchiseId =
@@ -37,38 +39,38 @@ export function AdminHierarchyTab() {
         {isSuperAdmin && (
           <TabsTrigger value="performance" className="py-2">
             <Activity className="h-4 w-4 mr-2" />
-            Performance
+            {t('admin.hierarchy.performance', 'Performance')}
           </TabsTrigger>
         )}
         {isSuperAdmin && (
           <TabsTrigger value="franchises" className="py-2">
             <Building className="h-4 w-4 mr-2" />
-            Franchises
+            {t('admin.hierarchy.franchises', 'Franchises')}
           </TabsTrigger>
         )}
         <TabsTrigger value="merchants" className="py-2">
           <Store className="h-4 w-4 mr-2" />
-          Merchants
+          {t('admin.hierarchy.merchants', 'Merchants')}
         </TabsTrigger>
         {isSuperAdmin && (
           <TabsTrigger value="approvals" className="py-2 relative">
             <CheckSquare className="h-4 w-4 mr-2" />
-            Approvals
+            {t('admin.hierarchy.approvals', 'Approvals')}
             {pendingCount > 0 && (
               <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full shadow-sm">
-                {pendingCount}
+                {formatNumber(pendingCount)}
               </span>
             )}
           </TabsTrigger>
         )}
         <TabsTrigger value="staff" className="py-2">
           <Users className="h-4 w-4 mr-2" />
-          Manage Team
+          {t('admin.hierarchy.team', 'Manage Team')}
         </TabsTrigger>
         {isSuperAdmin && (
           <TabsTrigger value="audit" className="py-2">
             <FileStack className="h-4 w-4 mr-2" />
-            Audit Logs
+            {t('admin.hierarchy.audit', 'Audit Logs')}
           </TabsTrigger>
         )}
       </TabsList>

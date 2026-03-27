@@ -30,11 +30,16 @@ import { TestingSandboxTab } from '@/components/admin/TestingSandboxTab'
 import { AdminHierarchyTab } from '@/components/admin/AdminHierarchyTab'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useCouponStore } from '@/stores/CouponContext'
+import { useRegionFormatting } from '@/hooks/useRegionFormatting'
 import { cn } from '@/lib/utils'
 
 export default function AdminDashboard() {
   const { t } = useLanguage()
   const { user, companies } = useCouponStore()
+  const { formatNumber, formatCurrency } = useRegionFormatting(
+    user?.region,
+    user?.country,
+  )
 
   const isSuperAdmin = user?.role === 'super_admin'
   const isFranchisee = user?.role === 'franchisee'
@@ -239,7 +244,7 @@ export default function AdminDashboard() {
             </>
           )}
           <TabsTrigger value="hierarchy">
-            {t('admin.hierarchy', 'Hierarchy & Team')}
+            {t('admin.hierarchy.title', 'Hierarchy & Team')}
           </TabsTrigger>
         </TabsList>
 
@@ -255,7 +260,9 @@ export default function AdminDashboard() {
                     <Users className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">45.231</div>
+                    <div className="text-2xl font-bold">
+                      {formatNumber(45231)}
+                    </div>
                     <p className="text-xs text-muted-foreground">
                       +20.1% este mês
                     </p>
@@ -269,7 +276,9 @@ export default function AdminDashboard() {
                     <Store className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">1.234</div>
+                    <div className="text-2xl font-bold">
+                      {formatNumber(1234)}
+                    </div>
                     <p className="text-xs text-muted-foreground">
                       +15 novas esta semana
                     </p>
@@ -283,7 +292,9 @@ export default function AdminDashboard() {
                     <DollarSign className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">R$ 84.320</div>
+                    <div className="text-2xl font-bold">
+                      {formatCurrency(84320)}
+                    </div>
                     <p className="text-xs text-muted-foreground">
                       +12% este mês
                     </p>
@@ -297,7 +308,9 @@ export default function AdminDashboard() {
                     <Activity className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">12.543</div>
+                    <div className="text-2xl font-bold">
+                      {formatNumber(12543)}
+                    </div>
                     <p className="text-xs text-muted-foreground">
                       +5% esta semana
                     </p>

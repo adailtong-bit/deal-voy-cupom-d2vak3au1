@@ -1,4 +1,6 @@
 import { useCouponStore } from '@/stores/CouponContext'
+import { useLanguage } from '@/stores/LanguageContext'
+import { useRegionFormatting } from '@/hooks/useRegionFormatting'
 import {
   Card,
   CardContent,
@@ -22,8 +24,16 @@ import {
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 
 export function PerformanceDashboardTab() {
-  const { franchises, companies, validationLogs, coupons, seasonalEvents } =
-    useCouponStore()
+  const {
+    user,
+    franchises,
+    companies,
+    validationLogs,
+    coupons,
+    seasonalEvents,
+  } = useCouponStore()
+  const { t } = useLanguage()
+  const { formatNumber } = useRegionFormatting(user?.region, user?.country)
 
   const chartData = franchises
     .map((f) => {
@@ -67,35 +77,39 @@ export function PerformanceDashboardTab() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">
-              Total Franchises
+              {t('admin.hierarchy.total_franchises', 'Total Franchises')}
             </CardTitle>
             <Building2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{franchises.length}</div>
+            <div className="text-2xl font-bold">
+              {formatNumber(franchises.length)}
+            </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">
-              Total Merchants
+              {t('admin.hierarchy.total_merchants', 'Total Merchants')}
             </CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{companies.length}</div>
+            <div className="text-2xl font-bold">
+              {formatNumber(companies.length)}
+            </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">
-              Pending Approvals
+              {t('admin.hierarchy.pending_approvals', 'Pending Approvals')}
             </CardTitle>
             <AlertCircle className="h-4 w-4 text-orange-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-orange-500">
-              {pendingCompanies.length}
+              {formatNumber(pendingCompanies.length)}
             </div>
           </CardContent>
         </Card>
@@ -104,9 +118,14 @@ export function PerformanceDashboardTab() {
       <div className="grid gap-6 md:grid-cols-3">
         <Card className="md:col-span-2">
           <CardHeader>
-            <CardTitle>Coupons Issued vs. Redeemed</CardTitle>
+            <CardTitle>
+              {t('admin.hierarchy.chart_title', 'Coupons Issued vs. Redeemed')}
+            </CardTitle>
             <CardDescription>
-              Performance comparison across Top Franchises
+              {t(
+                'admin.hierarchy.chart_desc',
+                'Performance comparison across Top Franchises',
+              )}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -114,11 +133,11 @@ export function PerformanceDashboardTab() {
               <ChartContainer
                 config={{
                   issued: {
-                    label: 'Issued',
+                    label: t('admin.hierarchy.issued', 'Issued'),
                     color: 'hsl(var(--primary))',
                   },
                   redeemed: {
-                    label: 'Redeemed',
+                    label: t('admin.hierarchy.redeemed', 'Redeemed'),
                     color: 'hsl(var(--destructive))',
                   },
                 }}
@@ -134,7 +153,12 @@ export function PerformanceDashboardTab() {
                     axisLine={false}
                     fontSize={12}
                   />
-                  <YAxis tickLine={false} axisLine={false} fontSize={12} />
+                  <YAxis
+                    tickLine={false}
+                    axisLine={false}
+                    fontSize={12}
+                    tickFormatter={(value) => formatNumber(value)}
+                  />
                   <ChartTooltip content={<ChartTooltipContent />} />
                   <Legend />
                   <Bar
@@ -157,15 +181,21 @@ export function PerformanceDashboardTab() {
           <Card className="border-orange-200 bg-orange-50/50 h-full flex flex-col">
             <CardHeader className="pb-2">
               <CardTitle className="text-base text-orange-800 flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5" /> Financial & Registration
-                Alerts
+                <AlertTriangle className="h-5 w-5" />{' '}
+                {t(
+                  'admin.hierarchy.alerts_title',
+                  'Financial & Registration Alerts',
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 pt-2 flex-1">
               {incompleteCompanies.length > 0 ? (
                 <div className="space-y-3">
                   <p className="text-sm text-orange-700 font-medium">
-                    Companies with missing billing data:
+                    {t(
+                      'admin.hierarchy.alerts_missing',
+                      'Companies with missing billing data:',
+                    )}
                   </p>
                   <div className="space-y-2 max-h-[250px] overflow-y-auto pr-2">
                     {incompleteCompanies.map((c) => (
@@ -177,7 +207,7 @@ export function PerformanceDashboardTab() {
                           {c.name}
                         </p>
                         <p className="text-muted-foreground">
-                          Missing:
+                          {t('admin.hierarchy.missing', 'Missing:')}
                           {!c.taxId && (
                             <span className="text-red-500 font-medium ml-1">
                               CNPJ
@@ -185,12 +215,18 @@ export function PerformanceDashboardTab() {
                           )}
                           {!c.billingEmail && (
                             <span className="text-red-500 font-medium ml-1">
-                              Billing Email
+                              {t(
+                                'admin.hierarchy.billing_email',
+                                'Billing Email',
+                              )}
                             </span>
                           )}
                           {!c.bankAccount && (
                             <span className="text-red-500 font-medium ml-1">
-                              Bank Details
+                              {t(
+                                'admin.hierarchy.bank_details',
+                                'Bank Details',
+                              )}
                             </span>
                           )}
                         </p>
@@ -201,9 +237,14 @@ export function PerformanceDashboardTab() {
               ) : (
                 <Alert className="bg-white border-green-200">
                   <CheckCircle className="h-4 w-4 text-green-500" />
-                  <AlertTitle className="text-green-700">All Good!</AlertTitle>
+                  <AlertTitle className="text-green-700">
+                    {t('admin.hierarchy.all_good', 'All Good!')}
+                  </AlertTitle>
                   <AlertDescription className="text-green-600 text-xs mt-1">
-                    All active companies have complete billing records.
+                    {t(
+                      'admin.hierarchy.all_good_desc',
+                      'All active companies have complete billing records.',
+                    )}
                   </AlertDescription>
                 </Alert>
               )}
