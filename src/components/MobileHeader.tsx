@@ -333,4 +333,3 @@ export function MobileHeader() {
     </header>
   )
 }
-
