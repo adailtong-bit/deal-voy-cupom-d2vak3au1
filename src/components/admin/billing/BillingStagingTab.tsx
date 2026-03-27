@@ -77,27 +77,35 @@ function InvoiceRow({
       <TableCell className="text-right font-bold whitespace-nowrap">
         {formatCurrency(inv.totalCommission)}
       </TableCell>
-      <TableCell className="text-right whitespace-nowrap">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => onEdit(inv)}
-          className="mr-1 text-slate-500 hover:text-primary hover:bg-primary/5"
-        >
-          <Edit2 className="h-4 w-4" />
-        </Button>
-        <Button onClick={() => onSend(inv.id)} size="sm" className="mr-2">
-          <Send className="w-3 h-3 mr-2" />
-          Enviar
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => onCancel(inv.id)}
-          className="text-red-500 hover:text-red-600 hover:bg-red-50"
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
+      <TableCell className="text-right">
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onEdit(inv)}
+            className="h-8 w-8 text-slate-500 hover:text-primary hover:bg-primary/5 shrink-0"
+            title="Editar"
+          >
+            <Edit2 className="h-4 w-4" />
+          </Button>
+          <Button
+            onClick={() => onSend(inv.id)}
+            size="sm"
+            className="h-8 shrink-0 whitespace-nowrap"
+          >
+            <Send className="w-3 h-3 sm:mr-1.5" />
+            <span className="hidden sm:inline">Enviar</span>
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onCancel(inv.id)}
+            className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 shrink-0"
+            title="Cancelar"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
       </TableCell>
     </TableRow>
   )

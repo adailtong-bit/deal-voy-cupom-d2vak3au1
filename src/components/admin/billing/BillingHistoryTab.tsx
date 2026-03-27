@@ -328,34 +328,38 @@ export function BillingHistoryTab({ franchiseId }: { franchiseId?: string }) {
                     {formatCurrency(inv.totalCommission)}
                   </TableCell>
                   <TableCell>{getStatusBadge(inv.status)}</TableCell>
-                  <TableCell className="text-right whitespace-nowrap">
+                  <TableCell className="text-right">
                     {inv.status === 'pending' ||
                     inv.status === 'sent' ||
                     inv.status === 'overdue' ? (
-                      <div className="flex justify-end gap-2">
+                      <div className="flex flex-wrap items-center justify-end gap-2">
                         <Button
                           variant="outline"
                           size="sm"
-                          className="text-green-600 hover:bg-green-50"
+                          className="h-8 text-green-600 hover:bg-green-50 shrink-0 whitespace-nowrap"
                           onClick={() =>
                             updatePartnerInvoiceStatus(inv.id, 'paid')
                           }
                         >
-                          <CheckCircle className="w-3 h-3 mr-1" /> Marcar Pago
+                          <CheckCircle className="w-3 h-3 sm:mr-1.5" />
+                          <span className="hidden sm:inline">Marcar Pago</span>
                         </Button>
                         <Button
                           variant="ghost"
-                          size="sm"
-                          className="text-red-500 hover:bg-red-50 hover:text-red-600"
+                          size="icon"
+                          className="h-8 w-8 text-red-500 hover:bg-red-50 hover:text-red-600 shrink-0"
                           onClick={() =>
                             updatePartnerInvoiceStatus(inv.id, 'canceled')
                           }
+                          title="Cancelar"
                         >
                           <XCircle className="w-4 h-4" />
                         </Button>
                       </div>
                     ) : (
-                      <span className="text-xs text-muted-foreground">--</span>
+                      <span className="text-xs text-muted-foreground block w-full text-right pr-2">
+                        --
+                      </span>
                     )}
                   </TableCell>
                 </TableRow>

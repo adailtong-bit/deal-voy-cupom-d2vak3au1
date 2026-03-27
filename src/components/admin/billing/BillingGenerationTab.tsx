@@ -47,7 +47,18 @@ import {
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { Check, ChevronsUpDown, Filter, Building2, Store } from 'lucide-react'
+import {
+  Check,
+  ChevronsUpDown,
+  Filter,
+  Building2,
+  Store,
+  MapPin,
+  User as UserIcon,
+  Phone,
+  Mail,
+  CheckCircle2,
+} from 'lucide-react'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useRegionFormatting } from '@/hooks/useRegionFormatting'
@@ -121,9 +132,12 @@ export function BillingGenerationTab({
   const billedItemIds = useMemo(() => {
     const ids = new Set<string>()
     partnerInvoices.forEach((inv) => {
-      inv.items?.forEach((item) => {
-        if (item.id) ids.add(item.id)
-      })
+      // Allow re-billing if the previous invoice was canceled
+      if (inv.status !== 'canceled') {
+        inv.items?.forEach((item) => {
+          if (item.id) ids.add(item.id)
+        })
+      }
     })
     return ids
   }, [partnerInvoices])
@@ -177,7 +191,7 @@ export function BillingGenerationTab({
     const prefix = 'INV'
     const year = new Date().getFullYear()
     const count = partnerInvoices.length + 1
-    return `${prefix}-${year}-${count.toString().padStart(4, '0')}`
+    return `${prefix}-${year}-${count.toString().padStart(3, '0')}`
   }, [partnerInvoices.length])
 
   const handleGenerateInvoice = () => {
@@ -437,7 +451,7 @@ export function BillingGenerationTab({
 
               <div className="flex items-center gap-4 w-full lg:w-auto lg:ml-auto">
                 <div className="text-sm font-medium text-slate-500 bg-white px-4 py-2 rounded-md border flex items-center gap-2">
-                  <span>Fatura Atual:</span>
+                  <span>Próxima Fatura:</span>
                   <span className="text-primary font-bold tracking-wider">
                     {nextInvoiceNumber}
                   </span>
@@ -448,7 +462,7 @@ export function BillingGenerationTab({
                   className="w-full sm:w-auto whitespace-nowrap shadow-sm"
                   size="lg"
                 >
-                  Revisar Fatura ({selectedItemIds.length})
+                  Gerar Fatura ({selectedItemIds.length})
                 </Button>
               </div>
             </div>
@@ -500,18 +514,24 @@ export function BillingGenerationTab({
                       )}
                     >
                       <TableCell className="text-center">
-                        <Checkbox
-                          checked={selectedItemIds.includes(item.id)}
-                          disabled={item.isBilled}
-                          onCheckedChange={(c) => {
-                            if (c)
-                              setSelectedItemIds((prev) => [...prev, item.id])
-                            else
-                              setSelectedItemIds((prev) =>
-                                prev.filter((id) => id !== item.id),
-                              )
-                          }}
-                        />
+                        {item.isBilled ? (
+                          <CheckCircle2
+                            className="w-4 h-4 mx-auto text-slate-300"
+                            title="Processado"
+                          />
+                        ) : (
+                          <Checkbox
+                            checked={selectedItemIds.includes(item.id)}
+                            onCheckedChange={(c) => {
+                              if (c)
+                                setSelectedItemIds((prev) => [...prev, item.id])
+                              else
+                                setSelectedItemIds((prev) =>
+                                  prev.filter((id) => id !== item.id),
+                                )
+                            }}
+                          />
+                        )}
                       </TableCell>
                       <TableCell className="font-mono text-xs text-slate-600">
                         {item.id}
@@ -528,7 +548,7 @@ export function BillingGenerationTab({
                             variant="outline"
                             className="bg-slate-200 text-slate-500 border-slate-300"
                           >
-                            Faturado
+                            Processado
                           </Badge>
                         ) : (
                           <Badge
@@ -612,26 +632,44 @@ export function BillingGenerationTab({
                       <span>De (Emissor)</span>
                     </h4>
                     <div className="space-y-3 text-sm">
-                      <div>
-                        <div className="font-bold text-slate-900 text-base">
-                          {issuer.name}
+                      <div className="font-bold text-slate-900 text-base mb-2 border-b border-slate-100 pb-2">
+                        {issuer.name}
+                      </div>
+                      <div className="flex items-start gap-2 text-slate-600">
+                        <UserIcon className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                        <div className="flex-1 min-w-0 break-words">
+                          <span className="font-medium text-slate-700">
+                            Contato:
+                          </span>{' '}
+                          {issuer.contact}
                         </div>
                       </div>
-                      <div className="grid grid-cols-[20px_1fr] gap-2 items-start text-slate-600">
-                        <div className="text-slate-400 mt-0.5">•</div>
-                        <div>{issuer.address}</div>
+                      <div className="flex items-start gap-2 text-slate-600">
+                        <Mail className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                        <div className="flex-1 min-w-0 break-words">
+                          <span className="font-medium text-slate-700">
+                            Email:
+                          </span>{' '}
+                          {issuer.email}
+                        </div>
                       </div>
-                      <div className="grid grid-cols-[20px_1fr] gap-2 items-start text-slate-600">
-                        <div className="text-slate-400 mt-0.5">•</div>
-                        <div>{issuer.contact}</div>
+                      <div className="flex items-start gap-2 text-slate-600">
+                        <Phone className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                        <div className="flex-1 min-w-0 break-words">
+                          <span className="font-medium text-slate-700">
+                            Telefone:
+                          </span>{' '}
+                          {issuer.phone}
+                        </div>
                       </div>
-                      <div className="grid grid-cols-[20px_1fr] gap-2 items-start text-slate-600">
-                        <div className="text-slate-400 mt-0.5">•</div>
-                        <div>{issuer.phone}</div>
-                      </div>
-                      <div className="grid grid-cols-[20px_1fr] gap-2 items-start text-slate-600">
-                        <div className="text-slate-400 mt-0.5">•</div>
-                        <div>{issuer.email}</div>
+                      <div className="flex items-start gap-2 text-slate-600">
+                        <MapPin className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                        <div className="flex-1 min-w-0 break-words">
+                          <span className="font-medium text-slate-700">
+                            Endereço:
+                          </span>{' '}
+                          {issuer.address}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -643,26 +681,44 @@ export function BillingGenerationTab({
                       <span>Para (Cliente)</span>
                     </h4>
                     <div className="space-y-3 text-sm">
-                      <div>
-                        <div className="font-bold text-slate-900 text-base">
-                          {client.name}
+                      <div className="font-bold text-slate-900 text-base mb-2 border-b border-slate-100 pb-2">
+                        {client.name}
+                      </div>
+                      <div className="flex items-start gap-2 text-slate-600">
+                        <UserIcon className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                        <div className="flex-1 min-w-0 break-words">
+                          <span className="font-medium text-slate-700">
+                            Contato:
+                          </span>{' '}
+                          {client.contact}
                         </div>
                       </div>
-                      <div className="grid grid-cols-[20px_1fr] gap-2 items-start text-slate-600">
-                        <div className="text-slate-400 mt-0.5">•</div>
-                        <div>{client.address}</div>
+                      <div className="flex items-start gap-2 text-slate-600">
+                        <Mail className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                        <div className="flex-1 min-w-0 break-words">
+                          <span className="font-medium text-slate-700">
+                            Email:
+                          </span>{' '}
+                          {client.email}
+                        </div>
                       </div>
-                      <div className="grid grid-cols-[20px_1fr] gap-2 items-start text-slate-600">
-                        <div className="text-slate-400 mt-0.5">•</div>
-                        <div>{client.contact}</div>
+                      <div className="flex items-start gap-2 text-slate-600">
+                        <Phone className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                        <div className="flex-1 min-w-0 break-words">
+                          <span className="font-medium text-slate-700">
+                            Telefone:
+                          </span>{' '}
+                          {client.phone}
+                        </div>
                       </div>
-                      <div className="grid grid-cols-[20px_1fr] gap-2 items-start text-slate-600">
-                        <div className="text-slate-400 mt-0.5">•</div>
-                        <div>{client.phone}</div>
-                      </div>
-                      <div className="grid grid-cols-[20px_1fr] gap-2 items-start text-slate-600">
-                        <div className="text-slate-400 mt-0.5">•</div>
-                        <div>{client.email}</div>
+                      <div className="flex items-start gap-2 text-slate-600">
+                        <MapPin className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                        <div className="flex-1 min-w-0 break-words">
+                          <span className="font-medium text-slate-700">
+                            Endereço:
+                          </span>{' '}
+                          {client.address}
+                        </div>
                       </div>
                     </div>
                   </div>
