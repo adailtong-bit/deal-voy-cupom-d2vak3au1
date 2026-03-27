@@ -20,6 +20,7 @@ import { CouponCard } from '@/components/CouponCard'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { CheckCircle, XCircle } from 'lucide-react'
 import { CATEGORIES } from '@/lib/data'
+import { useLanguage } from '@/stores/LanguageContext'
 
 interface CrawlerAnalysisSheetProps {
   promo: DiscoveredPromotion | null
@@ -36,6 +37,7 @@ export function CrawlerAnalysisSheet({
   onImport,
   onIgnore,
 }: CrawlerAnalysisSheetProps) {
+  const { t } = useLanguage()
   const [importCategory, setImportCategory] = useState<string>('all')
 
   if (!promo) return null
@@ -55,7 +57,7 @@ export function CrawlerAnalysisSheet({
     code: 'PREVIEW-CODE',
     coordinates: { lat: 0, lng: 0 },
     status: 'active',
-    source: 'aggregated',
+    source: 'organic',
     region: promo.region,
     price: promo.price,
     currency: promo.currency,
@@ -78,17 +80,21 @@ export function CrawlerAnalysisSheet({
         side="right"
       >
         <SheetHeader className="mb-6">
-          <SheetTitle>Promotion Analysis</SheetTitle>
+          <SheetTitle>
+            {t('franchisee.crawler.analysis_title', 'Análise da Promoção')}
+          </SheetTitle>
           <SheetDescription>
-            Review the extracted raw data against the final mapped UI before
-            approving this deal.
+            {t(
+              'franchisee.crawler.analysis_desc',
+              'Revise os dados extraídos antes de aprovar e importar a oferta.',
+            )}
           </SheetDescription>
         </SheetHeader>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
           <div className="flex flex-col">
             <h3 className="font-semibold mb-3 text-sm text-muted-foreground uppercase tracking-wider">
-              Scraped Raw Data
+              {t('franchisee.crawler.raw_data', 'Dados Brutos Extraídos')}
             </h3>
             <ScrollArea className="flex-1 bg-slate-950 text-green-400 p-4 rounded-lg font-mono text-xs shadow-inner">
               <pre>{JSON.stringify(promo.rawData || promo, null, 2)}</pre>
@@ -97,7 +103,7 @@ export function CrawlerAnalysisSheet({
 
           <div className="flex flex-col">
             <h3 className="font-semibold mb-3 text-sm text-muted-foreground uppercase tracking-wider">
-              Converted UI Preview
+              {t('franchisee.crawler.ui_preview', 'Pré-visualização (App)')}
             </h3>
             <div className="mb-6 border p-4 rounded-xl bg-slate-50 flex items-center justify-center">
               <div className="w-full max-w-[280px]">
@@ -108,18 +114,28 @@ export function CrawlerAnalysisSheet({
             {promo.status === 'pending' && (
               <div className="mt-auto space-y-4 border-t pt-4">
                 <div className="space-y-2">
-                  <Label>Map to App Category</Label>
+                  <Label>
+                    {t(
+                      'franchisee.crawler.map_category',
+                      'Mapear para Categoria do App',
+                    )}
+                  </Label>
                   <Select
                     value={importCategory}
                     onValueChange={setImportCategory}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Original Category" />
+                      <SelectValue
+                        placeholder={t(
+                          'franchisee.crawler.map_category',
+                          'Mapear para Categoria do App',
+                        )}
+                      />
                     </SelectTrigger>
                     <SelectContent>
                       {CATEGORIES.filter((c) => c.id !== 'all').map((c) => (
                         <SelectItem key={c.id} value={c.id}>
-                          {c.label}
+                          {t(c.translationKey, c.label)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -131,20 +147,28 @@ export function CrawlerAnalysisSheet({
                     className="flex-1 text-red-500 hover:text-red-600 hover:bg-red-50"
                     onClick={handleIgnore}
                   >
-                    <XCircle className="h-4 w-4 mr-2" /> Ignore
+                    <XCircle className="h-4 w-4 mr-2" />{' '}
+                    {t('franchisee.crawler.ignore', 'Ignorar')}
                   </Button>
                   <Button
                     className="flex-1 bg-green-600 hover:bg-green-700"
                     onClick={handleImport}
                   >
-                    <CheckCircle className="h-4 w-4 mr-2" /> Approve & Import
+                    <CheckCircle className="h-4 w-4 mr-2" />{' '}
+                    {t(
+                      'franchisee.crawler.approve_import',
+                      'Aprovar e Importar',
+                    )}
                   </Button>
                 </div>
               </div>
             )}
             {promo.status !== 'pending' && (
               <div className="mt-auto text-center p-4 bg-muted rounded-lg font-medium">
-                This promotion has already been {promo.status}.
+                {t(
+                  'franchisee.crawler.already_processed',
+                  'Esta promoção já foi processada ({status}).',
+                ).replace('{status}', promo.status)}
               </div>
             )}
           </div>

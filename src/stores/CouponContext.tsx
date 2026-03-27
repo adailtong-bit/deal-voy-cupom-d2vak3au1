@@ -866,9 +866,69 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   const addCrawlerSource = (source: CrawlerSource) => {}
   const updateCrawlerSource = (id: string, data: Partial<CrawlerSource>) => {}
   const deleteCrawlerSource = (id: string) => {}
-  const importPromotion = (id: string, customCategory?: string) => {}
-  const ignorePromotion = (id: string) => {}
-  const triggerScan = (sourceId: string) => {}
+
+  const importPromotion = (id: string, customCategory?: string) => {
+    setDiscoveredPromotions((prev) =>
+      prev.map((p) =>
+        p.id === id
+          ? { ...p, status: 'imported', category: customCategory || p.category }
+          : p,
+      ),
+    )
+
+    const promo = discoveredPromotions.find((p) => p.id === id)
+    if (promo) {
+      const newCoupon: Coupon = {
+        id: Math.random().toString(),
+        storeName: promo.storeName,
+        title: promo.title,
+        description: promo.description,
+        discount: promo.discount,
+        category: customCategory || promo.category,
+        distance: 0,
+        expiryDate: promo.expiryDate,
+        image: promo.image,
+        code: `ORG-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+        coordinates: { lat: 0, lng: 0 },
+        status: 'active',
+        source: 'organic',
+        region: promo.region,
+        price: promo.price,
+        currency: promo.currency,
+        franchiseId: promo.franchiseId,
+        targetAudience: 'all',
+      }
+      addCoupon(newCoupon)
+    }
+  }
+
+  const ignorePromotion = (id: string) => {
+    setDiscoveredPromotions((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, status: 'ignored' } : p)),
+    )
+  }
+
+  const triggerScan = (sourceId: string) => {
+    setTimeout(() => {
+      const newPromo: DiscoveredPromotion = {
+        id: Math.random().toString(),
+        sourceId,
+        title: 'Nova Oferta Orgânica',
+        discount: '30% OFF',
+        description: 'Oferta capturada de fonte externa para a região.',
+        expiryDate: new Date(Date.now() + 30 * 86400000).toISOString(),
+        image: 'https://img.usecurling.com/p/300/200?q=deal',
+        storeName: 'Lojista Descoberto',
+        status: 'pending',
+        region: selectedRegion || 'Global',
+        category: 'Outros',
+        capturedAt: new Date().toISOString(),
+      }
+      setDiscoveredPromotions((prev) => [newPromo, ...prev])
+      logSystemAction('Crawler Scan', `Scan completed for source ${sourceId}`)
+    }, 1500)
+  }
+
   const addAdPricing = (pricing: AdPricing) => {}
   const addAdvertiser = (advertiser: Advertiser) => {}
   const createAdCampaign = (ad: Advertisement, invoice: AdInvoice) => {}
