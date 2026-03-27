@@ -47,7 +47,7 @@ import {
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { Check, ChevronsUpDown, Filter, AlertCircle } from 'lucide-react'
+import { Check, ChevronsUpDown, Filter, Building2, Store } from 'lucide-react'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useRegionFormatting } from '@/hooks/useRegionFormatting'
@@ -216,7 +216,7 @@ export function BillingGenerationTab({
     state?: string,
   ) => {
     const parts = [street, num].filter(Boolean).join(', ')
-    const loc = [city, state].filter(Boolean).join('/')
+    const loc = [city, state].filter(Boolean).join(' - ')
     return [parts, loc].filter(Boolean).join(' - ') || 'Endereço não informado'
   }
 
@@ -286,93 +286,124 @@ export function BillingGenerationTab({
   }, 0)
 
   return (
-    <Card className="min-w-0 w-full animate-fade-in-up">
-      <CardHeader>
-        <CardTitle>Seleção e Geração de Fatura</CardTitle>
-        <CardDescription>
+    <Card className="min-w-0 w-full animate-fade-in-up border-slate-200 shadow-sm">
+      <CardHeader className="bg-slate-50/50 border-b pb-4">
+        <CardTitle className="text-xl text-slate-800">
+          Seleção e Geração de Fatura
+        </CardTitle>
+        <CardDescription className="text-slate-500">
           Escolha o destinatário e os itens faturáveis para compor a cobrança.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+      <CardContent className="space-y-6 pt-6">
+        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center p-4 bg-white border rounded-lg shadow-sm">
           {isSuperAdmin && (
-            <Select
-              value={selectedTargetType}
-              onValueChange={(v: any) => {
-                setSelectedTargetType(v)
-                setSelectedTargetId('')
-                setSelectedItemIds([])
-              }}
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Tipo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="franchise">Franquias</SelectItem>
-                <SelectItem value="merchant">Lojistas</SelectItem>
-              </SelectContent>
-            </Select>
-          )}
-          <Popover open={openTargetCombo} onOpenChange={setOpenTargetCombo}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                role="combobox"
-                className="w-full sm:w-[400px] justify-between"
+            <div className="space-y-1.5 w-full sm:w-auto">
+              <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                Tipo
+              </Label>
+              <Select
+                value={selectedTargetType}
+                onValueChange={(v: any) => {
+                  setSelectedTargetType(v)
+                  setSelectedTargetId('')
+                  setSelectedItemIds([])
+                }}
               >
-                <span className="truncate">{selectedTargetName}</span>
-                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-[400px] p-0">
-              <Command>
-                <CommandInput placeholder="Buscar destinatário..." />
-                <CommandList>
-                  <CommandEmpty>Nenhum resultado encontrado.</CommandEmpty>
-                  <CommandGroup>
-                    {targets.map((tgt) => (
-                      <CommandItem
-                        key={tgt.id}
-                        value={tgt.name}
-                        onSelect={() => {
-                          setSelectedTargetId(tgt.id)
-                          setOpenTargetCombo(false)
-                          setSelectedItemIds([])
-                        }}
-                      >
-                        <Check
-                          className={cn(
-                            'mr-2 h-4 w-4 shrink-0',
-                            selectedTargetId === tgt.id
-                              ? 'opacity-100'
-                              : 'opacity-0',
-                          )}
-                        />
-                        <div className="flex flex-col truncate">
-                          <span className="truncate">{tgt.name}</span>
-                          <span className="text-xs text-muted-foreground truncate">
-                            {tgt.taxId ? `Doc: ${tgt.taxId}` : 'Sem documento'}
-                          </span>
-                        </div>
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
+                <SelectTrigger className="w-full sm:w-[180px] bg-slate-50">
+                  <SelectValue placeholder="Tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="franchise">
+                    <div className="flex items-center gap-2">
+                      <Building2 className="w-4 h-4 text-slate-400" />
+                      <span>Franquias</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="merchant">
+                    <div className="flex items-center gap-2">
+                      <Store className="w-4 h-4 text-slate-400" />
+                      <span>Lojistas</span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          <div className="space-y-1.5 w-full flex-1">
+            <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+              Destinatário
+            </Label>
+            <Popover open={openTargetCombo} onOpenChange={setOpenTargetCombo}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  className="w-full justify-between bg-slate-50 font-medium"
+                >
+                  <span className="truncate">{selectedTargetName}</span>
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[400px] p-0" align="start">
+                <Command>
+                  <CommandInput placeholder="Buscar destinatário..." />
+                  <CommandList>
+                    <CommandEmpty>Nenhum resultado encontrado.</CommandEmpty>
+                    <CommandGroup>
+                      {targets.map((tgt) => (
+                        <CommandItem
+                          key={tgt.id}
+                          value={tgt.name}
+                          onSelect={() => {
+                            setSelectedTargetId(tgt.id)
+                            setOpenTargetCombo(false)
+                            setSelectedItemIds([])
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              'mr-2 h-4 w-4 shrink-0',
+                              selectedTargetId === tgt.id
+                                ? 'opacity-100 text-primary'
+                                : 'opacity-0',
+                            )}
+                          />
+                          <div className="flex flex-col truncate">
+                            <span className="truncate font-medium">
+                              {tgt.name}
+                            </span>
+                            <span className="text-xs text-muted-foreground truncate">
+                              {tgt.taxId
+                                ? `Doc: ${tgt.taxId}`
+                                : 'Sem documento'}
+                            </span>
+                          </div>
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+          </div>
         </div>
 
         {selectedTargetId && (
-          <>
-            <div className="flex flex-col md:flex-row gap-4 items-start md:items-center bg-slate-50 p-4 rounded-lg border flex-wrap">
-              <div className="flex items-center gap-2 w-full md:w-auto">
-                <Filter className="h-5 w-5 text-slate-500 shrink-0" />
+          <div className="space-y-4">
+            <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center bg-slate-50 p-4 rounded-lg border flex-wrap">
+              <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+                <div className="flex items-center gap-2 bg-white rounded-md border px-3 py-1.5">
+                  <Filter className="h-4 w-4 text-slate-400 shrink-0" />
+                  <span className="text-sm font-medium text-slate-600">
+                    Filtros
+                  </span>
+                </div>
                 <Select
                   value={itemFilterStatus}
                   onValueChange={setItemFilterStatus}
                 >
-                  <SelectTrigger className="w-full md:w-[150px]">
+                  <SelectTrigger className="w-[140px] bg-white">
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
                   <SelectContent>
@@ -381,50 +412,52 @@ export function BillingGenerationTab({
                     <SelectItem value="pending">Pendentes</SelectItem>
                   </SelectContent>
                 </Select>
+                <Select
+                  value={itemFilterPeriod}
+                  onValueChange={setItemFilterPeriod}
+                >
+                  <SelectTrigger className="w-[160px] bg-white">
+                    <SelectValue placeholder="Período" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todo o Período</SelectItem>
+                    <SelectItem value="month">Este Mês</SelectItem>
+                    <SelectItem value="quarter">Este Trimestre</SelectItem>
+                    <SelectItem value="semester">Este Semestre</SelectItem>
+                    <SelectItem value="year">Este Ano</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Input
+                  placeholder="Buscar por ID..."
+                  value={itemFilterId}
+                  onChange={(e) => setItemFilterId(e.target.value)}
+                  className="w-[180px] bg-white"
+                />
               </div>
-              <Input
-                placeholder="Buscar por ID..."
-                value={itemFilterId}
-                onChange={(e) => setItemFilterId(e.target.value)}
-                className="w-full md:w-[180px]"
-              />
-              <Select
-                value={itemFilterPeriod}
-                onValueChange={setItemFilterPeriod}
-              >
-                <SelectTrigger className="w-full md:w-[150px]">
-                  <SelectValue placeholder="Período" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todo o Período</SelectItem>
-                  <SelectItem value="month">Este Mês</SelectItem>
-                  <SelectItem value="quarter">Este Trimestre</SelectItem>
-                  <SelectItem value="semester">Este Semestre</SelectItem>
-                  <SelectItem value="year">Este Ano</SelectItem>
-                </SelectContent>
-              </Select>
-              <div className="flex items-center gap-4 w-full md:w-auto md:ml-auto">
-                <div className="text-sm font-medium text-slate-500">
-                  Fatura:{' '}
-                  <span className="text-slate-900 font-bold">
+
+              <div className="flex items-center gap-4 w-full lg:w-auto lg:ml-auto">
+                <div className="text-sm font-medium text-slate-500 bg-white px-4 py-2 rounded-md border flex items-center gap-2">
+                  <span>Fatura Atual:</span>
+                  <span className="text-primary font-bold tracking-wider">
                     {nextInvoiceNumber}
                   </span>
                 </div>
                 <Button
                   onClick={() => setIsConfirmDialogOpen(true)}
                   disabled={selectedItemIds.length === 0}
-                  className="w-full md:w-auto whitespace-nowrap"
+                  className="w-full sm:w-auto whitespace-nowrap shadow-sm"
+                  size="lg"
                 >
                   Revisar Fatura ({selectedItemIds.length})
                 </Button>
               </div>
             </div>
 
-            <div className="border rounded-md">
+            <div className="border rounded-lg bg-white overflow-hidden">
               <Table>
-                <TableHeader>
+                <TableHeader className="bg-slate-50 border-b">
                   <TableRow>
-                    <TableHead className="w-[50px]">
+                    <TableHead className="w-[50px] text-center">
                       <Checkbox
                         checked={
                           selectedItemIds.length === availableItems.length &&
@@ -438,20 +471,35 @@ export function BillingGenerationTab({
                         }}
                       />
                     </TableHead>
-                    <TableHead>ID</TableHead>
-                    <TableHead>Data</TableHead>
-                    <TableHead>Descrição</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Valor</TableHead>
+                    <TableHead className="font-semibold text-slate-700">
+                      ID da Transação
+                    </TableHead>
+                    <TableHead className="font-semibold text-slate-700">
+                      Data
+                    </TableHead>
+                    <TableHead className="font-semibold text-slate-700">
+                      Descrição
+                    </TableHead>
+                    <TableHead className="font-semibold text-slate-700">
+                      Status
+                    </TableHead>
+                    <TableHead className="text-right font-semibold text-slate-700">
+                      Valor
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredItems.map((item) => (
                     <TableRow
                       key={item.id}
-                      className={cn(item.isBilled && 'bg-slate-50 opacity-60')}
+                      className={cn(
+                        'transition-colors',
+                        item.isBilled
+                          ? 'bg-slate-50/80 opacity-60'
+                          : 'hover:bg-slate-50/50',
+                      )}
                     >
-                      <TableCell>
+                      <TableCell className="text-center">
                         <Checkbox
                           checked={selectedItemIds.includes(item.id)}
                           disabled={item.isBilled}
@@ -465,14 +513,21 @@ export function BillingGenerationTab({
                           }}
                         />
                       </TableCell>
-                      <TableCell className="font-medium text-xs">
+                      <TableCell className="font-mono text-xs text-slate-600">
                         {item.id}
                       </TableCell>
-                      <TableCell>{formatShortDate(item.date)}</TableCell>
-                      <TableCell>{item.description}</TableCell>
+                      <TableCell className="text-slate-600 font-medium">
+                        {formatShortDate(item.date)}
+                      </TableCell>
+                      <TableCell className="text-slate-800">
+                        {item.description}
+                      </TableCell>
                       <TableCell>
                         {item.isBilled ? (
-                          <Badge variant="outline" className="bg-slate-200">
+                          <Badge
+                            variant="outline"
+                            className="bg-slate-200 text-slate-500 border-slate-300"
+                          >
                             Faturado
                           </Badge>
                         ) : (
@@ -482,13 +537,17 @@ export function BillingGenerationTab({
                                 ? 'secondary'
                                 : 'default'
                             }
-                            className="capitalize"
+                            className={cn(
+                              'capitalize',
+                              item.status === 'open' &&
+                                'bg-blue-500 hover:bg-blue-600',
+                            )}
                           >
                             {item.status}
                           </Badge>
                         )}
                       </TableCell>
-                      <TableCell className="text-right font-medium">
+                      <TableCell className="text-right font-bold text-slate-900">
                         {formatCurrency(item.amount)}
                       </TableCell>
                     </TableRow>
@@ -497,7 +556,7 @@ export function BillingGenerationTab({
                     <TableRow>
                       <TableCell
                         colSpan={6}
-                        className="text-center py-8 text-muted-foreground"
+                        className="text-center py-12 text-slate-500 font-medium"
                       >
                         Nenhum item faturável encontrado para os filtros
                         selecionados.
@@ -507,141 +566,165 @@ export function BillingGenerationTab({
                 </TableBody>
               </Table>
             </div>
-          </>
+          </div>
         )}
 
         <Dialog
           open={isConfirmDialogOpen}
           onOpenChange={setIsConfirmDialogOpen}
         >
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="text-xl">
-                Revisar e Confirmar Fatura
-              </DialogTitle>
-              <DialogDescription>
-                Confirme as informações de faturamento e dados de contato.
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4">
-              <Card className="shadow-sm">
-                <CardHeader className="pb-3 bg-slate-50 border-b">
-                  <CardTitle className="text-sm font-semibold text-slate-700">
-                    Cobrador (Emissor)
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-4 text-sm space-y-2">
-                  <div className="grid grid-cols-[80px_1fr] gap-1">
-                    <span className="text-slate-500 font-medium">Nome:</span>
-                    <span className="font-semibold text-slate-800">
-                      {issuer.name}
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-[80px_1fr] gap-1">
-                    <span className="text-slate-500 font-medium">
-                      Endereço:
-                    </span>
-                    <span className="text-slate-700">{issuer.address}</span>
-                  </div>
-                  <div className="grid grid-cols-[80px_1fr] gap-1">
-                    <span className="text-slate-500 font-medium">Contato:</span>
-                    <span className="text-slate-700">{issuer.contact}</span>
-                  </div>
-                  <div className="grid grid-cols-[80px_1fr] gap-1">
-                    <span className="text-slate-500 font-medium">
-                      Telefone:
-                    </span>
-                    <span className="text-slate-700">{issuer.phone}</span>
-                  </div>
-                  <div className="grid grid-cols-[80px_1fr] gap-1">
-                    <span className="text-slate-500 font-medium">E-mail:</span>
-                    <span className="text-slate-700">{issuer.email}</span>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="shadow-sm">
-                <CardHeader className="pb-3 bg-slate-50 border-b">
-                  <CardTitle className="text-sm font-semibold text-slate-700">
-                    Cobrado (Cliente)
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-4 text-sm space-y-2">
-                  <div className="grid grid-cols-[80px_1fr] gap-1">
-                    <span className="text-slate-500 font-medium">Nome:</span>
-                    <span className="font-semibold text-slate-800">
-                      {client.name}
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-[80px_1fr] gap-1">
-                    <span className="text-slate-500 font-medium">
-                      Endereço:
-                    </span>
-                    <span className="text-slate-700">{client.address}</span>
-                  </div>
-                  <div className="grid grid-cols-[80px_1fr] gap-1">
-                    <span className="text-slate-500 font-medium">Contato:</span>
-                    <span className="text-slate-700">{client.contact}</span>
-                  </div>
-                  <div className="grid grid-cols-[80px_1fr] gap-1">
-                    <span className="text-slate-500 font-medium">
-                      Telefone:
-                    </span>
-                    <span className="text-slate-700">{client.phone}</span>
-                  </div>
-                  <div className="grid grid-cols-[80px_1fr] gap-1">
-                    <span className="text-slate-500 font-medium">E-mail:</span>
-                    <span className="text-slate-700">{client.email}</span>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-2 border-t mt-2 pt-6">
-              <div className="space-y-2">
-                <Label className="text-slate-600">Nº da Fatura (Ref)</Label>
-                <Input
-                  value={nextInvoiceNumber}
-                  readOnly
-                  className="bg-slate-100 font-mono text-slate-600 cursor-not-allowed"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-slate-600">Data de Vencimento</Label>
-                <Input
-                  type="date"
-                  value={dueDate}
-                  onChange={(e) => setDueDate(e.target.value)}
-                  className="font-medium"
-                />
-              </div>
-              <div className="space-y-2 sm:col-span-2">
-                <Label className="text-slate-600 font-bold">Valor Total</Label>
-                <div className="relative">
-                  <Input
-                    value={formatCurrency(selectedAmount)}
-                    readOnly
-                    className="bg-slate-100 font-bold text-lg text-slate-800 pl-10 cursor-not-allowed"
-                  />
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <span className="text-slate-500 text-lg font-bold">R$</span>
-                  </div>
+          <DialogContent className="max-w-4xl p-0 overflow-hidden bg-slate-50 sm:rounded-xl">
+            <div className="relative">
+              {/* Watermark effect */}
+              <div className="absolute inset-0 pointer-events-none opacity-[0.02] flex items-center justify-center overflow-hidden z-0">
+                <div className="text-[12rem] font-black rotate-[-35deg] tracking-widest uppercase text-slate-900">
+                  INVOICE
                 </div>
               </div>
-            </div>
 
-            <DialogFooter className="mt-6 border-t pt-4">
-              <Button
-                variant="outline"
-                onClick={() => setIsConfirmDialogOpen(false)}
-              >
-                Cancelar
-              </Button>
-              <Button onClick={handleGenerateInvoice} className="font-semibold">
-                Gerar Fatura Definitiva
-              </Button>
-            </DialogFooter>
+              <div className="relative z-10 p-6 sm:p-8 max-h-[90vh] overflow-y-auto flex flex-col gap-6">
+                <DialogHeader>
+                  <div className="flex items-center justify-between border-b border-slate-200 pb-4">
+                    <div>
+                      <DialogTitle className="text-2xl font-bold text-slate-900 tracking-tight">
+                        Pré-visualização da Fatura
+                      </DialogTitle>
+                      <DialogDescription className="text-slate-500 mt-1">
+                        Verifique os dados antes da geração definitiva.
+                      </DialogDescription>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm font-medium text-slate-500 uppercase tracking-wider mb-1">
+                        Nº Fatura
+                      </div>
+                      <div className="text-2xl font-black text-primary tracking-tight">
+                        {nextInvoiceNumber}
+                      </div>
+                    </div>
+                  </div>
+                </DialogHeader>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  {/* Issuer Card */}
+                  <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-slate-300"></div>
+                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                      <span>De (Emissor)</span>
+                    </h4>
+                    <div className="space-y-3 text-sm">
+                      <div>
+                        <div className="font-bold text-slate-900 text-base">
+                          {issuer.name}
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-[20px_1fr] gap-2 items-start text-slate-600">
+                        <div className="text-slate-400 mt-0.5">•</div>
+                        <div>{issuer.address}</div>
+                      </div>
+                      <div className="grid grid-cols-[20px_1fr] gap-2 items-start text-slate-600">
+                        <div className="text-slate-400 mt-0.5">•</div>
+                        <div>{issuer.contact}</div>
+                      </div>
+                      <div className="grid grid-cols-[20px_1fr] gap-2 items-start text-slate-600">
+                        <div className="text-slate-400 mt-0.5">•</div>
+                        <div>{issuer.phone}</div>
+                      </div>
+                      <div className="grid grid-cols-[20px_1fr] gap-2 items-start text-slate-600">
+                        <div className="text-slate-400 mt-0.5">•</div>
+                        <div>{issuer.email}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Client Card */}
+                  <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-primary"></div>
+                    <h4 className="text-xs font-bold text-primary uppercase tracking-wider mb-4 flex items-center gap-2">
+                      <span>Para (Cliente)</span>
+                    </h4>
+                    <div className="space-y-3 text-sm">
+                      <div>
+                        <div className="font-bold text-slate-900 text-base">
+                          {client.name}
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-[20px_1fr] gap-2 items-start text-slate-600">
+                        <div className="text-slate-400 mt-0.5">•</div>
+                        <div>{client.address}</div>
+                      </div>
+                      <div className="grid grid-cols-[20px_1fr] gap-2 items-start text-slate-600">
+                        <div className="text-slate-400 mt-0.5">•</div>
+                        <div>{client.contact}</div>
+                      </div>
+                      <div className="grid grid-cols-[20px_1fr] gap-2 items-start text-slate-600">
+                        <div className="text-slate-400 mt-0.5">•</div>
+                        <div>{client.phone}</div>
+                      </div>
+                      <div className="grid grid-cols-[20px_1fr] gap-2 items-start text-slate-600">
+                        <div className="text-slate-400 mt-0.5">•</div>
+                        <div>{client.email}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 items-end">
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                        Itens Selecionados
+                      </Label>
+                      <div className="font-medium text-slate-900 text-lg py-2">
+                        {selectedItemIds.length}{' '}
+                        {selectedItemIds.length === 1
+                          ? 'transação'
+                          : 'transações'}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                        Data de Vencimento
+                      </Label>
+                      <Input
+                        type="date"
+                        value={dueDate}
+                        onChange={(e) => setDueDate(e.target.value)}
+                        className="font-medium bg-slate-50 border-slate-200"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider text-right block">
+                        Valor Total
+                      </Label>
+                      <Input
+                        value={formatCurrency(selectedAmount)}
+                        readOnly
+                        className="bg-slate-50 font-black text-2xl text-slate-900 cursor-not-allowed border-slate-200 text-right h-12"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <DialogFooter className="mt-2 pt-4 border-t border-slate-200">
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsConfirmDialogOpen(false)}
+                    className="font-medium"
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    onClick={handleGenerateInvoice}
+                    className="font-bold shadow-md"
+                    size="lg"
+                  >
+                    Confirmar e Gerar Fatura
+                  </Button>
+                </DialogFooter>
+              </div>
+            </div>
           </DialogContent>
         </Dialog>
       </CardContent>
