@@ -206,7 +206,7 @@ interface CouponContextType {
   deleteCrawlerSource: (id: string) => void
   importPromotion: (id: string, customCategory?: string) => void
   ignorePromotion: (id: string) => void
-  triggerScan: (sourceId: string) => void
+  triggerScan: (sourceId: string, limit?: number) => void
   addAdPricing: (pricing: AdPricing) => void
   addAdvertiser: (advertiser: Advertiser) => void
   createAdCampaign: (ad: Advertisement, invoice: AdInvoice) => void
@@ -904,24 +904,31 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     )
   }
 
-  const triggerScan = (sourceId: string) => {
+  const triggerScan = (sourceId: string, limit: number = 50) => {
     setTimeout(() => {
-      const newPromo: DiscoveredPromotion = {
-        id: Math.random().toString(),
-        sourceId,
-        title: 'Nova Oferta Orgânica',
-        discount: '30% OFF',
-        description: 'Oferta capturada de fonte externa para a região.',
-        expiryDate: new Date(Date.now() + 30 * 86400000).toISOString(),
-        image: 'https://img.usecurling.com/p/300/200?q=deal',
-        storeName: 'Lojista Descoberto',
-        status: 'pending',
-        region: selectedRegion || 'Global',
-        category: 'Outros',
-        capturedAt: new Date().toISOString(),
+      const newPromos: DiscoveredPromotion[] = []
+      for (let i = 0; i < limit; i++) {
+        newPromos.push({
+          id: Math.random().toString(),
+          sourceId,
+          title: `Oferta Orgânica ${Math.floor(Math.random() * 1000)}`,
+          discount: `${10 + Math.floor(Math.random() * 40)}% OFF`,
+          description: `Esta é uma oferta incrível extraída da web para a região de ${selectedRegion || 'Global'}. Aproveite os descontos especiais.`,
+          expiryDate: new Date(Date.now() + (30 + i) * 86400000).toISOString(),
+          image: `https://img.usecurling.com/p/300/200?q=deal&seed=${Math.floor(Math.random() * 1000)}`,
+          storeName: `Lojista Descoberto ${Math.floor(Math.random() * 1000)}`,
+          status: 'pending',
+          region: selectedRegion || 'Global',
+          category: 'Outros',
+          capturedAt: new Date().toISOString(),
+          originalUrl: `https://example.com/oferta/${Math.floor(Math.random() * 10000)}`,
+        })
       }
-      setDiscoveredPromotions((prev) => [newPromo, ...prev])
-      logSystemAction('Crawler Scan', `Scan completed for source ${sourceId}`)
+      setDiscoveredPromotions((prev) => [...newPromos, ...prev])
+      logSystemAction(
+        'Crawler Scan',
+        `Scan completed for source ${sourceId} with limit ${limit}`,
+      )
     }, 1500)
   }
 

@@ -40,7 +40,7 @@ export function CrawlerSourcesTab() {
     toast.success(
       t('franchisee.crawler.scan_started', 'Crawler iniciado com sucesso!'),
     )
-    triggerScan('custom')
+    triggerScan('custom', limit)
   }
 
   const activeSeasonalEvents = seasonalEvents.filter(

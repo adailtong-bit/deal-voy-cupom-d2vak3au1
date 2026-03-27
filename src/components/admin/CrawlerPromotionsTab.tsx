@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useLanguage } from '@/stores/LanguageContext'
+import { useRegionFormatting } from '@/hooks/useRegionFormatting'
 import { useCouponStore } from '@/stores/CouponContext'
 import {
   Table,
@@ -18,15 +19,32 @@ import { toast } from 'sonner'
 
 export function CrawlerPromotionsTab() {
   const { t } = useLanguage()
-  const { discoveredPromotions, importPromotion, ignorePromotion } =
-    useCouponStore()
+  const {
+    discoveredPromotions,
+    importPromotion,
+    ignorePromotion,
+    user,
+    franchises,
+  } = useCouponStore()
+
+  const myFranchise =
+    franchises.find((f) => f.ownerId === user?.id) || franchises[0]
+  const { formatShortDate } = useRegionFormatting(
+    myFranchise?.region,
+    myFranchise?.addressCountry,
+  )
 
   const [selectedPromo, setSelectedPromo] =
     useState<DiscoveredPromotion | null>(null)
   const [isSheetOpen, setIsSheetOpen] = useState(false)
 
   const pendingPromotions = discoveredPromotions.filter(
-    (p) => p.status === 'pending',
+    (p) =>
+      p.status === 'pending' &&
+      p.storeName?.trim() &&
+      p.title?.trim() &&
+      p.description?.trim() &&
+      (p.capturedAt || p.expiryDate),
   )
 
   const handleImport = (id: string, category?: string) => {
@@ -62,17 +80,13 @@ export function CrawlerPromotionsTab() {
           <TableHeader>
             <TableRow>
               <TableHead>
-                {t('franchisee.crawler.offer_title', 'Título')}
+                {t('franchisee.crawler.company', 'Empresa')}
               </TableHead>
               <TableHead>
-                {t('franchisee.crawler.discount', 'Desconto')}
+                {t('franchisee.crawler.description', 'O que é (Descrição)')}
               </TableHead>
-              <TableHead>
-                {t('franchisee.crawler.source', 'Fonte / Lojista (Orgânico)')}
-              </TableHead>
-              <TableHead>
-                {t('franchisee.crawler.category', 'Categoria')}
-              </TableHead>
+              <TableHead>{t('franchisee.crawler.origin', 'Origem')}</TableHead>
+              <TableHead>{t('franchisee.crawler.date', 'Data')}</TableHead>
               <TableHead className="text-right">
                 {t('common.actions', 'Ações')}
               </TableHead>
@@ -81,30 +95,63 @@ export function CrawlerPromotionsTab() {
           <TableBody>
             {pendingPromotions.map((promo) => (
               <TableRow key={promo.id}>
-                <TableCell className="font-medium">
-                  <div className="flex items-center gap-2">
+                <TableCell className="font-medium whitespace-nowrap">
+                  <div className="flex items-center gap-3">
                     <img
                       src={promo.image}
                       alt=""
-                      className="w-8 h-8 rounded object-cover"
+                      className="w-10 h-10 rounded-md object-cover"
                     />
-                    <span>{promo.title}</span>
+                    <div className="flex flex-col">
+                      <span className="font-bold">
+                        {promo.storeName || 'Desconhecida'}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {promo.region}
+                      </span>
+                    </div>
                   </div>
                 </TableCell>
-                <TableCell>
-                  <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
-                    {promo.discount}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <div className="flex flex-col">
-                    <span>{promo.storeName}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {promo.region}
+                <TableCell className="min-w-[200px] max-w-[300px]">
+                  <div className="flex flex-col space-y-1">
+                    <span className="font-semibold text-sm line-clamp-1">
+                      {promo.title}
                     </span>
+                    <span className="text-xs text-muted-foreground line-clamp-2">
+                      {promo.description}
+                    </span>
+                    <Badge
+                      variant="secondary"
+                      className="w-fit bg-green-100 text-green-800 hover:bg-green-100"
+                    >
+                      {promo.discount}
+                    </Badge>
                   </div>
                 </TableCell>
-                <TableCell>{promo.category}</TableCell>
+                <TableCell className="whitespace-nowrap">
+                  <div className="flex flex-col space-y-0.5">
+                    <span className="text-sm font-medium">
+                      {promo.sourceId === 'custom'
+                        ? 'Busca Web'
+                        : promo.sourceId}
+                    </span>
+                    {promo.originalUrl && (
+                      <a
+                        href={promo.originalUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs text-blue-500 hover:underline flex items-center gap-1"
+                      >
+                        Ver fonte <ExternalLink className="w-3 h-3" />
+                      </a>
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell className="whitespace-nowrap text-sm text-slate-600">
+                  {promo.capturedAt
+                    ? formatShortDate(promo.capturedAt)
+                    : formatShortDate(promo.expiryDate)}
+                </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
                     <Button
