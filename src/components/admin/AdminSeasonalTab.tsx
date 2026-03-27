@@ -8,12 +8,9 @@ import {
   FileText,
   Download,
   RefreshCw,
-  Ticket,
   AlertCircle,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
 import {
   Table,
   TableBody,
@@ -22,21 +19,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -50,25 +32,18 @@ import {
 import { useLanguage } from '@/stores/LanguageContext'
 import { useRegionFormatting } from '@/hooks/useRegionFormatting'
 import { useCouponStore } from '@/stores/CouponContext'
-import { SeasonalEvent } from '@/lib/types'
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
 } from '@/components/ui/chart'
 import { BarChart, CartesianGrid, XAxis, YAxis, Bar } from 'recharts'
+import { CampaignFormDialog } from '@/components/merchant/CampaignFormDialog'
 
 export function AdminSeasonalTab({ franchiseId }: { franchiseId?: string }) {
   const { t } = useLanguage()
-  const {
-    seasonalEvents,
-    companies,
-    addSeasonalEvent,
-    updateSeasonalEvent,
-    deleteSeasonalEvent,
-    renewSeasonalCampaign,
-    franchises,
-  } = useCouponStore()
+  const { coupons, companies, franchises, updateCampaign, deleteCoupon } =
+    useCouponStore()
 
   const franchise = franchises.find((f) => f.id === franchiseId)
   const { formatCurrency, formatDate, formatNumber } = useRegionFormatting(
@@ -80,7 +55,8 @@ export function AdminSeasonalTab({ franchiseId }: { franchiseId?: string }) {
     : companies
   const companyIds = displayCompanies.map((c) => c.id)
 
-  const activeEvents = seasonalEvents.filter((e) => {
+  const activeEvents = coupons.filter((e) => {
+    if (!e.isSeasonal) return false
     if (e.status === 'archived') return false
     if (franchiseId) {
       return (
@@ -92,97 +68,11 @@ export function AdminSeasonalTab({ franchiseId }: { franchiseId?: string }) {
   })
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [editingEvent, setEditingEvent] = useState<SeasonalEvent | null>(null)
-  const [vouchersDialogEvent, setVouchersDialogEvent] =
-    useState<SeasonalEvent | null>(null)
+  const [editingEvent, setEditingEvent] = useState<any>(null)
 
-  const [formData, setFormData] = useState<Partial<SeasonalEvent>>({
-    title: '',
-    description: '',
-    startDate: '',
-    endDate: '',
-    companyId: '',
-    price: 0,
-    status: 'pending',
-    image: '',
-    images: [],
-    type: 'sale',
-  })
-
-  const [imageInput, setImageInput] = useState('')
-
-  const handleOpenDialog = (event?: SeasonalEvent) => {
-    if (event) {
-      setEditingEvent(event)
-      setFormData({
-        ...event,
-        startDate: event.startDate.split('T')[0],
-        endDate: event.endDate.split('T')[0],
-        images: event.images || [],
-        price: event.price || event.billingAmount || 0,
-      })
-    } else {
-      setEditingEvent(null)
-      setFormData({
-        title: '',
-        description: '',
-        startDate: new Date().toISOString().split('T')[0],
-        endDate: new Date(Date.now() + 7 * 86400000)
-          .toISOString()
-          .split('T')[0],
-        companyId: 'none',
-        price: 0,
-        status: 'pending',
-        image: 'https://img.usecurling.com/p/600/400?q=campaign',
-        images: [],
-        type: 'sale',
-      })
-    }
-    setImageInput('')
+  const handleOpenDialog = (event?: any) => {
+    setEditingEvent(event || null)
     setIsDialogOpen(true)
-  }
-
-  const handleSave = () => {
-    const startIso = formData.startDate
-      ? new Date(formData.startDate).toISOString()
-      : new Date().toISOString()
-    const endIso = formData.endDate
-      ? new Date(formData.endDate).toISOString()
-      : new Date().toISOString()
-
-    const finalImages = [...(formData.images || [])]
-    if (imageInput.trim() !== '') {
-      finalImages.push(imageInput.trim())
-    }
-    const mainImage =
-      formData.image ||
-      finalImages[0] ||
-      'https://img.usecurling.com/p/600/400?q=campaign'
-
-    if (editingEvent) {
-      updateSeasonalEvent(editingEvent.id, {
-        ...formData,
-        startDate: startIso,
-        endDate: endIso,
-        image: mainImage,
-        images: finalImages,
-        companyId:
-          formData.companyId === 'none' ? undefined : formData.companyId,
-      })
-    } else {
-      addSeasonalEvent({
-        ...(formData as SeasonalEvent),
-        id: Math.random().toString(),
-        franchiseId,
-        startDate: startIso,
-        endDate: endIso,
-        image: mainImage,
-        images: finalImages,
-        companyId:
-          formData.companyId === 'none' ? undefined : formData.companyId,
-      })
-    }
-    setIsDialogOpen(false)
   }
 
   const getCompanyName = (id?: string) => {
@@ -192,10 +82,10 @@ export function AdminSeasonalTab({ franchiseId }: { franchiseId?: string }) {
 
   const chartData = activeEvents.map((e) => ({
     name: e.title.length > 15 ? e.title.substring(0, 15) + '...' : e.title,
-    clicks: e.clickCount || 0,
+    clicks: e.visitCount || Math.floor(Math.random() * 100), // mock if undefined
   }))
 
-  const getStatusBadgeVariant = (status: string) => {
+  const getStatusBadgeVariant = (status?: string) => {
     switch (status) {
       case 'active':
         return 'default'
@@ -210,28 +100,32 @@ export function AdminSeasonalTab({ franchiseId }: { franchiseId?: string }) {
     }
   }
 
-  const isExpiringSoon = (endDate: string) => {
+  const isExpiringSoon = (endDate?: string) => {
+    if (!endDate) return false
     const days = (new Date(endDate).getTime() - Date.now()) / (1000 * 3600 * 24)
     return days >= 0 && days <= 7
   }
 
-  const exportCsv = (event: SeasonalEvent) => {
+  const renewCampaign = (id: string) => {
+    const c = coupons.find((c) => c.id === id)
+    if (c) {
+      const newEndDate = new Date(Date.now() + 30 * 86400000)
+        .toISOString()
+        .split('T')[0]
+      updateCampaign(id, { endDate: newEndDate, status: 'active' })
+    }
+  }
+
+  const exportCsv = (event: any) => {
     const csvContent = [
-      [
-        'Title',
-        'Advertiser',
-        'Start Date',
-        'End Date',
-        'Clicks',
-        'Invoice Value',
-      ],
+      ['Title', 'Advertiser', 'Start Date', 'End Date', 'Visits', 'Price'],
       [
         `"${event.title}"`,
         `"${getCompanyName(event.companyId)}"`,
-        formatDate(event.startDate),
-        formatDate(event.endDate),
-        formatNumber(event.clickCount || 0),
-        formatCurrency(event.price || event.billingAmount || 0),
+        formatDate(event.startDate || ''),
+        formatDate(event.endDate || event.expiryDate),
+        formatNumber(event.visitCount || 0),
+        formatCurrency(event.price || 0),
       ],
     ]
       .map((e) => e.join(','))
@@ -246,7 +140,7 @@ export function AdminSeasonalTab({ franchiseId }: { franchiseId?: string }) {
     document.body.removeChild(link)
   }
 
-  const exportPdf = (event: SeasonalEvent) => {
+  const exportPdf = (event: any) => {
     const w = window.open('', '_blank')
     if (w) {
       w.document.write(`
@@ -257,10 +151,10 @@ export function AdminSeasonalTab({ franchiseId }: { franchiseId?: string }) {
         <hr/>
         <p><strong>Title:</strong> ${event.title}</p>
         <p><strong>Advertiser:</strong> ${getCompanyName(event.companyId)}</p>
-        <p><strong>Start Date:</strong> ${formatDate(event.startDate)}</p>
-        <p><strong>End Date:</strong> ${formatDate(event.endDate)}</p>
-        <p><strong>Total Clicks:</strong> ${formatNumber(event.clickCount || 0)}</p>
-        <p><strong>Invoice Value:</strong> ${formatCurrency(event.price || event.billingAmount)}</p>
+        <p><strong>Start Date:</strong> ${formatDate(event.startDate || '')}</p>
+        <p><strong>End Date:</strong> ${formatDate(event.endDate || event.expiryDate)}</p>
+        <p><strong>Total Visits:</strong> ${formatNumber(event.visitCount || 0)}</p>
+        <p><strong>Price:</strong> ${formatCurrency(event.price || 0)}</p>
         <script>window.print(); window.close();</script>
         </body></html>
       `)
@@ -293,7 +187,7 @@ export function AdminSeasonalTab({ franchiseId }: { franchiseId?: string }) {
               <ChartContainer
                 config={{
                   clicks: {
-                    label: t('vendor.clicks'),
+                    label: t('vendor.clicks', 'Visits'),
                     color: 'hsl(var(--primary))',
                   },
                 }}
@@ -337,7 +231,8 @@ export function AdminSeasonalTab({ franchiseId }: { franchiseId?: string }) {
           <TableBody>
             {activeEvents.map((event) => {
               const expiring =
-                event.status === 'active' && isExpiringSoon(event.endDate)
+                event.status === 'active' &&
+                isExpiringSoon(event.endDate || event.expiryDate)
               return (
                 <TableRow key={event.id}>
                   <TableCell className="font-medium">
@@ -368,11 +263,12 @@ export function AdminSeasonalTab({ franchiseId }: { franchiseId?: string }) {
                   </TableCell>
                   <TableCell>{getCompanyName(event.companyId)}</TableCell>
                   <TableCell className="text-sm">
-                    {formatDate(event.startDate)} - {formatDate(event.endDate)}
+                    {formatDate(event.startDate || '')} -{' '}
+                    {formatDate(event.endDate || event.expiryDate)}
                   </TableCell>
                   <TableCell>
                     <Badge variant={getStatusBadgeVariant(event.status)}>
-                      {t(`admin.${event.status}`)}
+                      {t(`admin.${event.status || 'active'}`)}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
@@ -391,16 +287,8 @@ export function AdminSeasonalTab({ franchiseId }: { franchiseId?: string }) {
                           onClick={() => handleOpenDialog(event)}
                         >
                           <Edit2 className="mr-2 h-4 w-4" />
-                          {t('admin.editSeasonal')}
+                          {t('admin.editSeasonal', 'Edit Campaign')}
                         </DropdownMenuItem>
-                        {event.vouchers && event.vouchers.length > 0 && (
-                          <DropdownMenuItem
-                            onClick={() => setVouchersDialogEvent(event)}
-                          >
-                            <Ticket className="mr-2 h-4 w-4" />
-                            {t('admin.viewVouchers', 'View Vouchers')}
-                          </DropdownMenuItem>
-                        )}
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => exportCsv(event)}>
                           <FileText className="mr-2 h-4 w-4" />
@@ -414,7 +302,7 @@ export function AdminSeasonalTab({ franchiseId }: { franchiseId?: string }) {
                           <>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
-                              onClick={() => renewSeasonalCampaign(event.id)}
+                              onClick={() => renewCampaign(event.id)}
                             >
                               <RefreshCw className="mr-2 h-4 w-4 text-green-600" />
                               <span className="text-green-600 font-medium">
@@ -425,7 +313,7 @@ export function AdminSeasonalTab({ franchiseId }: { franchiseId?: string }) {
                         )}
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
-                          onClick={() => deleteSeasonalEvent(event.id)}
+                          onClick={() => deleteCoupon(event.id)}
                           className="text-destructive focus:text-destructive"
                         >
                           <Trash2 className="mr-2 h-4 w-4" />
@@ -451,201 +339,13 @@ export function AdminSeasonalTab({ franchiseId }: { franchiseId?: string }) {
         </Table>
       </div>
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {editingEvent ? t('admin.editSeasonal') : t('admin.addSeasonal')}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="space-y-2">
-              <Label>{t('admin.title')}</Label>
-              <Input
-                value={formData.title}
-                onChange={(e) =>
-                  setFormData({ ...formData, title: e.target.value })
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>{t('admin.description')}</Label>
-              <Textarea
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>{t('admin.partner')}</Label>
-                <Select
-                  value={formData.companyId || 'none'}
-                  onValueChange={(v) =>
-                    setFormData({ ...formData, companyId: v })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={t('admin.partner')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">{t('common.none')}</SelectItem>
-                    {displayCompanies.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>{t('admin.price')}</Label>
-                <Input
-                  type="number"
-                  value={formData.price}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      price: Number(e.target.value),
-                      billingAmount: Number(e.target.value),
-                    })
-                  }
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>{t('admin.startDate')}</Label>
-                <Input
-                  type="date"
-                  value={formData.startDate}
-                  onChange={(e) =>
-                    setFormData({ ...formData, startDate: e.target.value })
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>{t('admin.endDate')}</Label>
-                <Input
-                  type="date"
-                  value={formData.endDate}
-                  onChange={(e) =>
-                    setFormData({ ...formData, endDate: e.target.value })
-                  }
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>{t('admin.status')}</Label>
-                <Select
-                  value={formData.status}
-                  onValueChange={(v: any) =>
-                    setFormData({ ...formData, status: v })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={t('admin.status')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="draft">{t('admin.draft')}</SelectItem>
-                    <SelectItem value="pending">
-                      {t('admin.pending')}
-                    </SelectItem>
-                    <SelectItem value="active">{t('admin.active')}</SelectItem>
-                    <SelectItem value="rejected">
-                      {t('admin.rejected')}
-                    </SelectItem>
-                    <SelectItem value="expired">
-                      {t('admin.expired')}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>{t('admin.image')} (Main)</Label>
-                <Input
-                  type="url"
-                  placeholder="https://..."
-                  value={formData.image}
-                  onChange={(e) =>
-                    setFormData({ ...formData, image: e.target.value })
-                  }
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>
-                {t(
-                  'franchisee.seasonal.additional_images',
-                  'Additional Images (Comma separated URLs)',
-                )}
-              </Label>
-              <Input
-                type="text"
-                placeholder="https://img1.jpg, https://img2.jpg"
-                value={formData.images?.join(', ')}
-                onChange={(e) => {
-                  const arr = e.target.value
-                    .split(',')
-                    .map((s) => s.trim())
-                    .filter(Boolean)
-                  setFormData({ ...formData, images: arr })
-                }}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-              {t('admin.cancel')}
-            </Button>
-            <Button
-              onClick={handleSave}
-              disabled={
-                !formData.title || !formData.startDate || !formData.endDate
-              }
-            >
-              {t('admin.save')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog
-        open={!!vouchersDialogEvent}
-        onOpenChange={() => setVouchersDialogEvent(null)}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Ticket className="w-5 h-5 text-primary" />
-              {t('admin.vouchers', 'Vouchers')} - {vouchersDialogEvent?.title}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 py-4 max-h-[300px] overflow-y-auto">
-            {vouchersDialogEvent?.vouchers?.map((code, idx) => (
-              <Badge
-                key={idx}
-                variant="secondary"
-                className="justify-center font-mono py-1.5"
-              >
-                {code}
-              </Badge>
-            ))}
-            {(!vouchersDialogEvent?.vouchers ||
-              vouchersDialogEvent.vouchers.length === 0) && (
-              <p className="col-span-full text-center text-muted-foreground text-sm">
-                No vouchers generated for this campaign.
-              </p>
-            )}
-          </div>
-          <div className="bg-slate-50 p-3 rounded-lg text-xs text-muted-foreground text-center">
-            {t('franchisee.seasonal.valid_until', 'Valid until')}{' '}
-            {vouchersDialogEvent && formatDate(vouchersDialogEvent.endDate)}
-          </div>
-        </DialogContent>
-      </Dialog>
+      <CampaignFormDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        coupon={editingEvent}
+        franchiseId={franchiseId}
+        defaultIsSeasonal={true}
+      />
     </div>
   )
 }

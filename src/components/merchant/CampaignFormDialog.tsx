@@ -62,6 +62,7 @@ const formSchema = z
     description: z
       .string()
       .min(10, 'Campo obrigatório. Mínimo de 10 caracteres.'),
+    companyId: z.string().optional(),
     instructions: z.string().optional(),
     image: z.string().optional(),
     companyUrl: z
@@ -217,19 +218,24 @@ export function CampaignFormDialog({
   onOpenChange,
   coupon,
   companyId,
+  franchiseId,
+  defaultIsSeasonal = false,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   coupon?: any
-  companyId: string
+  companyId?: string
+  franchiseId?: string
+  defaultIsSeasonal?: boolean
 }) {
   const { addCoupon, updateCampaign, companies, standardRules, rewardCatalog } =
     useCouponStore()
   const { t, formatCurrency } = useLanguage()
-  const company = companies.find((c) => c.id === companyId)
 
-  const myRules = standardRules.filter((r) => r.companyId === companyId)
-  const myRewards = rewardCatalog.filter((r) => r.companyId === companyId)
+  const needsCompanySelection = !companyId
+  const displayCompanies = franchiseId
+    ? companies.filter((c) => c.franchiseId === franchiseId)
+    : companies
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -237,6 +243,7 @@ export function CampaignFormDialog({
     defaultValues: {
       title: '',
       description: '',
+      companyId: '',
       instructions: '',
       image: '',
       companyUrl: '',
@@ -252,13 +259,23 @@ export function CampaignFormDialog({
       totalLimit: 100,
       enableProximityAlerts: false,
       alertRadius: 100,
-      isSeasonal: false,
+      isSeasonal: defaultIsSeasonal,
       enableTrigger: false,
       triggerType: 'coupon_usage',
       triggerThreshold: undefined,
       rewardId: '',
     },
   })
+
+  const selectedCompanyId = form.watch('companyId') || companyId || ''
+  const company = companies.find((c) => c.id === selectedCompanyId)
+
+  const myRules = selectedCompanyId
+    ? standardRules.filter((r) => r.companyId === selectedCompanyId)
+    : []
+  const myRewards = selectedCompanyId
+    ? rewardCatalog.filter((r) => r.companyId === selectedCompanyId)
+    : []
 
   const scope = form.watch('scope')
   const discountType = form.watch('discountType')
@@ -278,6 +295,7 @@ export function CampaignFormDialog({
       form.reset({
         title: coupon.title,
         description: coupon.description,
+        companyId: coupon.companyId || companyId || '',
         instructions: coupon.instructions || '',
         image: coupon.image || '',
         companyUrl: coupon.externalUrl || '',
@@ -290,12 +308,16 @@ export function CampaignFormDialog({
         startDate: coupon.startDate || new Date().toISOString().split('T')[0],
         endDate:
           coupon.endDate ||
+          coupon.expiryDate ||
           new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
         limitType: coupon.isUnlimited ? 'unlimited' : 'limited',
         totalLimit: coupon.totalLimit || coupon.totalAvailable || 100,
         enableProximityAlerts: coupon.enableProximityAlerts || false,
         alertRadius: coupon.alertRadius || 100,
-        isSeasonal: coupon.isSeasonal || false,
+        isSeasonal:
+          coupon.isSeasonal !== undefined
+            ? coupon.isSeasonal
+            : defaultIsSeasonal,
         enableTrigger: !!bt && bt.isActive,
         triggerType: (bt?.type as any) || 'coupon_usage',
         triggerThreshold: bt?.threshold || undefined,
@@ -305,6 +327,7 @@ export function CampaignFormDialog({
       form.reset({
         title: '',
         description: '',
+        companyId: companyId || '',
         instructions: '',
         image: '',
         companyUrl: '',
@@ -322,16 +345,22 @@ export function CampaignFormDialog({
         totalLimit: 100,
         enableProximityAlerts: false,
         alertRadius: 100,
-        isSeasonal: false,
+        isSeasonal: defaultIsSeasonal,
         enableTrigger: false,
         triggerType: 'coupon_usage',
         triggerThreshold: undefined,
         rewardId: '',
       })
     }
-  }, [coupon, open, form, company])
+  }, [coupon, open, form, companyId, defaultIsSeasonal])
 
   const onSubmit = (data: FormData) => {
+    const finalCompanyId = data.companyId || companyId || ''
+    if (needsCompanySelection && !finalCompanyId) {
+      form.setError('companyId', { message: 'Selecione uma loja.' })
+      return
+    }
+
     const formattedDiscount =
       data.discountType === 'percentage'
         ? `${data.discountPercentage} OFF`
@@ -365,6 +394,8 @@ export function CampaignFormDialog({
       updateCampaign(coupon.id, {
         title: data.title,
         description: data.description,
+        companyId: finalCompanyId,
+        franchiseId: franchiseId || coupon.franchiseId,
         instructions: data.instructions,
         discount: formattedDiscount,
         image: data.image || coupon.image,
@@ -386,7 +417,8 @@ export function CampaignFormDialog({
     } else {
       addCoupon({
         id: Math.random().toString(),
-        companyId,
+        companyId: finalCompanyId,
+        franchiseId: franchiseId,
         storeName:
           data.scope === 'specific' && data.specificStore
             ? data.specificStore
@@ -401,6 +433,7 @@ export function CampaignFormDialog({
         address: data.scope === 'specific' ? data.specificStore : '',
         startDate: data.startDate,
         endDate: data.endDate,
+        expiryDate: data.endDate,
         totalLimit: totalLimit,
         isUnlimited: isUnlimited,
         totalAvailable: totalLimit,
@@ -453,6 +486,44 @@ export function CampaignFormDialog({
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <div className="space-y-4">
+                {needsCompanySelection && (
+                  <FormField
+                    control={form.control}
+                    name="companyId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          {t('admin.partner', 'Loja Parceira')}
+                        </FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                          value={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="bg-white">
+                              <SelectValue
+                                placeholder={t(
+                                  'admin.partner',
+                                  'Selecione a loja',
+                                )}
+                              />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {displayCompanies.map((c) => (
+                              <SelectItem key={c.id} value={c.id}>
+                                {c.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+
                 <FormField
                   control={form.control}
                   name="title"
