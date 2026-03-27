@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, useLocation } from 'react-router-dom'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useRegionFormatting } from '@/hooks/useRegionFormatting'
 import { useCouponStore } from '@/stores/CouponContext'
@@ -14,12 +14,15 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Mail, Phone } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 export function FranchiseeLeadsTab({ franchiseId }: { franchiseId: string }) {
   const { t } = useLanguage()
   const { validationLogs, users, companies, franchises } = useCouponStore()
   const [searchParams] = useSearchParams()
   const searchQuery = (searchParams.get('q') || '').toLowerCase()
+  const location = useLocation()
+  const isFranchisee = location.pathname.includes('/franchisee')
 
   const myFranchise = franchises.find((f) => f.id === franchiseId)
   const { formatDate } = useRegionFormatting(
@@ -94,8 +97,15 @@ export function FranchiseeLeadsTab({ franchiseId }: { franchiseId: string }) {
           )}
         </p>
       </div>
-      <Card className="shadow-sm min-w-0 w-full overflow-hidden">
-        <CardContent className="p-0 sm:p-0 overflow-x-auto">
+      <Card
+        className={cn(
+          'shadow-sm min-w-0 w-full',
+          !isFranchisee && 'overflow-hidden',
+        )}
+      >
+        <CardContent
+          className={cn('p-0 sm:p-0', !isFranchisee && 'overflow-x-auto')}
+        >
           <Table>
             <TableHeader className="bg-slate-50">
               <TableRow>

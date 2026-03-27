@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, useLocation } from 'react-router-dom'
 import { Plus, Edit2, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -30,6 +30,7 @@ import { useLanguage } from '@/stores/LanguageContext'
 import { useRegionFormatting } from '@/hooks/useRegionFormatting'
 import { useCouponStore } from '@/stores/CouponContext'
 import { PartnerPolicy } from '@/lib/types'
+import { cn } from '@/lib/utils'
 
 export function PartnerPoliciesTab({ franchiseId }: { franchiseId?: string }) {
   const { t } = useLanguage()
@@ -42,6 +43,8 @@ export function PartnerPoliciesTab({ franchiseId }: { franchiseId?: string }) {
   } = useCouponStore()
   const [searchParams] = useSearchParams()
   const searchQuery = (searchParams.get('q') || '').toLowerCase()
+  const location = useLocation()
+  const isFranchisee = location.pathname.includes('/franchisee')
 
   const franchise = franchises.find((f) => f.id === franchiseId)
   const { formatNumber } = useRegionFormatting(franchise?.region)
@@ -114,7 +117,12 @@ export function PartnerPoliciesTab({ franchiseId }: { franchiseId?: string }) {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in-up min-w-0 w-full max-w-full">
+    <div
+      className={cn(
+        'space-y-6 animate-fade-in-up w-full',
+        !isFranchisee && 'min-w-0 max-w-full',
+      )}
+    >
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 min-w-0">
         <h2 className="text-xl font-semibold tracking-tight truncate">
           {t('admin.policies')}
@@ -128,7 +136,12 @@ export function PartnerPoliciesTab({ franchiseId }: { franchiseId?: string }) {
         </Button>
       </div>
 
-      <div className="rounded-md border bg-card overflow-hidden min-w-0 w-full">
+      <div
+        className={cn(
+          'rounded-md border bg-card w-full',
+          !isFranchisee && 'overflow-hidden min-w-0',
+        )}
+      >
         <Table>
           <TableHeader>
             <TableRow>

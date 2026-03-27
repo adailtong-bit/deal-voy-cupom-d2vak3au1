@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { useLocation } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
@@ -20,6 +21,7 @@ import { DollarSign, TrendingUp, Users, Activity, Radar } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useRegionFormatting } from '@/hooks/useRegionFormatting'
 import { useCouponStore } from '@/stores/CouponContext'
+import { cn } from '@/lib/utils'
 
 const dummyData = [
   { partner: 'Sabor', coupons: 145, credits: 1250, margin: 350 },
@@ -49,6 +51,8 @@ export function AdminMonetizationTab({
   const { formatCurrency, formatNumber } = useRegionFormatting(
     franchise?.region,
   )
+  const location = useLocation()
+  const isFranchisee = location.pathname.includes('/franchisee')
 
   const totals = useMemo(() => {
     return dummyData.reduce(
@@ -62,7 +66,12 @@ export function AdminMonetizationTab({
   }, [])
 
   return (
-    <div className="space-y-6 animate-fade-in-up min-w-0 w-full max-w-full">
+    <div
+      className={cn(
+        'space-y-6 animate-fade-in-up w-full',
+        !isFranchisee && 'min-w-0 max-w-full',
+      )}
+    >
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 min-w-0">
         <Card className="min-w-0 overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

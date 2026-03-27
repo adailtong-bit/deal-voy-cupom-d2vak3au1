@@ -1,3 +1,4 @@
+import { useLocation } from 'react-router-dom'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useRegionFormatting } from '@/hooks/useRegionFormatting'
@@ -12,10 +13,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Globe, Box } from 'lucide-react'
 import { CrawlerSourcesTab } from './CrawlerSourcesTab'
 import { CrawlerPromotionsTab } from './CrawlerPromotionsTab'
+import { cn } from '@/lib/utils'
 
 export function PromotionCrawler({ franchiseId }: { franchiseId?: string }) {
   const { user, discoveredPromotions, franchises } = useCouponStore()
   const { t } = useLanguage()
+  const location = useLocation()
+  const isFranchisee = location.pathname.includes('/franchisee')
 
   const franchise = franchises.find((f) => f.id === franchiseId)
   const { formatNumber } = useRegionFormatting(franchise?.region)
@@ -29,7 +33,9 @@ export function PromotionCrawler({ franchiseId }: { franchiseId?: string }) {
   }).length
 
   return (
-    <div className="space-y-6 min-w-0 w-full max-w-full">
+    <div
+      className={cn('space-y-6 w-full', !isFranchisee && 'min-w-0 max-w-full')}
+    >
       <Card className="min-w-0 overflow-hidden w-full max-w-full">
         <CardHeader className="min-w-0">
           <CardTitle className="truncate">

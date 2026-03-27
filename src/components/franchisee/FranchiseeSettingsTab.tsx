@@ -1,3 +1,4 @@
+import { useLocation } from 'react-router-dom'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useRegionFormatting } from '@/hooks/useRegionFormatting'
 import { useCouponStore } from '@/stores/CouponContext'
@@ -10,6 +11,7 @@ import {
 } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
+import { cn } from '@/lib/utils'
 
 export function FranchiseeSettingsTab({
   franchiseId,
@@ -18,6 +20,8 @@ export function FranchiseeSettingsTab({
 }) {
   const { t } = useLanguage()
   const { franchises, platformSettings } = useCouponStore()
+  const location = useLocation()
+  const isFranchisee = location.pathname.includes('/franchisee')
 
   const myFranchise = franchises.find((f) => f.id === franchiseId)
   const { formatNumber, currency } = useRegionFormatting(
@@ -30,7 +34,12 @@ export function FranchiseeSettingsTab({
   if (!myFranchise) return null
 
   return (
-    <div className="space-y-6 animate-fade-in-up min-w-0 w-full max-w-full">
+    <div
+      className={cn(
+        'space-y-6 animate-fade-in-up w-full',
+        !isFranchisee && 'min-w-0 max-w-full',
+      )}
+    >
       <div className="min-w-0">
         <h2 className="text-2xl font-bold text-slate-800 truncate">
           {t('franchisee.settings.title', 'Configurações')}

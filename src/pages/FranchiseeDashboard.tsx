@@ -4,7 +4,6 @@ import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
 import { LayoutDashboard, Menu, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { ScrollArea } from '@/components/ui/scroll-area'
 
 import { FranchiseeSidebar } from '@/components/franchisee/FranchiseeSidebar'
 import { FranchiseeOverviewTab } from '@/components/franchisee/FranchiseeOverviewTab'
@@ -54,9 +53,9 @@ export default function FranchiseeDashboard() {
   }
 
   return (
-    <div className="flex flex-col md:flex-row h-[calc(100vh-3.5rem)] md:h-[calc(100vh-4rem)] bg-slate-50/50 overflow-hidden relative w-full max-w-full">
+    <div className="flex flex-col md:flex-row h-[calc(100vh-3.5rem)] md:h-[calc(100vh-4rem)] bg-slate-50/50 overflow-hidden relative w-full">
       {/* Mobile Header for Sidebar Toggle */}
-      <div className="md:hidden flex items-center justify-between bg-white border-b p-4 z-40 shadow-sm shrink-0 w-full max-w-full">
+      <div className="md:hidden flex items-center justify-between bg-white border-b p-4 z-40 shadow-sm shrink-0 w-full">
         <div className="flex items-center gap-2 min-w-0">
           <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center shrink-0">
             <LayoutDashboard className="w-4 h-4 text-primary" />
@@ -95,68 +94,66 @@ export default function FranchiseeDashboard() {
       )}
 
       {/* Main Content */}
-      <main className="flex-1 min-w-0 h-full flex flex-col relative overflow-hidden bg-slate-50/50 max-w-full">
-        <ScrollArea className="h-full w-full [&_[data-radix-scroll-area-viewport]]:min-w-0">
-          <div className="p-4 sm:p-6 lg:p-8 pb-20 md:pb-8 w-full max-w-[1400px] mx-auto min-w-0 flex flex-col">
-            {activeTab === 'overview' && (
-              <FranchiseeOverviewTab franchiseId={myFranchise.id} />
-            )}
-            {activeTab === 'merchants' && (
-              <MerchantsTab franchiseId={myFranchise.id} />
-            )}
+      <main className="flex-1 h-full overflow-auto bg-slate-50/50 custom-scrollbar relative">
+        <div className="p-4 sm:p-5 lg:p-6 pb-20 md:pb-8 min-w-full w-fit mx-auto flex flex-col">
+          {activeTab === 'overview' && (
+            <FranchiseeOverviewTab franchiseId={myFranchise.id} />
+          )}
+          {activeTab === 'merchants' && (
+            <MerchantsTab franchiseId={myFranchise.id} />
+          )}
 
-            {/* Financeiro */}
-            {activeTab === 'current-account' && (
-              <FranchiseeCurrentAccountTab franchiseId={myFranchise.id} />
-            )}
-            {activeTab === 'billing' && (
-              <PartnerBillingTab franchiseId={myFranchise.id} />
-            )}
-            {activeTab === 'monetization' && (
-              <AdminMonetizationTab franchiseId={myFranchise.id} />
-            )}
-            {activeTab === 'ads-royalties' && (
-              <FranchiseeAdsTab franchiseId={myFranchise.id} />
-            )}
+          {/* Financeiro */}
+          {activeTab === 'current-account' && (
+            <FranchiseeCurrentAccountTab franchiseId={myFranchise.id} />
+          )}
+          {activeTab === 'billing' && (
+            <PartnerBillingTab franchiseId={myFranchise.id} />
+          )}
+          {activeTab === 'monetization' && (
+            <AdminMonetizationTab franchiseId={myFranchise.id} />
+          )}
+          {activeTab === 'ads-royalties' && (
+            <FranchiseeAdsTab franchiseId={myFranchise.id} />
+          )}
 
-            {/* Operacional */}
-            {activeTab === 'seasonal' && (
-              <AdminSeasonalTab franchiseId={myFranchise.id} />
-            )}
-            {activeTab === 'categories' && (
-              <AdminCategoriesTab franchiseId={myFranchise.id} />
-            )}
-            {activeTab === 'interests' && (
-              <AdminInterestsTab franchiseId={myFranchise.id} />
-            )}
-            {activeTab === 'policies' && (
-              <PartnerPoliciesTab franchiseId={myFranchise.id} />
-            )}
+          {/* Operacional */}
+          {activeTab === 'seasonal' && (
+            <AdminSeasonalTab franchiseId={myFranchise.id} />
+          )}
+          {activeTab === 'categories' && (
+            <AdminCategoriesTab franchiseId={myFranchise.id} />
+          )}
+          {activeTab === 'interests' && (
+            <AdminInterestsTab franchiseId={myFranchise.id} />
+          )}
+          {activeTab === 'policies' && (
+            <PartnerPoliciesTab franchiseId={myFranchise.id} />
+          )}
 
-            {/* Inteligência */}
-            {activeTab === 'crm' && <AdminCRM franchiseId={myFranchise.id} />}
-            {activeTab === 'leads' && (
-              <FranchiseeLeadsTab franchiseId={myFranchise.id} />
-            )}
-            {activeTab === 'crawler' && (
-              <PromotionCrawler franchiseId={myFranchise.id} />
-            )}
-            {activeTab === 'insights' && (
-              <DataInsightsTab franchiseId={myFranchise.id} />
-            )}
+          {/* Inteligência */}
+          {activeTab === 'crm' && <AdminCRM franchiseId={myFranchise.id} />}
+          {activeTab === 'leads' && (
+            <FranchiseeLeadsTab franchiseId={myFranchise.id} />
+          )}
+          {activeTab === 'crawler' && (
+            <PromotionCrawler franchiseId={myFranchise.id} />
+          )}
+          {activeTab === 'insights' && (
+            <DataInsightsTab franchiseId={myFranchise.id} />
+          )}
 
-            {/* Apoio */}
-            {activeTab === 'sandbox' && (
-              <TestingSandboxTab franchiseId={myFranchise.id} />
-            )}
-            {activeTab === 'team' && (
-              <StaffTab parentType="franchise" parentId={myFranchise.id} />
-            )}
-            {activeTab === 'settings' && (
-              <FranchiseeSettingsTab franchiseId={myFranchise.id} />
-            )}
-          </div>
-        </ScrollArea>
+          {/* Apoio */}
+          {activeTab === 'sandbox' && (
+            <TestingSandboxTab franchiseId={myFranchise.id} />
+          )}
+          {activeTab === 'team' && (
+            <StaffTab parentType="franchise" parentId={myFranchise.id} />
+          )}
+          {activeTab === 'settings' && (
+            <FranchiseeSettingsTab franchiseId={myFranchise.id} />
+          )}
+        </div>
       </main>
     </div>
   )

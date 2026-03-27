@@ -14,6 +14,7 @@ import {
 import logoUrl from '@/assets/whatsapp-image-2026-01-25-at-5.34.51-am-1-9b370.jpeg'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useCouponStore } from '@/stores/CouponContext'
+import { cn } from '@/lib/utils'
 
 export function DesktopHeader() {
   const { user, logout } = useCouponStore()
@@ -117,14 +118,20 @@ export function DesktopHeader() {
           </nav>
         </div>
         <div className="flex items-center gap-2 lg:gap-4 shrink-0">
-          <div className="relative group hidden md:block">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground transition-colors group-focus-within:text-primary" />
+          <div className="relative group hidden md:block flex-shrink-0">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 transition-colors group-focus-within:text-primary z-10 pointer-events-none" />
             <input
               type="search"
               value={searchQuery}
               onChange={handleSearchChange}
               placeholder={t('nav.search', 'Buscar...')}
-              className="h-8 w-20 lg:w-28 rounded-full border border-input bg-slate-50/50 pl-8 pr-3 text-xs transition-all focus:w-48 lg:focus:w-64 focus:bg-white focus:ring-2 focus:ring-primary/20 outline-none placeholder:text-muted-foreground/70"
+              className={cn(
+                'h-9 rounded-full border transition-all duration-300 outline-none focus:bg-white focus:border-input focus:ring-2 focus:ring-primary/20 focus:w-48 lg:focus:w-64 focus:pl-9 focus:pr-4 focus:text-foreground focus:placeholder:text-muted-foreground',
+                searchQuery
+                  ? 'w-48 lg:w-64 pl-9 pr-4 bg-white border-input text-foreground placeholder:text-muted-foreground'
+                  : 'w-9 bg-slate-100 border-transparent text-transparent placeholder:text-transparent cursor-pointer hover:bg-slate-200',
+              )}
+              title={t('nav.search', 'Buscar')}
             />
           </div>
           <LanguageSelector />

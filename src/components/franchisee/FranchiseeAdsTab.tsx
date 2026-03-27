@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, useLocation } from 'react-router-dom'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useRegionFormatting } from '@/hooks/useRegionFormatting'
@@ -32,6 +32,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { DollarSign, Plus, Edit2, Trash2 } from 'lucide-react'
 import { Advertisement } from '@/lib/types'
+import { cn } from '@/lib/utils'
 
 export function FranchiseeAdsTab({ franchiseId }: { franchiseId?: string }) {
   const {
@@ -46,6 +47,8 @@ export function FranchiseeAdsTab({ franchiseId }: { franchiseId?: string }) {
   const { t } = useLanguage()
   const [searchParams] = useSearchParams()
   const searchQuery = (searchParams.get('q') || '').toLowerCase()
+  const location = useLocation()
+  const isFranchisee = location.pathname.includes('/franchisee')
 
   const franchise = franchises.find((f) => f.id === franchiseId)
   const { formatCurrency } = useRegionFormatting(franchise?.region)
@@ -176,7 +179,9 @@ export function FranchiseeAdsTab({ franchiseId }: { franchiseId?: string }) {
         </Card>
       </div>
 
-      <Card className="min-w-0 w-full overflow-hidden">
+      <Card
+        className={cn('min-w-0 w-full', !isFranchisee && 'overflow-hidden')}
+      >
         <CardHeader className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 min-w-0">
           <div className="min-w-0">
             <CardTitle className="truncate">
@@ -197,7 +202,12 @@ export function FranchiseeAdsTab({ franchiseId }: { franchiseId?: string }) {
             {t('franchisee.ads.create', 'Criar Anúncio')}
           </Button>
         </CardHeader>
-        <CardContent className="p-0 sm:p-6 sm:pt-0 overflow-x-auto">
+        <CardContent
+          className={cn(
+            'p-0 sm:p-6 sm:pt-0',
+            !isFranchisee && 'overflow-x-auto',
+          )}
+        >
           <Table>
             <TableHeader>
               <TableRow>

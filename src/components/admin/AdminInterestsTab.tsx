@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, useLocation } from 'react-router-dom'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
 import { CATEGORIES } from '@/lib/data'
@@ -22,12 +22,15 @@ import {
 } from '@/components/ui/table'
 import { Plus, Trash2, Edit2, Check, X, Tag } from 'lucide-react'
 import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
 
 export function AdminInterestsTab({ franchiseId }: { franchiseId?: string }) {
   const { platformSettings, updatePlatformSettings } = useCouponStore()
   const { t } = useLanguage()
   const [searchParams] = useSearchParams()
   const searchQuery = (searchParams.get('q') || '').toLowerCase()
+  const location = useLocation()
+  const isFranchisee = location.pathname.includes('/franchisee')
 
   const interests = (platformSettings.availableInterests || []).filter((i) => {
     if (!searchQuery) return true
@@ -152,8 +155,15 @@ export function AdminInterestsTab({ franchiseId }: { franchiseId?: string }) {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in-up min-w-0 w-full max-w-full">
-      <Card className="min-w-0 overflow-hidden w-full">
+    <div
+      className={cn(
+        'space-y-6 animate-fade-in-up w-full',
+        !isFranchisee && 'min-w-0 max-w-full',
+      )}
+    >
+      <Card
+        className={cn('w-full', !isFranchisee && 'min-w-0 overflow-hidden')}
+      >
         <CardHeader className="min-w-0">
           <CardTitle className="truncate">
             {t('franchisee.interests.title', 'Gerenciar Interesses')}
@@ -165,7 +175,12 @@ export function AdminInterestsTab({ franchiseId }: { franchiseId?: string }) {
             )}
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-4 sm:p-6 overflow-x-auto min-w-0">
+        <CardContent
+          className={cn(
+            'p-4 sm:p-6',
+            !isFranchisee && 'overflow-x-auto min-w-0',
+          )}
+        >
           <div className="flex flex-col sm:flex-row gap-4 mb-6 min-w-0">
             <Input
               placeholder={t(

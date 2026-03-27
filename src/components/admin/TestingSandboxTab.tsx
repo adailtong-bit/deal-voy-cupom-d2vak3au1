@@ -1,3 +1,4 @@
+import { useLocation } from 'react-router-dom'
 import {
   Card,
   CardContent,
@@ -10,15 +11,23 @@ import { MapPin, User, Building, Store } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useRegionFormatting } from '@/hooks/useRegionFormatting'
 import { useCouponStore } from '@/stores/CouponContext'
+import { cn } from '@/lib/utils'
 
 export function TestingSandboxTab({ franchiseId }: { franchiseId?: string }) {
   const { t } = useLanguage()
   const { franchises } = useCouponStore()
   const franchise = franchises.find((f) => f.id === franchiseId)
   const { formatNumber } = useRegionFormatting(franchise?.region)
+  const location = useLocation()
+  const isFranchisee = location.pathname.includes('/franchisee')
 
   return (
-    <div className="space-y-6 animate-fade-in min-w-0 w-full max-w-full">
+    <div
+      className={cn(
+        'space-y-6 animate-fade-in w-full',
+        !isFranchisee && 'min-w-0 max-w-full',
+      )}
+    >
       <div className="min-w-0">
         <h2 className="text-2xl font-bold truncate">
           {t('franchisee.sandbox.title', 'Sandbox de Testes')}

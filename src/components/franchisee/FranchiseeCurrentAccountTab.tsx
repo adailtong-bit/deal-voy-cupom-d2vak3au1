@@ -1,4 +1,4 @@
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, useLocation } from 'react-router-dom'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useRegionFormatting } from '@/hooks/useRegionFormatting'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -13,6 +13,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { ArrowDownRight, ArrowUpRight, Wallet } from 'lucide-react'
 import { useCouponStore } from '@/stores/CouponContext'
+import { cn } from '@/lib/utils'
 
 export function FranchiseeCurrentAccountTab({
   franchiseId,
@@ -24,6 +25,8 @@ export function FranchiseeCurrentAccountTab({
     useCouponStore()
   const [searchParams] = useSearchParams()
   const searchQuery = (searchParams.get('q') || '').toLowerCase()
+  const location = useLocation()
+  const isFranchisee = location.pathname.includes('/franchisee')
 
   const franchise = franchises.find((f) => f.id === franchiseId)
   const { formatCurrency, formatDate } = useRegionFormatting(franchise?.region)
@@ -149,13 +152,20 @@ export function FranchiseeCurrentAccountTab({
         </Card>
       </div>
 
-      <Card className="min-w-0 w-full overflow-hidden">
+      <Card
+        className={cn('min-w-0 w-full', !isFranchisee && 'overflow-hidden')}
+      >
         <CardHeader className="min-w-0">
           <CardTitle className="truncate">
             {t('franchisee.current_account.statement')}
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-0 sm:p-6 sm:pt-0 overflow-x-auto">
+        <CardContent
+          className={cn(
+            'p-0 sm:p-6 sm:pt-0',
+            !isFranchisee && 'overflow-x-auto',
+          )}
+        >
           <Table>
             <TableHeader>
               <TableRow>

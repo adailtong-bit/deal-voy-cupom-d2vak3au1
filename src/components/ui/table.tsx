@@ -5,15 +5,25 @@ import { cn } from '@/lib/utils'
 const Table = React.forwardRef<
   HTMLTableElement,
   React.HTMLAttributes<HTMLTableElement>
->(({ className, ...props }, ref) => (
-  <div className="relative w-full overflow-x-auto custom-scrollbar pb-1">
-    <table
-      ref={ref}
-      className={cn('w-full caption-bottom text-sm', className)}
-      {...props}
-    />
-  </div>
-))
+>(({ className, ...props }, ref) => {
+  const isFranchisee =
+    typeof window !== 'undefined' &&
+    window.location.pathname.includes('/franchisee')
+  return (
+    <div
+      className={cn(
+        'relative w-full pb-1 custom-scrollbar',
+        !isFranchisee && 'overflow-x-auto',
+      )}
+    >
+      <table
+        ref={ref}
+        className={cn('w-full caption-bottom text-sm', className)}
+        {...props}
+      />
+    </div>
+  )
+})
 Table.displayName = 'Table'
 
 const TableHeader = React.forwardRef<

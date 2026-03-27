@@ -1,13 +1,17 @@
+import { useLocation } from 'react-router-dom'
 import { useCouponStore } from '@/stores/CouponContext'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useRegionFormatting } from '@/hooks/useRegionFormatting'
 import { DollarSign, Users, ShoppingCart, TrendingUp } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 export function DataInsightsTab({ franchiseId }: { franchiseId?: string }) {
   const { validationLogs, users, adInvoices, companies, franchises } =
     useCouponStore()
   const { t } = useLanguage()
+  const location = useLocation()
+  const isFranchisee = location.pathname.includes('/franchisee')
 
   const franchise = franchises.find((f) => f.id === franchiseId)
   const { formatCurrency, formatNumber } = useRegionFormatting(
@@ -60,7 +64,12 @@ export function DataInsightsTab({ franchiseId }: { franchiseId?: string }) {
   const referralPayouts = totalCashbackDistributed * 0.15
 
   return (
-    <div className="space-y-6 animate-fade-in-up min-w-0 w-full max-w-full">
+    <div
+      className={cn(
+        'space-y-6 animate-fade-in-up w-full',
+        !isFranchisee && 'min-w-0 max-w-full',
+      )}
+    >
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 min-w-0">
         <Card className="min-w-0 overflow-hidden">
           <CardContent className="p-6">

@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { useLocation } from 'react-router-dom'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useRegionFormatting } from '@/hooks/useRegionFormatting'
@@ -8,10 +9,13 @@ import { Users, Target, BarChart3, Megaphone } from 'lucide-react'
 import { LeadsProfileTab } from './crm/LeadsProfileTab'
 import { TargetGroupsTab } from './crm/TargetGroupsTab'
 import { CommunicationCampaignsTab } from './crm/CommunicationCampaignsTab'
+import { cn } from '@/lib/utils'
 
 export function AdminCRM({ franchiseId }: { franchiseId?: string }) {
   const { users, validationLogs, companies, franchises } = useCouponStore()
   const { t } = useLanguage()
+  const location = useLocation()
+  const isFranchisee = location.pathname.includes('/franchisee')
 
   const franchise = franchises.find((f) => f.id === franchiseId)
   const { formatNumber } = useRegionFormatting(franchise?.region)
@@ -39,7 +43,12 @@ export function AdminCRM({ franchiseId }: { franchiseId?: string }) {
   }).length
 
   return (
-    <div className="space-y-6 animate-fade-in-up min-w-0 w-full max-w-full">
+    <div
+      className={cn(
+        'space-y-6 animate-fade-in-up w-full',
+        !isFranchisee && 'min-w-0 max-w-full',
+      )}
+    >
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 min-w-0">
         <Card className="border-l-4 border-l-blue-500 min-w-0 overflow-hidden">
           <CardContent className="p-4 flex items-center gap-4">

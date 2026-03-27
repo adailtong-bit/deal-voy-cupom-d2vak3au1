@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, useLocation } from 'react-router-dom'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
 import { Button } from '@/components/ui/button'
@@ -31,6 +31,7 @@ import { Badge } from '@/components/ui/badge'
 import { Plus, Edit2, Trash2, Mail, Send } from 'lucide-react'
 import { User } from '@/lib/types'
 import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
 
 interface StaffTabProps {
   parentType?: 'franchise' | 'company' | 'global'
@@ -43,6 +44,8 @@ export function StaffTab({ parentType = 'global', parentId }: StaffTabProps) {
   const { t } = useLanguage()
   const [searchParams] = useSearchParams()
   const searchQuery = (searchParams.get('q') || '').toLowerCase()
+  const location = useLocation()
+  const isFranchisee = location.pathname.includes('/franchisee')
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false)
@@ -143,7 +146,12 @@ export function StaffTab({ parentType = 'global', parentId }: StaffTabProps) {
   }
 
   return (
-    <div className="space-y-4 animate-fade-in-up min-w-0 w-full max-w-full">
+    <div
+      className={cn(
+        'space-y-4 animate-fade-in-up w-full',
+        !isFranchisee && 'min-w-0 max-w-full',
+      )}
+    >
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-card p-4 rounded-lg border gap-4 min-w-0 w-full">
         <div className="min-w-0">
           <h3 className="text-lg font-bold truncate">
@@ -175,7 +183,12 @@ export function StaffTab({ parentType = 'global', parentId }: StaffTabProps) {
         </div>
       </div>
 
-      <div className="rounded-md border bg-card overflow-hidden min-w-0 w-full">
+      <div
+        className={cn(
+          'rounded-md border bg-card w-full',
+          !isFranchisee && 'overflow-hidden min-w-0',
+        )}
+      >
         <Table>
           <TableHeader>
             <TableRow>

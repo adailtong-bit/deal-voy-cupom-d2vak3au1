@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, useLocation } from 'react-router-dom'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
 import { Button } from '@/components/ui/button'
@@ -30,6 +30,8 @@ export function MerchantsTab({ franchiseId }: { franchiseId?: string }) {
   const { t } = useLanguage()
   const [searchParams] = useSearchParams()
   const searchQuery = (searchParams.get('q') || '').toLowerCase()
+  const location = useLocation()
+  const isFranchisee = location.pathname.includes('/franchisee')
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingMerchant, setEditingMerchant] = useState<Company | null>(null)
@@ -184,7 +186,12 @@ export function MerchantsTab({ franchiseId }: { franchiseId?: string }) {
         </div>
       </div>
 
-      <div className="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm min-w-0 w-full">
+      <div
+        className={cn(
+          'rounded-xl border border-slate-200 bg-white shadow-sm min-w-0 w-full',
+          !isFranchisee && 'overflow-hidden',
+        )}
+      >
         <Table>
           <TableHeader className="bg-slate-50">
             <TableRow>

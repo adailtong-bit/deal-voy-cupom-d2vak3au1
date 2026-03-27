@@ -1,3 +1,4 @@
+import { useLocation } from 'react-router-dom'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useRegionFormatting } from '@/hooks/useRegionFormatting'
@@ -30,11 +31,14 @@ import {
   Sparkles,
   CircleEllipsis,
 } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 export function AdminCategoriesTab({ franchiseId }: { franchiseId?: string }) {
   const { t } = useLanguage()
   const { platformSettings, updatePlatformSettings, franchises } =
     useCouponStore()
+  const location = useLocation()
+  const isFranchisee = location.pathname.includes('/franchisee')
 
   const franchise = franchises.find((f) => f.id === franchiseId)
   const { formatNumber } = useRegionFormatting(franchise?.region)
@@ -88,8 +92,15 @@ export function AdminCategoriesTab({ franchiseId }: { franchiseId?: string }) {
   const manageableCategories = CATEGORIES.filter((c) => c.id !== 'all')
 
   return (
-    <div className="space-y-6 animate-fade-in-up min-w-0 w-full max-w-full">
-      <Card className="min-w-0 overflow-hidden w-full">
+    <div
+      className={cn(
+        'space-y-6 animate-fade-in-up w-full',
+        !isFranchisee && 'min-w-0 max-w-full',
+      )}
+    >
+      <Card
+        className={cn('w-full', !isFranchisee && 'min-w-0 overflow-hidden')}
+      >
         <CardHeader className="min-w-0">
           <CardTitle className="truncate">
             {t('admin.categoryManagement', 'Gerenciamento de Categorias')}
@@ -108,7 +119,12 @@ export function AdminCategoriesTab({ franchiseId }: { franchiseId?: string }) {
             </strong>
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-0 sm:p-6 sm:pt-0 overflow-x-auto min-w-0">
+        <CardContent
+          className={cn(
+            'p-0 sm:p-6 sm:pt-0',
+            !isFranchisee && 'overflow-x-auto min-w-0',
+          )}
+        >
           <Table>
             <TableHeader>
               <TableRow>
