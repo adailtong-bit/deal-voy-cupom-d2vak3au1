@@ -882,7 +882,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         discount: promo.discount,
         category: customCategory || promo.category,
         distance: 0,
-        expiryDate: promo.expiryDate,
+        expiryDate: new Date(Date.now() + 30 * 86400000).toISOString(),
         image: promo.image,
         code: `ORG-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
         coordinates: { lat: 0, lng: 0 },
@@ -893,6 +893,8 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         currency: promo.currency,
         franchiseId: promo.franchiseId,
         targetAudience: 'all',
+        externalUrl: promo.originalUrl,
+        instructions: 'Válido por 30 dias ou enquanto durar o estoque',
       }
       addCoupon(newCoupon)
     }
@@ -914,7 +916,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
           title: `Oferta Orgânica ${Math.floor(Math.random() * 1000)}`,
           discount: `${10 + Math.floor(Math.random() * 40)}% OFF`,
           description: `Esta é uma oferta incrível extraída da web para a região de ${selectedRegion || 'Global'}. Aproveite os descontos especiais.`,
-          expiryDate: new Date(Date.now() + (30 + i) * 86400000).toISOString(),
+          expiryDate: new Date(Date.now() + 30 * 86400000).toISOString(),
           image: `https://img.usecurling.com/p/300/200?q=deal&seed=${Math.floor(Math.random() * 1000)}`,
           storeName: `Lojista Descoberto ${Math.floor(Math.random() * 1000)}`,
           status: 'pending',

@@ -61,21 +61,33 @@ export function CouponCard({
   const isExpired = !!(endDateObj && now > endDateObj)
   const isDisabled = isSoldOut || reserved || isExpired || isScheduled
 
+  const hasExternalLink = !!coupon.externalUrl
+
   const getButtonText = () => {
-    if (reserved) return t('vouchers.reserved', 'Reservado')
     if (isSoldOut) return t('vouchers.sold_out', 'Esgotado')
     if (isExpired) return t('vouchers.expired', 'Expirada')
     if (isScheduled) return t('vouchers.scheduled', 'Agendada')
+    if (hasExternalLink) return t('vouchers.go_to_deal', 'Ir para a promoção')
+    if (reserved) return t('vouchers.reserved', 'Reservado')
     return t('vouchers.reserve', 'Reservar')
   }
 
   const handleCardClick = () => {
+    if (hasExternalLink) {
+      window.open(coupon.externalUrl, '_blank', 'noopener,noreferrer')
+      return
+    }
     navigate(`/voucher/${coupon.id}`)
   }
 
-  const handleReserve = (e: React.MouseEvent) => {
+  const handleAction = (e: React.MouseEvent) => {
     e.stopPropagation()
     e.preventDefault()
+
+    if (hasExternalLink) {
+      window.open(coupon.externalUrl, '_blank', 'noopener,noreferrer')
+      return
+    }
 
     if (!user) {
       navigate('/login', { state: { from: location } })
@@ -225,14 +237,21 @@ export function CouponCard({
                 )}
                 <Button
                   size="sm"
-                  variant={reserved ? 'secondary' : 'default'}
+                  variant={
+                    reserved && !hasExternalLink ? 'secondary' : 'default'
+                  }
                   className={cn(
                     'h-7 text-[10px] sm:text-xs px-2.5 shadow-sm',
-                    reserved && 'pointer-events-none opacity-70',
+                    reserved &&
+                      !hasExternalLink &&
+                      'pointer-events-none opacity-70',
+                    hasExternalLink &&
+                      'bg-blue-600 hover:bg-blue-700 text-white',
                   )}
-                  onClick={handleReserve}
+                  onClick={handleAction}
                   disabled={isDisabled}
                 >
+                  {hasExternalLink && <Globe className="w-3 h-3 mr-1" />}
                   {getButtonText()}
                 </Button>
               </div>
@@ -376,15 +395,18 @@ export function CouponCard({
 
             <Button
               size="sm"
-              variant={reserved ? 'secondary' : 'default'}
+              variant={reserved && !hasExternalLink ? 'secondary' : 'default'}
               className={cn(
                 'w-full h-7 sm:h-8 text-[10px] sm:text-xs shadow-sm transition-transform hover:-translate-y-0.5',
                 reserved &&
+                  !hasExternalLink &&
                   'pointer-events-none opacity-70 hover:translate-y-0',
+                hasExternalLink && 'bg-blue-600 hover:bg-blue-700 text-white',
               )}
-              onClick={handleReserve}
+              onClick={handleAction}
               disabled={isDisabled}
             >
+              {hasExternalLink && <Globe className="w-3 h-3 mr-1.5" />}
               {getButtonText()}
             </Button>
           </div>
