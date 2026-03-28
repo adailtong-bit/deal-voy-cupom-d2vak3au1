@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Search, Map as MapIcon, List, Filter, Radar } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useCouponStore } from '@/stores/CouponContext'
@@ -6,32 +6,117 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { CouponCard } from '@/components/CouponCard'
 import { AdSpace } from '@/components/AdSpace'
+import { Skeleton } from '@/components/ui/skeleton'
 import { CATEGORIES } from '@/lib/data'
 import { cn } from '@/lib/utils'
+import { fetchCoupons } from '@/lib/api'
+import { Coupon } from '@/lib/types'
 
 export default function Explore() {
   const { t, language } = useLanguage()
-  const { coupons, user } = useCouponStore()
+  const { user, selectedRegion } = useCouponStore()
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list')
   const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
 
-  const filtered = useMemo(() => {
-    return coupons.filter((c) => {
-      const title = c.translations?.[language]?.title || c.title
-      const desc = c.translations?.[language]?.description || c.description
+  const [serverCoupons, setServerCoupons] = useState<Coupon[]>([])
+  const [loading, setLoading] = useState(true)
+  const [page, setPage] = useState(1)
+  const [hasMore, setHasMore] = useState(true)
+  const [total, setTotal] = useState(0)
 
-      const matchesSearch =
-        title.toLowerCase().includes(search.toLowerCase()) ||
-        c.storeName.toLowerCase().includes(search.toLowerCase()) ||
-        desc.toLowerCase().includes(search.toLowerCase())
+  // Debounce search
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedSearch(search), 500)
+    return () => clearTimeout(handler)
+  }, [search])
 
-      const matchesCategory =
-        selectedCategory === 'all' || c.category === selectedCategory
+  useEffect(() => {
+    let isMounted = true
+    const loadInitial = async () => {
+      setLoading(true)
+      try {
+        const res = await fetchCoupons({
+          query: debouncedSearch,
+          category: selectedCategory,
+          page: 1,
+          limit: 12,
+          franchiseId: user?.franchiseId,
+          region: selectedRegion,
+          language,
+        })
+        if (isMounted) {
+          setServerCoupons(res.data)
+          setPage(1)
+          setHasMore(res.hasMore)
+          setTotal(res.total)
+        }
+      } catch (err) {
+        console.error(err)
+      } finally {
+        if (isMounted) setLoading(false)
+      }
+    }
+    loadInitial()
+    return () => {
+      isMounted = false
+    }
+  }, [
+    debouncedSearch,
+    selectedCategory,
+    language,
+    selectedRegion,
+    user?.franchiseId,
+  ])
 
-      return matchesSearch && matchesCategory
-    })
-  }, [coupons, search, selectedCategory, language])
+  const observer = useRef<IntersectionObserver | null>(null)
+  const lastElementRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (loading || !hasMore) return
+      if (observer.current) observer.current.disconnect()
+      observer.current = new IntersectionObserver(async (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loading) {
+          setLoading(true)
+          try {
+            const nextPage = page + 1
+            const res = await fetchCoupons({
+              query: debouncedSearch,
+              category: selectedCategory,
+              page: nextPage,
+              limit: 12,
+              franchiseId: user?.franchiseId,
+              region: selectedRegion,
+              language,
+            })
+            setServerCoupons((prev) => {
+              const newItems = res.data.filter(
+                (n) => !prev.some((p) => p.id === n.id),
+              )
+              return [...prev, ...newItems]
+            })
+            setPage(nextPage)
+            setHasMore(res.hasMore)
+          } catch (err) {
+            console.error(err)
+          } finally {
+            setLoading(false)
+          }
+        }
+      })
+      if (node) observer.current.observe(node)
+    },
+    [
+      loading,
+      hasMore,
+      page,
+      debouncedSearch,
+      selectedCategory,
+      language,
+      selectedRegion,
+      user?.franchiseId,
+    ],
+  )
 
   return (
     <div className="container max-w-6xl py-6 animate-fade-in-up flex flex-col gap-6">
@@ -44,7 +129,11 @@ export default function Explore() {
             {t('nav.explore', 'Explorar')}
           </h1>
           <p className="text-slate-500 mt-1">
-            {filtered.length} {t('explore.offers_found', 'ofertas encontradas')}
+            {loading && page === 1 ? (
+              <Skeleton className="h-5 w-40" />
+            ) : (
+              `${total} ${t('explore.offers_found', 'ofertas encontradas')}`
+            )}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -126,9 +215,45 @@ export default function Explore() {
         )}
       >
         {viewMode === 'list' ? (
-          filtered.map((coupon) => (
-            <CouponCard key={coupon.id} coupon={coupon} variant="vertical" />
-          ))
+          <>
+            {serverCoupons.map((coupon, index) => {
+              if (index === serverCoupons.length - 1) {
+                return (
+                  <div ref={lastElementRef} key={coupon.id} className="h-full">
+                    <CouponCard coupon={coupon} variant="vertical" />
+                  </div>
+                )
+              }
+              return (
+                <CouponCard
+                  key={coupon.id}
+                  coupon={coupon}
+                  variant="vertical"
+                />
+              )
+            })}
+
+            {loading && (
+              <>
+                {Array.from({ length: page === 1 ? 12 : 4 }).map((_, i) => (
+                  <div
+                    key={`skeleton-${i}`}
+                    className="flex flex-col h-full rounded-lg border border-slate-200 overflow-hidden bg-white shadow-sm min-h-[250px]"
+                  >
+                    <Skeleton className="h-28 sm:h-32 w-full rounded-none" />
+                    <div className="p-2.5 sm:p-3 flex-1 flex flex-col gap-2">
+                      <Skeleton className="h-4 w-3/4" />
+                      <Skeleton className="h-3 w-1/2" />
+                      <div className="mt-auto pt-2 border-t flex flex-col gap-2.5">
+                        <Skeleton className="h-3 w-full" />
+                        <Skeleton className="h-7 w-full rounded" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
+          </>
         ) : (
           <div className="h-[400px] w-full bg-slate-100 rounded-lg flex items-center justify-center border border-slate-200 shadow-inner">
             <div className="text-center flex flex-col items-center gap-3">
@@ -143,7 +268,7 @@ export default function Explore() {
           </div>
         )}
 
-        {filtered.length === 0 && viewMode === 'list' && (
+        {!loading && serverCoupons.length === 0 && viewMode === 'list' && (
           <div className="col-span-full py-16 text-center bg-white rounded-lg border border-slate-100 border-dashed">
             <div className="flex justify-center mb-4">
               <Search className="h-10 w-10 text-slate-300" />

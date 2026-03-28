@@ -15,9 +15,11 @@ import { CrawlerSourcesTab } from './CrawlerSourcesTab'
 import { CrawlerPromotionsTab } from './CrawlerPromotionsTab'
 import { CrawlerHistoryTab } from './CrawlerHistoryTab'
 import { cn } from '@/lib/utils'
+import { useState, useEffect } from 'react'
+import { fetchCrawlerPromotions } from '@/lib/api'
 
 export function PromotionCrawler({ franchiseId }: { franchiseId?: string }) {
-  const { user, discoveredPromotions, franchises } = useCouponStore()
+  const { user, franchises } = useCouponStore()
   const { t } = useLanguage()
   const location = useLocation()
   const isFranchisee = location.pathname.includes('/franchisee')
@@ -25,13 +27,35 @@ export function PromotionCrawler({ franchiseId }: { franchiseId?: string }) {
   const franchise = franchises.find((f) => f.id === franchiseId)
   const { formatNumber } = useRegionFormatting(franchise?.region)
 
-  const pendingPromotionsCount = discoveredPromotions.filter((p) => {
-    if (p.status !== 'pending') return false
-    if (franchiseId) {
-      return p.franchiseId === franchiseId || p.region === user?.region
+  const [pendingPromotionsCount, setPendingPromotionsCount] = useState(0)
+
+  // Real-Time Synchronization via Optimized Polling
+  useEffect(() => {
+    let isMounted = true
+
+    const pollPromotions = async () => {
+      try {
+        const res = await fetchCrawlerPromotions({
+          franchiseId,
+          region: user?.region,
+          limit: 1, // We only need total count here
+        })
+        if (isMounted) {
+          setPendingPromotionsCount(res.total)
+        }
+      } catch (err) {
+        console.error('Failed to poll crawler promotions', err)
+      }
     }
-    return true
-  }).length
+
+    pollPromotions()
+    const interval = setInterval(pollPromotions, 10000) // Poll every 10s
+
+    return () => {
+      isMounted = false
+      clearInterval(interval)
+    }
+  }, [franchiseId, user?.region])
 
   return (
     <div
