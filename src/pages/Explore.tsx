@@ -128,13 +128,15 @@ export default function Explore() {
           <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
             {t('nav.explore', 'Explorar')}
           </h1>
-          <p className="text-slate-500 mt-1">
+          <div className="text-slate-500 mt-1">
             {loading && page === 1 ? (
               <Skeleton className="h-5 w-40" />
             ) : (
-              `${total} ${t('explore.offers_found', 'ofertas encontradas')}`
+              <span>
+                {total} {t('explore.offers_found', 'ofertas encontradas')}
+              </span>
             )}
-          </p>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <Button
