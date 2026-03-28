@@ -20,6 +20,7 @@ import {
   ChatThread,
   Review,
   CrawlerSource,
+  CrawlerHistory,
   DiscoveredPromotion,
   AdPricing,
   Advertiser,
@@ -1503,6 +1504,47 @@ export const MOCK_CHATS: ChatThread[] = [
   },
 ]
 
+export const MOCK_CRAWLER_HISTORY: CrawlerHistory[] = [
+  {
+    id: 'ch1',
+    date: new Date(Date.now() - 3600000).toISOString(),
+    storeName: 'Amazon',
+    status: 'success',
+    itemsFound: 152,
+    itemsImported: 45,
+    sourceId: 'cs_amazon',
+  },
+  {
+    id: 'ch2',
+    date: new Date(Date.now() - 7200000).toISOString(),
+    storeName: 'Shopee',
+    status: 'success',
+    itemsFound: 89,
+    itemsImported: 12,
+    sourceId: 'cs_shopee',
+  },
+  {
+    id: 'ch3',
+    date: new Date(Date.now() - 86400000).toISOString(),
+    storeName: 'AliExpress',
+    status: 'warning',
+    itemsFound: 15,
+    itemsImported: 0,
+    sourceId: 'cs_ali',
+    errorMessage: 'Rate limit exceeded, partial results',
+  },
+  {
+    id: 'ch4',
+    date: new Date(Date.now() - 172800000).toISOString(),
+    storeName: 'Mercado Livre',
+    status: 'error',
+    itemsFound: 0,
+    itemsImported: 0,
+    sourceId: 'cs_ml',
+    errorMessage: 'Connection timeout',
+  },
+]
+
 export const MOCK_CRAWLER_SOURCES: CrawlerSource[] = [
   {
     id: 'cs1',
@@ -1522,6 +1564,17 @@ export const MOCK_CRAWLER_SOURCES: CrawlerSource[] = [
     region: 'US-FL',
     scanRadius: 100,
     status: 'active',
+  },
+  {
+    id: 'cs_amazon',
+    name: 'Amazon Deals',
+    url: 'https://amazon.com.br/deals',
+    type: 'web',
+    region: 'Global',
+    scanRadius: 0,
+    status: 'active',
+    lastScan: new Date(Date.now() - 3600000).toISOString(),
+    lastStatus: 'success',
   },
 ]
 
@@ -1565,6 +1618,67 @@ export const MOCK_DISCOVERED_PROMOTIONS: DiscoveredPromotion[] = [
       discount_value: '$20',
       source_link: 'https://flcoupons.com/deal/orlando-parks',
       scraped_images: ['url1', 'url2'],
+    },
+  },
+  {
+    id: 'dp_amz_1',
+    sourceId: 'cs_amazon',
+    title: 'Echo Dot (5ª Geração)',
+    discount: '30% OFF',
+    description:
+      'Smart speaker com Alexa. Controle sua casa inteligente e muito mais.',
+    expiryDate: '2025-12-31',
+    image: 'https://img.usecurling.com/p/300/200?q=speaker',
+    storeName: 'Amazon',
+    status: 'pending',
+    region: 'Global',
+    category: 'Eletrônicos',
+    capturedAt: new Date(Date.now() - 3600000).toISOString(),
+    rawData: {
+      original_title: 'Echo Dot (5th Gen, 2022 release)',
+      price_info: '$34.99',
+      is_sponsored: false,
+    },
+  },
+  {
+    id: 'dp_amz_2',
+    sourceId: 'cs_amazon',
+    title: 'Kindle Paperwhite 16GB',
+    discount: '15% OFF',
+    description:
+      'Tela de 6,8" e temperatura de luz ajustável. Bateria que dura semanas.',
+    expiryDate: '2025-11-30',
+    image: 'https://img.usecurling.com/p/300/200?q=ereader',
+    storeName: 'Amazon',
+    status: 'pending',
+    region: 'Global',
+    category: 'Eletrônicos',
+    capturedAt: new Date(Date.now() - 7200000).toISOString(),
+    rawData: {
+      original_title: 'Kindle Paperwhite (8 GB)',
+      price_info: '$139.99',
+      is_sponsored: false,
+    },
+  },
+  {
+    id: 'dp_amz_3',
+    sourceId: 'cs_amazon',
+    title: 'Fone de Ouvido Bluetooth Sem Fio Estranho',
+    discount: '90% OFF',
+    description:
+      'Fone de ouvido misterioso. Sem marca, sem garantia. Compre por sua conta e risco.',
+    expiryDate: '2025-05-30',
+    image: 'https://img.usecurling.com/p/300/200?q=headphones&color=gray',
+    storeName: 'Amazon',
+    status: 'pending',
+    region: 'Global',
+    category: 'Eletrônicos',
+    capturedAt: new Date(Date.now() - 7200000).toISOString(),
+    rawData: {
+      original_title: 'Wireless Earbuds X9999 Pro Max',
+      price_info: '$5.99',
+      is_sponsored: true,
+      suspicious: true,
     },
   },
 ]

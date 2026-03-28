@@ -46,6 +46,7 @@ export function CrawlerPromotionsTab() {
   const [isSheetOpen, setIsSheetOpen] = useState(false)
   const [filterState, setFilterState] = useState<string>('all')
   const [filterCity, setFilterCity] = useState<string>('all')
+  const [filterStore, setFilterStore] = useState<string>('all')
 
   const basePendingPromotions = discoveredPromotions.filter(
     (p) =>
@@ -69,9 +70,14 @@ export function CrawlerPromotionsTab() {
     ),
   ).sort() as string[]
 
+  const allStores = Array.from(
+    new Set(basePendingPromotions.map((p) => p.storeName).filter(Boolean)),
+  ).sort() as string[]
+
   const pendingPromotions = basePendingPromotions.filter((p) => {
     if (filterState !== 'all' && p.state !== filterState) return false
     if (filterCity !== 'all' && p.city !== filterCity) return false
+    if (filterStore !== 'all' && p.storeName !== filterStore) return false
     return true
   })
 
@@ -128,7 +134,23 @@ export function CrawlerPromotionsTab() {
           </Badge>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+        <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto flex-wrap justify-end">
+          <Select value={filterStore} onValueChange={setFilterStore}>
+            <SelectTrigger className="w-full sm:w-[180px] bg-background">
+              <SelectValue placeholder={t('common.store', 'Loja')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">
+                {t('common.all_stores', 'Todas as Lojas')}
+              </SelectItem>
+              {allStores.map((s) => (
+                <SelectItem key={s} value={s}>
+                  {s}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
           <Select
             value={filterState}
             onValueChange={(val) => {
@@ -246,12 +268,22 @@ export function CrawlerPromotionsTab() {
                   </TableCell>
                   <TableCell className="min-w-[200px] max-w-[300px]">
                     <div className="flex flex-col space-y-1">
-                      <span
-                        className="font-semibold text-sm line-clamp-1"
-                        title={promo.title}
-                      >
-                        {promo.title}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="font-semibold text-sm line-clamp-1"
+                          title={promo.title}
+                        >
+                          {promo.title}
+                        </span>
+                        {promo.rawData?.suspicious && (
+                          <Badge
+                            variant="destructive"
+                            className="text-[10px] px-1 py-0 h-4"
+                          >
+                            {t('common.suspicious', 'Suspeito')}
+                          </Badge>
+                        )}
+                      </div>
                       <span
                         className="text-xs text-muted-foreground line-clamp-2"
                         title={promo.description}

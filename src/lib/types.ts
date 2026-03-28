@@ -727,6 +727,17 @@ export interface ChatThread {
   unreadCount: number
 }
 
+export interface CrawlerHistory {
+  id: string
+  date: string
+  storeName: string
+  status: 'success' | 'warning' | 'error' | 'scanning'
+  itemsFound: number
+  itemsImported: number
+  sourceId: string
+  errorMessage?: string
+}
+
 export interface CrawlerSource {
   id: string
   name: string

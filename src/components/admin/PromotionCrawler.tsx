@@ -10,9 +10,10 @@ import {
   CardDescription,
 } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Globe, Box } from 'lucide-react'
+import { Globe, Box, History } from 'lucide-react'
 import { CrawlerSourcesTab } from './CrawlerSourcesTab'
 import { CrawlerPromotionsTab } from './CrawlerPromotionsTab'
+import { CrawlerHistoryTab } from './CrawlerHistoryTab'
 import { cn } from '@/lib/utils'
 
 export function PromotionCrawler({ franchiseId }: { franchiseId?: string }) {
@@ -59,14 +60,19 @@ export function PromotionCrawler({ franchiseId }: { franchiseId?: string }) {
                 {t('franchisee.crawler.sources', 'Fontes de Dados')}
               </TabsTrigger>
               <TabsTrigger
+                value="history"
+                className="py-2 px-4 whitespace-nowrap"
+              >
+                <History className="h-4 w-4 mr-2 shrink-0" />
+                {t('franchisee.crawler.history', 'Histórico de Buscas')}
+              </TabsTrigger>
+              <TabsTrigger
                 value="promotions"
                 className="py-2 px-4 whitespace-nowrap"
               >
                 <Box className="h-4 w-4 mr-2 shrink-0" />
-                {t(
-                  'franchisee.crawler.promotions',
-                  'Ofertas Importadas',
-                ).replace('{count}', formatNumber(pendingPromotionsCount))}
+                {t('franchisee.crawler.promotions', 'Ofertas Pendentes')} (
+                {formatNumber(pendingPromotionsCount)})
               </TabsTrigger>
             </TabsList>
 
@@ -75,6 +81,13 @@ export function PromotionCrawler({ franchiseId }: { franchiseId?: string }) {
               className="animate-in fade-in-50 min-w-0 w-full"
             >
               <CrawlerSourcesTab />
+            </TabsContent>
+
+            <TabsContent
+              value="history"
+              className="animate-in fade-in-50 min-w-0 w-full"
+            >
+              <CrawlerHistoryTab />
             </TabsContent>
 
             <TabsContent
