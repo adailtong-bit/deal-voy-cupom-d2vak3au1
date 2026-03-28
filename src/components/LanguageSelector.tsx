@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { useLanguage } from '@/stores/LanguageContext'
 
 export function LanguageSelector() {
-  const { language, setLanguage } = useLanguage()
+  const { language, setLanguage, supportedLanguages } = useLanguage()
 
   return (
     <DropdownMenu>
@@ -23,24 +23,15 @@ export function LanguageSelector() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-32">
-        <DropdownMenuItem
-          onClick={() => setLanguage('pt')}
-          className={`font-medium ${language === 'pt' ? 'bg-primary/10 text-primary' : ''}`}
-        >
-          Português
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => setLanguage('en')}
-          className={`font-medium ${language === 'en' ? 'bg-primary/10 text-primary' : ''}`}
-        >
-          English
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => setLanguage('es')}
-          className={`font-medium ${language === 'es' ? 'bg-primary/10 text-primary' : ''}`}
-        >
-          Español
-        </DropdownMenuItem>
+        {supportedLanguages.map((l) => (
+          <DropdownMenuItem
+            key={l.code}
+            onClick={() => setLanguage(l.code)}
+            className={`font-medium ${language === l.code ? 'bg-primary/10 text-primary' : ''}`}
+          >
+            {l.name}
+          </DropdownMenuItem>
+        ))}
       </DropdownMenuContent>
     </DropdownMenu>
   )

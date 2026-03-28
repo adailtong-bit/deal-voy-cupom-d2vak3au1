@@ -4,12 +4,15 @@ import React, {
   useState,
   ReactNode,
   useEffect,
+  useCallback,
 } from 'react'
-import { translations, Language } from '@/lib/translations'
+import { translations as defaultTranslations } from '@/lib/translations'
 import {
   formatCurrency as utilsFormatCurrency,
   formatDate as utilsFormatDate,
 } from '@/lib/utils'
+
+export type Language = string
 
 type LanguageContextType = {
   language: Language
@@ -20,40 +23,142 @@ type LanguageContextType = {
     currency?: string,
   ) => string
   formatDate: (date: string | Date) => string
+  formatTime: (date: string | Date) => string
   locale: string
+  supportedLanguages: { code: string; name: string }[]
+  addLanguage: (code: string, name: string) => void
+  overrides: Record<string, Record<string, string>>
+  updateTranslation: (lang: string, path: string, value: string) => void
+  getAllKeys: () => string[]
+  getDefaultTranslation: (lang: string, path: string) => string
 }
 
 export const LanguageContext = createContext<LanguageContextType | undefined>(
   undefined,
 )
 
+const flattenObj = (obj: any, prefix = ''): Record<string, string> => {
+  return Object.keys(obj).reduce((acc: any, k: string) => {
+    const pre = prefix.length ? prefix + '.' : ''
+    if (
+      typeof obj[k] === 'object' &&
+      obj[k] !== null &&
+      !Array.isArray(obj[k])
+    ) {
+      Object.assign(acc, flattenObj(obj[k], pre + k))
+    } else {
+      acc[pre + k] = obj[k]
+    }
+    return acc
+  }, {})
+}
+
+const flatDefaultTranslations = {
+  pt: flattenObj(defaultTranslations.pt || {}),
+  en: flattenObj(defaultTranslations.en || {}),
+  es: flattenObj(defaultTranslations.es || {}),
+}
+
+const defaultSupported = [
+  { code: 'pt', name: 'Português' },
+  { code: 'en', name: 'English' },
+  { code: 'es', name: 'Español' },
+]
+
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<Language>(() => {
+  const [supportedLanguages, setSupportedLanguages] = useState(() => {
+    const saved = localStorage.getItem('app_supported_langs')
+    return saved ? JSON.parse(saved) : defaultSupported
+  })
+
+  const [language, setLanguageState] = useState<Language>(() => {
     const saved = localStorage.getItem('app_language')
-    if (saved && (saved === 'pt' || saved === 'en' || saved === 'es')) {
-      return saved as Language
+    if (saved && supportedLanguages.find((l: any) => l.code === saved)) {
+      return saved
     }
     return 'en'
+  })
+
+  const [overrides, setOverrides] = useState<
+    Record<string, Record<string, string>>
+  >(() => {
+    const saved = localStorage.getItem('app_translation_overrides')
+    return saved ? JSON.parse(saved) : {}
   })
 
   useEffect(() => {
     localStorage.setItem('app_language', language)
   }, [language])
 
-  const t = (path: string, fallback?: string): string => {
-    const keys = path.split('.')
-    let current: any = translations[language]
-    for (const key of keys) {
-      if (!current || current[key] === undefined) {
-        return fallback || path // Fallback to path string if not found
+  useEffect(() => {
+    localStorage.setItem(
+      'app_supported_langs',
+      JSON.stringify(supportedLanguages),
+    )
+  }, [supportedLanguages])
+
+  useEffect(() => {
+    localStorage.setItem('app_translation_overrides', JSON.stringify(overrides))
+  }, [overrides])
+
+  const setLanguage = useCallback(
+    (lang: string) => {
+      if (supportedLanguages.find((l: any) => l.code === lang)) {
+        setLanguageState(lang)
+      } else {
+        setLanguageState('en') // fallback
       }
-      current = current[key]
+    },
+    [supportedLanguages],
+  )
+
+  const addLanguage = (code: string, name: string) => {
+    if (!supportedLanguages.find((l: any) => l.code === code)) {
+      setSupportedLanguages([...supportedLanguages, { code, name }])
     }
-    return current
+  }
+
+  const updateTranslation = (lang: string, path: string, value: string) => {
+    setOverrides((prev) => ({
+      ...prev,
+      [lang]: {
+        ...(prev[lang] || {}),
+        [path]: value,
+      },
+    }))
+  }
+
+  const getAllKeys = () =>
+    Object.keys((flatDefaultTranslations as any).en || {})
+
+  const getDefaultTranslation = (lang: string, path: string) => {
+    const flat = (flatDefaultTranslations as any)[lang]
+    if (flat && flat[path] !== undefined) return flat[path]
+    return (flatDefaultTranslations as any)['en']?.[path] || path
+  }
+
+  const t = (path: string, fallback?: string): string => {
+    if (overrides[language] && overrides[language][path] !== undefined) {
+      return overrides[language][path]
+    }
+    const flat = (flatDefaultTranslations as any)[language]
+    if (flat && flat[path] !== undefined) return flat[path]
+
+    // Fallback to english if available
+    const flatEn = (flatDefaultTranslations as any)['en']
+    if (flatEn && flatEn[path] !== undefined) return flatEn[path]
+
+    return fallback || path
   }
 
   const locale =
-    language === 'en' ? 'en-US' : language === 'es' ? 'es-ES' : 'pt-BR'
+    language === 'en'
+      ? 'en-US'
+      : language === 'es'
+        ? 'es-ES'
+        : language === 'pt'
+          ? 'pt-BR'
+          : `${language}-${language.toUpperCase()}`
 
   const formatCurrency = (
     amount: number | undefined | null,
@@ -66,9 +171,32 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     return utilsFormatDate(date, locale)
   }
 
+  const formatTime = (date: string | Date) => {
+    if (!date) return ''
+    return new Intl.DateTimeFormat(locale, {
+      hour: 'numeric',
+      minute: 'numeric',
+      hour12: locale === 'en-US',
+    }).format(new Date(date))
+  }
+
   return (
     <LanguageContext.Provider
-      value={{ language, setLanguage, t, formatCurrency, formatDate, locale }}
+      value={{
+        language,
+        setLanguage,
+        t,
+        formatCurrency,
+        formatDate,
+        formatTime,
+        locale,
+        supportedLanguages,
+        addLanguage,
+        overrides,
+        updateTranslation,
+        getAllKeys,
+        getDefaultTranslation,
+      }}
     >
       {children}
     </LanguageContext.Provider>
@@ -78,15 +206,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 export function useLanguage() {
   const context = useContext(LanguageContext)
   if (!context) {
-    return {
-      language: 'en',
-      setLanguage: () => {},
-      t: (k: string, fallback?: string) => fallback || k,
-      formatCurrency: (a: number | undefined | null, c?: string) =>
-        utilsFormatCurrency(a, c, 'en-US'),
-      formatDate: (d: string | Date) => utilsFormatDate(d, 'en-US'),
-      locale: 'en-US',
-    }
+    throw new Error('useLanguage must be used within a LanguageProvider')
   }
   return context
 }

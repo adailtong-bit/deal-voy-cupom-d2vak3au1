@@ -28,6 +28,7 @@ import { AdminCategoriesTab } from '@/components/admin/AdminCategoriesTab'
 import { AdminInterestsTab } from '@/components/admin/AdminInterestsTab'
 import { TestingSandboxTab } from '@/components/admin/TestingSandboxTab'
 import { AdminHierarchyTab } from '@/components/admin/AdminHierarchyTab'
+import { AdminTranslationsTab } from '@/components/admin/AdminTranslationsTab'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useRegionFormatting } from '@/hooks/useRegionFormatting'
@@ -237,6 +238,7 @@ export default function AdminDashboard() {
                 <Megaphone className="h-4 w-4" />
                 {t('admin.network_ads', 'Publicidade de Rede')}
               </TabsTrigger>
+              <TabsTrigger value="translations">Translations</TabsTrigger>
               <TabsTrigger value="insights">{t('admin.insights')}</TabsTrigger>
               <TabsTrigger value="sandbox">
                 {t('admin.sandbox', 'Testing Sandbox')}
@@ -347,6 +349,9 @@ export default function AdminDashboard() {
             </TabsContent>
             <TabsContent value="network-ads">
               <AdminNetworkAdsTab />
+            </TabsContent>
+            <TabsContent value="translations">
+              <AdminTranslationsTab />
             </TabsContent>
             <TabsContent value="insights">
               <DataInsightsTab />

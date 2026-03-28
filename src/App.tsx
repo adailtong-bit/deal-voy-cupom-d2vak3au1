@@ -53,25 +53,47 @@ function RequireAuth({
 }
 
 function GlobalLanguageSync() {
-  const { user } = useCouponStore()
+  const { user, franchises } = useCouponStore()
   const { setLanguage } = useLanguage()
 
   useEffect(() => {
-    if (user?.country) {
-      const countryLower = user.country.toLowerCase()
-      if (countryLower === 'brasil' || countryLower === 'brazil') {
+    let countryToUse = user?.country
+
+    if (user?.role === 'franchisee') {
+      const myFranchise = franchises.find((f) => f.ownerId === user.id)
+      if (myFranchise?.addressCountry) {
+        countryToUse = myFranchise.addressCountry
+      }
+    }
+
+    if (countryToUse) {
+      const countryLower = countryToUse.toLowerCase()
+      if (
+        countryLower === 'brasil' ||
+        countryLower === 'brazil' ||
+        countryLower === 'br'
+      ) {
         setLanguage('pt')
       } else if (
-        ['spain', 'mexico', 'argentina', 'colombia', 'chile', 'peru'].includes(
-          countryLower,
-        )
+        [
+          'spain',
+          'espanha',
+          'es',
+          'mexico',
+          'argentina',
+          'colombia',
+          'chile',
+          'peru',
+        ].includes(countryLower)
       ) {
         setLanguage('es')
+      } else if (['france', 'fr', 'frança'].includes(countryLower)) {
+        setLanguage('fr')
       } else {
         setLanguage('en')
       }
     }
-  }, [user?.country, setLanguage])
+  }, [user?.country, user?.role, user?.id, franchises, setLanguage])
 
   return null
 }

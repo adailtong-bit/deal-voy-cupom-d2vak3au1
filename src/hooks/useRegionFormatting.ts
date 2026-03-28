@@ -61,6 +61,15 @@ export function useRegionFormatting(regionCode?: string, country?: string) {
       }).format(new Date(date))
     }
 
+    const formatTime = (date: string | Date | null | undefined) => {
+      if (!date) return ''
+      return new Intl.DateTimeFormat(locale, {
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: locale === 'en-US',
+      }).format(new Date(date))
+    }
+
     const formatNumber = (
       num: number | null | undefined,
       options?: Intl.NumberFormatOptions,
@@ -84,6 +93,7 @@ export function useRegionFormatting(regionCode?: string, country?: string) {
       formatCurrency,
       formatDate,
       formatShortDate,
+      formatTime,
       formatNumber,
       formatDistance,
     }
