@@ -1194,6 +1194,8 @@ export const translations: Record<Language, any> = {
       featured: 'Destaque',
       verified: 'Verificado',
       discovered: 'Oferta Descoberta',
+      source_site: 'Site de Origem',
+      expiration_date: 'Data de Expiração',
     },
     voucher_detail: {
       not_found: 'Voucher não encontrado',
@@ -2559,6 +2561,8 @@ export const translations: Record<Language, any> = {
       featured: 'Featured',
       verified: 'Verified',
       discovered: 'Discovered Offer',
+      source_site: 'Source Site',
+      expiration_date: 'Expiration Date',
     },
     voucher_detail: {
       not_found: 'Voucher not found',
@@ -3933,6 +3937,8 @@ export const translations: Record<Language, any> = {
       featured: 'Destacado',
       verified: 'Verificado',
       discovered: 'Oferta Descubierta',
+      source_site: 'Sitio de Origen',
+      expiration_date: 'Fecha de Expiración',
     },
     voucher_detail: {
       not_found: 'Voucher no encontrado',

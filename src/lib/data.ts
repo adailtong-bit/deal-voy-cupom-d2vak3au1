@@ -471,7 +471,7 @@ const generateCoupons = (): Coupon[] => {
     },
   })
 
-  for (let i = 1; i <= 30; i++) {
+  for (let i = 1; i <= 100; i++) {
     const isUS = i % 2 !== 0
     const cityBR = i % 2 === 0 ? 'São Paulo' : 'Campinas'
     const cityUS = i % 2 === 0 ? 'Miami' : 'Orlando'
@@ -562,7 +562,13 @@ const generateCoupons = (): Coupon[] => {
       address: isUS
         ? `${1000 + i} Ocean Drive, Miami, FL`
         : `Av. Paulista, ${1000 + i}, São Paulo, SP`,
-      offerType: 'in-store',
+      offerType: i % 3 === 0 ? 'online' : 'in-store',
+      externalUrl:
+        i % 3 === 0
+          ? isUS
+            ? `https://www.retailer${i}.com/deal`
+            : `https://www.loja${i}.com.br/oferta`
+          : undefined,
       instructions: instPt,
       targetAudience: i % 5 === 0 ? 'preferred' : 'all',
       enableProximityAlerts: i % 4 === 0,
@@ -1681,6 +1687,28 @@ export const MOCK_DISCOVERED_PROMOTIONS: DiscoveredPromotion[] = [
       suspicious: true,
     },
   },
+  ...Array.from({ length: 15 }).map((_, i) => ({
+    id: `dp_us_${i}`,
+    sourceId: 'cs_us_web',
+    title: `USA Super Deal ${i + 1}`,
+    discount: `${10 + (i % 50)}% OFF`,
+    description: `Amazing discount for USA residents. Grab it while it lasts! Valid until the end of the month.`,
+    expiryDate: new Date(Date.now() + 86400000 * (15 + i)).toISOString(),
+    image: `https://img.usecurling.com/p/300/200?q=deal&seed=${i}`,
+    storeName: `USA Retailer ${i % 5}`,
+    status: 'pending' as const,
+    region: 'US-FL',
+    country: 'USA',
+    state: 'Florida',
+    city: 'Miami',
+    category: i % 2 === 0 ? 'Eletrônicos' : 'Moda',
+    capturedAt: new Date(Date.now() - 3600000 * i).toISOString(),
+    originalUrl: `https://www.usretailer${i % 5}.com/deals/${i}`,
+    rawData: {
+      original_title: `Super Deal ${i + 1}`,
+      price_info: `$${99 - i}`,
+    },
+  })),
 ]
 
 export const MOCK_AD_PRICING: AdPricing[] = [

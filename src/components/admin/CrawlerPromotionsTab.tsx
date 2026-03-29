@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useRegionFormatting } from '@/hooks/useRegionFormatting'
 import { useCouponStore } from '@/stores/CouponContext'
@@ -57,29 +57,43 @@ export function CrawlerPromotionsTab() {
       (p.capturedAt || p.expiryDate),
   )
 
-  const allStates = Array.from(
-    new Set(basePendingPromotions.map((p) => p.state).filter(Boolean)),
-  ).sort() as string[]
+  const allStates = useMemo(
+    () =>
+      Array.from(
+        new Set(basePendingPromotions.map((p) => p.state).filter(Boolean)),
+      ).sort() as string[],
+    [basePendingPromotions],
+  )
 
-  const allCities = Array.from(
-    new Set(
-      basePendingPromotions
-        .filter((p) => filterState === 'all' || p.state === filterState)
-        .map((p) => p.city)
-        .filter(Boolean),
-    ),
-  ).sort() as string[]
+  const allCities = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          basePendingPromotions
+            .filter((p) => filterState === 'all' || p.state === filterState)
+            .map((p) => p.city)
+            .filter(Boolean),
+        ),
+      ).sort() as string[],
+    [basePendingPromotions, filterState],
+  )
 
-  const allStores = Array.from(
-    new Set(basePendingPromotions.map((p) => p.storeName).filter(Boolean)),
-  ).sort() as string[]
+  const allStores = useMemo(
+    () =>
+      Array.from(
+        new Set(basePendingPromotions.map((p) => p.storeName).filter(Boolean)),
+      ).sort() as string[],
+    [basePendingPromotions],
+  )
 
-  const pendingPromotions = basePendingPromotions.filter((p) => {
-    if (filterState !== 'all' && p.state !== filterState) return false
-    if (filterCity !== 'all' && p.city !== filterCity) return false
-    if (filterStore !== 'all' && p.storeName !== filterStore) return false
-    return true
-  })
+  const pendingPromotions = useMemo(() => {
+    return basePendingPromotions.filter((p) => {
+      if (filterState !== 'all' && p.state !== filterState) return false
+      if (filterCity !== 'all' && p.city !== filterCity) return false
+      if (filterStore !== 'all' && p.storeName !== filterStore) return false
+      return true
+    })
+  }, [basePendingPromotions, filterState, filterCity, filterStore])
 
   const handleImport = (
     id: string,
@@ -200,10 +214,10 @@ export function CrawlerPromotionsTab() {
                   {t('franchisee.crawler.company', 'Empresa')}
                 </TableHead>
                 <TableHead className="whitespace-nowrap">
-                  {t('franchisee.crawler.origin', 'Origem')}
+                  {t('vouchers.source_site', 'Site de Origem')}
                 </TableHead>
                 <TableHead className="whitespace-nowrap">
-                  {t('franchisee.crawler.date', 'Data')}
+                  {t('vouchers.expiration_date', 'Data de Expiração')}
                 </TableHead>
                 <TableHead className="min-w-[200px]">
                   {t('franchisee.crawler.description', 'Descrição')}
@@ -244,10 +258,23 @@ export function CrawlerPromotionsTab() {
                   </TableCell>
                   <TableCell className="whitespace-nowrap">
                     <div className="flex flex-col space-y-0.5">
-                      <span className="text-sm font-medium">
-                        {promo.sourceId === 'custom'
-                          ? 'Busca Web'
-                          : promo.sourceId}
+                      <span
+                        className="text-sm font-medium max-w-[150px] truncate"
+                        title={promo.originalUrl || promo.sourceId}
+                      >
+                        {promo.originalUrl
+                          ? (() => {
+                              try {
+                                return new URL(
+                                  promo.originalUrl,
+                                ).hostname.replace('www.', '')
+                              } catch (e) {
+                                return promo.sourceId
+                              }
+                            })()
+                          : promo.sourceId === 'custom'
+                            ? 'Busca Web'
+                            : promo.sourceId}
                       </span>
                       {promo.originalUrl && (
                         <a
@@ -255,16 +282,20 @@ export function CrawlerPromotionsTab() {
                           target="_blank"
                           rel="noreferrer"
                           className="text-xs text-blue-500 hover:underline flex items-center gap-1"
+                          title={promo.originalUrl}
                         >
-                          Ver fonte <ExternalLink className="w-3 h-3" />
+                          {t('common.view', 'Ver')}{' '}
+                          <ExternalLink className="w-3 h-3" />
                         </a>
                       )}
                     </div>
                   </TableCell>
-                  <TableCell className="whitespace-nowrap text-sm text-slate-600">
-                    {promo.capturedAt
-                      ? formatShortDate(promo.capturedAt)
-                      : formatShortDate(promo.expiryDate)}
+                  <TableCell className="whitespace-nowrap text-sm text-slate-600 font-medium">
+                    {promo.expiryDate
+                      ? formatShortDate(promo.expiryDate)
+                      : promo.capturedAt
+                        ? formatShortDate(promo.capturedAt)
+                        : '-'}
                   </TableCell>
                   <TableCell className="min-w-[200px] max-w-[300px]">
                     <div className="flex flex-col space-y-1">

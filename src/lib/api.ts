@@ -44,8 +44,16 @@ export const fetchCoupons = async ({
 
       // Server-side Regional Scoping (if no specific franchise)
       if (region && region !== 'Global') {
+        const regionLower = region.toLowerCase()
         results = results.filter(
-          (c) => !c.region || c.region === region || c.region === '',
+          (c) =>
+            !c.region ||
+            c.region === '' ||
+            c.region.toLowerCase() === regionLower ||
+            c.country?.toLowerCase() === regionLower ||
+            c.state?.toLowerCase() === regionLower ||
+            (regionLower === 'usa' && c.country?.toLowerCase() === 'usa') ||
+            (regionLower === 'us' && c.country?.toLowerCase() === 'usa'),
         )
       }
 
@@ -124,8 +132,16 @@ export const fetchCrawlerPromotions = async ({
           (p) => !p.franchiseId || p.franchiseId === franchiseId,
         )
       } else if (region && region !== 'Global') {
+        const regionLower = region.toLowerCase()
         results = results.filter(
-          (p) => !p.region || p.region === region || p.region === '',
+          (p) =>
+            !p.region ||
+            p.region === '' ||
+            p.region.toLowerCase() === regionLower ||
+            p.country?.toLowerCase() === regionLower ||
+            p.state?.toLowerCase() === regionLower ||
+            (regionLower === 'usa' && p.country?.toLowerCase() === 'usa') ||
+            (regionLower === 'us' && p.country?.toLowerCase() === 'usa'),
         )
       }
 

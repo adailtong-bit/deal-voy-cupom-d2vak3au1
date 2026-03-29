@@ -222,28 +222,58 @@ export function CouponCard({
 
             <div className="mt-3 pt-3 border-t border-slate-100 flex flex-col gap-3">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3 text-xs text-slate-500 font-medium">
-                  <span className="flex items-center gap-1">
-                    {isOnline ? (
-                      <>
-                        <Globe className="h-3.5 w-3.5 text-blue-500" />{' '}
-                        {t('vouchers.online', 'Online')}
-                      </>
-                    ) : (
-                      <>
-                        <MapPin className="h-3.5 w-3.5" />{' '}
-                        {coupon.distance > 1000
-                          ? `${(coupon.distance / 1000).toFixed(1)}km`
-                          : `${Math.round(coupon.distance)}m`}
-                      </>
-                    )}
-                  </span>
-                  <span className="flex items-center gap-1 text-orange-600">
-                    <Clock className="h-3.5 w-3.5" />
-                    {t('vouchers.expires', 'Expira em')}
-                  </span>
+                <div className="flex flex-col gap-1 text-xs text-slate-500 font-medium">
+                  <div className="flex items-center gap-3">
+                    <span className="flex items-center gap-1">
+                      {isOnline ? (
+                        <>
+                          <Globe className="h-3.5 w-3.5 text-blue-500" />{' '}
+                          {t('vouchers.online', 'Online')}
+                        </>
+                      ) : (
+                        <>
+                          <MapPin className="h-3.5 w-3.5" />{' '}
+                          {coupon.distance > 1000
+                            ? `${(coupon.distance / 1000).toFixed(1)}km`
+                            : `${Math.round(coupon.distance)}m`}
+                        </>
+                      )}
+                    </span>
+                    <span
+                      className="flex items-center gap-1 text-orange-600"
+                      title={t('vouchers.expiration_date', 'Data de Expiração')}
+                    >
+                      <Clock className="h-3.5 w-3.5" />
+                      {coupon.expiryDate
+                        ? new Date(coupon.expiryDate).toLocaleDateString(
+                            language === 'pt'
+                              ? 'pt-BR'
+                              : language === 'es'
+                                ? 'es-ES'
+                                : 'en-US',
+                          )
+                        : t('vouchers.expires', 'Expira em')}
+                    </span>
+                  </div>
+                  {hasExternalLink && (
+                    <div className="flex items-center gap-1 text-slate-400 mt-0.5 truncate max-w-[200px]">
+                      <Globe className="h-3 w-3 shrink-0" />
+                      <span className="truncate">
+                        {t('vouchers.source_site', 'Site de Origem')}:{' '}
+                        {(() => {
+                          try {
+                            return new URL(
+                              coupon.externalUrl!,
+                            ).hostname.replace('www.', '')
+                          } catch (e) {
+                            return coupon.externalUrl
+                          }
+                        })()}
+                      </span>
+                    </div>
+                  )}
                 </div>
-                <div className="flex flex-col items-end">
+                <div className="flex flex-col items-end shrink-0">
                   {coupon.price !== undefined && !coupon.isPaid && (
                     <div className="flex items-center gap-1.5">
                       {originalPrice !== undefined && (
@@ -388,26 +418,57 @@ export function CouponCard({
           </div>
 
           <div className="mt-auto pt-3 border-t border-slate-100 flex flex-col gap-3">
-            <div className="flex items-center justify-between text-[11px] text-slate-500 font-medium">
-              <span className="flex items-center gap-1">
-                {isOnline ? (
-                  <>
-                    <Globe className="h-3.5 w-3.5 text-blue-500" />
-                    {t('vouchers.online', 'Online')}
-                  </>
-                ) : (
-                  <>
-                    <MapPin className="h-3.5 w-3.5" />
-                    {coupon.distance > 1000
-                      ? `${(coupon.distance / 1000).toFixed(1)}km`
-                      : `${Math.round(coupon.distance)}m`}
-                  </>
-                )}
-              </span>
-              <span className="flex items-center gap-1 text-orange-600">
-                <Clock className="h-3.5 w-3.5" />
-                {t('vouchers.expires', 'Expira em')}
-              </span>
+            <div className="flex flex-col gap-1 text-[11px] text-slate-500 font-medium">
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-1">
+                  {isOnline ? (
+                    <>
+                      <Globe className="h-3.5 w-3.5 text-blue-500" />
+                      {t('vouchers.online', 'Online')}
+                    </>
+                  ) : (
+                    <>
+                      <MapPin className="h-3.5 w-3.5" />
+                      {coupon.distance > 1000
+                        ? `${(coupon.distance / 1000).toFixed(1)}km`
+                        : `${Math.round(coupon.distance)}m`}
+                    </>
+                  )}
+                </span>
+                <span
+                  className="flex items-center gap-1 text-orange-600"
+                  title={t('vouchers.expiration_date', 'Data de Expiração')}
+                >
+                  <Clock className="h-3.5 w-3.5" />
+                  {coupon.expiryDate
+                    ? new Date(coupon.expiryDate).toLocaleDateString(
+                        language === 'pt'
+                          ? 'pt-BR'
+                          : language === 'es'
+                            ? 'es-ES'
+                            : 'en-US',
+                      )
+                    : t('vouchers.expires', 'Expira em')}
+                </span>
+              </div>
+              {hasExternalLink && (
+                <div className="flex items-center gap-1 text-slate-400 mt-0.5 truncate">
+                  <Globe className="h-3 w-3 shrink-0" />
+                  <span className="truncate">
+                    {t('vouchers.source_site', 'Site de Origem')}:{' '}
+                    {(() => {
+                      try {
+                        return new URL(coupon.externalUrl!).hostname.replace(
+                          'www.',
+                          '',
+                        )
+                      } catch (e) {
+                        return coupon.externalUrl
+                      }
+                    })()}
+                  </span>
+                </div>
+              )}
             </div>
 
             {coupon.price !== undefined && !coupon.isPaid && (
