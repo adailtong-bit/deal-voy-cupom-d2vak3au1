@@ -425,6 +425,8 @@ export interface Company {
   franchiseId?: string
   taxId?: string
   contactPerson?: string
+  contactEmail?: string
+  contactPhone?: string
   contactDepartment?: string
   businessPhone?: string
   whatsapp?: string
@@ -432,6 +434,7 @@ export interface Company {
   secondaryContactName?: string
   secondaryContactEmail?: string
   secondaryContactPhone?: string
+  secondaryContactDepartment?: string
   billingEmail?: string
   addressStreet?: string
   addressNumber?: string
@@ -441,6 +444,8 @@ export interface Company {
   addressState?: string
   addressZip?: string
   addressCountry?: string
+  addressLat?: number
+  addressLng?: number
   paymentMethod?: string
   billingFrequency?: string
   bankName?: string
@@ -587,6 +592,7 @@ export interface Franchise {
   taxId?: string
   contactPerson?: string
   contactEmail?: string
+  contactPhone?: string
   contactDepartment?: string
   businessPhone?: string
   whatsapp?: string
@@ -594,6 +600,7 @@ export interface Franchise {
   secondaryContactName?: string
   secondaryContactEmail?: string
   secondaryContactPhone?: string
+  secondaryContactDepartment?: string
   billingEmail?: string
   addressStreet?: string
   addressNumber?: string
@@ -603,6 +610,8 @@ export interface Franchise {
   addressState?: string
   addressZip?: string
   addressCountry?: string
+  addressLat?: number
+  addressLng?: number
   paymentMethod?: string
   billingFrequency?: string
   address?: string

@@ -12,20 +12,12 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Separator } from '@/components/ui/separator'
 import { COUNTRIES } from '@/lib/locationData'
 import { useLanguage } from '@/stores/LanguageContext'
 
-type ExtendedCompany = Partial<Company> & {
-  addressStreet?: string
-  addressNumber?: string
-  addressNeighborhood?: string
-  addressCity?: string
-  addressState?: string
-  addressZip?: string
-}
-
 interface Props {
-  type: 'merchant' | 'franchise'
+  type: 'merchant' | 'franchise' | 'advertiser' | string
   initialData?: Company | null
   franchiseId?: string
   onSave: (data: Partial<Company>) => void
@@ -40,22 +32,39 @@ export function AdvancedCompanyForm({
   onCancel,
 }: Props) {
   const { t } = useLanguage()
-  const [formData, setFormData] = useState<ExtendedCompany>({
+  const [formData, setFormData] = useState<Partial<Company>>({
     name: '',
     email: '',
     status: 'active',
     franchiseId: franchiseId || 'independent',
+    businessPhone: '',
+    addressCountry: 'USA',
+
+    // Primary contact
     contactPerson: '',
     contactDepartment: '',
-    billingEmail: '',
+    contactEmail: '',
+    contactPhone: '',
+
+    // Secondary contact
+    secondaryContactName: '',
+    secondaryContactDepartment: '',
+    secondaryContactEmail: '',
+    secondaryContactPhone: '',
+
+    // Billing
     stateRegistration: '',
-    addressCountry: 'USA',
+    billingEmail: '',
+
+    // Address
     addressStreet: '',
     addressNumber: '',
     addressNeighborhood: '',
     addressCity: '',
     addressState: '',
     addressZip: '',
+    addressLat: undefined,
+    addressLng: undefined,
   })
 
   useEffect(() => {
@@ -66,7 +75,12 @@ export function AdvancedCompanyForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    onSave(formData as Partial<Company>)
+    onSave(formData)
+  }
+
+  const handleNumberChange = (field: keyof Company, value: string) => {
+    const num = parseFloat(value)
+    setFormData((prev) => ({ ...prev, [field]: isNaN(num) ? undefined : num }))
   }
 
   return (
@@ -76,8 +90,8 @@ export function AdvancedCompanyForm({
           <TabsTrigger value="general">
             {t('admin.company.tabs.general', 'Geral')}
           </TabsTrigger>
-          <TabsTrigger value="contact">
-            {t('admin.company.tabs.contact', 'Contato')}
+          <TabsTrigger value="contacts">
+            {t('admin.company.tabs.contacts', 'Contatos')}
           </TabsTrigger>
           <TabsTrigger value="billing">
             {t('admin.company.tabs.billing', 'Faturamento')}
@@ -88,9 +102,9 @@ export function AdvancedCompanyForm({
         </TabsList>
 
         <TabsContent value="general" className="space-y-4 mt-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>{t('admin.company.name', 'Nome da Loja')}</Label>
+              <Label>{t('admin.company.name', 'Nome da Empresa')}</Label>
               <Input
                 required
                 value={formData.name || ''}
@@ -100,13 +114,27 @@ export function AdvancedCompanyForm({
               />
             </div>
             <div className="space-y-2">
-              <Label>{t('admin.company.email', 'E-mail Principal')}</Label>
+              <Label>
+                {t('admin.company.master_email', 'E-mail Principal')}
+              </Label>
               <Input
                 required
                 type="email"
                 value={formData.email || ''}
                 onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>
+                {t('admin.company.business_phone', 'Telefone Principal')}
+              </Label>
+              <Input
+                required
+                value={formData.businessPhone || ''}
+                onChange={(e) =>
+                  setFormData({ ...formData, businessPhone: e.target.value })
                 }
               />
             </div>
@@ -136,36 +164,125 @@ export function AdvancedCompanyForm({
           </div>
         </TabsContent>
 
-        <TabsContent value="contact" className="space-y-4 mt-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>
-                {t('admin.company.contact_name', 'Nome do Contato')}
-              </Label>
-              <Input
-                value={formData.contactPerson || ''}
-                onChange={(e) =>
-                  setFormData({ ...formData, contactPerson: e.target.value })
-                }
-              />
+        <TabsContent value="contacts" className="space-y-6 mt-4">
+          <div className="space-y-4">
+            <h4 className="text-sm font-medium leading-none">
+              {t('admin.company.primary_contact', 'Contato Primário')}
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>
+                  {t('admin.company.contact_name', 'Nome Completo')}
+                </Label>
+                <Input
+                  required
+                  value={formData.contactPerson || ''}
+                  onChange={(e) =>
+                    setFormData({ ...formData, contactPerson: e.target.value })
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>{t('admin.company.department', 'Departamento')}</Label>
+                <Input
+                  required
+                  value={formData.contactDepartment || ''}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      contactDepartment: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>{t('admin.company.contact_email', 'E-mail')}</Label>
+                <Input
+                  required
+                  type="email"
+                  value={formData.contactEmail || ''}
+                  onChange={(e) =>
+                    setFormData({ ...formData, contactEmail: e.target.value })
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>{t('admin.company.contact_phone', 'Telefone')}</Label>
+                <Input
+                  required
+                  value={formData.contactPhone || ''}
+                  onChange={(e) =>
+                    setFormData({ ...formData, contactPhone: e.target.value })
+                  }
+                />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label>{t('admin.company.department', 'Departamento')}</Label>
-              <Input
-                value={formData.contactDepartment || ''}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    contactDepartment: e.target.value,
-                  })
-                }
-              />
+          </div>
+
+          <Separator />
+
+          <div className="space-y-4">
+            <h4 className="text-sm font-medium leading-none">
+              {t('admin.company.secondary_contact', 'Contato Secundário')}
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>
+                  {t('admin.company.contact_name', 'Nome Completo')}
+                </Label>
+                <Input
+                  value={formData.secondaryContactName || ''}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      secondaryContactName: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>{t('admin.company.department', 'Departamento')}</Label>
+                <Input
+                  value={formData.secondaryContactDepartment || ''}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      secondaryContactDepartment: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>{t('admin.company.contact_email', 'E-mail')}</Label>
+                <Input
+                  type="email"
+                  value={formData.secondaryContactEmail || ''}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      secondaryContactEmail: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>{t('admin.company.contact_phone', 'Telefone')}</Label>
+                <Input
+                  value={formData.secondaryContactPhone || ''}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      secondaryContactPhone: e.target.value,
+                    })
+                  }
+                />
+              </div>
             </div>
           </div>
         </TabsContent>
 
         <TabsContent value="billing" className="space-y-4 mt-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>
                 {t('admin.company.state_reg', 'Inscrição Estadual')}
@@ -196,7 +313,7 @@ export function AdvancedCompanyForm({
         </TabsContent>
 
         <TabsContent value="address" className="space-y-4 mt-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>{t('admin.company.address.street', 'Rua/Avenida')}</Label>
               <Input
@@ -257,6 +374,30 @@ export function AdvancedCompanyForm({
                 value={formData.addressZip || ''}
                 onChange={(e) =>
                   setFormData({ ...formData, addressZip: e.target.value })
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>{t('admin.company.address.lat', 'Latitude')}</Label>
+              <Input
+                required
+                type="number"
+                step="any"
+                value={formData.addressLat ?? ''}
+                onChange={(e) =>
+                  handleNumberChange('addressLat', e.target.value)
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>{t('admin.company.address.lng', 'Longitude')}</Label>
+              <Input
+                required
+                type="number"
+                step="any"
+                value={formData.addressLng ?? ''}
+                onChange={(e) =>
+                  handleNumberChange('addressLng', e.target.value)
                 }
               />
             </div>
