@@ -11,6 +11,7 @@ import {
   Globe,
   CheckCircle,
   Sparkles,
+  Heart,
 } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { cn } from '@/lib/utils'
@@ -34,6 +35,11 @@ export function CouponCard({
   const location = useLocation()
   const { user, reserveCoupon, isReserved } = useCouponStore()
   const [imgError, setImgError] = useState(false)
+
+  const [isFavorite, setIsFavorite] = useState(() => {
+    const favs = JSON.parse(localStorage.getItem('user_favorites') || '[]')
+    return favs.includes(coupon.id)
+  })
 
   const reserved = isReserved(coupon.id)
   const isSoldOut =
@@ -60,10 +66,8 @@ export function CouponCard({
   const isScheduled = !!(startDateObj && now < startDateObj)
   const isExpired = !!(endDateObj && now > endDateObj)
   const isDisabled = isSoldOut || reserved || isExpired || isScheduled
-
   const hasExternalLink = !!coupon.externalUrl
 
-  // Displaying mocked original price based on current price to reflect UI typography improvements
   const originalPrice =
     (coupon as any).originalPrice ||
     (coupon.price ? coupon.price * 1.3 : undefined)
@@ -109,16 +113,44 @@ export function CouponCard({
     }
   }
 
+  const toggleFavorite = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const favs = JSON.parse(localStorage.getItem('user_favorites') || '[]')
+    if (isFavorite) {
+      const newFavs = favs.filter((id: string) => id !== coupon.id)
+      localStorage.setItem('user_favorites', JSON.stringify(newFavs))
+      setIsFavorite(false)
+      toast.success(t('favorites.removed', 'Removido dos favoritos'))
+    } else {
+      favs.push(coupon.id)
+      localStorage.setItem('user_favorites', JSON.stringify(favs))
+      setIsFavorite(true)
+      toast.success(t('favorites.added', 'Adicionado aos favoritos'))
+    }
+  }
+
   if (variant === 'horizontal') {
     return (
       <div onClick={handleCardClick} className="block cursor-pointer">
         <Card
           className={cn(
-            'overflow-hidden hover:shadow-lg hover:border-primary/20 transition-all duration-300 group min-h-[140px] flex border-slate-200/60 rounded-xl bg-white',
+            'overflow-hidden hover:shadow-lg hover:border-primary/20 transition-all duration-300 group min-h-[140px] flex border-slate-200/60 rounded-xl bg-white relative',
             className,
           )}
         >
           <div className="w-32 sm:w-48 relative bg-slate-100 flex-shrink-0 flex items-center justify-center overflow-hidden">
+            <button
+              onClick={toggleFavorite}
+              className="absolute top-2 right-2 z-20 p-1.5 rounded-full bg-white/80 hover:bg-white shadow-sm transition-colors backdrop-blur-sm"
+            >
+              <Heart
+                className={cn(
+                  'w-4 h-4 text-slate-400 hover:text-red-500 transition-colors',
+                  isFavorite && 'fill-red-500 text-red-500 hover:text-red-600',
+                )}
+              />
+            </button>
             {!imgError ? (
               <img
                 src={coupon.image}
@@ -154,11 +186,6 @@ export function CouponCard({
                   {coupon.discount}
                 </Badge>
               )}
-              {coupon.isSeasonal && (
-                <Badge className="bg-orange-500 text-white hover:bg-orange-600 shadow-sm font-bold backdrop-blur-sm text-[10px] h-5 px-2 py-0 border-none mt-1">
-                  {t('vouchers.seasonal_badge', 'Sazonal')}
-                </Badge>
-              )}
             </div>
             {isOnline && (
               <Badge
@@ -187,26 +214,6 @@ export function CouponCard({
                 <p className="text-xs text-slate-500 truncate font-medium">
                   {coupon.storeName}
                 </p>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  {isVerified && (
-                    <span
-                      className="flex items-center text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-md"
-                      title={t('vouchers.verified', 'Verificado')}
-                    >
-                      <CheckCircle className="w-3 h-3 mr-1" />
-                      {t('vouchers.verified', 'Verificado')}
-                    </span>
-                  )}
-                  {isOrganic && (
-                    <span
-                      className="flex items-center text-[10px] font-bold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded-md"
-                      title={t('vouchers.discovered', 'Oferta Descoberta')}
-                    >
-                      <Sparkles className="w-3 h-3 mr-1 text-yellow-500" />
-                      {t('vouchers.discovered', 'Oferta Descoberta')}
-                    </span>
-                  )}
-                </div>
               </div>
               <p className="text-xs text-slate-500 mt-1.5 line-clamp-2 leading-relaxed">
                 {description}
@@ -227,7 +234,7 @@ export function CouponCard({
                         <MapPin className="h-3.5 w-3.5" />{' '}
                         {coupon.distance > 1000
                           ? `${(coupon.distance / 1000).toFixed(1)}km`
-                          : `${coupon.distance}m`}
+                          : `${Math.round(coupon.distance)}m`}
                       </>
                     )}
                   </span>
@@ -236,7 +243,6 @@ export function CouponCard({
                     {t('vouchers.expires', 'Expira em')}
                   </span>
                 </div>
-
                 <div className="flex flex-col items-end">
                   {coupon.price !== undefined && !coupon.isPaid && (
                     <div className="flex items-center gap-1.5">
@@ -252,7 +258,6 @@ export function CouponCard({
                   )}
                 </div>
               </div>
-
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <span className="text-[10px] text-slate-400 font-medium hidden sm:block">
                   {t(
@@ -260,20 +265,15 @@ export function CouponCard({
                     'Válido por 30 dias ou enquanto durarem os estoques',
                   )}
                 </span>
-
                 <Button
                   size="sm"
                   variant={
                     reserved && !hasExternalLink ? 'secondary' : 'default'
                   }
                   className={cn(
-                    'h-11 sm:h-10 text-xs sm:text-sm px-4 shadow-sm font-semibold rounded-lg transition-transform hover:-translate-y-0.5 active:translate-y-0',
-                    reserved &&
-                      !hasExternalLink &&
-                      'pointer-events-none opacity-70 hover:translate-y-0',
+                    'h-11 sm:h-10 text-xs sm:text-sm px-4 shadow-sm font-semibold rounded-lg w-full sm:w-auto',
                     hasExternalLink &&
                       'bg-blue-600 hover:bg-blue-700 text-white',
-                    'w-full sm:w-auto',
                   )}
                   onClick={handleAction}
                   disabled={isDisabled}
@@ -281,13 +281,6 @@ export function CouponCard({
                   {hasExternalLink && <Globe className="w-4 h-4 mr-1.5" />}
                   {getButtonText()}
                 </Button>
-
-                <span className="text-[10px] text-slate-400 font-medium text-center sm:hidden block">
-                  {t(
-                    'vouchers.validity_disclaimer',
-                    'Válido por 30 dias ou enquanto durarem os estoques',
-                  )}
-                </span>
               </div>
             </div>
           </div>
@@ -297,14 +290,29 @@ export function CouponCard({
   }
 
   return (
-    <div onClick={handleCardClick} className="block h-full cursor-pointer">
+    <div
+      onClick={handleCardClick}
+      className="block h-full cursor-pointer relative"
+    >
       <Card
         className={cn(
-          'overflow-hidden hover:shadow-lg hover:border-primary/20 transition-all duration-300 group h-full flex flex-col border-slate-200/60 rounded-xl bg-white',
+          'overflow-hidden hover:shadow-lg hover:border-primary/20 transition-all duration-300 group h-full flex flex-col border-slate-200/60 rounded-xl bg-white relative',
           className,
         )}
       >
         <div className="relative h-36 sm:h-44 overflow-hidden bg-slate-100 flex items-center justify-center">
+          <button
+            onClick={toggleFavorite}
+            className="absolute top-2 right-2 z-20 p-1.5 rounded-full bg-white/80 hover:bg-white shadow-sm transition-colors backdrop-blur-sm"
+          >
+            <Heart
+              className={cn(
+                'w-4 h-4 text-slate-400 hover:text-red-500 transition-colors',
+                isFavorite && 'fill-red-500 text-red-500 hover:text-red-600',
+              )}
+            />
+          </button>
+
           {!imgError ? (
             <img
               src={coupon.image}
@@ -340,13 +348,8 @@ export function CouponCard({
                 {coupon.discount}
               </Badge>
             )}
-            {coupon.isSeasonal && (
-              <Badge className="bg-orange-500 text-white hover:bg-orange-600 shadow-sm font-bold backdrop-blur-sm text-[10px] h-5 px-2 py-0 border-none">
-                {t('vouchers.seasonal_badge', 'Sazonal')}
-              </Badge>
-            )}
           </div>
-          <div className="absolute top-2 right-2 flex flex-col gap-1.5 z-10 items-end">
+          <div className="absolute bottom-2 right-2 flex flex-col gap-1.5 z-10 items-end">
             {coupon.isFeatured && (
               <Badge
                 variant="secondary"
@@ -382,26 +385,6 @@ export function CouponCard({
             <p className="text-xs text-slate-500 truncate font-medium">
               {coupon.storeName}
             </p>
-            <div className="flex items-center gap-1.5 shrink-0">
-              {isVerified && (
-                <span
-                  className="flex items-center text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-md w-max"
-                  title={t('vouchers.verified', 'Verificado')}
-                >
-                  <CheckCircle className="w-3 h-3 mr-1" />
-                  {t('vouchers.verified', 'Verificado')}
-                </span>
-              )}
-              {isOrganic && (
-                <span
-                  className="flex items-center text-[10px] font-bold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded-md w-max"
-                  title={t('vouchers.discovered', 'Oferta Descoberta')}
-                >
-                  <Sparkles className="w-3 h-3 mr-1 text-yellow-500" />
-                  {t('vouchers.discovered', 'Oferta Descoberta')}
-                </span>
-              )}
-            </div>
           </div>
 
           <div className="mt-auto pt-3 border-t border-slate-100 flex flex-col gap-3">
@@ -417,7 +400,7 @@ export function CouponCard({
                     <MapPin className="h-3.5 w-3.5" />
                     {coupon.distance > 1000
                       ? `${(coupon.distance / 1000).toFixed(1)}km`
-                      : `${coupon.distance}m`}
+                      : `${Math.round(coupon.distance)}m`}
                   </>
                 )}
               </span>
@@ -449,10 +432,7 @@ export function CouponCard({
               size="sm"
               variant={reserved && !hasExternalLink ? 'secondary' : 'default'}
               className={cn(
-                'w-full h-11 sm:h-10 text-xs sm:text-sm font-semibold rounded-lg shadow-sm transition-transform hover:-translate-y-0.5 active:translate-y-0',
-                reserved &&
-                  !hasExternalLink &&
-                  'pointer-events-none opacity-70 hover:translate-y-0',
+                'w-full h-11 sm:h-10 text-xs sm:text-sm font-semibold rounded-lg shadow-sm',
                 hasExternalLink && 'bg-blue-600 hover:bg-blue-700 text-white',
               )}
               onClick={handleAction}
@@ -461,7 +441,6 @@ export function CouponCard({
               {hasExternalLink && <Globe className="w-4 h-4 mr-2" />}
               {getButtonText()}
             </Button>
-
             <span className="text-[10px] text-slate-400 text-center font-medium leading-tight">
               {t(
                 'vouchers.validity_disclaimer',

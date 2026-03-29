@@ -1,5 +1,12 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
-import { Search, Map as MapIcon, List, Filter, Radar } from 'lucide-react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import {
+  Search,
+  Map as MapIcon,
+  List,
+  Filter,
+  Radar,
+  MapPin,
+} from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useCouponStore } from '@/stores/CouponContext'
 import { Input } from '@/components/ui/input'
@@ -11,6 +18,32 @@ import { CATEGORIES } from '@/lib/data'
 import { cn } from '@/lib/utils'
 import { fetchCoupons } from '@/lib/api'
 import { Coupon } from '@/lib/types'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+
+const getDistance = (
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number,
+) => {
+  const R = 6371 // km
+  const dLat = ((lat2 - lat1) * Math.PI) / 180
+  const dLon = ((lon2 - lon1) * Math.PI) / 180
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2)
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  return R * c
+}
 
 export default function Explore() {
   const { t, language } = useLanguage()
@@ -19,6 +52,13 @@ export default function Explore() {
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
+  const [sortBy, setSortBy] = useState<'recommended' | 'distance'>(
+    'recommended',
+  )
+  const [userLocation, setUserLocation] = useState<{
+    lat: number
+    lng: number
+  } | null>(null)
 
   const [serverCoupons, setServerCoupons] = useState<Coupon[]>([])
   const [loading, setLoading] = useState(true)
@@ -26,7 +66,19 @@ export default function Explore() {
   const [hasMore, setHasMore] = useState(true)
   const [total, setTotal] = useState(0)
 
-  // Debounce search
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) =>
+          setUserLocation({
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+          }),
+        (err) => console.warn('Geolocation error:', err),
+      )
+    }
+  }, [])
+
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedSearch(search), 500)
     return () => clearTimeout(handler)
@@ -118,9 +170,33 @@ export default function Explore() {
     ],
   )
 
+  const displayCoupons = useMemo(() => {
+    let processed = [...serverCoupons]
+    if (userLocation) {
+      processed = processed.map((c) => {
+        if (c.coordinates?.lat && c.coordinates?.lng) {
+          return {
+            ...c,
+            distance:
+              getDistance(
+                userLocation.lat,
+                userLocation.lng,
+                c.coordinates.lat,
+                c.coordinates.lng,
+              ) * 1000,
+          }
+        }
+        return c
+      })
+    }
+    if (sortBy === 'distance') {
+      processed.sort((a, b) => (a.distance || 0) - (b.distance || 0))
+    }
+    return processed
+  }, [serverCoupons, sortBy, userLocation])
+
   return (
     <div className="container max-w-6xl py-6 animate-fade-in-up flex flex-col gap-6">
-      {/* Header Banner Section */}
       <AdSpace position="top" />
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -128,12 +204,17 @@ export default function Explore() {
           <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
             {t('nav.explore', 'Explorar')}
           </h1>
-          <div className="text-slate-500 mt-1">
+          <div className="text-slate-500 mt-1 flex items-center gap-2">
             {loading && page === 1 ? (
               <Skeleton className="h-5 w-40" />
             ) : (
               <span>
                 {total} {t('explore.offers_found', 'ofertas encontradas')}
+              </span>
+            )}
+            {userLocation && (
+              <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full flex items-center gap-1 font-medium">
+                <MapPin className="w-3 h-3 text-primary" /> Localização Ativa
               </span>
             )}
           </div>
@@ -160,7 +241,7 @@ export default function Explore() {
         </div>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex flex-col sm:flex-row gap-2">
         <div className="relative flex-1 shadow-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -170,25 +251,26 @@ export default function Explore() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        {user && (
+        <div className="flex items-center gap-2">
+          <Select value={sortBy} onValueChange={(v: any) => setSortBy(v)}>
+            <SelectTrigger className="w-full sm:w-[160px] bg-white shadow-sm">
+              <SelectValue placeholder="Ordenar por" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="recommended">Recomendados</SelectItem>
+              <SelectItem value="distance">Mais Próximos</SelectItem>
+            </SelectContent>
+          </Select>
           <Button
             variant="outline"
-            className="hidden sm:flex bg-white shadow-sm gap-2 text-slate-600 font-medium"
+            size="icon"
+            className="shrink-0 bg-white shadow-sm"
           >
-            <Radar className="h-4 w-4 text-primary" />
-            {t('explore.offer_radar', 'Radar de Ofertas')}
+            <Filter className="h-4 w-4 text-slate-600" />
           </Button>
-        )}
-        <Button
-          variant="outline"
-          size="icon"
-          className="shrink-0 bg-white shadow-sm"
-        >
-          <Filter className="h-4 w-4 text-slate-600" />
-        </Button>
+        </div>
       </div>
 
-      {/* Category Filter Bar */}
       <div className="flex overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 gap-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {CATEGORIES.map((cat) => (
           <Button
@@ -207,7 +289,6 @@ export default function Explore() {
         ))}
       </div>
 
-      {/* Dynamic Coupon Grid */}
       <div
         className={cn(
           'grid gap-4 sm:gap-6 lg:gap-8',
@@ -218,8 +299,8 @@ export default function Explore() {
       >
         {viewMode === 'list' ? (
           <>
-            {serverCoupons.map((coupon, index) => {
-              if (index === serverCoupons.length - 1) {
+            {displayCoupons.map((coupon, index) => {
+              if (index === displayCoupons.length - 1) {
                 return (
                   <div ref={lastElementRef} key={coupon.id} className="h-full">
                     <CouponCard coupon={coupon} variant="vertical" />
@@ -249,7 +330,6 @@ export default function Explore() {
                       <div className="mt-auto pt-3 border-t border-slate-100 flex flex-col gap-3">
                         <Skeleton className="h-4 w-full" />
                         <Skeleton className="h-11 sm:h-10 w-full rounded-lg" />
-                        <Skeleton className="h-2 w-2/3 mx-auto mt-1" />
                       </div>
                     </div>
                   </div>
@@ -271,7 +351,7 @@ export default function Explore() {
           </div>
         )}
 
-        {!loading && serverCoupons.length === 0 && viewMode === 'list' && (
+        {!loading && displayCoupons.length === 0 && viewMode === 'list' && (
           <div className="col-span-full py-16 text-center bg-white rounded-lg border border-slate-100 border-dashed">
             <div className="flex justify-center mb-4">
               <Search className="h-10 w-10 text-slate-300" />
@@ -285,23 +365,10 @@ export default function Explore() {
                 'Tente ajustar os filtros ou buscar por outros termos.',
               )}
             </p>
-            {(search || selectedCategory !== 'all') && (
-              <Button
-                variant="link"
-                onClick={() => {
-                  setSearch('')
-                  setSelectedCategory('all')
-                }}
-                className="mt-2 text-primary"
-              >
-                {t('explore.clear_filters', 'Limpar filtros')}
-              </Button>
-            )}
           </div>
         )}
       </div>
 
-      {/* Footer Banner Section */}
       <AdSpace position="bottom" className="mt-4" />
     </div>
   )

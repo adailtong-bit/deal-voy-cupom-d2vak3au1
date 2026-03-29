@@ -29,6 +29,9 @@ import { AdminInterestsTab } from '@/components/admin/AdminInterestsTab'
 import { TestingSandboxTab } from '@/components/admin/TestingSandboxTab'
 import { AdminHierarchyTab } from '@/components/admin/AdminHierarchyTab'
 import { AdminTranslationsTab } from '@/components/admin/AdminTranslationsTab'
+import { AdminPerformanceTab } from '@/components/admin/AdminPerformanceTab'
+import { AdminNotificationsTab } from '@/components/admin/AdminNotificationsTab'
+import { AdminSettingsTab } from '@/components/admin/AdminSettingsTab'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useRegionFormatting } from '@/hooks/useRegionFormatting'
@@ -243,6 +246,11 @@ export default function AdminDashboard() {
               <TabsTrigger value="sandbox">
                 {t('admin.sandbox', 'Testing Sandbox')}
               </TabsTrigger>
+              <TabsTrigger value="performance">Performance</TabsTrigger>
+              <TabsTrigger value="notifications">
+                Push Notifications
+              </TabsTrigger>
+              <TabsTrigger value="settings">Settings</TabsTrigger>
             </>
           )}
           <TabsTrigger value="hierarchy">
@@ -358,6 +366,15 @@ export default function AdminDashboard() {
             </TabsContent>
             <TabsContent value="sandbox">
               <TestingSandboxTab />
+            </TabsContent>
+            <TabsContent value="performance">
+              <AdminPerformanceTab />
+            </TabsContent>
+            <TabsContent value="notifications">
+              <AdminNotificationsTab />
+            </TabsContent>
+            <TabsContent value="settings">
+              <AdminSettingsTab />
             </TabsContent>
           </>
         )}
