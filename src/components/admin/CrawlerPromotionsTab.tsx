@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useRegionFormatting } from '@/hooks/useRegionFormatting'
 import { useCouponStore } from '@/stores/CouponContext'
@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { CheckCircle, XCircle, ExternalLink, Edit } from 'lucide-react'
+import { CheckCircle, XCircle, ExternalLink, Edit, FilterX } from 'lucide-react'
 import { CrawlerAnalysisSheet } from './CrawlerAnalysisSheet'
 import { DiscoveredPromotion } from '@/lib/types'
 import { toast } from 'sonner'
@@ -44,9 +44,39 @@ export function CrawlerPromotionsTab() {
   const [selectedPromo, setSelectedPromo] =
     useState<DiscoveredPromotion | null>(null)
   const [isSheetOpen, setIsSheetOpen] = useState(false)
-  const [filterState, setFilterState] = useState<string>('all')
-  const [filterCity, setFilterCity] = useState<string>('all')
-  const [filterStore, setFilterStore] = useState<string>('all')
+
+  // Persisted Filters
+  const [filterState, setFilterState] = useState<string>(
+    () => sessionStorage.getItem('crawler_filterState') || 'all',
+  )
+  const [filterCity, setFilterCity] = useState<string>(
+    () => sessionStorage.getItem('crawler_filterCity') || 'all',
+  )
+  const [filterStore, setFilterStore] = useState<string>(
+    () => sessionStorage.getItem('crawler_filterStore') || 'all',
+  )
+  const [filterCategory, setFilterCategory] = useState<string>(
+    () => sessionStorage.getItem('crawler_filterCategory') || 'all',
+  )
+  const [filterFetchDate, setFilterFetchDate] = useState<string>(
+    () => sessionStorage.getItem('crawler_filterFetchDate') || 'all',
+  )
+
+  useEffect(() => {
+    sessionStorage.setItem('crawler_filterState', filterState)
+    sessionStorage.setItem('crawler_filterCity', filterCity)
+    sessionStorage.setItem('crawler_filterStore', filterStore)
+    sessionStorage.setItem('crawler_filterCategory', filterCategory)
+    sessionStorage.setItem('crawler_filterFetchDate', filterFetchDate)
+  }, [filterState, filterCity, filterStore, filterCategory, filterFetchDate])
+
+  const clearFilters = () => {
+    setFilterState('all')
+    setFilterCity('all')
+    setFilterStore('all')
+    setFilterCategory('all')
+    setFilterFetchDate('all')
+  }
 
   const basePendingPromotions = discoveredPromotions.filter(
     (p) =>
@@ -86,14 +116,42 @@ export function CrawlerPromotionsTab() {
     [basePendingPromotions],
   )
 
+  const allCategories = useMemo(
+    () =>
+      Array.from(
+        new Set(basePendingPromotions.map((p) => p.category).filter(Boolean)),
+      ).sort() as string[],
+    [basePendingPromotions],
+  )
+
+  const allFetchDates = useMemo(() => {
+    const dates = basePendingPromotions
+      .map((p) => (p.capturedAt ? p.capturedAt.split('T')[0] : null))
+      .filter(Boolean) as string[]
+    return Array.from(new Set(dates)).sort((a, b) => b.localeCompare(a))
+  }, [basePendingPromotions])
+
   const pendingPromotions = useMemo(() => {
     return basePendingPromotions.filter((p) => {
       if (filterState !== 'all' && p.state !== filterState) return false
       if (filterCity !== 'all' && p.city !== filterCity) return false
       if (filterStore !== 'all' && p.storeName !== filterStore) return false
+      if (filterCategory !== 'all' && p.category !== filterCategory)
+        return false
+      if (filterFetchDate !== 'all') {
+        const pDate = p.capturedAt ? p.capturedAt.split('T')[0] : ''
+        if (pDate !== filterFetchDate) return false
+      }
       return true
     })
-  }, [basePendingPromotions, filterState, filterCity, filterStore])
+  }, [
+    basePendingPromotions,
+    filterState,
+    filterCity,
+    filterStore,
+    filterCategory,
+    filterFetchDate,
+  ])
 
   const handleImport = (
     id: string,
@@ -136,9 +194,16 @@ export function CrawlerPromotionsTab() {
     )
   }
 
+  const isFiltering =
+    filterState !== 'all' ||
+    filterCity !== 'all' ||
+    filterStore !== 'all' ||
+    filterCategory !== 'all' ||
+    filterFetchDate !== 'all'
+
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
         <div className="flex items-center gap-3">
           <h3 className="text-lg font-bold">
             {t('franchisee.crawler.imported_offers', 'Ofertas Importadas')}
@@ -146,11 +211,59 @@ export function CrawlerPromotionsTab() {
           <Badge variant="secondary">
             {pendingPromotions.length} {t('common.pending', 'Pendentes')}
           </Badge>
+          {isFiltering && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearFilters}
+              className="text-slate-500 h-8 px-2"
+            >
+              <FilterX className="w-4 h-4 mr-1" />
+              {t('common.clear', 'Limpar Filtros')}
+            </Button>
+          )}
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto flex-wrap justify-end">
+        <div className="flex flex-col sm:flex-row items-center gap-3 w-full xl:w-auto flex-wrap justify-end">
+          <Select value={filterFetchDate} onValueChange={setFilterFetchDate}>
+            <SelectTrigger className="w-full sm:w-[160px] bg-background">
+              <SelectValue
+                placeholder={t(
+                  'franchisee.crawler.fetch_date',
+                  'Data de Busca',
+                )}
+              />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">
+                {t('franchisee.crawler.all_dates', 'Todas as Datas')}
+              </SelectItem>
+              {allFetchDates.map((d) => (
+                <SelectItem key={d} value={d}>
+                  {formatShortDate(d)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={filterCategory} onValueChange={setFilterCategory}>
+            <SelectTrigger className="w-full sm:w-[160px] bg-background">
+              <SelectValue placeholder={t('common.category', 'Categoria')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">
+                {t('franchisee.crawler.all_categories', 'Todas as Categorias')}
+              </SelectItem>
+              {allCategories.map((c) => (
+                <SelectItem key={c} value={c}>
+                  {c}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
           <Select value={filterStore} onValueChange={setFilterStore}>
-            <SelectTrigger className="w-full sm:w-[180px] bg-background">
+            <SelectTrigger className="w-full sm:w-[160px] bg-background">
               <SelectValue placeholder={t('common.store', 'Loja')} />
             </SelectTrigger>
             <SelectContent>
@@ -172,7 +285,7 @@ export function CrawlerPromotionsTab() {
               setFilterCity('all')
             }}
           >
-            <SelectTrigger className="w-full sm:w-[180px] bg-background">
+            <SelectTrigger className="w-full sm:w-[160px] bg-background">
               <SelectValue placeholder={t('common.state', 'Estado')} />
             </SelectTrigger>
             <SelectContent>
@@ -188,7 +301,7 @@ export function CrawlerPromotionsTab() {
           </Select>
 
           <Select value={filterCity} onValueChange={setFilterCity}>
-            <SelectTrigger className="w-full sm:w-[180px] bg-background">
+            <SelectTrigger className="w-full sm:w-[160px] bg-background">
               <SelectValue placeholder={t('common.city', 'Cidade')} />
             </SelectTrigger>
             <SelectContent>
@@ -207,14 +320,17 @@ export function CrawlerPromotionsTab() {
 
       <div className="rounded-md border bg-card overflow-hidden">
         <div className="w-full overflow-x-auto hide-scrollbar">
-          <Table className="min-w-[1200px]">
+          <Table className="min-w-[1300px]">
             <TableHeader>
               <TableRow>
                 <TableHead className="whitespace-nowrap">
                   {t('franchisee.crawler.company', 'Empresa')}
                 </TableHead>
                 <TableHead className="whitespace-nowrap">
-                  {t('vouchers.source_site', 'Site de Origem')}
+                  {t('franchisee.crawler.source_site', 'Site de Origem')}
+                </TableHead>
+                <TableHead className="whitespace-nowrap">
+                  {t('franchisee.crawler.fetch_date', 'Data de Busca')}
                 </TableHead>
                 <TableHead className="whitespace-nowrap">
                   {t('vouchers.expiration_date', 'Data de Expiração')}
@@ -291,11 +407,10 @@ export function CrawlerPromotionsTab() {
                     </div>
                   </TableCell>
                   <TableCell className="whitespace-nowrap text-sm text-slate-600 font-medium">
-                    {promo.expiryDate
-                      ? formatShortDate(promo.expiryDate)
-                      : promo.capturedAt
-                        ? formatShortDate(promo.capturedAt)
-                        : '-'}
+                    {promo.capturedAt ? formatShortDate(promo.capturedAt) : '-'}
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap text-sm text-slate-600 font-medium">
+                    {promo.expiryDate ? formatShortDate(promo.expiryDate) : '-'}
                   </TableCell>
                   <TableCell className="min-w-[200px] max-w-[300px]">
                     <div className="flex flex-col space-y-1">
@@ -376,7 +491,7 @@ export function CrawlerPromotionsTab() {
               {pendingPromotions.length === 0 && (
                 <TableRow>
                   <TableCell
-                    colSpan={8}
+                    colSpan={9}
                     className="text-center py-8 text-muted-foreground"
                   >
                     {t(

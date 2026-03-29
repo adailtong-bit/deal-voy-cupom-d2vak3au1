@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useLanguage } from '@/stores/LanguageContext'
 import {
   Card,
@@ -27,14 +27,52 @@ export function CrawlerSourcesTab() {
   const { t } = useLanguage()
   const { triggerScan, seasonalEvents } = useCouponStore()
 
-  const [searchType, setSearchType] = useState('region')
-  const [region, setRegion] = useState('')
-  const [company, setCompany] = useState('')
-  const [category, setCategory] = useState('')
-  const [limit, setLimit] = useState(50)
-  const [minDiscount, setMinDiscount] = useState(10)
-  const [differentiated, setDifferentiated] = useState(false)
-  const [holiday, setHoliday] = useState('none')
+  // Load from session storage for persistence or fallback to defaults
+  const [searchType, setSearchType] = useState(
+    () => sessionStorage.getItem('crawler_src_searchType') || 'region',
+  )
+  const [region, setRegion] = useState(
+    () => sessionStorage.getItem('crawler_src_region') || '',
+  )
+  const [company, setCompany] = useState(
+    () => sessionStorage.getItem('crawler_src_company') || '',
+  )
+  const [category, setCategory] = useState(
+    () => sessionStorage.getItem('crawler_src_category') || '',
+  )
+  const [limit, setLimit] = useState(
+    () => Number(sessionStorage.getItem('crawler_src_limit')) || 50,
+  )
+  const [minDiscount, setMinDiscount] = useState(
+    () => Number(sessionStorage.getItem('crawler_src_minDiscount')) || 10,
+  )
+  const [differentiated, setDifferentiated] = useState(
+    () => sessionStorage.getItem('crawler_src_diff') === 'true',
+  )
+  const [holiday, setHoliday] = useState(
+    () => sessionStorage.getItem('crawler_src_holiday') || 'none',
+  )
+
+  // Save to session storage whenever a field changes
+  useEffect(() => {
+    sessionStorage.setItem('crawler_src_searchType', searchType)
+    sessionStorage.setItem('crawler_src_region', region)
+    sessionStorage.setItem('crawler_src_company', company)
+    sessionStorage.setItem('crawler_src_category', category)
+    sessionStorage.setItem('crawler_src_limit', limit.toString())
+    sessionStorage.setItem('crawler_src_minDiscount', minDiscount.toString())
+    sessionStorage.setItem('crawler_src_diff', differentiated.toString())
+    sessionStorage.setItem('crawler_src_holiday', holiday)
+  }, [
+    searchType,
+    region,
+    company,
+    category,
+    limit,
+    minDiscount,
+    differentiated,
+    holiday,
+  ])
 
   const handleStartCrawler = () => {
     toast.success(
@@ -52,8 +90,13 @@ export function CrawlerSourcesTab() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>
-            {t('franchisee.crawler.config_title', 'Configuração de Busca')}
+          <CardTitle className="flex justify-between items-center">
+            <span>
+              {t('franchisee.crawler.config_title', 'Configuração de Busca')}
+            </span>
+            <span className="text-xs font-normal text-muted-foreground px-2 py-1 bg-slate-100 rounded-md">
+              {t('franchisee.crawler.last_search', 'Última Busca')}
+            </span>
           </CardTitle>
           <CardDescription>
             {t(

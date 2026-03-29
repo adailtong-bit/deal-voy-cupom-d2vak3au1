@@ -656,6 +656,13 @@ export const translations: Record<Language, any> = {
         team: 'Equipe Local',
         settings: 'Configurações',
       },
+      crawler: {
+        fetch_date: 'Data de Busca',
+        all_categories: 'Todas as Categorias',
+        all_dates: 'Todas as Datas',
+        last_search: 'Última Busca',
+        source_site: 'Site de Origem',
+      },
       overview: {
         title: 'Visão Geral',
         desc: 'Métricas consolidadas da região de {region}.',
@@ -2027,6 +2034,13 @@ export const translations: Record<Language, any> = {
         team: 'Local Team',
         settings: 'Settings',
       },
+      crawler: {
+        fetch_date: 'Fetch Date',
+        all_categories: 'All Categories',
+        all_dates: 'All Dates',
+        last_search: 'Last Search',
+        source_site: 'Source Site',
+      },
       overview: {
         title: 'Overview',
         desc: 'Consolidated metrics for {region} region.',
@@ -3396,6 +3410,13 @@ export const translations: Record<Language, any> = {
         sandbox: 'Testing Sandbox',
         team: 'Equipo Local',
         settings: 'Configuración',
+      },
+      crawler: {
+        fetch_date: 'Fecha de Búsqueda',
+        all_categories: 'Todas las Categorías',
+        all_dates: 'Todas las Fechas',
+        last_search: 'Última Búsqueda',
+        source_site: 'Sitio de Origen',
       },
       overview: {
         title: 'Visión General',
