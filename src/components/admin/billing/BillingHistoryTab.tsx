@@ -28,7 +28,7 @@ import {
 } from '@/components/ui/dialog'
 import { CheckCircle2, Download, Eye, AlertCircle } from 'lucide-react'
 import { PartnerInvoice } from '@/lib/types'
-import { cn } from '@/lib/utils'
+import { cn, extractContactInfo, formatAddress } from '@/lib/utils'
 
 export function BillingHistoryTab({ franchiseId }: { franchiseId?: string }) {
   const { t } = useLanguage()
@@ -70,8 +70,38 @@ export function BillingHistoryTab({ franchiseId }: { franchiseId?: string }) {
   const exportPdf = (inv: PartnerInvoice) => {
     const w = window.open('', '_blank')
     if (w) {
-      const billerName = inv.billerName || getFranchiseName(inv.franchiseId)
-      const customerName = inv.customerName || getCompanyName(inv.companyId)
+      const currentBiller = franchises.find((f) => f.id === inv.franchiseId)
+      const currentCustomer = companies.find((c) => c.id === inv.companyId)
+      const bInfo = extractContactInfo(currentBiller)
+      const cInfo = extractContactInfo(currentCustomer)
+
+      const billerName =
+        inv.billerName ||
+        currentBiller?.legalName ||
+        currentBiller?.name ||
+        getFranchiseName(inv.franchiseId)
+      const billerTaxId = inv.billerTaxId || currentBiller?.taxId || ''
+      const billerStateReg =
+        inv.billerStateReg || currentBiller?.stateRegistration || ''
+      const billerAddress = inv.billerAddress || formatAddress(currentBiller)
+      const billerContact = inv.billerContact || bInfo.name
+      const billerEmail = inv.billerEmail || bInfo.email
+      const billerPhone = inv.billerPhone || bInfo.phone
+
+      const customerName =
+        inv.customerName ||
+        currentCustomer?.legalName ||
+        currentCustomer?.name ||
+        getCompanyName(inv.companyId)
+      const customerTaxId = inv.customerTaxId || currentCustomer?.taxId || ''
+      const customerStateReg =
+        inv.customerStateReg || currentCustomer?.stateRegistration || ''
+      const customerAddress =
+        inv.customerAddress || formatAddress(currentCustomer)
+      const customerContact = inv.customerContact || cInfo.name
+      const customerEmail = inv.customerEmail || cInfo.email
+      const customerPhone = inv.customerPhone || cInfo.phone
+
       const fullDescription = getFullDescription(inv)
 
       w.document.write(`
@@ -123,23 +153,23 @@ export function BillingHistoryTab({ franchiseId }: { franchiseId?: string }) {
             <div class="party">
               <h3>${t('franchisee.billing.biller', 'Cobrador (Emissor)')}</h3>
               <strong>${billerName}</strong>
-              ${inv.billerTaxId ? `<p><strong>CNPJ/CPF:</strong> ${inv.billerTaxId}${inv.billerStateReg ? ` | <strong>IE:</strong> ${inv.billerStateReg}` : ''}</p>` : ''}
-              ${inv.billerAddress ? `<p><strong>Endereço:</strong> ${inv.billerAddress}</p>` : ''}
+              ${billerTaxId ? `<p><strong>CNPJ/CPF:</strong> ${billerTaxId}${billerStateReg ? ` | <strong>IE:</strong> ${billerStateReg}` : ''}</p>` : ''}
+              ${billerAddress ? `<p><strong>Endereço:</strong> ${billerAddress}</p>` : ''}
               <div class="contact-info">
-                ${inv.billerContact ? `<p><strong>Contato Financeiro:</strong> ${inv.billerContact}</p>` : ''}
-                ${inv.billerEmail ? `<p><strong>Email:</strong> ${inv.billerEmail}</p>` : ''}
-                ${inv.billerPhone ? `<p><strong>Tel:</strong> ${inv.billerPhone}</p>` : ''}
+                ${billerContact ? `<p><strong>Contato Financeiro:</strong> ${billerContact}</p>` : ''}
+                ${billerEmail ? `<p><strong>Email:</strong> ${billerEmail}</p>` : ''}
+                ${billerPhone ? `<p><strong>Tel:</strong> ${billerPhone}</p>` : ''}
               </div>
             </div>
             <div class="party">
               <h3>${t('franchisee.billing.customer', 'Cobrado (Pagador)')}</h3>
               <strong>${customerName}</strong>
-              ${inv.customerTaxId ? `<p><strong>CNPJ/CPF:</strong> ${inv.customerTaxId}${inv.customerStateReg ? ` | <strong>IE:</strong> ${inv.customerStateReg}` : ''}</p>` : ''}
-              ${inv.customerAddress ? `<p><strong>Endereço:</strong> ${inv.customerAddress}</p>` : ''}
+              ${customerTaxId ? `<p><strong>CNPJ/CPF:</strong> ${customerTaxId}${customerStateReg ? ` | <strong>IE:</strong> ${customerStateReg}` : ''}</p>` : ''}
+              ${customerAddress ? `<p><strong>Endereço:</strong> ${customerAddress}</p>` : ''}
               <div class="contact-info">
-                ${inv.customerContact ? `<p><strong>Contato Financeiro:</strong> ${inv.customerContact}</p>` : ''}
-                ${inv.customerEmail ? `<p><strong>Email:</strong> ${inv.customerEmail}</p>` : ''}
-                ${inv.customerPhone ? `<p><strong>Tel:</strong> ${inv.customerPhone}</p>` : ''}
+                ${customerContact ? `<p><strong>Contato Financeiro:</strong> ${customerContact}</p>` : ''}
+                ${customerEmail ? `<p><strong>Email:</strong> ${customerEmail}</p>` : ''}
+                ${customerPhone ? `<p><strong>Tel:</strong> ${customerPhone}</p>` : ''}
               </div>
             </div>
           </div>
@@ -368,233 +398,280 @@ export function BillingHistoryTab({ franchiseId }: { franchiseId?: string }) {
               {viewingInv?.referenceNumber}
             </DialogTitle>
           </DialogHeader>
-          {viewingInv && (
-            <div className="grid gap-6 py-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="bg-slate-50 p-5 rounded-xl border border-slate-200 shadow-sm">
-                  <div className="flex items-center gap-2 mb-3 border-b border-slate-200 pb-2">
-                    <div className="h-2 w-2 rounded-full bg-blue-500"></div>
-                    <h4 className="text-xs font-bold text-slate-600 uppercase tracking-wider">
-                      {t('franchisee.billing.biller', 'Cobrador (Emissor)')}
-                    </h4>
-                  </div>
-                  <p className="text-base font-bold text-slate-900 mb-2">
-                    {viewingInv.billerName ||
-                      getFranchiseName(viewingInv.franchiseId)}
-                  </p>
-                  <div className="space-y-1.5 mb-4">
-                    {viewingInv.billerTaxId && (
-                      <p className="text-sm text-slate-600">
-                        <span className="font-semibold text-slate-700">
-                          CNPJ/CPF:
-                        </span>{' '}
-                        {viewingInv.billerTaxId}
-                        {viewingInv.billerStateReg && (
-                          <span className="ml-2 text-slate-400">
-                            |{' '}
+          {viewingInv &&
+            (() => {
+              const currentBiller = franchises.find(
+                (f) => f.id === viewingInv.franchiseId,
+              )
+              const currentCustomer = companies.find(
+                (c) => c.id === viewingInv.companyId,
+              )
+              const bInfo = extractContactInfo(currentBiller)
+              const cInfo = extractContactInfo(currentCustomer)
+
+              const billerName =
+                viewingInv.billerName ||
+                currentBiller?.legalName ||
+                currentBiller?.name ||
+                getFranchiseName(viewingInv.franchiseId)
+              const billerTaxId =
+                viewingInv.billerTaxId || currentBiller?.taxId || ''
+              const billerStateReg =
+                viewingInv.billerStateReg ||
+                currentBiller?.stateRegistration ||
+                ''
+              const billerAddress =
+                viewingInv.billerAddress || formatAddress(currentBiller)
+              const billerContact = viewingInv.billerContact || bInfo.name
+              const billerEmail = viewingInv.billerEmail || bInfo.email
+              const billerPhone = viewingInv.billerPhone || bInfo.phone
+
+              const customerName =
+                viewingInv.customerName ||
+                currentCustomer?.legalName ||
+                currentCustomer?.name ||
+                getCompanyName(viewingInv.companyId)
+              const customerTaxId =
+                viewingInv.customerTaxId || currentCustomer?.taxId || ''
+              const customerStateReg =
+                viewingInv.customerStateReg ||
+                currentCustomer?.stateRegistration ||
+                ''
+              const customerAddress =
+                viewingInv.customerAddress || formatAddress(currentCustomer)
+              const customerContact = viewingInv.customerContact || cInfo.name
+              const customerEmail = viewingInv.customerEmail || cInfo.email
+              const customerPhone = viewingInv.customerPhone || cInfo.phone
+
+              return (
+                <div className="grid gap-6 py-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="bg-slate-50 p-5 rounded-xl border border-slate-200 shadow-sm">
+                      <div className="flex items-center gap-2 mb-3 border-b border-slate-200 pb-2">
+                        <div className="h-2 w-2 rounded-full bg-blue-500"></div>
+                        <h4 className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                          {t('franchisee.billing.biller', 'Cobrador (Emissor)')}
+                        </h4>
+                      </div>
+                      <p className="text-base font-bold text-slate-900 mb-2">
+                        {billerName}
+                      </p>
+                      <div className="space-y-1.5 mb-4">
+                        {billerTaxId && (
+                          <p className="text-sm text-slate-600">
                             <span className="font-semibold text-slate-700">
-                              IE:
+                              CNPJ/CPF:
                             </span>{' '}
-                            {viewingInv.billerStateReg}
-                          </span>
+                            {billerTaxId}
+                            {billerStateReg && (
+                              <span className="ml-2 text-slate-400">
+                                |{' '}
+                                <span className="font-semibold text-slate-700">
+                                  IE:
+                                </span>{' '}
+                                {billerStateReg}
+                              </span>
+                            )}
+                          </p>
+                        )}
+                        {billerAddress && (
+                          <p className="text-sm text-slate-600">
+                            <span className="font-semibold text-slate-700">
+                              Endereço:
+                            </span>{' '}
+                            {billerAddress}
+                          </p>
+                        )}
+                      </div>
+                      <div className="bg-white p-3 rounded-lg border border-slate-100 space-y-1.5">
+                        <p className="text-xs font-semibold text-slate-500 uppercase mb-1">
+                          Contato Financeiro / Responsável
+                        </p>
+                        {billerContact && (
+                          <p className="text-sm text-slate-700 font-medium">
+                            {billerContact}
+                          </p>
+                        )}
+                        {billerEmail && (
+                          <p className="text-sm text-slate-600">
+                            {billerEmail}
+                          </p>
+                        )}
+                        {billerPhone && (
+                          <p className="text-sm text-slate-600">
+                            {billerPhone}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="bg-slate-50 p-5 rounded-xl border border-slate-200 shadow-sm relative">
+                      <div className="absolute top-4 right-4">
+                        <Badge
+                          className={cn(
+                            'capitalize',
+                            viewingInv.status === 'paid'
+                              ? 'bg-emerald-500 text-white'
+                              : viewingInv.status === 'overdue'
+                                ? 'bg-destructive text-white'
+                                : 'bg-slate-500 text-white',
+                          )}
+                        >
+                          {t(
+                            `franchisee.billing.${viewingInv.status}`,
+                            viewingInv.status,
+                          )}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-2 mb-3 border-b border-slate-200 pb-2 pr-20">
+                        <div className="h-2 w-2 rounded-full bg-orange-500"></div>
+                        <h4 className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                          {t(
+                            'franchisee.billing.customer',
+                            'Cobrado (Pagador)',
+                          )}
+                        </h4>
+                      </div>
+                      <p className="text-base font-bold text-slate-900 mb-2 pr-20">
+                        {customerName}
+                      </p>
+                      <div className="space-y-1.5 mb-4">
+                        {customerTaxId && (
+                          <p className="text-sm text-slate-600">
+                            <span className="font-semibold text-slate-700">
+                              CNPJ/CPF:
+                            </span>{' '}
+                            {customerTaxId}
+                            {customerStateReg && (
+                              <span className="ml-2 text-slate-400">
+                                |{' '}
+                                <span className="font-semibold text-slate-700">
+                                  IE:
+                                </span>{' '}
+                                {customerStateReg}
+                              </span>
+                            )}
+                          </p>
+                        )}
+                        {customerAddress && (
+                          <p className="text-sm text-slate-600">
+                            <span className="font-semibold text-slate-700">
+                              Endereço:
+                            </span>{' '}
+                            {customerAddress}
+                          </p>
+                        )}
+                      </div>
+                      <div className="bg-white p-3 rounded-lg border border-slate-100 space-y-1.5">
+                        <p className="text-xs font-semibold text-slate-500 uppercase mb-1">
+                          Contato Financeiro / Responsável
+                        </p>
+                        {customerContact && (
+                          <p className="text-sm text-slate-700 font-medium">
+                            {customerContact}
+                          </p>
+                        )}
+                        {customerEmail && (
+                          <p className="text-sm text-slate-600">
+                            {customerEmail}
+                          </p>
+                        )}
+                        {customerPhone && (
+                          <p className="text-sm text-slate-600">
+                            {customerPhone}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div>
+                      <p className="text-xs text-slate-500 uppercase font-semibold">
+                        {t('franchisee.billing.issue_date', 'Data de Emissão')}
+                      </p>
+                      <p className="font-medium">
+                        {formatDate(viewingInv.issueDate)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-500 uppercase font-semibold">
+                        {t('franchisee.billing.due_date', 'Vencimento')}
+                      </p>
+                      <p className="font-medium text-red-600">
+                        {formatDate(viewingInv.dueDate)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-500 uppercase font-semibold">
+                        {t('franchisee.billing.period_start', 'Início')}
+                      </p>
+                      <p className="font-medium">
+                        {formatDate(viewingInv.periodStart)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-500 uppercase font-semibold">
+                        {t('franchisee.billing.period_end', 'Fim')}
+                      </p>
+                      <p className="font-medium">
+                        {formatDate(viewingInv.periodEnd)}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-50 rounded-lg border border-slate-100 p-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                      <p className="text-sm text-slate-500">
+                        {t('franchisee.billing.total_sales', 'Total de Vendas')}
+                      </p>
+                      <p className="font-bold text-xl text-slate-700">
+                        {formatCurrency(viewingInv.totalSales)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-slate-500">
+                        {t('franchisee.billing.total_cashback', 'Cashback')}
+                      </p>
+                      <p className="font-bold text-xl text-slate-700">
+                        {formatCurrency(viewingInv.totalCashback)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-slate-500">
+                        {t('franchisee.billing.total_commission', 'Comissão')}
+                      </p>
+                      <p className="font-bold text-xl text-emerald-600">
+                        {formatCurrency(viewingInv.totalCommission)}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <p className="text-sm font-semibold text-slate-700">
+                      {t('franchisee.billing.description', 'Descrição / Notas')}
+                    </p>
+                    <p className="text-sm text-slate-600 bg-slate-50 p-3 rounded-md whitespace-pre-wrap">
+                      {getFullDescription(viewingInv)}
+                    </p>
+                  </div>
+
+                  {viewingInv.paymentInstructions && (
+                    <div className="space-y-1">
+                      <p className="text-sm font-semibold text-slate-700">
+                        {t(
+                          'franchisee.billing.payment_instructions',
+                          'Instruções de Pagamento',
                         )}
                       </p>
-                    )}
-                    {viewingInv.billerAddress && (
-                      <p className="text-sm text-slate-600">
-                        <span className="font-semibold text-slate-700">
-                          Endereço:
-                        </span>{' '}
-                        {viewingInv.billerAddress}
+                      <p className="text-sm text-slate-600 bg-slate-50 p-3 rounded-md whitespace-pre-wrap">
+                        {viewingInv.paymentInstructions}
                       </p>
-                    )}
-                  </div>
-                  <div className="bg-white p-3 rounded-lg border border-slate-100 space-y-1.5">
-                    <p className="text-xs font-semibold text-slate-500 uppercase mb-1">
-                      Contato Financeiro / Responsável
-                    </p>
-                    {viewingInv.billerContact && (
-                      <p className="text-sm text-slate-700 font-medium">
-                        {viewingInv.billerContact}
-                      </p>
-                    )}
-                    {viewingInv.billerEmail && (
-                      <p className="text-sm text-slate-600">
-                        {viewingInv.billerEmail}
-                      </p>
-                    )}
-                    {viewingInv.billerPhone && (
-                      <p className="text-sm text-slate-600">
-                        {viewingInv.billerPhone}
-                      </p>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
-
-                <div className="bg-slate-50 p-5 rounded-xl border border-slate-200 shadow-sm relative">
-                  <div className="absolute top-4 right-4">
-                    <Badge
-                      className={cn(
-                        'capitalize',
-                        viewingInv.status === 'paid'
-                          ? 'bg-emerald-500 text-white'
-                          : viewingInv.status === 'overdue'
-                            ? 'bg-destructive text-white'
-                            : 'bg-slate-500 text-white',
-                      )}
-                    >
-                      {t(
-                        `franchisee.billing.${viewingInv.status}`,
-                        viewingInv.status,
-                      )}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center gap-2 mb-3 border-b border-slate-200 pb-2 pr-20">
-                    <div className="h-2 w-2 rounded-full bg-orange-500"></div>
-                    <h4 className="text-xs font-bold text-slate-600 uppercase tracking-wider">
-                      {t('franchisee.billing.customer', 'Cobrado (Pagador)')}
-                    </h4>
-                  </div>
-                  <p className="text-base font-bold text-slate-900 mb-2 pr-20">
-                    {viewingInv.customerName ||
-                      getCompanyName(viewingInv.companyId)}
-                  </p>
-                  <div className="space-y-1.5 mb-4">
-                    {viewingInv.customerTaxId && (
-                      <p className="text-sm text-slate-600">
-                        <span className="font-semibold text-slate-700">
-                          CNPJ/CPF:
-                        </span>{' '}
-                        {viewingInv.customerTaxId}
-                        {viewingInv.customerStateReg && (
-                          <span className="ml-2 text-slate-400">
-                            |{' '}
-                            <span className="font-semibold text-slate-700">
-                              IE:
-                            </span>{' '}
-                            {viewingInv.customerStateReg}
-                          </span>
-                        )}
-                      </p>
-                    )}
-                    {viewingInv.customerAddress && (
-                      <p className="text-sm text-slate-600">
-                        <span className="font-semibold text-slate-700">
-                          Endereço:
-                        </span>{' '}
-                        {viewingInv.customerAddress}
-                      </p>
-                    )}
-                  </div>
-                  <div className="bg-white p-3 rounded-lg border border-slate-100 space-y-1.5">
-                    <p className="text-xs font-semibold text-slate-500 uppercase mb-1">
-                      Contato Financeiro / Responsável
-                    </p>
-                    {viewingInv.customerContact && (
-                      <p className="text-sm text-slate-700 font-medium">
-                        {viewingInv.customerContact}
-                      </p>
-                    )}
-                    {viewingInv.customerEmail && (
-                      <p className="text-sm text-slate-600">
-                        {viewingInv.customerEmail}
-                      </p>
-                    )}
-                    {viewingInv.customerPhone && (
-                      <p className="text-sm text-slate-600">
-                        {viewingInv.customerPhone}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <div>
-                  <p className="text-xs text-slate-500 uppercase font-semibold">
-                    {t('franchisee.billing.issue_date', 'Data de Emissão')}
-                  </p>
-                  <p className="font-medium">
-                    {formatDate(viewingInv.issueDate)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-slate-500 uppercase font-semibold">
-                    {t('franchisee.billing.due_date', 'Vencimento')}
-                  </p>
-                  <p className="font-medium text-red-600">
-                    {formatDate(viewingInv.dueDate)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-slate-500 uppercase font-semibold">
-                    {t('franchisee.billing.period_start', 'Início')}
-                  </p>
-                  <p className="font-medium">
-                    {formatDate(viewingInv.periodStart)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-slate-500 uppercase font-semibold">
-                    {t('franchisee.billing.period_end', 'Fim')}
-                  </p>
-                  <p className="font-medium">
-                    {formatDate(viewingInv.periodEnd)}
-                  </p>
-                </div>
-              </div>
-
-              <div className="bg-slate-50 rounded-lg border border-slate-100 p-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <p className="text-sm text-slate-500">
-                    {t('franchisee.billing.total_sales', 'Total de Vendas')}
-                  </p>
-                  <p className="font-bold text-xl text-slate-700">
-                    {formatCurrency(viewingInv.totalSales)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-slate-500">
-                    {t('franchisee.billing.total_cashback', 'Cashback')}
-                  </p>
-                  <p className="font-bold text-xl text-slate-700">
-                    {formatCurrency(viewingInv.totalCashback)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-slate-500">
-                    {t('franchisee.billing.total_commission', 'Comissão')}
-                  </p>
-                  <p className="font-bold text-xl text-emerald-600">
-                    {formatCurrency(viewingInv.totalCommission)}
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <p className="text-sm font-semibold text-slate-700">
-                  {t('franchisee.billing.description', 'Descrição / Notas')}
-                </p>
-                <p className="text-sm text-slate-600 bg-slate-50 p-3 rounded-md whitespace-pre-wrap">
-                  {getFullDescription(viewingInv)}
-                </p>
-              </div>
-
-              {viewingInv.paymentInstructions && (
-                <div className="space-y-1">
-                  <p className="text-sm font-semibold text-slate-700">
-                    {t(
-                      'franchisee.billing.payment_instructions',
-                      'Instruções de Pagamento',
-                    )}
-                  </p>
-                  <p className="text-sm text-slate-600 bg-slate-50 p-3 rounded-md whitespace-pre-wrap">
-                    {viewingInv.paymentInstructions}
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
+              )
+            })()}
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsViewOpen(false)}>
               {t('common.close', 'Fechar')}

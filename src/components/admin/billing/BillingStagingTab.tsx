@@ -38,6 +38,7 @@ import {
 } from '@/components/ui/select'
 import { Send, Edit2, Trash2, Download } from 'lucide-react'
 import { PartnerInvoice } from '@/lib/types'
+import { extractContactInfo, formatAddress } from '@/lib/utils'
 
 export function BillingStagingTab({ franchiseId }: { franchiseId?: string }) {
   const { t } = useLanguage()
@@ -67,8 +68,39 @@ export function BillingStagingTab({ franchiseId }: { franchiseId?: string }) {
     id ? franchises.find((f) => f.id === id)?.name || id : 'Platform'
 
   const handleEdit = (inv: PartnerInvoice) => {
+    const currentBiller = franchises.find((f) => f.id === inv.franchiseId)
+    const currentCustomer = companies.find((c) => c.id === inv.companyId)
+    const bInfo = extractContactInfo(currentBiller)
+    const cInfo = extractContactInfo(currentCustomer)
+
     setEditingInv(inv)
-    setEditForm(inv)
+    setEditForm({
+      ...inv,
+      billerName:
+        inv.billerName ||
+        currentBiller?.legalName ||
+        currentBiller?.name ||
+        getFranchiseName(inv.franchiseId),
+      billerTaxId: inv.billerTaxId || currentBiller?.taxId || '',
+      billerStateReg:
+        inv.billerStateReg || currentBiller?.stateRegistration || '',
+      billerAddress: inv.billerAddress || formatAddress(currentBiller),
+      billerContact: inv.billerContact || bInfo.name,
+      billerEmail: inv.billerEmail || bInfo.email,
+      billerPhone: inv.billerPhone || bInfo.phone,
+      customerName:
+        inv.customerName ||
+        currentCustomer?.legalName ||
+        currentCustomer?.name ||
+        getCompanyName(inv.companyId),
+      customerTaxId: inv.customerTaxId || currentCustomer?.taxId || '',
+      customerStateReg:
+        inv.customerStateReg || currentCustomer?.stateRegistration || '',
+      customerAddress: inv.customerAddress || formatAddress(currentCustomer),
+      customerContact: inv.customerContact || cInfo.name,
+      customerEmail: inv.customerEmail || cInfo.email,
+      customerPhone: inv.customerPhone || cInfo.phone,
+    })
     setIsEditOpen(true)
   }
 
@@ -82,8 +114,37 @@ export function BillingStagingTab({ franchiseId }: { franchiseId?: string }) {
   const exportPdf = (inv: PartnerInvoice) => {
     const w = window.open('', '_blank')
     if (w) {
-      const billerName = inv.billerName || getFranchiseName(inv.franchiseId)
-      const customerName = inv.customerName || getCompanyName(inv.companyId)
+      const currentBiller = franchises.find((f) => f.id === inv.franchiseId)
+      const currentCustomer = companies.find((c) => c.id === inv.companyId)
+      const bInfo = extractContactInfo(currentBiller)
+      const cInfo = extractContactInfo(currentCustomer)
+
+      const billerName =
+        inv.billerName ||
+        currentBiller?.legalName ||
+        currentBiller?.name ||
+        getFranchiseName(inv.franchiseId)
+      const billerTaxId = inv.billerTaxId || currentBiller?.taxId || ''
+      const billerStateReg =
+        inv.billerStateReg || currentBiller?.stateRegistration || ''
+      const billerAddress = inv.billerAddress || formatAddress(currentBiller)
+      const billerContact = inv.billerContact || bInfo.name
+      const billerEmail = inv.billerEmail || bInfo.email
+      const billerPhone = inv.billerPhone || bInfo.phone
+
+      const customerName =
+        inv.customerName ||
+        currentCustomer?.legalName ||
+        currentCustomer?.name ||
+        getCompanyName(inv.companyId)
+      const customerTaxId = inv.customerTaxId || currentCustomer?.taxId || ''
+      const customerStateReg =
+        inv.customerStateReg || currentCustomer?.stateRegistration || ''
+      const customerAddress =
+        inv.customerAddress || formatAddress(currentCustomer)
+      const customerContact = inv.customerContact || cInfo.name
+      const customerEmail = inv.customerEmail || cInfo.email
+      const customerPhone = inv.customerPhone || cInfo.phone
 
       w.document.write(`
         <html><head><title>Fatura - ${inv.referenceNumber}</title>
@@ -134,23 +195,23 @@ export function BillingStagingTab({ franchiseId }: { franchiseId?: string }) {
             <div class="party">
               <h3>${t('franchisee.billing.biller', 'Cobrador (Emissor)')}</h3>
               <strong>${billerName}</strong>
-              ${inv.billerTaxId ? `<p><strong>CNPJ/CPF:</strong> ${inv.billerTaxId}${inv.billerStateReg ? ` | <strong>IE:</strong> ${inv.billerStateReg}` : ''}</p>` : ''}
-              ${inv.billerAddress ? `<p><strong>Endereço:</strong> ${inv.billerAddress}</p>` : ''}
+              ${billerTaxId ? `<p><strong>CNPJ/CPF:</strong> ${billerTaxId}${billerStateReg ? ` | <strong>IE:</strong> ${billerStateReg}` : ''}</p>` : ''}
+              ${billerAddress ? `<p><strong>Endereço:</strong> ${billerAddress}</p>` : ''}
               <div class="contact-info">
-                ${inv.billerContact ? `<p><strong>Contato Financeiro:</strong> ${inv.billerContact}</p>` : ''}
-                ${inv.billerEmail ? `<p><strong>Email:</strong> ${inv.billerEmail}</p>` : ''}
-                ${inv.billerPhone ? `<p><strong>Tel:</strong> ${inv.billerPhone}</p>` : ''}
+                ${billerContact ? `<p><strong>Contato Financeiro:</strong> ${billerContact}</p>` : ''}
+                ${billerEmail ? `<p><strong>Email:</strong> ${billerEmail}</p>` : ''}
+                ${billerPhone ? `<p><strong>Tel:</strong> ${billerPhone}</p>` : ''}
               </div>
             </div>
             <div class="party">
               <h3>${t('franchisee.billing.customer', 'Cobrado (Pagador)')}</h3>
               <strong>${customerName}</strong>
-              ${inv.customerTaxId ? `<p><strong>CNPJ/CPF:</strong> ${inv.customerTaxId}${inv.customerStateReg ? ` | <strong>IE:</strong> ${inv.customerStateReg}` : ''}</p>` : ''}
-              ${inv.customerAddress ? `<p><strong>Endereço:</strong> ${inv.customerAddress}</p>` : ''}
+              ${customerTaxId ? `<p><strong>CNPJ/CPF:</strong> ${customerTaxId}${customerStateReg ? ` | <strong>IE:</strong> ${customerStateReg}` : ''}</p>` : ''}
+              ${customerAddress ? `<p><strong>Endereço:</strong> ${customerAddress}</p>` : ''}
               <div class="contact-info">
-                ${inv.customerContact ? `<p><strong>Contato Financeiro:</strong> ${inv.customerContact}</p>` : ''}
-                ${inv.customerEmail ? `<p><strong>Email:</strong> ${inv.customerEmail}</p>` : ''}
-                ${inv.customerPhone ? `<p><strong>Tel:</strong> ${inv.customerPhone}</p>` : ''}
+                ${customerContact ? `<p><strong>Contato Financeiro:</strong> ${customerContact}</p>` : ''}
+                ${customerEmail ? `<p><strong>Email:</strong> ${customerEmail}</p>` : ''}
+                ${customerPhone ? `<p><strong>Tel:</strong> ${customerPhone}</p>` : ''}
               </div>
             </div>
           </div>

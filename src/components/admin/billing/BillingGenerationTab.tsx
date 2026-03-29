@@ -19,8 +19,9 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
-import { Play, Settings2, FileText, AlertCircle } from 'lucide-react'
+import { Play, Settings2, FileText, AlertCircle, Building2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { extractContactInfo, formatAddress } from '@/lib/utils'
 
 export function BillingGenerationTab({
   franchiseId,
@@ -92,79 +93,6 @@ export function BillingGenerationTab({
 
     const franchise = franchises.find((f) => f.id === franchiseId)
 
-    const formatAddress = (entity: any) => {
-      if (!entity) return ''
-      const parts = []
-      let streetPart = entity.addressStreet || ''
-      if (streetPart && entity.addressNumber)
-        streetPart += `, ${entity.addressNumber}`
-      if (streetPart && entity.addressComplement)
-        streetPart += ` (${entity.addressComplement})`
-      if (entity.addressNeighborhood)
-        streetPart += (streetPart ? ` - ` : '') + entity.addressNeighborhood
-      if (streetPart) parts.push(streetPart)
-
-      let cityState = ''
-      if (entity.addressCity) cityState += entity.addressCity
-      if (entity.addressState)
-        cityState += cityState
-          ? ` - ${entity.addressState}`
-          : entity.addressState
-      if (cityState) parts.push(cityState)
-
-      if (entity.addressZip) parts.push(`CEP: ${entity.addressZip}`)
-
-      return parts.join(', ')
-    }
-
-    const extractContactInfo = (entity: any) => {
-      if (!entity) return { name: 'Financeiro', email: '', phone: '' }
-
-      const isSecFin = entity.secondaryContactDepartment
-        ?.toLowerCase()
-        .includes('financ')
-      const isPriFin = entity.contactDepartment
-        ?.toLowerCase()
-        .includes('financ')
-
-      if (isSecFin && entity.secondaryContactName) {
-        return {
-          name: entity.secondaryContactName,
-          email:
-            entity.billingEmail ||
-            entity.secondaryContactEmail ||
-            entity.email ||
-            '',
-          phone: entity.secondaryContactPhone || entity.businessPhone || '',
-        }
-      }
-      if (isPriFin && entity.contactPerson) {
-        return {
-          name: entity.contactPerson,
-          email:
-            entity.billingEmail || entity.contactEmail || entity.email || '',
-          phone: entity.contactPhone || entity.businessPhone || '',
-        }
-      }
-
-      // Fallback to Master
-      return {
-        name:
-          entity.contactPerson || entity.secondaryContactName || 'Responsável',
-        email:
-          entity.billingEmail ||
-          entity.contactEmail ||
-          entity.secondaryContactEmail ||
-          entity.email ||
-          '',
-        phone:
-          entity.contactPhone ||
-          entity.secondaryContactPhone ||
-          entity.businessPhone ||
-          '',
-      }
-    }
-
     const billerInfo = extractContactInfo(franchise)
     const billerName = franchise
       ? franchise.legalName || franchise.name
@@ -229,8 +157,12 @@ export function BillingGenerationTab({
     )
   }
 
+  const currentFranchise = franchises.find((f) => f.id === franchiseId)
+  const currentBillerInfo = extractContactInfo(currentFranchise)
+  const currentBillerAddress = formatAddress(currentFranchise)
+
   return (
-    <Card className="w-full min-w-0 overflow-hidden shadow-sm border-slate-200 max-w-3xl">
+    <Card className="w-full min-w-0 overflow-hidden shadow-sm border-slate-200 max-w-4xl">
       <CardHeader className="min-w-0 pb-4 border-b border-slate-100 bg-white">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
@@ -250,6 +182,55 @@ export function BillingGenerationTab({
         </div>
       </CardHeader>
       <CardContent className="p-6 w-full bg-white space-y-6">
+        <div className="bg-slate-50 p-5 rounded-xl border border-slate-200 shadow-sm mb-6">
+          <div className="flex items-center gap-2 mb-4 border-b border-slate-200 pb-3">
+            <Building2 className="h-5 w-5 text-blue-500" />
+            <h4 className="text-sm font-bold text-slate-700 uppercase tracking-wider">
+              {t(
+                'franchisee.billing.biller_info',
+                'Dados do Emissor (Cobrador)',
+              )}
+            </h4>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div>
+              <p className="text-base font-bold text-slate-900 mb-2">
+                {currentFranchise?.legalName ||
+                  currentFranchise?.name ||
+                  'Deal Voy Platform'}
+              </p>
+              <p className="text-sm text-slate-600 mb-1">
+                <span className="font-semibold text-slate-700">CNPJ/CPF:</span>{' '}
+                {currentFranchise?.taxId || '00.000.000/0001-00'}
+                {currentFranchise?.stateRegistration && (
+                  <span className="ml-2 text-slate-400">
+                    | <span className="font-semibold text-slate-700">IE:</span>{' '}
+                    {currentFranchise.stateRegistration}
+                  </span>
+                )}
+              </p>
+              <p className="text-sm text-slate-600">
+                <span className="font-semibold text-slate-700">Endereço:</span>{' '}
+                {currentBillerAddress || 'Endereço não cadastrado'}
+              </p>
+            </div>
+            <div className="bg-white p-3 rounded-lg border border-slate-100">
+              <p className="text-xs font-semibold text-slate-500 uppercase mb-2">
+                Contato Financeiro
+              </p>
+              <p className="text-sm text-slate-700 font-medium mb-1">
+                {currentBillerInfo.name}
+              </p>
+              <p className="text-sm text-slate-600 mb-1">
+                {currentBillerInfo.email || 'Email não informado'}
+              </p>
+              <p className="text-sm text-slate-600">
+                {currentBillerInfo.phone || 'Telefone não informado'}
+              </p>
+            </div>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div className="space-y-3">
             <Label className="text-slate-700 font-semibold">
