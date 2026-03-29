@@ -45,7 +45,9 @@ export const fetchCoupons = async ({
       // Server-side Regional Scoping (if no specific franchise)
       if (region && region !== 'Global') {
         const regionLower = region.toLowerCase()
-        const isUS = ['usa', 'us', 'united states'].includes(regionLower)
+        const isUS = ['usa', 'us', 'united states', 'estados unidos'].includes(
+          regionLower,
+        )
 
         results = results.filter(
           (c) =>
@@ -55,7 +57,7 @@ export const fetchCoupons = async ({
             c.country?.toLowerCase() === regionLower ||
             c.state?.toLowerCase() === regionLower ||
             (isUS &&
-              ['usa', 'us', 'united states'].includes(
+              ['usa', 'us', 'united states', 'estados unidos'].includes(
                 c.country?.toLowerCase() || '',
               )),
         )
@@ -70,7 +72,7 @@ export const fetchCoupons = async ({
               generated.push({
                 ...template,
                 id: `${template.id}-gen-usa-${i}`,
-                country: 'USA',
+                country: 'United States',
                 region: 'USA',
                 title: `${template.title} (US Deal ${i + 1})`,
               })
@@ -101,13 +103,20 @@ export const fetchCoupons = async ({
       }
 
       // Return calculated expirationDate and externalUrl as per crawler logic
-      results = results.map((c) => {
-        if (!c.expiryDate) {
+      results = results.map((c, index) => {
+        let updated = { ...c }
+        if (!updated.expiryDate) {
           const defaultExpiry = new Date()
           defaultExpiry.setDate(defaultExpiry.getDate() + 30) // Default 30 days
-          return { ...c, expiryDate: defaultExpiry.toISOString() }
+          updated.expiryDate = defaultExpiry.toISOString()
         }
-        return c
+        if (!updated.externalUrl && updated.storeName) {
+          const domain =
+            updated.storeName.toLowerCase().replace(/[^a-z0-9]/g, '') ||
+            `store-${index}`
+          updated.externalUrl = `https://www.${domain}.com/offer/${updated.id}`
+        }
+        return updated
       })
 
       const total = results.length

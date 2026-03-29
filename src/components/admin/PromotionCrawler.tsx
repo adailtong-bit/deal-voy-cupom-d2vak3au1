@@ -29,6 +29,15 @@ export function PromotionCrawler({ franchiseId }: { franchiseId?: string }) {
 
   const [pendingPromotionsCount, setPendingPromotionsCount] = useState(0)
 
+  // Persist active tab
+  const [activeTab, setActiveTab] = useState<string>(
+    () => sessionStorage.getItem('crawler_activeTab') || 'sources',
+  )
+
+  useEffect(() => {
+    sessionStorage.setItem('crawler_activeTab', activeTab)
+  }, [activeTab])
+
   // Real-Time Synchronization via Optimized Polling
   useEffect(() => {
     let isMounted = true
@@ -74,7 +83,11 @@ export function PromotionCrawler({ franchiseId }: { franchiseId?: string }) {
           </CardDescription>
         </CardHeader>
         <CardContent className="p-4 sm:p-6 min-w-0 overflow-x-hidden">
-          <Tabs defaultValue="sources" className="min-w-0 w-full">
+          <Tabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="min-w-0 w-full"
+          >
             <TabsList className="mb-6 w-full justify-start h-auto p-1 bg-slate-100 flex-wrap overflow-x-auto hide-scrollbar">
               <TabsTrigger
                 value="sources"

@@ -381,36 +381,30 @@ export function CrawlerPromotionsTab() {
                     </div>
                   </TableCell>
                   <TableCell className="whitespace-nowrap">
-                    <div className="flex flex-col space-y-0.5">
-                      <span
-                        className="text-sm font-medium max-w-[150px] truncate"
-                        title={promo.originalUrl || promo.sourceId}
-                      >
-                        {promo.originalUrl
-                          ? (() => {
-                              try {
-                                return new URL(
-                                  promo.originalUrl,
-                                ).hostname.replace('www.', '')
-                              } catch (e) {
-                                return promo.sourceId
-                              }
-                            })()
-                          : promo.sourceId === 'custom'
-                            ? 'Busca Web'
-                            : promo.sourceId}
-                      </span>
-                      {promo.originalUrl && (
+                    <div className="flex flex-col">
+                      {promo.originalUrl ? (
                         <a
                           href={promo.originalUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-xs text-blue-500 hover:underline flex items-center gap-1"
+                          className="text-sm font-medium text-blue-600 hover:underline max-w-[200px] truncate block"
                           title={promo.originalUrl}
                         >
-                          {t('common.view', 'Ver')}{' '}
-                          <ExternalLink className="w-3 h-3" />
+                          {promo.originalUrl}
                         </a>
+                      ) : (
+                        <span
+                          className="text-sm font-medium text-slate-700 max-w-[200px] truncate block"
+                          title={promo.sourceId}
+                        >
+                          {promo.sourceId}
+                        </span>
+                      )}
+                      {promo.originalUrl && (
+                        <span className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
+                          <ExternalLink className="w-3 h-3" />{' '}
+                          {t('franchisee.crawler.offer_url', 'URL da Oferta')}
+                        </span>
                       )}
                     </div>
                   </TableCell>

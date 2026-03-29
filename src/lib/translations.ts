@@ -662,6 +662,7 @@ export const translations: Record<Language, any> = {
         all_dates: 'Todas as Datas',
         last_search: 'Última Busca',
         source_site: 'Site de Origem',
+        offer_url: 'URL da Oferta',
       },
       overview: {
         title: 'Visão Geral',
@@ -2040,6 +2041,7 @@ export const translations: Record<Language, any> = {
         all_dates: 'All Dates',
         last_search: 'Last Search',
         source_site: 'Source Site',
+        offer_url: 'Offer URL',
       },
       overview: {
         title: 'Overview',
@@ -3417,6 +3419,7 @@ export const translations: Record<Language, any> = {
         all_dates: 'Todas las Fechas',
         last_search: 'Última Búsqueda',
         source_site: 'Sitio de Origen',
+        offer_url: 'URL de la Oferta',
       },
       overview: {
         title: 'Visión General',
