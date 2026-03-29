@@ -15,19 +15,16 @@ import { CrawlerSourcesTab } from './CrawlerSourcesTab'
 import { CrawlerPromotionsTab } from './CrawlerPromotionsTab'
 import { CrawlerHistoryTab } from './CrawlerHistoryTab'
 import { cn } from '@/lib/utils'
-import { useState, useEffect } from 'react'
-import { fetchCrawlerPromotions } from '@/lib/api'
+import { useState, useEffect, useMemo } from 'react'
 
 export function PromotionCrawler({ franchiseId }: { franchiseId?: string }) {
-  const { user, franchises } = useCouponStore()
+  const { user, franchises, discoveredPromotions } = useCouponStore()
   const { t } = useLanguage()
   const location = useLocation()
   const isFranchisee = location.pathname.includes('/franchisee')
 
   const franchise = franchises.find((f) => f.id === franchiseId)
   const { formatNumber } = useRegionFormatting(franchise?.region)
-
-  const [pendingPromotionsCount, setPendingPromotionsCount] = useState(0)
 
   // Persist active tab
   const [activeTab, setActiveTab] = useState<string>(
@@ -38,33 +35,80 @@ export function PromotionCrawler({ franchiseId }: { franchiseId?: string }) {
     sessionStorage.setItem('crawler_activeTab', activeTab)
   }, [activeTab])
 
-  // Real-Time Synchronization via Optimized Polling
+  // Filters
+  const [filterState, setFilterState] = useState<string>(
+    () => sessionStorage.getItem('crawler_filterState') || 'all',
+  )
+  const [filterCity, setFilterCity] = useState<string>(
+    () => sessionStorage.getItem('crawler_filterCity') || 'all',
+  )
+  const [filterStore, setFilterStore] = useState<string>(
+    () => sessionStorage.getItem('crawler_filterStore') || 'all',
+  )
+  const [filterSource, setFilterSource] = useState<string>(
+    () => sessionStorage.getItem('crawler_filterSource') || 'all',
+  )
+  const [filterCategory, setFilterCategory] = useState<string>(
+    () => sessionStorage.getItem('crawler_filterCategory') || 'all',
+  )
+  const [filterFetchDate, setFilterFetchDate] = useState<string>(
+    () => sessionStorage.getItem('crawler_filterFetchDate') || 'all',
+  )
+
   useEffect(() => {
-    let isMounted = true
+    sessionStorage.setItem('crawler_filterState', filterState)
+    sessionStorage.setItem('crawler_filterCity', filterCity)
+    sessionStorage.setItem('crawler_filterStore', filterStore)
+    sessionStorage.setItem('crawler_filterSource', filterSource)
+    sessionStorage.setItem('crawler_filterCategory', filterCategory)
+    sessionStorage.setItem('crawler_filterFetchDate', filterFetchDate)
+  }, [
+    filterState,
+    filterCity,
+    filterStore,
+    filterSource,
+    filterCategory,
+    filterFetchDate,
+  ])
 
-    const pollPromotions = async () => {
-      try {
-        const res = await fetchCrawlerPromotions({
-          franchiseId,
-          region: user?.region,
-          limit: 1, // We only need total count here
-        })
-        if (isMounted) {
-          setPendingPromotionsCount(res.total)
-        }
-      } catch (err) {
-        console.error('Failed to poll crawler promotions', err)
+  const basePendingPromotions = useMemo(
+    () =>
+      discoveredPromotions.filter(
+        (p) =>
+          p.status === 'pending' &&
+          p.storeName?.trim() &&
+          p.title?.trim() &&
+          p.description?.trim() &&
+          (p.capturedAt || p.expiryDate),
+      ),
+    [discoveredPromotions],
+  )
+
+  const pendingPromotions = useMemo(() => {
+    return basePendingPromotions.filter((p) => {
+      if (filterState !== 'all' && p.state !== filterState) return false
+      if (filterCity !== 'all' && p.city !== filterCity) return false
+      if (filterStore !== 'all' && p.storeName !== filterStore) return false
+      if (filterCategory !== 'all' && p.category !== filterCategory)
+        return false
+      if (filterSource !== 'all' && p.sourceId !== filterSource) return false
+      if (filterFetchDate !== 'all') {
+        const pDate = p.capturedAt ? p.capturedAt.split('T')[0] : ''
+        if (pDate !== filterFetchDate) return false
       }
-    }
+      return true
+    })
+  }, [
+    basePendingPromotions,
+    filterState,
+    filterCity,
+    filterStore,
+    filterSource,
+    filterCategory,
+    filterFetchDate,
+  ])
 
-    pollPromotions()
-    const interval = setInterval(pollPromotions, 10000) // Poll every 10s
-
-    return () => {
-      isMounted = false
-      clearInterval(interval)
-    }
-  }, [franchiseId, user?.region])
+  const pendingPromotionsCount = pendingPromotions.length
 
   return (
     <div
@@ -131,7 +175,22 @@ export function PromotionCrawler({ franchiseId }: { franchiseId?: string }) {
               value="promotions"
               className="animate-in fade-in-50 min-w-0 w-full"
             >
-              <CrawlerPromotionsTab />
+              <CrawlerPromotionsTab
+                pendingPromotions={pendingPromotions}
+                basePendingPromotions={basePendingPromotions}
+                filterState={filterState}
+                setFilterState={setFilterState}
+                filterCity={filterCity}
+                setFilterCity={setFilterCity}
+                filterStore={filterStore}
+                setFilterStore={setFilterStore}
+                filterSource={filterSource}
+                setFilterSource={setFilterSource}
+                filterCategory={filterCategory}
+                setFilterCategory={setFilterCategory}
+                filterFetchDate={filterFetchDate}
+                setFilterFetchDate={setFilterFetchDate}
+              />
             </TabsContent>
           </Tabs>
         </CardContent>

@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useRegionFormatting } from '@/hooks/useRegionFormatting'
 import { useCouponStore } from '@/stores/CouponContext'
@@ -24,15 +24,42 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 
-export function CrawlerPromotionsTab() {
+interface CrawlerPromotionsTabProps {
+  pendingPromotions: DiscoveredPromotion[]
+  basePendingPromotions: DiscoveredPromotion[]
+  filterState: string
+  setFilterState: (v: string) => void
+  filterCity: string
+  setFilterCity: (v: string) => void
+  filterStore: string
+  setFilterStore: (v: string) => void
+  filterSource: string
+  setFilterSource: (v: string) => void
+  filterCategory: string
+  setFilterCategory: (v: string) => void
+  filterFetchDate: string
+  setFilterFetchDate: (v: string) => void
+}
+
+export function CrawlerPromotionsTab({
+  pendingPromotions,
+  basePendingPromotions,
+  filterState,
+  setFilterState,
+  filterCity,
+  setFilterCity,
+  filterStore,
+  setFilterStore,
+  filterSource,
+  setFilterSource,
+  filterCategory,
+  setFilterCategory,
+  filterFetchDate,
+  setFilterFetchDate,
+}: CrawlerPromotionsTabProps) {
   const { t } = useLanguage()
-  const {
-    discoveredPromotions,
-    importPromotion,
-    ignorePromotion,
-    user,
-    franchises,
-  } = useCouponStore()
+  const { importPromotion, ignorePromotion, user, franchises } =
+    useCouponStore()
 
   const myFranchise =
     franchises.find((f) => f.ownerId === user?.id) || franchises[0]
@@ -45,47 +72,14 @@ export function CrawlerPromotionsTab() {
     useState<DiscoveredPromotion | null>(null)
   const [isSheetOpen, setIsSheetOpen] = useState(false)
 
-  // Persisted Filters
-  const [filterState, setFilterState] = useState<string>(
-    () => sessionStorage.getItem('crawler_filterState') || 'all',
-  )
-  const [filterCity, setFilterCity] = useState<string>(
-    () => sessionStorage.getItem('crawler_filterCity') || 'all',
-  )
-  const [filterStore, setFilterStore] = useState<string>(
-    () => sessionStorage.getItem('crawler_filterStore') || 'all',
-  )
-  const [filterCategory, setFilterCategory] = useState<string>(
-    () => sessionStorage.getItem('crawler_filterCategory') || 'all',
-  )
-  const [filterFetchDate, setFilterFetchDate] = useState<string>(
-    () => sessionStorage.getItem('crawler_filterFetchDate') || 'all',
-  )
-
-  useEffect(() => {
-    sessionStorage.setItem('crawler_filterState', filterState)
-    sessionStorage.setItem('crawler_filterCity', filterCity)
-    sessionStorage.setItem('crawler_filterStore', filterStore)
-    sessionStorage.setItem('crawler_filterCategory', filterCategory)
-    sessionStorage.setItem('crawler_filterFetchDate', filterFetchDate)
-  }, [filterState, filterCity, filterStore, filterCategory, filterFetchDate])
-
   const clearFilters = () => {
     setFilterState('all')
     setFilterCity('all')
     setFilterStore('all')
+    setFilterSource('all')
     setFilterCategory('all')
     setFilterFetchDate('all')
   }
-
-  const basePendingPromotions = discoveredPromotions.filter(
-    (p) =>
-      p.status === 'pending' &&
-      p.storeName?.trim() &&
-      p.title?.trim() &&
-      p.description?.trim() &&
-      (p.capturedAt || p.expiryDate),
-  )
 
   const allStates = useMemo(
     () =>
@@ -116,6 +110,14 @@ export function CrawlerPromotionsTab() {
     [basePendingPromotions],
   )
 
+  const allSources = useMemo(
+    () =>
+      Array.from(
+        new Set(basePendingPromotions.map((p) => p.sourceId).filter(Boolean)),
+      ).sort() as string[],
+    [basePendingPromotions],
+  )
+
   const allCategories = useMemo(
     () =>
       Array.from(
@@ -130,28 +132,6 @@ export function CrawlerPromotionsTab() {
       .filter(Boolean) as string[]
     return Array.from(new Set(dates)).sort((a, b) => b.localeCompare(a))
   }, [basePendingPromotions])
-
-  const pendingPromotions = useMemo(() => {
-    return basePendingPromotions.filter((p) => {
-      if (filterState !== 'all' && p.state !== filterState) return false
-      if (filterCity !== 'all' && p.city !== filterCity) return false
-      if (filterStore !== 'all' && p.storeName !== filterStore) return false
-      if (filterCategory !== 'all' && p.category !== filterCategory)
-        return false
-      if (filterFetchDate !== 'all') {
-        const pDate = p.capturedAt ? p.capturedAt.split('T')[0] : ''
-        if (pDate !== filterFetchDate) return false
-      }
-      return true
-    })
-  }, [
-    basePendingPromotions,
-    filterState,
-    filterCity,
-    filterStore,
-    filterCategory,
-    filterFetchDate,
-  ])
 
   const handleImport = (
     id: string,
@@ -174,7 +154,6 @@ export function CrawlerPromotionsTab() {
       }
     }
 
-    // Attempting to pass editedData if the mock store supports it internally
     ;(importPromotion as any)(id, category, finalData)
     toast.success(
       t(
@@ -198,17 +177,21 @@ export function CrawlerPromotionsTab() {
     filterState !== 'all' ||
     filterCity !== 'all' ||
     filterStore !== 'all' ||
+    filterSource !== 'all' ||
     filterCategory !== 'all' ||
     filterFetchDate !== 'all'
 
   return (
     <div className="space-y-4">
       <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center flex-wrap gap-3">
           <h3 className="text-lg font-bold">
             {t('franchisee.crawler.imported_offers', 'Ofertas Importadas')}
           </h3>
-          <Badge variant="secondary">
+          <Badge
+            variant="secondary"
+            className="text-sm shadow-sm font-semibold"
+          >
             {pendingPromotions.length} {t('common.pending', 'Pendentes')}
           </Badge>
           <Badge variant="outline" className="text-slate-500">
@@ -279,6 +262,25 @@ export function CrawlerPromotionsTab() {
                 {t('common.all_stores', 'Todas as Lojas')}
               </SelectItem>
               {allStores.map((s) => (
+                <SelectItem key={s} value={s}>
+                  {s}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={filterSource} onValueChange={setFilterSource}>
+            <SelectTrigger className="w-full sm:w-[160px] bg-background">
+              <SelectValue
+                placeholder={t(
+                  'franchisee.crawler.source_site',
+                  'Site de Origem',
+                )}
+              />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('common.all', 'Todos')}</SelectItem>
+              {allSources.map((s) => (
                 <SelectItem key={s} value={s}>
                   {s}
                 </SelectItem>
