@@ -100,7 +100,10 @@ export function FranchisesTab() {
   const handleSendCredentials = (f: Franchise) => {
     updateFranchise(f.id, { credentialsSent: true })
     toast.success(
-      t('common.success', 'Credentials emailed to Franchise Partner'),
+      t(
+        'admin.franchises.credentials_emailed',
+        'Credentials emailed to Franchise Partner',
+      ),
     )
   }
 
@@ -109,25 +112,27 @@ export function FranchisesTab() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-card p-4 rounded-lg border gap-4">
         <div>
           <h3 className="text-lg font-bold">
-            {t('admin.hierarchy.franchises', 'Franchise Network')}
+            {t('admin.franchises.network', 'Franchise Network')}
           </h3>
           <p className="text-sm text-muted-foreground">
             {t(
-              'admin.hierarchy.franchises_desc',
+              'admin.franchises.network_desc',
               'Manage your master franchises and their primary contacts.',
             )}
           </p>
         </div>
         <div className="flex flex-wrap gap-2 w-full sm:w-auto">
           <Button variant="outline" onClick={exportCsv}>
-            <FileText className="w-4 h-4 mr-2" /> {t('admin.exportCsv', 'CSV')}
+            <FileText className="w-4 h-4 mr-2" />{' '}
+            {t('admin.franchises.export_csv', 'CSV')}
           </Button>
           <Button variant="outline" onClick={exportPdf}>
-            <Download className="w-4 h-4 mr-2" /> {t('admin.exportPdf', 'PDF')}
+            <Download className="w-4 h-4 mr-2" />{' '}
+            {t('admin.franchises.export_pdf', 'PDF')}
           </Button>
           <Button onClick={() => handleOpenDialog()}>
             <Plus className="w-4 h-4 mr-2" />{' '}
-            {t('common.create_new', 'Add Franchise')}
+            {t('admin.franchises.add', 'Add Franchise')}
           </Button>
         </div>
       </div>
@@ -137,7 +142,7 @@ export function FranchisesTab() {
           <TableHeader>
             <TableRow>
               <TableHead>{t('admin.title', 'Franchise Name')}</TableHead>
-              <TableHead>Tax ID</TableHead>
+              <TableHead>{t('admin.tax_id', 'Tax ID')}</TableHead>
               <TableHead>{t('profile.phone', 'Contact')}</TableHead>
               <TableHead>{t('profile.state', 'Region')}</TableHead>
               <TableHead>{t('admin.status', 'Status')}</TableHead>
@@ -227,8 +232,8 @@ export function FranchisesTab() {
           <DialogHeader>
             <DialogTitle>
               {editingFranchise
-                ? t('common.edit', 'Editar Franquia')
-                : t('common.create_new', 'Cadastrar Franquia')}
+                ? t('admin.franchises.edit', 'Editar Franquia')
+                : t('admin.franchises.add', 'Cadastrar Franquia')}
             </DialogTitle>
           </DialogHeader>
           <AdvancedCompanyForm

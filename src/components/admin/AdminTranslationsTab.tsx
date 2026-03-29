@@ -44,16 +44,19 @@ export function AdminTranslationsTab() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">
-            Translation Management
+            {t('admin.translations.title', 'Translation Management')}
           </h2>
           <p className="text-muted-foreground">
-            Manage language settings and modify translation masks directly.
+            {t(
+              'admin.translations.desc',
+              'Manage language settings and modify translation masks directly.',
+            )}
           </p>
         </div>
 
         <Button onClick={() => setIsAddLangOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          Add Language
+          {t('admin.translations.add_lang', 'Add Language')}
         </Button>
       </div>
 
@@ -61,7 +64,12 @@ export function AdminTranslationsTab() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="bg-white rounded-lg shadow-lg w-full max-w-md overflow-hidden animate-fade-in-up">
             <div className="flex justify-between items-center p-4 border-b">
-              <h3 className="text-lg font-semibold">Add Supported Language</h3>
+              <h3 className="text-lg font-semibold">
+                {t(
+                  'admin.translations.add_lang_title',
+                  'Add Supported Language',
+                )}
+              </h3>
               <Button
                 variant="ghost"
                 size="icon"
@@ -73,7 +81,10 @@ export function AdminTranslationsTab() {
             <div className="p-4 space-y-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">
-                  Language Code (e.g. fr, de, it)
+                  {t(
+                    'admin.translations.lang_code',
+                    'Language Code (e.g. fr, de, it)',
+                  )}
                 </label>
                 <input
                   value={newLangCode}
@@ -83,7 +94,9 @@ export function AdminTranslationsTab() {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Language Name</label>
+                <label className="text-sm font-medium">
+                  {t('admin.translations.lang_name', 'Language Name')}
+                </label>
                 <input
                   value={newLangName}
                   onChange={(e) => setNewLangName(e.target.value)}
@@ -94,13 +107,13 @@ export function AdminTranslationsTab() {
             </div>
             <div className="flex justify-end p-4 border-t gap-2 bg-slate-50">
               <Button variant="outline" onClick={() => setIsAddLangOpen(false)}>
-                Cancel
+                {t('admin.translations.cancel', 'Cancel')}
               </Button>
               <Button
                 onClick={handleAddLanguage}
                 disabled={!newLangCode || !newLangName}
               >
-                Save Language
+                {t('admin.translations.save_lang', 'Save Language')}
               </Button>
             </div>
           </div>
@@ -127,7 +140,10 @@ export function AdminTranslationsTab() {
             <div className="relative w-full sm:w-1/2">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <input
-                placeholder="Search keys..."
+                placeholder={t(
+                  'admin.translations.search_keys',
+                  'Search keys...',
+                )}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="flex h-10 w-full rounded-md border border-slate-200 bg-white pl-8 pr-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2"
@@ -141,9 +157,11 @@ export function AdminTranslationsTab() {
               <thead className="text-xs text-slate-500 bg-slate-50 sticky top-0 z-10 shadow-sm">
                 <tr>
                   <th className="px-4 py-3 font-semibold w-1/3 border-b">
-                    Translation Key
+                    {t('admin.translations.key', 'Translation Key')}
                   </th>
-                  <th className="px-4 py-3 font-semibold border-b">Value</th>
+                  <th className="px-4 py-3 font-semibold border-b">
+                    {t('admin.translations.value', 'Value')}
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -175,12 +193,18 @@ export function AdminTranslationsTab() {
                               )
                             }
                             className={`flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 ${isOverridden ? 'border-primary ring-1 ring-primary/20' : ''}`}
-                            placeholder="Translation value..."
+                            placeholder={t(
+                              'admin.translations.value_placeholder',
+                              'Translation value...',
+                            )}
                           />
                           {isOverridden && (
                             <span
                               className="text-primary"
-                              title="Custom override applied"
+                              title={t(
+                                'admin.translations.override_applied',
+                                'Custom override applied',
+                              )}
                             >
                               <Check className="h-4 w-4 shrink-0" />
                             </span>
@@ -194,12 +218,18 @@ export function AdminTranslationsTab() {
             </table>
             {filteredKeys.length > 100 && (
               <div className="p-4 text-center text-sm text-muted-foreground border-t">
-                Showing top 100 results. Use search to find specific keys.
+                {t(
+                  'admin.translations.showing_top',
+                  'Showing top 100 results. Use search to find specific keys.',
+                )}
               </div>
             )}
             {filteredKeys.length === 0 && (
               <div className="p-8 text-center text-muted-foreground">
-                No translation keys found.
+                {t(
+                  'admin.translations.not_found',
+                  'No translation keys found.',
+                )}
               </div>
             )}
           </div>

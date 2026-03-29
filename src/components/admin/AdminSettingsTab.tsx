@@ -11,8 +11,10 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { Save } from 'lucide-react'
+import { useLanguage } from '@/stores/LanguageContext'
 
 export function AdminSettingsTab() {
+  const { t } = useLanguage()
   const [settings, setSettings] = useState(() => {
     const saved = localStorage.getItem('system_settings')
     return saved
@@ -27,29 +29,49 @@ export function AdminSettingsTab() {
 
   const handleSave = () => {
     localStorage.setItem('system_settings', JSON.stringify(settings))
-    toast.success('System parameters updated successfully.')
+    toast.success(
+      t(
+        'admin.settings_tab.save_success',
+        'System parameters updated successfully.',
+      ),
+    )
   }
 
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">System Settings</h2>
+        <h2 className="text-2xl font-bold tracking-tight">
+          {t('admin.settings_tab.title', 'System Settings')}
+        </h2>
         <p className="text-muted-foreground">
-          Configure dynamic parameters and system thresholds globally.
+          {t(
+            'admin.settings_tab.desc',
+            'Configure dynamic parameters and system thresholds globally.',
+          )}
         </p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Geolocation Parameters</CardTitle>
+            <CardTitle>
+              {t('admin.settings_tab.geo_title', 'Geolocation Parameters')}
+            </CardTitle>
             <CardDescription>
-              Configure how proximity and distances are handled.
+              {t(
+                'admin.settings_tab.geo_desc',
+                'Configure how proximity and distances are handled.',
+              )}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label>Default Search Radius (km)</Label>
+              <Label>
+                {t(
+                  'admin.settings_tab.geo_radius',
+                  'Default Search Radius (km)',
+                )}
+              </Label>
               <Input
                 type="number"
                 value={settings.geoRadius}
@@ -61,7 +83,10 @@ export function AdminSettingsTab() {
                 }
               />
               <p className="text-xs text-muted-foreground">
-                Used as the default limit when exploring offers.
+                {t(
+                  'admin.settings_tab.geo_radius_desc',
+                  'Used as the default limit when exploring offers.',
+                )}
               </p>
             </div>
           </CardContent>
@@ -69,14 +94,24 @@ export function AdminSettingsTab() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Notification Thresholds</CardTitle>
+            <CardTitle>
+              {t('admin.settings_tab.notif_title', 'Notification Thresholds')}
+            </CardTitle>
             <CardDescription>
-              Limits and triggers for push notifications.
+              {t(
+                'admin.settings_tab.notif_desc',
+                'Limits and triggers for push notifications.',
+              )}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label>Max Push Notifications per User/Day</Label>
+              <Label>
+                {t(
+                  'admin.settings_tab.max_push',
+                  'Max Push Notifications per User/Day',
+                )}
+              </Label>
               <Input
                 type="number"
                 value={settings.maxPushPerDay}
@@ -93,14 +128,21 @@ export function AdminSettingsTab() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Security & Sessions</CardTitle>
+            <CardTitle>
+              {t('admin.settings_tab.sec_title', 'Security & Sessions')}
+            </CardTitle>
             <CardDescription>
-              Configure user session parameters.
+              {t(
+                'admin.settings_tab.sec_desc',
+                'Configure user session parameters.',
+              )}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label>Session Timeout (minutes)</Label>
+              <Label>
+                {t('admin.settings_tab.timeout', 'Session Timeout (minutes)')}
+              </Label>
               <Input
                 type="number"
                 value={settings.sessionTimeout}
@@ -118,7 +160,8 @@ export function AdminSettingsTab() {
 
       <div className="flex justify-end">
         <Button onClick={handleSave} size="lg">
-          <Save className="w-4 h-4 mr-2" /> Save Changes
+          <Save className="w-4 h-4 mr-2" />{' '}
+          {t('admin.settings_tab.save_changes', 'Save Changes')}
         </Button>
       </div>
     </div>

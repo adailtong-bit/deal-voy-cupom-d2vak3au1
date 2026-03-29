@@ -111,7 +111,10 @@ export default function AdminDashboard() {
   if (!isSuperAdmin && !isFranchisee) {
     return (
       <div className="container py-16 text-center text-muted-foreground animate-fade-in">
-        Acesso restrito. Área exclusiva para administradores e franqueados.
+        {t(
+          'admin.restricted_access',
+          'Acesso restrito. Área exclusiva para administradores e franqueados.',
+        )}
       </div>
     )
   }
@@ -165,7 +168,7 @@ export default function AdminDashboard() {
                   onClick={markAllRead}
                   className="h-auto text-xs py-1 px-2 text-primary hover:text-primary"
                 >
-                  Mark all read
+                  {t('admin.mark_all_read', 'Mark all read')}
                 </Button>
               </div>
               <div className="max-h-[350px] overflow-y-auto">
@@ -248,9 +251,11 @@ export default function AdminDashboard() {
               </TabsTrigger>
               <TabsTrigger value="performance">Performance</TabsTrigger>
               <TabsTrigger value="notifications">
-                Push Notifications
+                {t('admin.push_notifications', 'Push Notifications')}
               </TabsTrigger>
-              <TabsTrigger value="settings">Settings</TabsTrigger>
+              <TabsTrigger value="settings">
+                {t('admin.settings', 'Settings')}
+              </TabsTrigger>
             </>
           )}
           <TabsTrigger value="hierarchy">
@@ -274,7 +279,7 @@ export default function AdminDashboard() {
                       {formatNumber(45231)}
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      +20.1% este mês
+                      {t('admin.metrics.users_increase', '+20.1% este mês')}
                     </p>
                   </CardContent>
                 </Card>
@@ -290,7 +295,10 @@ export default function AdminDashboard() {
                       {formatNumber(1234)}
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      +15 novas esta semana
+                      {t(
+                        'admin.metrics.stores_increase',
+                        '+15 novas esta semana',
+                      )}
                     </p>
                   </CardContent>
                 </Card>
@@ -306,7 +314,7 @@ export default function AdminDashboard() {
                       {formatCurrency(84320)}
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      +12% este mês
+                      {t('admin.metrics.revenue_increase', '+12% este mês')}
                     </p>
                   </CardContent>
                 </Card>
@@ -322,7 +330,10 @@ export default function AdminDashboard() {
                       {formatNumber(12543)}
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      +5% esta semana
+                      {t(
+                        'admin.metrics.engagement_increase',
+                        '+5% esta semana',
+                      )}
                     </p>
                   </CardContent>
                 </Card>
