@@ -171,8 +171,15 @@ export function CrawlerPromotionsTab({
       }
     }
 
-    const finalCategory =
-      category || editedCategories[id] || finalData?.category
+    let finalCategory = category || editedCategories[id] || finalData?.category
+
+    // Map to ID if it's a label
+    const mappedCat = dynamicCategories.find(
+      (c: any) => c.label === finalCategory,
+    )
+    if (mappedCat) {
+      finalCategory = mappedCat.id
+    }
 
     ;(importPromotion as any)(id, finalCategory, finalData)
     toast.success(
@@ -533,7 +540,14 @@ export function CrawlerPromotionsTab({
                   </TableCell>
                   <TableCell className="whitespace-nowrap text-sm">
                     <Select
-                      value={editedCategories[promo.id] || promo.category || ''}
+                      value={
+                        editedCategories[promo.id] ||
+                        dynamicCategories.find(
+                          (c: any) => c.label === promo.category,
+                        )?.id ||
+                        promo.category ||
+                        ''
+                      }
                       onValueChange={(val) =>
                         setEditedCategories((prev) => ({
                           ...prev,
@@ -546,15 +560,18 @@ export function CrawlerPromotionsTab({
                       </SelectTrigger>
                       <SelectContent>
                         {dynamicCategories.map((c: any) => (
-                          <SelectItem key={c.id} value={c.label}>
+                          <SelectItem key={c.id} value={c.id}>
                             {c.label}
                           </SelectItem>
                         ))}
                         {(editedCategories[promo.id] || promo.category) &&
                           !dynamicCategories.find(
                             (c: any) =>
+                              c.id ===
+                                (editedCategories[promo.id] ||
+                                  promo.category) ||
                               c.label ===
-                              (editedCategories[promo.id] || promo.category),
+                                (editedCategories[promo.id] || promo.category),
                           ) && (
                             <SelectItem
                               key="promo-cat-custom"

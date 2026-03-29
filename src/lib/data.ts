@@ -65,6 +65,10 @@ export const getCategoryTranslationKey = (category: string): string => {
     case 'others':
     case 'otros':
       return 'category.others'
+    case 'viagens':
+    case 'travel':
+    case 'viajes':
+      return 'category.travel'
     default:
       return 'category.others'
   }
@@ -159,6 +163,12 @@ export const CATEGORIES: {
     label: 'Outros',
     translationKey: 'category.others',
     icon: 'CircleEllipsis',
+  },
+  {
+    id: 'cat-viagens',
+    label: 'Viagens',
+    translationKey: 'category.travel',
+    icon: 'Plane',
   },
 ]
 
@@ -1797,19 +1807,13 @@ export const DEFAULT_PLATFORM_SETTINGS: PlatformSettings = {
   categories: [
     ...CATEGORIES.filter((c) => c.id !== 'all').map((c) => ({
       ...c,
-      description: `Ofertas e promoções de ${c.label.toLowerCase()}`,
+      description:
+        c.id === 'cat-viagens'
+          ? 'Ofertas e promoções de viagens e pacotes'
+          : `Ofertas e promoções de ${c.label.toLowerCase()}`,
       status: 'active',
       createdAt: '2024-01-01',
     })),
-    {
-      id: 'cat-viagens',
-      label: 'Viagens',
-      translationKey: 'category.travel',
-      icon: 'Plane',
-      description: 'Ofertas e promoções de viagens e pacotes',
-      status: 'active',
-      createdAt: '2024-01-01',
-    },
   ],
   travelMargins: {
     hotels: 12,

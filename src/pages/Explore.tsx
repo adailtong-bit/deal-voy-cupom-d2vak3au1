@@ -24,15 +24,6 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 
-const EXPLORE_CATEGORIES = [
-  { id: 'all', label: 'Todas' },
-  { id: 'food', label: 'Alimentação' },
-  { id: 'retail', label: 'Varejo' },
-  { id: 'services', label: 'Serviços' },
-  { id: 'technology', label: 'Tecnologia' },
-  { id: 'health', label: 'Saúde' },
-]
-
 const getDistance = (
   lat1: number,
   lon1: number,
@@ -54,11 +45,23 @@ const getDistance = (
 
 export default function Explore() {
   const { t, language } = useLanguage()
-  const { user, selectedRegion, coupons } = useCouponStore()
+  const { user, selectedRegion, coupons, platformSettings } = useCouponStore()
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list')
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
+
+  const dynamicCategories = useMemo(() => {
+    const cats = platformSettings?.categories || []
+    const activeCats = cats.filter((c: any) => c.status === 'active')
+    return [
+      { id: 'all', label: 'Todas' },
+      ...activeCats.map((c: any) => ({
+        id: c.id,
+        label: c.label,
+      })),
+    ]
+  }, [platformSettings?.categories])
   const [sortBy, setSortBy] = useState<'recommended' | 'distance'>(
     'recommended',
   )
@@ -114,18 +117,17 @@ export default function Explore() {
 
     // 4. Category Filter
     if (selectedCategory !== 'all') {
-      const categoryMap: Record<string, string[]> = {
-        food: ['food', 'alimentação', 'alimentacao'],
-        retail: ['retail', 'varejo'],
-        services: ['services', 'serviços', 'servicos'],
-        technology: ['technology', 'tech', 'tecnologia'],
-        health: ['health', 'saúde', 'saude'],
-      }
-      const allowed = categoryMap[selectedCategory] || [
-        selectedCategory.toLowerCase(),
-      ]
-      processed = processed.filter((c) =>
-        allowed.includes(c.category?.toLowerCase() || ''),
+      const categoryObj = dynamicCategories.find(
+        (c) => c.id === selectedCategory,
+      )
+      const labelToMatch = categoryObj
+        ? categoryObj.label.toLowerCase()
+        : selectedCategory.toLowerCase()
+
+      processed = processed.filter(
+        (c) =>
+          c.category?.toLowerCase() === labelToMatch ||
+          c.category === selectedCategory,
       )
     }
 
@@ -180,8 +182,14 @@ export default function Explore() {
   ])
 
   const displayCoupons = useMemo(() => {
-    return filteredCoupons.slice(0, page * itemsPerPage)
-  }, [filteredCoupons, page])
+    return filteredCoupons.slice(0, page * itemsPerPage).map((coupon) => {
+      const catObj = dynamicCategories.find((c) => c.id === coupon.category)
+      if (catObj) {
+        return { ...coupon, category: catObj.label }
+      }
+      return coupon
+    })
+  }, [filteredCoupons, page, dynamicCategories])
 
   const hasMore = displayCoupons.length < filteredCoupons.length
   const total = filteredCoupons.length
@@ -287,7 +295,7 @@ export default function Explore() {
       </div>
 
       <div className="flex overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 gap-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-        {EXPLORE_CATEGORIES.map((cat) => (
+        {dynamicCategories.map((cat) => (
           <Button
             key={cat.id}
             variant={selectedCategory === cat.id ? 'default' : 'outline'}
