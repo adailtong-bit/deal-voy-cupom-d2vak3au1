@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
@@ -15,7 +15,7 @@ import { Label } from '@/components/ui/label'
 
 export default function Login() {
   const [email, setEmail] = useState('')
-  const { login } = useCouponStore()
+  const { login, user } = useCouponStore()
   const { t } = useLanguage()
   const navigate = useNavigate()
   const location = useLocation()
@@ -25,21 +25,33 @@ export default function Login() {
     ? `${fromObj.pathname}${fromObj.search}${fromObj.hash}`
     : '/'
 
+  useEffect(() => {
+    if (user) {
+      if (user.role === 'super_admin') {
+        navigate('/admin', { replace: true })
+      } else if (user.role === 'franchisee') {
+        navigate('/franchisee', { replace: true })
+      } else if (user.role === 'shopkeeper') {
+        navigate('/vendor', { replace: true })
+      } else {
+        navigate(from !== '/' ? from : '/', { replace: true })
+      }
+    }
+  }, [user, navigate, from])
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault()
     if (email) {
       login(email)
-      navigate(from, { replace: true })
     }
   }
 
   const handleQuickLogin = (
     quickEmail: string,
     role: any,
-    targetPath: string,
+    _targetPath: string,
   ) => {
     login(quickEmail, role)
-    navigate(from !== '/' ? from : targetPath, { replace: true })
   }
 
   return (

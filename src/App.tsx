@@ -52,6 +52,21 @@ function RequireAuth({
   return <>{children}</>
 }
 
+function AuthStateSync() {
+  const { user } = useCouponStore()
+
+  useEffect(() => {
+    if (!user) {
+      // Purge authentication tokens and role-related data upon logout
+      localStorage.removeItem('auth_token')
+      localStorage.removeItem('user_role')
+      sessionStorage.clear()
+    }
+  }, [user])
+
+  return null
+}
+
 function GlobalLanguageSync() {
   const { user, franchises } = useCouponStore()
   const { setLanguage } = useLanguage()
@@ -104,6 +119,7 @@ export default function App() {
       <NotificationProvider>
         <CouponProvider>
           <BrowserRouter>
+            <AuthStateSync />
             <GlobalLanguageSync />
             <Routes>
               <Route element={<Layout />}>
@@ -121,7 +137,7 @@ export default function App() {
                 <Route
                   path="/vendor"
                   element={
-                    <RequireAuth roles={['shopkeeper', 'super_admin']}>
+                    <RequireAuth roles={['shopkeeper']}>
                       <VendorDashboard />
                     </RequireAuth>
                   }
@@ -129,7 +145,7 @@ export default function App() {
                 <Route
                   path="/merchant"
                   element={
-                    <RequireAuth roles={['shopkeeper', 'super_admin']}>
+                    <RequireAuth roles={['shopkeeper']}>
                       <MerchantLayout />
                     </RequireAuth>
                   }
@@ -149,7 +165,7 @@ export default function App() {
                 <Route
                   path="/franchisee"
                   element={
-                    <RequireAuth roles={['franchisee', 'super_admin']}>
+                    <RequireAuth roles={['franchisee']}>
                       <FranchiseeDashboard />
                     </RequireAuth>
                   }

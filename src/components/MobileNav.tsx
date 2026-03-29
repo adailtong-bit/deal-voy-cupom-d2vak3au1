@@ -1,19 +1,50 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Home, Ticket, Map, User, Compass } from 'lucide-react'
+import {
+  Home,
+  Ticket,
+  Map,
+  User,
+  Compass,
+  Store,
+  LayoutDashboard,
+  ShieldCheck,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useLanguage } from '@/stores/LanguageContext'
+import { useCouponStore } from '@/stores/CouponContext'
 
 export function MobileNav() {
   const location = useLocation()
   const { t } = useLanguage()
+  const { user } = useCouponStore()
 
-  const navItems = [
+  let navItems = [
     { icon: Home, label: t('nav.home', 'Início'), path: '/' },
     { icon: Compass, label: t('nav.explore', 'Explorar'), path: '/explore' },
     { icon: Ticket, label: t('nav.vouchers', 'Vouchers'), path: '/vouchers' },
     { icon: Map, label: t('nav.travel', 'Experiências'), path: '/travel' },
     { icon: User, label: t('nav.profile', 'Perfil'), path: '/profile' },
   ]
+
+  if (user?.role === 'super_admin') {
+    navItems = [
+      { icon: LayoutDashboard, label: 'Admin', path: '/admin' },
+      { icon: Compass, label: t('nav.explore', 'Explorar'), path: '/explore' },
+      { icon: User, label: t('nav.profile', 'Perfil'), path: '/profile' },
+    ]
+  } else if (user?.role === 'shopkeeper') {
+    navItems = [
+      { icon: Store, label: 'Vendor', path: '/vendor' },
+      { icon: Compass, label: t('nav.explore', 'Explorar'), path: '/explore' },
+      { icon: User, label: t('nav.profile', 'Perfil'), path: '/profile' },
+    ]
+  } else if (user?.role === 'franchisee') {
+    navItems = [
+      { icon: ShieldCheck, label: 'Franchise', path: '/franchisee' },
+      { icon: Compass, label: t('nav.explore', 'Explorar'), path: '/explore' },
+      { icon: User, label: t('nav.profile', 'Perfil'), path: '/profile' },
+    ]
+  }
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:hidden">
