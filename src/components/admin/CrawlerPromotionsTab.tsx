@@ -1,6 +1,18 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useRegionFormatting } from '@/hooks/useRegionFormatting'
+import { fetchCrawlerPromotions } from '@/lib/api'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionContent,
+} from '@/components/ui/accordion'
+import { Progress } from '@/components/ui/progress'
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
+import { Search, Loader2, AlertTriangle } from 'lucide-react'
 import { useCouponStore } from '@/stores/CouponContext'
 import {
   Table,
@@ -84,6 +96,80 @@ export function CrawlerPromotionsTab({
   const [editedCategories, setEditedCategories] = useState<
     Record<string, string>
   >({})
+
+  // Live Preview State
+  const [previewCategory, setPreviewCategory] = useState<string>('all')
+  const [previewKeywords, setPreviewKeywords] = useState<string>('')
+  const [isSearchingPreview, setIsSearchingPreview] = useState(false)
+  const [previewResults, setPreviewResults] = useState<DiscoveredPromotion[]>(
+    [],
+  )
+  const [hasSearched, setHasSearched] = useState(false)
+
+  useEffect(() => {
+    if (previewCategory && previewCategory !== 'all') {
+      const catLabel =
+        dynamicCategories.find((c: any) => c.id === previewCategory)?.label ||
+        previewCategory
+      setPreviewKeywords(catLabel)
+    } else {
+      setPreviewKeywords('')
+    }
+  }, [previewCategory, dynamicCategories])
+
+  const handlePreviewSearch = async () => {
+    setIsSearchingPreview(true)
+    setHasSearched(true)
+    try {
+      const res = await fetchCrawlerPromotions({
+        category: previewCategory !== 'all' ? previewCategory : undefined,
+        query: previewKeywords,
+        limit: 5,
+      })
+
+      const enhancedResults = res.data.map((p) => {
+        let confidence = 0
+        let reason = ''
+        const q = previewKeywords.toLowerCase()
+        const catLabel = (
+          dynamicCategories.find((c: any) => c.id === previewCategory)?.label ||
+          previewCategory
+        ).toLowerCase()
+
+        if (
+          p.category?.toLowerCase() === catLabel ||
+          p.category?.toLowerCase() === previewCategory.toLowerCase()
+        ) {
+          confidence += 60
+          reason = t('franchisee.crawler.cat_match', 'Category match')
+        }
+        if (
+          q &&
+          (p.title.toLowerCase().includes(q) ||
+            p.description?.toLowerCase().includes(q))
+        ) {
+          confidence += 40
+          reason = reason
+            ? reason + ' + ' + t('franchisee.crawler.kw_match', 'Keyword match')
+            : t('franchisee.crawler.kw_match', 'Keyword match')
+        }
+
+        if (confidence === 0) {
+          confidence = 25
+          reason = t(
+            'franchisee.crawler.semantic_match',
+            'Partial semantic match',
+          )
+        }
+
+        return { ...p, matchConfidence: confidence, matchReason: reason }
+      })
+
+      setPreviewResults(enhancedResults)
+    } finally {
+      setIsSearchingPreview(false)
+    }
+  }
 
   const clearFilters = () => {
     setFilterState('all')
@@ -219,6 +305,181 @@ export function CrawlerPromotionsTab({
 
   return (
     <div className="space-y-4">
+      <Accordion
+        type="single"
+        collapsible
+        className="bg-card border rounded-lg shadow-sm"
+      >
+        <AccordionItem value="preview" className="border-none">
+          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-slate-50 rounded-t-lg">
+            <div className="flex items-center gap-2">
+              <Search className="w-4 h-4 text-primary" />
+              <span className="font-semibold text-sm">
+                {t(
+                  'franchisee.crawler.live_preview',
+                  'Live Category Preview & Search Validation',
+                )}
+              </span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-4 pb-4">
+            <div className="space-y-4 pt-2">
+              <p className="text-xs text-muted-foreground">
+                {t(
+                  'franchisee.crawler.preview_desc',
+                  'Test the crawler search logic before importing. Select a category and fine-tune your keywords to ensure relevant results (e.g., ensure "Viagens" returns only travel deals, not food).',
+                )}
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-1.5">
+                  <Label className="text-xs">
+                    {t('common.category', 'Category')}
+                  </Label>
+                  <Select
+                    value={previewCategory}
+                    onValueChange={setPreviewCategory}
+                  >
+                    <SelectTrigger className="w-full bg-background h-9 text-xs">
+                      <SelectValue placeholder="Select..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">
+                        {t('common.all_categories', 'Todas as Categorias')}
+                      </SelectItem>
+                      {dynamicCategories.map((c: any) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">
+                    {t(
+                      'franchisee.crawler.keywords',
+                      'Search Keywords (Auto-filled)',
+                    )}
+                  </Label>
+                  <Input
+                    value={previewKeywords}
+                    onChange={(e) => setPreviewKeywords(e.target.value)}
+                    placeholder={t(
+                      'franchisee.crawler.kw_placeholder',
+                      'e.g. Viagens, Hotéis...',
+                    )}
+                    className="h-9 text-xs"
+                  />
+                </div>
+                <div className="flex items-end">
+                  <Button
+                    onClick={handlePreviewSearch}
+                    disabled={isSearchingPreview || previewCategory === 'all'}
+                    className="w-full h-9 text-xs"
+                  >
+                    {isSearchingPreview ? (
+                      <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />
+                    ) : (
+                      <Search className="w-3.5 h-3.5 mr-2" />
+                    )}
+                    {t('franchisee.crawler.run_preview', 'Run Preview')}
+                  </Button>
+                </div>
+              </div>
+
+              {hasSearched && (
+                <div className="mt-4 border rounded-md p-4 bg-slate-50/50">
+                  {previewResults.length === 0 ? (
+                    <Alert
+                      variant="destructive"
+                      className="bg-red-50 text-red-900 border-red-200"
+                    >
+                      <AlertTriangle className="h-4 w-4 stroke-red-600" />
+                      <AlertTitle className="text-sm font-bold text-red-800">
+                        {t(
+                          'franchisee.crawler.no_results_title',
+                          'Irrelevant or Empty Results',
+                        )}
+                      </AlertTitle>
+                      <AlertDescription className="text-xs text-red-700 mt-1">
+                        {t(
+                          'franchisee.crawler.no_results_desc',
+                          'The current search parameters are returning zero matches or unrelated items for this category. Consider broadening or refining your keywords.',
+                        )}
+                      </AlertDescription>
+                    </Alert>
+                  ) : (
+                    <div className="space-y-3">
+                      <h4 className="font-semibold text-xs text-slate-700 uppercase tracking-wider">
+                        {t(
+                          'franchisee.crawler.preview_results',
+                          'Real-Time Fetch Sample',
+                        )}
+                      </h4>
+                      <div className="space-y-2 max-h-[250px] overflow-y-auto pr-2 hide-scrollbar">
+                        {previewResults.map((res) => (
+                          <div
+                            key={res.id}
+                            className="bg-white p-3 rounded-md border text-sm flex flex-col sm:flex-row gap-4 items-start sm:items-center shadow-sm"
+                          >
+                            <img
+                              src={res.image}
+                              alt=""
+                              className="w-10 h-10 rounded-md object-cover shrink-0 border"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <p className="font-semibold text-slate-900 truncate text-sm">
+                                {res.title}
+                              </p>
+                              <p className="text-xs text-slate-500 line-clamp-1 mt-0.5">
+                                {res.description}
+                              </p>
+                            </div>
+                            <div className="flex flex-col items-end gap-1.5 shrink-0 min-w-[130px]">
+                              <Badge
+                                variant={
+                                  res.matchConfidence &&
+                                  res.matchConfidence > 70
+                                    ? 'default'
+                                    : 'secondary'
+                                }
+                                className="text-[10px] h-4 px-1.5 font-semibold"
+                              >
+                                {res.category}
+                              </Badge>
+                              <div className="flex flex-col w-full gap-0.5">
+                                <div className="flex items-center justify-between w-full">
+                                  <span className="text-[9px] text-slate-500">
+                                    Confidence
+                                  </span>
+                                  <span className="text-[10px] font-bold text-slate-700">
+                                    {res.matchConfidence}%
+                                  </span>
+                                </div>
+                                <Progress
+                                  value={res.matchConfidence || 0}
+                                  className="h-1.5 w-full bg-slate-100"
+                                />
+                              </div>
+                              <span
+                                className="text-[9px] text-muted-foreground text-right w-full truncate"
+                                title={res.matchReason}
+                              >
+                                {res.matchReason}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
+
       <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
         <div className="flex items-center flex-wrap gap-3">
           <h3 className="text-lg font-bold">

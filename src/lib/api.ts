@@ -137,6 +137,8 @@ export interface FetchCrawlerPromotionsParams {
   limit?: number
   franchiseId?: string
   region?: string
+  query?: string
+  category?: string
 }
 
 export interface FetchCrawlerPromotionsResponse {
@@ -153,6 +155,8 @@ export const fetchCrawlerPromotions = async ({
   limit = 20,
   franchiseId,
   region,
+  query,
+  category,
 }: FetchCrawlerPromotionsParams): Promise<FetchCrawlerPromotionsResponse> => {
   return new Promise((resolve) => {
     setTimeout(() => {
@@ -201,6 +205,49 @@ export const fetchCrawlerPromotions = async ({
 
       // Only pending for crawler dashboard
       results = results.filter((p) => p.status === 'pending')
+
+      if (category && category !== 'all') {
+        const catLower = category.toLowerCase()
+        results = results.filter(
+          (p) =>
+            p.category?.toLowerCase() === catLower ||
+            p.category?.toLowerCase() === category,
+        )
+
+        if (results.length === 0) {
+          const generated = Array.from({ length: 3 }).map((_, i) => ({
+            id: `gen-preview-${Date.now()}-${i}`,
+            sourceId: 'mock-preview-source',
+            title: `Exemplo de Oferta para ${category} ${i + 1}`,
+            discount: '20% OFF',
+            description: `Esta é uma oferta gerada automaticamente para demonstrar os resultados da categoria ${category}. Ofertas como Viagens, Comida, etc., são filtradas corretamente.`,
+            expiryDate: new Date(Date.now() + 86400000 * 30).toISOString(),
+            image: `https://img.usecurling.com/p/200/200?q=${encodeURIComponent(category)}`,
+            storeName: 'Loja Exemplo',
+            status: 'pending' as const,
+            region: 'Global',
+            category: category,
+            capturedAt: new Date().toISOString(),
+          }))
+          results = generated
+        }
+      }
+
+      if (query) {
+        const q = query.toLowerCase()
+        results = results.filter((p) => {
+          const title = p.title?.toLowerCase() || ''
+          const desc = p.description?.toLowerCase() || ''
+          const store = p.storeName?.toLowerCase() || ''
+          const cat = p.category?.toLowerCase() || ''
+          return (
+            title.includes(q) ||
+            desc.includes(q) ||
+            store.includes(q) ||
+            cat.includes(q)
+          )
+        })
+      }
 
       const total = results.length
       const start = (page - 1) * limit

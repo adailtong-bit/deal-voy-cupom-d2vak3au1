@@ -785,6 +785,8 @@ export interface DiscoveredPromotion {
   capturedAt?: string
   rawData?: Record<string, any>
   franchiseId?: string
+  matchConfidence?: number
+  matchReason?: string
 }
 
 export interface InterestCategory {
