@@ -90,6 +90,8 @@ export function CrawlerPromotionsTab({
     myFranchise?.addressCountry,
   )
 
+  const dynamicCategories = platformSettings?.categories || []
+
   const [selectedPromo, setSelectedPromo] =
     useState<DiscoveredPromotion | null>(null)
   const [isSheetOpen, setIsSheetOpen] = useState(false)
@@ -216,8 +218,6 @@ export function CrawlerPromotionsTab({
       ).sort() as string[],
     [basePendingPromotions],
   )
-
-  const dynamicCategories = platformSettings?.categories || []
 
   const allCategories = useMemo(() => {
     const existing = Array.from(
