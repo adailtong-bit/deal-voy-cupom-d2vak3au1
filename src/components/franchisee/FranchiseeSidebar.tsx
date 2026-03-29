@@ -55,8 +55,8 @@ export function FranchiseeSidebar({
       title: t('franchisee.menu.financial', 'Financial'),
       items: [
         {
-          id: 'current-account',
-          label: t('franchisee.menu.current_account', 'Current Account'),
+          id: 'finance',
+          label: t('franchisee.menu.finance', 'Finance'),
           icon: Wallet,
         },
         {

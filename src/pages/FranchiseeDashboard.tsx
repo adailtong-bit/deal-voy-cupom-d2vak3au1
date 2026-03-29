@@ -12,7 +12,7 @@ import { FranchiseeSettingsTab } from '@/components/franchisee/FranchiseeSetting
 
 import { MerchantsTab } from '@/components/admin/hierarchy/MerchantsTab'
 import { FranchiseeAdsTab } from '@/components/franchisee/FranchiseeAdsTab'
-import { FranchiseeCurrentAccountTab } from '@/components/franchisee/FranchiseeCurrentAccountTab'
+import { FinanceDashboardTab } from '@/components/finance/FinanceDashboardTab'
 import { PartnerBillingTab } from '@/components/admin/PartnerBillingTab'
 import { AdminMonetizationTab } from '@/components/admin/AdminMonetizationTab'
 import { AdminSeasonalTab } from '@/components/admin/AdminSeasonalTab'
@@ -101,8 +101,8 @@ export default function FranchiseeDashboard() {
           )}
 
           {/* Financeiro */}
-          {activeTab === 'current-account' && (
-            <FranchiseeCurrentAccountTab franchiseId={myFranchise.id} />
+          {activeTab === 'finance' && (
+            <FinanceDashboardTab franchiseId={myFranchise.id} />
           )}
           {activeTab === 'billing' && (
             <PartnerBillingTab franchiseId={myFranchise.id} />

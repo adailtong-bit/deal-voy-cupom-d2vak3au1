@@ -29,25 +29,21 @@ export function FutureForecasting({ franchiseId }: { franchiseId?: string }) {
 
   const allData = useFinanceData(franchiseId)
   const futureTransactions = useMemo(
-    () => allData.filter((d) => d.status === 'future'),
+    () => allData.filter((d) => d.status === 'scheduled'),
     [allData],
   )
 
-  const inflows = futureTransactions
-    .filter((tr) => tr.type === 'in')
-    .reduce((sum, tr) => sum + tr.amount, 0)
-  const outflows = futureTransactions
-    .filter((tr) => tr.type === 'out')
-    .reduce((sum, tr) => sum + tr.amount, 0)
-  const balance = inflows - outflows
+  const balance = futureTransactions.reduce(
+    (sum, tr) => sum + (tr.type === 'in' ? tr.amount : -tr.amount),
+    0,
+  )
 
   return (
     <div className="space-y-4 animate-fade-in">
       <FinanceSummaryCards
-        balance={balance}
-        inflows={inflows}
-        outflows={outflows}
-        isFuture
+        currentBalance={0}
+        projectedBalance={balance}
+        totalPending={0}
         region={franchise?.region}
       />
       <Card className="shadow-sm">

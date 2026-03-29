@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useRegionFormatting } from '@/hooks/useRegionFormatting'
 import { useCouponStore } from '@/stores/CouponContext'
@@ -10,7 +10,6 @@ import {
   CardDescription,
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import {
   Table,
   TableBody,
@@ -19,7 +18,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { CheckCircle2, Upload, AlertCircle } from 'lucide-react'
+import {
+  CheckCircle2,
+  Upload,
+  AlertCircle,
+  FileUp,
+  Link as LinkIcon,
+} from 'lucide-react'
 import { useFinanceData } from '@/hooks/useFinanceData'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
@@ -31,7 +36,10 @@ export function BankReconciliation({ franchiseId }: { franchiseId?: string }) {
   const { formatCurrency, formatDate } = useRegionFormatting(franchise?.region)
 
   const allData = useFinanceData(franchiseId)
-  const systemEntries = allData.filter((d) => d.status === 'completed')
+  const systemEntries = useMemo(
+    () => allData.filter((d) => d.status === 'paid'),
+    [allData],
+  )
 
   const [imported, setImported] = useState<any[]>([])
   const [reconciledIds, setReconciledIds] = useState<Set<string>>(new Set())
@@ -39,6 +47,8 @@ export function BankReconciliation({ franchiseId }: { franchiseId?: string }) {
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
+
+    toast.info(t('finance.importing', 'Analyzing bank statement...'))
 
     // Mock parsing the CSV/OFX
     setTimeout(() => {
@@ -72,7 +82,7 @@ export function BankReconciliation({ franchiseId }: { franchiseId?: string }) {
       toast.success(
         t('finance.import_success', 'Statement imported successfully'),
       )
-    }, 600)
+    }, 1000)
   }
 
   const markReconciled = (id: string) => {
@@ -81,8 +91,8 @@ export function BankReconciliation({ franchiseId }: { franchiseId?: string }) {
   }
 
   return (
-    <Card className="shadow-sm animate-fade-in">
-      <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-slate-100 bg-white">
+    <Card className="shadow-sm border-slate-200 animate-fade-in-up">
+      <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 bg-white border-b border-slate-100">
         <div>
           <CardTitle className="text-lg text-slate-800">
             {t('finance.reconciliation', 'Bank Reconciliation')}
@@ -95,22 +105,34 @@ export function BankReconciliation({ franchiseId }: { franchiseId?: string }) {
           </CardDescription>
         </div>
         <div className="flex items-center gap-2">
-          <Input
-            type="file"
-            accept=".csv,.ofx"
-            className="w-full sm:w-[250px] cursor-pointer"
-            onChange={handleFileUpload}
-          />
+          <Button
+            variant="outline"
+            className="relative cursor-pointer overflow-hidden"
+          >
+            <FileUp className="w-4 h-4 mr-2 text-slate-500" />
+            <span>{t('finance.import_statement', 'Import Statement')}</span>
+            <input
+              type="file"
+              accept=".csv,.ofx"
+              className="absolute inset-0 opacity-0 cursor-pointer"
+              onChange={handleFileUpload}
+            />
+          </Button>
         </div>
       </CardHeader>
       <CardContent className="overflow-x-auto p-0">
         <Table>
           <TableHeader className="bg-slate-50">
             <TableRow>
-              <TableHead className="pl-6">Bank Entry</TableHead>
-              <TableHead>Amount</TableHead>
-              <TableHead>System Match</TableHead>
-              <TableHead className="pr-6">Action</TableHead>
+              <TableHead className="pl-6 w-1/3">
+                {t('finance.bank_entry', 'Bank Entry')}
+              </TableHead>
+              <TableHead className="w-1/3">
+                {t('finance.system_match', 'System Match')}
+              </TableHead>
+              <TableHead className="text-right pr-6">
+                {t('finance.action', 'Action')}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -119,64 +141,91 @@ export function BankReconciliation({ franchiseId }: { franchiseId?: string }) {
               const match = systemEntries.find(
                 (s) => s.id === entry.matchedSysId,
               )
+
               return (
                 <TableRow
                   key={entry.id}
                   className={`hover:bg-slate-50/50 ${isReconciled ? 'bg-emerald-50/30' : ''}`}
                 >
-                  <TableCell className="pl-6">
+                  <TableCell className="pl-6 align-top pt-4 pb-4">
                     <div className="font-semibold text-slate-800">
                       {entry.desc}
                     </div>
-                    <div className="text-xs text-slate-500 mt-0.5">
-                      {formatDate(entry.date)}
+                    <div className="flex items-center gap-3 mt-1">
+                      <span className="text-xs text-slate-500">
+                        {formatDate(entry.date)}
+                      </span>
+                      <span
+                        className={`text-sm font-bold ${entry.amount > 0 ? 'text-green-600' : 'text-red-600'}`}
+                      >
+                        {entry.amount > 0 ? '+' : ''}
+                        {formatCurrency(entry.amount)}
+                      </span>
                     </div>
                   </TableCell>
-                  <TableCell className="font-bold text-slate-700">
-                    {formatCurrency(Math.abs(entry.amount))}
-                  </TableCell>
-                  <TableCell>
+
+                  <TableCell className="align-top pt-4 pb-4">
                     {match ? (
-                      <div className="flex items-center gap-2 text-sm text-slate-600 bg-white p-2 rounded-md border border-slate-200 shadow-sm max-w-xs">
-                        <span className="truncate flex-1">{match.desc}</span>
-                        <Badge
-                          variant="secondary"
-                          className="ml-auto shrink-0 font-mono"
-                        >
-                          {formatCurrency(match.amount)}
-                        </Badge>
+                      <div className="flex flex-col gap-1 bg-white p-3 rounded-md border border-slate-200 shadow-sm">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium text-slate-700 text-sm truncate">
+                            {match.desc}
+                          </span>
+                          <Badge variant="secondary" className="shrink-0 ml-2">
+                            {formatCurrency(
+                              match.type === 'in'
+                                ? match.amount
+                                : -match.amount,
+                            )}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center justify-between text-xs text-slate-500">
+                          <span>{formatDate(match.date)}</span>
+                          <span className="capitalize">{match.category}</span>
+                        </div>
                       </div>
                     ) : (
-                      <div className="flex items-center text-amber-600 text-sm font-medium">
-                        <AlertCircle className="w-4 h-4 mr-1.5" />
-                        No exact match found
+                      <div className="flex items-center justify-center h-full p-3 border border-dashed border-amber-200 bg-amber-50/50 rounded-md">
+                        <div className="flex items-center text-amber-600 text-sm font-medium">
+                          <AlertCircle className="w-4 h-4 mr-2" />
+                          {t('finance.no_match', 'No system match found')}
+                        </div>
                       </div>
                     )}
                   </TableCell>
-                  <TableCell className="pr-6">
+
+                  <TableCell className="text-right pr-6 align-middle">
                     {isReconciled ? (
-                      <Badge className="bg-emerald-500 hover:bg-emerald-600 shadow-sm">
-                        <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />{' '}
-                        Reconciled
+                      <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-200 shadow-none">
+                        <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
+                        {t('finance.reconciled_status', 'Reconciled')}
                       </Badge>
                     ) : (
                       <Button
                         size="sm"
-                        variant="default"
+                        variant={match ? 'default' : 'outline'}
                         onClick={() => markReconciled(entry.id)}
-                        className="shadow-sm"
+                        className="shadow-sm whitespace-nowrap"
                       >
-                        Match & Reconcile
+                        {match ? (
+                          <>
+                            <LinkIcon className="w-3.5 h-3.5 mr-1.5" />
+                            {t('finance.confirm_match', 'Confirm Match')}
+                          </>
+                        ) : (
+                          t('finance.manual_match', 'Manual Match')
+                        )}
                       </Button>
                     )}
                   </TableCell>
                 </TableRow>
               )
             })}
+
             {imported.length === 0 && (
               <TableRow>
                 <TableCell
-                  colSpan={4}
+                  colSpan={3}
                   className="text-center py-16 text-muted-foreground"
                 >
                   <div className="flex flex-col items-center justify-center">
@@ -184,10 +233,16 @@ export function BankReconciliation({ franchiseId }: { franchiseId?: string }) {
                       <Upload className="h-6 w-6 text-slate-400" />
                     </div>
                     <p className="font-medium text-slate-600">
-                      Upload a statement to begin reconciliation
+                      {t(
+                        'finance.upload_prompt',
+                        'Upload a statement to begin reconciliation',
+                      )}
                     </p>
                     <p className="text-sm text-slate-400 mt-1">
-                      Supports .CSV and .OFX files from your bank.
+                      {t(
+                        'finance.upload_formats',
+                        'Supports .CSV and .OFX files from your bank.',
+                      )}
                     </p>
                   </div>
                 </TableCell>

@@ -9,12 +9,14 @@ export interface FinancialEntry {
   category: string
   amount: number
   type: 'in' | 'out'
-  status: 'completed' | 'pending' | 'future'
+  status: 'paid' | 'pending' | 'scheduled' | 'canceled'
   entityId?: string
+  entityName?: string
 }
 
 export function useFinanceData(franchiseId?: string) {
-  const { partnerInvoices, ads, platformSettings } = useCouponStore()
+  const { partnerInvoices, ads, platformSettings, franchises } =
+    useCouponStore()
   const { t } = useLanguage()
 
   const data = useMemo(() => {
@@ -25,6 +27,9 @@ export function useFinanceData(franchiseId?: string) {
       if (franchiseId && ad.franchiseId !== franchiseId) return
       const amt = ad.price || ad.budget || 0
       const isCompleted = ad.status === 'active' || ad.status === 'ended'
+      const status = isCompleted ? 'paid' : 'scheduled'
+      const entityName =
+        franchises.find((f) => f.id === ad.franchiseId)?.name || 'Platform'
 
       transactions.push({
         id: `ad_inc_${ad.id}`,
@@ -33,8 +38,9 @@ export function useFinanceData(franchiseId?: string) {
         category: 'Sales',
         amount: amt,
         type: 'in',
-        status: isCompleted ? 'completed' : 'future',
+        status,
         entityId: ad.franchiseId,
+        entityName,
       })
 
       transactions.push({
@@ -44,18 +50,25 @@ export function useFinanceData(franchiseId?: string) {
         category: 'Royalties',
         amount: amt * (royaltyRate / 100),
         type: 'out',
-        status: isCompleted ? 'completed' : 'future',
+        status,
         entityId: ad.franchiseId,
+        entityName,
       })
     })
 
     partnerInvoices.forEach((inv) => {
       if (franchiseId && inv.franchiseId !== franchiseId) return
 
-      let status: FinancialEntry['status'] = 'completed'
-      if (['draft', 'pending', 'invoiced', 'sent'].includes(inv.status)) {
-        status = 'future'
-      }
+      let status: FinancialEntry['status'] = 'scheduled'
+      if (inv.status === 'paid') status = 'paid'
+      else if (
+        ['draft', 'pending', 'sent', 'invoiced', 'overdue'].includes(inv.status)
+      )
+        status = 'pending'
+      else if (inv.status === 'canceled') status = 'canceled'
+
+      const entityName =
+        franchises.find((f) => f.id === inv.franchiseId)?.name || 'Platform'
 
       transactions.push({
         id: `inv_${inv.id}`,
@@ -66,10 +79,13 @@ export function useFinanceData(franchiseId?: string) {
         type: 'in',
         status,
         entityId: inv.franchiseId,
+        entityName,
       })
     })
 
     if (transactions.length === 0) {
+      const entityName =
+        franchises.find((f) => f.id === franchiseId)?.name || 'Platform'
       transactions.push({
         id: 'initial',
         date: new Date(Date.now() - 30 * 86400000).toISOString(),
@@ -77,8 +93,9 @@ export function useFinanceData(franchiseId?: string) {
         category: 'Deposit',
         amount: 1000,
         type: 'in',
-        status: 'completed',
+        status: 'paid',
         entityId: franchiseId,
+        entityName,
       })
     }
 
@@ -87,7 +104,7 @@ export function useFinanceData(franchiseId?: string) {
     )
 
     return transactions
-  }, [ads, partnerInvoices, platformSettings, franchiseId, t])
+  }, [ads, partnerInvoices, platformSettings, franchiseId, franchises, t])
 
   return data
 }

@@ -1,21 +1,19 @@
 import { Card, CardContent } from '@/components/ui/card'
-import { Wallet, ArrowUpRight, ArrowDownRight } from 'lucide-react'
+import { Wallet, TrendingUp, Clock } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useRegionFormatting } from '@/hooks/useRegionFormatting'
 
 interface Props {
-  balance: number
-  inflows: number
-  outflows: number
-  isFuture?: boolean
+  currentBalance: number
+  projectedBalance: number
+  totalPending: number
   region?: string
 }
 
 export function FinanceSummaryCards({
-  balance,
-  inflows,
-  outflows,
-  isFuture,
+  currentBalance,
+  projectedBalance,
+  totalPending,
   region,
 }: Props) {
   const { t } = useLanguage()
@@ -26,51 +24,47 @@ export function FinanceSummaryCards({
       <Card className="min-w-0 overflow-hidden shadow-sm">
         <CardContent className="p-6">
           <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-slate-100 rounded-full text-slate-600 shrink-0">
+            <div className="p-2 bg-blue-100 rounded-full text-blue-600 shrink-0">
               <Wallet className="h-5 w-5" />
             </div>
             <p className="text-sm font-medium text-muted-foreground truncate">
-              {isFuture
-                ? t('finance.expected_balance', 'Expected Balance')
-                : t('finance.balance', 'Balance')}
+              {t('finance.current_balance', 'Current Balance')}
             </p>
           </div>
-          <h3 className="text-2xl font-bold truncate text-slate-800">
-            {formatCurrency(balance)}
+          <h3 className="text-2xl font-bold text-slate-800 truncate">
+            {formatCurrency(currentBalance)}
           </h3>
         </CardContent>
       </Card>
+
       <Card className="min-w-0 overflow-hidden shadow-sm">
         <CardContent className="p-6">
           <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-green-100 rounded-full text-green-600 shrink-0">
-              <ArrowUpRight className="h-5 w-5" />
+            <div className="p-2 bg-emerald-100 rounded-full text-emerald-600 shrink-0">
+              <TrendingUp className="h-5 w-5" />
             </div>
             <p className="text-sm font-medium text-muted-foreground truncate">
-              {isFuture
-                ? t('finance.future_inflows', 'Future Inflows')
-                : t('finance.inflows', 'Inflows')}
+              {t('finance.projected_balance', 'Projected Balance')}
             </p>
           </div>
-          <h3 className="text-2xl font-bold text-green-600 truncate">
-            {formatCurrency(inflows)}
+          <h3 className="text-2xl font-bold text-emerald-600 truncate">
+            {formatCurrency(projectedBalance)}
           </h3>
         </CardContent>
       </Card>
+
       <Card className="min-w-0 overflow-hidden shadow-sm">
         <CardContent className="p-6">
           <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-red-100 rounded-full text-red-600 shrink-0">
-              <ArrowDownRight className="h-5 w-5" />
+            <div className="p-2 bg-amber-100 rounded-full text-amber-600 shrink-0">
+              <Clock className="h-5 w-5" />
             </div>
             <p className="text-sm font-medium text-muted-foreground truncate">
-              {isFuture
-                ? t('finance.future_outflows', 'Future Outflows')
-                : t('finance.outflows', 'Outflows')}
+              {t('finance.total_pending', 'Total Pending')}
             </p>
           </div>
-          <h3 className="text-2xl font-bold text-red-600 truncate">
-            {formatCurrency(outflows)}
+          <h3 className="text-2xl font-bold text-amber-600 truncate">
+            {formatCurrency(totalPending)}
           </h3>
         </CardContent>
       </Card>
