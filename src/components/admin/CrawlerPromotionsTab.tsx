@@ -391,7 +391,9 @@ export function CrawlerPromotionsTab({
                       />
                       <div className="flex flex-col">
                         <span className="font-bold">
-                          {promo.storeName || 'Desconhecida'}
+                          {promo.storeName ||
+                            promo.sourceId ||
+                            'Marca Não Identificada'}
                         </span>
                         <span className="text-xs text-muted-foreground">
                           {promo.region}
@@ -414,9 +416,9 @@ export function CrawlerPromotionsTab({
                       ) : (
                         <span
                           className="text-sm font-medium text-slate-700 max-w-[200px] truncate block"
-                          title={promo.sourceId || 'Lojista descoberto'}
+                          title={promo.sourceId || 'Sem URL'}
                         >
-                          {promo.sourceId || 'Lojista descoberto'}
+                          {promo.sourceId || 'Sem URL'}
                         </span>
                       )}
                       {getOfferUrl(promo) && (
@@ -466,38 +468,40 @@ export function CrawlerPromotionsTab({
 
                       <HoverCard>
                         <HoverCardTrigger asChild>
-                          <span className="text-xs text-muted-foreground line-clamp-2 cursor-help border-b border-dashed border-slate-300 pb-0.5">
-                            {promo.description ||
-                              promo.rawData?.original_description ||
+                          <span className="text-xs text-muted-foreground line-clamp-2 cursor-help border-b border-dashed border-slate-300 pb-0.5 break-words">
+                            {promo.rawData?.original_description ||
+                              promo.description ||
                               t('common.no_description', 'Sem descrição')}
                           </span>
                         </HoverCardTrigger>
-                        <HoverCardContent className="w-[350px] text-sm z-[100] bg-background shadow-xl border-border">
-                          <p className="font-semibold mb-1 text-foreground">
-                            {t(
-                              'franchisee.crawler.original_description',
-                              'Descrição Original do Anunciante',
+                        <HoverCardContent className="w-[350px] max-w-[90vw] text-sm z-[100] bg-background shadow-xl border-border">
+                          <div className="max-h-[300px] overflow-y-auto pr-2 hide-scrollbar">
+                            <p className="font-semibold mb-1 text-foreground">
+                              {t(
+                                'franchisee.crawler.original_description',
+                                'Descrição Original do Anunciante',
+                              )}
+                            </p>
+                            <p className="text-muted-foreground whitespace-pre-wrap break-words">
+                              {promo.rawData?.original_description ||
+                                promo.description ||
+                                t('common.no_description', 'Sem descrição')}
+                            </p>
+                            {promo.rawData?.original_title && (
+                              <div className="mt-3 pt-2 border-t border-border/50">
+                                <span className="text-xs font-semibold text-foreground">
+                                  {t(
+                                    'franchisee.crawler.original_title',
+                                    'Título Original',
+                                  )}
+                                  :{' '}
+                                </span>
+                                <span className="text-xs text-muted-foreground break-words">
+                                  {promo.rawData.original_title}
+                                </span>
+                              </div>
                             )}
-                          </p>
-                          <p className="text-muted-foreground whitespace-pre-wrap">
-                            {promo.description ||
-                              promo.rawData?.original_description ||
-                              t('common.no_description', 'Sem descrição')}
-                          </p>
-                          {promo.rawData?.original_title && (
-                            <div className="mt-3 pt-2 border-t border-border/50">
-                              <span className="text-xs font-semibold text-foreground">
-                                {t(
-                                  'franchisee.crawler.original_title',
-                                  'Título Original',
-                                )}
-                                :{' '}
-                              </span>
-                              <span className="text-xs text-muted-foreground">
-                                {promo.rawData.original_title}
-                              </span>
-                            </div>
-                          )}
+                          </div>
                         </HoverCardContent>
                       </HoverCard>
 

@@ -62,7 +62,7 @@ export const fetchCoupons = async ({
               )),
         )
 
-        // Optimization: Ensure high volume for US region searches
+        // Ensure high volume for US region without using generic mock labels
         if (isUS && results.length < 50) {
           const generated = []
           const baseList = results.length > 0 ? results : MOCK_COUPONS
@@ -74,7 +74,6 @@ export const fetchCoupons = async ({
                 id: `${template.id}-gen-usa-${i}`,
                 country: 'United States',
                 region: 'USA',
-                title: `${template.title} (US Deal ${i + 1})`,
               })
             }
           }
@@ -180,7 +179,7 @@ export const fetchCrawlerPromotions = async ({
               )),
         )
 
-        // Optimization: Ensure high volume for US region searches
+        // Ensure high volume for US region without using generic mock labels
         if (isUS && results.length < 50) {
           const generated = []
           const baseList =
@@ -193,7 +192,6 @@ export const fetchCrawlerPromotions = async ({
                 id: `${template.id}-gen-usa-${i}`,
                 country: 'USA',
                 region: 'USA',
-                title: `${template.title} (US Import ${i + 1})`,
               })
             }
           }

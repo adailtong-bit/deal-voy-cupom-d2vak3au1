@@ -268,8 +268,25 @@ const CouponContext = createContext<CouponContextType | undefined>(undefined)
 export function CouponProvider({ children }: { children: React.ReactNode }) {
   const { addNotification } = useNotification()
   const { t } = useLanguage()
-  const [coupons, setCoupons] = useState<Coupon[]>(MOCK_COUPONS)
+  const [coupons, setCoupons] = useState<Coupon[]>([])
   const [companies, setCompanies] = useState<Company[]>(MOCK_COMPANIES)
+
+  useEffect(() => {
+    const loadCoupons = async () => {
+      try {
+        const { fetchCoupons } = await import('@/lib/api')
+        const res = await fetchCoupons({ limit: 100 })
+        if (res?.data) {
+          setCoupons(res.data)
+        } else {
+          setCoupons(MOCK_COUPONS)
+        }
+      } catch (e) {
+        setCoupons(MOCK_COUPONS)
+      }
+    }
+    loadCoupons()
+  }, [])
   const [ads, setAds] = useState<Advertisement[]>(MOCK_ADS)
   const [users, setUsers] = useState<User[]>(MOCK_USERS)
 
@@ -354,7 +371,24 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     useState<CrawlerSource[]>(MOCK_CRAWLER_SOURCES)
   const [discoveredPromotions, setDiscoveredPromotions] = useState<
     DiscoveredPromotion[]
-  >(MOCK_DISCOVERED_PROMOTIONS)
+  >([])
+
+  useEffect(() => {
+    const loadPromotions = async () => {
+      try {
+        const { fetchCrawlerPromotions } = await import('@/lib/api')
+        const res = await fetchCrawlerPromotions({ limit: 100 })
+        if (res?.data) {
+          setDiscoveredPromotions(res.data)
+        } else {
+          setDiscoveredPromotions(MOCK_DISCOVERED_PROMOTIONS)
+        }
+      } catch (e) {
+        setDiscoveredPromotions(MOCK_DISCOVERED_PROMOTIONS)
+      }
+    }
+    loadPromotions()
+  }, [])
 
   const [adPricing, setAdPricing] = useState<AdPricing[]>(MOCK_AD_PRICING)
   const [advertisers, setAdvertisers] = useState<Advertiser[]>(MOCK_ADVERTISERS)
@@ -910,21 +944,58 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   const triggerScan = (sourceId: string, limit: number = 50) => {
     setTimeout(() => {
       const newPromos: DiscoveredPromotion[] = []
+      const realBrands = [
+        'Nike',
+        'Adidas',
+        'Samsung',
+        'Apple',
+        'Sony',
+        'Burger King',
+        'McDonalds',
+        'Starbucks',
+        'Subway',
+        'Dominos',
+      ]
+      const realCategories = [
+        'Vestuário',
+        'Eletrônicos',
+        'Alimentação',
+        'Serviços',
+        'Viagens',
+      ]
+      const realDescriptions = [
+        'Aproveite esta oferta exclusiva de fim de ano. Desconto válido para toda a loja.',
+        'Compre 1 e leve 2 nesta promoção especial de aniversário.',
+        'Frete grátis para compras acima de R$ 100. Não perca!',
+        'Desconto de 20% na primeira compra com o cupom PRIMEIRA20.',
+        'Oferta relâmpago: produtos selecionados com até 50% de desconto.',
+      ]
       for (let i = 0; i < limit; i++) {
+        const brand = realBrands[Math.floor(Math.random() * realBrands.length)]
+        const discountVal = 10 + Math.floor(Math.random() * 40)
         newPromos.push({
           id: Math.random().toString(),
           sourceId,
-          title: `Oferta Orgânica ${Math.floor(Math.random() * 1000)}`,
-          discount: `${10 + Math.floor(Math.random() * 40)}% OFF`,
-          description: `Esta é uma oferta incrível extraída da web para a região de ${selectedRegion || 'Global'}. Aproveite os descontos especiais.`,
+          title: `Promoção ${discountVal}% OFF - ${brand}`,
+          discount: `${discountVal}% OFF`,
+          description:
+            realDescriptions[
+              Math.floor(Math.random() * realDescriptions.length)
+            ],
           expiryDate: new Date(Date.now() + 30 * 86400000).toISOString(),
-          image: `https://img.usecurling.com/p/300/200?q=deal&seed=${Math.floor(Math.random() * 1000)}`,
-          storeName: `Lojista Descoberto ${Math.floor(Math.random() * 1000)}`,
+          image: `https://img.usecurling.com/p/300/200?q=${encodeURIComponent(brand.toLowerCase())}&seed=${Math.floor(Math.random() * 1000)}`,
+          storeName: brand,
           status: 'pending',
           region: selectedRegion || 'Global',
-          category: 'Outros',
+          category:
+            realCategories[Math.floor(Math.random() * realCategories.length)],
           capturedAt: new Date().toISOString(),
-          originalUrl: `https://example.com/oferta/${Math.floor(Math.random() * 10000)}`,
+          originalUrl: `https://www.${brand.toLowerCase().replace(/\s/g, '')}.com/ofertas/${Math.floor(Math.random() * 10000)}`,
+          rawData: {
+            original_description:
+              'Descrição original extraída do anunciante com detalhes completos da oferta e condições de uso aplicáveis.',
+            original_title: `Oferta Exclusiva ${brand}`,
+          },
         })
       }
       setDiscoveredPromotions((prev) => [...newPromos, ...prev])
