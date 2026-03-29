@@ -273,6 +273,13 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   const [companies, setCompanies] = useState<Company[]>(MOCK_COMPANIES)
 
   useEffect(() => {
+    const storedCoupons = localStorage.getItem('mock_coupons_db')
+    if (storedCoupons) {
+      try {
+        setCoupons(JSON.parse(storedCoupons))
+        return
+      } catch (e) {}
+    }
     const loadCoupons = async () => {
       try {
         const res = await fetchCoupons({ limit: 100 })
@@ -287,6 +294,12 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     }
     loadCoupons()
   }, [])
+
+  useEffect(() => {
+    if (coupons.length > 0) {
+      localStorage.setItem('mock_coupons_db', JSON.stringify(coupons))
+    }
+  }, [coupons])
   const [ads, setAds] = useState<Advertisement[]>(MOCK_ADS)
   const [users, setUsers] = useState<User[]>(MOCK_USERS)
 
@@ -374,6 +387,15 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   >([])
 
   useEffect(() => {
+    const storedPromotions = localStorage.getItem(
+      'mock_discovered_promotions_db',
+    )
+    if (storedPromotions) {
+      try {
+        setDiscoveredPromotions(JSON.parse(storedPromotions))
+        return
+      } catch (e) {}
+    }
     const loadPromotions = async () => {
       try {
         const res = await fetchCrawlerPromotions({ limit: 100 })
@@ -388,6 +410,15 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     }
     loadPromotions()
   }, [])
+
+  useEffect(() => {
+    if (discoveredPromotions.length > 0) {
+      localStorage.setItem(
+        'mock_discovered_promotions_db',
+        JSON.stringify(discoveredPromotions),
+      )
+    }
+  }, [discoveredPromotions])
 
   const [adPricing, setAdPricing] = useState<AdPricing[]>(MOCK_AD_PRICING)
   const [advertisers, setAdvertisers] = useState<Advertiser[]>(MOCK_ADVERTISERS)

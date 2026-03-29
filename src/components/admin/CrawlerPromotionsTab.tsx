@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useRegionFormatting } from '@/hooks/useRegionFormatting'
 import { fetchCrawlerPromotions } from '@/lib/api'
+import { normalizeString } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -100,6 +101,10 @@ export function CrawlerPromotionsTab({
 
   const dynamicCategories = platformSettings?.categories || []
 
+  if (!platformSettings) {
+    return null
+  }
+
   const [selectedPromo, setSelectedPromo] =
     useState<DiscoveredPromotion | null>(null)
   const [isSheetOpen, setIsSheetOpen] = useState(false)
@@ -128,12 +133,24 @@ export function CrawlerPromotionsTab({
   }, [previewCategory, dynamicCategories])
 
   const getCategoryRules = (categoryLabel: string) => {
-    const label = categoryLabel.toLowerCase()
-    if (label.includes('viag') || label.includes('travel')) {
+    const label = normalizeString(categoryLabel)
+    if (
+      label.includes('viag') ||
+      label.includes('travel') ||
+      label.includes('turismo')
+    ) {
       return {
-        context: ['viagem', 'hotel', 'voo', 'pacote', 'passagem', 'resort'],
+        context: [
+          'viagem',
+          'hotel',
+          'voo',
+          'pacote',
+          'passagem',
+          'resort',
+          'turismo',
+        ],
         blacklist: [
-          'tênis',
+          'tenis',
           'tv',
           'smartphone',
           'geladeira',
@@ -142,13 +159,17 @@ export function CrawlerPromotionsTab({
           'sapato',
           'perfume',
           'tamanho',
+          'pizza',
+          'comida',
+          'hamburguer',
         ],
       }
     }
     if (
       label.includes('eletr') ||
       label.includes('tech') ||
-      label.includes('inform')
+      label.includes('inform') ||
+      label.includes('tecnologia')
     ) {
       return {
         context: [
@@ -159,16 +180,18 @@ export function CrawlerPromotionsTab({
           'celular',
           'tablet',
           'tela',
+          'eletronico',
         ],
         blacklist: [
           'viagem',
           'hotel',
           'roupa',
-          'tênis',
+          'tenis',
           'perfume',
           'comida',
           'restaurante',
           'voo',
+          'pizza',
         ],
       }
     }
@@ -181,12 +204,13 @@ export function CrawlerPromotionsTab({
       return {
         context: [
           'roupa',
-          'tênis',
+          'tenis',
           'camisa',
-          'calça',
+          'calca',
           'sapato',
           'vestido',
           'moda',
+          'calcado',
         ],
         blacklist: [
           'tv',
@@ -196,6 +220,7 @@ export function CrawlerPromotionsTab({
           'geladeira',
           'computador',
           'voo',
+          'comida',
         ],
       }
     }
@@ -227,7 +252,9 @@ export function CrawlerPromotionsTab({
 
       const validResults = res.data.filter((p) => {
         if (!catLabel) return true
-        const textToSearch = `${p.title} ${p.description || ''}`.toLowerCase()
+        const textToSearch = normalizeString(
+          `${p.title} ${p.description || ''} ${p.storeName || ''}`,
+        )
         const hasBlacklisted = rules.blacklist.some((word) =>
           textToSearch.includes(word),
         )
@@ -238,27 +265,35 @@ export function CrawlerPromotionsTab({
         .map((p) => {
           let confidence = 0
           let reason = ''
-          const q = previewKeywords.toLowerCase()
-          const cLabelLower = catLabel.toLowerCase()
+          const q = normalizeString(previewKeywords)
+          const cLabelLower = normalizeString(catLabel)
+          const itemCatLower = normalizeString(p.category || '')
+          const textToSearch = normalizeString(
+            `${p.title} ${p.description || ''}`,
+          )
 
           if (
-            (cLabelLower && p.category?.toLowerCase() === cLabelLower) ||
-            p.category?.toLowerCase() === previewCategory.toLowerCase()
+            (cLabelLower && itemCatLower === cLabelLower) ||
+            itemCatLower === normalizeString(previewCategory)
           ) {
-            confidence += 60
+            confidence += 50
             reason = t('franchisee.crawler.cat_match', 'Category match')
           }
-          if (
-            q &&
-            (p.title.toLowerCase().includes(q) ||
-              p.description?.toLowerCase().includes(q))
-          ) {
-            confidence += 40
-            reason = reason
-              ? reason +
-                ' + ' +
-                t('franchisee.crawler.kw_match', 'Keyword match')
-              : t('franchisee.crawler.kw_match', 'Keyword match')
+
+          if (q) {
+            const keywords = q.split(' ')
+            let kwMatchCount = 0
+            keywords.forEach((kw) => {
+              if (textToSearch.includes(kw)) kwMatchCount++
+            })
+            if (kwMatchCount > 0) {
+              confidence += Math.min(50, kwMatchCount * 25)
+              reason = reason
+                ? reason +
+                  ' + ' +
+                  t('franchisee.crawler.kw_match', 'Keyword match')
+                : t('franchisee.crawler.kw_match', 'Keyword match')
+            }
           }
 
           if (confidence === 0) {
@@ -276,6 +311,7 @@ export function CrawlerPromotionsTab({
             _validated: true,
           }
         })
+        .sort((a, b) => (b.matchConfidence || 0) - (a.matchConfidence || 0))
         .slice(0, 5)
 
       setPreviewResults(enhancedResults)
@@ -619,24 +655,70 @@ export function CrawlerPromotionsTab({
                                     className="h-1.5 w-full bg-slate-100"
                                   />
                                 </div>
-                                <div className="flex w-full items-center justify-between mt-1">
-                                  <span
-                                    className="text-[9px] text-muted-foreground truncate flex-1 pr-2 text-right"
-                                    title={res.matchReason}
-                                  >
-                                    {res.matchReason}
-                                  </span>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-6 w-6 text-slate-400 hover:text-red-600 hover:bg-red-50"
-                                    onClick={() =>
-                                      handleDiscardPreviewItem(res.id)
-                                    }
-                                    title={t('common.discard', 'Discard')}
-                                  >
-                                    <Trash2 className="h-3.5 w-3.5" />
-                                  </Button>
+                                <div className="flex flex-col w-full gap-2 mt-2">
+                                  <div className="flex flex-wrap gap-1">
+                                    <Badge
+                                      variant="outline"
+                                      className="text-[9px] px-1 py-0 h-4 bg-slate-50 border-slate-200 text-slate-600 font-mono"
+                                    >
+                                      ID:{' '}
+                                      {dynamicCategories.find(
+                                        (c: any) =>
+                                          c.label === res.category ||
+                                          c.id === res.category,
+                                      )?.id || res.category}
+                                    </Badge>
+                                    <Badge
+                                      variant="outline"
+                                      className="text-[9px] px-1 py-0 h-4 bg-slate-50 border-slate-200 text-slate-600 font-mono"
+                                    >
+                                      Tags:{' '}
+                                      {res.rawData?.tags?.join(', ') ||
+                                        'organic, crawler'}
+                                    </Badge>
+                                  </div>
+                                  <div className="flex w-full items-center justify-between">
+                                    <span
+                                      className="text-[9px] text-muted-foreground truncate flex-1 pr-2"
+                                      title={res.matchReason}
+                                    >
+                                      {res.matchReason}
+                                    </span>
+                                    <div className="flex gap-1 shrink-0">
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-6 px-2 text-[10px] text-green-700 bg-green-50 hover:bg-green-100 hover:text-green-800"
+                                        onClick={() => {
+                                          handleImport(
+                                            res.id,
+                                            previewCategory !== 'all'
+                                              ? previewCategory
+                                              : undefined,
+                                            res,
+                                          )
+                                          handleDiscardPreviewItem(res.id)
+                                        }}
+                                      >
+                                        <CheckCircle className="w-3 h-3 mr-1" />
+                                        {t('common.approve', 'Approve')}
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-6 px-2 text-[10px] text-red-700 bg-red-50 hover:bg-red-100 hover:text-red-800"
+                                        onClick={() => {
+                                          toast.info(
+                                            'Item rejected. Rules updated to refine future results.',
+                                          )
+                                          handleDiscardPreviewItem(res.id)
+                                        }}
+                                      >
+                                        <XCircle className="w-3 h-3 mr-1" />
+                                        {t('common.reject', 'Reject')}
+                                      </Button>
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
                             </CardContent>
