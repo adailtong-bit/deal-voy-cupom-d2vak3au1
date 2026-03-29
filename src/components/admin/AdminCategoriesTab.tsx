@@ -83,14 +83,14 @@ export function AdminCategoriesTab({ franchiseId }: { franchiseId?: string }) {
 
   const mainCategories = platformSettings.mainCategories || []
 
-  const [categoriesList, setCategoriesList] = useState(() =>
+  const categoriesList =
+    platformSettings.categories ||
     CATEGORIES.filter((c) => c.id !== 'all').map((c) => ({
       ...c,
       description: `Ofertas e promoções de ${c.label.toLowerCase()}`,
       status: 'active' as const,
       createdAt: '2024-01-01',
-    })),
-  )
+    }))
 
   const [search, setSearch] = useState('')
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -138,11 +138,11 @@ export function AdminCategoriesTab({ franchiseId }: { franchiseId?: string }) {
       return
     }
     if (editingCategory) {
-      setCategoriesList((prev) =>
-        prev.map((c) =>
+      updatePlatformSettings({
+        categories: categoriesList.map((c) =>
           c.id === editingCategory.id ? { ...c, ...formData } : c,
         ),
-      )
+      })
       toast.success('Categoria atualizada com sucesso!')
     } else {
       const newCategory = {
@@ -151,7 +151,9 @@ export function AdminCategoriesTab({ franchiseId }: { franchiseId?: string }) {
         createdAt: new Date().toISOString().split('T')[0],
         ...formData,
       }
-      setCategoriesList((prev) => [...prev, newCategory as any])
+      updatePlatformSettings({
+        categories: [...categoriesList, newCategory as any],
+      })
       toast.success('Categoria criada com sucesso!')
     }
     setIsDialogOpen(false)
@@ -468,9 +470,11 @@ export function AdminCategoriesTab({ franchiseId }: { franchiseId?: string }) {
               className="bg-red-500 hover:bg-red-600"
               onClick={() => {
                 if (categoryToDelete) {
-                  setCategoriesList((prev) =>
-                    prev.filter((c) => c.id !== categoryToDelete),
-                  )
+                  updatePlatformSettings({
+                    categories: categoriesList.filter(
+                      (c) => c.id !== categoryToDelete,
+                    ),
+                  })
                   setCategoryToDelete(null)
                   toast.success('Categoria removida com sucesso!')
                 }

@@ -800,6 +800,15 @@ export interface PlatformSettings {
   franchiseRoyaltyRate: number
   mainCategories?: string[]
   availableInterests?: InterestCategory[]
+  categories?: {
+    id: string
+    label: string
+    translationKey: string
+    icon: string
+    description?: string
+    status?: 'active' | 'inactive' | string
+    createdAt?: string
+  }[]
   travelMargins: {
     hotels: number
     flights: number

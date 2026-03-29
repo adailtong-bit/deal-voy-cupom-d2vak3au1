@@ -63,8 +63,13 @@ export function CrawlerPromotionsTab({
   setFilterFetchDate,
 }: CrawlerPromotionsTabProps) {
   const { t } = useLanguage()
-  const { importPromotion, ignorePromotion, user, franchises } =
-    useCouponStore()
+  const {
+    importPromotion,
+    ignorePromotion,
+    user,
+    franchises,
+    platformSettings,
+  } = useCouponStore()
 
   const myFranchise =
     franchises.find((f) => f.ownerId === user?.id) || franchises[0]
@@ -76,6 +81,9 @@ export function CrawlerPromotionsTab({
   const [selectedPromo, setSelectedPromo] =
     useState<DiscoveredPromotion | null>(null)
   const [isSheetOpen, setIsSheetOpen] = useState(false)
+  const [editedCategories, setEditedCategories] = useState<
+    Record<string, string>
+  >({})
 
   const clearFilters = () => {
     setFilterState('all')
@@ -123,13 +131,17 @@ export function CrawlerPromotionsTab({
     [basePendingPromotions],
   )
 
-  const allCategories = useMemo(
-    () =>
-      Array.from(
-        new Set(basePendingPromotions.map((p) => p.category).filter(Boolean)),
-      ).sort() as string[],
-    [basePendingPromotions],
-  )
+  const dynamicCategories = platformSettings?.categories || []
+
+  const allCategories = useMemo(() => {
+    const existing = Array.from(
+      new Set(basePendingPromotions.map((p) => p.category).filter(Boolean)),
+    )
+    const dynamicLabels = dynamicCategories.map((c: any) => c.label)
+    return Array.from(
+      new Set([...existing, ...dynamicLabels]),
+    ).sort() as string[]
+  }, [basePendingPromotions, dynamicCategories])
 
   const allFetchDates = useMemo(() => {
     const dates = basePendingPromotions
@@ -159,7 +171,10 @@ export function CrawlerPromotionsTab({
       }
     }
 
-    ;(importPromotion as any)(id, category, finalData)
+    const finalCategory =
+      category || editedCategories[id] || finalData?.category
+
+    ;(importPromotion as any)(id, finalCategory, finalData)
     toast.success(
       t(
         'franchisee.crawler.imported_success',
@@ -366,6 +381,9 @@ export function CrawlerPromotionsTab({
                   {t('franchisee.crawler.description', 'Descrição')}
                 </TableHead>
                 <TableHead className="whitespace-nowrap">
+                  {t('common.category', 'Categoria')}
+                </TableHead>
+                <TableHead className="whitespace-nowrap">
                   {t('common.country', 'País')}
                 </TableHead>
                 <TableHead className="whitespace-nowrap">
@@ -513,6 +531,43 @@ export function CrawlerPromotionsTab({
                       </Badge>
                     </div>
                   </TableCell>
+                  <TableCell className="whitespace-nowrap text-sm">
+                    <Select
+                      value={editedCategories[promo.id] || promo.category || ''}
+                      onValueChange={(val) =>
+                        setEditedCategories((prev) => ({
+                          ...prev,
+                          [promo.id]: val,
+                        }))
+                      }
+                    >
+                      <SelectTrigger className="w-[140px] h-8 text-xs">
+                        <SelectValue placeholder="Categoria" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {dynamicCategories.map((c: any) => (
+                          <SelectItem key={c.id} value={c.label}>
+                            {c.label}
+                          </SelectItem>
+                        ))}
+                        {(editedCategories[promo.id] || promo.category) &&
+                          !dynamicCategories.find(
+                            (c: any) =>
+                              c.label ===
+                              (editedCategories[promo.id] || promo.category),
+                          ) && (
+                            <SelectItem
+                              key="promo-cat-custom"
+                              value={
+                                editedCategories[promo.id] || promo.category
+                              }
+                            >
+                              {editedCategories[promo.id] || promo.category}
+                            </SelectItem>
+                          )}
+                      </SelectContent>
+                    </Select>
+                  </TableCell>
                   <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
                     {promo.country || '-'}
                   </TableCell>
@@ -560,7 +615,7 @@ export function CrawlerPromotionsTab({
               {pendingPromotions.length === 0 && (
                 <TableRow>
                   <TableCell
-                    colSpan={9}
+                    colSpan={10}
                     className="text-center py-8 text-muted-foreground"
                   >
                     {t(

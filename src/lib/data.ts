@@ -1794,6 +1794,23 @@ export const DEFAULT_PLATFORM_SETTINGS: PlatformSettings = {
     label: c.label,
     icon: c.icon,
   })),
+  categories: [
+    ...CATEGORIES.filter((c) => c.id !== 'all').map((c) => ({
+      ...c,
+      description: `Ofertas e promoções de ${c.label.toLowerCase()}`,
+      status: 'active',
+      createdAt: '2024-01-01',
+    })),
+    {
+      id: 'cat-viagens',
+      label: 'Viagens',
+      translationKey: 'category.travel',
+      icon: 'Plane',
+      description: 'Ofertas e promoções de viagens e pacotes',
+      status: 'active',
+      createdAt: '2024-01-01',
+    },
+  ],
   travelMargins: {
     hotels: 12,
     flights: 3,
