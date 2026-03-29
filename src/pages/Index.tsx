@@ -515,7 +515,7 @@ export default function Index() {
                   ? t('home.search_results', 'Resultados da Busca')
                   : t('home.trending', 'Em Alta')}
               </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                 {finalTrending.map((coupon) => (
                   <CouponCard key={coupon.id} coupon={coupon} />
                 ))}
@@ -529,7 +529,7 @@ export default function Index() {
                 <Sparkles className="h-6 w-6 text-yellow-500" />
                 {t('home.more_deals', 'Mais Oportunidades')}
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 {moreCoupons.map((coupon) => (
                   <CouponCard
                     key={coupon.id}

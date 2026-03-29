@@ -210,9 +210,9 @@ export default function Explore() {
       {/* Dynamic Coupon Grid */}
       <div
         className={cn(
-          'grid gap-4',
+          'grid gap-4 sm:gap-6 lg:gap-8',
           viewMode === 'list'
-            ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4'
+            ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
             : 'grid-cols-1',
         )}
       >
@@ -240,15 +240,16 @@ export default function Explore() {
                 {Array.from({ length: page === 1 ? 12 : 4 }).map((_, i) => (
                   <div
                     key={`skeleton-${i}`}
-                    className="flex flex-col h-full rounded-lg border border-slate-200 overflow-hidden bg-white shadow-sm min-h-[250px]"
+                    className="flex flex-col h-full rounded-xl border border-slate-200/60 overflow-hidden bg-white shadow-sm min-h-[280px]"
                   >
-                    <Skeleton className="h-28 sm:h-32 w-full rounded-none" />
-                    <div className="p-2.5 sm:p-3 flex-1 flex flex-col gap-2">
-                      <Skeleton className="h-4 w-3/4" />
-                      <Skeleton className="h-3 w-1/2" />
-                      <div className="mt-auto pt-2 border-t flex flex-col gap-2.5">
-                        <Skeleton className="h-3 w-full" />
-                        <Skeleton className="h-7 w-full rounded" />
+                    <Skeleton className="h-36 sm:h-44 w-full rounded-none" />
+                    <div className="p-3 sm:p-4 flex-1 flex flex-col gap-2">
+                      <Skeleton className="h-5 w-3/4" />
+                      <Skeleton className="h-4 w-1/2" />
+                      <div className="mt-auto pt-3 border-t border-slate-100 flex flex-col gap-3">
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-11 sm:h-10 w-full rounded-lg" />
+                        <Skeleton className="h-2 w-2/3 mx-auto mt-1" />
                       </div>
                     </div>
                   </div>
