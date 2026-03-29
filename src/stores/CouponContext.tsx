@@ -40,6 +40,7 @@ import {
   StandardRule,
   RewardCatalogItem,
 } from '@/lib/types'
+import { fetchCoupons, fetchCrawlerPromotions } from '@/lib/api'
 import {
   MOCK_COUPONS,
   MOCK_USER_LOCATION,
@@ -274,7 +275,6 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const loadCoupons = async () => {
       try {
-        const { fetchCoupons } = await import('@/lib/api')
         const res = await fetchCoupons({ limit: 100 })
         if (res?.data) {
           setCoupons(res.data)
@@ -376,7 +376,6 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const loadPromotions = async () => {
       try {
-        const { fetchCrawlerPromotions } = await import('@/lib/api')
         const res = await fetchCrawlerPromotions({ limit: 100 })
         if (res?.data) {
           setDiscoveredPromotions(res.data)
