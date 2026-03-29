@@ -37,16 +37,16 @@ export function AdminNotificationsTab() {
   const [notifications, setNotifications] = useState([
     {
       id: '1',
-      title: 'Weekend Sale!',
-      message: 'Check out the new offers.',
+      title: t('admin.notifications.mock.title1', 'Weekend Sale!'),
+      message: t('admin.notifications.mock.msg1', 'Check out the new offers.'),
       target: 'all',
       status: 'sent',
       date: '2025-10-10T10:00',
     },
     {
       id: '2',
-      title: 'New Stores in NY',
-      message: 'Discover Brooklyn Coffee.',
+      title: t('admin.notifications.mock.title2', 'New Stores in NY'),
+      message: t('admin.notifications.mock.msg2', 'Discover Brooklyn Coffee.'),
       target: 'f_ny',
       status: 'scheduled',
       date: '2025-11-01T09:00',

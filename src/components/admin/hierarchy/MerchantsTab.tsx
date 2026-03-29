@@ -3,6 +3,14 @@ import { useSearchParams, useLocation } from 'react-router-dom'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -29,9 +37,12 @@ export function MerchantsTab({ franchiseId }: { franchiseId?: string }) {
     useCouponStore()
   const { t } = useLanguage()
   const [searchParams] = useSearchParams()
-  const searchQuery = (searchParams.get('q') || '').toLowerCase()
+  const urlSearch = (searchParams.get('q') || '').toLowerCase()
   const location = useLocation()
   const isFranchisee = location.pathname.includes('/franchisee')
+
+  const [searchQuery, setSearchQuery] = useState(urlSearch)
+  const [statusFilter, setStatusFilter] = useState('all')
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingMerchant, setEditingMerchant] = useState<Company | null>(null)
@@ -41,12 +52,15 @@ export function MerchantsTab({ franchiseId }: { franchiseId?: string }) {
       ? companies.filter((c) => c.franchiseId === franchiseId)
       : companies
   ).filter((c) => {
-    if (!searchQuery) return true
-    return (
-      c.name.toLowerCase().includes(searchQuery) ||
-      c.email.toLowerCase().includes(searchQuery) ||
-      (c.region && c.region.toLowerCase().includes(searchQuery))
-    )
+    const matchesSearch =
+      !searchQuery ||
+      c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      c.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (c.region && c.region.toLowerCase().includes(searchQuery.toLowerCase()))
+
+    const matchesStatus = statusFilter === 'all' || c.status === statusFilter
+
+    return matchesSearch && matchesStatus
   })
 
   const handleOpenDialog = (merchant?: Company) => {
@@ -137,7 +151,7 @@ export function MerchantsTab({ franchiseId }: { franchiseId?: string }) {
 
   return (
     <div className="space-y-4 animate-fade-in-up min-w-0 w-full max-w-full">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-sm gap-4 min-w-0 w-full">
+      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-sm gap-4 min-w-0 w-full">
         <div className="flex items-center gap-3 min-w-0">
           <div className="p-2.5 bg-primary/10 rounded-lg text-primary hidden sm:block shrink-0">
             <Store className="h-6 w-6" />
@@ -159,7 +173,35 @@ export function MerchantsTab({ franchiseId }: { franchiseId?: string }) {
             </p>
           </div>
         </div>
-        <div className="flex flex-wrap gap-2 w-full sm:w-auto shrink-0">
+        <div className="flex flex-wrap items-center gap-2 w-full xl:w-auto shrink-0">
+          <Input
+            placeholder={t('admin.merchants.search', 'Buscar lojistas...')}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full sm:w-48 bg-slate-50"
+          />
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-full sm:w-36 bg-slate-50">
+              <SelectValue
+                placeholder={t('admin.merchants.filter_status', 'Status')}
+              />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">
+                {t('admin.merchants.all_statuses', 'Todos')}
+              </SelectItem>
+              <SelectItem value="active">
+                {t('admin.active', 'Ativo')}
+              </SelectItem>
+              <SelectItem value="pending">
+                {t('admin.pending', 'Pendente')}
+              </SelectItem>
+              <SelectItem value="inactive">
+                {t('admin.inactive', 'Inativo')}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+
           <Button
             variant="outline"
             onClick={exportCsv}

@@ -107,3 +107,83 @@ export const exportToPDF = (
     win.document.close()
   }
 }
+
+export const exportAccountingData = (
+  franchise: any,
+  merchants: any[],
+  t: any,
+) => {
+  const country = (
+    franchise.addressCountry ||
+    franchise.region ||
+    ''
+  ).toLowerCase()
+  const isBrazil =
+    country.includes('brasil') || country.includes('brazil') || country === 'br'
+
+  if (isBrazil) {
+    const headers = [
+      'Código',
+      'Razão Social',
+      'Nome Fantasia',
+      'CNPJ',
+      'Inscrição Estadual',
+      'Email',
+      'Telefone',
+      'Status',
+      'Data de Registro',
+    ]
+    const rows = merchants.map((m) => [
+      m.id,
+      m.legalName || m.name,
+      m.name,
+      m.taxId || '',
+      m.stateRegistration || '',
+      m.email || '',
+      m.businessPhone || '',
+      m.status.toUpperCase(),
+      m.registrationDate
+        ? new Date(m.registrationDate).toLocaleDateString('pt-BR')
+        : '',
+    ])
+    exportToCSV(
+      headers,
+      rows,
+      `Contabilidade_BR_${franchise.name.replace(/\s+/g, '_')}.csv`,
+    )
+    return t(
+      'admin.franchises.export_br_success',
+      'Brazilian Accounting format exported successfully',
+    )
+  } else {
+    const headers = [
+      '*Customer',
+      'NAME',
+      'COMPANYNAME',
+      'BILLA/C',
+      'EMAIL',
+      'PHONE',
+      'TERMS',
+      'TAXABLE',
+    ]
+    const rows = merchants.map((m) => [
+      'Customer',
+      m.name,
+      m.legalName || m.name,
+      m.taxId || '',
+      m.email || '',
+      m.businessPhone || '',
+      'Net 30',
+      'Y',
+    ])
+    exportToCSV(
+      headers,
+      rows,
+      `QuickBooks_Export_${franchise.name.replace(/\s+/g, '_')}.csv`,
+    )
+    return t(
+      'admin.franchises.export_quickbooks_success',
+      'QuickBooks format exported successfully',
+    )
+  }
+}

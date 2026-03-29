@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
   Table,
   TableBody,
@@ -17,17 +18,31 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
-import { Plus, Edit2, Trash2, Download, FileText } from 'lucide-react'
+import {
+  Plus,
+  Edit2,
+  Trash2,
+  Download,
+  FileText,
+  FileSpreadsheet,
+} from 'lucide-react'
 import { Franchise } from '@/lib/types'
 import { AdvancedCompanyForm } from './AdvancedCompanyForm'
+import { exportAccountingData } from '@/lib/exportUtils'
 import { toast } from 'sonner'
 
 export function FranchisesTab() {
-  const { franchises, addFranchise, updateFranchise, deleteFranchise } =
-    useCouponStore()
+  const {
+    franchises,
+    companies,
+    addFranchise,
+    updateFranchise,
+    deleteFranchise,
+  } = useCouponStore()
   const { t } = useLanguage()
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
   const [editingFranchise, setEditingFranchise] = useState<Franchise | null>(
     null,
   )
@@ -58,9 +73,18 @@ export function FranchisesTab() {
     setIsDialogOpen(false)
   }
 
+  const filteredFranchises = franchises.filter((f) => {
+    if (!searchQuery) return true
+    return (
+      f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (f.taxId && f.taxId.includes(searchQuery)) ||
+      (f.region && f.region.toLowerCase().includes(searchQuery.toLowerCase()))
+    )
+  })
+
   const exportCsv = () => {
     const headers = ['ID', 'Name', 'Tax ID', 'Contact', 'Region', 'Status']
-    const rows = franchises.map(
+    const rows = filteredFranchises.map(
       (f) =>
         `"${f.id}","${f.name}","${f.taxId || ''}","${f.contactEmail || ''}","${f.region || ''}","${f.status}"`,
     )
@@ -88,7 +112,7 @@ export function FranchisesTab() {
         <h1>Franchises Report</h1>
         <table>
           <tr><th>Name</th><th>Tax ID</th><th>Contact</th><th>Region</th><th>Status</th></tr>
-          ${franchises.map((f) => `<tr><td>${f.name}</td><td>${f.taxId || ''}</td><td>${f.contactEmail || ''}</td><td>${f.region || ''}</td><td>${f.status}</td></tr>`).join('')}
+          ${filteredFranchises.map((f) => `<tr><td>${f.name}</td><td>${f.taxId || ''}</td><td>${f.contactEmail || ''}</td><td>${f.region || ''}</td><td>${f.status}</td></tr>`).join('')}
         </table>
         <script>window.print(); window.close();</script>
         </body></html>
@@ -107,6 +131,12 @@ export function FranchisesTab() {
     )
   }
 
+  const handleAccountingExport = (f: Franchise) => {
+    const franchiseMerchants = companies.filter((c) => c.franchiseId === f.id)
+    const msg = exportAccountingData(f, franchiseMerchants, t)
+    toast.success(msg)
+  }
+
   return (
     <div className="space-y-4 animate-fade-in-up">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-card p-4 rounded-lg border gap-4">
@@ -121,7 +151,13 @@ export function FranchisesTab() {
             )}
           </p>
         </div>
-        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+          <Input
+            placeholder={t('admin.franchises.search', 'Search franchises...')}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full sm:w-48 bg-white"
+          />
           <Button variant="outline" onClick={exportCsv}>
             <FileText className="w-4 h-4 mr-2" />{' '}
             {t('admin.franchises.export_csv', 'CSV')}
@@ -155,7 +191,7 @@ export function FranchisesTab() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {franchises.map((f) => {
+            {filteredFranchises.map((f) => {
               const isSent = f.credentialsSent || f.status === 'active'
               return (
                 <TableRow key={f.id}>
@@ -204,6 +240,18 @@ export function FranchisesTab() {
                     </div>
                   </TableCell>
                   <TableCell className="text-right">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleAccountingExport(f)}
+                      title={t(
+                        'admin.franchises.export_accounting',
+                        'Export Accounting',
+                      )}
+                      className="text-green-600 hover:text-green-700"
+                    >
+                      <FileSpreadsheet className="h-4 w-4" />
+                    </Button>
                     <Button
                       variant="ghost"
                       size="icon"

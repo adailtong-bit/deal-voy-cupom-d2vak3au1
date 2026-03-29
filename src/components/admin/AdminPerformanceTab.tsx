@@ -61,10 +61,22 @@ export function AdminPerformanceTab() {
   }, [])
 
   const popularOffers = [
-    { title: '50% Nike', favorites: 1420 },
-    { title: 'Compre 1 Leve 2 - Brooklyn Coffee', favorites: 950 },
-    { title: 'Echo Dot (5ª Geração)', favorites: 834 },
-    { title: '20% Off Queens Pizza', favorites: 521 },
+    { title: t('admin.performance.mock.offer1', '50% Nike'), favorites: 1420 },
+    {
+      title: t(
+        'admin.performance.mock.offer2',
+        'Compre 1 Leve 2 - Brooklyn Coffee',
+      ),
+      favorites: 950,
+    },
+    {
+      title: t('admin.performance.mock.offer3', 'Echo Dot (5ª Geração)'),
+      favorites: 834,
+    },
+    {
+      title: t('admin.performance.mock.offer4', '20% Off Queens Pizza'),
+      favorites: 521,
+    },
   ]
 
   return (
