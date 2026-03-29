@@ -888,6 +888,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         coordinates: { lat: 0, lng: 0 },
         status: 'active',
         source: 'organic',
+        capturedAt: promo.capturedAt || new Date().toISOString(),
         region: promo.region,
         price: promo.price,
         currency: promo.currency,

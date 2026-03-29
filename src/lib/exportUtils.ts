@@ -134,6 +134,7 @@ export const exportAccountingData = (
       'Data de Registro',
       'Data de Expiração',
       'Site de Origem',
+      'Data de Busca',
     ]
     const rows = merchants.map((m) => [
       m.id,
@@ -149,6 +150,7 @@ export const exportAccountingData = (
         : '',
       m.expiryDate ? new Date(m.expiryDate).toLocaleDateString('pt-BR') : '',
       m.externalUrl || m.sourceId || '',
+      m.capturedAt ? new Date(m.capturedAt).toLocaleDateString('pt-BR') : '',
     ])
     exportToCSV(
       headers,
@@ -171,6 +173,7 @@ export const exportAccountingData = (
       'TAXABLE',
       'EXPIRATION_DATE',
       'SOURCE_SITE',
+      'FETCH_DATE',
     ]
     const rows = merchants.map((m) => [
       'Customer',
@@ -183,6 +186,7 @@ export const exportAccountingData = (
       'Y',
       m.expiryDate ? new Date(m.expiryDate).toISOString().split('T')[0] : '',
       m.externalUrl || m.sourceId || '',
+      m.capturedAt ? new Date(m.capturedAt).toISOString().split('T')[0] : '',
     ])
     exportToCSV(
       headers,

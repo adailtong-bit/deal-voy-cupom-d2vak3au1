@@ -211,6 +211,14 @@ export function CrawlerPromotionsTab() {
           <Badge variant="secondary">
             {pendingPromotions.length} {t('common.pending', 'Pendentes')}
           </Badge>
+          <Badge variant="outline" className="text-slate-500">
+            {t('franchisee.crawler.last_search', 'Última Busca')}:{' '}
+            {filterFetchDate !== 'all'
+              ? formatShortDate(filterFetchDate)
+              : allFetchDates[0]
+                ? formatShortDate(allFetchDates[0])
+                : '-'}
+          </Badge>
           {isFiltering && (
             <Button
               variant="ghost"
@@ -407,7 +415,19 @@ export function CrawlerPromotionsTab() {
                     </div>
                   </TableCell>
                   <TableCell className="whitespace-nowrap text-sm text-slate-600 font-medium">
-                    {promo.capturedAt ? formatShortDate(promo.capturedAt) : '-'}
+                    {promo.capturedAt ? (
+                      <div className="flex flex-col">
+                        <span>{formatShortDate(promo.capturedAt)}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(promo.capturedAt).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </span>
+                      </div>
+                    ) : (
+                      '-'
+                    )}
                   </TableCell>
                   <TableCell className="whitespace-nowrap text-sm text-slate-600 font-medium">
                     {promo.expiryDate ? formatShortDate(promo.expiryDate) : '-'}

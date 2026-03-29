@@ -145,6 +145,7 @@ export interface Coupon {
   currency?: string
   isPaid?: boolean
   source?: 'partner' | 'aggregated' | 'organic'
+  capturedAt?: string
   region?: string
   country?: string
   state?: string
