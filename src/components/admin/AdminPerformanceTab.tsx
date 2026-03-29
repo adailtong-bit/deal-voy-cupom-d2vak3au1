@@ -21,6 +21,7 @@ import {
   ChartTooltipContent,
 } from '@/components/ui/chart'
 import { Activity, Server, Users, Database, Heart } from 'lucide-react'
+import { useLanguage } from '@/stores/LanguageContext'
 
 const generateData = () => {
   const now = new Date()
@@ -36,6 +37,7 @@ const generateData = () => {
 }
 
 export function AdminPerformanceTab() {
+  const { t } = useLanguage()
   const [data, setData] = useState(generateData())
 
   useEffect(() => {
@@ -69,10 +71,13 @@ export function AdminPerformanceTab() {
     <div className="space-y-6 animate-fade-in">
       <div>
         <h2 className="text-2xl font-bold tracking-tight">
-          System Performance
+          {t('admin.performance.title', 'System Performance')}
         </h2>
         <p className="text-muted-foreground">
-          Real-time visualization of server metrics and active sessions.
+          {t(
+            'admin.performance.desc',
+            'Real-time visualization of server metrics and active sessions.',
+          )}
         </p>
       </div>
 
@@ -80,7 +85,7 @@ export function AdminPerformanceTab() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Avg Server Latency
+              {t('admin.performance.avg_server_latency', 'Avg Server Latency')}
             </CardTitle>
             <Server className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -88,13 +93,15 @@ export function AdminPerformanceTab() {
             <div className="text-2xl font-bold">
               {data[data.length - 1].latency} ms
             </div>
-            <p className="text-xs text-muted-foreground">Optimal &lt; 100ms</p>
+            <p className="text-xs text-muted-foreground">
+              {t('admin.performance.optimal_100ms', 'Optimal < 100ms')}
+            </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Database Latency
+              {t('admin.performance.db_latency', 'Database Latency')}
             </CardTitle>
             <Database className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -102,13 +109,15 @@ export function AdminPerformanceTab() {
             <div className="text-2xl font-bold">
               {data[data.length - 1].dbLatency} ms
             </div>
-            <p className="text-xs text-muted-foreground">Optimal &lt; 50ms</p>
+            <p className="text-xs text-muted-foreground">
+              {t('admin.performance.optimal_50ms', 'Optimal < 50ms')}
+            </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Active Sessions
+              {t('admin.performance.active_sessions', 'Active Sessions')}
             </CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -116,17 +125,23 @@ export function AdminPerformanceTab() {
             <div className="text-2xl font-bold">
               {data[data.length - 1].users.toLocaleString()}
             </div>
-            <p className="text-xs text-muted-foreground">Concurrent Users</p>
+            <p className="text-xs text-muted-foreground">
+              {t('admin.performance.concurrent_users', 'Concurrent Users')}
+            </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">System Health</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t('admin.performance.system_health', 'System Health')}
+            </CardTitle>
             <Activity className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">99.99%</div>
-            <p className="text-xs text-muted-foreground">Uptime this month</p>
+            <p className="text-xs text-muted-foreground">
+              {t('admin.performance.uptime_month', 'Uptime this month')}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -134,19 +149,29 @@ export function AdminPerformanceTab() {
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Response Times (ms)</CardTitle>
-            <CardDescription>Server & DB Latency</CardDescription>
+            <CardTitle>
+              {t('admin.performance.response_times', 'Response Times (ms)')}
+            </CardTitle>
+            <CardDescription>
+              {t('admin.performance.server_db_latency', 'Server & DB Latency')}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-[300px]">
               <ChartContainer
                 config={{
                   latency: {
-                    label: 'Server Latency',
+                    label: t(
+                      'admin.performance.server_latency_chart',
+                      'Server Latency',
+                    ),
                     color: 'hsl(var(--primary))',
                   },
                   dbLatency: {
-                    label: 'DB Latency',
+                    label: t(
+                      'admin.performance.db_latency_chart',
+                      'DB Latency',
+                    ),
                     color: 'hsl(var(--destructive))',
                   },
                 }}
@@ -186,14 +211,24 @@ export function AdminPerformanceTab() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Concurrent Users</CardTitle>
-            <CardDescription>Active Sessions over time</CardDescription>
+            <CardTitle>
+              {t('admin.performance.concurrent_users', 'Concurrent Users')}
+            </CardTitle>
+            <CardDescription>
+              {t(
+                'admin.performance.active_sessions_time',
+                'Active Sessions over time',
+              )}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-[300px]">
               <ChartContainer
                 config={{
-                  users: { label: 'Users', color: 'hsl(var(--chart-2))' },
+                  users: {
+                    label: t('admin.performance.users_chart', 'Users'),
+                    color: 'hsl(var(--chart-2))',
+                  },
                 }}
               >
                 <AreaChart
@@ -231,8 +266,15 @@ export function AdminPerformanceTab() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Top Favorited Offers</CardTitle>
-          <CardDescription>Most popular items saved by users.</CardDescription>
+          <CardTitle>
+            {t('admin.performance.top_offers', 'Top Favorited Offers')}
+          </CardTitle>
+          <CardDescription>
+            {t(
+              'admin.performance.top_offers_desc',
+              'Most popular items saved by users.',
+            )}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">

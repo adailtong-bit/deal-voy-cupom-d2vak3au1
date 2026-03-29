@@ -28,9 +28,12 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useCouponStore } from '@/stores/CouponContext'
+import { useLanguage } from '@/stores/LanguageContext'
 
 export function AdminNotificationsTab() {
   const { franchises } = useCouponStore()
+  const { t } = useLanguage()
+
   const [notifications, setNotifications] = useState([
     {
       id: '1',
@@ -73,29 +76,46 @@ export function AdminNotificationsTab() {
 
   const handleSave = () => {
     if (!formData.title || !formData.message)
-      return toast.error('Title and message are required')
+      return toast.error(
+        t(
+          'admin.notifications.toast.required',
+          'Title and message are required',
+        ),
+      )
+
     if (notifications.some((n) => n.id === formData.id)) {
       setNotifications(
         notifications.map((n) => (n.id === formData.id ? formData : n)),
       )
-      toast.success('Notification updated')
+      toast.success(
+        t('admin.notifications.toast.updated', 'Notification updated'),
+      )
     } else {
       setNotifications([...notifications, formData])
-      toast.success('Notification created')
+      toast.success(
+        t('admin.notifications.toast.created', 'Notification created'),
+      )
     }
     setIsDialogOpen(false)
   }
 
   const handleDelete = (id: string) => {
     setNotifications(notifications.filter((n) => n.id !== id))
-    toast.success('Notification deleted')
+    toast.success(
+      t('admin.notifications.toast.deleted', 'Notification deleted'),
+    )
   }
 
   const handleSend = (id: string) => {
     setNotifications(
       notifications.map((n) => (n.id === id ? { ...n, status: 'sent' } : n)),
     )
-    toast.success('Notification triggered successfully!')
+    toast.success(
+      t(
+        'admin.notifications.toast.sent',
+        'Notification triggered successfully!',
+      ),
+    )
   }
 
   return (
@@ -103,25 +123,34 @@ export function AdminNotificationsTab() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">
-            Push Notifications
+            {t('admin.notifications.title', 'Push Notifications')}
           </h2>
           <p className="text-muted-foreground">
-            Manage and schedule push notifications for users.
+            {t(
+              'admin.notifications.desc',
+              'Manage and schedule push notifications for users.',
+            )}
           </p>
         </div>
         <Button onClick={() => handleOpen()}>
-          <Plus className="w-4 h-4 mr-2" /> Create Notification
+          <Plus className="w-4 h-4 mr-2" />{' '}
+          {t('admin.notifications.create', 'Create Notification')}
         </Button>
       </div>
 
       <Card>
         <CardHeader>
-          <div className="flex justify-between items-center">
-            <CardTitle>All Notifications</CardTitle>
-            <div className="relative w-64">
+          <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+            <CardTitle>
+              {t('admin.notifications.all', 'All Notifications')}
+            </CardTitle>
+            <div className="relative w-full sm:w-64">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search notifications..."
+                placeholder={t(
+                  'admin.notifications.search_placeholder',
+                  'Search notifications...',
+                )}
                 className="pl-8"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -130,15 +159,25 @@ export function AdminNotificationsTab() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border">
+          <div className="rounded-md border overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Target Group</TableHead>
-                  <TableHead>Schedule Date</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="whitespace-nowrap">
+                    {t('admin.notifications.table.title', 'Title')}
+                  </TableHead>
+                  <TableHead className="whitespace-nowrap">
+                    {t('admin.notifications.table.target', 'Target Group')}
+                  </TableHead>
+                  <TableHead className="whitespace-nowrap">
+                    {t('admin.notifications.table.date', 'Schedule Date')}
+                  </TableHead>
+                  <TableHead className="whitespace-nowrap">
+                    {t('admin.notifications.table.status', 'Status')}
+                  </TableHead>
+                  <TableHead className="text-right whitespace-nowrap">
+                    {t('admin.notifications.table.actions', 'Actions')}
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -147,16 +186,21 @@ export function AdminNotificationsTab() {
                     <TableCell className="font-medium">{n.title}</TableCell>
                     <TableCell>
                       {n.target === 'all'
-                        ? 'All Users'
+                        ? t('admin.notifications.all_users', 'All Users')
                         : franchises.find((f) => f.id === n.target)?.name ||
                           n.target}
                     </TableCell>
                     <TableCell>{new Date(n.date).toLocaleString()}</TableCell>
                     <TableCell>
                       <span
-                        className={`px-2 py-1 rounded text-xs font-medium ${n.status === 'sent' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}
+                        className={`px-2 py-1 rounded text-xs font-medium whitespace-nowrap ${n.status === 'sent' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}
                       >
-                        {n.status.toUpperCase()}
+                        {n.status === 'sent'
+                          ? t('admin.notifications.status_sent', 'SENT')
+                          : t(
+                              'admin.notifications.status_scheduled',
+                              'SCHEDULED',
+                            )}
                       </span>
                     </TableCell>
                     <TableCell className="text-right">
@@ -166,8 +210,10 @@ export function AdminNotificationsTab() {
                             variant="outline"
                             size="sm"
                             onClick={() => handleSend(n.id)}
+                            className="whitespace-nowrap"
                           >
-                            <Send className="w-4 h-4 mr-2" /> Send Now
+                            <Send className="w-4 h-4 mr-2" />{' '}
+                            {t('admin.notifications.send_now', 'Send Now')}
                           </Button>
                         )}
                         <Button
@@ -195,7 +241,10 @@ export function AdminNotificationsTab() {
                       colSpan={5}
                       className="text-center text-muted-foreground py-8"
                     >
-                      No notifications found.
+                      {t(
+                        'admin.notifications.no_results',
+                        'No notifications found.',
+                      )}
                     </TableCell>
                   </TableRow>
                 )}
@@ -206,37 +255,47 @@ export function AdminNotificationsTab() {
       </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>
               {formData?.id && notifications.some((n) => n.id === formData.id)
-                ? 'Edit Notification'
-                : 'New Notification'}
+                ? t('admin.notifications.edit', 'Edit Notification')
+                : t('admin.notifications.new', 'New Notification')}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Notification Title</Label>
+              <Label>
+                {t('admin.notifications.form.title', 'Notification Title')}
+              </Label>
               <Input
                 value={formData?.title || ''}
                 onChange={(e) =>
                   setFormData({ ...formData, title: e.target.value })
                 }
-                placeholder="e.g., Weekend Special!"
+                placeholder={t(
+                  'admin.notifications.form.title_ph',
+                  'e.g., Weekend Special!',
+                )}
               />
             </div>
             <div className="space-y-2">
-              <Label>Message</Label>
+              <Label>{t('admin.notifications.form.message', 'Message')}</Label>
               <Input
                 value={formData?.message || ''}
                 onChange={(e) =>
                   setFormData({ ...formData, message: e.target.value })
                 }
-                placeholder="Write your message here..."
+                placeholder={t(
+                  'admin.notifications.form.message_ph',
+                  'Write your message here...',
+                )}
               />
             </div>
             <div className="space-y-2">
-              <Label>Target Audience</Label>
+              <Label>
+                {t('admin.notifications.form.target', 'Target Audience')}
+              </Label>
               <Select
                 value={formData?.target || 'all'}
                 onValueChange={(v) => setFormData({ ...formData, target: v })}
@@ -245,7 +304,9 @@ export function AdminNotificationsTab() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Users</SelectItem>
+                  <SelectItem value="all">
+                    {t('admin.notifications.form.all_users', 'All Users')}
+                  </SelectItem>
                   {franchises.map((f) => (
                     <SelectItem key={f.id} value={f.id}>
                       {f.name}
@@ -255,7 +316,9 @@ export function AdminNotificationsTab() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Schedule Time</Label>
+              <Label>
+                {t('admin.notifications.form.date', 'Schedule Time')}
+              </Label>
               <Input
                 type="datetime-local"
                 value={formData?.date || ''}
@@ -267,9 +330,11 @@ export function AdminNotificationsTab() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-              Cancel
+              {t('admin.notifications.cancel', 'Cancel')}
             </Button>
-            <Button onClick={handleSave}>Save Notification</Button>
+            <Button onClick={handleSave}>
+              {t('admin.notifications.save', 'Save Notification')}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
