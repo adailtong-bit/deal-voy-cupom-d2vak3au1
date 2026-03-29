@@ -863,9 +863,13 @@ export interface PartnerInvoice {
   paymentInstructions?: string
   billerName?: string
   billerTaxId?: string
+  billerStateReg?: string
+  billerEmail?: string
   billerAddress?: string
   customerName?: string
   customerTaxId?: string
+  customerStateReg?: string
+  customerEmail?: string
   customerAddress?: string
 }
 

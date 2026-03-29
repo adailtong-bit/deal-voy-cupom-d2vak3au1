@@ -28,7 +28,7 @@ export function BillingGenerationTab({
   franchiseId?: string
 }) {
   const { t } = useLanguage()
-  const { generatePartnerInvoice, companies, partnerInvoices } =
+  const { generatePartnerInvoice, companies, partnerInvoices, franchises } =
     useCouponStore()
   const [period, setPeriod] = useState('last_month')
   const [targetType, setTargetType] = useState('all')
@@ -90,7 +90,38 @@ export function BillingGenerationTab({
       return
     }
 
+    const franchise = franchises.find((f) => f.id === franchiseId)
+
+    const billerName = franchise
+      ? franchise.legalName || franchise.name
+      : 'Deal Voy Platform'
+    const billerTaxId = franchise?.taxId || '00.000.000/0001-00'
+    const billerStateReg = franchise?.stateRegistration || 'Isento'
+    const billerEmail =
+      franchise?.billingEmail || franchise?.email || 'billing@dealvoy.com'
+    const billerAddress = franchise
+      ? `${franchise.addressStreet || ''}, ${franchise.addressNumber || ''} - ${franchise.addressCity || ''}/${franchise.addressState || ''}`.replace(
+          /^[,\s-]+|[,\s-]+$/g,
+          '',
+        )
+      : 'Sede da Plataforma'
+
+    const paymentInstructions = franchise?.bankAccount
+      ? `Banco: ${franchise.bankName || ''}\nAgência: ${franchise.bankAgency || ''}\nConta: ${franchise.bankAccount || ''}\nPIX: ${franchise.taxId || ''}`
+      : 'PIX (Chave CNPJ): 00.000.000/0001-00\nPrazo para compensação: D+1'
+
     pendingCompanies.forEach((targetCompany) => {
+      const customerName = targetCompany.legalName || targetCompany.name
+      const customerTaxId = targetCompany.taxId || ''
+      const customerStateReg = targetCompany.stateRegistration || ''
+      const customerEmail =
+        targetCompany.billingEmail || targetCompany.email || ''
+      const customerAddress =
+        `${targetCompany.addressStreet || ''}, ${targetCompany.addressNumber || ''} - ${targetCompany.addressCity || ''}/${targetCompany.addressState || ''}`.replace(
+          /^[,\s-]+|[,\s-]+$/g,
+          '',
+        )
+
       generatePartnerInvoice({
         franchiseId,
         companyId: targetCompany.id,
@@ -102,6 +133,17 @@ export function BillingGenerationTab({
         periodStart: start.toISOString(),
         periodEnd: end.toISOString(),
         targetType: 'merchant',
+        billerName,
+        billerTaxId,
+        billerStateReg,
+        billerEmail,
+        billerAddress,
+        customerName,
+        customerTaxId,
+        customerStateReg,
+        customerEmail,
+        customerAddress,
+        paymentInstructions,
       })
     })
 

@@ -86,73 +86,121 @@ export function BillingStagingTab({ franchiseId }: { franchiseId?: string }) {
       const customerName = inv.customerName || getCompanyName(inv.companyId)
 
       w.document.write(`
-        <html><head><title>Invoice - ${inv.referenceNumber}</title>
+        <html><head><title>Fatura - ${inv.referenceNumber}</title>
         <style>
-          body { font-family: sans-serif; padding: 40px; line-height: 1.6; color: #333; }
-          .header { display: flex; justify-content: space-between; border-bottom: 2px solid #eee; padding-bottom: 20px; margin-bottom: 20px; }
-          .details { display: flex; justify-content: space-between; margin-bottom: 30px; gap: 20px; }
-          .box { flex: 1; padding: 15px; background: #f9f9f9; border-radius: 8px; border: 1px solid #eee; }
-          table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-          th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-          th { background-color: #f5f5f5; }
-          .total { text-align: right; font-size: 1.2em; margin-top: 20px; font-weight: bold; }
-          h3 { margin-top: 0; color: #555; font-size: 14px; text-transform: uppercase; }
+          body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 40px; color: #1e293b; background: #fff; line-height: 1.5; }
+          .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 30px; }
+          .title h1 { margin: 0; font-size: 28px; color: #0f172a; text-transform: uppercase; letter-spacing: -0.5px; }
+          .title p { margin: 4px 0 0 0; color: #64748b; font-size: 14px; }
+          .meta table { border-collapse: collapse; text-align: right; }
+          .meta td { padding: 4px 0; font-size: 14px; border: none; }
+          .meta td:first-child { font-weight: 600; color: #475569; padding-right: 16px; text-align: left; }
+          .parties { display: flex; gap: 30px; margin-bottom: 40px; }
+          .party { flex: 1; background: #f8fafc; padding: 24px; border-radius: 12px; border: 1px solid #e2e8f0; }
+          .party h3 { margin: 0 0 16px 0; font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #cbd5e1; padding-bottom: 8px; }
+          .party p { margin: 6px 0; font-size: 14px; color: #334155; }
+          .party strong { color: #0f172a; font-weight: 600; display: block; margin-bottom: 8px; font-size: 16px; }
+          .details-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+          .details-table th { background: #f1f5f9; padding: 12px 16px; text-align: left; font-size: 12px; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #cbd5e1; border-top: none; border-left: none; border-right: none;}
+          .details-table td { padding: 16px; font-size: 14px; border-bottom: 1px solid #e2e8f0; color: #334155; border-top: none; border-left: none; border-right: none;}
+          .details-table .amount { text-align: right; font-weight: 600; color: #0f172a; }
+          .summary { display: flex; justify-content: flex-end; margin-bottom: 40px; }
+          .summary-box { width: 300px; background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; }
+          .summary-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 14px; color: #475569; }
+          .summary-row.total { border-top: 2px solid #cbd5e1; padding-top: 12px; margin-top: 4px; margin-bottom: 0; font-size: 18px; font-weight: 700; color: #0f172a; }
+          .payment-box { background: #f0fdf4; border: 1px solid #bbf7d0; padding: 24px; border-radius: 12px; border-left: 4px solid #22c55e; page-break-inside: avoid; margin-bottom: 30px; }
+          .payment-box h4 { margin: 0 0 12px 0; font-size: 14px; font-weight: 700; color: #166534; text-transform: uppercase; letter-spacing: 0.5px; }
+          .payment-box p { margin: 0; font-size: 14px; color: #15803d; white-space: pre-wrap; line-height: 1.6; }
+          .notes { font-size: 13px; color: #64748b; line-height: 1.6; white-space: pre-wrap; background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; }
+          .notes h4 { margin: 0 0 8px 0; font-size: 12px; text-transform: uppercase; color: #475569; }
         </style></head>
         <body>
           <div class="header">
-            <h2>INVOICE</h2>
-            <div style="text-align: right;">
-              <strong>Ref:</strong> ${inv.referenceNumber}<br/>
-              <strong>Issue Date:</strong> ${formatDate(inv.issueDate)}<br/>
-              <strong>Due Date:</strong> ${formatDate(inv.dueDate)}<br/>
-              <strong>Status:</strong> ${inv.status.toUpperCase()}
+            <div class="title">
+              <h1>${t('franchisee.billing.invoice', 'Fatura de Serviços')}</h1>
+              <p>Ref: ${inv.referenceNumber}</p>
+            </div>
+            <div class="meta">
+              <table>
+                <tr><td>${t('franchisee.billing.issue_date', 'Data de Emissão')}:</td><td>${formatDate(inv.issueDate)}</td></tr>
+                <tr><td>${t('franchisee.billing.due_date', 'Vencimento')}:</td><td><strong>${formatDate(inv.dueDate)}</strong></td></tr>
+                <tr><td>Status:</td><td>${inv.status.toUpperCase()}</td></tr>
+              </table>
             </div>
           </div>
           
-          <div class="details">
-            <div class="box">
-              <h3>Biller (Cobrador)</h3>
-              <strong>${billerName}</strong><br/>
-              ${inv.billerTaxId ? `Tax ID: ${inv.billerTaxId}<br/>` : ''}
-              ${inv.billerAddress ? `${inv.billerAddress}<br/>` : ''}
+          <div class="parties">
+            <div class="party">
+              <h3>${t('franchisee.billing.biller', 'Cobrador')}</h3>
+              <strong>${billerName}</strong>
+              ${inv.billerTaxId ? `<p>CNPJ/CPF: ${inv.billerTaxId}${inv.billerStateReg ? ` | IE: ${inv.billerStateReg}` : ''}</p>` : ''}
+              ${inv.billerEmail ? `<p>Email: ${inv.billerEmail}</p>` : ''}
+              ${inv.billerAddress ? `<p>${inv.billerAddress}</p>` : ''}
             </div>
-            <div class="box">
-              <h3>Customer (Cobrado)</h3>
-              <strong>${customerName}</strong><br/>
-              ${inv.customerTaxId ? `Tax ID: ${inv.customerTaxId}<br/>` : ''}
-              ${inv.customerAddress ? `${inv.customerAddress}<br/>` : ''}
+            <div class="party">
+              <h3>${t('franchisee.billing.customer', 'Cobrado')}</h3>
+              <strong>${customerName}</strong>
+              ${inv.customerTaxId ? `<p>CNPJ/CPF: ${inv.customerTaxId}${inv.customerStateReg ? ` | IE: ${inv.customerStateReg}` : ''}</p>` : ''}
+              ${inv.customerEmail ? `<p>Email: ${inv.customerEmail}</p>` : ''}
+              ${inv.customerAddress ? `<p>${inv.customerAddress}</p>` : ''}
             </div>
           </div>
 
-          <table>
-            <tr>
-              <th>Description</th>
-              <th>Period</th>
-              <th>Amount</th>
-            </tr>
-            <tr>
-              <td>Commissions (${inv.transactionCount} transactions)</td>
-              <td>${formatDate(inv.periodStart)} - ${formatDate(inv.periodEnd)}</td>
-              <td>${formatCurrency(inv.totalCommission)}</td>
-            </tr>
+          <table class="details-table">
+            <thead>
+              <tr>
+                <th>${t('franchisee.billing.description', 'Descrição')}</th>
+                <th>${t('franchisee.billing.period', 'Período')}</th>
+                <th class="amount">${t('franchisee.billing.value', 'Valor')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Comissões / Serviços (${inv.transactionCount} transações)</td>
+                <td>${formatDate(inv.periodStart)} - ${formatDate(inv.periodEnd)}</td>
+                <td class="amount">${formatCurrency(inv.totalCommission)}</td>
+              </tr>
+            </tbody>
           </table>
           
-          <div class="total">
-            Total Due: ${formatCurrency(inv.totalCommission)}
+          <div class="summary">
+            <div class="summary-box">
+              <div class="summary-row">
+                <span>Subtotal:</span>
+                <span>${formatCurrency(inv.totalCommission)}</span>
+              </div>
+              <div class="summary-row total">
+                <span>Total a Pagar:</span>
+                <span>${formatCurrency(inv.totalCommission)}</span>
+              </div>
+            </div>
           </div>
           
           ${
             inv.paymentInstructions
               ? `
-            <div style="margin-top: 40px; padding: 15px; background: #f0f8ff; border-left: 4px solid #0066cc;">
-              <h4>Payment Instructions</h4>
-              <pre style="font-family: inherit; margin: 0; white-space: pre-wrap;">${inv.paymentInstructions}</pre>
+            <div class="payment-box">
+              <h4>${t('franchisee.billing.payment_instructions', 'Dados para Pagamento')}</h4>
+              <p>${inv.paymentInstructions}</p>
+            </div>
+          `
+              : ''
+          }
+
+          ${
+            inv.description
+              ? `
+            <div class="notes">
+              <h4>${t('franchisee.billing.notes', 'Observações')}</h4>
+              <div>${inv.description}</div>
             </div>
           `
               : ''
           }
           
-          <script>window.print(); window.close();</script>
+          <script>
+            window.onload = () => { setTimeout(() => { window.print(); window.close(); }, 500); }
+          </script>
         </body></html>
       `)
       w.document.close()
@@ -361,17 +409,48 @@ export function BillingStagingTab({ franchiseId }: { franchiseId?: string }) {
                     }
                   />
                 </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-2">
+                    <Label>{t('franchisee.billing.tax_id', 'CNPJ/CPF')}</Label>
+                    <Input
+                      value={editForm.billerTaxId || ''}
+                      onChange={(e) =>
+                        setEditForm({
+                          ...editForm,
+                          billerTaxId: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>
+                      {t('admin.company.state_reg', 'Insc. Estadual')}
+                    </Label>
+                    <Input
+                      value={editForm.billerStateReg || ''}
+                      onChange={(e) =>
+                        setEditForm({
+                          ...editForm,
+                          billerStateReg: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                </div>
                 <div className="space-y-2">
-                  <Label>{t('franchisee.billing.tax_id', 'CNPJ/CPF')}</Label>
+                  <Label>{t('admin.company.email', 'E-mail')}</Label>
                   <Input
-                    value={editForm.billerTaxId || ''}
+                    type="email"
+                    value={editForm.billerEmail || ''}
                     onChange={(e) =>
-                      setEditForm({ ...editForm, billerTaxId: e.target.value })
+                      setEditForm({ ...editForm, billerEmail: e.target.value })
                     }
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>{t('franchisee.billing.address', 'Endereço')}</Label>
+                  <Label>
+                    {t('franchisee.billing.address', 'Endereço Completo')}
+                  </Label>
                   <Input
                     value={editForm.billerAddress || ''}
                     onChange={(e) =>
@@ -400,20 +479,51 @@ export function BillingStagingTab({ franchiseId }: { franchiseId?: string }) {
                     placeholder={getCompanyName(editForm.companyId || '')}
                   />
                 </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-2">
+                    <Label>{t('franchisee.billing.tax_id', 'CNPJ/CPF')}</Label>
+                    <Input
+                      value={editForm.customerTaxId || ''}
+                      onChange={(e) =>
+                        setEditForm({
+                          ...editForm,
+                          customerTaxId: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>
+                      {t('admin.company.state_reg', 'Insc. Estadual')}
+                    </Label>
+                    <Input
+                      value={editForm.customerStateReg || ''}
+                      onChange={(e) =>
+                        setEditForm({
+                          ...editForm,
+                          customerStateReg: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                </div>
                 <div className="space-y-2">
-                  <Label>{t('franchisee.billing.tax_id', 'CNPJ/CPF')}</Label>
+                  <Label>{t('admin.company.email', 'E-mail')}</Label>
                   <Input
-                    value={editForm.customerTaxId || ''}
+                    type="email"
+                    value={editForm.customerEmail || ''}
                     onChange={(e) =>
                       setEditForm({
                         ...editForm,
-                        customerTaxId: e.target.value,
+                        customerEmail: e.target.value,
                       })
                     }
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>{t('franchisee.billing.address', 'Endereço')}</Label>
+                  <Label>
+                    {t('franchisee.billing.address', 'Endereço Completo')}
+                  </Label>
                   <Input
                     value={editForm.customerAddress || ''}
                     onChange={(e) =>
