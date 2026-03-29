@@ -866,11 +866,15 @@ export interface PartnerInvoice {
   billerStateReg?: string
   billerEmail?: string
   billerAddress?: string
+  billerContact?: string
+  billerPhone?: string
   customerName?: string
   customerTaxId?: string
   customerStateReg?: string
   customerEmail?: string
   customerAddress?: string
+  customerContact?: string
+  customerPhone?: string
 }
 
 export interface WebhookLog {

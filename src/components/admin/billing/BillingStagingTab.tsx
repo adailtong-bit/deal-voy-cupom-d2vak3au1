@@ -100,6 +100,7 @@ export function BillingStagingTab({ franchiseId }: { franchiseId?: string }) {
           .party h3 { margin: 0 0 16px 0; font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #cbd5e1; padding-bottom: 8px; }
           .party p { margin: 6px 0; font-size: 14px; color: #334155; }
           .party strong { color: #0f172a; font-weight: 600; display: block; margin-bottom: 8px; font-size: 16px; }
+          .contact-info { margin-top: 12px; padding-top: 12px; border-top: 1px solid #e2e8f0; }
           .details-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
           .details-table th { background: #f1f5f9; padding: 12px 16px; text-align: left; font-size: 12px; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #cbd5e1; border-top: none; border-left: none; border-right: none;}
           .details-table td { padding: 16px; font-size: 14px; border-bottom: 1px solid #e2e8f0; color: #334155; border-top: none; border-left: none; border-right: none;}
@@ -134,15 +135,23 @@ export function BillingStagingTab({ franchiseId }: { franchiseId?: string }) {
               <h3>${t('franchisee.billing.biller', 'Cobrador')}</h3>
               <strong>${billerName}</strong>
               ${inv.billerTaxId ? `<p>CNPJ/CPF: ${inv.billerTaxId}${inv.billerStateReg ? ` | IE: ${inv.billerStateReg}` : ''}</p>` : ''}
-              ${inv.billerEmail ? `<p>Email: ${inv.billerEmail}</p>` : ''}
               ${inv.billerAddress ? `<p>${inv.billerAddress}</p>` : ''}
+              <div class="contact-info">
+                ${inv.billerContact ? `<p>A/C: <strong>${inv.billerContact}</strong></p>` : ''}
+                ${inv.billerEmail ? `<p>Email: ${inv.billerEmail}</p>` : ''}
+                ${inv.billerPhone ? `<p>Tel: ${inv.billerPhone}</p>` : ''}
+              </div>
             </div>
             <div class="party">
               <h3>${t('franchisee.billing.customer', 'Cobrado')}</h3>
               <strong>${customerName}</strong>
               ${inv.customerTaxId ? `<p>CNPJ/CPF: ${inv.customerTaxId}${inv.customerStateReg ? ` | IE: ${inv.customerStateReg}` : ''}</p>` : ''}
-              ${inv.customerEmail ? `<p>Email: ${inv.customerEmail}</p>` : ''}
               ${inv.customerAddress ? `<p>${inv.customerAddress}</p>` : ''}
+              <div class="contact-info">
+                ${inv.customerContact ? `<p>A/C: <strong>${inv.customerContact}</strong></p>` : ''}
+                ${inv.customerEmail ? `<p>Email: ${inv.customerEmail}</p>` : ''}
+                ${inv.customerPhone ? `<p>Tel: ${inv.customerPhone}</p>` : ''}
+              </div>
             </div>
           </div>
 
@@ -438,16 +447,6 @@ export function BillingStagingTab({ franchiseId }: { franchiseId?: string }) {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label>{t('admin.company.email', 'E-mail')}</Label>
-                  <Input
-                    type="email"
-                    value={editForm.billerEmail || ''}
-                    onChange={(e) =>
-                      setEditForm({ ...editForm, billerEmail: e.target.value })
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
                   <Label>
                     {t('franchisee.billing.address', 'Endereço Completo')}
                   </Label>
@@ -458,6 +457,46 @@ export function BillingStagingTab({ franchiseId }: { franchiseId?: string }) {
                         ...editForm,
                         billerAddress: e.target.value,
                       })
+                    }
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-2">
+                    <Label>
+                      {t('admin.company.contact_person', 'Contato (A/C)')}
+                    </Label>
+                    <Input
+                      value={editForm.billerContact || ''}
+                      onChange={(e) =>
+                        setEditForm({
+                          ...editForm,
+                          billerContact: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>{t('admin.company.phone', 'Telefone')}</Label>
+                    <Input
+                      value={editForm.billerPhone || ''}
+                      onChange={(e) =>
+                        setEditForm({
+                          ...editForm,
+                          billerPhone: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>
+                    {t('admin.company.email', 'E-mail de Cobrança')}
+                  </Label>
+                  <Input
+                    type="email"
+                    value={editForm.billerEmail || ''}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, billerEmail: e.target.value })
                     }
                   />
                 </div>
@@ -508,19 +547,6 @@ export function BillingStagingTab({ franchiseId }: { franchiseId?: string }) {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label>{t('admin.company.email', 'E-mail')}</Label>
-                  <Input
-                    type="email"
-                    value={editForm.customerEmail || ''}
-                    onChange={(e) =>
-                      setEditForm({
-                        ...editForm,
-                        customerEmail: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
                   <Label>
                     {t('franchisee.billing.address', 'Endereço Completo')}
                   </Label>
@@ -530,6 +556,49 @@ export function BillingStagingTab({ franchiseId }: { franchiseId?: string }) {
                       setEditForm({
                         ...editForm,
                         customerAddress: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-2">
+                    <Label>
+                      {t('admin.company.contact_person', 'Contato (A/C)')}
+                    </Label>
+                    <Input
+                      value={editForm.customerContact || ''}
+                      onChange={(e) =>
+                        setEditForm({
+                          ...editForm,
+                          customerContact: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>{t('admin.company.phone', 'Telefone')}</Label>
+                    <Input
+                      value={editForm.customerPhone || ''}
+                      onChange={(e) =>
+                        setEditForm({
+                          ...editForm,
+                          customerPhone: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>
+                    {t('admin.company.email', 'E-mail de Pagamento')}
+                  </Label>
+                  <Input
+                    type="email"
+                    value={editForm.customerEmail || ''}
+                    onChange={(e) =>
+                      setEditForm({
+                        ...editForm,
+                        customerEmail: e.target.value,
                       })
                     }
                   />

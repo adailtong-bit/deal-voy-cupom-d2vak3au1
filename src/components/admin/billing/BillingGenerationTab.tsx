@@ -92,18 +92,55 @@ export function BillingGenerationTab({
 
     const franchise = franchises.find((f) => f.id === franchiseId)
 
+    const formatAddress = (entity: any) => {
+      if (!entity) return ''
+      const parts = []
+      let streetPart = entity.addressStreet || ''
+      if (streetPart && entity.addressNumber)
+        streetPart += `, ${entity.addressNumber}`
+      if (streetPart && entity.addressComplement)
+        streetPart += ` (${entity.addressComplement})`
+      if (entity.addressNeighborhood)
+        streetPart += (streetPart ? ` - ` : '') + entity.addressNeighborhood
+      if (streetPart) parts.push(streetPart)
+
+      let cityState = ''
+      if (entity.addressCity) cityState += entity.addressCity
+      if (entity.addressState)
+        cityState += cityState
+          ? ` - ${entity.addressState}`
+          : entity.addressState
+      if (cityState) parts.push(cityState)
+
+      if (entity.addressZip) parts.push(`CEP: ${entity.addressZip}`)
+
+      return parts.join(', ')
+    }
+
     const billerName = franchise
       ? franchise.legalName || franchise.name
       : 'Deal Voy Platform'
     const billerTaxId = franchise?.taxId || '00.000.000/0001-00'
     const billerStateReg = franchise?.stateRegistration || 'Isento'
     const billerEmail =
-      franchise?.billingEmail || franchise?.email || 'billing@dealvoy.com'
+      franchise?.billingEmail ||
+      franchise?.secondaryContactEmail ||
+      franchise?.contactEmail ||
+      franchise?.email ||
+      'billing@dealvoy.com'
+
+    const billerContact =
+      franchise?.secondaryContactName &&
+      franchise?.secondaryContactDepartment?.toLowerCase().includes('financ')
+        ? franchise.secondaryContactName
+        : franchise?.contactPerson || 'Financeiro'
+    const billerPhone =
+      franchise?.secondaryContactPhone ||
+      franchise?.businessPhone ||
+      franchise?.contactPhone ||
+      ''
     const billerAddress = franchise
-      ? `${franchise.addressStreet || ''}, ${franchise.addressNumber || ''} - ${franchise.addressCity || ''}/${franchise.addressState || ''}`.replace(
-          /^[,\s-]+|[,\s-]+$/g,
-          '',
-        )
+      ? formatAddress(franchise)
       : 'Sede da Plataforma'
 
     const paymentInstructions = franchise?.bankAccount
@@ -115,12 +152,25 @@ export function BillingGenerationTab({
       const customerTaxId = targetCompany.taxId || ''
       const customerStateReg = targetCompany.stateRegistration || ''
       const customerEmail =
-        targetCompany.billingEmail || targetCompany.email || ''
-      const customerAddress =
-        `${targetCompany.addressStreet || ''}, ${targetCompany.addressNumber || ''} - ${targetCompany.addressCity || ''}/${targetCompany.addressState || ''}`.replace(
-          /^[,\s-]+|[,\s-]+$/g,
-          '',
-        )
+        targetCompany.billingEmail ||
+        targetCompany.secondaryContactEmail ||
+        targetCompany.contactEmail ||
+        targetCompany.email ||
+        ''
+
+      const customerContact =
+        targetCompany.secondaryContactName &&
+        targetCompany.secondaryContactDepartment
+          ?.toLowerCase()
+          .includes('financ')
+          ? targetCompany.secondaryContactName
+          : targetCompany.contactPerson || ''
+      const customerPhone =
+        targetCompany.secondaryContactPhone ||
+        targetCompany.businessPhone ||
+        targetCompany.contactPhone ||
+        ''
+      const customerAddress = formatAddress(targetCompany)
 
       generatePartnerInvoice({
         franchiseId,
@@ -138,11 +188,15 @@ export function BillingGenerationTab({
         billerStateReg,
         billerEmail,
         billerAddress,
+        billerContact,
+        billerPhone,
         customerName,
         customerTaxId,
         customerStateReg,
         customerEmail,
         customerAddress,
+        customerContact,
+        customerPhone,
         paymentInstructions,
       })
     })

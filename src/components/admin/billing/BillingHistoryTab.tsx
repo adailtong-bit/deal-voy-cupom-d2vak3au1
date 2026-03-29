@@ -89,6 +89,7 @@ export function BillingHistoryTab({ franchiseId }: { franchiseId?: string }) {
           .party h3 { margin: 0 0 16px 0; font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #cbd5e1; padding-bottom: 8px; }
           .party p { margin: 6px 0; font-size: 14px; color: #334155; }
           .party strong { color: #0f172a; font-weight: 600; display: block; margin-bottom: 8px; font-size: 16px; }
+          .contact-info { margin-top: 12px; padding-top: 12px; border-top: 1px solid #e2e8f0; }
           .details-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
           .details-table th { background: #f1f5f9; padding: 12px 16px; text-align: left; font-size: 12px; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #cbd5e1; border-top: none; border-left: none; border-right: none;}
           .details-table td { padding: 16px; font-size: 14px; border-bottom: 1px solid #e2e8f0; color: #334155; border-top: none; border-left: none; border-right: none;}
@@ -123,15 +124,23 @@ export function BillingHistoryTab({ franchiseId }: { franchiseId?: string }) {
               <h3>${t('franchisee.billing.biller', 'Cobrador')}</h3>
               <strong>${billerName}</strong>
               ${inv.billerTaxId ? `<p>CNPJ/CPF: ${inv.billerTaxId}${inv.billerStateReg ? ` | IE: ${inv.billerStateReg}` : ''}</p>` : ''}
-              ${inv.billerEmail ? `<p>Email: ${inv.billerEmail}</p>` : ''}
               ${inv.billerAddress ? `<p>${inv.billerAddress}</p>` : ''}
+              <div class="contact-info">
+                ${inv.billerContact ? `<p>A/C: <strong>${inv.billerContact}</strong></p>` : ''}
+                ${inv.billerEmail ? `<p>Email: ${inv.billerEmail}</p>` : ''}
+                ${inv.billerPhone ? `<p>Tel: ${inv.billerPhone}</p>` : ''}
+              </div>
             </div>
             <div class="party">
               <h3>${t('franchisee.billing.customer', 'Cobrado')}</h3>
               <strong>${customerName}</strong>
               ${inv.customerTaxId ? `<p>CNPJ/CPF: ${inv.customerTaxId}${inv.customerStateReg ? ` | IE: ${inv.customerStateReg}` : ''}</p>` : ''}
-              ${inv.customerEmail ? `<p>Email: ${inv.customerEmail}</p>` : ''}
               ${inv.customerAddress ? `<p>${inv.customerAddress}</p>` : ''}
+              <div class="contact-info">
+                ${inv.customerContact ? `<p>A/C: <strong>${inv.customerContact}</strong></p>` : ''}
+                ${inv.customerEmail ? `<p>Email: ${inv.customerEmail}</p>` : ''}
+                ${inv.customerPhone ? `<p>Tel: ${inv.customerPhone}</p>` : ''}
+              </div>
             </div>
           </div>
 
@@ -377,16 +386,31 @@ export function BillingHistoryTab({ franchiseId }: { franchiseId?: string }) {
                         `| IE: ${viewingInv.billerStateReg}`}
                     </p>
                   )}
-                  {viewingInv.billerEmail && (
-                    <p className="text-sm text-slate-600 mt-1">
-                      Email: {viewingInv.billerEmail}
-                    </p>
-                  )}
                   {viewingInv.billerAddress && (
                     <p className="text-sm text-slate-600 mt-1">
                       {viewingInv.billerAddress}
                     </p>
                   )}
+                  <div className="mt-3 pt-3 border-t border-slate-200 space-y-1">
+                    {viewingInv.billerContact && (
+                      <p className="text-sm text-slate-600">
+                        A/C:{' '}
+                        <span className="font-medium text-slate-800">
+                          {viewingInv.billerContact}
+                        </span>
+                      </p>
+                    )}
+                    {viewingInv.billerEmail && (
+                      <p className="text-sm text-slate-600">
+                        Email: {viewingInv.billerEmail}
+                      </p>
+                    )}
+                    {viewingInv.billerPhone && (
+                      <p className="text-sm text-slate-600">
+                        Tel: {viewingInv.billerPhone}
+                      </p>
+                    )}
+                  </div>
                 </div>
                 <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 relative">
                   <div className="absolute top-4 right-4">
@@ -420,16 +444,31 @@ export function BillingHistoryTab({ franchiseId }: { franchiseId?: string }) {
                         `| IE: ${viewingInv.customerStateReg}`}
                     </p>
                   )}
-                  {viewingInv.customerEmail && (
-                    <p className="text-sm text-slate-600 mt-1">
-                      Email: {viewingInv.customerEmail}
-                    </p>
-                  )}
                   {viewingInv.customerAddress && (
                     <p className="text-sm text-slate-600 mt-1">
                       {viewingInv.customerAddress}
                     </p>
                   )}
+                  <div className="mt-3 pt-3 border-t border-slate-200 space-y-1">
+                    {viewingInv.customerContact && (
+                      <p className="text-sm text-slate-600">
+                        A/C:{' '}
+                        <span className="font-medium text-slate-800">
+                          {viewingInv.customerContact}
+                        </span>
+                      </p>
+                    )}
+                    {viewingInv.customerEmail && (
+                      <p className="text-sm text-slate-600">
+                        Email: {viewingInv.customerEmail}
+                      </p>
+                    )}
+                    {viewingInv.customerPhone && (
+                      <p className="text-sm text-slate-600">
+                        Tel: {viewingInv.customerPhone}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
 
