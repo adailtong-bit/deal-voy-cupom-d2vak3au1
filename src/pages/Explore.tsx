@@ -16,8 +16,7 @@ import { AdSpace } from '@/components/AdSpace'
 import { Skeleton } from '@/components/ui/skeleton'
 import { CATEGORIES } from '@/lib/data'
 import { cn } from '@/lib/utils'
-import { fetchCoupons } from '@/lib/api'
-import { Coupon } from '@/lib/types'
+
 import {
   Select,
   SelectContent,
@@ -47,7 +46,7 @@ const getDistance = (
 
 export default function Explore() {
   const { t, language } = useLanguage()
-  const { user, selectedRegion } = useCouponStore()
+  const { user, selectedRegion, coupons } = useCouponStore()
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list')
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
@@ -60,11 +59,9 @@ export default function Explore() {
     lng: number
   } | null>(null)
 
-  const [serverCoupons, setServerCoupons] = useState<Coupon[]>([])
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
-  const [hasMore, setHasMore] = useState(true)
-  const [total, setTotal] = useState(0)
+  const itemsPerPage = 24
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -84,94 +81,50 @@ export default function Explore() {
     return () => clearTimeout(handler)
   }, [search])
 
-  useEffect(() => {
-    let isMounted = true
-    const loadInitial = async () => {
-      setLoading(true)
-      try {
-        const res = await fetchCoupons({
-          query: debouncedSearch,
-          category: selectedCategory,
-          page: 1,
-          limit: 24,
-          franchiseId: user?.franchiseId,
-          region: selectedRegion,
-          language,
-        })
-        if (isMounted) {
-          setServerCoupons(res.data)
-          setPage(1)
-          setHasMore(res.hasMore)
-          setTotal(res.total)
-        }
-      } catch (err) {
-        console.error(err)
-      } finally {
-        if (isMounted) setLoading(false)
-      }
-    }
-    loadInitial()
-    return () => {
-      isMounted = false
-    }
-  }, [
-    debouncedSearch,
-    selectedCategory,
-    language,
-    selectedRegion,
-    user?.franchiseId,
-  ])
+  const filteredCoupons = useMemo(() => {
+    let processed = [...coupons]
 
-  const observer = useRef<IntersectionObserver | null>(null)
-  const lastElementRef = useCallback(
-    (node: HTMLDivElement | null) => {
-      if (loading || !hasMore) return
-      if (observer.current) observer.current.disconnect()
-      observer.current = new IntersectionObserver(async (entries) => {
-        if (entries[0].isIntersecting && hasMore && !loading) {
-          setLoading(true)
-          try {
-            const nextPage = page + 1
-            const res = await fetchCoupons({
-              query: debouncedSearch,
-              category: selectedCategory,
-              page: nextPage,
-              limit: 24,
-              franchiseId: user?.franchiseId,
-              region: selectedRegion,
-              language,
-            })
-            setServerCoupons((prev) => {
-              const newItems = res.data.filter(
-                (n) => !prev.some((p) => p.id === n.id),
-              )
-              return [...prev, ...newItems]
-            })
-            setPage(nextPage)
-            setHasMore(res.hasMore)
-          } catch (err) {
-            console.error(err)
-          } finally {
-            setLoading(false)
-          }
-        }
+    // 1. Status Filter: Only show active/approved coupons
+    processed = processed.filter(
+      (c) => c.status === 'active' || c.status === 'approved',
+    )
+
+    // 2. Expiration Filter
+    const now = new Date()
+    processed = processed.filter((c) => {
+      if (!c.expiryDate) return true
+      const exp = new Date(c.expiryDate)
+      return exp > now
+    })
+
+    // 3. Franchise Filter
+    if (user?.franchiseId) {
+      processed = processed.filter(
+        (c) => !c.franchiseId || c.franchiseId === user.franchiseId,
+      )
+    }
+
+    // 4. Category Filter
+    if (selectedCategory !== 'all') {
+      processed = processed.filter((c) => c.category === selectedCategory)
+    }
+
+    // 5. Search Filter
+    if (debouncedSearch) {
+      const q = debouncedSearch.toLowerCase()
+      processed = processed.filter((c) => {
+        const title = (
+          c.translations?.[language]?.title || c.title
+        ).toLowerCase()
+        const desc = (
+          c.translations?.[language]?.description || c.description
+        ).toLowerCase()
+        const store = (c.storeName || '').toLowerCase()
+        return title.includes(q) || desc.includes(q) || store.includes(q)
       })
-      if (node) observer.current.observe(node)
-    },
-    [
-      loading,
-      hasMore,
-      page,
-      debouncedSearch,
-      selectedCategory,
-      language,
-      selectedRegion,
-      user?.franchiseId,
-    ],
-  )
+    }
 
-  const displayCoupons = useMemo(() => {
-    let processed = [...serverCoupons]
+    // 6. Location processing
     if (userLocation) {
       processed = processed.map((c) => {
         if (c.coordinates?.lat && c.coordinates?.lng) {
@@ -189,11 +142,53 @@ export default function Explore() {
         return c
       })
     }
+
+    // 7. Sorting
     if (sortBy === 'distance') {
       processed.sort((a, b) => (a.distance || 0) - (b.distance || 0))
     }
+
     return processed
-  }, [serverCoupons, sortBy, userLocation])
+  }, [
+    coupons,
+    selectedCategory,
+    debouncedSearch,
+    language,
+    userLocation,
+    sortBy,
+    user?.franchiseId,
+  ])
+
+  const displayCoupons = useMemo(() => {
+    return filteredCoupons.slice(0, page * itemsPerPage)
+  }, [filteredCoupons, page])
+
+  const hasMore = displayCoupons.length < filteredCoupons.length
+  const total = filteredCoupons.length
+
+  useEffect(() => {
+    setLoading(true)
+    setPage(1)
+    const timer = setTimeout(() => {
+      setLoading(false)
+    }, 400)
+    return () => clearTimeout(timer)
+  }, [debouncedSearch, selectedCategory, selectedRegion, coupons])
+
+  const observer = useRef<IntersectionObserver | null>(null)
+  const lastElementRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (loading || !hasMore) return
+      if (observer.current) observer.current.disconnect()
+      observer.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasMore) {
+          setPage((prev) => prev + 1)
+        }
+      })
+      if (node) observer.current.observe(node)
+    },
+    [loading, hasMore],
+  )
 
   return (
     <div className="container max-w-6xl py-6 animate-fade-in-up flex flex-col gap-6">
