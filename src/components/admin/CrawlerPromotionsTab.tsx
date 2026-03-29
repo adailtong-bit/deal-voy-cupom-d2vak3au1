@@ -24,7 +24,15 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { CheckCircle, XCircle, ExternalLink, Edit, FilterX } from 'lucide-react'
+import {
+  CheckCircle,
+  XCircle,
+  ExternalLink,
+  Edit,
+  FilterX,
+  Trash2,
+} from 'lucide-react'
+import { Card, CardContent } from '@/components/ui/card'
 import { CrawlerAnalysisSheet } from './CrawlerAnalysisSheet'
 import {
   HoverCard,
@@ -103,13 +111,13 @@ export function CrawlerPromotionsTab({
   const [previewCategory, setPreviewCategory] = useState<string>('all')
   const [previewKeywords, setPreviewKeywords] = useState<string>('')
   const [isSearchingPreview, setIsSearchingPreview] = useState(false)
-  const [previewResults, setPreviewResults] = useState<DiscoveredPromotion[]>(
-    [],
-  )
+  const [previewResults, setPreviewResults] = useState<
+    (DiscoveredPromotion & { _validated?: boolean })[]
+  >([])
   const [hasSearched, setHasSearched] = useState(false)
 
   useEffect(() => {
-    if (previewCategory && previewCategory !== 'all') {
+    if (previewCategory && previewCategory !== 'all' && dynamicCategories) {
       const catLabel =
         dynamicCategories.find((c: any) => c.id === previewCategory)?.label ||
         previewCategory
@@ -119,58 +127,165 @@ export function CrawlerPromotionsTab({
     }
   }, [previewCategory, dynamicCategories])
 
+  const getCategoryRules = (categoryLabel: string) => {
+    const label = categoryLabel.toLowerCase()
+    if (label.includes('viag') || label.includes('travel')) {
+      return {
+        context: ['viagem', 'hotel', 'voo', 'pacote', 'passagem', 'resort'],
+        blacklist: [
+          'tênis',
+          'tv',
+          'smartphone',
+          'geladeira',
+          'computador',
+          'roupa',
+          'sapato',
+          'perfume',
+          'tamanho',
+        ],
+      }
+    }
+    if (
+      label.includes('eletr') ||
+      label.includes('tech') ||
+      label.includes('inform')
+    ) {
+      return {
+        context: [
+          'tv',
+          'smartphone',
+          'notebook',
+          'computador',
+          'celular',
+          'tablet',
+          'tela',
+        ],
+        blacklist: [
+          'viagem',
+          'hotel',
+          'roupa',
+          'tênis',
+          'perfume',
+          'comida',
+          'restaurante',
+          'voo',
+        ],
+      }
+    }
+    if (
+      label.includes('moda') ||
+      label.includes('roupa') ||
+      label.includes('vestu') ||
+      label.includes('fashion')
+    ) {
+      return {
+        context: [
+          'roupa',
+          'tênis',
+          'camisa',
+          'calça',
+          'sapato',
+          'vestido',
+          'moda',
+        ],
+        blacklist: [
+          'tv',
+          'smartphone',
+          'viagem',
+          'hotel',
+          'geladeira',
+          'computador',
+          'voo',
+        ],
+      }
+    }
+    return { context: [], blacklist: [] }
+  }
+
   const handlePreviewSearch = async () => {
     setIsSearchingPreview(true)
     setHasSearched(true)
     try {
+      const catLabel =
+        previewCategory !== 'all' && dynamicCategories
+          ? dynamicCategories.find((c: any) => c.id === previewCategory)
+              ?.label || previewCategory
+          : ''
+
+      const rules = catLabel
+        ? getCategoryRules(catLabel)
+        : { context: [], blacklist: [] }
+      const enhancedQuery = [previewKeywords, ...rules.context]
+        .filter(Boolean)
+        .join(' ')
+
       const res = await fetchCrawlerPromotions({
         category: previewCategory !== 'all' ? previewCategory : undefined,
-        query: previewKeywords,
-        limit: 5,
+        query: enhancedQuery,
+        limit: 15,
       })
 
-      const enhancedResults = res.data.map((p) => {
-        let confidence = 0
-        let reason = ''
-        const q = previewKeywords.toLowerCase()
-        const catLabel = (
-          dynamicCategories.find((c: any) => c.id === previewCategory)?.label ||
-          previewCategory
-        ).toLowerCase()
-
-        if (
-          p.category?.toLowerCase() === catLabel ||
-          p.category?.toLowerCase() === previewCategory.toLowerCase()
-        ) {
-          confidence += 60
-          reason = t('franchisee.crawler.cat_match', 'Category match')
-        }
-        if (
-          q &&
-          (p.title.toLowerCase().includes(q) ||
-            p.description?.toLowerCase().includes(q))
-        ) {
-          confidence += 40
-          reason = reason
-            ? reason + ' + ' + t('franchisee.crawler.kw_match', 'Keyword match')
-            : t('franchisee.crawler.kw_match', 'Keyword match')
-        }
-
-        if (confidence === 0) {
-          confidence = 25
-          reason = t(
-            'franchisee.crawler.semantic_match',
-            'Partial semantic match',
-          )
-        }
-
-        return { ...p, matchConfidence: confidence, matchReason: reason }
+      const validResults = res.data.filter((p) => {
+        if (!catLabel) return true
+        const textToSearch = `${p.title} ${p.description || ''}`.toLowerCase()
+        const hasBlacklisted = rules.blacklist.some((word) =>
+          textToSearch.includes(word),
+        )
+        return !hasBlacklisted
       })
+
+      const enhancedResults = validResults
+        .map((p) => {
+          let confidence = 0
+          let reason = ''
+          const q = previewKeywords.toLowerCase()
+          const cLabelLower = catLabel.toLowerCase()
+
+          if (
+            (cLabelLower && p.category?.toLowerCase() === cLabelLower) ||
+            p.category?.toLowerCase() === previewCategory.toLowerCase()
+          ) {
+            confidence += 60
+            reason = t('franchisee.crawler.cat_match', 'Category match')
+          }
+          if (
+            q &&
+            (p.title.toLowerCase().includes(q) ||
+              p.description?.toLowerCase().includes(q))
+          ) {
+            confidence += 40
+            reason = reason
+              ? reason +
+                ' + ' +
+                t('franchisee.crawler.kw_match', 'Keyword match')
+              : t('franchisee.crawler.kw_match', 'Keyword match')
+          }
+
+          if (confidence === 0) {
+            confidence = 25
+            reason = t(
+              'franchisee.crawler.semantic_match',
+              'Partial semantic match',
+            )
+          }
+
+          return {
+            ...p,
+            matchConfidence: confidence,
+            matchReason: reason,
+            _validated: true,
+          }
+        })
+        .slice(0, 5)
 
       setPreviewResults(enhancedResults)
     } finally {
       setIsSearchingPreview(false)
     }
+  }
+
+  const handleDiscardPreviewItem = (id: string) => {
+    setPreviewResults((prev) => prev.filter((item) => item.id !== id))
   }
 
   const clearFilters = () => {
@@ -386,7 +501,11 @@ export function CrawlerPromotionsTab({
                   </Button>
                   <Button
                     variant="outline"
-                    disabled={!hasSearched || previewResults.length === 0}
+                    disabled={
+                      !hasSearched ||
+                      previewResults.length === 0 ||
+                      !previewResults.some((r) => r._validated)
+                    }
                     onClick={() => {
                       toast.success(
                         t(
@@ -420,7 +539,11 @@ export function CrawlerPromotionsTab({
                       <AlertDescription className="text-xs text-red-700 mt-1 font-medium">
                         {t(
                           'franchisee.crawler.no_results_desc_new',
-                          'No relevant items found for this category. Please refine your keywords.',
+                          `No consistent results found for ${
+                            dynamicCategories?.find(
+                              (c: any) => c.id === previewCategory,
+                            )?.label || previewCategory
+                          }. Please try refining your keywords.`,
                         )}
                       </AlertDescription>
                     </Alert>
@@ -432,73 +555,92 @@ export function CrawlerPromotionsTab({
                           'Preview Results',
                         )}
                       </h4>
-                      <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 hide-scrollbar">
+                      <div className="space-y-3 max-h-[350px] overflow-y-auto pr-2 hide-scrollbar">
                         {previewResults.map((res) => (
-                          <div
+                          <Card
                             key={res.id}
-                            className="bg-white p-3 rounded-md border text-sm flex flex-col sm:flex-row gap-4 items-start sm:items-center shadow-sm"
+                            className="overflow-hidden shadow-sm hover:shadow-md transition-shadow"
                           >
-                            <img
-                              src={res.image}
-                              alt=""
-                              className="w-12 h-12 rounded-md object-cover shrink-0 border"
-                            />
-                            <div className="flex-1 min-w-0">
-                              <p className="font-semibold text-slate-900 truncate text-sm">
-                                {res.title}
-                              </p>
-                              <p className="text-xs text-slate-500 line-clamp-1 mt-0.5">
-                                {res.description}
-                              </p>
-                              <div className="flex items-center gap-2 mt-1.5">
-                                <span className="text-xs font-medium text-slate-700">
-                                  {res.storeName}
-                                </span>
-                                {res.price !== undefined && (
-                                  <>
-                                    <span className="text-slate-300">•</span>
-                                    <span className="text-xs font-bold text-green-600">
-                                      {res.currency || 'R$'}{' '}
-                                      {res.price.toFixed(2)}
-                                    </span>
-                                  </>
-                                )}
-                              </div>
-                            </div>
-                            <div className="flex flex-col items-end gap-1.5 shrink-0 min-w-[140px]">
-                              <Badge
-                                variant={
-                                  res.matchConfidence &&
-                                  res.matchConfidence > 70
-                                    ? 'default'
-                                    : 'secondary'
-                                }
-                                className="text-[10px] h-5 px-2 font-semibold flex items-center gap-1"
-                              >
-                                Target Category: {res.category}
-                              </Badge>
-                              <div className="flex flex-col w-full gap-0.5">
-                                <div className="flex items-center justify-between w-full">
-                                  <span className="text-[9px] text-slate-500">
-                                    Confidence
+                            <CardContent className="p-3 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                              <img
+                                src={res.image}
+                                alt=""
+                                className="w-16 h-16 rounded-md object-cover shrink-0 border"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <p className="font-semibold text-slate-900 truncate text-sm">
+                                  {res.title}
+                                </p>
+                                <p className="text-xs text-slate-500 line-clamp-2 mt-0.5">
+                                  {res.description}
+                                </p>
+                                <div className="flex items-center gap-2 mt-2">
+                                  <span className="text-xs font-medium text-slate-700">
+                                    {res.storeName}
                                   </span>
-                                  <span className="text-[10px] font-bold text-slate-700">
-                                    {res.matchConfidence}%
-                                  </span>
+                                  {res.price !== undefined && (
+                                    <>
+                                      <span className="text-slate-300">•</span>
+                                      <span className="text-xs font-bold text-green-600">
+                                        {res.currency || 'R$'}{' '}
+                                        {res.price.toFixed(2)}
+                                      </span>
+                                    </>
+                                  )}
                                 </div>
-                                <Progress
-                                  value={res.matchConfidence || 0}
-                                  className="h-1.5 w-full bg-slate-100"
-                                />
                               </div>
-                              <span
-                                className="text-[9px] text-muted-foreground text-right w-full truncate"
-                                title={res.matchReason}
-                              >
-                                {res.matchReason}
-                              </span>
-                            </div>
-                          </div>
+                              <div className="flex flex-col items-end gap-2 shrink-0 min-w-[140px]">
+                                <Badge
+                                  variant={
+                                    res.matchConfidence &&
+                                    res.matchConfidence > 70
+                                      ? 'default'
+                                      : 'secondary'
+                                  }
+                                  className="text-[10px] h-5 px-2 font-semibold flex items-center gap-1"
+                                >
+                                  {t('common.category', 'Category')}:{' '}
+                                  {res.category}
+                                </Badge>
+                                <div className="flex flex-col w-full gap-0.5">
+                                  <div className="flex items-center justify-between w-full">
+                                    <span className="text-[9px] text-slate-500">
+                                      {t(
+                                        'franchisee.crawler.confidence',
+                                        'Confidence',
+                                      )}
+                                    </span>
+                                    <span className="text-[10px] font-bold text-slate-700">
+                                      {res.matchConfidence}%
+                                    </span>
+                                  </div>
+                                  <Progress
+                                    value={res.matchConfidence || 0}
+                                    className="h-1.5 w-full bg-slate-100"
+                                  />
+                                </div>
+                                <div className="flex w-full items-center justify-between mt-1">
+                                  <span
+                                    className="text-[9px] text-muted-foreground truncate flex-1 pr-2 text-right"
+                                    title={res.matchReason}
+                                  >
+                                    {res.matchReason}
+                                  </span>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6 text-slate-400 hover:text-red-600 hover:bg-red-50"
+                                    onClick={() =>
+                                      handleDiscardPreviewItem(res.id)
+                                    }
+                                    title={t('common.discard', 'Discard')}
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </Button>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
                         ))}
                       </div>
                     </div>
