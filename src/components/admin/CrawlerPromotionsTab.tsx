@@ -14,6 +14,11 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { CheckCircle, XCircle, ExternalLink, Edit, FilterX } from 'lucide-react'
 import { CrawlerAnalysisSheet } from './CrawlerAnalysisSheet'
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from '@/components/ui/hover-card'
 import { DiscoveredPromotion } from '@/lib/types'
 import { toast } from 'sonner'
 import {
@@ -181,6 +186,15 @@ export function CrawlerPromotionsTab({
     filterCategory !== 'all' ||
     filterFetchDate !== 'all'
 
+  const getOfferUrl = (promo: DiscoveredPromotion) => {
+    return (
+      promo.originalUrl ||
+      promo.rawData?.source_link ||
+      promo.rawData?.url ||
+      ''
+    )
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
@@ -192,7 +206,10 @@ export function CrawlerPromotionsTab({
             variant="secondary"
             className="text-sm shadow-sm font-semibold"
           >
-            {pendingPromotions.length} {t('common.pending', 'Pendentes')}
+            {isFiltering
+              ? `${pendingPromotions.length} / ${basePendingPromotions.length}`
+              : basePendingPromotions.length}{' '}
+            {t('common.pending', 'Pendentes')}
           </Badge>
           <Badge variant="outline" className="text-slate-500">
             {t('franchisee.crawler.last_search', 'Última Busca')}:{' '}
@@ -384,25 +401,25 @@ export function CrawlerPromotionsTab({
                   </TableCell>
                   <TableCell className="whitespace-nowrap">
                     <div className="flex flex-col">
-                      {promo.originalUrl ? (
+                      {getOfferUrl(promo) ? (
                         <a
-                          href={promo.originalUrl}
+                          href={getOfferUrl(promo)}
                           target="_blank"
                           rel="noreferrer"
                           className="text-sm font-medium text-blue-600 hover:underline max-w-[200px] truncate block"
-                          title={promo.originalUrl}
+                          title={getOfferUrl(promo)}
                         >
-                          {promo.originalUrl}
+                          {getOfferUrl(promo)}
                         </a>
                       ) : (
                         <span
                           className="text-sm font-medium text-slate-700 max-w-[200px] truncate block"
-                          title={promo.sourceId}
+                          title={promo.sourceId || 'Lojista descoberto'}
                         >
-                          {promo.sourceId}
+                          {promo.sourceId || 'Lojista descoberto'}
                         </span>
                       )}
-                      {promo.originalUrl && (
+                      {getOfferUrl(promo) && (
                         <span className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
                           <ExternalLink className="w-3 h-3" />{' '}
                           {t('franchisee.crawler.offer_url', 'URL da Oferta')}
@@ -446,15 +463,47 @@ export function CrawlerPromotionsTab({
                           </Badge>
                         )}
                       </div>
-                      <span
-                        className="text-xs text-muted-foreground line-clamp-2"
-                        title={promo.description}
-                      >
-                        {promo.description}
-                      </span>
+
+                      <HoverCard>
+                        <HoverCardTrigger asChild>
+                          <span className="text-xs text-muted-foreground line-clamp-2 cursor-help border-b border-dashed border-slate-300 pb-0.5">
+                            {promo.description ||
+                              promo.rawData?.original_description ||
+                              t('common.no_description', 'Sem descrição')}
+                          </span>
+                        </HoverCardTrigger>
+                        <HoverCardContent className="w-[350px] text-sm z-[100] bg-background shadow-xl border-border">
+                          <p className="font-semibold mb-1 text-foreground">
+                            {t(
+                              'franchisee.crawler.original_description',
+                              'Descrição Original do Anunciante',
+                            )}
+                          </p>
+                          <p className="text-muted-foreground whitespace-pre-wrap">
+                            {promo.description ||
+                              promo.rawData?.original_description ||
+                              t('common.no_description', 'Sem descrição')}
+                          </p>
+                          {promo.rawData?.original_title && (
+                            <div className="mt-3 pt-2 border-t border-border/50">
+                              <span className="text-xs font-semibold text-foreground">
+                                {t(
+                                  'franchisee.crawler.original_title',
+                                  'Título Original',
+                                )}
+                                :{' '}
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                {promo.rawData.original_title}
+                              </span>
+                            </div>
+                          )}
+                        </HoverCardContent>
+                      </HoverCard>
+
                       <Badge
                         variant="secondary"
-                        className="w-fit bg-green-100 text-green-800 hover:bg-green-100"
+                        className="w-fit bg-green-100 text-green-800 hover:bg-green-100 mt-1"
                       >
                         {promo.discount}
                       </Badge>

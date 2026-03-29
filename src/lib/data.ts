@@ -1591,7 +1591,7 @@ export const MOCK_DISCOVERED_PROMOTIONS: DiscoveredPromotion[] = [
     title: 'Pizza 50% Off',
     discount: '50% OFF',
     description:
-      'Half price on all family sized pizzas. Enjoy this local deal!',
+      'Half price on all family sized pizzas. Enjoy this local deal! Terms and conditions apply. Limit one per customer. Not valid with other offers. See store for details. This is an extended description to test the hover card and responsive UI layout.',
     expiryDate: '2025-12-31',
     image: 'https://img.usecurling.com/p/300/200?q=pizza',
     storeName: 'Papa Johns',
@@ -1599,8 +1599,11 @@ export const MOCK_DISCOVERED_PROMOTIONS: DiscoveredPromotion[] = [
     region: 'BR-SP',
     category: 'Alimentação',
     capturedAt: new Date(Date.now() - 3600000).toISOString(),
+    originalUrl: 'https://www.papajohns.com/deals/50-off-family',
     rawData: {
       original_title: 'Papa Johns Special 50%',
+      original_description:
+        'Get 50% off any large or family size pizza at participating locations. Valid online only. Use promo code LOCAL50 at checkout. Expires 12/31/2025.',
       price_info: '50% Off Regular Price',
       vendor: 'Papa Johns Local',
       api_timestamp: new Date(Date.now() - 3600000).toISOString(),
@@ -1619,8 +1622,11 @@ export const MOCK_DISCOVERED_PROMOTIONS: DiscoveredPromotion[] = [
     region: 'US-FL',
     category: 'Lazer',
     capturedAt: new Date(Date.now() - 86400000).toISOString(),
+    originalUrl: 'https://www.orlandoparks.com/tickets/promo/family20',
     rawData: {
       headline: 'Orlando Parks - Save Big!',
+      original_description:
+        'Save $20 on all family passes. Includes fast-pass access to selected rides. Blackout dates apply.',
       discount_value: '$20',
       source_link: 'https://flcoupons.com/deal/orlando-parks',
       scraped_images: ['url1', 'url2'],
@@ -1640,8 +1646,11 @@ export const MOCK_DISCOVERED_PROMOTIONS: DiscoveredPromotion[] = [
     region: 'Global',
     category: 'Eletrônicos',
     capturedAt: new Date(Date.now() - 3600000).toISOString(),
+    originalUrl: 'https://www.amazon.com/dp/B09B8V1LZ3?ref=deals',
     rawData: {
       original_title: 'Echo Dot (5th Gen, 2022 release)',
+      original_description:
+        'Our best-sounding Echo Dot yet. Enjoy an improved audio experience compared to any previous Echo Dot with Alexa for clearer vocals, deeper bass and vibrant sound in any room.',
       price_info: '$34.99',
       is_sponsored: false,
     },
