@@ -32,6 +32,7 @@ import { AdminTranslationsTab } from '@/components/admin/AdminTranslationsTab'
 import { AdminPerformanceTab } from '@/components/admin/AdminPerformanceTab'
 import { AdminNotificationsTab } from '@/components/admin/AdminNotificationsTab'
 import { AdminSettingsTab } from '@/components/admin/AdminSettingsTab'
+import { FinanceDashboardTab } from '@/components/finance/FinanceDashboardTab'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useRegionFormatting } from '@/hooks/useRegionFormatting'
@@ -39,7 +40,7 @@ import { cn } from '@/lib/utils'
 
 export default function AdminDashboard() {
   const { t } = useLanguage()
-  const { user, companies } = useCouponStore()
+  const { user, companies, franchises } = useCouponStore()
   const { formatNumber, formatCurrency } = useRegionFormatting(
     user?.region,
     user?.country,
@@ -48,8 +49,15 @@ export default function AdminDashboard() {
   const isSuperAdmin = user?.role === 'super_admin'
   const isFranchisee = user?.role === 'franchisee'
 
+  const myFranchise = isFranchisee
+    ? franchises.find((f: any) => f.ownerId === user?.id)
+    : null
+  const currentFranchiseId = isFranchisee
+    ? user?.franchiseId || myFranchise?.id
+    : undefined
+
   const [activeTab, setActiveTab] = useState(
-    isSuperAdmin ? 'overview' : 'hierarchy',
+    isSuperAdmin ? 'overview' : 'finance',
   )
 
   const pendingMerchants = companies.filter((c) => c.status === 'pending')
@@ -223,8 +231,13 @@ export default function AdminDashboard() {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="mb-8 flex flex-wrap h-auto gap-2 p-1 justify-start">
           {isSuperAdmin && (
+            <TabsTrigger value="overview">{t('admin.overview')}</TabsTrigger>
+          )}
+          <TabsTrigger value="finance">
+            {t('finance.dashboard_title', 'Financeiro')}
+          </TabsTrigger>
+          {isSuperAdmin && (
             <>
-              <TabsTrigger value="overview">{t('admin.overview')}</TabsTrigger>
               <TabsTrigger value="monetization">
                 {t('admin.monetization')}
               </TabsTrigger>
@@ -262,6 +275,10 @@ export default function AdminDashboard() {
             {t('admin.hierarchy.title', 'Hierarchy & Team')}
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="finance">
+          <FinanceDashboardTab franchiseId={currentFranchiseId} />
+        </TabsContent>
 
         {isSuperAdmin && (
           <>

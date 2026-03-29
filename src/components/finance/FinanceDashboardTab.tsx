@@ -1,15 +1,16 @@
 import { useState } from 'react'
 import { TransactionsList } from './TransactionsList'
 import { BankReconciliation } from './BankReconciliation'
+import { BillingHistoryTab } from '@/components/admin/billing/BillingHistoryTab'
 import { useLanguage } from '@/stores/LanguageContext'
-import { Wallet, LineChart, CheckSquare } from 'lucide-react'
+import { Wallet, LineChart, CheckSquare, Receipt } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export function FinanceDashboardTab({ franchiseId }: { franchiseId?: string }) {
   const { t } = useLanguage()
-  const [activeView, setActiveView] = useState<'statement' | 'reconciliation'>(
-    'statement',
-  )
+  const [activeView, setActiveView] = useState<
+    'statement' | 'reconciliation' | 'billing'
+  >('statement')
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -52,6 +53,18 @@ export function FinanceDashboardTab({ franchiseId }: { franchiseId?: string }) {
             <CheckSquare className="w-4 h-4" />
             {t('finance.reconciliation', 'Bank Reconciliation')}
           </button>
+          <button
+            onClick={() => setActiveView('billing')}
+            className={cn(
+              'flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all',
+              activeView === 'billing'
+                ? 'bg-white text-slate-900 shadow-sm'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50',
+            )}
+          >
+            <Receipt className="w-4 h-4" />
+            {t('finance.billing', 'Billing')}
+          </button>
         </div>
 
         <div className="mt-0">
@@ -60,6 +73,9 @@ export function FinanceDashboardTab({ franchiseId }: { franchiseId?: string }) {
           )}
           {activeView === 'reconciliation' && (
             <BankReconciliation franchiseId={franchiseId} />
+          )}
+          {activeView === 'billing' && (
+            <BillingHistoryTab franchiseId={franchiseId} />
           )}
         </div>
       </div>
