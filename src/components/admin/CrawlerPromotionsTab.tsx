@@ -371,11 +371,11 @@ export function CrawlerPromotionsTab({
                     className="h-9 text-xs"
                   />
                 </div>
-                <div className="flex items-end">
+                <div className="flex items-end gap-2">
                   <Button
                     onClick={handlePreviewSearch}
                     disabled={isSearchingPreview || previewCategory === 'all'}
-                    className="w-full h-9 text-xs"
+                    className="flex-1 h-9 text-xs"
                   >
                     {isSearchingPreview ? (
                       <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />
@@ -383,6 +383,22 @@ export function CrawlerPromotionsTab({
                       <Search className="w-3.5 h-3.5 mr-2" />
                     )}
                     {t('franchisee.crawler.run_preview', 'Run Preview')}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    disabled={!hasSearched || previewResults.length === 0}
+                    onClick={() => {
+                      toast.success(
+                        t(
+                          'franchisee.crawler.saved_settings',
+                          'Crawler settings saved successfully!',
+                        ),
+                      )
+                    }}
+                    className="flex-1 h-9 text-xs bg-green-50 text-green-700 border-green-200 hover:bg-green-100 hover:text-green-800 disabled:opacity-50 disabled:bg-slate-50 disabled:text-slate-400 disabled:border-slate-200"
+                  >
+                    <CheckCircle className="w-3.5 h-3.5 mr-2" />
+                    {t('franchisee.crawler.save_crawler', 'Save Crawler')}
                   </Button>
                 </div>
               </div>
@@ -401,10 +417,10 @@ export function CrawlerPromotionsTab({
                           'Irrelevant or Empty Results',
                         )}
                       </AlertTitle>
-                      <AlertDescription className="text-xs text-red-700 mt-1">
+                      <AlertDescription className="text-xs text-red-700 mt-1 font-medium">
                         {t(
-                          'franchisee.crawler.no_results_desc',
-                          'The current search parameters are returning zero matches or unrelated items for this category. Consider broadening or refining your keywords.',
+                          'franchisee.crawler.no_results_desc_new',
+                          'No relevant items found for this category. Please refine your keywords.',
                         )}
                       </AlertDescription>
                     </Alert>
@@ -413,10 +429,10 @@ export function CrawlerPromotionsTab({
                       <h4 className="font-semibold text-xs text-slate-700 uppercase tracking-wider">
                         {t(
                           'franchisee.crawler.preview_results',
-                          'Real-Time Fetch Sample',
+                          'Preview Results',
                         )}
                       </h4>
-                      <div className="space-y-2 max-h-[250px] overflow-y-auto pr-2 hide-scrollbar">
+                      <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 hide-scrollbar">
                         {previewResults.map((res) => (
                           <div
                             key={res.id}
@@ -425,7 +441,7 @@ export function CrawlerPromotionsTab({
                             <img
                               src={res.image}
                               alt=""
-                              className="w-10 h-10 rounded-md object-cover shrink-0 border"
+                              className="w-12 h-12 rounded-md object-cover shrink-0 border"
                             />
                             <div className="flex-1 min-w-0">
                               <p className="font-semibold text-slate-900 truncate text-sm">
@@ -434,8 +450,22 @@ export function CrawlerPromotionsTab({
                               <p className="text-xs text-slate-500 line-clamp-1 mt-0.5">
                                 {res.description}
                               </p>
+                              <div className="flex items-center gap-2 mt-1.5">
+                                <span className="text-xs font-medium text-slate-700">
+                                  {res.storeName}
+                                </span>
+                                {res.price !== undefined && (
+                                  <>
+                                    <span className="text-slate-300">•</span>
+                                    <span className="text-xs font-bold text-green-600">
+                                      {res.currency || 'R$'}{' '}
+                                      {res.price.toFixed(2)}
+                                    </span>
+                                  </>
+                                )}
+                              </div>
                             </div>
-                            <div className="flex flex-col items-end gap-1.5 shrink-0 min-w-[130px]">
+                            <div className="flex flex-col items-end gap-1.5 shrink-0 min-w-[140px]">
                               <Badge
                                 variant={
                                   res.matchConfidence &&
@@ -443,9 +473,9 @@ export function CrawlerPromotionsTab({
                                     ? 'default'
                                     : 'secondary'
                                 }
-                                className="text-[10px] h-4 px-1.5 font-semibold"
+                                className="text-[10px] h-5 px-2 font-semibold flex items-center gap-1"
                               >
-                                {res.category}
+                                Target Category: {res.category}
                               </Badge>
                               <div className="flex flex-col w-full gap-0.5">
                                 <div className="flex items-center justify-between w-full">

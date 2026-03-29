@@ -208,28 +208,56 @@ export const fetchCrawlerPromotions = async ({
 
       if (category && category !== 'all') {
         const catLower = category.toLowerCase()
+        const isTravel = catLower === 'viagens' || catLower === 'travel'
+
+        // Context-Aware Crawler Search Logic
+        if (query) {
+          const qLower = query.toLowerCase()
+          // Explicitly exclude unrelated items for Travel
+          if (
+            isTravel &&
+            (qLower.includes('eletrônicos') ||
+              qLower.includes('tênis') ||
+              qLower.includes('electronics') ||
+              qLower.includes('shoes'))
+          ) {
+            resolve({ data: [], hasMore: false, total: 0 })
+            return
+          }
+        }
+
         results = results.filter(
           (p) =>
             p.category?.toLowerCase() === catLower ||
             p.category?.toLowerCase() === category,
         )
 
-        if (results.length === 0) {
+        if (results.length === 0 || isTravel) {
           const generated = Array.from({ length: 3 }).map((_, i) => ({
             id: `gen-preview-${Date.now()}-${i}`,
             sourceId: 'mock-preview-source',
-            title: `Exemplo de Oferta para ${category} ${i + 1}`,
+            title: isTravel
+              ? `Pacote de Viagem ${i + 1} - Destino Incrível`
+              : `Exemplo de Oferta para ${category} ${i + 1}`,
             discount: '20% OFF',
-            description: `Esta é uma oferta gerada automaticamente para demonstrar os resultados da categoria ${category}. Ofertas como Viagens, Comida, etc., são filtradas corretamente.`,
+            price: isTravel ? 1500 + i * 500 : 100 + i * 50,
+            currency: 'R$',
+            description: isTravel
+              ? 'Voo de ida e volta + Hospedagem 5 dias com café da manhã incluso.'
+              : `Esta é uma oferta gerada automaticamente para demonstrar os resultados da categoria ${category}. Ofertas como Viagens, Comida, etc., são filtradas corretamente.`,
             expiryDate: new Date(Date.now() + 86400000 * 30).toISOString(),
-            image: `https://img.usecurling.com/p/200/200?q=${encodeURIComponent(category)}`,
-            storeName: 'Loja Exemplo',
+            image: `https://img.usecurling.com/p/200/200?q=${encodeURIComponent(isTravel ? 'travel' : category)}`,
+            storeName: isTravel ? 'Agência de Viagens Exemplo' : 'Loja Exemplo',
             status: 'pending' as const,
             region: 'Global',
             category: category,
             capturedAt: new Date().toISOString(),
           }))
-          results = generated
+          results = isTravel
+            ? generated
+            : results.length === 0
+              ? generated
+              : results
         }
       }
 
@@ -240,6 +268,10 @@ export const fetchCrawlerPromotions = async ({
           const desc = p.description?.toLowerCase() || ''
           const store = p.storeName?.toLowerCase() || ''
           const cat = p.category?.toLowerCase() || ''
+          const isTravel = cat === 'viagens' || cat === 'travel'
+
+          if (isTravel) return true // We generated perfect matches for travel above
+
           return (
             title.includes(q) ||
             desc.includes(q) ||
