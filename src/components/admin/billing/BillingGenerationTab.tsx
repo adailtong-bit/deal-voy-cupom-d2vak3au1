@@ -117,28 +117,63 @@ export function BillingGenerationTab({
       return parts.join(', ')
     }
 
+    const extractContactInfo = (entity: any) => {
+      if (!entity) return { name: 'Financeiro', email: '', phone: '' }
+
+      const isSecFin = entity.secondaryContactDepartment
+        ?.toLowerCase()
+        .includes('financ')
+      const isPriFin = entity.contactDepartment
+        ?.toLowerCase()
+        .includes('financ')
+
+      if (isSecFin && entity.secondaryContactName) {
+        return {
+          name: entity.secondaryContactName,
+          email:
+            entity.billingEmail ||
+            entity.secondaryContactEmail ||
+            entity.email ||
+            '',
+          phone: entity.secondaryContactPhone || entity.businessPhone || '',
+        }
+      }
+      if (isPriFin && entity.contactPerson) {
+        return {
+          name: entity.contactPerson,
+          email:
+            entity.billingEmail || entity.contactEmail || entity.email || '',
+          phone: entity.contactPhone || entity.businessPhone || '',
+        }
+      }
+
+      // Fallback to Master
+      return {
+        name:
+          entity.contactPerson || entity.secondaryContactName || 'Responsável',
+        email:
+          entity.billingEmail ||
+          entity.contactEmail ||
+          entity.secondaryContactEmail ||
+          entity.email ||
+          '',
+        phone:
+          entity.contactPhone ||
+          entity.secondaryContactPhone ||
+          entity.businessPhone ||
+          '',
+      }
+    }
+
+    const billerInfo = extractContactInfo(franchise)
     const billerName = franchise
       ? franchise.legalName || franchise.name
       : 'Deal Voy Platform'
     const billerTaxId = franchise?.taxId || '00.000.000/0001-00'
     const billerStateReg = franchise?.stateRegistration || 'Isento'
-    const billerEmail =
-      franchise?.billingEmail ||
-      franchise?.secondaryContactEmail ||
-      franchise?.contactEmail ||
-      franchise?.email ||
-      'billing@dealvoy.com'
-
-    const billerContact =
-      franchise?.secondaryContactName &&
-      franchise?.secondaryContactDepartment?.toLowerCase().includes('financ')
-        ? franchise.secondaryContactName
-        : franchise?.contactPerson || 'Financeiro'
-    const billerPhone =
-      franchise?.secondaryContactPhone ||
-      franchise?.businessPhone ||
-      franchise?.contactPhone ||
-      ''
+    const billerEmail = billerInfo.email || 'billing@dealvoy.com'
+    const billerContact = billerInfo.name
+    const billerPhone = billerInfo.phone
     const billerAddress = franchise
       ? formatAddress(franchise)
       : 'Sede da Plataforma'
@@ -148,28 +183,13 @@ export function BillingGenerationTab({
       : 'PIX (Chave CNPJ): 00.000.000/0001-00\nPrazo para compensação: D+1'
 
     pendingCompanies.forEach((targetCompany) => {
+      const customerInfo = extractContactInfo(targetCompany)
       const customerName = targetCompany.legalName || targetCompany.name
       const customerTaxId = targetCompany.taxId || ''
       const customerStateReg = targetCompany.stateRegistration || ''
-      const customerEmail =
-        targetCompany.billingEmail ||
-        targetCompany.secondaryContactEmail ||
-        targetCompany.contactEmail ||
-        targetCompany.email ||
-        ''
-
-      const customerContact =
-        targetCompany.secondaryContactName &&
-        targetCompany.secondaryContactDepartment
-          ?.toLowerCase()
-          .includes('financ')
-          ? targetCompany.secondaryContactName
-          : targetCompany.contactPerson || ''
-      const customerPhone =
-        targetCompany.secondaryContactPhone ||
-        targetCompany.businessPhone ||
-        targetCompany.contactPhone ||
-        ''
+      const customerEmail = customerInfo.email
+      const customerContact = customerInfo.name
+      const customerPhone = customerInfo.phone
       const customerAddress = formatAddress(targetCompany)
 
       generatePartnerInvoice({

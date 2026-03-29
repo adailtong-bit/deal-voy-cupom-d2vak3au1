@@ -132,25 +132,25 @@ export function BillingStagingTab({ franchiseId }: { franchiseId?: string }) {
           
           <div class="parties">
             <div class="party">
-              <h3>${t('franchisee.billing.biller', 'Cobrador')}</h3>
+              <h3>${t('franchisee.billing.biller', 'Cobrador (Emissor)')}</h3>
               <strong>${billerName}</strong>
-              ${inv.billerTaxId ? `<p>CNPJ/CPF: ${inv.billerTaxId}${inv.billerStateReg ? ` | IE: ${inv.billerStateReg}` : ''}</p>` : ''}
-              ${inv.billerAddress ? `<p>${inv.billerAddress}</p>` : ''}
+              ${inv.billerTaxId ? `<p><strong>CNPJ/CPF:</strong> ${inv.billerTaxId}${inv.billerStateReg ? ` | <strong>IE:</strong> ${inv.billerStateReg}` : ''}</p>` : ''}
+              ${inv.billerAddress ? `<p><strong>Endereço:</strong> ${inv.billerAddress}</p>` : ''}
               <div class="contact-info">
-                ${inv.billerContact ? `<p>A/C: <strong>${inv.billerContact}</strong></p>` : ''}
-                ${inv.billerEmail ? `<p>Email: ${inv.billerEmail}</p>` : ''}
-                ${inv.billerPhone ? `<p>Tel: ${inv.billerPhone}</p>` : ''}
+                ${inv.billerContact ? `<p><strong>Contato Financeiro:</strong> ${inv.billerContact}</p>` : ''}
+                ${inv.billerEmail ? `<p><strong>Email:</strong> ${inv.billerEmail}</p>` : ''}
+                ${inv.billerPhone ? `<p><strong>Tel:</strong> ${inv.billerPhone}</p>` : ''}
               </div>
             </div>
             <div class="party">
-              <h3>${t('franchisee.billing.customer', 'Cobrado')}</h3>
+              <h3>${t('franchisee.billing.customer', 'Cobrado (Pagador)')}</h3>
               <strong>${customerName}</strong>
-              ${inv.customerTaxId ? `<p>CNPJ/CPF: ${inv.customerTaxId}${inv.customerStateReg ? ` | IE: ${inv.customerStateReg}` : ''}</p>` : ''}
-              ${inv.customerAddress ? `<p>${inv.customerAddress}</p>` : ''}
+              ${inv.customerTaxId ? `<p><strong>CNPJ/CPF:</strong> ${inv.customerTaxId}${inv.customerStateReg ? ` | <strong>IE:</strong> ${inv.customerStateReg}` : ''}</p>` : ''}
+              ${inv.customerAddress ? `<p><strong>Endereço:</strong> ${inv.customerAddress}</p>` : ''}
               <div class="contact-info">
-                ${inv.customerContact ? `<p>A/C: <strong>${inv.customerContact}</strong></p>` : ''}
-                ${inv.customerEmail ? `<p>Email: ${inv.customerEmail}</p>` : ''}
-                ${inv.customerPhone ? `<p>Tel: ${inv.customerPhone}</p>` : ''}
+                ${inv.customerContact ? `<p><strong>Contato Financeiro:</strong> ${inv.customerContact}</p>` : ''}
+                ${inv.customerEmail ? `<p><strong>Email:</strong> ${inv.customerEmail}</p>` : ''}
+                ${inv.customerPhone ? `<p><strong>Tel:</strong> ${inv.customerPhone}</p>` : ''}
               </div>
             </div>
           </div>
@@ -404,8 +404,9 @@ export function BillingStagingTab({ franchiseId }: { franchiseId?: string }) {
             {/* Cobrador e Cobrado */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-slate-50 rounded-lg border border-slate-200">
               <div className="space-y-4">
-                <h4 className="font-semibold text-slate-700 border-b pb-2">
-                  {t('franchisee.billing.biller_info', 'Dados do Cobrador')}
+                <h4 className="font-semibold text-slate-700 border-b pb-2 flex items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-blue-500"></div>
+                  {t('franchisee.billing.biller_info', 'Cobrador (Emissor)')}
                 </h4>
                 <div className="space-y-2">
                   <Label>
@@ -463,7 +464,7 @@ export function BillingStagingTab({ franchiseId }: { franchiseId?: string }) {
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-2">
                     <Label>
-                      {t('admin.company.contact_person', 'Contato (A/C)')}
+                      {t('admin.company.contact_person', 'Contato Financeiro')}
                     </Label>
                     <Input
                       value={editForm.billerContact || ''}
@@ -503,8 +504,9 @@ export function BillingStagingTab({ franchiseId }: { franchiseId?: string }) {
               </div>
 
               <div className="space-y-4">
-                <h4 className="font-semibold text-slate-700 border-b pb-2">
-                  {t('franchisee.billing.customer_info', 'Dados do Cobrado')}
+                <h4 className="font-semibold text-slate-700 border-b pb-2 flex items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-orange-500"></div>
+                  {t('franchisee.billing.customer_info', 'Cobrado (Pagador)')}
                 </h4>
                 <div className="space-y-2">
                   <Label>
@@ -563,7 +565,7 @@ export function BillingStagingTab({ franchiseId }: { franchiseId?: string }) {
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-2">
                     <Label>
-                      {t('admin.company.contact_person', 'Contato (A/C)')}
+                      {t('admin.company.contact_person', 'Contato Financeiro')}
                     </Label>
                     <Input
                       value={editForm.customerContact || ''}

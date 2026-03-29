@@ -121,25 +121,25 @@ export function BillingHistoryTab({ franchiseId }: { franchiseId?: string }) {
           
           <div class="parties">
             <div class="party">
-              <h3>${t('franchisee.billing.biller', 'Cobrador')}</h3>
+              <h3>${t('franchisee.billing.biller', 'Cobrador (Emissor)')}</h3>
               <strong>${billerName}</strong>
-              ${inv.billerTaxId ? `<p>CNPJ/CPF: ${inv.billerTaxId}${inv.billerStateReg ? ` | IE: ${inv.billerStateReg}` : ''}</p>` : ''}
-              ${inv.billerAddress ? `<p>${inv.billerAddress}</p>` : ''}
+              ${inv.billerTaxId ? `<p><strong>CNPJ/CPF:</strong> ${inv.billerTaxId}${inv.billerStateReg ? ` | <strong>IE:</strong> ${inv.billerStateReg}` : ''}</p>` : ''}
+              ${inv.billerAddress ? `<p><strong>Endereço:</strong> ${inv.billerAddress}</p>` : ''}
               <div class="contact-info">
-                ${inv.billerContact ? `<p>A/C: <strong>${inv.billerContact}</strong></p>` : ''}
-                ${inv.billerEmail ? `<p>Email: ${inv.billerEmail}</p>` : ''}
-                ${inv.billerPhone ? `<p>Tel: ${inv.billerPhone}</p>` : ''}
+                ${inv.billerContact ? `<p><strong>Contato Financeiro:</strong> ${inv.billerContact}</p>` : ''}
+                ${inv.billerEmail ? `<p><strong>Email:</strong> ${inv.billerEmail}</p>` : ''}
+                ${inv.billerPhone ? `<p><strong>Tel:</strong> ${inv.billerPhone}</p>` : ''}
               </div>
             </div>
             <div class="party">
-              <h3>${t('franchisee.billing.customer', 'Cobrado')}</h3>
+              <h3>${t('franchisee.billing.customer', 'Cobrado (Pagador)')}</h3>
               <strong>${customerName}</strong>
-              ${inv.customerTaxId ? `<p>CNPJ/CPF: ${inv.customerTaxId}${inv.customerStateReg ? ` | IE: ${inv.customerStateReg}` : ''}</p>` : ''}
-              ${inv.customerAddress ? `<p>${inv.customerAddress}</p>` : ''}
+              ${inv.customerTaxId ? `<p><strong>CNPJ/CPF:</strong> ${inv.customerTaxId}${inv.customerStateReg ? ` | <strong>IE:</strong> ${inv.customerStateReg}` : ''}</p>` : ''}
+              ${inv.customerAddress ? `<p><strong>Endereço:</strong> ${inv.customerAddress}</p>` : ''}
               <div class="contact-info">
-                ${inv.customerContact ? `<p>A/C: <strong>${inv.customerContact}</strong></p>` : ''}
-                ${inv.customerEmail ? `<p>Email: ${inv.customerEmail}</p>` : ''}
-                ${inv.customerPhone ? `<p>Tel: ${inv.customerPhone}</p>` : ''}
+                ${inv.customerContact ? `<p><strong>Contato Financeiro:</strong> ${inv.customerContact}</p>` : ''}
+                ${inv.customerEmail ? `<p><strong>Email:</strong> ${inv.customerEmail}</p>` : ''}
+                ${inv.customerPhone ? `<p><strong>Tel:</strong> ${inv.customerPhone}</p>` : ''}
               </div>
             </div>
           </div>
@@ -371,48 +371,67 @@ export function BillingHistoryTab({ franchiseId }: { franchiseId?: string }) {
           {viewingInv && (
             <div className="grid gap-6 py-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
-                  <h4 className="text-xs font-bold text-slate-500 mb-2 uppercase tracking-wider">
-                    {t('franchisee.billing.biller', 'Cobrador')}
-                  </h4>
-                  <p className="text-sm font-bold text-slate-800">
+                <div className="bg-slate-50 p-5 rounded-xl border border-slate-200 shadow-sm">
+                  <div className="flex items-center gap-2 mb-3 border-b border-slate-200 pb-2">
+                    <div className="h-2 w-2 rounded-full bg-blue-500"></div>
+                    <h4 className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                      {t('franchisee.billing.biller', 'Cobrador (Emissor)')}
+                    </h4>
+                  </div>
+                  <p className="text-base font-bold text-slate-900 mb-2">
                     {viewingInv.billerName ||
                       getFranchiseName(viewingInv.franchiseId)}
                   </p>
-                  {viewingInv.billerTaxId && (
-                    <p className="text-sm text-slate-600 mt-1">
-                      Doc: {viewingInv.billerTaxId}{' '}
-                      {viewingInv.billerStateReg &&
-                        `| IE: ${viewingInv.billerStateReg}`}
-                    </p>
-                  )}
-                  {viewingInv.billerAddress && (
-                    <p className="text-sm text-slate-600 mt-1">
-                      {viewingInv.billerAddress}
-                    </p>
-                  )}
-                  <div className="mt-3 pt-3 border-t border-slate-200 space-y-1">
-                    {viewingInv.billerContact && (
+                  <div className="space-y-1.5 mb-4">
+                    {viewingInv.billerTaxId && (
                       <p className="text-sm text-slate-600">
-                        A/C:{' '}
-                        <span className="font-medium text-slate-800">
-                          {viewingInv.billerContact}
-                        </span>
+                        <span className="font-semibold text-slate-700">
+                          CNPJ/CPF:
+                        </span>{' '}
+                        {viewingInv.billerTaxId}
+                        {viewingInv.billerStateReg && (
+                          <span className="ml-2 text-slate-400">
+                            |{' '}
+                            <span className="font-semibold text-slate-700">
+                              IE:
+                            </span>{' '}
+                            {viewingInv.billerStateReg}
+                          </span>
+                        )}
+                      </p>
+                    )}
+                    {viewingInv.billerAddress && (
+                      <p className="text-sm text-slate-600">
+                        <span className="font-semibold text-slate-700">
+                          Endereço:
+                        </span>{' '}
+                        {viewingInv.billerAddress}
+                      </p>
+                    )}
+                  </div>
+                  <div className="bg-white p-3 rounded-lg border border-slate-100 space-y-1.5">
+                    <p className="text-xs font-semibold text-slate-500 uppercase mb-1">
+                      Contato Financeiro / Responsável
+                    </p>
+                    {viewingInv.billerContact && (
+                      <p className="text-sm text-slate-700 font-medium">
+                        {viewingInv.billerContact}
                       </p>
                     )}
                     {viewingInv.billerEmail && (
                       <p className="text-sm text-slate-600">
-                        Email: {viewingInv.billerEmail}
+                        {viewingInv.billerEmail}
                       </p>
                     )}
                     {viewingInv.billerPhone && (
                       <p className="text-sm text-slate-600">
-                        Tel: {viewingInv.billerPhone}
+                        {viewingInv.billerPhone}
                       </p>
                     )}
                   </div>
                 </div>
-                <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 relative">
+
+                <div className="bg-slate-50 p-5 rounded-xl border border-slate-200 shadow-sm relative">
                   <div className="absolute top-4 right-4">
                     <Badge
                       className={cn(
@@ -430,42 +449,60 @@ export function BillingHistoryTab({ franchiseId }: { franchiseId?: string }) {
                       )}
                     </Badge>
                   </div>
-                  <h4 className="text-xs font-bold text-slate-500 mb-2 uppercase tracking-wider">
-                    {t('franchisee.billing.customer', 'Cobrado')}
-                  </h4>
-                  <p className="text-sm font-bold text-slate-800 pr-16">
+                  <div className="flex items-center gap-2 mb-3 border-b border-slate-200 pb-2 pr-20">
+                    <div className="h-2 w-2 rounded-full bg-orange-500"></div>
+                    <h4 className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                      {t('franchisee.billing.customer', 'Cobrado (Pagador)')}
+                    </h4>
+                  </div>
+                  <p className="text-base font-bold text-slate-900 mb-2 pr-20">
                     {viewingInv.customerName ||
                       getCompanyName(viewingInv.companyId)}
                   </p>
-                  {viewingInv.customerTaxId && (
-                    <p className="text-sm text-slate-600 mt-1">
-                      Doc: {viewingInv.customerTaxId}{' '}
-                      {viewingInv.customerStateReg &&
-                        `| IE: ${viewingInv.customerStateReg}`}
-                    </p>
-                  )}
-                  {viewingInv.customerAddress && (
-                    <p className="text-sm text-slate-600 mt-1">
-                      {viewingInv.customerAddress}
-                    </p>
-                  )}
-                  <div className="mt-3 pt-3 border-t border-slate-200 space-y-1">
-                    {viewingInv.customerContact && (
+                  <div className="space-y-1.5 mb-4">
+                    {viewingInv.customerTaxId && (
                       <p className="text-sm text-slate-600">
-                        A/C:{' '}
-                        <span className="font-medium text-slate-800">
-                          {viewingInv.customerContact}
-                        </span>
+                        <span className="font-semibold text-slate-700">
+                          CNPJ/CPF:
+                        </span>{' '}
+                        {viewingInv.customerTaxId}
+                        {viewingInv.customerStateReg && (
+                          <span className="ml-2 text-slate-400">
+                            |{' '}
+                            <span className="font-semibold text-slate-700">
+                              IE:
+                            </span>{' '}
+                            {viewingInv.customerStateReg}
+                          </span>
+                        )}
+                      </p>
+                    )}
+                    {viewingInv.customerAddress && (
+                      <p className="text-sm text-slate-600">
+                        <span className="font-semibold text-slate-700">
+                          Endereço:
+                        </span>{' '}
+                        {viewingInv.customerAddress}
+                      </p>
+                    )}
+                  </div>
+                  <div className="bg-white p-3 rounded-lg border border-slate-100 space-y-1.5">
+                    <p className="text-xs font-semibold text-slate-500 uppercase mb-1">
+                      Contato Financeiro / Responsável
+                    </p>
+                    {viewingInv.customerContact && (
+                      <p className="text-sm text-slate-700 font-medium">
+                        {viewingInv.customerContact}
                       </p>
                     )}
                     {viewingInv.customerEmail && (
                       <p className="text-sm text-slate-600">
-                        Email: {viewingInv.customerEmail}
+                        {viewingInv.customerEmail}
                       </p>
                     )}
                     {viewingInv.customerPhone && (
                       <p className="text-sm text-slate-600">
-                        Tel: {viewingInv.customerPhone}
+                        {viewingInv.customerPhone}
                       </p>
                     )}
                   </div>
