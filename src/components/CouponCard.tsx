@@ -12,7 +12,16 @@ import {
   CheckCircle,
   Sparkles,
   Heart,
+  Share2,
+  Copy,
+  MessageCircle,
 } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { useLanguage } from '@/stores/LanguageContext'
@@ -65,6 +74,11 @@ export function CouponCard({
 
   const isScheduled = !!(startDateObj && now < startDateObj)
   const isExpired = !!(endDateObj && now > endDateObj)
+  const isExpiringSoon =
+    !isExpired &&
+    !!(
+      endDateObj && (endDateObj.getTime() - now.getTime()) / (1000 * 3600) <= 72
+    )
   const isDisabled = isSoldOut || reserved || isExpired || isScheduled
   const hasExternalLink = !!coupon.externalUrl
 
@@ -130,6 +144,25 @@ export function CouponCard({
     }
   }
 
+  const shareUrl = `${window.location.origin}/voucher/${coupon.id}`
+  const shareText = `Confira esta oferta: ${coupon.storeName} - ${title}! Veja mais em: ${shareUrl}`
+
+  const handleCopyLink = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    navigator.clipboard.writeText(shareUrl)
+    toast.success('Link copiado para a área de transferência!')
+  }
+
+  const handleShareWhatsApp = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    window.open(
+      `https://wa.me/?text=${encodeURIComponent(shareText)}`,
+      '_blank',
+    )
+  }
+
   if (variant === 'horizontal') {
     return (
       <div onClick={handleCardClick} className="block cursor-pointer">
@@ -140,17 +173,46 @@ export function CouponCard({
           )}
         >
           <div className="w-32 sm:w-48 relative bg-slate-100 flex-shrink-0 flex items-center justify-center overflow-hidden">
-            <button
-              onClick={toggleFavorite}
-              className="absolute top-2 right-2 z-20 p-1.5 rounded-full bg-white/80 hover:bg-white shadow-sm transition-colors backdrop-blur-sm"
-            >
-              <Heart
-                className={cn(
-                  'w-4 h-4 text-slate-400 hover:text-red-500 transition-colors',
-                  isFavorite && 'fill-red-500 text-red-500 hover:text-red-600',
-                )}
-              />
-            </button>
+            <div className="absolute top-2 right-2 flex flex-col gap-2 z-20">
+              <button
+                onClick={toggleFavorite}
+                className="p-1.5 rounded-full bg-white/80 hover:bg-white shadow-sm transition-colors backdrop-blur-sm"
+              >
+                <Heart
+                  className={cn(
+                    'w-4 h-4 text-slate-400 hover:text-red-500 transition-colors',
+                    isFavorite &&
+                      'fill-red-500 text-red-500 hover:text-red-600',
+                  )}
+                />
+              </button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                    }}
+                    className="p-1.5 rounded-full bg-white/80 hover:bg-white shadow-sm transition-colors backdrop-blur-sm"
+                  >
+                    <Share2 className="w-4 h-4 text-slate-400 hover:text-blue-500 transition-colors" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <DropdownMenuItem onClick={handleCopyLink}>
+                    <Copy className="w-4 h-4 mr-2" />
+                    Copiar Link
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleShareWhatsApp}>
+                    <MessageCircle className="w-4 h-4 mr-2" />
+                    WhatsApp
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
             {!imgError ? (
               <img
                 src={coupon.image}
@@ -171,9 +233,14 @@ export function CouponCard({
               {isExpired && !isSoldOut && (
                 <Badge
                   variant="secondary"
-                  className="shadow-sm font-bold backdrop-blur-sm text-[10px] h-5 px-2 py-0 border-none"
+                  className="shadow-sm font-bold backdrop-blur-sm text-[10px] h-5 px-2 py-0 border-none bg-slate-800 text-white"
                 >
-                  {t('vouchers.expired', 'Expirada')}
+                  {t('vouchers.expired', 'Vencido')}
+                </Badge>
+              )}
+              {isExpiringSoon && !isSoldOut && !isExpired && (
+                <Badge className="bg-amber-500 hover:bg-amber-600 text-white shadow-sm font-bold backdrop-blur-sm text-[10px] h-5 px-2 py-0 border-none">
+                  {t('vouchers.expiring_soon', 'Expira em breve')}
                 </Badge>
               )}
               {isScheduled && !isSoldOut && (
@@ -331,17 +398,45 @@ export function CouponCard({
         )}
       >
         <div className="relative h-36 sm:h-44 overflow-hidden bg-slate-100 flex items-center justify-center">
-          <button
-            onClick={toggleFavorite}
-            className="absolute top-2 right-2 z-20 p-1.5 rounded-full bg-white/80 hover:bg-white shadow-sm transition-colors backdrop-blur-sm"
-          >
-            <Heart
-              className={cn(
-                'w-4 h-4 text-slate-400 hover:text-red-500 transition-colors',
-                isFavorite && 'fill-red-500 text-red-500 hover:text-red-600',
-              )}
-            />
-          </button>
+          <div className="absolute top-2 right-2 flex flex-col gap-2 z-20">
+            <button
+              onClick={toggleFavorite}
+              className="p-1.5 rounded-full bg-white/80 hover:bg-white shadow-sm transition-colors backdrop-blur-sm"
+            >
+              <Heart
+                className={cn(
+                  'w-4 h-4 text-slate-400 hover:text-red-500 transition-colors',
+                  isFavorite && 'fill-red-500 text-red-500 hover:text-red-600',
+                )}
+              />
+            </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                  }}
+                  className="p-1.5 rounded-full bg-white/80 hover:bg-white shadow-sm transition-colors backdrop-blur-sm"
+                >
+                  <Share2 className="w-4 h-4 text-slate-400 hover:text-blue-500 transition-colors" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <DropdownMenuItem onClick={handleCopyLink}>
+                  <Copy className="w-4 h-4 mr-2" />
+                  Copiar Link
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleShareWhatsApp}>
+                  <MessageCircle className="w-4 h-4 mr-2" />
+                  WhatsApp
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
 
           {!imgError ? (
             <img
@@ -363,9 +458,14 @@ export function CouponCard({
             {isExpired && !isSoldOut && (
               <Badge
                 variant="secondary"
-                className="shadow-sm font-bold backdrop-blur-sm text-[10px] h-5 px-2 py-0 border-none"
+                className="shadow-sm font-bold backdrop-blur-sm text-[10px] h-5 px-2 py-0 border-none bg-slate-800 text-white"
               >
-                {t('vouchers.expired', 'Expirada')}
+                {t('vouchers.expired', 'Vencido')}
+              </Badge>
+            )}
+            {isExpiringSoon && !isSoldOut && !isExpired && (
+              <Badge className="bg-amber-500 hover:bg-amber-600 text-white shadow-sm font-bold backdrop-blur-sm text-[10px] h-5 px-2 py-0 border-none">
+                {t('vouchers.expiring_soon', 'Expira em breve')}
               </Badge>
             )}
             {isScheduled && !isSoldOut && (

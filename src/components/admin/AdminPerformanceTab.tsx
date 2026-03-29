@@ -14,14 +14,26 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
+  BarChart,
+  Bar,
 } from 'recharts'
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
 } from '@/components/ui/chart'
-import { Activity, Server, Users, Database, Heart } from 'lucide-react'
+import {
+  Activity,
+  Server,
+  Users,
+  Database,
+  Heart,
+  CheckCircle2,
+  AlertTriangle,
+  Link2,
+} from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
+import { useCouponStore } from '@/stores/CouponContext'
 
 const generateData = () => {
   const now = new Date()
@@ -38,7 +50,31 @@ const generateData = () => {
 
 export function AdminPerformanceTab() {
   const { t } = useLanguage()
+  const { coupons } = useCouponStore()
   const [data, setData] = useState(generateData())
+
+  const now = new Date()
+  const activeOffers = coupons.filter(
+    (c) => c.status === 'active' || c.status === 'approved',
+  ).length
+  const expiredOffers = coupons.filter((c) => {
+    const end = c.endDate || c.expiryDate
+    return end && new Date(end) < now
+  }).length
+
+  const sourceCounts = coupons.reduce(
+    (acc, c) => {
+      const source = c.source || 'organic'
+      acc[source] = (acc[source] || 0) + 1
+      return acc
+    },
+    {} as Record<string, number>,
+  )
+
+  const sourceChartData = Object.entries(sourceCounts).map(([name, count]) => ({
+    source: name.charAt(0).toUpperCase() + name.slice(1),
+    count,
+  }))
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -91,6 +127,83 @@ export function AdminPerformanceTab() {
             'Real-time visualization of server metrics and active sessions.',
           )}
         </p>
+      </div>
+
+      {/* NOVO: Performance de Fontes */}
+      <div>
+        <h3 className="text-xl font-semibold mb-4 tracking-tight flex items-center gap-2">
+          <Link2 className="h-5 w-5 text-slate-500" />
+          Performance de Fontes & Ofertas
+        </h3>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-8">
+          <Card className="bg-primary/5 border-primary/20 shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Ofertas Ativas
+              </CardTitle>
+              <CheckCircle2 className="h-4 w-4 text-primary" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-primary">
+                {activeOffers}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Cupons atualmente válidos
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="bg-amber-500/5 border-amber-500/20 shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-amber-900">
+                Ofertas Vencidas
+              </CardTitle>
+              <AlertTriangle className="h-4 w-4 text-amber-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-amber-600">
+                {expiredOffers}
+              </div>
+              <p className="text-xs text-amber-700/70 mt-1">
+                Cupons inativos ou passados
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Distribuição de Fontes
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <div className="h-[60px]">
+                <ChartContainer
+                  config={{
+                    count: {
+                      label: 'Ofertas',
+                      color: 'hsl(var(--primary))',
+                    },
+                  }}
+                >
+                  <BarChart
+                    data={sourceChartData}
+                    margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
+                  >
+                    <XAxis dataKey="source" hide />
+                    <ChartTooltip
+                      content={<ChartTooltipContent />}
+                      cursor={{ fill: 'var(--color-count)', opacity: 0.1 }}
+                    />
+                    <Bar
+                      dataKey="count"
+                      fill="var(--color-count)"
+                      radius={[4, 4, 0, 0]}
+                    />
+                  </BarChart>
+                </ChartContainer>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

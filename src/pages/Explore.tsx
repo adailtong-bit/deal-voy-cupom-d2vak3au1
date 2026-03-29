@@ -14,7 +14,6 @@ import { Button } from '@/components/ui/button'
 import { CouponCard } from '@/components/CouponCard'
 import { AdSpace } from '@/components/AdSpace'
 import { Skeleton } from '@/components/ui/skeleton'
-import { CATEGORIES } from '@/lib/data'
 import { cn } from '@/lib/utils'
 
 import {
@@ -24,6 +23,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+
+const EXPLORE_CATEGORIES = [
+  { id: 'all', label: 'Todas' },
+  { id: 'food', label: 'Alimentação' },
+  { id: 'retail', label: 'Varejo' },
+  { id: 'services', label: 'Serviços' },
+  { id: 'technology', label: 'Tecnologia' },
+  { id: 'health', label: 'Saúde' },
+]
 
 const getDistance = (
   lat1: number,
@@ -106,7 +114,19 @@ export default function Explore() {
 
     // 4. Category Filter
     if (selectedCategory !== 'all') {
-      processed = processed.filter((c) => c.category === selectedCategory)
+      const categoryMap: Record<string, string[]> = {
+        food: ['food', 'alimentação', 'alimentacao'],
+        retail: ['retail', 'varejo'],
+        services: ['services', 'serviços', 'servicos'],
+        technology: ['technology', 'tech', 'tecnologia'],
+        health: ['health', 'saúde', 'saude'],
+      }
+      const allowed = categoryMap[selectedCategory] || [
+        selectedCategory.toLowerCase(),
+      ]
+      processed = processed.filter((c) =>
+        allowed.includes(c.category?.toLowerCase() || ''),
+      )
     }
 
     // 5. Search Filter
@@ -267,7 +287,7 @@ export default function Explore() {
       </div>
 
       <div className="flex overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 gap-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-        {CATEGORIES.map((cat) => (
+        {EXPLORE_CATEGORIES.map((cat) => (
           <Button
             key={cat.id}
             variant={selectedCategory === cat.id ? 'default' : 'outline'}
@@ -279,7 +299,7 @@ export default function Explore() {
             )}
             onClick={() => setSelectedCategory(cat.id)}
           >
-            {t(cat.translationKey, cat.label)}
+            {cat.label}
           </Button>
         ))}
       </div>
