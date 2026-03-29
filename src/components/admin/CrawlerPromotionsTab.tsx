@@ -101,10 +101,6 @@ export function CrawlerPromotionsTab({
 
   const dynamicCategories = platformSettings?.categories || []
 
-  if (!platformSettings) {
-    return null
-  }
-
   const [selectedPromo, setSelectedPromo] =
     useState<DiscoveredPromotion | null>(null)
   const [isSheetOpen, setIsSheetOpen] = useState(false)
@@ -452,6 +448,10 @@ export function CrawlerPromotionsTab({
       promo.rawData?.url ||
       ''
     )
+  }
+
+  if (!platformSettings) {
+    return null
   }
 
   return (

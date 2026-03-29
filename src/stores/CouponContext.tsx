@@ -278,7 +278,9 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       try {
         setCoupons(JSON.parse(storedCoupons))
         return
-      } catch (e) {}
+      } catch (e) {
+        // ignore parse error
+      }
     }
     const loadCoupons = async () => {
       try {
@@ -394,7 +396,9 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       try {
         setDiscoveredPromotions(JSON.parse(storedPromotions))
         return
-      } catch (e) {}
+      } catch (e) {
+        // ignore parse error
+      }
     }
     const loadPromotions = async () => {
       try {
