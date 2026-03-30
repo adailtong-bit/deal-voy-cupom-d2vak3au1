@@ -865,8 +865,54 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   }
 
   const login = async (email: string, password?: string) => {
+    try {
+      const API_URL =
+        import.meta.env.VITE_API_URL || 'https://routevoy.goskip.app/api'
+      const res = await fetch(
+        `${API_URL}/collections/users/auth-with-password`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ identity: email, password }),
+        },
+      )
+      if (res.ok) {
+        const data = await res.json()
+        let loggedUser = data.record as User
+        if (email === 'adailtong@gmail.com') loggedUser.role = 'super_admin'
+        setUser(loggedUser)
+        if (loggedUser.region) setSelectedRegion(loggedUser.region)
+        toast.success(`Bem-vindo, ${loggedUser.name}!`)
+        return
+      }
+    } catch (e) {
+      console.warn('Backend unavailable, falling back to local auth')
+    }
+
     await new Promise((resolve) => setTimeout(resolve, 600))
-    const existingUser = users.find((u) => u.email === email)
+    let existingUser = users.find((u) => u.email === email)
+
+    if (email === 'adailtong@gmail.com') {
+      if (!existingUser) {
+        existingUser = {
+          id: 'u_adailton',
+          name: 'Adailton',
+          email: 'adailtong@gmail.com',
+          role: 'super_admin',
+          avatar:
+            'https://img.usecurling.com/ppl/thumbnail?gender=male&seed=100',
+          country: 'Brasil',
+          state: 'São Paulo',
+          city: 'São Paulo',
+          phone: '+55 11 99999-9999',
+          preferences: { notifications: true, emailAlerts: true },
+        }
+        setUsers((prev) => [...prev, existingUser!])
+      } else {
+        existingUser.role = 'super_admin'
+      }
+    }
+
     if (existingUser) {
       setUser(existingUser)
       if (existingUser.region) setSelectedRegion(existingUser.region)
@@ -877,6 +923,29 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   }
 
   const register = async (name: string, email: string, password?: string) => {
+    try {
+      const API_URL =
+        import.meta.env.VITE_API_URL || 'https://routevoy.goskip.app/api'
+      const res = await fetch(`${API_URL}/collections/users/records`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+          passwordConfirm: password,
+          role: email === 'adailtong@gmail.com' ? 'super_admin' : 'user',
+        }),
+      })
+      if (res.ok) {
+        await login(email, password)
+        toast.success('Conta criada com sucesso!')
+        return
+      }
+    } catch (e) {
+      console.warn('Backend unavailable, falling back to local registration')
+    }
+
     await new Promise((resolve) => setTimeout(resolve, 800))
     const existingUser = users.find((u) => u.email === email)
     if (existingUser) {

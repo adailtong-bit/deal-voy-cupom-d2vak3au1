@@ -21,6 +21,9 @@ export interface FetchCouponsResponse {
  * Mocks a server-side API call to a database (like Supabase or Skip Cloud).
  * Supports search, filtering, franchise scoping, pagination and server-side relevance logic.
  */
+const API_URL =
+  import.meta.env.VITE_API_URL || 'https://routevoy.goskip.app/api'
+
 export const fetchCoupons = async ({
   query = '',
   category = 'all',
@@ -30,6 +33,30 @@ export const fetchCoupons = async ({
   region,
   language = 'pt',
 }: FetchCouponsParams): Promise<FetchCouponsResponse> => {
+  try {
+    const queryParams = new URLSearchParams({
+      page: page.toString(),
+      perPage: limit.toString(),
+      q: query,
+      category,
+      region: region || '',
+      franchiseId: franchiseId || '',
+    })
+    const res = await fetch(
+      `${API_URL}/collections/coupons/records?${queryParams}`,
+    )
+    if (res.ok) {
+      const data = await res.json()
+      return {
+        data: data.items,
+        hasMore: data.page < data.totalPages,
+        total: data.totalItems,
+      }
+    }
+  } catch (e) {
+    console.warn('Backend unavailable, falling back to local data')
+  }
+
   return new Promise((resolve) => {
     // Simulate network delay to test loading states (under 300ms as per acceptance criteria)
     setTimeout(() => {
@@ -150,6 +177,18 @@ export interface FetchCrawlerPromotionsResponse {
 export const fetchWebSearchPromotions = async (
   query: string,
 ): Promise<DiscoveredPromotion[]> => {
+  try {
+    const res = await fetch(
+      `${API_URL}/crawler/search?q=${encodeURIComponent(query)}`,
+    )
+    if (res.ok) {
+      const data = await res.json()
+      return data.items || []
+    }
+  } catch (e) {
+    console.warn('Real search API unavailable, falling back to mock generator')
+  }
+
   return new Promise((resolve) => {
     setTimeout(() => {
       if (!query) {
@@ -188,6 +227,30 @@ export const fetchCrawlerPromotions = async ({
   query,
   category,
 }: FetchCrawlerPromotionsParams): Promise<FetchCrawlerPromotionsResponse> => {
+  try {
+    const queryParams = new URLSearchParams({
+      page: page.toString(),
+      perPage: limit.toString(),
+      q: query || '',
+      category: category || '',
+      region: region || '',
+      franchiseId: franchiseId || '',
+    })
+    const res = await fetch(
+      `${API_URL}/collections/discovered_promotions/records?${queryParams}`,
+    )
+    if (res.ok) {
+      const data = await res.json()
+      return {
+        data: data.items,
+        hasMore: data.page < data.totalPages,
+        total: data.totalItems,
+      }
+    }
+  } catch (e) {
+    console.warn('Backend unavailable, falling back to local crawler data')
+  }
+
   return new Promise((resolve) => {
     setTimeout(() => {
       let results = [...MOCK_DISCOVERED_PROMOTIONS]
