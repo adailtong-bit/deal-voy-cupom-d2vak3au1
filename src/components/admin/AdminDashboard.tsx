@@ -26,7 +26,6 @@ import { PartnerBillingTab } from '@/components/admin/PartnerBillingTab'
 import { AdminSeasonalTab } from '@/components/admin/AdminSeasonalTab'
 import { AdminCategoriesTab } from '@/components/admin/AdminCategoriesTab'
 import { AdminInterestsTab } from '@/components/admin/AdminInterestsTab'
-import { TestingSandboxTab } from '@/components/admin/TestingSandboxTab'
 import { AdminHierarchyTab } from '@/components/admin/AdminHierarchyTab'
 import { AdminTranslationsTab } from '@/components/admin/AdminTranslationsTab'
 import { AdminPerformanceTab } from '@/components/admin/AdminPerformanceTab'
@@ -259,9 +258,6 @@ export default function AdminDashboard() {
               </TabsTrigger>
               <TabsTrigger value="translations">Translations</TabsTrigger>
               <TabsTrigger value="insights">{t('admin.insights')}</TabsTrigger>
-              <TabsTrigger value="sandbox">
-                {t('admin.sandbox', 'Testing Sandbox')}
-              </TabsTrigger>
               <TabsTrigger value="performance">Performance</TabsTrigger>
               <TabsTrigger value="notifications">
                 {t('admin.push_notifications', 'Push Notifications')}
@@ -391,9 +387,6 @@ export default function AdminDashboard() {
             </TabsContent>
             <TabsContent value="insights">
               <DataInsightsTab />
-            </TabsContent>
-            <TabsContent value="sandbox">
-              <TestingSandboxTab />
             </TabsContent>
             <TabsContent value="performance">
               <AdminPerformanceTab />

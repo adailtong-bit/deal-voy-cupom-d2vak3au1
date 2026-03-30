@@ -147,6 +147,36 @@ export interface FetchCrawlerPromotionsResponse {
   total: number
 }
 
+export const fetchWebSearchPromotions = async (
+  query: string,
+): Promise<DiscoveredPromotion[]> => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      if (!query) {
+        resolve([])
+        return
+      }
+
+      const generated = Array.from({ length: 4 }).map((_, i) => ({
+        id: `web-search-${Date.now()}-${i}`,
+        sourceId: 'organic_web',
+        title: `${query} - Oferta Encontrada na Web ${i + 1}`,
+        discount: `${15 + i * 5}% OFF`,
+        description: `Esta é uma oferta orgânica capturada da web para a sua busca por "${query}". Aproveite os melhores preços disponíveis online.`,
+        expiryDate: new Date(Date.now() + 86400000 * 7).toISOString(),
+        image: `https://img.usecurling.com/p/400/300?q=${encodeURIComponent(query)}`,
+        storeName: 'Web Store ' + (i + 1),
+        status: 'pending' as const,
+        region: 'Global',
+        category: 'Outros',
+        capturedAt: new Date().toISOString(),
+        originalUrl: `https://www.google.com/search?q=${encodeURIComponent(query)}+oferta`,
+      }))
+      resolve(generated)
+    }, 800)
+  })
+}
+
 /**
  * Mocks a server-side API call for real-time crawler data synchronization.
  */

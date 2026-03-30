@@ -74,10 +74,33 @@ export default function Index() {
     reservedIds,
     platformSettings,
     reserveCoupon,
+    searchWeb,
   } = useCouponStore()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({})
+  const [webResults, setWebResults] = useState<any[]>([])
+  const [isSearchingWeb, setIsSearchingWeb] = useState(false)
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(async () => {
+      if (searchQuery.trim().length > 2) {
+        setIsSearchingWeb(true)
+        try {
+          const results = await searchWeb(searchQuery)
+          setWebResults(results)
+        } catch (e) {
+          console.error(e)
+        } finally {
+          setIsSearchingWeb(false)
+        }
+      } else {
+        setWebResults([])
+      }
+    }, 800)
+
+    return () => clearTimeout(delayDebounceFn)
+  }, [searchQuery, searchWeb])
 
   const handleBack = () => {
     if (window.history.state && window.history.state.idx > 0) {
@@ -125,10 +148,13 @@ export default function Index() {
   // Map coupons with recalculated distances if destination overridden
   const couponsWithDistance = useMemo(() => {
     const baseLoc = searchLocationInfo || userLocation
-    return coupons.map((c) => {
-      let dist = c.distance
+    const allC = [...coupons, ...webResults].filter(
+      (v, i, a) => a.findIndex((t) => t.id === v.id) === i,
+    )
+    return allC.map((c) => {
+      let dist = c.distance || 0
 
-      if (baseLoc && c.coordinates) {
+      if (baseLoc && c.coordinates && typeof c.coordinates.lat === 'number') {
         dist = Math.round(
           getDistanceFromLatLonInKm(
             baseLoc.lat,
@@ -140,7 +166,7 @@ export default function Index() {
       }
       return { ...c, distance: dist }
     })
-  }, [coupons, searchLocationInfo, userLocation])
+  }, [coupons, webResults, searchLocationInfo, userLocation])
 
   const activeEvents = useMemo(() => {
     const today = new Date()
@@ -276,21 +302,32 @@ export default function Index() {
               />
             </div>
 
-            <div className="flex items-center gap-1.5 text-sm font-medium text-slate-600 animate-fade-in pl-2 mt-1">
-              <MapPin className="h-4 w-4 text-primary" />
-              <span>
-                {searchLocationInfo
-                  ? t(
-                      'home.location_override',
-                      `Mostrando ofertas perto de ${searchLocationInfo.label}`,
-                    ).replace('{location}', searchLocationInfo.label)
-                  : userLocation
+            <div className="flex items-center justify-between pl-2 mt-1">
+              <div className="flex items-center gap-1.5 text-sm font-medium text-slate-600 animate-fade-in">
+                <MapPin className="h-4 w-4 text-primary" />
+                <span>
+                  {searchLocationInfo
                     ? t(
-                        'home.location_active',
-                        'Mostrando ofertas próximas a você',
-                      )
-                    : t('home.detecting_location', 'Detectando localização...')}
-              </span>
+                        'home.location_override',
+                        `Mostrando ofertas perto de ${searchLocationInfo.label}`,
+                      ).replace('{location}', searchLocationInfo.label)
+                    : userLocation
+                      ? t(
+                          'home.location_active',
+                          'Mostrando ofertas próximas a você',
+                        )
+                      : t(
+                          'home.detecting_location',
+                          'Detectando localização...',
+                        )}
+                </span>
+              </div>
+              {isSearchingWeb && (
+                <div className="text-xs text-primary animate-pulse flex items-center gap-1">
+                  <Globe className="w-3 h-3" />
+                  {t('home.searching_web', 'Buscando na web...')}
+                </div>
+              )}
             </div>
           </div>
         </div>

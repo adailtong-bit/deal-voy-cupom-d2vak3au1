@@ -1066,6 +1066,22 @@ export const MOCK_ADS: Advertisement[] = [
 
 export const MOCK_USERS: User[] = [
   {
+    id: 'u_adailton',
+    name: 'Adailton',
+    email: 'adailtong@gmail.com',
+    role: 'super_admin',
+    avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=male&seed=100',
+    birthday: '1980-01-01',
+    country: 'Brasil',
+    state: 'São Paulo',
+    city: 'São Paulo',
+    phone: '+55 11 99999-9999',
+    preferences: {
+      notifications: true,
+      emailAlerts: true,
+    },
+  },
+  {
     id: 'u_admin',
     name: 'App Owner',
     email: 'admin@dealvoy.com',

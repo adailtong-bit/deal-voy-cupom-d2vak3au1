@@ -12,10 +12,18 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { UserPlus, LogIn, Mail, Lock, User } from 'lucide-react'
 
 export default function Login() {
   const [email, setEmail] = useState('')
-  const { login, user } = useCouponStore()
+  const [password, setPassword] = useState('')
+  const [name, setName] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [activeTab, setActiveTab] = useState('login')
+  const [isLoading, setIsLoading] = useState(false)
+
+  const { login, register, user } = useCouponStore()
   const { t } = useLanguage()
   const navigate = useNavigate()
   const location = useLocation()
@@ -39,92 +47,203 @@ export default function Login() {
     }
   }, [user, navigate, from])
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (email) {
-      login(email)
+    if (email && password) {
+      setIsLoading(true)
+      await login(email, password)
+      setIsLoading(false)
     }
   }
 
-  const handleQuickLogin = (
-    quickEmail: string,
-    role: any,
-    _targetPath: string,
-  ) => {
-    login(quickEmail, role)
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (password !== confirmPassword) {
+      alert(t('auth.passwords_mismatch', 'Senhas não conferem'))
+      return
+    }
+    if (email && password && name) {
+      setIsLoading(true)
+      await register(name, email, password)
+      setIsLoading(false)
+    }
   }
 
   return (
     <div className="container max-w-md py-16 animate-fade-in-up mb-16 md:mb-0">
-      <Card>
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl">
-            {t('auth.login', 'Sign In')}
+      <Card className="border-0 shadow-xl shadow-primary/5">
+        <CardHeader className="text-center pb-6">
+          <CardTitle className="text-3xl font-bold tracking-tight text-slate-900">
+            Routevoy
           </CardTitle>
-          <CardDescription>
-            {t('auth.login_desc', 'Access your account to continue.')}
+          <CardDescription className="text-base mt-2">
+            {t('auth.welcome', 'Bem-vindo! Acesse sua conta ou cadastre-se.')}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">{t('auth.email', 'Email')}</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="user@dealvoy.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            <Button type="submit" className="w-full">
-              {t('auth.login', 'Sign In')}
-            </Button>
-          </form>
-          <div className="mt-6 flex flex-col gap-3">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-slate-200" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground font-medium">
-                  {t('auth.demo_access', 'Quick Access (Demo)')}
-                </span>
-              </div>
-            </div>
-            <Button
-              variant="outline"
-              onClick={() =>
-                handleQuickLogin('admin@dealvoy.com', 'super_admin', '/admin')
-              }
+          <Tabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="w-full"
+          >
+            <TabsList className="grid w-full grid-cols-2 mb-6 h-12 p-1 bg-slate-100/80">
+              <TabsTrigger
+                value="login"
+                className="rounded-md font-semibold text-sm transition-all data-[state=active]:bg-white data-[state=active]:shadow-sm"
+              >
+                <LogIn className="w-4 h-4 mr-2" />
+                {t('auth.login_tab', 'Entrar')}
+              </TabsTrigger>
+              <TabsTrigger
+                value="register"
+                className="rounded-md font-semibold text-sm transition-all data-[state=active]:bg-white data-[state=active]:shadow-sm"
+              >
+                <UserPlus className="w-4 h-4 mr-2" />
+                {t('auth.register_tab', 'Cadastrar')}
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent
+              value="login"
+              className="animate-in fade-in-50 slide-in-from-bottom-2 duration-300"
             >
-              {t('auth.quick_admin', 'Login as Admin')}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() =>
-                handleQuickLogin('shop@dealvoy.com', 'shopkeeper', '/vendor')
-              }
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-slate-700">
+                    {t('auth.email', 'Email')}
+                  </Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="user@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="pl-9 h-11 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="password" className="text-slate-700">
+                      {t('auth.password', 'Senha')}
+                    </Label>
+                  </div>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <Input
+                      id="password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="pl-9 h-11 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
+                      required
+                    />
+                  </div>
+                </div>
+                <Button
+                  type="submit"
+                  className="w-full h-11 font-bold text-base mt-2"
+                  disabled={isLoading}
+                >
+                  {isLoading
+                    ? t('common.loading', 'Carregando...')
+                    : t('auth.login', 'Entrar na Plataforma')}
+                </Button>
+              </form>
+            </TabsContent>
+
+            <TabsContent
+              value="register"
+              className="animate-in fade-in-50 slide-in-from-bottom-2 duration-300"
             >
-              {t('auth.quick_vendor', 'Login as Vendor')}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() =>
-                handleQuickLogin('ny@dealvoy.com', 'franchisee', '/franchisee')
-              }
-              className="border-primary/20 text-primary hover:bg-primary/5"
-            >
-              {t('auth.quick_ny', 'Login as NY Franchisee')}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => handleQuickLogin('user@dealvoy.com', 'user', '/')}
-            >
-              {t('auth.quick_user', 'Login as User')}
-            </Button>
-          </div>
+              <form onSubmit={handleRegister} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="reg-name" className="text-slate-700">
+                    {t('auth.name', 'Nome Completo')}
+                  </Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <Input
+                      id="reg-name"
+                      type="text"
+                      placeholder="Seu nome"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="pl-9 h-11 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="reg-email" className="text-slate-700">
+                    {t('auth.email', 'Email')}
+                  </Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <Input
+                      id="reg-email"
+                      type="email"
+                      placeholder="user@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="pl-9 h-11 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="reg-password" className="text-slate-700">
+                    {t('auth.password', 'Senha')}
+                  </Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <Input
+                      id="reg-password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="pl-9 h-11 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="reg-confirm-password"
+                    className="text-slate-700"
+                  >
+                    {t('auth.confirm_password', 'Confirmar Senha')}
+                  </Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <Input
+                      id="reg-confirm-password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="pl-9 h-11 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
+                      required
+                    />
+                  </div>
+                </div>
+                <Button
+                  type="submit"
+                  className="w-full h-11 font-bold text-base mt-2"
+                  disabled={isLoading}
+                >
+                  {isLoading
+                    ? t('common.loading', 'Carregando...')
+                    : t('auth.create_account', 'Criar Conta')}
+                </Button>
+              </form>
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
     </div>

@@ -40,7 +40,11 @@ import {
   StandardRule,
   RewardCatalogItem,
 } from '@/lib/types'
-import { fetchCoupons, fetchCrawlerPromotions } from '@/lib/api'
+import {
+  fetchCoupons,
+  fetchCrawlerPromotions,
+  fetchWebSearchPromotions,
+} from '@/lib/api'
 import {
   MOCK_COUPONS,
   MOCK_USER_LOCATION,
@@ -169,7 +173,8 @@ interface CouponContextType {
   isDownloaded: (id: string) => boolean
   joinChallenge: (id: string) => void
   completeMission: (id: string) => void
-  login: (email: string, role?: User['role']) => void
+  login: (email: string, password?: string) => Promise<void>
+  register: (name: string, email: string, password?: string) => Promise<void>
   logout: () => void
   approveCompany: (id: string) => void
   rejectCompany: (id: string) => void
@@ -262,6 +267,7 @@ interface CouponContextType {
     data: Partial<RewardCatalogItem>,
   ) => void
   deleteRewardCatalogItem: (id: string) => void
+  searchWeb: (query: string) => Promise<Coupon[]>
 }
 
 const CouponContext = createContext<CouponContextType | undefined>(undefined)
@@ -303,7 +309,19 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     }
   }, [coupons])
   const [ads, setAds] = useState<Advertisement[]>(MOCK_ADS)
-  const [users, setUsers] = useState<User[]>(MOCK_USERS)
+  const [users, setUsers] = useState<User[]>(() => {
+    const stored = localStorage.getItem('mock_users_db')
+    if (stored) {
+      try {
+        return JSON.parse(stored)
+      } catch {}
+    }
+    return MOCK_USERS
+  })
+
+  useEffect(() => {
+    localStorage.setItem('mock_users_db', JSON.stringify(users))
+  }, [users])
 
   const [user, setUser] = useState<User | null>(() => {
     const storedUser = localStorage.getItem('currentUser')
@@ -844,24 +862,36 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     /* ... */
   }
 
-  const login = (email: string, role?: User['role']) => {
+  const login = async (email: string, password?: string) => {
+    await new Promise((resolve) => setTimeout(resolve, 600))
     const existingUser = users.find((u) => u.email === email)
     if (existingUser) {
       setUser(existingUser)
       if (existingUser.region) setSelectedRegion(existingUser.region)
       toast.success(`Bem-vindo, ${existingUser.name}!`)
     } else {
-      const newUser: User = {
-        id: Math.random().toString(),
-        name: email.split('@')[0],
-        email,
-        role: role || 'user',
-        subscriptionTier: 'free',
-        avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=male',
-      }
-      setUser(newUser)
-      toast.success('Login realizado com sucesso!')
+      toast.error('Usuário ou senha inválidos.')
     }
+  }
+
+  const register = async (name: string, email: string, password?: string) => {
+    await new Promise((resolve) => setTimeout(resolve, 800))
+    const existingUser = users.find((u) => u.email === email)
+    if (existingUser) {
+      toast.error('Este e-mail já está em uso.')
+      return
+    }
+    const newUser: User = {
+      id: Math.random().toString(),
+      name,
+      email,
+      role: email === 'adailtong@gmail.com' ? 'super_admin' : 'user',
+      subscriptionTier: 'free',
+      avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=male',
+    }
+    setUsers((prev) => [...prev, newUser])
+    setUser(newUser)
+    toast.success('Conta criada com sucesso! Você está conectado.')
   }
 
   const logout = () => {
@@ -1205,6 +1235,31 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     toast.success('Recompensa removida do catálogo!')
   }
 
+  const searchWeb = async (query: string): Promise<Coupon[]> => {
+    if (!query) return []
+    const results = await fetchWebSearchPromotions(query)
+    return results.map((p) => ({
+      id: p.id,
+      storeName: p.storeName,
+      title: p.title,
+      description: p.description || '',
+      discount: p.discount || '',
+      category: p.category || 'Outros',
+      distance: 0,
+      expiryDate:
+        p.expiryDate || new Date(Date.now() + 30 * 86400000).toISOString(),
+      image: p.image || '',
+      code: `WEB-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+      coordinates: { lat: 0, lng: 0 },
+      status: 'active',
+      source: 'organic',
+      region: 'Global',
+      targetAudience: 'all',
+      externalUrl: p.originalUrl,
+      instructions: 'Oferta orgânica encontrada na web.',
+    }))
+  }
+
   return React.createElement(
     CouponContext.Provider,
     {
@@ -1362,6 +1417,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         addRewardCatalogItem,
         updateRewardCatalogItem,
         deleteRewardCatalogItem,
+        searchWeb,
       },
     },
     children,
