@@ -314,7 +314,9 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     if (stored) {
       try {
         return JSON.parse(stored)
-      } catch {}
+      } catch {
+        // ignore parsing error
+      }
     }
     return MOCK_USERS
   })
