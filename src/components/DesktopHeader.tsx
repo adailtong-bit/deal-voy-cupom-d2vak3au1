@@ -51,11 +51,11 @@ export function DesktopHeader() {
           >
             <img
               src={logoUrl}
-              alt="routevoy"
+              alt="Routevoy"
               className="h-10 w-10 rounded-full object-cover shadow-sm border border-slate-200 shrink-0"
             />
             <span className="font-bold text-xl text-primary tracking-tight hidden lg:inline-block">
-              routevoy
+              Routevoy
             </span>
           </Link>
           <nav className="flex items-center gap-3 lg:gap-6 text-sm font-semibold shrink-0 overflow-x-auto hide-scrollbar">

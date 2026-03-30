@@ -103,11 +103,11 @@ export function MobileHeader() {
               <div className="flex items-center gap-3 px-1">
                 <img
                   src={logoUrl}
-                  alt="routevoy"
+                  alt="Routevoy"
                   className="h-10 w-10 rounded-full object-cover shadow-sm border border-slate-200"
                 />
                 <span className="font-bold text-xl text-primary tracking-tight">
-                  routevoy
+                  Routevoy
                 </span>
               </div>
 
@@ -268,11 +268,11 @@ export function MobileHeader() {
           >
             <img
               src={logoUrl}
-              alt="routevoy"
+              alt="Routevoy"
               className="h-8 w-8 rounded-full object-cover shadow-sm border border-slate-200"
             />
             <span className="font-bold text-lg text-primary tracking-tight">
-              routevoy
+              Routevoy
             </span>
           </Link>
         </div>

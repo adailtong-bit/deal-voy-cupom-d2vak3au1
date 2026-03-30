@@ -67,6 +67,40 @@ function AuthStateSync() {
   return null
 }
 
+function PageTitleSync() {
+  const location = useLocation()
+  const { t } = useLanguage()
+
+  useEffect(() => {
+    const path = location.pathname
+    let title = 'Routevoy'
+
+    if (path.startsWith('/admin'))
+      title = `Routevoy - ${t('nav.admin', 'Admin')}`
+    else if (path.startsWith('/vendor'))
+      title = `Routevoy - ${t('nav.vendor', 'Painel do Lojista')}`
+    else if (path.startsWith('/franchisee'))
+      title = `Routevoy - ${t('nav.franchisee', 'Painel Regional')}`
+    else if (path.startsWith('/explore'))
+      title = `Routevoy - ${t('nav.explore', 'Explorar')}`
+    else if (path.startsWith('/vouchers'))
+      title = `Routevoy - ${t('nav.vouchers', 'Meus Vouchers')}`
+    else if (path.startsWith('/travel'))
+      title = `Routevoy - ${t('nav.travel', 'Experiências')}`
+    else if (path.startsWith('/seasonal'))
+      title = `Routevoy - ${t('nav.seasonal', 'Ofertas')}`
+    else if (path.startsWith('/profile'))
+      title = `Routevoy - ${t('profile.title', 'Perfil')}`
+    else if (path.startsWith('/login'))
+      title = `Routevoy - ${t('auth.login', 'Login')}`
+    else if (path === '/') title = `Routevoy - ${t('nav.home', 'Home')}`
+
+    document.title = title
+  }, [location, t])
+
+  return null
+}
+
 function GlobalLanguageSync() {
   const { user, franchises } = useCouponStore()
   const { setLanguage } = useLanguage()
@@ -121,6 +155,7 @@ export default function App() {
           <BrowserRouter>
             <AuthStateSync />
             <GlobalLanguageSync />
+            <PageTitleSync />
             <Routes>
               <Route element={<Layout />}>
                 <Route path="/" element={<Index />} />
