@@ -276,54 +276,24 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   const { addNotification } = useNotification()
   const { t } = useLanguage()
   const [coupons, setCoupons] = useState<Coupon[]>([])
-  const [companies, setCompanies] = useState<Company[]>(MOCK_COMPANIES)
+  const [companies, setCompanies] = useState<Company[]>([])
 
   useEffect(() => {
-    const storedCoupons = localStorage.getItem('mock_coupons_db')
-    if (storedCoupons) {
-      try {
-        setCoupons(JSON.parse(storedCoupons))
-        return
-      } catch (e) {
-        // ignore parse error
-      }
-    }
     const loadCoupons = async () => {
       try {
         const res = await fetchCoupons({ limit: 100 })
         if (res?.data) {
           setCoupons(res.data)
-        } else {
-          setCoupons(MOCK_COUPONS)
         }
       } catch (e) {
-        setCoupons(MOCK_COUPONS)
+        console.error(e)
       }
     }
     loadCoupons()
   }, [])
 
-  useEffect(() => {
-    if (coupons.length > 0) {
-      localStorage.setItem('mock_coupons_db', JSON.stringify(coupons))
-    }
-  }, [coupons])
-  const [ads, setAds] = useState<Advertisement[]>(MOCK_ADS)
-  const [users, setUsers] = useState<User[]>(() => {
-    const stored = localStorage.getItem('mock_users_db')
-    if (stored) {
-      try {
-        return JSON.parse(stored)
-      } catch {
-        // ignore parsing error
-      }
-    }
-    return MOCK_USERS
-  })
-
-  useEffect(() => {
-    localStorage.setItem('mock_users_db', JSON.stringify(users))
-  }, [users])
+  const [ads, setAds] = useState<Advertisement[]>([])
+  const [users, setUsers] = useState<User[]>([])
 
   const [user, setUser] = useState<User | null>(() => {
     const storedUser = localStorage.getItem('currentUser')
@@ -409,40 +379,18 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   >([])
 
   useEffect(() => {
-    const storedPromotions = localStorage.getItem(
-      'mock_discovered_promotions_db',
-    )
-    if (storedPromotions) {
-      try {
-        setDiscoveredPromotions(JSON.parse(storedPromotions))
-        return
-      } catch (e) {
-        // ignore parse error
-      }
-    }
     const loadPromotions = async () => {
       try {
         const res = await fetchCrawlerPromotions({ limit: 100 })
         if (res?.data) {
           setDiscoveredPromotions(res.data)
-        } else {
-          setDiscoveredPromotions(MOCK_DISCOVERED_PROMOTIONS)
         }
       } catch (e) {
-        setDiscoveredPromotions(MOCK_DISCOVERED_PROMOTIONS)
+        console.error(e)
       }
     }
     loadPromotions()
   }, [])
-
-  useEffect(() => {
-    if (discoveredPromotions.length > 0) {
-      localStorage.setItem(
-        'mock_discovered_promotions_db',
-        JSON.stringify(discoveredPromotions),
-      )
-    }
-  }, [discoveredPromotions])
 
   const [adPricing, setAdPricing] = useState<AdPricing[]>(MOCK_AD_PRICING)
   const [advertisers, setAdvertisers] = useState<Advertiser[]>(MOCK_ADVERTISERS)
@@ -865,104 +813,61 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   }
 
   const login = async (email: string, password?: string) => {
-    try {
-      const API_URL =
-        import.meta.env.VITE_API_URL || 'https://routevoy.goskip.app/api'
-      const res = await fetch(
-        `${API_URL}/collections/users/auth-with-password`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ identity: email, password }),
-        },
-      )
-      if (res.ok) {
-        const data = await res.json()
-        let loggedUser = data.record as User
-        if (email === 'adailtong@gmail.com') loggedUser.role = 'super_admin'
-        setUser(loggedUser)
-        if (loggedUser.region) setSelectedRegion(loggedUser.region)
-        toast.success(`Bem-vindo, ${loggedUser.name}!`)
-        return
-      }
-    } catch (e) {
-      console.warn('Backend unavailable, falling back to local auth')
+    const API_URL =
+      import.meta.env.VITE_API_URL || 'https://routevoy.goskip.app/api'
+    const res = await fetch(`${API_URL}/collections/users/auth-with-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ identity: email, password }),
+    })
+
+    if (!res.ok) {
+      throw new Error('Usuário ou senha inválidos.')
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 600))
-    let existingUser = users.find((u) => u.email === email)
-
-    if (email === 'adailtong@gmail.com') {
-      if (!existingUser) {
-        existingUser = {
-          id: 'u_adailton',
-          name: 'Adailton',
-          email: 'adailtong@gmail.com',
-          role: 'super_admin',
-          avatar:
-            'https://img.usecurling.com/ppl/thumbnail?gender=male&seed=100',
-          country: 'Brasil',
-          state: 'São Paulo',
-          city: 'São Paulo',
-          phone: '+55 11 99999-9999',
-          preferences: { notifications: true, emailAlerts: true },
-        }
-        setUsers((prev) => [...prev, existingUser!])
-      } else {
-        existingUser.role = 'super_admin'
-      }
-    }
-
-    if (existingUser) {
-      setUser(existingUser)
-      if (existingUser.region) setSelectedRegion(existingUser.region)
-      toast.success(`Bem-vindo, ${existingUser.name}!`)
-    } else {
-      toast.error('Usuário ou senha inválidos.')
-    }
+    const data = await res.json()
+    let loggedUser = data.record as User
+    if (email === 'adailtong@gmail.com') loggedUser.role = 'super_admin'
+    setUser(loggedUser)
+    if (loggedUser.region) setSelectedRegion(loggedUser.region)
+    toast.success(`Bem-vindo, ${loggedUser.name}!`)
   }
 
   const register = async (name: string, email: string, password?: string) => {
-    try {
-      const API_URL =
-        import.meta.env.VITE_API_URL || 'https://routevoy.goskip.app/api'
-      const res = await fetch(`${API_URL}/collections/users/records`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name,
-          email,
-          password,
-          passwordConfirm: password,
-          role: email === 'adailtong@gmail.com' ? 'super_admin' : 'user',
-        }),
-      })
-      if (res.ok) {
-        await login(email, password)
-        toast.success('Conta criada com sucesso!')
-        return
-      }
-    } catch (e) {
-      console.warn('Backend unavailable, falling back to local registration')
+    const API_URL =
+      import.meta.env.VITE_API_URL || 'https://routevoy.goskip.app/api'
+    const res = await fetch(`${API_URL}/collections/users/records`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name,
+        email,
+        password,
+        passwordConfirm: password,
+        role: email === 'adailtong@gmail.com' ? 'super_admin' : 'user',
+      }),
+    })
+
+    if (!res.ok) {
+      throw new Error(
+        'Erro ao criar conta. Verifique os dados e tente novamente.',
+      )
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 800))
-    const existingUser = users.find((u) => u.email === email)
-    if (existingUser) {
-      toast.error('Este e-mail já está em uso.')
-      return
+    try {
+      await fetch(`${API_URL}/collections/users/request-verification`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      })
+    } catch (err) {
+      console.warn('Failed to send verification email', err)
     }
-    const newUser: User = {
-      id: Math.random().toString(),
-      name,
-      email,
-      role: email === 'adailtong@gmail.com' ? 'super_admin' : 'user',
-      subscriptionTier: 'free',
-      avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=male',
-    }
-    setUsers((prev) => [...prev, newUser])
-    setUser(newUser)
-    toast.success('Conta criada com sucesso! Você está conectado.')
+
+    await login(email, password)
+    toast.success(
+      'Conta criada com sucesso! Verifique seu e-mail para validar sua conta.',
+    )
   }
 
   const logout = () => {
@@ -1076,69 +981,25 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     )
   }
 
-  const triggerScan = (sourceId: string, limit: number = 50) => {
-    setTimeout(() => {
-      const newPromos: DiscoveredPromotion[] = []
-      const realBrands = [
-        'Nike',
-        'Adidas',
-        'Samsung',
-        'Apple',
-        'Sony',
-        'Burger King',
-        'McDonalds',
-        'Starbucks',
-        'Subway',
-        'Dominos',
-      ]
-      const realCategories = [
-        'Vestuário',
-        'Eletrônicos',
-        'Alimentação',
-        'Serviços',
-        'Viagens',
-      ]
-      const realDescriptions = [
-        'Aproveite esta oferta exclusiva de fim de ano. Desconto válido para toda a loja.',
-        'Compre 1 e leve 2 nesta promoção especial de aniversário.',
-        'Frete grátis para compras acima de R$ 100. Não perca!',
-        'Desconto de 20% na primeira compra com o cupom PRIMEIRA20.',
-        'Oferta relâmpago: produtos selecionados com até 50% de desconto.',
-      ]
-      for (let i = 0; i < limit; i++) {
-        const brand = realBrands[Math.floor(Math.random() * realBrands.length)]
-        const discountVal = 10 + Math.floor(Math.random() * 40)
-        newPromos.push({
-          id: Math.random().toString(),
-          sourceId,
-          title: `Promoção ${discountVal}% OFF - ${brand}`,
-          discount: `${discountVal}% OFF`,
-          description:
-            realDescriptions[
-              Math.floor(Math.random() * realDescriptions.length)
-            ],
-          expiryDate: new Date(Date.now() + 30 * 86400000).toISOString(),
-          image: `https://img.usecurling.com/p/300/200?q=${encodeURIComponent(brand.toLowerCase())}&seed=${Math.floor(Math.random() * 1000)}`,
-          storeName: brand,
-          status: 'pending',
-          region: selectedRegion || 'Global',
-          category:
-            realCategories[Math.floor(Math.random() * realCategories.length)],
-          capturedAt: new Date().toISOString(),
-          originalUrl: `https://www.${brand.toLowerCase().replace(/\s/g, '')}.com/ofertas/${Math.floor(Math.random() * 10000)}`,
-          rawData: {
-            original_description:
-              'Descrição original extraída do anunciante com detalhes completos da oferta e condições de uso aplicáveis.',
-            original_title: `Oferta Exclusiva ${brand}`,
-          },
-        })
+  const triggerScan = async (sourceId: string, limit: number = 50) => {
+    const API_URL =
+      import.meta.env.VITE_API_URL || 'https://routevoy.goskip.app/api'
+    try {
+      const res = await fetch(`${API_URL}/crawler/trigger`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sourceId, limit }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setDiscoveredPromotions((prev) => [...(data.items || []), ...prev])
+        logSystemAction('Crawler Scan', `Scan completed for source ${sourceId}`)
+        toast.success('Varredura concluída com sucesso')
       }
-      setDiscoveredPromotions((prev) => [...newPromos, ...prev])
-      logSystemAction(
-        'Crawler Scan',
-        `Scan completed for source ${sourceId} with limit ${limit}`,
-      )
-    }, 1500)
+    } catch (e) {
+      console.error('Error triggering scan', e)
+      toast.error('Erro ao acionar crawler')
+    }
   }
 
   const addAdPricing = (pricing: AdPricing) => {}

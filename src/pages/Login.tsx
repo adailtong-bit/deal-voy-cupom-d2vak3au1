@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { UserPlus, LogIn, Mail, Lock, User } from 'lucide-react'
+import { toast } from 'sonner'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -51,7 +52,11 @@ export default function Login() {
     e.preventDefault()
     if (email && password) {
       setIsLoading(true)
-      await login(email, password)
+      try {
+        await login(email, password)
+      } catch (err: any) {
+        toast.error(err.message || 'Erro ao fazer login')
+      }
       setIsLoading(false)
     }
   }
@@ -59,12 +64,16 @@ export default function Login() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     if (password !== confirmPassword) {
-      alert(t('auth.passwords_mismatch', 'Senhas não conferem'))
+      toast.error(t('auth.passwords_mismatch', 'Senhas não conferem'))
       return
     }
     if (email && password && name) {
       setIsLoading(true)
-      await register(name, email, password)
+      try {
+        await register(name, email, password)
+      } catch (err: any) {
+        toast.error(err.message || 'Erro ao criar conta')
+      }
       setIsLoading(false)
     }
   }
