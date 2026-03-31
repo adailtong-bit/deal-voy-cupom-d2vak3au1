@@ -193,9 +193,25 @@ export function CrawlerHistoryTab() {
                   <div className="flex flex-col gap-1">
                     <span className="w-fit">{getStatusBadge(log.status)}</span>
                     {log.errorMessage && (
-                      <span className="text-xs text-red-500 max-w-[250px] truncate">
+                      <span
+                        className="text-xs text-red-500 max-w-[250px] truncate"
+                        title={log.errorMessage}
+                      >
                         {log.errorMessage}
                       </span>
+                    )}
+                    {log.errorDetails && log.errorDetails.length > 0 && (
+                      <div className="mt-1 text-xs text-red-400 flex flex-col gap-0.5">
+                        {log.errorDetails.map((err: string, i: number) => (
+                          <span
+                            key={i}
+                            className="max-w-[250px] truncate"
+                            title={err}
+                          >
+                            • {err}
+                          </span>
+                        ))}
+                      </div>
                     )}
                   </div>
                 </TableCell>

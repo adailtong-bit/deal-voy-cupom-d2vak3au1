@@ -749,6 +749,7 @@ export interface CrawlerHistory {
   itemsImported: number
   sourceId: string
   errorMessage?: string
+  errorDetails?: string[]
 }
 
 export interface CrawlerSource {

@@ -90,6 +90,11 @@ export function CrawlerSourcesTab() {
     holiday,
   ])
 
+  // Sync background processing flag for Admin Session Stability
+  useEffect(() => {
+    sessionStorage.setItem('crawler_isScanning', isScanning.toString())
+  }, [isScanning])
+
   const handleStartCrawler = async () => {
     let targets: { query: string; platform?: string }[] = []
 
@@ -149,6 +154,7 @@ export function CrawlerSourcesTab() {
       let platformImported = 0
       let emptyPages = 0
       const maxPages = 10
+      const errorsList: string[] = []
 
       while (totalImported < limit && page <= maxPages && emptyPages < 2) {
         if (stopRef.current) break
@@ -177,12 +183,27 @@ export function CrawlerSourcesTab() {
           }
           emptyPages = 0
 
+          // Accurate count of items identified before validation
+          platformFound += results.length
+
           const validResults = results.filter((r: any) => {
-            // Validation Layer: Must have name (title), price, image, and link to be considered valid
-            if (!r.title || (!r.price && !r.currentPrice && r.price !== 0))
+            // Data Integrity Filter: Robust pre-validation layer
+            if (!r.title) {
+              errorsList.push(`Missing Title`)
               return false
-            if (!r.image && !r.imageUrl) return false
-            if (!r.sourceUrl && !r.originalUrl) return false
+            }
+            if (!r.price && !r.currentPrice && r.price !== 0) {
+              errorsList.push(`Missing Price: "${r.title}"`)
+              return false
+            }
+            if (!r.image && !r.imageUrl) {
+              errorsList.push(`Missing Image: "${r.title}"`)
+              return false
+            }
+            if (!r.sourceUrl && !r.originalUrl) {
+              errorsList.push(`Missing Link: "${r.title}"`)
+              return false
+            }
 
             const textToInspect =
               `${r.title} ${r.description} ${r.storeName || ''}`.toLowerCase()
@@ -193,20 +214,23 @@ export function CrawlerSourcesTab() {
               'mock',
               'dummy',
             ]
-            if (trashKeywords.some((kw) => textToInspect.includes(kw)))
+            if (trashKeywords.some((kw) => textToInspect.includes(kw))) {
+              errorsList.push(`Trash Keyword Found: "${r.title}"`)
               return false
+            }
 
             if (!r.discount) return true
             const discNum = parseInt(String(r.discount).replace(/\D/g, ''), 10)
-            return isNaN(discNum) || discNum >= minDiscount
+            if (!isNaN(discNum) && discNum < minDiscount) {
+              return false
+            }
+            return true
           })
 
           const toImport = validResults.slice(
             0,
             Math.max(0, limit - totalImported),
           )
-
-          platformFound += toImport.length
 
           for (const item of toImport) {
             if (stopRef.current) break
@@ -216,82 +240,82 @@ export function CrawlerSourcesTab() {
                 ? new Date(item.expiryDate).toISOString()
                 : undefined
 
-            await saveDiscoveredPromotion({
-              ...item,
-              title: item.title?.trim(),
-              description: item.description?.trim() || item.title?.trim(),
-              storeName: item.storeName?.trim() || platform || q,
-              discount: item.discount,
-              price: item.currentPrice || item.price,
-              image: item.imageUrl || item.image,
-              originalUrl: item.sourceUrl || item.originalUrl,
-              rawData: {
-                originalPrice: item.originalPrice,
-                ...item.rawData,
-              },
-              expiryDate: expDate,
-              state: item.state?.trim(),
-              city: item.city?.trim(),
-              latitude: item.latitude ? Number(item.latitude) : undefined,
-              longitude: item.longitude ? Number(item.longitude) : undefined,
-              category:
-                category !== 'all' ? category : item.category || 'retail',
-              status: 'pending',
-            })
-            totalImported++
-            platformImported++
+            try {
+              // Atomic Import Logic: Only increment counters if DB write is successful
+              await saveDiscoveredPromotion({
+                ...item,
+                title: item.title?.trim(),
+                description: item.description?.trim() || item.title?.trim(),
+                storeName: item.storeName?.trim() || platform || q,
+                discount: item.discount,
+                price: item.currentPrice || item.price,
+                image: item.imageUrl || item.image,
+                originalUrl: item.sourceUrl || item.originalUrl,
+                rawData: {
+                  originalPrice: item.originalPrice,
+                  ...item.rawData,
+                },
+                expiryDate: expDate,
+                state: item.state?.trim(),
+                city: item.city?.trim(),
+                latitude: item.latitude ? Number(item.latitude) : undefined,
+                longitude: item.longitude ? Number(item.longitude) : undefined,
+                category:
+                  category !== 'all' ? category : item.category || 'retail',
+                status: 'pending',
+              })
+
+              totalImported++
+              platformImported++
+            } catch (saveErr: any) {
+              errorsList.push(
+                `DB Write Error for "${item.title}": ${saveErr.message || 'Unknown Error'}`,
+              )
+              hasErrors = true
+            }
           }
 
           // Delay to prevent rate limiting
           await new Promise((resolve) => setTimeout(resolve, 800))
 
           if (results.length < chunkSize) {
-            break // Exhausated results for this query
+            break // Exhausted results for this query
           }
 
           page++
         } catch (err: any) {
           hasErrors = true
+          const errMsg = err.message || 'Connection Timeout / API Error'
+          errorsList.push(`Page ${page} Error: ${errMsg}`)
           console.error(`Error searching for ${q} on page ${page}:`, err)
           emptyPages++
           page++
         }
       }
 
-      if (platformFound === 0) {
-        const msg = t(
-          'franchisee.crawler.no_results_platform',
-          `Nenhum resultado válido encontrado em ${platform || 'fonte'} para a busca: ${q}`,
-        )
-        toast.warning(msg)
-        try {
-          await saveCrawlerLog({
-            storeName: platform || q,
-            status: 'warning',
-            errorMessage: msg,
-            itemsFound: 0,
-            itemsImported: 0,
-            date: new Date().toISOString(),
-          })
-        } catch (logErr) {
-          console.error('Failed to save warning crawler log', logErr)
-        }
-      } else {
-        try {
-          await saveCrawlerLog({
-            storeName: platform || q,
-            status: platformImported > 0 ? 'success' : 'warning',
-            errorMessage:
-              platformImported === 0
-                ? 'No valid real data imported'
-                : undefined,
-            itemsFound: platformFound,
-            itemsImported: platformImported,
-            date: new Date().toISOString(),
-          })
-        } catch (logErr) {
-          console.error('Failed to save success crawler log', logErr)
-        }
+      // Determine log status accurately based on success vs errors
+      const logStatus =
+        errorsList.length > 0 && platformImported === 0
+          ? 'error'
+          : platformImported > 0 && errorsList.length > 0
+            ? 'warning'
+            : platformImported > 0
+              ? 'success'
+              : 'warning'
+
+      try {
+        await saveCrawlerLog({
+          storeName: platform || q,
+          status: logStatus,
+          errorMessage:
+            platformImported === 0 ? 'No valid real data imported' : undefined,
+          errorDetails: errorsList.slice(0, 15), // Detailed Execution Logs
+          itemsFound: platformFound,
+          itemsImported: platformImported,
+          date: new Date().toISOString(),
+        })
+      } catch (logErr) {
+        console.error('Failed to save crawler log', logErr)
       }
 
       // Update overall progress

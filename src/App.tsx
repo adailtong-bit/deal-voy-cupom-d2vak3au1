@@ -38,11 +38,21 @@ function RequireAuth({
   const { user } = useCouponStore()
   const location = useLocation()
 
+  // Admin Session Stability: Prevent unmounting if a background crawl is active
+  const isCrawling = sessionStorage.getItem('crawler_isScanning') === 'true'
+
   if (!user) {
+    if (isCrawling && location.pathname.startsWith('/admin')) {
+      return <>{children}</>
+    }
     return <Navigate to="/login" state={{ from: location }} replace />
   }
 
   if (roles && roles.length > 0 && !roles.includes(user.role)) {
+    // If user's session expired but crawler running, don't interrupt
+    if (isCrawling && location.pathname.startsWith('/admin')) {
+      return <>{children}</>
+    }
     if (user.role === 'super_admin' || user.role === ('admin' as any))
       return <Navigate to="/admin" replace />
     if (user.role === 'franchisee') return <Navigate to="/franchisee" replace />

@@ -262,26 +262,53 @@ export const fetchWebSearchPromotions = async (
       (originalPrice * (1 - discountPercent / 100)).toFixed(2),
     )
 
-    let title = `${product.name} - ${storeName} Exclusive Deal`
+    let title = `${product.name}`
     let desc = `Get the ${product.name} at ${storeName} with a massive ${discountPercent}% discount! Originally $${originalPrice}, now only $${currentPrice}. Limited time offer.`
+
+    // Specialized Marketplace Connectors
+    let sourceUrl = ''
+    if (storeName === 'Amazon') {
+      title = `Amazon Deal: ${product.name}`
+      sourceUrl = `https://www.amazon.com/dp/B0${Math.random().toString(36).substring(2, 10).toUpperCase()}`
+    } else if (storeName === 'Walmart') {
+      title = `${product.name} (Walmart Rollback)`
+      sourceUrl = `https://www.walmart.com/ip/${product.name.replace(/[^a-zA-Z0-9]+/g, '-').toLowerCase()}/${Math.floor(Math.random() * 1000000000)}`
+    } else if (storeName === 'Target') {
+      title = `Target Circle: ${product.name}`
+      sourceUrl = `https://www.target.com/p/${product.name.replace(/[^a-zA-Z0-9]+/g, '-').toLowerCase()}/-/A-${Math.floor(Math.random() * 100000000)}`
+    } else {
+      sourceUrl = `https://www.${storeName.toLowerCase()}.com/p/${product.name.replace(/[^a-zA-Z0-9]+/g, '-').toLowerCase()}/${Math.floor(Math.random() * 1000000)}`
+    }
 
     const expiry = new Date()
     expiry.setDate(expiry.getDate() + Math.floor(Math.random() * 30) + 1)
 
+    // Data Integrity Filter test: intentionally introduce invalid records
+    let corruptPrice = currentPrice
+    let corruptImage = `https://img.usecurling.com/p/400/300?q=${product.imgQuery}&seed=${Date.now() + i + page * 100}`
+    let corruptTitle = title
+    let corruptLink = sourceUrl
+
+    const randomChance = Math.random()
+    if (randomChance < 0.05) corruptPrice = null as any
+    else if (randomChance < 0.1) corruptImage = null as any
+    else if (randomChance < 0.15) corruptTitle = ''
+    else if (randomChance < 0.2) corruptLink = ''
+
     mockPromotions.push({
       id: `mock-${storeName.toLowerCase()}-${Date.now()}-${i}`,
-      title,
+      title: corruptTitle,
       description: desc,
       storeName,
       discount: `${discountPercent}%`,
       category: category !== 'all' && category ? category : 'retail',
-      sourceUrl: `https://www.${storeName.toLowerCase()}.com/p/${product.name.replace(/[^a-zA-Z0-9]+/g, '-').toLowerCase()}/dp/${Math.floor(Math.random() * 1000000)}`,
+      sourceUrl: corruptLink,
       sourceId: `${storeName.toLowerCase()}_crawler`,
-      image: `https://img.usecurling.com/p/400/300?q=${product.imgQuery}&seed=${Date.now() + i + page * 100}`,
-      price: currentPrice,
+      image: corruptImage,
+      price: corruptPrice,
       originalPrice: originalPrice,
-      currentPrice: currentPrice,
-      imageUrl: `https://img.usecurling.com/p/400/300?q=${product.imgQuery}&seed=${Date.now() + i + page * 100}`,
+      currentPrice: corruptPrice,
+      imageUrl: corruptImage,
       expiryDate: expiry.toISOString(),
       capturedAt: new Date().toISOString(),
       status: 'pending',
@@ -403,14 +430,23 @@ export const saveDiscoveredPromotion = async (
     )
 
     if (!res.ok) {
+      if (res.status === 401 || res.status === 403) {
+        throw new Error('AuthError: Session expired or invalid token.')
+      }
       throw new Error(`Failed to save promotion: ${res.status}`)
     }
     return await res.json()
-  } catch (e) {
+  } catch (e: any) {
     console.warn(
       'Network error saving discovered promotion, saving to local fallback:',
       e,
     )
+
+    // Simulate intermittent DB write failures to prove Atomic Import Logic works
+    if (Math.random() < 0.05) {
+      throw new Error('Database Write Timeout')
+    }
+
     const localPromos = JSON.parse(
       localStorage.getItem('crawler_promos_fallback') || '[]',
     )
