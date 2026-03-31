@@ -23,34 +23,47 @@ export interface FetchCouponsResponse {
 const API_URL =
   import.meta.env.VITE_API_URL || 'https://routevoy.goskip.app/api'
 
-export const fetchCoupons = async ({
-  query = '',
-  category = 'all',
-  page = 1,
-  limit = 20,
-  franchiseId,
-  region,
-  language = 'pt',
-}: FetchCouponsParams): Promise<FetchCouponsResponse> => {
+export const fetchCoupons = async (
+  params: FetchCouponsParams = {},
+): Promise<FetchCouponsResponse> => {
+  const {
+    query = '',
+    category = 'all',
+    page = 1,
+    limit = 20,
+    franchiseId,
+    region,
+    language = 'pt',
+  } = params
+
   try {
-    const queryParams = new URLSearchParams({
-      page: page.toString(),
-      perPage: limit.toString(),
-      q: query,
-      category,
-      region: region || '',
-      franchiseId: franchiseId || '',
-    })
+    const queryParams = new URLSearchParams()
+    queryParams.append('page', page.toString())
+    queryParams.append('perPage', limit.toString())
+    if (query) queryParams.append('q', query)
+    if (category && category !== 'all') queryParams.append('category', category)
+    if (region) queryParams.append('region', region)
+    if (franchiseId) queryParams.append('franchiseId', franchiseId)
+
     const res = await fetch(
-      `${API_URL}/collections/coupons/records?${queryParams}`,
+      `${API_URL}/collections/coupons/records?${queryParams.toString()}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+      },
     )
     if (res.ok) {
       const data = await res.json()
       return {
-        data: data.items,
-        hasMore: data.page < data.totalPages,
-        total: data.totalItems,
+        data: data?.items || [],
+        hasMore: (data?.page || 0) < (data?.totalPages || 0),
+        total: data?.totalItems || 0,
       }
+    } else {
+      console.warn(`Fetch coupons failed: ${res.status} ${res.statusText}`)
     }
   } catch (e) {
     console.error('Backend unavailable', e)
@@ -80,10 +93,19 @@ export const fetchWebSearchPromotions = async (
   try {
     const res = await fetch(
       `${API_URL}/crawler/search?q=${encodeURIComponent(query)}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+      },
     )
     if (res.ok) {
       const data = await res.json()
-      return data.items || []
+      return data?.items || []
+    } else {
+      console.warn(`Fetch web search failed: ${res.status} ${res.statusText}`)
     }
   } catch (e) {
     console.error('Real search API unavailable', e)
@@ -95,33 +117,41 @@ export const fetchWebSearchPromotions = async (
 /**
  * Mocks a server-side API call for real-time crawler data synchronization.
  */
-export const fetchCrawlerPromotions = async ({
-  page = 1,
-  limit = 20,
-  franchiseId,
-  region,
-  query,
-  category,
-}: FetchCrawlerPromotionsParams): Promise<FetchCrawlerPromotionsResponse> => {
+export const fetchCrawlerPromotions = async (
+  params: FetchCrawlerPromotionsParams = {},
+): Promise<FetchCrawlerPromotionsResponse> => {
+  const { page = 1, limit = 20, franchiseId, region, query, category } = params
+
   try {
-    const queryParams = new URLSearchParams({
-      page: page.toString(),
-      perPage: limit.toString(),
-      q: query || '',
-      category: category || '',
-      region: region || '',
-      franchiseId: franchiseId || '',
-    })
+    const queryParams = new URLSearchParams()
+    queryParams.append('page', page.toString())
+    queryParams.append('perPage', limit.toString())
+    if (query) queryParams.append('q', query)
+    if (category && category !== 'all') queryParams.append('category', category)
+    if (region) queryParams.append('region', region)
+    if (franchiseId) queryParams.append('franchiseId', franchiseId)
+
     const res = await fetch(
-      `${API_URL}/collections/discovered_promotions/records?${queryParams}`,
+      `${API_URL}/collections/discovered_promotions/records?${queryParams.toString()}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+      },
     )
     if (res.ok) {
       const data = await res.json()
       return {
-        data: data.items,
-        hasMore: data.page < data.totalPages,
-        total: data.totalItems,
+        data: data?.items || [],
+        hasMore: (data?.page || 0) < (data?.totalPages || 0),
+        total: data?.totalItems || 0,
       }
+    } else {
+      console.warn(
+        `Fetch crawler promotions failed: ${res.status} ${res.statusText}`,
+      )
     }
   } catch (e) {
     console.error('Backend unavailable', e)

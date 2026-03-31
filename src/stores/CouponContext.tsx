@@ -282,11 +282,14 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     const loadCoupons = async () => {
       try {
         const res = await fetchCoupons({ limit: 100 })
-        if (res?.data) {
+        if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
           setCoupons(res.data)
+        } else {
+          setCoupons(MOCK_COUPONS)
         }
       } catch (e) {
-        console.error(e)
+        console.error('Failed to load coupons, using fallback', e)
+        setCoupons(MOCK_COUPONS)
       }
     }
     loadCoupons()
@@ -382,11 +385,14 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     const loadPromotions = async () => {
       try {
         const res = await fetchCrawlerPromotions({ limit: 100 })
-        if (res?.data) {
+        if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
           setDiscoveredPromotions(res.data)
+        } else {
+          setDiscoveredPromotions(MOCK_DISCOVERED_PROMOTIONS)
         }
       } catch (e) {
-        console.error(e)
+        console.error('Failed to load promotions, using fallback', e)
+        setDiscoveredPromotions(MOCK_DISCOVERED_PROMOTIONS)
       }
     }
     loadPromotions()
