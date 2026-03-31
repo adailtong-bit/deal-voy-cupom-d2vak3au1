@@ -98,6 +98,7 @@ export interface FetchCrawlerPromotionsResponse {
 
 export const fetchWebSearchPromotions = async (
   query: string,
+  limit: number = 50,
 ): Promise<DiscoveredPromotion[]> => {
   let token = localStorage.getItem('auth_token')
   if (!token) {
@@ -113,7 +114,7 @@ export const fetchWebSearchPromotions = async (
 
   try {
     const res = await fetch(
-      `${API_URL}/crawler/search?q=${encodeURIComponent(query)}`,
+      `${API_URL}/crawler/search?q=${encodeURIComponent(query)}&limit=${limit}`,
       {
         method: 'GET',
         headers: {
@@ -259,33 +260,25 @@ export const saveCrawlerLog = async (data: any): Promise<any> => {
     }
   }
 
-  try {
-    const res = await fetch(`${API_URL}/collections/crawler_logs/records`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-        ...(token
-          ? {
-              Authorization: token.startsWith('Bearer')
-                ? token
-                : `Bearer ${token}`,
-            }
-          : {}),
-      },
-      body: JSON.stringify(data),
-    })
-    return await res.json()
-  } catch (e) {
-    console.warn('Failed to save crawler log', e)
-    const logs = JSON.parse(localStorage.getItem('local_crawler_logs') || '[]')
-    logs.unshift({ id: Math.random().toString(), ...data })
-    localStorage.setItem(
-      'local_crawler_logs',
-      JSON.stringify(logs.slice(0, 100)),
-    )
-    return data
+  const res = await fetch(`${API_URL}/collections/crawler_logs/records`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      ...(token
+        ? {
+            Authorization: token.startsWith('Bearer')
+              ? token
+              : `Bearer ${token}`,
+          }
+        : {}),
+    },
+    body: JSON.stringify(data),
+  })
+  if (!res.ok) {
+    throw new Error('Failed to save crawler log')
   }
+  return await res.json()
 }
 
 export const fetchCrawlerLogs = async (): Promise<any[]> => {
@@ -303,7 +296,7 @@ export const fetchCrawlerLogs = async (): Promise<any[]> => {
 
   try {
     const res = await fetch(
-      `${API_URL}/collections/crawler_logs/records?sort=-created&perPage=50`,
+      `${API_URL}/collections/crawler_logs/records?sort=-created&perPage=100`,
       {
         headers: {
           Accept: 'application/json',
@@ -319,13 +312,13 @@ export const fetchCrawlerLogs = async (): Promise<any[]> => {
     )
     if (res.ok) {
       const data = await res.json()
-      if (data.items && data.items.length > 0) return data.items
+      return data?.items || []
     }
   } catch (e) {
-    console.warn('Failed to fetch crawler logs from API', e)
+    console.error('Failed to fetch crawler logs from API', e)
   }
 
-  return JSON.parse(localStorage.getItem('local_crawler_logs') || '[]')
+  return []
 }
 
 export const updateUser = async (userId: string, data: any): Promise<any> => {

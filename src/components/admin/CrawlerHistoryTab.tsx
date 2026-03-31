@@ -9,7 +9,6 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
-import { MOCK_CRAWLER_HISTORY } from '@/lib/data'
 import { fetchCrawlerLogs } from '@/lib/api'
 import { format } from 'date-fns'
 import {
@@ -41,13 +40,9 @@ export function CrawlerHistoryTab() {
     setIsLoading(true)
     try {
       const data = await fetchCrawlerLogs()
-      if (data && data.length > 0) {
-        setLogs(data)
-      } else {
-        setLogs(MOCK_CRAWLER_HISTORY)
-      }
+      setLogs(data || [])
     } catch (e) {
-      setLogs(MOCK_CRAWLER_HISTORY)
+      setLogs([])
     } finally {
       setIsLoading(false)
     }

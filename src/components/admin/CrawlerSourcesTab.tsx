@@ -136,9 +136,22 @@ export function CrawlerSourcesTab() {
       )
 
       try {
-        const results = await fetchWebSearchPromotions(q)
+        const results = await fetchWebSearchPromotions(q, limit)
 
         const validResults = results.filter((r) => {
+          if (!r.title || !r.description) return false
+          const textToInspect =
+            `${r.title} ${r.description} ${r.storeName || ''}`.toLowerCase()
+          const trashKeywords = [
+            'lorem ipsum',
+            'test',
+            'teste',
+            'mock',
+            'dummy',
+          ]
+          if (trashKeywords.some((kw) => textToInspect.includes(kw)))
+            return false
+
           if (!r.discount) return true
           const discNum = parseInt(String(r.discount).replace(/\D/g, ''), 10)
           return isNaN(discNum) || discNum >= minDiscount
@@ -151,18 +164,46 @@ export function CrawlerSourcesTab() {
 
         for (const item of toImport) {
           if (stopRef.current) break
+
+          const expDate =
+            item.expiryDate && !isNaN(Date.parse(item.expiryDate))
+              ? new Date(item.expiryDate).toISOString()
+              : undefined
+
           await saveDiscoveredPromotion({
             ...item,
+            title: item.title?.trim(),
+            description: item.description?.trim(),
+            storeName: item.storeName?.trim() || q,
+            discount: item.discount,
+            originalPrice: item.originalPrice,
+            currentPrice: item.currentPrice,
+            expiryDate: expDate,
+            state: item.state?.trim(),
+            city: item.city?.trim(),
+            latitude: item.latitude ? Number(item.latitude) : undefined,
+            longitude: item.longitude ? Number(item.longitude) : undefined,
             category: category !== 'all' ? category : item.category || 'other',
             status: 'pending',
           })
           totalImported++
         }
 
+        if (validResults.length === 0 && results.length > 0) {
+          toast.warning(
+            t(
+              'franchisee.crawler.no_valid_data',
+              `Nenhum dado real encontrado para: ${q}`,
+            ),
+          )
+        }
+
         await saveCrawlerLog({
           storeName: q,
-          status: 'success',
-          itemsFound: results.length,
+          status: toImport.length > 0 ? 'success' : 'warning',
+          errorMessage:
+            toImport.length === 0 ? 'No valid real data found' : undefined,
+          itemsFound: validResults.length,
           itemsImported: toImport.length,
           date: new Date().toISOString(),
         })
@@ -350,7 +391,7 @@ export function CrawlerSourcesTab() {
                 value={limit}
                 onChange={(e) => setLimit(Number(e.target.value))}
                 min={1}
-                max={500}
+                max={1000}
               />
             </div>
 
