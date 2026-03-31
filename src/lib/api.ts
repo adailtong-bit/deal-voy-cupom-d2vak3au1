@@ -219,12 +219,22 @@ export const updateUser = async (userId: string, data: any): Promise<any> => {
   })
 
   if (!res.ok) {
-    console.warn(
-      'Backend rejected the update, bypassing security policies for testing.',
-    )
-    // Attempting to ignore the error and simulate a successful response
-    // to allow the frontend to persist the change locally
-    return { ...data, id: userId }
+    let errorMessage = `HTTP Error: ${res.status}`
+    try {
+      const errorData = await res.json()
+      if (errorData.message) errorMessage = errorData.message
+      if (errorData.data) {
+        const fieldErrors = Object.entries(errorData.data)
+          .map(
+            ([field, err]: [string, any]) => `${field}: ${err?.message || err}`,
+          )
+          .join(', ')
+        if (fieldErrors) errorMessage += ` (${fieldErrors})`
+      }
+    } catch (e) {
+      // Ignore JSON parse error
+    }
+    throw new Error(errorMessage)
   }
 
   return await res.json()

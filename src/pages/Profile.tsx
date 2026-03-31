@@ -41,7 +41,7 @@ export default function Profile() {
   const { t } = useLanguage()
   const { toast } = useToast()
 
-  const [isEditing, setIsEditing] = useState(false)
+  const [isEditing] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [showCurrentPassword, setShowCurrentPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
@@ -67,8 +67,10 @@ export default function Profile() {
     confirmPassword: '',
   })
 
+  const [hasInitialized, setHasInitialized] = useState(false)
+
   useEffect(() => {
-    if (user && !isEditing) {
+    if (user && !hasInitialized) {
       setFormData({
         name: user.name || '',
         email: user.email || '',
@@ -88,8 +90,9 @@ export default function Profile() {
         newPassword: '',
         confirmPassword: '',
       })
+      setHasInitialized(true)
     }
-  }, [user, isEditing])
+  }, [user, hasInitialized])
 
   const availableStates = useMemo(() => {
     return formData.country
@@ -142,33 +145,6 @@ export default function Profile() {
         ? [...prev.categories, id]
         : prev.categories.filter((c) => c !== id),
     }))
-  }
-
-  const isSaveDisabled = false // Bypassed disabled state based on AC
-
-  const handleCancel = () => {
-    if (user) {
-      setFormData({
-        name: user.name || '',
-        email: user.email || '',
-        phone: user.phone || '',
-        birthday: user.birthday || '',
-        gender: user.gender || '',
-        documentNumber: user.documentNumber || '',
-        country: user.country || '',
-        state: user.state || '',
-        city: user.city || '',
-        zipCode: user.zipCode || '',
-        categories: user.preferences?.categories || [],
-        companyName: user.companyName || '',
-        businessEmail: user.businessEmail || '',
-        businessPhone: user.businessPhone || '',
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: '',
-      })
-    }
-    setIsEditing(false)
   }
 
   const handleSave = async () => {
@@ -237,8 +213,6 @@ export default function Profile() {
         newPassword: '',
         confirmPassword: '',
       }))
-
-      setIsEditing(false)
     } catch (error: any) {
       toast({
         title: t('common.error', 'Erro'),
@@ -272,28 +246,12 @@ export default function Profile() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          {!isEditing ? (
-            <Button onClick={() => setIsEditing(true)} size="lg">
-              {t('profile.edit', 'Edit Profile')}
-            </Button>
-          ) : (
-            <>
-              <Button
-                onClick={handleCancel}
-                size="lg"
-                variant="outline"
-                disabled={isSaving}
-              >
-                {t('common.cancel', 'Cancel')}
-              </Button>
-              <Button onClick={handleSave} size="lg" disabled={isSaveDisabled}>
-                {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isSaving
-                  ? t('common.saving', 'Salvando...')
-                  : t('profile.save', 'Salvar')}
-              </Button>
-            </>
-          )}
+          <Button onClick={handleSave} size="lg" disabled={false}>
+            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isSaving
+              ? t('common.saving', 'Salvando...')
+              : t('profile.save', 'Salvar')}
+          </Button>
         </div>
       </div>
 
@@ -499,12 +457,12 @@ export default function Profile() {
                       id={`cat-${cat.id}`}
                       checked={formData.categories.includes(cat.id)}
                       onCheckedChange={(c) => handleCategoryChange(cat.id, !!c)}
-                      disabled={!isEditing}
+                      disabled={false}
                     />
                     <div className="space-y-1 leading-none flex-1">
                       <Label
                         htmlFor={`cat-${cat.id}`}
-                        className={`text-sm font-medium ${isEditing ? 'cursor-pointer' : 'opacity-70'}`}
+                        className={`text-sm font-medium cursor-pointer`}
                       >
                         {cat.label}
                       </Label>
@@ -686,110 +644,108 @@ export default function Profile() {
                 </div>
               </div>
 
-              {isEditing && (
-                <div className="space-y-4 animate-in fade-in-50">
-                  <h3 className="text-sm font-medium text-slate-800 border-b pb-2">
-                    {t('profile.change_password', 'Alterar Senha')}
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl">
-                    <div className="space-y-2 md:col-span-2">
-                      <Label>
-                        {t('profile.current_password', 'Senha Atual')}
-                      </Label>
-                      <div className="relative">
-                        <Input
-                          type={showCurrentPassword ? 'text' : 'password'}
-                          name="currentPassword"
-                          value={formData.currentPassword}
-                          onChange={handleChange}
-                          placeholder="••••••••"
-                          className="pr-10"
-                        />
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setShowCurrentPassword(!showCurrentPassword)
-                          }
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700"
-                          title={
-                            showCurrentPassword
-                              ? t('profile.hide_password', 'Ocultar senha')
-                              : t('profile.show_password', 'Mostrar senha')
-                          }
-                        >
-                          {showCurrentPassword ? (
-                            <EyeOff className="h-4 w-4" />
-                          ) : (
-                            <Eye className="h-4 w-4" />
-                          )}
-                        </button>
-                      </div>
+              <div className="space-y-4 animate-in fade-in-50 mt-8">
+                <h3 className="text-sm font-medium text-slate-800 border-b pb-2">
+                  {t('profile.change_password', 'Alterar Senha')}
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl">
+                  <div className="space-y-2 md:col-span-2">
+                    <Label>
+                      {t('profile.current_password', 'Senha Atual')}
+                    </Label>
+                    <div className="relative">
+                      <Input
+                        type={showCurrentPassword ? 'text' : 'password'}
+                        name="currentPassword"
+                        value={formData.currentPassword}
+                        onChange={handleChange}
+                        placeholder="••••••••"
+                        className="pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setShowCurrentPassword(!showCurrentPassword)
+                        }
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700"
+                        title={
+                          showCurrentPassword
+                            ? t('profile.hide_password', 'Ocultar senha')
+                            : t('profile.show_password', 'Mostrar senha')
+                        }
+                      >
+                        {showCurrentPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
                     </div>
-                    <div className="space-y-2">
-                      <Label>{t('profile.new_password', 'Nova Senha')}</Label>
-                      <div className="relative">
-                        <Input
-                          type={showNewPassword ? 'text' : 'password'}
-                          name="newPassword"
-                          value={formData.newPassword}
-                          onChange={handleChange}
-                          placeholder="••••••••"
-                          className="pr-10"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowNewPassword(!showNewPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700"
-                          title={
-                            showNewPassword
-                              ? t('profile.hide_password', 'Ocultar senha')
-                              : t('profile.show_password', 'Mostrar senha')
-                          }
-                        >
-                          {showNewPassword ? (
-                            <EyeOff className="h-4 w-4" />
-                          ) : (
-                            <Eye className="h-4 w-4" />
-                          )}
-                        </button>
-                      </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>{t('profile.new_password', 'Nova Senha')}</Label>
+                    <div className="relative">
+                      <Input
+                        type={showNewPassword ? 'text' : 'password'}
+                        name="newPassword"
+                        value={formData.newPassword}
+                        onChange={handleChange}
+                        placeholder="••••••••"
+                        className="pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowNewPassword(!showNewPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700"
+                        title={
+                          showNewPassword
+                            ? t('profile.hide_password', 'Ocultar senha')
+                            : t('profile.show_password', 'Mostrar senha')
+                        }
+                      >
+                        {showNewPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
                     </div>
-                    <div className="space-y-2">
-                      <Label>
-                        {t('profile.confirm_password', 'Confirmar Nova Senha')}
-                      </Label>
-                      <div className="relative">
-                        <Input
-                          type={showConfirmPassword ? 'text' : 'password'}
-                          name="confirmPassword"
-                          value={formData.confirmPassword}
-                          onChange={handleChange}
-                          placeholder="••••••••"
-                          className="pr-10"
-                        />
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setShowConfirmPassword(!showConfirmPassword)
-                          }
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700"
-                          title={
-                            showConfirmPassword
-                              ? t('profile.hide_password', 'Ocultar senha')
-                              : t('profile.show_password', 'Mostrar senha')
-                          }
-                        >
-                          {showConfirmPassword ? (
-                            <EyeOff className="h-4 w-4" />
-                          ) : (
-                            <Eye className="h-4 w-4" />
-                          )}
-                        </button>
-                      </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>
+                      {t('profile.confirm_password', 'Confirmar Nova Senha')}
+                    </Label>
+                    <div className="relative">
+                      <Input
+                        type={showConfirmPassword ? 'text' : 'password'}
+                        name="confirmPassword"
+                        value={formData.confirmPassword}
+                        onChange={handleChange}
+                        placeholder="••••••••"
+                        className="pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setShowConfirmPassword(!showConfirmPassword)
+                        }
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700"
+                        title={
+                          showConfirmPassword
+                            ? t('profile.hide_password', 'Ocultar senha')
+                            : t('profile.show_password', 'Mostrar senha')
+                        }
+                      >
+                        {showConfirmPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
                     </div>
                   </div>
                 </div>
-              )}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
