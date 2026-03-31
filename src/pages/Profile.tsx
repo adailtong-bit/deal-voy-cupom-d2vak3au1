@@ -25,7 +25,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useToast } from '@/hooks/use-toast'
 import { COUNTRIES, LOCATION_DATA } from '@/lib/locationData'
 import { User } from '@/lib/types'
-import { Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff, Loader2 } from 'lucide-react'
 
 export default function Profile() {
   const { user, updateUserProfile, platformSettings } = useCouponStore()
@@ -33,6 +33,7 @@ export default function Profile() {
   const { toast } = useToast()
 
   const [isEditing, setIsEditing] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
   const [showCurrentPassword, setShowCurrentPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -228,7 +229,9 @@ export default function Profile() {
       }
     }
 
+    setIsSaving(true)
     try {
+      await new Promise((resolve) => setTimeout(resolve, 800))
       await Promise.resolve(
         updateUserProfile({
           name: formData.name,
@@ -287,6 +290,8 @@ export default function Profile() {
         ),
         variant: 'destructive',
       })
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -313,11 +318,19 @@ export default function Profile() {
             </Button>
           ) : (
             <>
-              <Button onClick={handleCancel} size="lg" variant="outline">
+              <Button
+                onClick={handleCancel}
+                size="lg"
+                variant="outline"
+                disabled={isSaving}
+              >
                 {t('common.cancel', 'Cancel')}
               </Button>
-              <Button onClick={handleSave} size="lg">
-                {t('profile.save', 'Save Changes')}
+              <Button onClick={handleSave} size="lg" disabled={isSaving}>
+                {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isSaving
+                  ? t('common.saving', 'Saving...')
+                  : t('profile.save', 'Save Changes')}
               </Button>
             </>
           )}
