@@ -158,36 +158,9 @@ export const fetchWebSearchPromotions = async (
     return []
   } catch (e: any) {
     console.warn(
-      `Failed to fetch from organic search engine API, using dynamic organic fallback for query: ${query}`,
+      `Failed to fetch from organic search engine API for query: ${query}`,
     )
-    // Generate organic-looking results with valid URLs to pass the ping test
-    const results = []
-    const count = limit > 0 ? Math.min(limit, 25) : 10
-    const sites = [
-      { name: 'Global Store', country: 'USA', url: 'https://www.amazon.com' },
-      { name: 'Tech Deals', country: 'UK', url: 'https://www.apple.com' },
-      { name: 'Fashion Hub', country: 'France', url: 'https://www.nike.com' },
-      {
-        name: 'Local Market',
-        country: 'Brazil',
-        url: 'https://www.mercadolivre.com.br',
-      },
-    ]
-    for (let i = 0; i < count; i++) {
-      const site = sites[i % sites.length]
-      results.push({
-        title: `${query || 'Organic Product'} - Top Result ${i + 1}`,
-        price: 19.99 + i * 5,
-        currency: 'USD',
-        image: `https://img.usecurling.com/p/400/300?q=${encodeURIComponent(query || 'product')}&seed=${Date.now() + i}`,
-        sourceUrl: site.url,
-        storeName: site.name,
-        country: site.country,
-        category: options.category || 'Uncategorized',
-        status: 'pending',
-      })
-    }
-    return results
+    throw e
   }
 }
 
@@ -238,30 +211,10 @@ export const fetchCrawlerPromotions = async (
     )
   }
 
-  // Fallback to local promos if any exist
-  const localPromos = JSON.parse(
-    localStorage.getItem('crawler_promos_fallback') || '[]',
-  )
-
-  // Apply basic mock filtering to local data
-  const filteredLocal = localPromos.filter((p: any) => {
-    if (
-      query &&
-      !p.storeName?.toLowerCase().includes(query.toLowerCase()) &&
-      !p.title?.toLowerCase().includes(query.toLowerCase())
-    )
-      return false
-    if (category && category !== 'all' && p.category !== category) return false
-    if (region && p.region !== region) return false
-    return true
-  })
-
-  const merged = [...filteredLocal, ...apiData]
-
   return {
-    data: merged.slice(0, limit),
-    hasMore: hasMore || filteredLocal.length > limit,
-    total: Math.max(total, merged.length),
+    data: apiData.slice(0, limit),
+    hasMore: hasMore,
+    total: Math.max(total, apiData.length),
   }
 }
 
@@ -308,23 +261,8 @@ export const saveDiscoveredPromotion = async (
     }
     return await res.json()
   } catch (e: any) {
-    console.warn(
-      'Network error saving discovered promotion, saving to local fallback:',
-      e,
-    )
-
-    const localPromos = JSON.parse(
-      localStorage.getItem('crawler_promos_fallback') || '[]',
-    )
-    const newPromo = {
-      ...data,
-      id: `local-promo-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-    }
-    localStorage.setItem(
-      'crawler_promos_fallback',
-      JSON.stringify([newPromo, ...localPromos].slice(0, 500)),
-    )
-    return newPromo
+    console.warn('Network error saving discovered promotion:', e)
+    throw e
   }
 }
 
@@ -363,20 +301,8 @@ export const saveCrawlerLog = async (data: any): Promise<any> => {
     }
     return await res.json()
   } catch (e) {
-    console.warn('Network error saving crawler log, using fallback:', e)
-    const localLogs = JSON.parse(
-      localStorage.getItem('crawler_logs_fallback') || '[]',
-    )
-    const newLog = {
-      ...data,
-      id: `local-log-${Date.now()}`,
-      created: new Date().toISOString(),
-    }
-    localStorage.setItem(
-      'crawler_logs_fallback',
-      JSON.stringify([newLog, ...localLogs].slice(0, 100)),
-    )
-    return newLog
+    console.warn('Network error saving crawler log:', e)
+    throw e
   }
 }
 
@@ -415,17 +341,10 @@ export const fetchCrawlerLogs = async (): Promise<any[]> => {
       apiLogs = data?.items || []
     }
   } catch (e) {
-    console.warn(
-      'Failed to fetch crawler logs from API, falling back to local storage',
-      e,
-    )
+    console.warn('Failed to fetch crawler logs from API', e)
   }
 
-  const localLogs = JSON.parse(
-    localStorage.getItem('crawler_logs_fallback') || '[]',
-  )
-
-  const allLogs = [...apiLogs, ...localLogs].sort((a, b) => {
+  const allLogs = [...apiLogs].sort((a, b) => {
     return (
       new Date(b.created || b.date).getTime() -
       new Date(a.created || a.date).getTime()

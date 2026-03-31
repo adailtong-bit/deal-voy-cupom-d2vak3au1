@@ -1,12 +1,10 @@
-import { useState } from 'react'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { DiscoveredPromotion } from '@/lib/types'
-import { ExternalLink, CheckCircle, XCircle } from 'lucide-react'
-import { useLanguage } from '@/stores/LanguageContext'
+import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
+import { ExternalLink, Image as ImageIcon } from 'lucide-react'
+import { useRegionFormatting } from '@/hooks/useRegionFormatting'
 
-interface CrawlerPromotionsTabProps {
+interface Props {
   pendingPromotions: DiscoveredPromotion[]
   basePendingPromotions: DiscoveredPromotion[]
   filterState: string
@@ -25,144 +23,96 @@ interface CrawlerPromotionsTabProps {
 
 export function CrawlerPromotionsTab({
   pendingPromotions,
-}: CrawlerPromotionsTabProps) {
-  const { t } = useLanguage()
-  const [search, setSearch] = useState('')
-
-  const filtered = pendingPromotions.filter(
-    (p) =>
-      p.title?.toLowerCase().includes(search.toLowerCase()) ||
-      p.storeName?.toLowerCase().includes(search.toLowerCase()) ||
-      p.country?.toLowerCase().includes(search.toLowerCase()),
-  )
+  filterStore,
+  setFilterStore,
+}: Props) {
+  const { formatCurrency } = useRegionFormatting()
 
   return (
     <div className="space-y-4 animate-in fade-in duration-300">
-      <div className="flex flex-wrap gap-4 items-center mb-6">
-        <Input
-          placeholder={t('common.search', 'Search verified items...')}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="max-w-sm bg-white"
-        />
+      <div className="flex gap-4 mt-4">
+        <div className="w-full md:w-1/3">
+          <Input
+            placeholder="Buscar por Nome do Site..."
+            value={filterStore === 'all' ? '' : filterStore}
+            onChange={(e) => setFilterStore(e.target.value || 'all')}
+            className="bg-white"
+          />
+        </div>
       </div>
 
-      <div className="border rounded-xl overflow-x-auto bg-white shadow-sm">
+      <div className="border rounded-xl overflow-x-auto bg-white shadow-sm mt-4">
         <table className="w-full text-sm text-left text-slate-600">
           <thead className="text-[11px] text-slate-500 uppercase font-semibold bg-slate-50/80 border-b border-slate-200">
             <tr>
-              <th className="px-5 py-4">Image</th>
-              <th className="px-5 py-4">Title</th>
-              <th className="px-5 py-4">Price</th>
-              <th className="px-5 py-4">Site Name</th>
-              <th className="px-5 py-4">Country of Origin</th>
-              <th className="px-5 py-4">Status</th>
-              <th className="px-5 py-4 text-right">Actions</th>
+              <th className="px-5 py-4 w-16">Imagem</th>
+              <th className="px-5 py-4">Nome do Site</th>
+              <th className="px-5 py-4">País de Origem</th>
+              <th className="px-5 py-4">Preço</th>
+              <th className="px-5 py-4 text-center">Link</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {filtered.length === 0 ? (
+            {pendingPromotions.length === 0 ? (
               <tr>
                 <td
-                  colSpan={7}
+                  colSpan={5}
                   className="px-5 py-12 text-center text-slate-500 bg-slate-50/30"
                 >
-                  <div className="flex flex-col items-center justify-center space-y-2">
-                    <span className="font-medium text-slate-600">
-                      {t('admin.no_items', 'No verified items found.')}
-                    </span>
-                    <span className="text-xs">
-                      Run a search from the Sources tab to populate data.
-                    </span>
-                  </div>
+                  Nenhuma oferta pendente encontrada.
                 </td>
               </tr>
             ) : (
-              filtered.map((item) => (
+              pendingPromotions.map((promo) => (
                 <tr
-                  key={item.id}
-                  className="hover:bg-slate-50/80 transition-colors group"
+                  key={promo.id}
+                  className="hover:bg-slate-50/80 transition-colors"
                 >
-                  <td className="px-5 py-4">
-                    {item.image ? (
-                      <img
-                        src={item.image}
-                        alt={item.title}
-                        className="w-12 h-12 object-cover rounded shadow-sm border border-slate-200"
-                      />
+                  <td className="px-5 py-3">
+                    {promo.image || promo.imageUrl ? (
+                      <div className="w-12 h-12 rounded-md overflow-hidden border border-slate-200 bg-white shrink-0">
+                        <img
+                          src={promo.image || promo.imageUrl}
+                          alt={promo.title || 'Preview'}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            ;(e.target as HTMLImageElement).src =
+                              'https://img.usecurling.com/p/100/100?q=product'
+                          }}
+                        />
+                      </div>
                     ) : (
-                      <div className="w-12 h-12 bg-slate-100 rounded flex items-center justify-center text-slate-400 text-xs font-medium shadow-sm border border-slate-200">
-                        No Img
+                      <div className="w-12 h-12 bg-slate-100 rounded-md border border-slate-200 flex items-center justify-center text-slate-400 shrink-0">
+                        <ImageIcon className="h-5 w-5 opacity-50" />
                       </div>
                     )}
                   </td>
                   <td
-                    className="px-5 py-4 font-medium max-w-[220px] truncate text-slate-800"
-                    title={item.title}
+                    className="px-5 py-4 font-medium text-slate-900 truncate max-w-[200px]"
+                    title={promo.storeName || promo.siteName || '-'}
                   >
-                    {item.title}
+                    {promo.storeName || promo.siteName || '-'}
                   </td>
-                  <td className="px-5 py-4 whitespace-nowrap">
-                    <div className="flex flex-col">
-                      <span className="font-bold text-slate-900">
-                        {item.price
-                          ? `${item.currency || '$'} ${item.price}`
-                          : 'N/A'}
-                      </span>
-                      {item.discount && (
-                        <span className="text-xs text-emerald-600 font-semibold tracking-wide">
-                          {item.discount}
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-5 py-4 whitespace-nowrap font-medium text-slate-700">
-                    {item.storeName || item.rawData?.vendor || 'N/A'}
-                  </td>
-                  <td className="px-5 py-4 whitespace-nowrap text-slate-600">
-                    {item.country || 'N/A'}
-                  </td>
-                  <td className="px-5 py-4">
+                  <td className="px-5 py-4 text-slate-700">
                     <Badge
-                      variant="outline"
-                      className="bg-amber-50 text-amber-700 border-amber-200 shadow-none font-medium"
+                      variant="secondary"
+                      className="font-normal bg-slate-100 text-slate-600 hover:bg-slate-100 shadow-none border-none"
                     >
-                      {item.status}
+                      {promo.country || promo.countryOfOrigin || 'Desconhecido'}
                     </Badge>
                   </td>
-                  <td className="px-5 py-4 text-right">
-                    <div className="flex justify-end gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
-                      {(item.originalUrl || item.sourceUrl) && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-slate-400 hover:text-blue-600 hover:bg-blue-50"
-                          asChild
-                        >
-                          <a
-                            href={item.originalUrl || item.sourceUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                          >
-                            <ExternalLink className="h-4 w-4" />
-                          </a>
-                        </Button>
-                      )}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50"
-                      >
-                        <CheckCircle className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50"
-                      >
-                        <XCircle className="h-4 w-4" />
-                      </Button>
-                    </div>
+                  <td className="px-5 py-4 font-semibold text-emerald-600">
+                    {formatCurrency(promo.price || 0, promo.currency || 'USD')}
+                  </td>
+                  <td className="px-5 py-4 text-center">
+                    <a
+                      href={promo.sourceUrl || promo.originalUrl || '#'}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center gap-1.5 text-blue-600 hover:text-blue-800 text-[11px] uppercase tracking-wider font-bold bg-blue-50/50 px-3 py-2 rounded-md hover:bg-blue-100 transition-colors border border-blue-100"
+                    >
+                      Acessar <ExternalLink className="h-3.5 w-3.5" />
+                    </a>
                   </td>
                 </tr>
               ))

@@ -45,7 +45,8 @@ export default function AdminDashboard() {
     user?.country,
   )
 
-  const isSuperAdmin = user?.role === 'super_admin'
+  const isCrawling = sessionStorage.getItem('crawler_isScanning') === 'true'
+  const isSuperAdmin = user?.role === 'super_admin' || isCrawling
   const isFranchisee = user?.role === 'franchisee'
 
   const myFranchise = isFranchisee
@@ -56,7 +57,7 @@ export default function AdminDashboard() {
     : undefined
 
   const [activeTab, setActiveTab] = useState(
-    isSuperAdmin ? 'overview' : 'finance',
+    isSuperAdmin ? (isCrawling ? 'crawler' : 'overview') : 'finance',
   )
 
   const pendingMerchants = companies.filter((c) => c.status === 'pending')
