@@ -279,9 +279,12 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   const [companies, setCompanies] = useState<Company[]>([])
 
   useEffect(() => {
+    let mounted = true
     const loadCoupons = async () => {
       try {
         const res = await fetchCoupons({ limit: 100 })
+        if (!mounted) return
+
         if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
           setCoupons(res.data)
         } else {
@@ -289,14 +292,18 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         }
       } catch (e) {
         console.error('Failed to load coupons, using fallback', e)
-        setCoupons(MOCK_COUPONS)
+        if (mounted) setCoupons(MOCK_COUPONS)
       }
     }
 
     loadCoupons().catch((err) => {
       console.error('Unhandled error in loadCoupons', err)
-      setCoupons(MOCK_COUPONS)
+      if (mounted) setCoupons(MOCK_COUPONS)
     })
+
+    return () => {
+      mounted = false
+    }
   }, [])
 
   const [ads, setAds] = useState<Advertisement[]>([])
@@ -386,9 +393,12 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   >([])
 
   useEffect(() => {
+    let mounted = true
     const loadPromotions = async () => {
       try {
         const res = await fetchCrawlerPromotions({ limit: 100 })
+        if (!mounted) return
+
         if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
           setDiscoveredPromotions(res.data)
         } else {
@@ -396,14 +406,18 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         }
       } catch (e) {
         console.error('Failed to load promotions, using fallback', e)
-        setDiscoveredPromotions(MOCK_DISCOVERED_PROMOTIONS)
+        if (mounted) setDiscoveredPromotions(MOCK_DISCOVERED_PROMOTIONS)
       }
     }
 
     loadPromotions().catch((err) => {
       console.error('Unhandled error in loadPromotions', err)
-      setDiscoveredPromotions(MOCK_DISCOVERED_PROMOTIONS)
+      if (mounted) setDiscoveredPromotions(MOCK_DISCOVERED_PROMOTIONS)
     })
+
+    return () => {
+      mounted = false
+    }
   }, [])
 
   const [adPricing, setAdPricing] = useState<AdPricing[]>(MOCK_AD_PRICING)

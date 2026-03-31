@@ -64,11 +64,11 @@ export const fetchCoupons = async (
       }
     } else {
       console.warn(`Fetch coupons failed: ${res.status} ${res.statusText}`)
-      throw new Error(`Fetch failed with status: ${res.status}`)
+      return { data: [], hasMore: false, total: 0 }
     }
   } catch (e) {
     console.error('Backend unavailable', e)
-    throw e
+    return { data: [], hasMore: false, total: 0 }
   }
 }
 
@@ -106,11 +106,11 @@ export const fetchWebSearchPromotions = async (
       return data?.items || []
     } else {
       console.warn(`Fetch web search failed: ${res.status} ${res.statusText}`)
-      throw new Error(`Fetch failed with status: ${res.status}`)
+      return []
     }
   } catch (e) {
     console.error('Real search API unavailable', e)
-    throw e
+    return []
   }
 }
 
@@ -152,10 +152,10 @@ export const fetchCrawlerPromotions = async (
       console.warn(
         `Fetch crawler promotions failed: ${res.status} ${res.statusText}`,
       )
-      throw new Error(`Fetch failed with status: ${res.status}`)
+      return { data: [], hasMore: false, total: 0 }
     }
   } catch (e) {
     console.error('Backend unavailable', e)
-    throw e
+    return { data: [], hasMore: false, total: 0 }
   }
 }
