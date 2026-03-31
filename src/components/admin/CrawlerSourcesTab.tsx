@@ -1,209 +1,189 @@
 import { useState, useEffect } from 'react'
-import { useToast } from '@/hooks/use-toast'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
+  CardDescription,
 } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Progress } from '@/components/ui/progress'
+import { Play, Square, Loader2, Globe } from 'lucide-react'
 import {
-  Play,
-  StopCircle,
-  CheckCircle2,
-  AlertTriangle,
-  Globe,
-} from 'lucide-react'
-import {
-  getCrawlerProgress,
   startExtractionTask,
   stopExtractionTask,
+  getCrawlerProgress,
   subscribeCrawler,
 } from '@/lib/crawlerTask'
+import { cn } from '@/lib/utils'
 
 export function CrawlerSourcesTab() {
-  const { toast } = useToast()
-
   const [query, setQuery] = useState('')
-  const [source, setSource] = useState('all')
-  const [limit, setLimit] = useState(20)
+  const [limit, setLimit] = useState(100)
 
   const [progress, setProgress] = useState(getCrawlerProgress())
 
-  // Subscribe to background crawler task updates decoupling UI from extraction logic
   useEffect(() => {
-    const unsubscribe = subscribeCrawler(() => {
+    return subscribeCrawler(() => {
       setProgress({ ...getCrawlerProgress() })
     })
-    return unsubscribe
   }, [])
 
-  const handleStart = async () => {
-    if (!query.trim()) {
-      toast({
-        title: 'Error',
-        description: 'Please enter a search query.',
-        variant: 'destructive',
-      })
-      return
-    }
-    startExtractionTask(query, limit, source)
+  const handleStart = () => {
+    if (!query.trim()) return
+    startExtractionTask(query, limit, 'all') // 'all' source for agnostic organic search
   }
 
-  const progressPercentage =
+  const handleStop = () => {
+    stopExtractionTask()
+  }
+
+  const percentage =
     progress.total > 0 ? (progress.current / progress.total) * 100 : 0
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>General Organic Crawler</CardTitle>
-          <CardDescription>
-            Execute flexible organic searches across the web to discover and
-            validate real deals.
+      <Card className="shadow-sm border-slate-200">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-2 text-xl">
+            <Globe className="h-5 w-5 text-blue-600" />
+            Agnostic Organic Search
+          </CardTitle>
+          <CardDescription className="text-sm">
+            Search and import promotional data from any source. The crawler will
+            validate links and require complete product data including Site Name
+            and Country of Origin.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="space-y-2 md:col-span-2">
-              <Label>Search Query</Label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-3">
+              <Label className="text-slate-700 font-medium">Search Query</Label>
               <Input
-                placeholder="e.g. Laptops, Headphones..."
+                placeholder="e.g., Laptops, Flight Tickets, Fashion Deals..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 disabled={progress.isScanning}
+                className="bg-slate-50 focus-visible:bg-white"
               />
             </div>
-            <div className="space-y-2">
-              <Label>Search Scope</Label>
-              <Select
-                value={source}
-                onValueChange={setSource}
-                disabled={progress.isScanning}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select source" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Organic Web Search</SelectItem>
-                  <SelectItem value="google_shopping">
-                    Google Shopping API
-                  </SelectItem>
-                  <SelectItem value="local_deals">
-                    Local Deals Directory
-                  </SelectItem>
-                  <SelectItem value="social_media">
-                    Social Media Scraper
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Batch Limit</Label>
+            <div className="space-y-3">
+              <Label className="text-slate-700 font-medium">
+                Maximum Items to Process
+              </Label>
               <Input
                 type="number"
                 min={1}
-                max={100}
+                max={500}
                 value={limit}
-                onChange={(e) => setLimit(Number(e.target.value))}
+                onChange={(e) => setLimit(parseInt(e.target.value) || 100)}
                 disabled={progress.isScanning}
+                className="bg-slate-50 focus-visible:bg-white"
               />
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="pt-2 flex gap-4 border-t border-slate-100">
             {!progress.isScanning ? (
-              <Button onClick={handleStart} className="w-full sm:w-auto">
-                <Play className="w-4 h-4 mr-2" />
-                Start Extraction
+              <Button
+                onClick={handleStart}
+                className="gap-2 w-full md:w-auto mt-4 px-6 font-semibold"
+                disabled={!query.trim()}
+              >
+                <Play className="h-4 w-4" />
+                Start Search Process
               </Button>
             ) : (
               <Button
-                onClick={stopExtractionTask}
+                onClick={handleStop}
                 variant="destructive"
-                className="w-full sm:w-auto animate-pulse"
+                className="gap-2 w-full md:w-auto mt-4 px-6 font-semibold shadow-sm"
               >
-                <StopCircle className="w-4 h-4 mr-2" />
-                Stop Extraction
+                <Square className="h-4 w-4" />
+                Stop Search Process
               </Button>
             )}
           </div>
+
+          {(progress.isScanning || progress.total > 0) && (
+            <div className="space-y-5 p-5 mt-6 border rounded-xl bg-slate-50 shadow-inner">
+              <div className="flex items-center justify-between text-sm font-semibold text-slate-800">
+                <span className="flex items-center gap-2">
+                  {progress.isScanning && (
+                    <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                  )}
+                  {progress.isScanning
+                    ? 'Executing Crawler Task...'
+                    : 'Extraction Cycle Completed'}
+                </span>
+                <span className="text-slate-500">
+                  {progress.current} / {progress.total} scanned
+                </span>
+              </div>
+
+              <Progress value={percentage} className="h-2.5 bg-slate-200" />
+
+              <div className="grid grid-cols-3 gap-4 text-center mt-6">
+                <div className="p-4 bg-white rounded-lg border shadow-sm flex flex-col justify-center">
+                  <div className="text-3xl font-bold text-blue-600">
+                    {progress.found}
+                  </div>
+                  <div className="text-xs text-slate-500 font-medium mt-1">
+                    Items Found
+                  </div>
+                </div>
+                <div className="p-4 bg-white rounded-lg border shadow-sm flex flex-col justify-center">
+                  <div className="text-3xl font-bold text-emerald-600">
+                    {progress.imported}
+                  </div>
+                  <div className="text-xs text-slate-500 font-medium mt-1">
+                    Verified & Imported
+                  </div>
+                </div>
+                <div className="p-4 bg-white rounded-lg border shadow-sm flex flex-col justify-center">
+                  <div className="text-3xl font-bold text-red-500">
+                    {progress.errors}
+                  </div>
+                  <div className="text-xs text-slate-500 font-medium mt-1">
+                    Discarded (Errors)
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 bg-slate-900 text-slate-300 p-4 rounded-lg h-48 overflow-y-auto font-mono text-[11px] leading-relaxed shadow-inner border border-slate-800">
+                {progress.logs.map((log, i) => (
+                  <div
+                    key={i}
+                    className="mb-1.5 border-b border-slate-800/60 pb-1.5 break-words"
+                  >
+                    <span
+                      className={cn(
+                        'opacity-90',
+                        log.includes('Fatal Error') && 'text-red-400 font-bold',
+                        log.includes('Imported:') &&
+                          'text-emerald-400 font-medium',
+                        log.includes('Discarded') && 'text-amber-400',
+                        log.includes('Initiating') &&
+                          'text-blue-300 font-medium',
+                        log.includes('Done.') && 'text-blue-300 font-medium',
+                      )}
+                    >
+                      {log}
+                    </span>
+                  </div>
+                ))}
+                {progress.logs.length === 0 && (
+                  <div className="opacity-40 italic">
+                    Waiting for execution logs...
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
-
-      {(progress.isScanning || progress.total > 0) && (
-        <Card className="animate-in fade-in slide-in-from-bottom-4">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center justify-between">
-              <span>Extraction Status</span>
-              {progress.isScanning && (
-                <span className="text-sm text-muted-foreground flex items-center">
-                  <Globe className="w-4 h-4 mr-2 animate-spin" />
-                  Connecting & Validating...
-                </span>
-              )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>
-                  Processing item {progress.current} of {progress.total}
-                </span>
-                <span>{Math.round(progressPercentage)}%</span>
-              </div>
-              <Progress value={progressPercentage} className="h-2" />
-            </div>
-
-            <div className="grid grid-cols-3 gap-4">
-              <div className="bg-slate-50 p-4 rounded-lg border text-center">
-                <p className="text-sm text-muted-foreground font-medium mb-1">
-                  Raw Found
-                </p>
-                <p className="text-2xl font-bold">{progress.found}</p>
-              </div>
-              <div className="bg-green-50 p-4 rounded-lg border border-green-100 text-center">
-                <p className="text-sm text-green-600 font-medium mb-1 flex items-center justify-center gap-1">
-                  <CheckCircle2 className="w-4 h-4" /> Imported
-                </p>
-                <p className="text-2xl font-bold text-green-700">
-                  {progress.imported}
-                </p>
-              </div>
-              <div className="bg-red-50 p-4 rounded-lg border border-red-100 text-center">
-                <p className="text-sm text-red-600 font-medium mb-1 flex items-center justify-center gap-1">
-                  <AlertTriangle className="w-4 h-4" /> Discarded
-                </p>
-                <p className="text-2xl font-bold text-red-700">
-                  {progress.errors}
-                </p>
-              </div>
-            </div>
-
-            <div className="bg-black text-green-400 p-4 rounded-lg font-mono text-xs h-48 overflow-y-auto space-y-1">
-              {progress.logs.map((log, i) => (
-                <div key={i} className="opacity-90">
-                  {log}
-                </div>
-              ))}
-              {progress.logs.length === 0 && (
-                <div className="text-muted-foreground">Waiting for logs...</div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   )
 }

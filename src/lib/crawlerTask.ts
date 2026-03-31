@@ -113,6 +113,12 @@ export const startExtractionTask = async (
       if (!item.image?.trim() && !item.imageUrl?.trim())
         missingFields.push('Image')
 
+      const siteName = item.storeName || item.siteName || ''
+      if (!siteName.trim()) missingFields.push('Site Name')
+
+      const country = item.country || item.countryOfOrigin || ''
+      if (!country.trim()) missingFields.push('Country of Origin')
+
       const linkToTest = item.sourceUrl || item.originalUrl || ''
       if (!linkToTest.trim() || !linkToTest.startsWith('http'))
         missingFields.push('Link')

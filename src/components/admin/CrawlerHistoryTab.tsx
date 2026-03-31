@@ -1,244 +1,106 @@
 import { useState, useEffect } from 'react'
-import { useLanguage } from '@/stores/LanguageContext'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
 import { fetchCrawlerLogs } from '@/lib/api'
+import { Badge } from '@/components/ui/badge'
 import { format } from 'date-fns'
-import {
-  CheckCircle2,
-  AlertTriangle,
-  XCircle,
-  Loader2,
-  Search,
-  RefreshCw,
-} from 'lucide-react'
-import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Button } from '@/components/ui/button'
 
 export function CrawlerHistoryTab() {
-  const { t } = useLanguage()
-  const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState('all')
   const [logs, setLogs] = useState<any[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-
-  const loadLogs = async () => {
-    setIsLoading(true)
-    try {
-      const data = await fetchCrawlerLogs()
-      setLogs(data || [])
-    } catch (e) {
-      setLogs([])
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    const loadLogs = async () => {
+      setLoading(true)
+      try {
+        const data = await fetchCrawlerLogs()
+        setLogs(data)
+      } catch (e) {
+        console.error('Failed to load crawler logs', e)
+      } finally {
+        setLoading(false)
+      }
+    }
     loadLogs()
   }, [])
 
-  const filteredHistory = logs
-    .filter((log) => {
-      if (
-        search &&
-        !log.storeName?.toLowerCase().includes(search.toLowerCase())
-      ) {
-        return false
-      }
-      if (statusFilter !== 'all' && log.status !== statusFilter) {
-        return false
-      }
-      return true
-    })
-    .sort(
-      (a, b) =>
-        new Date(b.date || a.created).getTime() -
-        new Date(a.date || b.created).getTime(),
-    )
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'success':
-        return (
-          <Badge variant="secondary" className="bg-green-100 text-green-800">
-            <CheckCircle2 className="w-3 h-3 mr-1" />
-            {t('common.success', 'Sucesso')}
-          </Badge>
-        )
-      case 'warning':
-        return (
-          <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
-            <AlertTriangle className="w-3 h-3 mr-1" />
-            {t('common.warning', 'Aviso')}
-          </Badge>
-        )
-      case 'error':
-        return (
-          <Badge variant="secondary" className="bg-red-100 text-red-800">
-            <XCircle className="w-3 h-3 mr-1" />
-            {t('common.error', 'Erro')}
-          </Badge>
-        )
-      case 'scanning':
-        return (
-          <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-            <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-            {t('common.scanning', 'Verificando')}
-          </Badge>
-        )
-      default:
-        return <Badge variant="outline">{status}</Badge>
-    }
-  }
-
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h3 className="text-lg font-bold">
-            {t('franchisee.crawler.history_title', 'Histórico de Buscas')}
-          </h3>
-          <p className="text-sm text-muted-foreground">
-            {t(
-              'franchisee.crawler.history_desc',
-              'Controle e auditoria das execuções do web crawler.',
-            )}
-          </p>
-        </div>
-
-        <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={loadLogs}
-            disabled={isLoading}
-            className="shrink-0"
-          >
-            <RefreshCw
-              className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`}
-            />
-          </Button>
-          <div className="relative w-full sm:w-[200px]">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder={t('common.search_store', 'Buscar loja...')}
-              className="pl-8 bg-background"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full sm:w-[150px] bg-background">
-              <SelectValue placeholder={t('common.status', 'Status')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">
-                {t('common.all_status', 'Todos os Status')}
-              </SelectItem>
-              <SelectItem value="success">
-                {t('common.success', 'Sucesso')}
-              </SelectItem>
-              <SelectItem value="warning">
-                {t('common.warning', 'Aviso')}
-              </SelectItem>
-              <SelectItem value="error">{t('common.error', 'Erro')}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      <div className="rounded-md border bg-card overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{t('common.date', 'Data / Hora')}</TableHead>
-              <TableHead>{t('common.store', 'Loja Alvo')}</TableHead>
-              <TableHead>{t('common.status', 'Status')}</TableHead>
-              <TableHead className="text-right">
-                {t('franchisee.crawler.found', 'Encontrados')}
-              </TableHead>
-              <TableHead className="text-right">
-                {t('franchisee.crawler.imported', 'Importados')}
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredHistory.map((log) => (
-              <TableRow key={log.id}>
-                <TableCell className="whitespace-nowrap font-medium">
-                  {format(
-                    new Date(log.date || log.created),
-                    'dd/MM/yyyy HH:mm',
-                  )}
-                </TableCell>
-                <TableCell className="font-semibold text-primary">
-                  {log.storeName}
-                </TableCell>
-                <TableCell>
-                  <div className="flex flex-col gap-1">
-                    <span className="w-fit">{getStatusBadge(log.status)}</span>
-                    {log.errorMessage && (
-                      <span
-                        className="text-xs text-red-500 max-w-[250px] truncate"
-                        title={log.errorMessage}
-                      >
-                        {log.errorMessage}
-                      </span>
-                    )}
-                    {log.errorDetails && log.errorDetails.length > 0 && (
-                      <div className="mt-2 text-xs text-red-600 bg-red-50 p-2 rounded border border-red-100 max-h-[120px] overflow-y-auto flex flex-col gap-1 w-[300px]">
-                        <span className="font-semibold text-red-800">
-                          Validation & Error Logs:
-                        </span>
-                        {log.errorDetails.map((err: string, i: number) => (
-                          <span key={i} className="break-words" title={err}>
-                            • {err}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell className="text-right">
-                  <span className="font-medium">{log.itemsFound}</span>
-                </TableCell>
-                <TableCell className="text-right">
-                  <span className="font-medium text-green-600">
-                    {log.itemsImported}
-                  </span>
-                </TableCell>
-              </TableRow>
-            ))}
-            {filteredHistory.length === 0 && (
-              <TableRow>
-                <TableCell
-                  colSpan={5}
-                  className="text-center py-8 text-muted-foreground"
+    <div className="space-y-4 animate-in fade-in duration-300">
+      <div className="border rounded-xl overflow-x-auto bg-white shadow-sm mt-4">
+        <table className="w-full text-sm text-left text-slate-600">
+          <thead className="text-[11px] text-slate-500 uppercase font-semibold bg-slate-50/80 border-b border-slate-200">
+            <tr>
+              <th className="px-5 py-4">Date</th>
+              <th className="px-5 py-4">Source Engine</th>
+              <th className="px-5 py-4">Status</th>
+              <th className="px-5 py-4 text-right">Items Found</th>
+              <th className="px-5 py-4 text-right">Imported</th>
+              <th className="px-5 py-4">Errors / Notes</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {loading ? (
+              <tr>
+                <td
+                  colSpan={6}
+                  className="px-5 py-12 text-center text-slate-500"
                 >
-                  {t(
-                    'common.no_records_found',
-                    'Nenhum registro encontrado para estes filtros.',
-                  )}
-                </TableCell>
-              </TableRow>
+                  Loading execution history...
+                </td>
+              </tr>
+            ) : logs.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={6}
+                  className="px-5 py-12 text-center text-slate-500 bg-slate-50/30"
+                >
+                  No previous executions found.
+                </td>
+              </tr>
+            ) : (
+              logs.map((log) => (
+                <tr
+                  key={log.id}
+                  className="hover:bg-slate-50/80 transition-colors"
+                >
+                  <td className="px-5 py-4 whitespace-nowrap font-medium text-slate-700">
+                    {format(
+                      new Date(log.created || log.date),
+                      'dd/MM/yyyy HH:mm',
+                    )}
+                  </td>
+                  <td className="px-5 py-4 font-medium whitespace-nowrap text-slate-900">
+                    {log.storeName}
+                  </td>
+                  <td className="px-5 py-4">
+                    <Badge
+                      variant="outline"
+                      className={
+                        log.status === 'success'
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200 shadow-none font-medium'
+                          : log.status === 'warning'
+                            ? 'bg-amber-50 text-amber-700 border-amber-200 shadow-none font-medium'
+                            : 'bg-red-50 text-red-700 border-red-200 shadow-none font-medium'
+                      }
+                    >
+                      {log.status}
+                    </Badge>
+                  </td>
+                  <td className="px-5 py-4 text-right font-medium text-slate-700">
+                    {log.itemsFound || 0}
+                  </td>
+                  <td className="px-5 py-4 text-right text-emerald-600 font-bold">
+                    {log.itemsImported || 0}
+                  </td>
+                  <td
+                    className="px-5 py-4 text-red-500 max-w-[280px] truncate text-xs"
+                    title={log.errorMessage}
+                  >
+                    {log.errorMessage || '-'}
+                  </td>
+                </tr>
+              ))
             )}
-          </TableBody>
-        </Table>
+          </tbody>
+        </table>
       </div>
     </div>
   )
