@@ -290,8 +290,12 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         } else {
           setCoupons(MOCK_COUPONS)
         }
-      } catch (e) {
-        console.error('Failed to load coupons, using fallback', e)
+      } catch (e: any) {
+        if (e?.message === 'Failed to fetch' || e?.name === 'TypeError') {
+          console.warn('Network error: Failed to load coupons, using fallback')
+        } else {
+          console.error('Failed to load coupons, using fallback', e)
+        }
         if (mounted) setCoupons(MOCK_COUPONS)
       }
     }
@@ -404,8 +408,14 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         } else {
           setDiscoveredPromotions(MOCK_DISCOVERED_PROMOTIONS)
         }
-      } catch (e) {
-        console.error('Failed to load promotions, using fallback', e)
+      } catch (e: any) {
+        if (e?.message === 'Failed to fetch' || e?.name === 'TypeError') {
+          console.warn(
+            'Network error: Failed to load promotions, using fallback',
+          )
+        } else {
+          console.error('Failed to load promotions, using fallback', e)
+        }
         if (mounted) setDiscoveredPromotions(MOCK_DISCOVERED_PROMOTIONS)
       }
     }

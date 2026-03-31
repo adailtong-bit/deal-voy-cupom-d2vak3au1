@@ -56,18 +56,27 @@ export const fetchCoupons = async (
       },
     )
     if (res.ok) {
-      const data = await res.json()
-      return {
-        data: data?.items || [],
-        hasMore: (data?.page || 0) < (data?.totalPages || 0),
-        total: data?.totalItems || 0,
+      try {
+        const data = await res.json()
+        return {
+          data: data?.items || [],
+          hasMore: (data?.page || 0) < (data?.totalPages || 0),
+          total: data?.totalItems || 0,
+        }
+      } catch (jsonErr) {
+        console.warn('Failed to parse coupons response as JSON', jsonErr)
+        return { data: [], hasMore: false, total: 0 }
       }
     } else {
       console.warn(`Fetch coupons failed: ${res.status} ${res.statusText}`)
       return { data: [], hasMore: false, total: 0 }
     }
-  } catch (e) {
-    console.error('Backend unavailable', e)
+  } catch (e: any) {
+    if (e?.name === 'TypeError' && e?.message === 'Failed to fetch') {
+      console.warn('Network error: Failed to fetch coupons. Using fallback.')
+    } else {
+      console.error('Backend unavailable', e)
+    }
     return { data: [], hasMore: false, total: 0 }
   }
 }
@@ -102,14 +111,23 @@ export const fetchWebSearchPromotions = async (
       },
     )
     if (res.ok) {
-      const data = await res.json()
-      return data?.items || []
+      try {
+        const data = await res.json()
+        return data?.items || []
+      } catch (jsonErr) {
+        console.warn('Failed to parse web search response', jsonErr)
+        return []
+      }
     } else {
       console.warn(`Fetch web search failed: ${res.status} ${res.statusText}`)
       return []
     }
-  } catch (e) {
-    console.error('Real search API unavailable', e)
+  } catch (e: any) {
+    if (e?.name === 'TypeError' && e?.message === 'Failed to fetch') {
+      console.warn('Network error: Failed to fetch web search promotions.')
+    } else {
+      console.error('Real search API unavailable', e)
+    }
     return []
   }
 }
@@ -142,11 +160,16 @@ export const fetchCrawlerPromotions = async (
       },
     )
     if (res.ok) {
-      const data = await res.json()
-      return {
-        data: data?.items || [],
-        hasMore: (data?.page || 0) < (data?.totalPages || 0),
-        total: data?.totalItems || 0,
+      try {
+        const data = await res.json()
+        return {
+          data: data?.items || [],
+          hasMore: (data?.page || 0) < (data?.totalPages || 0),
+          total: data?.totalItems || 0,
+        }
+      } catch (jsonErr) {
+        console.warn('Failed to parse crawler promotions response', jsonErr)
+        return { data: [], hasMore: false, total: 0 }
       }
     } else {
       console.warn(
@@ -154,8 +177,12 @@ export const fetchCrawlerPromotions = async (
       )
       return { data: [], hasMore: false, total: 0 }
     }
-  } catch (e) {
-    console.error('Backend unavailable', e)
+  } catch (e: any) {
+    if (e?.name === 'TypeError' && e?.message === 'Failed to fetch') {
+      console.warn('Network error: Failed to fetch crawler promotions.')
+    } else {
+      console.error('Backend unavailable', e)
+    }
     return { data: [], hasMore: false, total: 0 }
   }
 }
