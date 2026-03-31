@@ -132,6 +132,7 @@ export default function Login() {
         JSON.stringify({ token: fakeToken, model: mockUser }),
       )
       localStorage.setItem('auth_token', fakeToken)
+      localStorage.setItem('currentUser', JSON.stringify(mockUser))
 
       // Direct redirection ensuring 100% success access
       if (role === 'super_admin' || role === 'admin') {
@@ -447,18 +448,6 @@ export default function Login() {
           <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Button
               variant="outline"
-              className="w-full justify-start h-auto py-3 bg-white hover:bg-slate-100 hover:text-blue-600 transition-colors shadow-sm"
-              onClick={() => handleFakeLogin('user', 'user@dealvoy.com')}
-              disabled={isLoading}
-            >
-              <User className="w-4 h-4 mr-3 text-blue-500 shrink-0" />
-              <div className="text-left">
-                <div className="font-semibold text-sm">Test User</div>
-                <div className="text-xs text-slate-500">Acesso comum</div>
-              </div>
-            </Button>
-            <Button
-              variant="outline"
               className="w-full justify-start h-auto py-3 bg-white hover:bg-slate-100 hover:text-red-600 transition-colors shadow-sm"
               onClick={() =>
                 handleFakeLogin('super_admin', 'admin@dealvoy.com')
@@ -467,8 +456,10 @@ export default function Login() {
             >
               <ShieldAlert className="w-4 h-4 mr-3 text-red-500 shrink-0" />
               <div className="text-left">
-                <div className="font-semibold text-sm">Admin Bypass</div>
-                <div className="text-xs text-slate-500">Acesso total</div>
+                <div className="font-semibold text-sm">Acesso Admin</div>
+                <div className="text-xs text-slate-500">
+                  Privilégios administrativos
+                </div>
               </div>
             </Button>
             <Button
@@ -481,22 +472,34 @@ export default function Login() {
             >
               <Store className="w-4 h-4 mr-3 text-green-500 shrink-0" />
               <div className="text-left">
-                <div className="font-semibold text-sm">Test Lojista</div>
-                <div className="text-xs text-slate-500">Painel do vendedor</div>
+                <div className="font-semibold text-sm">Acesso Lojista</div>
+                <div className="text-xs text-slate-500">
+                  Dono de loja/comerciante
+                </div>
+              </div>
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full justify-start h-auto py-3 bg-white hover:bg-slate-100 hover:text-blue-600 transition-colors shadow-sm"
+              onClick={() => handleFakeLogin('user', 'cliente@dealvoy.com')}
+              disabled={isLoading}
+            >
+              <User className="w-4 h-4 mr-3 text-blue-500 shrink-0" />
+              <div className="text-left">
+                <div className="font-semibold text-sm">Acesso Cliente</div>
+                <div className="text-xs text-slate-500">Cliente padrão</div>
               </div>
             </Button>
             <Button
               variant="outline"
               className="w-full justify-start h-auto py-3 bg-white hover:bg-slate-100 hover:text-purple-600 transition-colors shadow-sm"
-              onClick={() =>
-                handleFakeLogin('franchisee', 'franchise@dealvoy.com')
-              }
+              onClick={() => handleFakeLogin('user', 'testuser@dealvoy.com')}
               disabled={isLoading}
             >
               <Map className="w-4 h-4 mr-3 text-purple-500 shrink-0" />
               <div className="text-left">
-                <div className="font-semibold text-sm">Test Franquia</div>
-                <div className="text-xs text-slate-500">Painel regional</div>
+                <div className="font-semibold text-sm">Usuário de Teste</div>
+                <div className="text-xs text-slate-500">Conta genérica</div>
               </div>
             </Button>
           </CardContent>
