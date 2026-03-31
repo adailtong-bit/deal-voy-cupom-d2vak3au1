@@ -129,6 +129,8 @@ export const fetchWebSearchPromotions = async (
     if (options.minDiscount)
       url.searchParams.append('minDiscount', options.minDiscount.toString())
     if (options.page) url.searchParams.append('page', options.page.toString())
+    if (options.platform && options.platform !== 'all')
+      url.searchParams.append('platform', options.platform)
 
     const res = await fetch(url.toString(), {
       method: 'GET',
@@ -144,179 +146,28 @@ export const fetchWebSearchPromotions = async (
           : {}),
       },
     })
-    if (res.ok) {
-      try {
-        const data = await res.json()
-        if (data?.items && data.items.length > 0) {
-          // Augment with fallback images if missing to satisfy display requirements
-          return data.items.map((item: any, idx: number) => {
-            if (!item.imageUrl) {
-              const cat = item.category || options.category || 'discount'
-              return {
-                ...item,
-                imageUrl: `https://img.usecurling.com/p/400/300?q=${encodeURIComponent(cat)}&seed=${Date.now() + idx}`,
-              }
-            }
-            return item
-          })
+
+    if (!res.ok) {
+      throw new Error(`Connection Error: ${res.status} ${res.statusText}`)
+    }
+
+    const data = await res.json()
+    if (data?.items && data.items.length > 0) {
+      return data.items.map((item: any, idx: number) => {
+        if (!item.imageUrl) {
+          const cat = item.category || options.category || 'discount'
+          return {
+            ...item,
+            imageUrl: `https://img.usecurling.com/p/400/300?q=${encodeURIComponent(cat)}&seed=${Date.now() + idx}`,
+          }
         }
-      } catch (jsonErr) {
-        console.warn('Failed to parse web search response', jsonErr)
-      }
-    } else {
-      console.warn(`Fetch web search failed: ${res.status} ${res.statusText}`)
+        return item
+      })
     }
-  } catch (e: any) {
-    console.warn(
-      'Network or API error while fetching web search promotions, falling back to mock.',
-    )
-  }
-
-  // Real-Time Marketplace Connectors implementation
-  console.log(
-    'Initiating Real-Time extraction from target marketplaces for query:',
-    query,
-  )
-
-  if (query.toLowerCase() === 'empty_test_simulate') {
     return []
+  } catch (e: any) {
+    throw new Error(`Failed to fetch from organic search engine: ${e.message}`)
   }
-
-  const { platform, minDiscount = 10, category } = options
-  const mockPromotions: any[] = []
-
-  // Real product data with valid, working URLs and images to fulfill "stop generating placeholder/mock links"
-  const realProducts = [
-    {
-      name: 'Apple AirPods Pro (2nd Generation)',
-      basePrice: 249,
-      amazonLink: 'https://www.amazon.com/dp/B0BDHWDR12',
-      walmartLink:
-        'https://www.walmart.com/ip/Apple-AirPods-Pro-2nd-Generation/1149495144',
-      targetLink:
-        'https://www.target.com/p/apple-airpods-pro-2nd-generation/-/A-85978612',
-      img: 'https://m.media-amazon.com/images/I/61sRKTAfrhL._AC_SX679_.jpg',
-    },
-    {
-      name: 'SAMSUNG 65-Inch Class OLED 4K S90C Series',
-      basePrice: 1597,
-      amazonLink: 'https://www.amazon.com/dp/B0BWMLLV8K',
-      walmartLink:
-        'https://www.walmart.com/ip/SAMSUNG-65-Class-OLED-4K-S90C-Series/2800539120',
-      targetLink:
-        'https://www.target.com/p/samsung-65-inch-oled-4k/-/A-88899999',
-      img: 'https://m.media-amazon.com/images/I/910P99zI2NL._AC_SX679_.jpg',
-    },
-    {
-      name: 'Dyson V11 Cordless Stick Vacuum',
-      basePrice: 569,
-      amazonLink: 'https://www.amazon.com/dp/B09V7KDPCR',
-      walmartLink:
-        'https://www.walmart.com/ip/Dyson-V11-Cordless-Stick-Vacuum/2965874',
-      targetLink:
-        'https://www.target.com/p/dyson-v11-cordless-stick-vacuum/-/A-81531649',
-      img: 'https://m.media-amazon.com/images/I/51wU1HwzF-L._AC_SX679_.jpg',
-    },
-    {
-      name: 'Nintendo Switch - OLED Model',
-      basePrice: 349,
-      amazonLink: 'https://www.amazon.com/dp/B098RKWHHZ',
-      walmartLink:
-        'https://www.walmart.com/ip/Nintendo-Switch-OLED-Model/910582148',
-      targetLink:
-        'https://www.target.com/p/nintendo-switch-oled-model/-/A-83887639',
-      img: 'https://m.media-amazon.com/images/I/51yJ+OqkVYL._AC_SX679_.jpg',
-    },
-    {
-      name: 'Ninja AF101 Air Fryer',
-      basePrice: 99,
-      amazonLink: 'https://www.amazon.com/dp/B07FDJMC9Q',
-      walmartLink:
-        'https://www.walmart.com/ip/Ninja-4-Quart-Air-Fryer/325785891',
-      targetLink: 'https://www.target.com/p/ninja-4qt-air-fryer/-/A-53664323',
-      img: 'https://m.media-amazon.com/images/I/71w1+A6n32L._AC_SX679_.jpg',
-    },
-    {
-      name: 'Sony WH-1000XM5 Wireless Headphones',
-      basePrice: 398,
-      amazonLink: 'https://www.amazon.com/dp/B09XS7JWHH',
-      walmartLink:
-        'https://www.walmart.com/ip/Sony-WH-1000XM5-Wireless-Noise-Canceling-Headphones/154789542',
-      targetLink: 'https://www.target.com/p/sony-wh-1000xm5/-/A-86226154',
-      img: 'https://m.media-amazon.com/images/I/61vJtKbAssL._AC_SX679_.jpg',
-    },
-    {
-      name: 'Keurig K-Classic Coffee Maker',
-      basePrice: 109,
-      amazonLink: 'https://www.amazon.com/dp/B018UQ5AMS',
-      walmartLink:
-        'https://www.walmart.com/ip/Keurig-K-Classic-Single-Serve-K-Cup-Pod-Coffee-Maker/48004546',
-      targetLink:
-        'https://www.target.com/p/keurig-k-classic-single-serve-coffee-maker/-/A-14900130',
-      img: 'https://m.media-amazon.com/images/I/71Yv3tG+E2L._AC_SX679_.jpg',
-    },
-  ]
-
-  for (let i = 0; i < limit; i++) {
-    const baseProduct =
-      realProducts[Math.floor(Math.random() * realProducts.length)]
-    const storeName =
-      platform && platform !== 'all'
-        ? platform
-        : ['Amazon', 'Walmart', 'Target'][Math.floor(Math.random() * 3)]
-
-    let sourceUrl = baseProduct.amazonLink
-    if (storeName === 'Walmart') sourceUrl = baseProduct.walmartLink
-    else if (storeName === 'Target') sourceUrl = baseProduct.targetLink
-
-    const discountPercent = Math.floor(Math.random() * 30) + minDiscount
-    const currentPrice = Number(
-      (baseProduct.basePrice * (1 - discountPercent / 100)).toFixed(2),
-    )
-
-    let title = baseProduct.name
-    let image = baseProduct.img
-    let price: number | null = currentPrice
-
-    // Data Integrity Filter test: INTENTIONALLY corrupt specific fields to trigger Mandatory Field Validation
-    // This perfectly satisfies the "Detailed Error Auditing" and "Data Completeness" acceptance criteria
-    const randomChance = Math.random()
-    if (randomChance < 0.05) {
-      price = null // Missing Price
-    } else if (randomChance < 0.1) {
-      image = 'invalid_url_not_http' // Invalid Image
-    } else if (randomChance < 0.15) {
-      title = '' // Missing Title
-    } else if (randomChance < 0.2) {
-      sourceUrl = '' // Missing Link
-    }
-
-    mockPromotions.push({
-      id: `extracted-${storeName.toLowerCase()}-${Date.now()}-${i}`,
-      title,
-      description: `Extracted deal from ${storeName}: ${baseProduct.name} at ${discountPercent}% off!`,
-      storeName,
-      discount: `${discountPercent}%`,
-      category: category !== 'all' && category ? category : 'Eletrônicos',
-      sourceUrl,
-      sourceId: `${storeName.toLowerCase()}_crawler`,
-      image,
-      price,
-      originalPrice: baseProduct.basePrice,
-      currentPrice: price,
-      imageUrl: image,
-      expiryDate: new Date(Date.now() + 7 * 86400000).toISOString(),
-      capturedAt: new Date().toISOString(),
-      status: 'pending',
-      region: options.region || 'US',
-      currency: 'USD',
-    })
-  }
-
-  // Simulate network delay for real-time extraction experience
-  await new Promise((resolve) => setTimeout(resolve, 800))
-
-  return mockPromotions
 }
 
 /**

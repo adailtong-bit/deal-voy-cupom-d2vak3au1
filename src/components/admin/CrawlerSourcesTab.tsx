@@ -1,11 +1,5 @@
-import { useState, useRef, useEffect } from 'react'
-import { useLanguage } from '@/stores/LanguageContext'
+import { useState, useEffect } from 'react'
 import { useToast } from '@/hooks/use-toast'
-import {
-  fetchWebSearchPromotions,
-  saveDiscoveredPromotion,
-  saveCrawlerLog,
-} from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -31,45 +25,31 @@ import {
   AlertTriangle,
   Globe,
 } from 'lucide-react'
+import {
+  getCrawlerProgress,
+  startExtractionTask,
+  stopExtractionTask,
+  subscribeCrawler,
+} from '@/lib/crawlerTask'
 
 export function CrawlerSourcesTab() {
-  const { t } = useLanguage()
   const { toast } = useToast()
 
-  const [isScanning, setIsScanning] = useState(
-    () => sessionStorage.getItem('crawler_isScanning') === 'true',
-  )
   const [query, setQuery] = useState('')
   const [source, setSource] = useState('all')
   const [limit, setLimit] = useState(20)
 
-  const [progress, setProgress] = useState({
-    total: 0,
-    current: 0,
-    found: 0,
-    imported: 0,
-    errors: 0,
-    logs: [] as string[],
-  })
+  const [progress, setProgress] = useState(getCrawlerProgress())
 
-  const abortControllerRef = useRef<AbortController | null>(null)
-
-  // Session-Stable Batch Processing: store scanning state so navigation doesn't disrupt it conceptually
+  // Subscribe to background crawler task updates decoupling UI from extraction logic
   useEffect(() => {
-    sessionStorage.setItem('crawler_isScanning', isScanning.toString())
-  }, [isScanning])
-
-  // Cleanup on unmount if it was running
-  useEffect(() => {
-    return () => {
-      if (abortControllerRef.current) {
-        // We don't abort on unmount to allow background extraction as per AC:
-        // "Auth Bypass for Background Tasks: The extraction routine must run independently..."
-      }
-    }
+    const unsubscribe = subscribeCrawler(() => {
+      setProgress({ ...getCrawlerProgress() })
+    })
+    return unsubscribe
   }, [])
 
-  const startExtraction = async () => {
+  const handleStart = async () => {
     if (!query.trim()) {
       toast({
         title: 'Error',
@@ -78,145 +58,7 @@ export function CrawlerSourcesTab() {
       })
       return
     }
-
-    setIsScanning(true)
-    setProgress({
-      total: limit,
-      current: 0,
-      found: 0,
-      imported: 0,
-      errors: 0,
-      logs: [],
-    })
-    abortControllerRef.current = new AbortController()
-    const errorDetails: string[] = []
-
-    try {
-      addLog('Initiating Real-Time Marketplace Connector...')
-
-      // 1. Fetch from connectors
-      const items = await fetchWebSearchPromotions(query, limit, {
-        platform: source === 'all' ? undefined : source,
-      })
-
-      const itemsFound = items.length
-      setProgress((p) => ({ ...p, found: itemsFound }))
-      addLog(`Extracted ${itemsFound} raw items. Validating...`)
-
-      let itemsImported = 0
-      let itemsDiscarded = 0
-
-      // 2. Atomic Persistence Sync & Mandatory Field Validation
-      for (let i = 0; i < items.length; i++) {
-        if (abortControllerRef.current?.signal.aborted) {
-          errorDetails.push('Extraction aborted by user.')
-          break
-        }
-
-        setProgress((p) => ({ ...p, current: i + 1 }))
-        const item = items[i]
-        const missingFields = []
-
-        if (!item.title?.trim()) missingFields.push('Title')
-        if (item.price === undefined || item.price === null || item.price <= 0)
-          missingFields.push('Price')
-        if (!item.image?.trim() || !item.image.startsWith('http'))
-          missingFields.push('Image URL')
-        if (!item.sourceUrl?.trim() || !item.sourceUrl.startsWith('http'))
-          missingFields.push('Direct Product Link')
-
-        if (missingFields.length > 0) {
-          itemsDiscarded++
-          const errMsg = `Discarded Item [Index ${i}]: Missing/Invalid fields (${missingFields.join(', ')})`
-          errorDetails.push(errMsg)
-          addLog(errMsg)
-          setProgress((p) => ({ ...p, errors: itemsDiscarded }))
-          continue
-        }
-
-        try {
-          // Atomic import
-          await saveDiscoveredPromotion(item)
-          itemsImported++
-          setProgress((p) => ({ ...p, imported: itemsImported }))
-        } catch (err: any) {
-          itemsDiscarded++
-          const errMsg = `Failed to save "${item.title}": ${err.message}`
-          errorDetails.push(errMsg)
-          addLog(errMsg)
-          setProgress((p) => ({ ...p, errors: itemsDiscarded }))
-        }
-      }
-
-      // 3. Save detailed error logs
-      addLog('Finalizing batch execution and generating audit logs...')
-      await saveCrawlerLog({
-        date: new Date().toISOString(),
-        storeName: source === 'all' ? 'All Connectors' : source,
-        status:
-          errorDetails.length > 0
-            ? itemsImported > 0
-              ? 'warning'
-              : 'error'
-            : 'success',
-        itemsFound,
-        itemsImported,
-        sourceId: `connector_${source.toLowerCase()}`,
-        errorMessage:
-          errorDetails.length > 0
-            ? `Extraction completed with ${errorDetails.length} errors/discards.`
-            : undefined,
-        errorDetails: errorDetails,
-      })
-
-      toast({
-        title: 'Extraction Complete',
-        description: `${itemsFound} Found, ${itemsImported} Imported, ${itemsDiscarded} Invalid/Discarded.`,
-      })
-      addLog(
-        `Done. ${itemsFound} Found, ${itemsImported} Imported, ${itemsDiscarded} Invalid/Discarded.`,
-      )
-    } catch (err: any) {
-      toast({
-        title: 'Extraction Failed',
-        description: err.message,
-        variant: 'destructive',
-      })
-      addLog(`Fatal Error: ${err.message}`)
-      await saveCrawlerLog({
-        date: new Date().toISOString(),
-        storeName: source,
-        status: 'error',
-        itemsFound: 0,
-        itemsImported: 0,
-        sourceId: `connector_${source.toLowerCase()}`,
-        errorMessage: err.message,
-        errorDetails: [err.message],
-      })
-    } finally {
-      setIsScanning(false)
-      abortControllerRef.current = null
-      sessionStorage.setItem('crawler_isScanning', 'false')
-    }
-  }
-
-  const stopExtraction = () => {
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort()
-    }
-    setIsScanning(false)
-    sessionStorage.setItem('crawler_isScanning', 'false')
-    addLog('Extraction manually aborted.')
-  }
-
-  const addLog = (msg: string) => {
-    setProgress((p) => ({
-      ...p,
-      logs: [`[${new Date().toLocaleTimeString()}] ${msg}`, ...p.logs].slice(
-        0,
-        50,
-      ),
-    }))
+    startExtractionTask(query, limit, source)
   }
 
   const progressPercentage =
@@ -226,9 +68,10 @@ export function CrawlerSourcesTab() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Real-Time Marketplace Connectors</CardTitle>
+          <CardTitle>General Organic Crawler</CardTitle>
           <CardDescription>
-            Extract live deals directly from Amazon, Walmart, and Target.
+            Execute flexible organic searches across the web to discover and
+            validate real deals.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -239,49 +82,55 @@ export function CrawlerSourcesTab() {
                 placeholder="e.g. Laptops, Headphones..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                disabled={isScanning}
+                disabled={progress.isScanning}
               />
             </div>
             <div className="space-y-2">
-              <Label>Target Marketplace</Label>
+              <Label>Search Scope</Label>
               <Select
                 value={source}
                 onValueChange={setSource}
-                disabled={isScanning}
+                disabled={progress.isScanning}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select source" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Marketplaces</SelectItem>
-                  <SelectItem value="Amazon">Amazon</SelectItem>
-                  <SelectItem value="Walmart">Walmart</SelectItem>
-                  <SelectItem value="Target">Target</SelectItem>
+                  <SelectItem value="all">Organic Web Search</SelectItem>
+                  <SelectItem value="google_shopping">
+                    Google Shopping API
+                  </SelectItem>
+                  <SelectItem value="local_deals">
+                    Local Deals Directory
+                  </SelectItem>
+                  <SelectItem value="social_media">
+                    Social Media Scraper
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Batch Limit (Max 100)</Label>
+              <Label>Batch Limit</Label>
               <Input
                 type="number"
                 min={1}
                 max={100}
                 value={limit}
                 onChange={(e) => setLimit(Number(e.target.value))}
-                disabled={isScanning}
+                disabled={progress.isScanning}
               />
             </div>
           </div>
 
           <div className="flex items-center gap-4">
-            {!isScanning ? (
-              <Button onClick={startExtraction} className="w-full sm:w-auto">
+            {!progress.isScanning ? (
+              <Button onClick={handleStart} className="w-full sm:w-auto">
                 <Play className="w-4 h-4 mr-2" />
                 Start Extraction
               </Button>
             ) : (
               <Button
-                onClick={stopExtraction}
+                onClick={stopExtractionTask}
                 variant="destructive"
                 className="w-full sm:w-auto animate-pulse"
               >
@@ -293,15 +142,15 @@ export function CrawlerSourcesTab() {
         </CardContent>
       </Card>
 
-      {(isScanning || progress.total > 0) && (
+      {(progress.isScanning || progress.total > 0) && (
         <Card className="animate-in fade-in slide-in-from-bottom-4">
           <CardHeader>
             <CardTitle className="text-lg flex items-center justify-between">
               <span>Extraction Status</span>
-              {isScanning && (
+              {progress.isScanning && (
                 <span className="text-sm text-muted-foreground flex items-center">
                   <Globe className="w-4 h-4 mr-2 animate-spin" />
-                  Connecting...
+                  Connecting & Validating...
                 </span>
               )}
             </CardTitle>
