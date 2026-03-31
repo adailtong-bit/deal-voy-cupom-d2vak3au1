@@ -312,16 +312,24 @@ export const saveDiscoveredPromotion = async (
       if (res.status === 401 || res.status === 403) {
         throw new Error('AuthError: Session expired or invalid token.')
       }
-      throw new Error(`Failed to save promotion: ${res.status}`)
+      let errorMsg = `Failed to save promotion: ${res.status}`
+      try {
+        const errData = await res.json()
+        if (errData.message) errorMsg += ` - ${errData.message}`
+      } catch (_) {}
+      throw new Error(errorMsg)
     }
     return await res.json()
   } catch (e: any) {
-    console.warn(
-      'Network error saving discovered promotion, using mock success:',
-      e,
-    )
-    // MOCK FALLBACK: Simulate successful save to prevent discarding valid results when backend is down
-    return { ...data, id: `mock-saved-${Date.now()}-${Math.random()}` }
+    if (e.name === 'TypeError' || e.message === 'Failed to fetch') {
+      console.warn(
+        'Network error saving discovered promotion, using mock success:',
+        e,
+      )
+      // MOCK FALLBACK: Simulate successful save to prevent discarding valid results when backend is down
+      return { ...data, id: `mock-saved-${Date.now()}-${Math.random()}` }
+    }
+    throw e
   }
 }
 

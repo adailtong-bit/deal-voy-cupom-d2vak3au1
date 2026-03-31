@@ -133,6 +133,10 @@ export const startExtractionTask = async (
 
       if (item.price === undefined || item.price === null || item.price <= 0)
         item.price = Math.floor(Math.random() * 100) + 10
+
+      item.currency = item.currency || 'BRL'
+      item.discount = item.discount || '0% OFF'
+
       if (!item.image?.trim() && !item.imageUrl?.trim())
         item.image = 'https://img.usecurling.com/p/400/400?q=offer'
 

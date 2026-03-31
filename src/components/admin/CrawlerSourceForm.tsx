@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { DialogFooter } from '@/components/ui/dialog'
-import { REGIONS } from '@/lib/data'
+import { REGIONS, CATEGORIES } from '@/lib/data'
 import { CrawlerSource } from '@/lib/types'
 
 interface CrawlerSourceFormProps {
@@ -213,11 +213,11 @@ export function CrawlerSourceForm({
                 <SelectValue placeholder="Selecione" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Viagens">Viagens</SelectItem>
-                <SelectItem value="Locação">Locação</SelectItem>
-                <SelectItem value="Pontos Turísticos">
-                  Pontos Turísticos
-                </SelectItem>
+                {CATEGORIES.filter((c) => c.id !== 'all').map((c) => (
+                  <SelectItem key={c.id} value={c.label}>
+                    {c.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
