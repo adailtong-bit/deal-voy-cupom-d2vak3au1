@@ -111,79 +111,93 @@ export const startExtractionTask = async (
       addLog('No items found. Process completed.')
     }
 
-    for (let i = 0; i < items.length; i++) {
+    // Batch processing to save items efficiently
+    const BATCH_SIZE = 5
+    for (let i = 0; i < items.length; i += BATCH_SIZE) {
       if (abortController?.signal.aborted) {
         errorDetails.push('Extraction aborted by user.')
         break
       }
 
-      progress.current = i + 1
-      notify()
+      const batch = items.slice(i, i + BATCH_SIZE)
 
-      const item = items[i]
-      // Auto-fill Missing Fields to Ensure Persistence
-      if (!item.title?.trim()) item.title = `Oferta Descoberta ${i + 1}`
+      await Promise.all(
+        batch.map(async (item, batchIndex) => {
+          const globalIndex = i + batchIndex
+          // Auto-fill Missing Fields to Ensure Persistence
+          if (!item.title?.trim())
+            item.title = `Oferta Descoberta ${globalIndex + 1}`
 
-      const siteName = item.storeName || item.siteName || ''
-      if (!siteName.trim())
-        item.storeName = source !== 'all' ? source : 'Web Search'
+          const siteName = item.storeName || item.siteName || ''
+          if (!siteName.trim())
+            item.storeName = source !== 'all' ? source : 'Web Search'
 
-      if (!item.description?.trim())
-        item.description = `Detalhes da oferta encontrada automaticamente na fonte ${item.storeName}.`
+          if (!item.description?.trim())
+            item.description = `Detalhes da oferta encontrada automaticamente na fonte ${item.storeName}.`
 
-      if (item.price === undefined || item.price === null || item.price <= 0)
-        item.price = Math.floor(Math.random() * 100) + 10
+          if (
+            item.price === undefined ||
+            item.price === null ||
+            item.price <= 0
+          )
+            item.price = Math.floor(Math.random() * 100) + 10
 
-      item.currency = item.currency || 'BRL'
-      item.discount = item.discount || '0% OFF'
+          item.currency = item.currency || 'BRL'
+          item.discount = item.discount || '0% OFF'
 
-      if (!item.image?.trim() && !item.imageUrl?.trim())
-        item.image = 'https://img.usecurling.com/p/400/400?q=offer'
+          if (!item.image?.trim() && !item.imageUrl?.trim())
+            item.image = 'https://img.usecurling.com/p/400/400?q=offer'
 
-      item.country =
-        item.country ||
-        item.countryOfOrigin ||
-        sourceOptions?.country ||
-        'Brasil'
-      item.category = item.category || sourceOptions?.category || 'Outros'
+          item.country =
+            item.country ||
+            item.countryOfOrigin ||
+            sourceOptions?.country ||
+            'Brasil'
+          item.category = item.category || sourceOptions?.category || 'Outros'
 
-      item.capturedAt = item.capturedAt || new Date().toISOString()
-      item.status = item.status || 'pending'
+          item.capturedAt = item.capturedAt || new Date().toISOString()
+          item.status = item.status || 'pending'
 
-      const linkToTest = item.sourceUrl || item.originalUrl || ''
-      if (!linkToTest.trim() || !linkToTest.startsWith('http')) {
-        item.sourceUrl = `https://example.com/offer/${Date.now()}_${i}`
-      } else {
-        item.sourceUrl = linkToTest
-      }
+          const linkToTest = item.sourceUrl || item.originalUrl || ''
+          if (!linkToTest.trim() || !linkToTest.startsWith('http')) {
+            item.sourceUrl = `https://example.com/offer/${Date.now()}_${globalIndex}`
+          } else {
+            item.sourceUrl = linkToTest
+          }
 
-      // Real-Time Link Validation (Log only, do not discard to ensure all items are saved)
-      addLog(`Pinging URL for "${item.title.substring(0, 30)}..."`)
-      const isLinkValid = await pingUrl(item.sourceUrl)
+          // Real-Time Link Validation (Log only, do not discard to ensure all items are saved)
+          addLog(`Pinging URL for "${item.title.substring(0, 30)}..."`)
+          const isLinkValid = await pingUrl(item.sourceUrl)
 
-      if (!isLinkValid) {
-        addLog(
-          `Warning: Unreachable Link (${item.sourceUrl}) - Proceeding anyway`,
-        )
-      }
+          if (!isLinkValid) {
+            addLog(
+              `Warning: Unreachable Link (${item.sourceUrl}) - Proceeding anyway`,
+            )
+          }
 
-      try {
-        // Atomic Persistence Sync
-        const savedItem = await saveDiscoveredPromotion({
-          ...item,
-          sourceUrl: item.sourceUrl,
-        })
-        progress.imported++
-        if (!progress.sessionImportedItems) progress.sessionImportedItems = []
-        progress.sessionImportedItems.push(savedItem)
-        addLog(`Imported: ${item.title}`)
-      } catch (err: any) {
-        progress.errors++
-        const errMsg = `Failed to save "${item.title}": ${err.message}`
-        errorDetails.push(errMsg)
-        addLog(errMsg)
-      }
-      notify()
+          try {
+            // Atomic Persistence Sync
+            const savedItem = await saveDiscoveredPromotion({
+              ...item,
+              sourceUrl: item.sourceUrl,
+            })
+
+            progress.imported++
+            if (!progress.sessionImportedItems)
+              progress.sessionImportedItems = []
+            progress.sessionImportedItems.push(savedItem)
+            addLog(`Imported: ${item.title}`)
+          } catch (err: any) {
+            progress.errors++
+            const errMsg = `Failed to save "${item.title}": ${err.message}`
+            errorDetails.push(errMsg)
+            addLog(errMsg)
+          }
+
+          progress.current = Math.min(progress.total, progress.current + 1)
+          notify()
+        }),
+      )
     }
 
     addLog('Finalizing execution and generating audit logs...')

@@ -1,5 +1,57 @@
 import { Coupon, DiscoveredPromotion } from './types'
 
+export const fetchCategories = async (): Promise<any[]> => {
+  let token = localStorage.getItem('auth_token')
+  if (!token) {
+    const pbAuth = localStorage.getItem('pocketbase_auth')
+    if (pbAuth) {
+      try {
+        token = JSON.parse(pbAuth).token
+      } catch (e) {
+        /* ignore */
+      }
+    }
+  }
+
+  try {
+    const res = await fetch(
+      `${API_URL}/collections/categories/records?perPage=100`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          ...(token
+            ? {
+                Authorization: token.startsWith('Bearer')
+                  ? token
+                  : `Bearer ${token}`,
+              }
+            : {}),
+        },
+      },
+    )
+    if (res.ok) {
+      const data = await res.json()
+      if (data?.items && data.items.length > 0) {
+        return data.items
+      }
+    }
+  } catch (e) {
+    console.warn('Failed to fetch categories, using mock fallback')
+  }
+
+  return [
+    { id: 'cat1', name: 'Alimentação' },
+    { id: 'cat2', name: 'Eletrônicos' },
+    { id: 'cat3', name: 'Moda' },
+    { id: 'cat4', name: 'Serviços' },
+    { id: 'cat5', name: 'Viagens' },
+    { id: 'cat6', name: 'Locação' },
+    { id: 'cat7', name: 'Pontos Turísticos' },
+  ]
+}
+
 export interface FetchCouponsParams {
   query?: string
   category?: string

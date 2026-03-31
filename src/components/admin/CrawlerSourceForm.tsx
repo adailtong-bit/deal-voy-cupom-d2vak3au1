@@ -13,8 +13,9 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { DialogFooter } from '@/components/ui/dialog'
-import { REGIONS, CATEGORIES } from '@/lib/data'
+import { REGIONS } from '@/lib/data'
 import { CrawlerSource } from '@/lib/types'
+import { fetchCategories } from '@/lib/api'
 
 interface CrawlerSourceFormProps {
   initialData?: CrawlerSource | null
@@ -30,6 +31,29 @@ export function CrawlerSourceForm({
   isFranchisee,
 }: CrawlerSourceFormProps) {
   const { toast } = useToast()
+  const [categories, setCategories] = useState<{ id: string; label: string }[]>(
+    [],
+  )
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const cats = await fetchCategories()
+        if (cats && cats.length > 0) {
+          setCategories(
+            cats.map((c: any) => ({
+              id: c.id,
+              label: c.name || c.label || 'Categoria',
+            })),
+          )
+        }
+      } catch (err) {
+        console.warn('Failed to load categories', err)
+      }
+    }
+    loadCategories()
+  }, [])
+
   const [formData, setFormData] = useState({
     name: '',
     url: '',
@@ -213,11 +237,17 @@ export function CrawlerSourceForm({
                 <SelectValue placeholder="Selecione" />
               </SelectTrigger>
               <SelectContent>
-                {CATEGORIES.filter((c) => c.id !== 'all').map((c) => (
-                  <SelectItem key={c.id} value={c.label}>
-                    {c.label}
+                {categories.length > 0 ? (
+                  categories.map((c) => (
+                    <SelectItem key={c.id} value={c.label}>
+                      {c.label}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="Geral" disabled>
+                    Carregando categorias...
                   </SelectItem>
-                ))}
+                )}
               </SelectContent>
             </Select>
           </div>
