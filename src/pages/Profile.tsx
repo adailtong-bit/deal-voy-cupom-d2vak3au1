@@ -159,7 +159,7 @@ export default function Profile() {
     setIsEditing(false)
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
     if (formData.email && !emailRegex.test(formData.email)) {
@@ -228,42 +228,65 @@ export default function Profile() {
       }
     }
 
-    updateUserProfile({
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone,
-      birthday: formData.birthday,
-      gender: formData.gender as User['gender'],
-      documentNumber: formData.documentNumber,
-      country: formData.country,
-      state: formData.state,
-      city: formData.city,
-      zipCode: formData.zipCode,
-      companyName: formData.companyName,
-      businessEmail: formData.businessEmail,
-      businessPhone: formData.businessPhone,
-      preferences: {
-        ...user?.preferences,
-        categories: formData.categories,
-      },
-    })
+    try {
+      await Promise.resolve(
+        updateUserProfile({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          birthday: formData.birthday,
+          gender: formData.gender as User['gender'],
+          documentNumber: formData.documentNumber,
+          country: formData.country,
+          state: formData.state,
+          city: formData.city,
+          zipCode: formData.zipCode,
+          companyName: formData.companyName,
+          businessEmail: formData.businessEmail,
+          businessPhone: formData.businessPhone,
+          preferences: {
+            ...user?.preferences,
+            categories: formData.categories,
+          },
+        }),
+      )
 
-    toast({
-      title: t('profile.successTitle', 'Profile Updated'),
-      description: t(
-        'profile.successDesc',
-        'Your profile information has been saved successfully.',
-      ),
-    })
+      toast({
+        title: t('profile.successTitle', 'Profile Updated'),
+        description: t(
+          'profile.successDesc',
+          'Your profile information has been saved successfully.',
+        ),
+      })
 
-    setFormData((prev) => ({
-      ...prev,
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: '',
-    }))
+      if (formData.newPassword) {
+        toast({
+          title: t('profile.passwordUpdated', 'Password Updated'),
+          description: t(
+            'profile.passwordUpdatedDesc',
+            'Your password has been changed successfully.',
+          ),
+        })
+      }
 
-    setIsEditing(false)
+      setFormData((prev) => ({
+        ...prev,
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      }))
+
+      setIsEditing(false)
+    } catch (error) {
+      toast({
+        title: t('common.error', 'Error'),
+        description: t(
+          'profile.errorDesc',
+          'An error occurred while saving your profile. Please try again.',
+        ),
+        variant: 'destructive',
+      })
+    }
   }
 
   if (!user) return null
@@ -379,7 +402,7 @@ export default function Profile() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>{t('profile.phone', 'Phone')}</Label>
+                  <Label>{t('profile.phone', 'Phone Number')}</Label>
                   <Input
                     name="phone"
                     value={formData.phone}
@@ -784,7 +807,7 @@ export default function Profile() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>
-                      {t('profile.company_name', 'Company Legal Name')}{' '}
+                      {t('profile.company_name', 'Company Name / Razão Social')}{' '}
                       <span className="text-red-500">*</span>
                     </Label>
                     <Input
@@ -798,7 +821,7 @@ export default function Profile() {
                   </div>
                   <div className="space-y-2">
                     <Label>
-                      {t('profile.business_email', 'Business Contact Email')}{' '}
+                      {t('profile.business_email', 'Official Business Email')}{' '}
                       <span className="text-red-500">*</span>
                     </Label>
                     <Input
