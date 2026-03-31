@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
 import {
@@ -25,11 +25,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useToast } from '@/hooks/use-toast'
 import { COUNTRIES, LOCATION_DATA } from '@/lib/locationData'
 import { User } from '@/lib/types'
+import { Eye, EyeOff } from 'lucide-react'
 
 export default function Profile() {
   const { user, updateUserProfile, platformSettings } = useCouponStore()
   const { t } = useLanguage()
   const { toast } = useToast()
+
+  const [isEditing, setIsEditing] = useState(false)
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   const [formData, setFormData] = useState({
     name: user?.name || '',
@@ -50,6 +56,30 @@ export default function Profile() {
     newPassword: '',
     confirmPassword: '',
   })
+
+  useEffect(() => {
+    if (user && !isEditing) {
+      setFormData({
+        name: user.name || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        birthday: user.birthday || '',
+        gender: user.gender || '',
+        documentNumber: user.documentNumber || '',
+        country: user.country || '',
+        state: user.state || '',
+        city: user.city || '',
+        zipCode: user.zipCode || '',
+        categories: user.preferences?.categories || [],
+        companyName: user.companyName || '',
+        businessEmail: user.businessEmail || '',
+        businessPhone: user.businessPhone || '',
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      })
+    }
+  }, [user, isEditing])
 
   const availableStates = useMemo(() => {
     return formData.country
@@ -102,6 +132,31 @@ export default function Profile() {
         ? [...prev.categories, id]
         : prev.categories.filter((c) => c !== id),
     }))
+  }
+
+  const handleCancel = () => {
+    if (user) {
+      setFormData({
+        name: user.name || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        birthday: user.birthday || '',
+        gender: user.gender || '',
+        documentNumber: user.documentNumber || '',
+        country: user.country || '',
+        state: user.state || '',
+        city: user.city || '',
+        zipCode: user.zipCode || '',
+        categories: user.preferences?.categories || [],
+        companyName: user.companyName || '',
+        businessEmail: user.businessEmail || '',
+        businessPhone: user.businessPhone || '',
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      })
+    }
+    setIsEditing(false)
   }
 
   const handleSave = () => {
@@ -207,6 +262,8 @@ export default function Profile() {
       newPassword: '',
       confirmPassword: '',
     }))
+
+    setIsEditing(false)
   }
 
   if (!user) return null
@@ -225,9 +282,22 @@ export default function Profile() {
             )}
           </p>
         </div>
-        <Button onClick={handleSave} size="lg">
-          {t('profile.save', 'Save Changes')}
-        </Button>
+        <div className="flex items-center gap-3">
+          {!isEditing ? (
+            <Button onClick={() => setIsEditing(true)} size="lg">
+              {t('profile.edit', 'Edit Profile')}
+            </Button>
+          ) : (
+            <>
+              <Button onClick={handleCancel} size="lg" variant="outline">
+                {t('common.cancel', 'Cancel')}
+              </Button>
+              <Button onClick={handleSave} size="lg">
+                {t('profile.save', 'Save Changes')}
+              </Button>
+            </>
+          )}
+        </div>
       </div>
 
       <Card>
@@ -305,6 +375,7 @@ export default function Profile() {
                     value={formData.name}
                     onChange={handleChange}
                     placeholder="Your full name"
+                    disabled={!isEditing}
                   />
                 </div>
                 <div className="space-y-2">
@@ -314,6 +385,7 @@ export default function Profile() {
                     value={formData.phone}
                     onChange={handleChange}
                     placeholder="+1 555 123-4567"
+                    disabled={!isEditing}
                   />
                 </div>
                 <div className="space-y-2">
@@ -325,6 +397,7 @@ export default function Profile() {
                     value={formData.documentNumber}
                     onChange={handleChange}
                     placeholder="e.g.: 123.456.789-00"
+                    disabled={!isEditing}
                   />
                 </div>
               </div>
@@ -344,6 +417,7 @@ export default function Profile() {
                     name="birthday"
                     value={formData.birthday}
                     onChange={handleChange}
+                    disabled={!isEditing}
                   />
                 </div>
                 <div className="space-y-2">
@@ -353,6 +427,7 @@ export default function Profile() {
                     onValueChange={(v) =>
                       setFormData({ ...formData, gender: v })
                     }
+                    disabled={!isEditing}
                   >
                     <SelectTrigger>
                       <SelectValue
@@ -397,11 +472,12 @@ export default function Profile() {
                       id={`cat-${cat.id}`}
                       checked={formData.categories.includes(cat.id)}
                       onCheckedChange={(c) => handleCategoryChange(cat.id, !!c)}
+                      disabled={!isEditing}
                     />
                     <div className="space-y-1 leading-none flex-1">
                       <Label
                         htmlFor={`cat-${cat.id}`}
-                        className="text-sm font-medium cursor-pointer"
+                        className={`text-sm font-medium ${isEditing ? 'cursor-pointer' : 'opacity-70'}`}
                       >
                         {cat.label}
                       </Label>
@@ -444,6 +520,7 @@ export default function Profile() {
                         city: '',
                       })
                     }
+                    disabled={!isEditing}
                   >
                     <SelectTrigger>
                       <SelectValue
@@ -467,7 +544,11 @@ export default function Profile() {
                     onValueChange={(v) =>
                       setFormData({ ...formData, state: v, city: '' })
                     }
-                    disabled={!formData.country || availableStates.length === 0}
+                    disabled={
+                      !isEditing ||
+                      !formData.country ||
+                      availableStates.length === 0
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue
@@ -489,7 +570,11 @@ export default function Profile() {
                   <Select
                     value={formData.city}
                     onValueChange={(v) => setFormData({ ...formData, city: v })}
-                    disabled={!formData.state || availableCities.length === 0}
+                    disabled={
+                      !isEditing ||
+                      !formData.state ||
+                      availableCities.length === 0
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue
@@ -513,6 +598,7 @@ export default function Profile() {
                     value={formData.zipCode}
                     onChange={handleZipChange}
                     placeholder="e.g.: 10001"
+                    disabled={!isEditing}
                   />
                 </div>
               </div>
@@ -549,6 +635,7 @@ export default function Profile() {
                     value={formData.email}
                     onChange={handleChange}
                     placeholder="your@email.com"
+                    disabled={!isEditing}
                   />
                   <p className="text-xs text-slate-500">
                     {t(
@@ -568,35 +655,102 @@ export default function Profile() {
                     <Label>
                       {t('profile.current_password', 'Current Password')}
                     </Label>
-                    <Input
-                      type="password"
-                      name="currentPassword"
-                      value={formData.currentPassword}
-                      onChange={handleChange}
-                      placeholder="••••••••"
-                    />
+                    <div className="relative">
+                      <Input
+                        type={showCurrentPassword ? 'text' : 'password'}
+                        name="currentPassword"
+                        value={formData.currentPassword}
+                        onChange={handleChange}
+                        placeholder="••••••••"
+                        disabled={!isEditing}
+                        className="pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setShowCurrentPassword(!showCurrentPassword)
+                        }
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 disabled:opacity-50"
+                        disabled={!isEditing}
+                        title={
+                          showCurrentPassword
+                            ? t('profile.hide_password', 'Hide password')
+                            : t('profile.show_password', 'Show password')
+                        }
+                      >
+                        {showCurrentPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <Label>{t('profile.new_password', 'New Password')}</Label>
-                    <Input
-                      type="password"
-                      name="newPassword"
-                      value={formData.newPassword}
-                      onChange={handleChange}
-                      placeholder="••••••••"
-                    />
+                    <div className="relative">
+                      <Input
+                        type={showNewPassword ? 'text' : 'password'}
+                        name="newPassword"
+                        value={formData.newPassword}
+                        onChange={handleChange}
+                        placeholder="••••••••"
+                        disabled={!isEditing}
+                        className="pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowNewPassword(!showNewPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 disabled:opacity-50"
+                        disabled={!isEditing}
+                        title={
+                          showNewPassword
+                            ? t('profile.hide_password', 'Hide password')
+                            : t('profile.show_password', 'Show password')
+                        }
+                      >
+                        {showNewPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <Label>
                       {t('profile.confirm_password', 'Confirm New Password')}
                     </Label>
-                    <Input
-                      type="password"
-                      name="confirmPassword"
-                      value={formData.confirmPassword}
-                      onChange={handleChange}
-                      placeholder="••••••••"
-                    />
+                    <div className="relative">
+                      <Input
+                        type={showConfirmPassword ? 'text' : 'password'}
+                        name="confirmPassword"
+                        value={formData.confirmPassword}
+                        onChange={handleChange}
+                        placeholder="••••••••"
+                        disabled={!isEditing}
+                        className="pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setShowConfirmPassword(!showConfirmPassword)
+                        }
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 disabled:opacity-50"
+                        disabled={!isEditing}
+                        title={
+                          showConfirmPassword
+                            ? t('profile.hide_password', 'Hide password')
+                            : t('profile.show_password', 'Show password')
+                        }
+                      >
+                        {showConfirmPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -639,6 +793,7 @@ export default function Profile() {
                       onChange={handleChange}
                       placeholder="e.g. Acme Corporation"
                       required
+                      disabled={!isEditing}
                     />
                   </div>
                   <div className="space-y-2">
@@ -653,6 +808,7 @@ export default function Profile() {
                       onChange={handleChange}
                       placeholder="billing@acme.com"
                       required
+                      disabled={!isEditing}
                     />
                   </div>
                   <div className="space-y-2">
@@ -664,6 +820,7 @@ export default function Profile() {
                       value={formData.businessPhone}
                       onChange={handleChange}
                       placeholder="+1 800 555-0199"
+                      disabled={!isEditing}
                     />
                   </div>
                 </div>
