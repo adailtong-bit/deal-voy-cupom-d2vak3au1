@@ -43,7 +43,8 @@ function RequireAuth({
   }
 
   if (roles && roles.length > 0 && !roles.includes(user.role)) {
-    if (user.role === 'super_admin') return <Navigate to="/admin" replace />
+    if (user.role === 'super_admin' || user.role === ('admin' as any))
+      return <Navigate to="/admin" replace />
     if (user.role === 'franchisee') return <Navigate to="/franchisee" replace />
     if (user.role === 'shopkeeper') return <Navigate to="/vendor" replace />
     return <Navigate to="/" replace />
@@ -192,7 +193,7 @@ export default function App() {
                 <Route
                   path="/admin"
                   element={
-                    <RequireAuth roles={['super_admin']}>
+                    <RequireAuth roles={['super_admin', 'admin'] as any}>
                       <AdminDashboard />
                     </RequireAuth>
                   }

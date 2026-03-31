@@ -28,6 +28,14 @@ import { User } from '@/lib/types'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import { updateUser } from '@/lib/api'
 
+function FieldDisplay({ value }: { value: string | undefined }) {
+  return (
+    <div className="flex min-h-10 w-full items-center rounded-md border border-slate-200 bg-slate-50/50 px-3 py-2 text-sm text-slate-700">
+      {value || <span className="text-slate-400 italic">Not provided</span>}
+    </div>
+  )
+}
+
 export default function Profile() {
   const { user, updateUserProfile, platformSettings } = useCouponStore()
   const { t } = useLanguage()
@@ -178,6 +186,7 @@ export default function Profile() {
 
     if (
       user?.role === 'super_admin' ||
+      user?.role === ('admin' as any) ||
       user?.role === 'franchisee' ||
       user?.role === 'shopkeeper'
     ) {
@@ -267,7 +276,7 @@ export default function Profile() {
 
       toast({
         title: t('profile.successTitle', 'Success!'),
-        description: t('profile.successDesc', 'Profile updated successfully.'),
+        description: t('profile.successDesc', 'Profile updated successfully'),
       })
 
       if (formData.newPassword) {
@@ -394,6 +403,7 @@ export default function Profile() {
             className="py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm disabled:opacity-50"
             disabled={
               user?.role !== 'super_admin' &&
+              user?.role !== ('admin' as any) &&
               user?.role !== 'franchisee' &&
               user?.role !== 'shopkeeper'
             }
@@ -416,35 +426,44 @@ export default function Profile() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>{t('profile.name', 'Full Name')}</Label>
-                  <Input
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    placeholder="Your full name"
-                    disabled={!isEditing}
-                  />
+                  {isEditing ? (
+                    <Input
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      placeholder="Your full name"
+                    />
+                  ) : (
+                    <FieldDisplay value={formData.name} />
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label>{t('profile.phone', 'Phone Number')}</Label>
-                  <Input
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    placeholder="+1 555 123-4567"
-                    disabled={!isEditing}
-                  />
+                  {isEditing ? (
+                    <Input
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      placeholder="+1 555 123-4567"
+                    />
+                  ) : (
+                    <FieldDisplay value={formData.phone} />
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label>
                     {t('profile.document', 'Document (ID / Passport)')}
                   </Label>
-                  <Input
-                    name="documentNumber"
-                    value={formData.documentNumber}
-                    onChange={handleChange}
-                    placeholder="e.g.: 123.456.789-00"
-                    disabled={!isEditing}
-                  />
+                  {isEditing ? (
+                    <Input
+                      name="documentNumber"
+                      value={formData.documentNumber}
+                      onChange={handleChange}
+                      placeholder="e.g.: 123.456.789-00"
+                    />
+                  ) : (
+                    <FieldDisplay value={formData.documentNumber} />
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -458,46 +477,66 @@ export default function Profile() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>{t('profile.birthday', 'Date of Birth')}</Label>
-                  <Input
-                    type="date"
-                    name="birthday"
-                    value={formData.birthday}
-                    onChange={handleChange}
-                    disabled={!isEditing}
-                  />
+                  {isEditing ? (
+                    <Input
+                      type="date"
+                      name="birthday"
+                      value={formData.birthday}
+                      onChange={handleChange}
+                    />
+                  ) : (
+                    <FieldDisplay value={formData.birthday} />
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label>{t('profile.gender', 'Gender')}</Label>
-                  <Select
-                    value={formData.gender}
-                    onValueChange={(v) =>
-                      setFormData({ ...formData, gender: v })
-                    }
-                    disabled={!isEditing}
-                  >
-                    <SelectTrigger>
-                      <SelectValue
-                        placeholder={t('common.select', 'Select...')}
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="male">
-                        {t('gender.male', 'Male')}
-                      </SelectItem>
-                      <SelectItem value="female">
-                        {t('gender.female', 'Female')}
-                      </SelectItem>
-                      <SelectItem value="non-binary">
-                        {t('gender.nb', 'Non-binary')}
-                      </SelectItem>
-                      <SelectItem value="other">
-                        {t('gender.other', 'Other')}
-                      </SelectItem>
-                      <SelectItem value="prefer-not-to-say">
-                        {t('gender.none', 'Prefer not to say')}
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
+                  {isEditing ? (
+                    <Select
+                      value={formData.gender}
+                      onValueChange={(v) =>
+                        setFormData({ ...formData, gender: v })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue
+                          placeholder={t('common.select', 'Select...')}
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="male">
+                          {t('gender.male', 'Male')}
+                        </SelectItem>
+                        <SelectItem value="female">
+                          {t('gender.female', 'Female')}
+                        </SelectItem>
+                        <SelectItem value="non-binary">
+                          {t('gender.nb', 'Non-binary')}
+                        </SelectItem>
+                        <SelectItem value="other">
+                          {t('gender.other', 'Other')}
+                        </SelectItem>
+                        <SelectItem value="prefer-not-to-say">
+                          {t('gender.none', 'Prefer not to say')}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <FieldDisplay
+                      value={
+                        formData.gender === 'male'
+                          ? t('gender.male', 'Male')
+                          : formData.gender === 'female'
+                            ? t('gender.female', 'Female')
+                            : formData.gender === 'non-binary'
+                              ? t('gender.nb', 'Non-binary')
+                              : formData.gender === 'other'
+                                ? t('gender.other', 'Other')
+                                : formData.gender === 'prefer-not-to-say'
+                                  ? t('gender.none', 'Prefer not to say')
+                                  : formData.gender
+                      }
+                    />
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -555,97 +594,107 @@ export default function Profile() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>{t('profile.country', 'Country')}</Label>
-                  <Select
-                    required
-                    value={formData.country}
-                    onValueChange={(v) =>
-                      setFormData({
-                        ...formData,
-                        country: v,
-                        state: '',
-                        city: '',
-                      })
-                    }
-                    disabled={!isEditing}
-                  >
-                    <SelectTrigger>
-                      <SelectValue
-                        placeholder={t('common.select', 'Select...')}
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {COUNTRIES.map((c) => (
-                        <SelectItem key={c} value={c}>
-                          {c}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {isEditing ? (
+                    <Select
+                      required
+                      value={formData.country}
+                      onValueChange={(v) =>
+                        setFormData({
+                          ...formData,
+                          country: v,
+                          state: '',
+                          city: '',
+                        })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue
+                          placeholder={t('common.select', 'Select...')}
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {COUNTRIES.map((c) => (
+                          <SelectItem key={c} value={c}>
+                            {c}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <FieldDisplay value={formData.country} />
+                  )}
                 </div>
 
                 <div className="space-y-2">
                   <Label>{t('profile.state', 'State')}</Label>
-                  <Select
-                    value={formData.state}
-                    onValueChange={(v) =>
-                      setFormData({ ...formData, state: v, city: '' })
-                    }
-                    disabled={
-                      !isEditing ||
-                      !formData.country ||
-                      availableStates.length === 0
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue
-                        placeholder={t('common.select', 'Select...')}
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableStates.map((s) => (
-                        <SelectItem key={s} value={s}>
-                          {s}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {isEditing ? (
+                    <Select
+                      value={formData.state}
+                      onValueChange={(v) =>
+                        setFormData({ ...formData, state: v, city: '' })
+                      }
+                      disabled={
+                        !formData.country || availableStates.length === 0
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue
+                          placeholder={t('common.select', 'Select...')}
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableStates.map((s) => (
+                          <SelectItem key={s} value={s}>
+                            {s}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <FieldDisplay value={formData.state} />
+                  )}
                 </div>
 
                 <div className="space-y-2">
                   <Label>{t('profile.city', 'City')}</Label>
-                  <Select
-                    value={formData.city}
-                    onValueChange={(v) => setFormData({ ...formData, city: v })}
-                    disabled={
-                      !isEditing ||
-                      !formData.state ||
-                      availableCities.length === 0
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue
-                        placeholder={t('common.select', 'Select...')}
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableCities.map((c) => (
-                        <SelectItem key={c} value={c}>
-                          {c}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {isEditing ? (
+                    <Select
+                      value={formData.city}
+                      onValueChange={(v) =>
+                        setFormData({ ...formData, city: v })
+                      }
+                      disabled={!formData.state || availableCities.length === 0}
+                    >
+                      <SelectTrigger>
+                        <SelectValue
+                          placeholder={t('common.select', 'Select...')}
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableCities.map((c) => (
+                          <SelectItem key={c} value={c}>
+                            {c}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <FieldDisplay value={formData.city} />
+                  )}
                 </div>
 
                 <div className="space-y-2">
                   <Label>{t('profile.zip', 'Zip / Postal Code')}</Label>
-                  <Input
-                    name="zipCode"
-                    value={formData.zipCode}
-                    onChange={handleZipChange}
-                    placeholder="e.g.: 10001"
-                    disabled={!isEditing}
-                  />
+                  {isEditing ? (
+                    <Input
+                      name="zipCode"
+                      value={formData.zipCode}
+                      onChange={handleZipChange}
+                      placeholder="e.g.: 10001"
+                    />
+                  ) : (
+                    <FieldDisplay value={formData.zipCode} />
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -675,14 +724,17 @@ export default function Profile() {
                 </h3>
                 <div className="space-y-2 max-w-md">
                   <Label>{t('profile.email', 'Email Address')}</Label>
-                  <Input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    placeholder="your@email.com"
-                    disabled={!isEditing}
-                  />
+                  {isEditing ? (
+                    <Input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      placeholder="your@email.com"
+                    />
+                  ) : (
+                    <FieldDisplay value={formData.email} />
+                  )}
                   <p className="text-xs text-slate-500">
                     {t(
                       'profile.email_note',
@@ -692,119 +744,116 @@ export default function Profile() {
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <h3 className="text-sm font-medium text-slate-800 border-b pb-2">
-                  Change Password
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl">
-                  <div className="space-y-2 md:col-span-2">
-                    <Label>
-                      {t('profile.current_password', 'Current Password')}
-                    </Label>
-                    <div className="relative">
-                      <Input
-                        type={showCurrentPassword ? 'text' : 'password'}
-                        name="currentPassword"
-                        value={formData.currentPassword}
-                        onChange={handleChange}
-                        placeholder="••••••••"
-                        disabled={!isEditing}
-                        className="pr-10"
-                      />
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setShowCurrentPassword(!showCurrentPassword)
-                        }
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 disabled:opacity-50"
-                        disabled={!isEditing}
-                        title={
-                          showCurrentPassword
-                            ? t('profile.hide_password', 'Hide password')
-                            : t('profile.show_password', 'Show password')
-                        }
-                      >
-                        {showCurrentPassword ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
-                        )}
-                      </button>
+              {isEditing && (
+                <div className="space-y-4 animate-in fade-in-50">
+                  <h3 className="text-sm font-medium text-slate-800 border-b pb-2">
+                    Change Password
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl">
+                    <div className="space-y-2 md:col-span-2">
+                      <Label>
+                        {t('profile.current_password', 'Current Password')}
+                      </Label>
+                      <div className="relative">
+                        <Input
+                          type={showCurrentPassword ? 'text' : 'password'}
+                          name="currentPassword"
+                          value={formData.currentPassword}
+                          onChange={handleChange}
+                          placeholder="••••••••"
+                          className="pr-10"
+                        />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setShowCurrentPassword(!showCurrentPassword)
+                          }
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700"
+                          title={
+                            showCurrentPassword
+                              ? t('profile.hide_password', 'Hide password')
+                              : t('profile.show_password', 'Show password')
+                          }
+                        >
+                          {showCurrentPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>{t('profile.new_password', 'New Password')}</Label>
-                    <div className="relative">
-                      <Input
-                        type={showNewPassword ? 'text' : 'password'}
-                        name="newPassword"
-                        value={formData.newPassword}
-                        onChange={handleChange}
-                        placeholder="••••••••"
-                        disabled={!isEditing}
-                        className="pr-10"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowNewPassword(!showNewPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 disabled:opacity-50"
-                        disabled={!isEditing}
-                        title={
-                          showNewPassword
-                            ? t('profile.hide_password', 'Hide password')
-                            : t('profile.show_password', 'Show password')
-                        }
-                      >
-                        {showNewPassword ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
-                        )}
-                      </button>
+                    <div className="space-y-2">
+                      <Label>{t('profile.new_password', 'New Password')}</Label>
+                      <div className="relative">
+                        <Input
+                          type={showNewPassword ? 'text' : 'password'}
+                          name="newPassword"
+                          value={formData.newPassword}
+                          onChange={handleChange}
+                          placeholder="••••••••"
+                          className="pr-10"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowNewPassword(!showNewPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700"
+                          title={
+                            showNewPassword
+                              ? t('profile.hide_password', 'Hide password')
+                              : t('profile.show_password', 'Show password')
+                          }
+                        >
+                          {showNewPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>
-                      {t('profile.confirm_password', 'Confirm New Password')}
-                    </Label>
-                    <div className="relative">
-                      <Input
-                        type={showConfirmPassword ? 'text' : 'password'}
-                        name="confirmPassword"
-                        value={formData.confirmPassword}
-                        onChange={handleChange}
-                        placeholder="••••••••"
-                        disabled={!isEditing}
-                        className="pr-10"
-                      />
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setShowConfirmPassword(!showConfirmPassword)
-                        }
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 disabled:opacity-50"
-                        disabled={!isEditing}
-                        title={
-                          showConfirmPassword
-                            ? t('profile.hide_password', 'Hide password')
-                            : t('profile.show_password', 'Show password')
-                        }
-                      >
-                        {showConfirmPassword ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
-                        )}
-                      </button>
+                    <div className="space-y-2">
+                      <Label>
+                        {t('profile.confirm_password', 'Confirm New Password')}
+                      </Label>
+                      <div className="relative">
+                        <Input
+                          type={showConfirmPassword ? 'text' : 'password'}
+                          name="confirmPassword"
+                          value={formData.confirmPassword}
+                          onChange={handleChange}
+                          placeholder="••••••••"
+                          className="pr-10"
+                        />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setShowConfirmPassword(!showConfirmPassword)
+                          }
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700"
+                          title={
+                            showConfirmPassword
+                              ? t('profile.hide_password', 'Hide password')
+                              : t('profile.show_password', 'Show password')
+                          }
+                        >
+                          {showConfirmPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
         {(user?.role === 'super_admin' ||
+          user?.role === ('admin' as any) ||
           user?.role === 'franchisee' ||
           user?.role === 'shopkeeper') && (
           <TabsContent
@@ -833,41 +882,50 @@ export default function Profile() {
                       {t('profile.company_name', 'Company Name / Razão Social')}{' '}
                       <span className="text-red-500">*</span>
                     </Label>
-                    <Input
-                      name="companyName"
-                      value={formData.companyName}
-                      onChange={handleChange}
-                      placeholder="e.g. Acme Corporation"
-                      required
-                      disabled={!isEditing}
-                    />
+                    {isEditing ? (
+                      <Input
+                        name="companyName"
+                        value={formData.companyName}
+                        onChange={handleChange}
+                        placeholder="e.g. Acme Corporation"
+                        required
+                      />
+                    ) : (
+                      <FieldDisplay value={formData.companyName} />
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label>
                       {t('profile.business_email', 'Official Business Email')}{' '}
                       <span className="text-red-500">*</span>
                     </Label>
-                    <Input
-                      type="email"
-                      name="businessEmail"
-                      value={formData.businessEmail}
-                      onChange={handleChange}
-                      placeholder="billing@acme.com"
-                      required
-                      disabled={!isEditing}
-                    />
+                    {isEditing ? (
+                      <Input
+                        type="email"
+                        name="businessEmail"
+                        value={formData.businessEmail}
+                        onChange={handleChange}
+                        placeholder="billing@acme.com"
+                        required
+                      />
+                    ) : (
+                      <FieldDisplay value={formData.businessEmail} />
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label>
                       {t('profile.business_phone', 'Business Phone Number')}
                     </Label>
-                    <Input
-                      name="businessPhone"
-                      value={formData.businessPhone}
-                      onChange={handleChange}
-                      placeholder="+1 800 555-0199"
-                      disabled={!isEditing}
-                    />
+                    {isEditing ? (
+                      <Input
+                        name="businessPhone"
+                        value={formData.businessPhone}
+                        onChange={handleChange}
+                        placeholder="+1 800 555-0199"
+                      />
+                    ) : (
+                      <FieldDisplay value={formData.businessPhone} />
+                    )}
                   </div>
                 </div>
               </CardContent>
