@@ -105,7 +105,9 @@ export const fetchWebSearchPromotions = async (
     if (pbAuth) {
       try {
         token = JSON.parse(pbAuth).token
-      } catch (e) {}
+      } catch (e) {
+        /* ignore */
+      }
     }
   }
 
@@ -213,7 +215,9 @@ export const saveDiscoveredPromotion = async (
     if (pbAuth) {
       try {
         token = JSON.parse(pbAuth).token
-      } catch (e) {}
+      } catch (e) {
+        /* ignore */
+      }
     }
   }
 
@@ -249,7 +253,9 @@ export const saveCrawlerLog = async (data: any): Promise<any> => {
     if (pbAuth) {
       try {
         token = JSON.parse(pbAuth).token
-      } catch (e) {}
+      } catch (e) {
+        /* ignore */
+      }
     }
   }
 
@@ -289,7 +295,9 @@ export const fetchCrawlerLogs = async (): Promise<any[]> => {
     if (pbAuth) {
       try {
         token = JSON.parse(pbAuth).token
-      } catch (e) {}
+      } catch (e) {
+        /* ignore */
+      }
     }
   }
 
