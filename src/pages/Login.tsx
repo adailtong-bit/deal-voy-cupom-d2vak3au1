@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { UserPlus, LogIn, Mail, Lock, User } from 'lucide-react'
+import { UserPlus, LogIn, Mail, Lock, User, Eye, EyeOff } from 'lucide-react'
 import { toast } from 'sonner'
 
 export default function Login() {
@@ -23,6 +23,9 @@ export default function Login() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [activeTab, setActiveTab] = useState('login')
   const [isLoading, setIsLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showRegPassword, setShowRegPassword] = useState(false)
+  const [showRegConfirmPassword, setShowRegConfirmPassword] = useState(false)
 
   const { login, register, user } = useCouponStore()
   const { t } = useLanguage()
@@ -144,13 +147,24 @@ export default function Login() {
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                     <Input
                       id="password"
-                      type="password"
+                      type={showPassword ? 'text' : 'password'}
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="pl-9 h-11 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
+                      className="pl-9 pr-10 h-11 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
                       required
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 focus:outline-none"
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
                   </div>
                 </div>
                 <Button
@@ -212,13 +226,24 @@ export default function Login() {
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                     <Input
                       id="reg-password"
-                      type="password"
+                      type={showRegPassword ? 'text' : 'password'}
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="pl-9 h-11 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
+                      className="pl-9 pr-10 h-11 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
                       required
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowRegPassword(!showRegPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 focus:outline-none"
+                    >
+                      {showRegPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -232,13 +257,26 @@ export default function Login() {
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                     <Input
                       id="reg-confirm-password"
-                      type="password"
+                      type={showRegConfirmPassword ? 'text' : 'password'}
                       placeholder="••••••••"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="pl-9 h-11 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
+                      className="pl-9 pr-10 h-11 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
                       required
                     />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setShowRegConfirmPassword(!showRegConfirmPassword)
+                      }
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 focus:outline-none"
+                    >
+                      {showRegConfirmPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
                   </div>
                 </div>
                 <Button

@@ -266,19 +266,16 @@ export default function Profile() {
       } as any)
 
       toast({
-        title: t('profile.successTitle', 'Profile Updated'),
-        description: t(
-          'profile.successDesc',
-          'Your profile information has been saved successfully.',
-        ),
+        title: t('profile.successTitle', 'Sucesso!'),
+        description: t('profile.successDesc', 'Alterações salvas com sucesso!'),
       })
 
       if (formData.newPassword) {
         toast({
-          title: t('profile.passwordUpdated', 'Password Updated'),
+          title: t('profile.passwordUpdated', 'Senha Atualizada'),
           description: t(
             'profile.passwordUpdatedDesc',
-            'Your password has been changed successfully.',
+            'Sua senha foi alterada com sucesso.',
           ),
         })
       }
@@ -293,12 +290,12 @@ export default function Profile() {
       setIsEditing(false)
     } catch (error: any) {
       toast({
-        title: t('common.error', 'Error'),
+        title: t('common.error', 'Erro'),
         description:
           error.message ||
           t(
             'profile.errorDesc',
-            'An error occurred while saving your profile. Please try again.',
+            'Ocorreu um erro ao salvar as alterações. Tente novamente.',
           ),
         variant: 'destructive',
       })
@@ -341,8 +338,8 @@ export default function Profile() {
               <Button onClick={handleSave} size="lg" disabled={isSaving}>
                 {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isSaving
-                  ? t('common.saving', 'Saving...')
-                  : t('profile.save', 'Save Changes')}
+                  ? t('common.saving', 'Salvando...')
+                  : t('profile.save', 'Salvar')}
               </Button>
             </>
           )}
