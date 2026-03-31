@@ -85,6 +85,15 @@ export function CrawlerSourceForm({
       return
     }
 
+    if (!formData.category) {
+      toast({
+        title: 'Categoria Obrigatória',
+        description: 'Selecione uma categoria antes de iniciar a busca.',
+        variant: 'destructive',
+      })
+      return
+    }
+
     startExtractionTask(
       formData.name || 'ofertas',
       formData.maxResults || 200,
@@ -104,11 +113,8 @@ export function CrawlerSourceForm({
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="flex flex-col h-full max-h-[80vh] relative"
-    >
-      <div className="space-y-4 flex-1 overflow-y-auto p-1 pr-2">
+    <form onSubmit={handleSubmit} className="flex flex-col w-full relative">
+      <div className="space-y-4 overflow-y-auto p-1 pr-4 max-h-[65vh]">
         <div className="space-y-2">
           <Label>Nome do Site</Label>
           <Input
@@ -282,7 +288,7 @@ export function CrawlerSourceForm({
           </p>
         </div>
       </div>
-      <div className="sticky bottom-0 pt-4 pb-2 bg-background border-t mt-4 z-10">
+      <div className="pt-4 pb-2 bg-background border-t mt-4 z-10 shrink-0">
         <DialogFooter className="flex flex-col sm:flex-row justify-between w-full sm:justify-between gap-3">
           <Button
             type="button"

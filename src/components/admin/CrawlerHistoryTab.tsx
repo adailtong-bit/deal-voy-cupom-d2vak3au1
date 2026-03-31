@@ -3,11 +3,13 @@ import { fetchCrawlerLogs } from '@/lib/api'
 import { Badge } from '@/components/ui/badge'
 import { format } from 'date-fns'
 
-export function CrawlerHistoryTab() {
+export function CrawlerHistoryTab({ isScanning }: { isScanning?: boolean }) {
   const [logs, setLogs] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (isScanning) return
+
     const loadLogs = async () => {
       setLoading(true)
       try {
@@ -20,7 +22,7 @@ export function CrawlerHistoryTab() {
       }
     }
     loadLogs()
-  }, [])
+  }, [isScanning])
 
   return (
     <div className="space-y-4 animate-in fade-in duration-300">

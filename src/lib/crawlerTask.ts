@@ -102,6 +102,7 @@ export const startExtractionTask = async (
     const items = await fetchWebSearchPromotions(query, limit, fetchOptions)
 
     const itemsFound = items.length
+    progress.total = itemsFound > 0 ? itemsFound : limit
     progress.found = itemsFound
     addLog(`Found ${itemsFound} organic results. Starting validation...`)
     notify()

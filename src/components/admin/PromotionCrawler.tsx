@@ -239,7 +239,7 @@ export function PromotionCrawler({ franchiseId }: { franchiseId?: string }) {
               value="history"
               className="animate-in fade-in-50 min-w-0 w-full"
             >
-              <CrawlerHistoryTab />
+              <CrawlerHistoryTab isScanning={crawlerState.isScanning} />
             </TabsContent>
 
             <TabsContent
