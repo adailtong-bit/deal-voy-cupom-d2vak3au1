@@ -136,7 +136,11 @@ export function CrawlerSourcesTab() {
       )
 
       try {
-        const results = await fetchWebSearchPromotions(q, limit)
+        const results = await fetchWebSearchPromotions(q, limit, {
+          region: searchType === 'region' ? region : undefined,
+          category,
+          minDiscount,
+        })
 
         const validResults = results.filter((r) => {
           if (!r.title || !r.description) return false
@@ -189,11 +193,18 @@ export function CrawlerSourcesTab() {
           totalImported++
         }
 
-        if (validResults.length === 0 && results.length > 0) {
+        if (results.length === 0) {
+          toast.warning(
+            t(
+              'franchisee.crawler.no_results',
+              `Nenhum resultado encontrado na busca para: ${q}`,
+            ),
+          )
+        } else if (validResults.length === 0) {
           toast.warning(
             t(
               'franchisee.crawler.no_valid_data',
-              `Nenhum dado real encontrado para: ${q}`,
+              `Nenhum dado real (válido) encontrado para: ${q}`,
             ),
           )
         }
