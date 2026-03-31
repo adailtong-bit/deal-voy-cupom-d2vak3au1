@@ -1610,7 +1610,62 @@ export const MOCK_CRAWLER_SOURCES: CrawlerSource[] = [
   },
 ]
 
-export const MOCK_DISCOVERED_PROMOTIONS: DiscoveredPromotion[] = []
+export const MOCK_DISCOVERED_PROMOTIONS: DiscoveredPromotion[] = [
+  {
+    id: 'dp1',
+    sourceId: 'cs_amazon',
+    originalUrl: 'https://amazon.com/dp/B08F7PTF53',
+    title: 'Pacote de Viagem Orlando 7 Dias',
+    discount: '20% OFF',
+    description: 'Pacote completo para Orlando com ingressos',
+    price: 3500,
+    currency: 'BRL',
+    expiryDate: '2025-12-31',
+    image: 'https://img.usecurling.com/p/600/400?q=orlando',
+    storeName: 'Amazon Deals',
+    status: 'pending',
+    region: 'Global',
+    country: 'Brasil',
+    category: 'Viagens',
+    capturedAt: new Date().toISOString(),
+  },
+  {
+    id: 'dp2',
+    sourceId: 'cs2',
+    originalUrl: 'https://flcoupons.com/rentals/1',
+    title: 'Locação de Carro SUV 4x4',
+    discount: '15% OFF',
+    description: 'Desconto em locação de SUV em Miami por uma semana',
+    price: 200,
+    currency: 'USD',
+    expiryDate: '2025-12-31',
+    image: 'https://img.usecurling.com/p/600/400?q=suv',
+    storeName: 'Florida Coupons Web',
+    status: 'imported',
+    region: 'US-FL',
+    country: 'USA',
+    category: 'Locação',
+    capturedAt: new Date().toISOString(),
+  },
+  {
+    id: 'dp3',
+    sourceId: 'cs1',
+    originalUrl: 'https://localdeals.com/tourist/1',
+    title: 'Ingresso Museu de Arte Moderna',
+    discount: '50% OFF',
+    description: 'Meia entrada para o museu de arte com tour guiado',
+    price: 15,
+    currency: 'BRL',
+    expiryDate: '2025-12-31',
+    image: 'https://img.usecurling.com/p/600/400?q=museum',
+    storeName: 'Local Deals API',
+    status: 'pending',
+    region: 'BR-SP',
+    country: 'Brasil',
+    category: 'Pontos Turísticos',
+    capturedAt: new Date().toISOString(),
+  },
+]
 
 export const MOCK_AD_PRICING: AdPricing[] = [
   {

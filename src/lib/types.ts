@@ -762,6 +762,7 @@ export interface CrawlerSource {
   state?: string
   city?: string
   scanRadius: number
+  category?: string
   lastScan?: string
   status: 'active' | 'paused'
   lastStatus?: 'success' | 'warning' | 'error' | 'scanning'

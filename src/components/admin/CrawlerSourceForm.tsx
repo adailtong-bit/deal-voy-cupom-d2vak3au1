@@ -40,6 +40,7 @@ export function CrawlerSourceForm({
     city: '',
     scanRadius: 50,
     maxResults: 200,
+    category: '',
   })
 
   useEffect(() => {
@@ -54,6 +55,7 @@ export function CrawlerSourceForm({
         city: initialData.city || '',
         scanRadius: initialData.scanRadius || 50,
         maxResults: 200,
+        category: initialData.category || '',
       })
     }
   }, [initialData])
@@ -69,6 +71,7 @@ export function CrawlerSourceForm({
       state: formData.state,
       city: formData.city,
       scanRadius: formData.scanRadius,
+      category: formData.category,
     })
   }
 
@@ -90,6 +93,7 @@ export function CrawlerSourceForm({
         country: formData.country,
         state: formData.state,
         city: formData.city,
+        category: formData.category,
       },
     )
 
@@ -192,7 +196,25 @@ export function CrawlerSourceForm({
             />
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label>Categoria</Label>
+            <Select
+              value={formData.category}
+              onValueChange={(v) => setFormData({ ...formData, category: v })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Viagens">Viagens</SelectItem>
+                <SelectItem value="Locação">Locação</SelectItem>
+                <SelectItem value="Pontos Turísticos">
+                  Pontos Turísticos
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <div className="space-y-2">
             <Label>Raio de Busca (km)</Label>
             <Input
