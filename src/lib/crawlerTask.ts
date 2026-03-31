@@ -12,6 +12,7 @@ export interface CrawlerProgress {
   errors: number
   logs: string[]
   isScanning: boolean
+  sessionImportedItems?: any[]
 }
 
 let progress: CrawlerProgress = {
@@ -22,6 +23,7 @@ let progress: CrawlerProgress = {
   errors: 0,
   logs: [],
   isScanning: sessionStorage.getItem('crawler_isScanning') === 'true',
+  sessionImportedItems: [],
 }
 
 let abortController: AbortController | null = null
@@ -78,6 +80,7 @@ export const startExtractionTask = async (
     errors: 0,
     logs: [],
     isScanning: true,
+    sessionImportedItems: [],
   }
   sessionStorage.setItem('crawler_isScanning', 'true')
   notify()
@@ -119,14 +122,18 @@ export const startExtractionTask = async (
       const item = items[i]
       // Auto-fill Missing Fields to Ensure Persistence
       if (!item.title?.trim()) item.title = `Oferta Descoberta ${i + 1}`
-      if (item.price === undefined || item.price === null || item.price <= 0)
-        item.price = Math.floor(Math.random() * 100) + 10
-      if (!item.image?.trim() && !item.imageUrl?.trim())
-        item.image = 'https://img.usecurling.com/p/400/400?q=offer'
 
       const siteName = item.storeName || item.siteName || ''
       if (!siteName.trim())
         item.storeName = source !== 'all' ? source : 'Web Search'
+
+      if (!item.description?.trim())
+        item.description = `Detalhes da oferta encontrada automaticamente na fonte ${item.storeName}.`
+
+      if (item.price === undefined || item.price === null || item.price <= 0)
+        item.price = Math.floor(Math.random() * 100) + 10
+      if (!item.image?.trim() && !item.imageUrl?.trim())
+        item.image = 'https://img.usecurling.com/p/400/400?q=offer'
 
       item.country =
         item.country ||
@@ -134,6 +141,9 @@ export const startExtractionTask = async (
         sourceOptions?.country ||
         'Brasil'
       item.category = item.category || sourceOptions?.category || 'Outros'
+
+      item.capturedAt = item.capturedAt || new Date().toISOString()
+      item.status = item.status || 'pending'
 
       const linkToTest = item.sourceUrl || item.originalUrl || ''
       if (!linkToTest.trim() || !linkToTest.startsWith('http')) {
@@ -154,8 +164,13 @@ export const startExtractionTask = async (
 
       try {
         // Atomic Persistence Sync
-        await saveDiscoveredPromotion({ ...item, sourceUrl: item.sourceUrl })
+        const savedItem = await saveDiscoveredPromotion({
+          ...item,
+          sourceUrl: item.sourceUrl,
+        })
         progress.imported++
+        if (!progress.sessionImportedItems) progress.sessionImportedItems = []
+        progress.sessionImportedItems.push(savedItem)
         addLog(`Imported: ${item.title}`)
       } catch (err: any) {
         progress.errors++

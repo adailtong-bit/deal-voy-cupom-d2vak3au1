@@ -86,18 +86,26 @@ export function PromotionCrawler({ franchiseId }: { franchiseId?: string }) {
     filterFetchDate,
   ])
 
-  const basePendingPromotions = useMemo(
-    () =>
-      discoveredPromotions.filter(
-        (p) =>
-          p.status === 'pending' &&
-          p.storeName?.trim() &&
-          p.title?.trim() &&
-          p.description?.trim() &&
-          (p.capturedAt || p.expiryDate),
-      ),
-    [discoveredPromotions],
-  )
+  const basePendingPromotions = useMemo(() => {
+    const allPromos = [...discoveredPromotions]
+
+    if (crawlerState.sessionImportedItems) {
+      crawlerState.sessionImportedItems.forEach((item: any) => {
+        if (!allPromos.some((p) => p.id === item.id)) {
+          allPromos.push(item)
+        }
+      })
+    }
+
+    return allPromos.filter(
+      (p) =>
+        p.status === 'pending' &&
+        p.storeName?.trim() &&
+        p.title?.trim() &&
+        p.description?.trim() &&
+        (p.capturedAt || p.expiryDate),
+    )
+  }, [discoveredPromotions, crawlerState.sessionImportedItems])
 
   const pendingPromotions = useMemo(() => {
     return basePendingPromotions.filter((p) => {

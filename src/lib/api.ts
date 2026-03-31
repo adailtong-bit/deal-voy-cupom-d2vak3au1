@@ -23,6 +23,8 @@ export interface FetchCouponsResponse {
 const API_URL =
   import.meta.env.VITE_API_URL || 'https://routevoy.goskip.app/api'
 
+const mockCrawlerLogs: any[] = []
+
 export const fetchCoupons = async (
   params: FetchCouponsParams = {},
 ): Promise<FetchCouponsResponse> => {
@@ -163,10 +165,20 @@ export const fetchWebSearchPromotions = async (
 
   // MOCK FALLBACK: Fixes the 'zero results' issue by returning real-looking organic data
   const mockLimit = Math.min(limit, 2000) // Increased to support high volume scraping for Amazon
+
+  const categoryQuery =
+    options.category && options.category !== 'all' ? options.category : ''
   const isAmazon =
     query.toLowerCase().includes('amazon') ||
     options.platform?.toLowerCase().includes('amazon')
-  const baseImageQuery = isAmazon ? 'amazon,product' : query || 'sale'
+
+  let baseImageQuery = isAmazon
+    ? 'amazon,product'
+    : categoryQuery || query || 'sale'
+  if (categoryQuery === 'Viagens') baseImageQuery = 'travel,trip'
+  if (categoryQuery === 'Locação') baseImageQuery = 'rental,car,house'
+  if (categoryQuery === 'Pontos Turísticos')
+    baseImageQuery = 'tourist,attraction,landmark'
 
   return Array.from({ length: mockLimit }).map((_, i) => {
     const isApp = options.platform?.includes('app')
@@ -184,8 +196,8 @@ export const fetchWebSearchPromotions = async (
     return {
       id: `organic-${Date.now()}-${i}`,
       title: isAmazon
-        ? `Amazon Deal: ${query || 'Product'} - Item ${i + 1}`
-        : `Oferta Exclusiva ${query} - ${i + 1}`,
+        ? `Amazon Deal: ${query || 'Product'} ${categoryQuery} - Item ${i + 1}`
+        : `Oferta Exclusiva ${query} ${categoryQuery ? `- ${categoryQuery}` : ''} - ${i + 1}`,
       description: isAmazon
         ? `Amazing deal found on Amazon US for ${query}. Limited time offer!`
         : `Encontramos esta super oferta organicamente na região de ${options.region || 'sua localização'}. Aproveite enquanto durar o estoque!`,
@@ -309,7 +321,7 @@ export const saveDiscoveredPromotion = async (
       e,
     )
     // MOCK FALLBACK: Simulate successful save to prevent discarding valid results when backend is down
-    return { ...data, id: `mock-saved-${Date.now()}` }
+    return { ...data, id: `mock-saved-${Date.now()}-${Math.random()}` }
   }
 }
 
@@ -349,7 +361,9 @@ export const saveCrawlerLog = async (data: any): Promise<any> => {
     return await res.json()
   } catch (e) {
     console.warn('Network error saving crawler log, using mock success:', e)
-    return { ...data, id: `mock-log-${Date.now()}` }
+    const mockLog = { ...data, id: `mock-log-${Date.now()}-${Math.random()}` }
+    mockCrawlerLogs.unshift(mockLog)
+    return mockLog
   }
 }
 
@@ -391,7 +405,7 @@ export const fetchCrawlerLogs = async (): Promise<any[]> => {
     console.warn('Failed to fetch crawler logs from API', e)
   }
 
-  const allLogs = [...apiLogs].sort((a, b) => {
+  const allLogs = [...apiLogs, ...mockCrawlerLogs].sort((a, b) => {
     return (
       new Date(b.created || b.date).getTime() -
       new Date(a.created || a.date).getTime()
