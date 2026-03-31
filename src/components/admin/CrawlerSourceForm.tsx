@@ -39,6 +39,7 @@ export function CrawlerSourceForm({
     state: '',
     city: '',
     scanRadius: 50,
+    maxResults: 200,
   })
 
   useEffect(() => {
@@ -51,7 +52,8 @@ export function CrawlerSourceForm({
         country: initialData.country || '',
         state: initialData.state || '',
         city: initialData.city || '',
-        scanRadius: initialData.scanRadius,
+        scanRadius: initialData.scanRadius || 50,
+        maxResults: 200,
       })
     }
   }, [initialData])
@@ -82,7 +84,7 @@ export function CrawlerSourceForm({
 
     startExtractionTask(
       formData.name || 'ofertas',
-      formData.scanRadius || 50,
+      formData.maxResults || 200,
       formData.url || 'all',
       {
         country: formData.country,
@@ -98,155 +100,181 @@ export function CrawlerSourceForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label>Nome do Site</Label>
-        <Input
-          value={formData.name}
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          required
-          placeholder="Ex: Ofertas Locais"
-        />
-      </div>
-      <div className="space-y-2">
-        <Label>URL / Link da Fonte</Label>
-        <Input
-          value={formData.url}
-          onChange={(e) => setFormData({ ...formData, url: e.target.value })}
-          required
-          placeholder="https://"
-        />
-      </div>
-      <div className="grid grid-cols-2 gap-4">
+    <form
+      onSubmit={handleSubmit}
+      className="flex flex-col h-full max-h-[80vh] relative"
+    >
+      <div className="space-y-4 flex-1 overflow-y-auto p-1 pr-2">
         <div className="space-y-2">
-          <Label>Tipo de Fonte</Label>
-          <Select
-            value={formData.type}
-            onValueChange={(v) => setFormData({ ...formData, type: v })}
+          <Label>Nome do Site</Label>
+          <Input
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            required
+            placeholder="Ex: Ofertas Locais"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>URL / Link da Fonte</Label>
+          <Input
+            value={formData.url}
+            onChange={(e) => setFormData({ ...formData, url: e.target.value })}
+            required
+            placeholder="https://"
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>Tipo de Fonte</Label>
+            <Select
+              value={formData.type}
+              onValueChange={(v) => setFormData({ ...formData, type: v })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="web">Website Scraper</SelectItem>
+                <SelectItem value="api">JSON API</SelectItem>
+                <SelectItem value="app">Mobile App Link</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>Região Alvo</Label>
+            <Select
+              disabled={isFranchisee}
+              value={formData.region}
+              onValueChange={(v) => setFormData({ ...formData, region: v })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {REGIONS.map((r) => (
+                  <SelectItem key={r.code} value={r.code}>
+                    {r.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label>País</Label>
+            <Input
+              value={formData.country}
+              onChange={(e) =>
+                setFormData({ ...formData, country: e.target.value })
+              }
+              placeholder="Ex: Brasil"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Estado</Label>
+            <Input
+              value={formData.state}
+              onChange={(e) =>
+                setFormData({ ...formData, state: e.target.value })
+              }
+              placeholder="Ex: SP"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Cidade</Label>
+            <Input
+              value={formData.city}
+              onChange={(e) =>
+                setFormData({ ...formData, city: e.target.value })
+              }
+              placeholder="Ex: São Paulo"
+            />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>Raio de Busca (km)</Label>
+            <Input
+              type="number"
+              value={formData.scanRadius}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  scanRadius: Number(e.target.value),
+                })
+              }
+              min={1}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Limite de Resultados</Label>
+            <Input
+              type="number"
+              value={formData.maxResults}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  maxResults: Number(e.target.value),
+                })
+              }
+              min={10}
+              max={2000}
+            />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Label>Parâmetros de Validação (Obrigatórios)</Label>
+          <div className="flex gap-4 mt-2">
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked
+                disabled
+                className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+              />
+              Preço
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked
+                disabled
+                className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+              />
+              Link do Produto
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked
+                disabled
+                className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+              />
+              Imagem
+            </label>
+          </div>
+          <p className="text-xs text-slate-500">
+            Estes parâmetros são validados automaticamente pelo motor de busca
+            na captura dos links.
+          </p>
+        </div>
+      </div>
+      <div className="sticky bottom-0 pt-4 pb-2 bg-background border-t mt-4 z-10">
+        <DialogFooter className="flex flex-col sm:flex-row justify-between w-full sm:justify-between gap-3">
+          <Button
+            type="button"
+            onClick={handleStartSearch}
+            className="bg-green-600 hover:bg-green-700 text-white shadow-md transition-all w-full sm:w-auto order-last sm:order-first"
           >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="web">Website Scraper</SelectItem>
-              <SelectItem value="api">JSON API</SelectItem>
-              <SelectItem value="app">Mobile App Link</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label>Região Alvo</Label>
-          <Select
-            disabled={isFranchisee}
-            value={formData.region}
-            onValueChange={(v) => setFormData({ ...formData, region: v })}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {REGIONS.map((r) => (
-                <SelectItem key={r.code} value={r.code}>
-                  {r.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+            <Play className="w-4 h-4 mr-2" fill="currentColor" />
+            Iniciar Busca
+          </Button>
+          <Button type="submit" className="w-full sm:w-auto">
+            Salvar Configuração
+          </Button>
+        </DialogFooter>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="space-y-2">
-          <Label>País</Label>
-          <Input
-            value={formData.country}
-            onChange={(e) =>
-              setFormData({ ...formData, country: e.target.value })
-            }
-            placeholder="Ex: Brasil"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>Estado</Label>
-          <Input
-            value={formData.state}
-            onChange={(e) =>
-              setFormData({ ...formData, state: e.target.value })
-            }
-            placeholder="Ex: SP"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>Cidade</Label>
-          <Input
-            value={formData.city}
-            onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-            placeholder="Ex: São Paulo"
-          />
-        </div>
-      </div>
-      <div className="space-y-2">
-        <Label>Raio de Busca (km)</Label>
-        <Input
-          type="number"
-          value={formData.scanRadius}
-          onChange={(e) =>
-            setFormData({
-              ...formData,
-              scanRadius: Number(e.target.value),
-            })
-          }
-          min={1}
-        />
-      </div>
-      <div className="space-y-2">
-        <Label>Parâmetros de Validação (Obrigatórios)</Label>
-        <div className="flex gap-4 mt-2">
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked
-              disabled
-              className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-            />
-            Preço
-          </label>
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked
-              disabled
-              className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-            />
-            Link do Produto
-          </label>
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked
-              disabled
-              className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-            />
-            Imagem
-          </label>
-        </div>
-        <p className="text-xs text-slate-500">
-          Estes parâmetros são validados automaticamente pelo motor de busca na
-          captura dos links.
-        </p>
-      </div>
-      <DialogFooter className="flex flex-col sm:flex-row justify-between w-full sm:justify-between mt-6 gap-3">
-        <Button
-          type="button"
-          onClick={handleStartSearch}
-          className="bg-green-600 hover:bg-green-700 text-white shadow-md transition-all w-full sm:w-auto order-last sm:order-first"
-        >
-          <Play className="w-4 h-4 mr-2" fill="currentColor" />
-          Iniciar Busca
-        </Button>
-        <Button type="submit" className="w-full sm:w-auto">
-          Salvar Configuração
-        </Button>
-      </DialogFooter>
     </form>
   )
 }
