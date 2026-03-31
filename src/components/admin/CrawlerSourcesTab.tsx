@@ -198,26 +198,34 @@ export function CrawlerSourcesTab() {
           )
         }
 
-        await saveCrawlerLog({
-          storeName: q,
-          status: toImport.length > 0 ? 'success' : 'warning',
-          errorMessage:
-            toImport.length === 0 ? 'No valid real data found' : undefined,
-          itemsFound: validResults.length,
-          itemsImported: toImport.length,
-          date: new Date().toISOString(),
-        })
+        try {
+          await saveCrawlerLog({
+            storeName: q,
+            status: toImport.length > 0 ? 'success' : 'warning',
+            errorMessage:
+              toImport.length === 0 ? 'No valid real data found' : undefined,
+            itemsFound: validResults.length,
+            itemsImported: toImport.length,
+            date: new Date().toISOString(),
+          })
+        } catch (logErr) {
+          console.error('Failed to save success crawler log', logErr)
+        }
       } catch (err: any) {
         hasErrors = true
         console.error(`Error searching for ${q}:`, err)
-        await saveCrawlerLog({
-          storeName: q,
-          status: 'error',
-          errorMessage: err.message || 'Erro de conexão',
-          itemsFound: 0,
-          itemsImported: 0,
-          date: new Date().toISOString(),
-        })
+        try {
+          await saveCrawlerLog({
+            storeName: q,
+            status: 'error',
+            errorMessage: err.message || 'Erro de conexão',
+            itemsFound: 0,
+            itemsImported: 0,
+            date: new Date().toISOString(),
+          })
+        } catch (logErr) {
+          console.error('Failed to save error crawler log', logErr)
+        }
       }
 
       setScanProgress(Math.round(((i + 1) / queries.length) * 100))

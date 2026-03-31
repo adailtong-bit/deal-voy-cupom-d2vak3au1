@@ -248,37 +248,43 @@ export const saveDiscoveredPromotion = async (
 }
 
 export const saveCrawlerLog = async (data: any): Promise<any> => {
-  let token = localStorage.getItem('auth_token')
-  if (!token) {
-    const pbAuth = localStorage.getItem('pocketbase_auth')
-    if (pbAuth) {
-      try {
-        token = JSON.parse(pbAuth).token
-      } catch (e) {
-        /* ignore */
+  try {
+    let token = localStorage.getItem('auth_token')
+    if (!token) {
+      const pbAuth = localStorage.getItem('pocketbase_auth')
+      if (pbAuth) {
+        try {
+          token = JSON.parse(pbAuth).token
+        } catch (e) {
+          /* ignore */
+        }
       }
     }
-  }
 
-  const res = await fetch(`${API_URL}/collections/crawler_logs/records`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-      ...(token
-        ? {
-            Authorization: token.startsWith('Bearer')
-              ? token
-              : `Bearer ${token}`,
-          }
-        : {}),
-    },
-    body: JSON.stringify(data),
-  })
-  if (!res.ok) {
-    throw new Error('Failed to save crawler log')
+    const res = await fetch(`${API_URL}/collections/crawler_logs/records`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        ...(token
+          ? {
+              Authorization: token.startsWith('Bearer')
+                ? token
+                : `Bearer ${token}`,
+            }
+          : {}),
+      },
+      body: JSON.stringify(data),
+    })
+    if (!res.ok) {
+      console.warn('Failed to save crawler log:', res.status)
+      return null
+    }
+    return await res.json()
+  } catch (e) {
+    console.error('Network error saving crawler log:', e)
+    return null
   }
-  return await res.json()
 }
 
 export const fetchCrawlerLogs = async (): Promise<any[]> => {
