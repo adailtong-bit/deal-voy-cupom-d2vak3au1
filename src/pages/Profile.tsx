@@ -1,7 +1,13 @@
 import { useState, useMemo } from 'react'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -15,15 +21,19 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useToast } from '@/hooks/use-toast'
 import { COUNTRIES, LOCATION_DATA } from '@/lib/locationData'
 import { User } from '@/lib/types'
 
 export default function Profile() {
   const { user, updateUserProfile, platformSettings } = useCouponStore()
   const { t } = useLanguage()
+  const { toast } = useToast()
 
   const [formData, setFormData] = useState({
     name: user?.name || '',
+    email: user?.email || '',
     phone: user?.phone || '',
     birthday: user?.birthday || '',
     gender: user?.gender || '',
@@ -33,6 +43,12 @@ export default function Profile() {
     city: user?.city || '',
     zipCode: user?.zipCode || '',
     categories: user?.preferences?.categories || [],
+    companyName: user?.companyName || '',
+    businessEmail: user?.businessEmail || '',
+    businessPhone: user?.businessPhone || '',
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
   })
 
   const availableStates = useMemo(() => {
@@ -89,8 +105,77 @@ export default function Profile() {
   }
 
   const handleSave = () => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+    if (formData.email && !emailRegex.test(formData.email)) {
+      toast({
+        title: t('common.error', 'Error'),
+        description: t(
+          'profile.invalid_email',
+          'Please enter a valid email address.',
+        ),
+        variant: 'destructive',
+      })
+      return
+    }
+
+    if (
+      user?.role === 'super_admin' ||
+      user?.role === 'franchisee' ||
+      user?.role === 'shopkeeper'
+    ) {
+      if (!formData.companyName || !formData.businessEmail) {
+        toast({
+          title: t('common.error', 'Error'),
+          description: t(
+            'profile.missing_business_info',
+            'Company Name and Business Email are required for admins.',
+          ),
+          variant: 'destructive',
+        })
+        return
+      }
+      if (!emailRegex.test(formData.businessEmail)) {
+        toast({
+          title: t('common.error', 'Error'),
+          description: t(
+            'profile.invalid_business_email',
+            'Please enter a valid business email address.',
+          ),
+          variant: 'destructive',
+        })
+        return
+      }
+    }
+
+    if (formData.newPassword) {
+      if (formData.newPassword !== formData.confirmPassword) {
+        toast({
+          title: t('common.error', 'Error'),
+          description: t(
+            'profile.password_mismatch',
+            'New password and confirmation do not match.',
+          ),
+          variant: 'destructive',
+        })
+        return
+      }
+      if (!formData.currentPassword) {
+        toast({
+          title: t('common.error', 'Error'),
+          description: t(
+            'profile.current_password_required',
+            'Please enter your current password to set a new one.',
+          ),
+          variant: 'destructive',
+        })
+        return
+      }
+    }
+
     updateUserProfile({
       name: formData.name,
+      email: formData.email,
       phone: formData.phone,
       birthday: formData.birthday,
       gender: formData.gender as User['gender'],
@@ -99,22 +184,48 @@ export default function Profile() {
       state: formData.state,
       city: formData.city,
       zipCode: formData.zipCode,
+      companyName: formData.companyName,
+      businessEmail: formData.businessEmail,
+      businessPhone: formData.businessPhone,
       preferences: {
         ...user?.preferences,
         categories: formData.categories,
       },
     })
+
+    toast({
+      title: t('profile.successTitle', 'Profile Updated'),
+      description: t(
+        'profile.successDesc',
+        'Your profile information has been saved successfully.',
+      ),
+    })
+
+    setFormData((prev) => ({
+      ...prev,
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: '',
+    }))
   }
 
   if (!user) return null
 
   return (
     <div className="container py-8 max-w-4xl mx-auto animate-fade-in-up mb-16 md:mb-0 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-slate-800">
-          {t('profile.title', 'My Profile')}
-        </h1>
-        <Button onClick={handleSave}>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-800">
+            {t('profile.title', 'My Profile')}
+          </h1>
+          <p className="text-slate-500 mt-1">
+            {t(
+              'profile.subtitle',
+              'Manage your account settings and preferences.',
+            )}
+          </p>
+        </div>
+        <Button onClick={handleSave} size="lg">
           {t('profile.save', 'Save Changes')}
         </Button>
       </div>
@@ -142,226 +253,425 @@ export default function Profile() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              {t('profile.personal', 'Personal Information')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label>{t('profile.name', 'Full Name')}</Label>
-              <Input
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                placeholder="Your full name"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>{t('profile.email', 'Email')}</Label>
-              <Input
-                value={user.email}
-                disabled
-                className="bg-slate-50 text-slate-500"
-              />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>{t('profile.phone', 'Phone')}</Label>
-                <Input
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  placeholder="+1 555 123-4567"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>
-                  {t('profile.document', 'Document (ID / Passport)')}
-                </Label>
-                <Input
-                  name="documentNumber"
-                  value={formData.documentNumber}
-                  onChange={handleChange}
-                  placeholder="e.g.: 123.456.789-00"
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      <Tabs defaultValue="personal" className="space-y-6">
+        <TabsList className="grid grid-cols-2 md:grid-cols-4 w-full h-auto gap-2 p-1 bg-slate-100/50">
+          <TabsTrigger
+            value="personal"
+            className="py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+          >
+            {t('profile.personal_tab', 'Personal Info')}
+          </TabsTrigger>
+          <TabsTrigger
+            value="location"
+            className="py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+          >
+            {t('profile.location_tab', 'Location')}
+          </TabsTrigger>
+          <TabsTrigger
+            value="security"
+            className="py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+          >
+            {t('profile.security_tab', 'Security')}
+          </TabsTrigger>
+          <TabsTrigger
+            value="business"
+            className="py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm disabled:opacity-50"
+            disabled={
+              user?.role !== 'super_admin' &&
+              user?.role !== 'franchisee' &&
+              user?.role !== 'shopkeeper'
+            }
+          >
+            {t('profile.business_tab', 'Business Identity')}
+          </TabsTrigger>
+        </TabsList>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              {t('profile.demographics', 'Demographics & Location')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>{t('profile.birthday', 'Date of Birth')}</Label>
-                <Input
-                  type="date"
-                  name="birthday"
-                  value={formData.birthday}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>{t('profile.gender', 'Gender')}</Label>
-                <Select
-                  value={formData.gender}
-                  onValueChange={(v) => setFormData({ ...formData, gender: v })}
-                >
-                  <SelectTrigger>
-                    <SelectValue
-                      placeholder={t('common.select', 'Select...')}
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="male">
-                      {t('gender.male', 'Male')}
-                    </SelectItem>
-                    <SelectItem value="female">
-                      {t('gender.female', 'Female')}
-                    </SelectItem>
-                    <SelectItem value="non-binary">
-                      {t('gender.nb', 'Non-binary')}
-                    </SelectItem>
-                    <SelectItem value="other">
-                      {t('gender.other', 'Other')}
-                    </SelectItem>
-                    <SelectItem value="prefer-not-to-say">
-                      {t('gender.none', 'Prefer not to say')}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>{t('profile.country', 'Country')}</Label>
-                <Select
-                  required
-                  value={formData.country}
-                  onValueChange={(v) =>
-                    setFormData({
-                      ...formData,
-                      country: v,
-                      state: '',
-                      city: '',
-                    })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue
-                      placeholder={t('common.select', 'Select...')}
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {COUNTRIES.map((c) => (
-                      <SelectItem key={c} value={c}>
-                        {c}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>{t('profile.state', 'State')}</Label>
-                <Select
-                  value={formData.state}
-                  onValueChange={(v) =>
-                    setFormData({ ...formData, state: v, city: '' })
-                  }
-                  disabled={!formData.country || availableStates.length === 0}
-                >
-                  <SelectTrigger>
-                    <SelectValue
-                      placeholder={t('common.select', 'Select...')}
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableStates.map((s) => (
-                      <SelectItem key={s} value={s}>
-                        {s}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>{t('profile.city', 'City')}</Label>
-                <Select
-                  value={formData.city}
-                  onValueChange={(v) => setFormData({ ...formData, city: v })}
-                  disabled={!formData.state || availableCities.length === 0}
-                >
-                  <SelectTrigger>
-                    <SelectValue
-                      placeholder={t('common.select', 'Select...')}
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableCities.map((c) => (
-                      <SelectItem key={c} value={c}>
-                        {c}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>{t('profile.zip', 'Zip / Postal Code')}</Label>
-                <Input
-                  name="zipCode"
-                  value={formData.zipCode}
-                  onChange={handleZipChange}
-                  placeholder="e.g.: 10001"
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="md:col-span-2">
-          <CardHeader>
-            <CardTitle>{t('profile.interests', 'Interests')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {(platformSettings.availableInterests || []).map((cat) => (
-                <div
-                  key={cat.id}
-                  className="flex flex-row items-center space-x-3 rounded-md border p-3 bg-card hover:bg-slate-50 transition-colors"
-                >
-                  <Checkbox
-                    id={`cat-${cat.id}`}
-                    checked={formData.categories.includes(cat.id)}
-                    onCheckedChange={(c) => handleCategoryChange(cat.id, !!c)}
+        <TabsContent
+          value="personal"
+          className="space-y-6 animate-in fade-in-50 duration-500"
+        >
+          <Card>
+            <CardHeader>
+              <CardTitle>
+                {t('profile.personal', 'Personal Information')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>{t('profile.name', 'Full Name')}</Label>
+                  <Input
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    placeholder="Your full name"
                   />
-                  <div className="space-y-1 leading-none flex-1">
-                    <Label
-                      htmlFor={`cat-${cat.id}`}
-                      className="text-sm font-medium cursor-pointer"
-                    >
-                      {cat.label}
+                </div>
+                <div className="space-y-2">
+                  <Label>{t('profile.phone', 'Phone')}</Label>
+                  <Input
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    placeholder="+1 555 123-4567"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>
+                    {t('profile.document', 'Document (ID / Passport)')}
+                  </Label>
+                  <Input
+                    name="documentNumber"
+                    value={formData.documentNumber}
+                    onChange={handleChange}
+                    placeholder="e.g.: 123.456.789-00"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('profile.demographics', 'Demographics')}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>{t('profile.birthday', 'Date of Birth')}</Label>
+                  <Input
+                    type="date"
+                    name="birthday"
+                    value={formData.birthday}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>{t('profile.gender', 'Gender')}</Label>
+                  <Select
+                    value={formData.gender}
+                    onValueChange={(v) =>
+                      setFormData({ ...formData, gender: v })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue
+                        placeholder={t('common.select', 'Select...')}
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="male">
+                        {t('gender.male', 'Male')}
+                      </SelectItem>
+                      <SelectItem value="female">
+                        {t('gender.female', 'Female')}
+                      </SelectItem>
+                      <SelectItem value="non-binary">
+                        {t('gender.nb', 'Non-binary')}
+                      </SelectItem>
+                      <SelectItem value="other">
+                        {t('gender.other', 'Other')}
+                      </SelectItem>
+                      <SelectItem value="prefer-not-to-say">
+                        {t('gender.none', 'Prefer not to say')}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('profile.interests', 'Interests')}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {(platformSettings.availableInterests || []).map((cat) => (
+                  <div
+                    key={cat.id}
+                    className="flex flex-row items-center space-x-3 rounded-md border p-3 bg-card hover:bg-slate-50 transition-colors"
+                  >
+                    <Checkbox
+                      id={`cat-${cat.id}`}
+                      checked={formData.categories.includes(cat.id)}
+                      onCheckedChange={(c) => handleCategoryChange(cat.id, !!c)}
+                    />
+                    <div className="space-y-1 leading-none flex-1">
+                      <Label
+                        htmlFor={`cat-${cat.id}`}
+                        className="text-sm font-medium cursor-pointer"
+                      >
+                        {cat.label}
+                      </Label>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent
+          value="location"
+          className="space-y-6 animate-in fade-in-50 duration-500"
+        >
+          <Card>
+            <CardHeader>
+              <CardTitle>
+                {t('profile.location', 'Location Settings')}
+              </CardTitle>
+              <CardDescription>
+                {t(
+                  'profile.location_desc',
+                  'Your location determines the currency and regional formats across the platform.',
+                )}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>{t('profile.country', 'Country')}</Label>
+                  <Select
+                    required
+                    value={formData.country}
+                    onValueChange={(v) =>
+                      setFormData({
+                        ...formData,
+                        country: v,
+                        state: '',
+                        city: '',
+                      })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue
+                        placeholder={t('common.select', 'Select...')}
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {COUNTRIES.map((c) => (
+                        <SelectItem key={c} value={c}>
+                          {c}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>{t('profile.state', 'State')}</Label>
+                  <Select
+                    value={formData.state}
+                    onValueChange={(v) =>
+                      setFormData({ ...formData, state: v, city: '' })
+                    }
+                    disabled={!formData.country || availableStates.length === 0}
+                  >
+                    <SelectTrigger>
+                      <SelectValue
+                        placeholder={t('common.select', 'Select...')}
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableStates.map((s) => (
+                        <SelectItem key={s} value={s}>
+                          {s}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>{t('profile.city', 'City')}</Label>
+                  <Select
+                    value={formData.city}
+                    onValueChange={(v) => setFormData({ ...formData, city: v })}
+                    disabled={!formData.state || availableCities.length === 0}
+                  >
+                    <SelectTrigger>
+                      <SelectValue
+                        placeholder={t('common.select', 'Select...')}
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableCities.map((c) => (
+                        <SelectItem key={c} value={c}>
+                          {c}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>{t('profile.zip', 'Zip / Postal Code')}</Label>
+                  <Input
+                    name="zipCode"
+                    value={formData.zipCode}
+                    onChange={handleZipChange}
+                    placeholder="e.g.: 10001"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent
+          value="security"
+          className="space-y-6 animate-in fade-in-50 duration-500"
+        >
+          <Card>
+            <CardHeader>
+              <CardTitle>
+                {t('profile.security', 'Security & Credentials')}
+              </CardTitle>
+              <CardDescription>
+                {t(
+                  'profile.security_desc',
+                  'Manage your login credentials and security preferences.',
+                )}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <h3 className="text-sm font-medium text-slate-800 border-b pb-2">
+                  Login Email
+                </h3>
+                <div className="space-y-2 max-w-md">
+                  <Label>{t('profile.email', 'Email Address')}</Label>
+                  <Input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder="your@email.com"
+                  />
+                  <p className="text-xs text-slate-500">
+                    {t(
+                      'profile.email_note',
+                      'This email is used to sign in to your account.',
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-sm font-medium text-slate-800 border-b pb-2">
+                  Change Password
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl">
+                  <div className="space-y-2 md:col-span-2">
+                    <Label>
+                      {t('profile.current_password', 'Current Password')}
                     </Label>
+                    <Input
+                      type="password"
+                      name="currentPassword"
+                      value={formData.currentPassword}
+                      onChange={handleChange}
+                      placeholder="••••••••"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>{t('profile.new_password', 'New Password')}</Label>
+                    <Input
+                      type="password"
+                      name="newPassword"
+                      value={formData.newPassword}
+                      onChange={handleChange}
+                      placeholder="••••••••"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>
+                      {t('profile.confirm_password', 'Confirm New Password')}
+                    </Label>
+                    <Input
+                      type="password"
+                      name="confirmPassword"
+                      value={formData.confirmPassword}
+                      onChange={handleChange}
+                      placeholder="••••••••"
+                    />
                   </div>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {(user?.role === 'super_admin' ||
+          user?.role === 'franchisee' ||
+          user?.role === 'shopkeeper') && (
+          <TabsContent
+            value="business"
+            className="space-y-6 animate-in fade-in-50 duration-500"
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle>
+                  {t(
+                    'profile.business_identity',
+                    'Business Identity & Billing',
+                  )}
+                </CardTitle>
+                <CardDescription>
+                  {t(
+                    'profile.business_desc',
+                    'This information will be used as the Issuer Information when generating invoices and billing documents.',
+                  )}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>
+                      {t('profile.company_name', 'Company Legal Name')}{' '}
+                      <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      name="companyName"
+                      value={formData.companyName}
+                      onChange={handleChange}
+                      placeholder="e.g. Acme Corporation"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>
+                      {t('profile.business_email', 'Business Contact Email')}{' '}
+                      <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      type="email"
+                      name="businessEmail"
+                      value={formData.businessEmail}
+                      onChange={handleChange}
+                      placeholder="billing@acme.com"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>
+                      {t('profile.business_phone', 'Business Phone Number')}
+                    </Label>
+                    <Input
+                      name="businessPhone"
+                      value={formData.businessPhone}
+                      onChange={handleChange}
+                      placeholder="+1 800 555-0199"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
+      </Tabs>
     </div>
   )
 }

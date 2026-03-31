@@ -392,6 +392,9 @@ export interface User {
   city?: string
   zipCode?: string
   phone?: string
+  companyName?: string
+  businessEmail?: string
+  businessPhone?: string
   preferences?: UserPreferences
   partnerId?: string
   gender?: 'male' | 'female' | 'non-binary' | 'other' | 'prefer-not-to-say'
