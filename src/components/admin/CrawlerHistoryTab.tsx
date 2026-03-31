@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useLanguage } from '@/stores/LanguageContext'
 import {
   Table,
@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { MOCK_CRAWLER_HISTORY } from '@/lib/data'
+import { fetchCrawlerLogs } from '@/lib/api'
 import { format } from 'date-fns'
 import {
   CheckCircle2,
@@ -17,6 +18,7 @@ import {
   XCircle,
   Loader2,
   Search,
+  RefreshCw,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import {
@@ -26,21 +28,53 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Button } from '@/components/ui/button'
 
 export function CrawlerHistoryTab() {
   const { t } = useLanguage()
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [logs, setLogs] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
-  const filteredHistory = MOCK_CRAWLER_HISTORY.filter((log) => {
-    if (search && !log.storeName.toLowerCase().includes(search.toLowerCase())) {
-      return false
+  const loadLogs = async () => {
+    setIsLoading(true)
+    try {
+      const data = await fetchCrawlerLogs()
+      if (data && data.length > 0) {
+        setLogs(data)
+      } else {
+        setLogs(MOCK_CRAWLER_HISTORY)
+      }
+    } catch (e) {
+      setLogs(MOCK_CRAWLER_HISTORY)
+    } finally {
+      setIsLoading(false)
     }
-    if (statusFilter !== 'all' && log.status !== statusFilter) {
-      return false
-    }
-    return true
-  }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+  }
+
+  useEffect(() => {
+    loadLogs()
+  }, [])
+
+  const filteredHistory = logs
+    .filter((log) => {
+      if (
+        search &&
+        !log.storeName?.toLowerCase().includes(search.toLowerCase())
+      ) {
+        return false
+      }
+      if (statusFilter !== 'all' && log.status !== statusFilter) {
+        return false
+      }
+      return true
+    })
+    .sort(
+      (a, b) =>
+        new Date(b.date || a.created).getTime() -
+        new Date(a.date || b.created).getTime(),
+    )
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -93,6 +127,17 @@ export function CrawlerHistoryTab() {
         </div>
 
         <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={loadLogs}
+            disabled={isLoading}
+            className="shrink-0"
+          >
+            <RefreshCw
+              className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`}
+            />
+          </Button>
           <div className="relative w-full sm:w-[200px]">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
@@ -141,7 +186,10 @@ export function CrawlerHistoryTab() {
             {filteredHistory.map((log) => (
               <TableRow key={log.id}>
                 <TableCell className="whitespace-nowrap font-medium">
-                  {format(new Date(log.date), 'dd/MM/yyyy HH:mm')}
+                  {format(
+                    new Date(log.date || log.created),
+                    'dd/MM/yyyy HH:mm',
+                  )}
                 </TableCell>
                 <TableCell className="font-semibold text-primary">
                   {log.storeName}

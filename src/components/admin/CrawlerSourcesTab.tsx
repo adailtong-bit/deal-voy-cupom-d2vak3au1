@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useLanguage } from '@/stores/LanguageContext'
 import {
   Card,
@@ -18,14 +18,20 @@ import {
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
-import { Play } from 'lucide-react'
+import { Progress } from '@/components/ui/progress'
+import { Play, StopCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { useCouponStore } from '@/stores/CouponContext'
 import { CATEGORIES } from '@/lib/data'
+import {
+  fetchWebSearchPromotions,
+  saveDiscoveredPromotion,
+  saveCrawlerLog,
+} from '@/lib/api'
 
 export function CrawlerSourcesTab() {
   const { t } = useLanguage()
-  const { triggerScan, seasonalEvents } = useCouponStore()
+  const { seasonalEvents } = useCouponStore()
 
   // Load from session storage for persistence or fallback to defaults
   const [searchType, setSearchType] = useState(
@@ -53,6 +59,12 @@ export function CrawlerSourcesTab() {
     () => sessionStorage.getItem('crawler_src_holiday') || 'none',
   )
 
+  // Crawler State
+  const [isScanning, setIsScanning] = useState(false)
+  const [scanProgress, setScanProgress] = useState(0)
+  const [scanStatus, setScanStatus] = useState('')
+  const stopRef = useRef(false)
+
   // Save to session storage whenever a field changes
   useEffect(() => {
     sessionStorage.setItem('crawler_src_searchType', searchType)
@@ -74,11 +86,137 @@ export function CrawlerSourcesTab() {
     holiday,
   ])
 
-  const handleStartCrawler = () => {
-    toast.success(
-      t('franchisee.crawler.scan_started', 'Crawler iniciado com sucesso!'),
+  const handleStartCrawler = async () => {
+    let queries =
+      searchType === 'company'
+        ? company
+            .split(/[,;\n]+/)
+            .map((c) => c.trim())
+            .filter(Boolean)
+        : [region]
+
+    if (searchType === 'region' && category !== 'all') {
+      queries = [`${region} ${category}`]
+    }
+
+    if (!queries.length || !queries[0]) {
+      toast.error(
+        t(
+          'franchisee.crawler.empty_query',
+          'Insira ao menos um termo de busca.',
+        ),
+      )
+      return
+    }
+
+    setIsScanning(true)
+    stopRef.current = false
+    setScanProgress(0)
+    setScanStatus(
+      t('franchisee.crawler.starting', 'Iniciando lote de buscas...'),
     )
-    triggerScan('custom', limit)
+
+    let totalImported = 0
+    let hasErrors = false
+
+    for (let i = 0; i < queries.length; i++) {
+      if (stopRef.current) {
+        setScanStatus(
+          t('franchisee.crawler.stopped', 'Busca interrompida pelo usuário.'),
+        )
+        break
+      }
+
+      const q = queries[i]
+      setScanStatus(
+        t(
+          'franchisee.crawler.searching_for',
+          `Processando (${i + 1}/${queries.length}): ${q}`,
+        ),
+      )
+
+      try {
+        const results = await fetchWebSearchPromotions(q)
+
+        const validResults = results.filter((r) => {
+          if (!r.discount) return true
+          const discNum = parseInt(String(r.discount).replace(/\D/g, ''), 10)
+          return isNaN(discNum) || discNum >= minDiscount
+        })
+
+        const toImport = validResults.slice(
+          0,
+          Math.max(0, limit - totalImported),
+        )
+
+        for (const item of toImport) {
+          if (stopRef.current) break
+          await saveDiscoveredPromotion({
+            ...item,
+            category: category !== 'all' ? category : item.category || 'other',
+            status: 'pending',
+          })
+          totalImported++
+        }
+
+        await saveCrawlerLog({
+          storeName: q,
+          status: 'success',
+          itemsFound: results.length,
+          itemsImported: toImport.length,
+          date: new Date().toISOString(),
+        })
+      } catch (err: any) {
+        hasErrors = true
+        console.error(`Error searching for ${q}:`, err)
+        await saveCrawlerLog({
+          storeName: q,
+          status: 'error',
+          errorMessage: err.message || 'Erro de conexão',
+          itemsFound: 0,
+          itemsImported: 0,
+          date: new Date().toISOString(),
+        })
+      }
+
+      setScanProgress(Math.round(((i + 1) / queries.length) * 100))
+
+      if (totalImported >= limit) {
+        toast.info(
+          t(
+            'franchisee.crawler.limit_reached',
+            'Limite total de promoções atingido.',
+          ),
+        )
+        break
+      }
+
+      // Delay to prevent rate limiting
+      await new Promise((resolve) => setTimeout(resolve, 800))
+    }
+
+    setIsScanning(false)
+
+    if (hasErrors) {
+      toast.warning(
+        t(
+          'franchisee.crawler.finished_with_errors',
+          'Busca concluída, porém com alguns erros.',
+        ),
+      )
+    } else if (!stopRef.current) {
+      toast.success(
+        t(
+          'franchisee.crawler.done',
+          'Processo de crawler finalizado com sucesso!',
+        ),
+      )
+    }
+  }
+
+  const handleStopCrawler = () => {
+    stopRef.current = true
+    toast.info(t('franchisee.crawler.stopping', 'Parando o crawler...'))
   }
 
   const activeSeasonalEvents = seasonalEvents.filter(
@@ -251,13 +389,37 @@ export function CrawlerSourcesTab() {
             </div>
           </div>
 
-          <Button
-            onClick={handleStartCrawler}
-            className="w-full sm:w-auto mt-4"
-          >
-            <Play className="w-4 h-4 mr-2" />
-            {t('franchisee.crawler.start', 'Iniciar Crawler')}
-          </Button>
+          {isScanning && (
+            <div className="space-y-2 mt-6 p-4 border rounded-md bg-slate-50">
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium text-slate-700">
+                  {scanStatus}
+                </span>
+                <span className="text-sm font-bold text-primary">
+                  {scanProgress}%
+                </span>
+              </div>
+              <Progress value={scanProgress} className="h-2" />
+            </div>
+          )}
+
+          <div className="flex gap-3 mt-6">
+            {!isScanning ? (
+              <Button onClick={handleStartCrawler} className="w-full sm:w-auto">
+                <Play className="w-4 h-4 mr-2" />
+                {t('franchisee.crawler.start', 'Iniciar Crawler')}
+              </Button>
+            ) : (
+              <Button
+                onClick={handleStopCrawler}
+                variant="destructive"
+                className="w-full sm:w-auto"
+              >
+                <StopCircle className="w-4 h-4 mr-2" />
+                {t('franchisee.crawler.stop', 'Parar Crawler')}
+              </Button>
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>

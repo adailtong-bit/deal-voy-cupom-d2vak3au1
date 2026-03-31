@@ -99,6 +99,16 @@ export interface FetchCrawlerPromotionsResponse {
 export const fetchWebSearchPromotions = async (
   query: string,
 ): Promise<DiscoveredPromotion[]> => {
+  let token = localStorage.getItem('auth_token')
+  if (!token) {
+    const pbAuth = localStorage.getItem('pocketbase_auth')
+    if (pbAuth) {
+      try {
+        token = JSON.parse(pbAuth).token
+      } catch (e) {}
+    }
+  }
+
   try {
     const res = await fetch(
       `${API_URL}/crawler/search?q=${encodeURIComponent(query)}`,
@@ -107,6 +117,13 @@ export const fetchWebSearchPromotions = async (
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
+          ...(token
+            ? {
+                Authorization: token.startsWith('Bearer')
+                  ? token
+                  : `Bearer ${token}`,
+              }
+            : {}),
         },
       },
     )
@@ -185,6 +202,122 @@ export const fetchCrawlerPromotions = async (
     }
     return { data: [], hasMore: false, total: 0 }
   }
+}
+
+export const saveDiscoveredPromotion = async (
+  data: Partial<DiscoveredPromotion>,
+): Promise<any> => {
+  let token = localStorage.getItem('auth_token')
+  if (!token) {
+    const pbAuth = localStorage.getItem('pocketbase_auth')
+    if (pbAuth) {
+      try {
+        token = JSON.parse(pbAuth).token
+      } catch (e) {}
+    }
+  }
+
+  const res = await fetch(
+    `${API_URL}/collections/discovered_promotions/records`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        ...(token
+          ? {
+              Authorization: token.startsWith('Bearer')
+                ? token
+                : `Bearer ${token}`,
+            }
+          : {}),
+      },
+      body: JSON.stringify(data),
+    },
+  )
+
+  if (!res.ok) {
+    throw new Error(`Failed to save promotion: ${res.status}`)
+  }
+  return await res.json()
+}
+
+export const saveCrawlerLog = async (data: any): Promise<any> => {
+  let token = localStorage.getItem('auth_token')
+  if (!token) {
+    const pbAuth = localStorage.getItem('pocketbase_auth')
+    if (pbAuth) {
+      try {
+        token = JSON.parse(pbAuth).token
+      } catch (e) {}
+    }
+  }
+
+  try {
+    const res = await fetch(`${API_URL}/collections/crawler_logs/records`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        ...(token
+          ? {
+              Authorization: token.startsWith('Bearer')
+                ? token
+                : `Bearer ${token}`,
+            }
+          : {}),
+      },
+      body: JSON.stringify(data),
+    })
+    return await res.json()
+  } catch (e) {
+    console.warn('Failed to save crawler log', e)
+    const logs = JSON.parse(localStorage.getItem('local_crawler_logs') || '[]')
+    logs.unshift({ id: Math.random().toString(), ...data })
+    localStorage.setItem(
+      'local_crawler_logs',
+      JSON.stringify(logs.slice(0, 100)),
+    )
+    return data
+  }
+}
+
+export const fetchCrawlerLogs = async (): Promise<any[]> => {
+  let token = localStorage.getItem('auth_token')
+  if (!token) {
+    const pbAuth = localStorage.getItem('pocketbase_auth')
+    if (pbAuth) {
+      try {
+        token = JSON.parse(pbAuth).token
+      } catch (e) {}
+    }
+  }
+
+  try {
+    const res = await fetch(
+      `${API_URL}/collections/crawler_logs/records?sort=-created&perPage=50`,
+      {
+        headers: {
+          Accept: 'application/json',
+          ...(token
+            ? {
+                Authorization: token.startsWith('Bearer')
+                  ? token
+                  : `Bearer ${token}`,
+              }
+            : {}),
+        },
+      },
+    )
+    if (res.ok) {
+      const data = await res.json()
+      if (data.items && data.items.length > 0) return data.items
+    }
+  } catch (e) {
+    console.warn('Failed to fetch crawler logs from API', e)
+  }
+
+  return JSON.parse(localStorage.getItem('local_crawler_logs') || '[]')
 }
 
 export const updateUser = async (userId: string, data: any): Promise<any> => {
