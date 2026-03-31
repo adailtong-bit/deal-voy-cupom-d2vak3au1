@@ -292,7 +292,11 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         setCoupons(MOCK_COUPONS)
       }
     }
-    loadCoupons()
+
+    loadCoupons().catch((err) => {
+      console.error('Unhandled error in loadCoupons', err)
+      setCoupons(MOCK_COUPONS)
+    })
   }, [])
 
   const [ads, setAds] = useState<Advertisement[]>([])
@@ -395,7 +399,11 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         setDiscoveredPromotions(MOCK_DISCOVERED_PROMOTIONS)
       }
     }
-    loadPromotions()
+
+    loadPromotions().catch((err) => {
+      console.error('Unhandled error in loadPromotions', err)
+      setDiscoveredPromotions(MOCK_DISCOVERED_PROMOTIONS)
+    })
   }, [])
 
   const [adPricing, setAdPricing] = useState<AdPricing[]>(MOCK_AD_PRICING)
@@ -821,59 +829,72 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password?: string) => {
     const API_URL =
       import.meta.env.VITE_API_URL || 'https://routevoy.goskip.app/api'
-    const res = await fetch(`${API_URL}/collections/users/auth-with-password`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ identity: email, password }),
-    })
+    try {
+      const res = await fetch(
+        `${API_URL}/collections/users/auth-with-password`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ identity: email, password }),
+        },
+      )
 
-    if (!res.ok) {
-      throw new Error('Usuário ou senha inválidos.')
+      if (!res.ok) {
+        throw new Error('Usuário ou senha inválidos.')
+      }
+
+      const data = await res.json()
+      let loggedUser = data.record as User
+      if (email === 'adailtong@gmail.com') loggedUser.role = 'super_admin'
+      setUser(loggedUser)
+      if (loggedUser.region) setSelectedRegion(loggedUser.region)
+      toast.success(`Bem-vindo, ${loggedUser.name}!`)
+    } catch (e: any) {
+      console.error('Login failed:', e)
+      throw new Error(e.message || 'Erro ao realizar login.')
     }
-
-    const data = await res.json()
-    let loggedUser = data.record as User
-    if (email === 'adailtong@gmail.com') loggedUser.role = 'super_admin'
-    setUser(loggedUser)
-    if (loggedUser.region) setSelectedRegion(loggedUser.region)
-    toast.success(`Bem-vindo, ${loggedUser.name}!`)
   }
 
   const register = async (name: string, email: string, password?: string) => {
     const API_URL =
       import.meta.env.VITE_API_URL || 'https://routevoy.goskip.app/api'
-    const res = await fetch(`${API_URL}/collections/users/records`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name,
-        email,
-        password,
-        passwordConfirm: password,
-        role: email === 'adailtong@gmail.com' ? 'super_admin' : 'user',
-      }),
-    })
-
-    if (!res.ok) {
-      throw new Error(
-        'Erro ao criar conta. Verifique os dados e tente novamente.',
-      )
-    }
-
     try {
-      await fetch(`${API_URL}/collections/users/request-verification`, {
+      const res = await fetch(`${API_URL}/collections/users/records`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+          passwordConfirm: password,
+          role: email === 'adailtong@gmail.com' ? 'super_admin' : 'user',
+        }),
       })
-    } catch (err) {
-      console.warn('Failed to send verification email', err)
-    }
 
-    await login(email, password)
-    toast.success(
-      'Conta criada com sucesso! Verifique seu e-mail para validar sua conta.',
-    )
+      if (!res.ok) {
+        throw new Error(
+          'Erro ao criar conta. Verifique os dados e tente novamente.',
+        )
+      }
+
+      try {
+        await fetch(`${API_URL}/collections/users/request-verification`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        })
+      } catch (err) {
+        console.warn('Failed to send verification email', err)
+      }
+
+      await login(email, password)
+      toast.success(
+        'Conta criada com sucesso! Verifique seu e-mail para validar sua conta.',
+      )
+    } catch (e: any) {
+      console.error('Register failed:', e)
+      throw new Error(e.message || 'Erro ao realizar cadastro.')
+    }
   }
 
   const logout = () => {
@@ -1175,27 +1196,32 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
 
   const searchWeb = async (query: string): Promise<Coupon[]> => {
     if (!query) return []
-    const results = await fetchWebSearchPromotions(query)
-    return results.map((p) => ({
-      id: p.id,
-      storeName: p.storeName,
-      title: p.title,
-      description: p.description || '',
-      discount: p.discount || '',
-      category: p.category || 'Outros',
-      distance: 0,
-      expiryDate:
-        p.expiryDate || new Date(Date.now() + 30 * 86400000).toISOString(),
-      image: p.image || '',
-      code: `WEB-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
-      coordinates: { lat: 0, lng: 0 },
-      status: 'active',
-      source: 'organic',
-      region: 'Global',
-      targetAudience: 'all',
-      externalUrl: p.originalUrl,
-      instructions: 'Oferta orgânica encontrada na web.',
-    }))
+    try {
+      const results = await fetchWebSearchPromotions(query)
+      return results.map((p) => ({
+        id: p.id,
+        storeName: p.storeName,
+        title: p.title,
+        description: p.description || '',
+        discount: p.discount || '',
+        category: p.category || 'Outros',
+        distance: 0,
+        expiryDate:
+          p.expiryDate || new Date(Date.now() + 30 * 86400000).toISOString(),
+        image: p.image || '',
+        code: `WEB-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+        coordinates: { lat: 0, lng: 0 },
+        status: 'active',
+        source: 'organic',
+        region: 'Global',
+        targetAudience: 'all',
+        externalUrl: p.originalUrl,
+        instructions: 'Oferta orgânica encontrada na web.',
+      }))
+    } catch (e) {
+      console.error('Search web failed', e)
+      return []
+    }
   }
 
   return React.createElement(
