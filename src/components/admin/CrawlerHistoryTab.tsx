@@ -201,13 +201,12 @@ export function CrawlerHistoryTab() {
                       </span>
                     )}
                     {log.errorDetails && log.errorDetails.length > 0 && (
-                      <div className="mt-1 text-xs text-red-400 flex flex-col gap-0.5">
+                      <div className="mt-2 text-xs text-red-600 bg-red-50 p-2 rounded border border-red-100 max-h-[120px] overflow-y-auto flex flex-col gap-1 w-[300px]">
+                        <span className="font-semibold text-red-800">
+                          Validation & Error Logs:
+                        </span>
                         {log.errorDetails.map((err: string, i: number) => (
-                          <span
-                            key={i}
-                            className="max-w-[250px] truncate"
-                            title={err}
-                          >
+                          <span key={i} className="break-words" title={err}>
                             • {err}
                           </span>
                         ))}

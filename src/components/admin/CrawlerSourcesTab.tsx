@@ -1,12 +1,12 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useLanguage } from '@/stores/LanguageContext'
+import { useToast } from '@/hooks/use-toast'
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from '@/components/ui/card'
+  fetchWebSearchPromotions,
+  saveDiscoveredPromotion,
+  saveCrawlerLog,
+} from '@/lib/api'
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -16,568 +16,345 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Button } from '@/components/ui/button'
-import { Switch } from '@/components/ui/switch'
-import { Progress } from '@/components/ui/progress'
-import { Play, StopCircle } from 'lucide-react'
-import { toast } from 'sonner'
-import { useCouponStore } from '@/stores/CouponContext'
-import { CATEGORIES } from '@/lib/data'
 import {
-  fetchWebSearchPromotions,
-  saveDiscoveredPromotion,
-  saveCrawlerLog,
-} from '@/lib/api'
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Progress } from '@/components/ui/progress'
+import {
+  Play,
+  StopCircle,
+  CheckCircle2,
+  AlertTriangle,
+  Globe,
+} from 'lucide-react'
 
 export function CrawlerSourcesTab() {
   const { t } = useLanguage()
-  const { seasonalEvents } = useCouponStore()
+  const { toast } = useToast()
 
-  // Load from session storage for persistence or fallback to defaults
-  const [searchType, setSearchType] = useState(
-    () => sessionStorage.getItem('crawler_src_searchType') || 'us_retailers',
+  const [isScanning, setIsScanning] = useState(
+    () => sessionStorage.getItem('crawler_isScanning') === 'true',
   )
-  const [region, setRegion] = useState(
-    () => sessionStorage.getItem('crawler_src_region') || '',
-  )
-  const [keyword, setKeyword] = useState(
-    () => sessionStorage.getItem('crawler_src_keyword') || '',
-  )
-  const [company, setCompany] = useState(
-    () => sessionStorage.getItem('crawler_src_company') || '',
-  )
-  const [category, setCategory] = useState(
-    () => sessionStorage.getItem('crawler_src_category') || '',
-  )
-  const [limit, setLimit] = useState(
-    () => Number(sessionStorage.getItem('crawler_src_limit')) || 50,
-  )
-  const [minDiscount, setMinDiscount] = useState(
-    () => Number(sessionStorage.getItem('crawler_src_minDiscount')) || 10,
-  )
-  const [differentiated, setDifferentiated] = useState(
-    () => sessionStorage.getItem('crawler_src_diff') === 'true',
-  )
-  const [holiday, setHoliday] = useState(
-    () => sessionStorage.getItem('crawler_src_holiday') || 'none',
-  )
+  const [query, setQuery] = useState('')
+  const [source, setSource] = useState('all')
+  const [limit, setLimit] = useState(20)
 
-  // Crawler State
-  const [isScanning, setIsScanning] = useState(false)
-  const [scanProgress, setScanProgress] = useState(0)
-  const [scanStatus, setScanStatus] = useState('')
-  const stopRef = useRef(false)
+  const [progress, setProgress] = useState({
+    total: 0,
+    current: 0,
+    found: 0,
+    imported: 0,
+    errors: 0,
+    logs: [] as string[],
+  })
 
-  // Save to session storage whenever a field changes
-  useEffect(() => {
-    sessionStorage.setItem('crawler_src_searchType', searchType)
-    sessionStorage.setItem('crawler_src_region', region)
-    sessionStorage.setItem('crawler_src_keyword', keyword)
-    sessionStorage.setItem('crawler_src_company', company)
-    sessionStorage.setItem('crawler_src_category', category)
-    sessionStorage.setItem('crawler_src_limit', limit.toString())
-    sessionStorage.setItem('crawler_src_minDiscount', minDiscount.toString())
-    sessionStorage.setItem('crawler_src_diff', differentiated.toString())
-    sessionStorage.setItem('crawler_src_holiday', holiday)
-  }, [
-    searchType,
-    region,
-    company,
-    category,
-    limit,
-    minDiscount,
-    differentiated,
-    holiday,
-  ])
+  const abortControllerRef = useRef<AbortController | null>(null)
 
-  // Sync background processing flag for Admin Session Stability
+  // Session-Stable Batch Processing: store scanning state so navigation doesn't disrupt it conceptually
   useEffect(() => {
     sessionStorage.setItem('crawler_isScanning', isScanning.toString())
   }, [isScanning])
 
-  const handleStartCrawler = async () => {
-    let targets: { query: string; platform?: string }[] = []
-
-    if (searchType === 'us_retailers') {
-      const kw = keyword.trim() || 'deals'
-      targets = [
-        { query: kw, platform: 'Amazon' },
-        { query: kw, platform: 'Walmart' },
-        { query: kw, platform: 'Target' },
-      ]
-    } else if (searchType === 'company') {
-      targets = company
-        .split(/[,;\n]+/)
-        .map((c) => c.trim())
-        .filter(Boolean)
-        .map((c) => ({ query: c, platform: c }))
-    } else {
-      let q = region
-      if (category !== 'all') q = `${region} ${category}`
-      targets = [{ query: q }]
+  // Cleanup on unmount if it was running
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        // We don't abort on unmount to allow background extraction as per AC:
+        // "Auth Bypass for Background Tasks: The extraction routine must run independently..."
+      }
     }
+  }, [])
 
-    if (!targets.length || !targets[0].query) {
-      toast.error(
-        t(
-          'franchisee.crawler.empty_query',
-          'Insira ao menos um termo de busca.',
-        ),
-      )
+  const startExtraction = async () => {
+    if (!query.trim()) {
+      toast({
+        title: 'Error',
+        description: 'Please enter a search query.',
+        variant: 'destructive',
+      })
       return
     }
 
     setIsScanning(true)
-    stopRef.current = false
-    setScanProgress(0)
-    setScanStatus(
-      t('franchisee.crawler.starting', 'Iniciando lote de buscas...'),
-    )
+    setProgress({
+      total: limit,
+      current: 0,
+      found: 0,
+      imported: 0,
+      errors: 0,
+      logs: [],
+    })
+    abortControllerRef.current = new AbortController()
+    const errorDetails: string[] = []
 
-    let totalImported = 0
-    let hasErrors = false
+    try {
+      addLog('Initiating Real-Time Marketplace Connector...')
 
-    for (let i = 0; i < targets.length; i++) {
-      if (stopRef.current || totalImported >= limit) {
-        if (stopRef.current) {
-          setScanStatus(
-            t('franchisee.crawler.stopped', 'Busca interrompida pelo usuário.'),
-          )
+      // 1. Fetch from connectors
+      const items = await fetchWebSearchPromotions(query, limit, {
+        platform: source === 'all' ? undefined : source,
+      })
+
+      const itemsFound = items.length
+      setProgress((p) => ({ ...p, found: itemsFound }))
+      addLog(`Extracted ${itemsFound} raw items. Validating...`)
+
+      let itemsImported = 0
+      let itemsDiscarded = 0
+
+      // 2. Atomic Persistence Sync & Mandatory Field Validation
+      for (let i = 0; i < items.length; i++) {
+        if (abortControllerRef.current?.signal.aborted) {
+          errorDetails.push('Extraction aborted by user.')
+          break
         }
-        break
-      }
 
-      const { query: q, platform } = targets[i]
+        setProgress((p) => ({ ...p, current: i + 1 }))
+        const item = items[i]
+        const missingFields = []
 
-      let page = 1
-      let platformFound = 0
-      let platformImported = 0
-      let emptyPages = 0
-      const maxPages = 10
-      const errorsList: string[] = []
+        if (!item.title?.trim()) missingFields.push('Title')
+        if (item.price === undefined || item.price === null || item.price <= 0)
+          missingFields.push('Price')
+        if (!item.image?.trim() || !item.image.startsWith('http'))
+          missingFields.push('Image URL')
+        if (!item.sourceUrl?.trim() || !item.sourceUrl.startsWith('http'))
+          missingFields.push('Direct Product Link')
 
-      while (totalImported < limit && page <= maxPages && emptyPages < 2) {
-        if (stopRef.current) break
-
-        setScanStatus(
-          t(
-            'franchisee.crawler.searching_page',
-            `Processando (${i + 1}/${targets.length}): ${q} ${platform ? 'em ' + platform : ''} (Pág ${page}) - Importados: ${totalImported}/${limit}`,
-          ),
-        )
+        if (missingFields.length > 0) {
+          itemsDiscarded++
+          const errMsg = `Discarded Item [Index ${i}]: Missing/Invalid fields (${missingFields.join(', ')})`
+          errorDetails.push(errMsg)
+          addLog(errMsg)
+          setProgress((p) => ({ ...p, errors: itemsDiscarded }))
+          continue
+        }
 
         try {
-          const chunkSize = Math.min(50, limit - totalImported)
-          const results = await fetchWebSearchPromotions(q, chunkSize, {
-            region: searchType === 'region' ? region : 'US',
-            category,
-            minDiscount,
-            platform,
-            page,
-          })
-
-          if (results.length === 0) {
-            emptyPages++
-            page++
-            continue
-          }
-          emptyPages = 0
-
-          // Accurate count of items identified before validation
-          platformFound += results.length
-
-          const validResults = results.filter((r: any) => {
-            // Data Integrity Filter: Robust pre-validation layer
-            if (!r.title) {
-              errorsList.push(`Missing Title`)
-              return false
-            }
-            if (!r.price && !r.currentPrice && r.price !== 0) {
-              errorsList.push(`Missing Price: "${r.title}"`)
-              return false
-            }
-            if (!r.image && !r.imageUrl) {
-              errorsList.push(`Missing Image: "${r.title}"`)
-              return false
-            }
-            if (!r.sourceUrl && !r.originalUrl) {
-              errorsList.push(`Missing Link: "${r.title}"`)
-              return false
-            }
-
-            const textToInspect =
-              `${r.title} ${r.description} ${r.storeName || ''}`.toLowerCase()
-            const trashKeywords = [
-              'lorem ipsum',
-              'test',
-              'teste',
-              'mock',
-              'dummy',
-            ]
-            if (trashKeywords.some((kw) => textToInspect.includes(kw))) {
-              errorsList.push(`Trash Keyword Found: "${r.title}"`)
-              return false
-            }
-
-            if (!r.discount) return true
-            const discNum = parseInt(String(r.discount).replace(/\D/g, ''), 10)
-            if (!isNaN(discNum) && discNum < minDiscount) {
-              return false
-            }
-            return true
-          })
-
-          const toImport = validResults.slice(
-            0,
-            Math.max(0, limit - totalImported),
-          )
-
-          for (const item of toImport) {
-            if (stopRef.current) break
-
-            const expDate =
-              item.expiryDate && !isNaN(Date.parse(item.expiryDate))
-                ? new Date(item.expiryDate).toISOString()
-                : undefined
-
-            try {
-              // Atomic Import Logic: Only increment counters if DB write is successful
-              await saveDiscoveredPromotion({
-                ...item,
-                title: item.title?.trim(),
-                description: item.description?.trim() || item.title?.trim(),
-                storeName: item.storeName?.trim() || platform || q,
-                discount: item.discount,
-                price: item.currentPrice || item.price,
-                image: item.imageUrl || item.image,
-                originalUrl: item.sourceUrl || item.originalUrl,
-                rawData: {
-                  originalPrice: item.originalPrice,
-                  ...item.rawData,
-                },
-                expiryDate: expDate,
-                state: item.state?.trim(),
-                city: item.city?.trim(),
-                latitude: item.latitude ? Number(item.latitude) : undefined,
-                longitude: item.longitude ? Number(item.longitude) : undefined,
-                category:
-                  category !== 'all' ? category : item.category || 'retail',
-                status: 'pending',
-              })
-
-              totalImported++
-              platformImported++
-            } catch (saveErr: any) {
-              errorsList.push(
-                `DB Write Error for "${item.title}": ${saveErr.message || 'Unknown Error'}`,
-              )
-              hasErrors = true
-            }
-          }
-
-          // Delay to prevent rate limiting
-          await new Promise((resolve) => setTimeout(resolve, 800))
-
-          if (results.length < chunkSize) {
-            break // Exhausted results for this query
-          }
-
-          page++
+          // Atomic import
+          await saveDiscoveredPromotion(item)
+          itemsImported++
+          setProgress((p) => ({ ...p, imported: itemsImported }))
         } catch (err: any) {
-          hasErrors = true
-          const errMsg = err.message || 'Connection Timeout / API Error'
-          errorsList.push(`Page ${page} Error: ${errMsg}`)
-          console.error(`Error searching for ${q} on page ${page}:`, err)
-          emptyPages++
-          page++
+          itemsDiscarded++
+          const errMsg = `Failed to save "${item.title}": ${err.message}`
+          errorDetails.push(errMsg)
+          addLog(errMsg)
+          setProgress((p) => ({ ...p, errors: itemsDiscarded }))
         }
       }
 
-      // Determine log status accurately based on success vs errors
-      const logStatus =
-        errorsList.length > 0 && platformImported === 0
-          ? 'error'
-          : platformImported > 0 && errorsList.length > 0
-            ? 'warning'
-            : platformImported > 0
-              ? 'success'
-              : 'warning'
+      // 3. Save detailed error logs
+      addLog('Finalizing batch execution and generating audit logs...')
+      await saveCrawlerLog({
+        date: new Date().toISOString(),
+        storeName: source === 'all' ? 'All Connectors' : source,
+        status:
+          errorDetails.length > 0
+            ? itemsImported > 0
+              ? 'warning'
+              : 'error'
+            : 'success',
+        itemsFound,
+        itemsImported,
+        sourceId: `connector_${source.toLowerCase()}`,
+        errorMessage:
+          errorDetails.length > 0
+            ? `Extraction completed with ${errorDetails.length} errors/discards.`
+            : undefined,
+        errorDetails: errorDetails,
+      })
 
-      try {
-        await saveCrawlerLog({
-          storeName: platform || q,
-          status: logStatus,
-          errorMessage:
-            platformImported === 0 ? 'No valid real data imported' : undefined,
-          errorDetails: errorsList.slice(0, 15), // Detailed Execution Logs
-          itemsFound: platformFound,
-          itemsImported: platformImported,
-          date: new Date().toISOString(),
-        })
-      } catch (logErr) {
-        console.error('Failed to save crawler log', logErr)
-      }
-
-      // Update overall progress
-      const targetProgress = Math.round(((i + 1) / targets.length) * 100)
-      const limitProgress = Math.round((totalImported / limit) * 100)
-      setScanProgress(Math.max(targetProgress, limitProgress))
-
-      if (totalImported >= limit) {
-        toast.info(
-          t(
-            'franchisee.crawler.limit_reached',
-            'Limite total de promoções atingido.',
-          ),
-        )
-        break
-      }
+      toast({
+        title: 'Extraction Complete',
+        description: `${itemsFound} Found, ${itemsImported} Imported, ${itemsDiscarded} Invalid/Discarded.`,
+      })
+      addLog(
+        `Done. ${itemsFound} Found, ${itemsImported} Imported, ${itemsDiscarded} Invalid/Discarded.`,
+      )
+    } catch (err: any) {
+      toast({
+        title: 'Extraction Failed',
+        description: err.message,
+        variant: 'destructive',
+      })
+      addLog(`Fatal Error: ${err.message}`)
+      await saveCrawlerLog({
+        date: new Date().toISOString(),
+        storeName: source,
+        status: 'error',
+        itemsFound: 0,
+        itemsImported: 0,
+        sourceId: `connector_${source.toLowerCase()}`,
+        errorMessage: err.message,
+        errorDetails: [err.message],
+      })
+    } finally {
+      setIsScanning(false)
+      abortControllerRef.current = null
+      sessionStorage.setItem('crawler_isScanning', 'false')
     }
+  }
 
+  const stopExtraction = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+    }
     setIsScanning(false)
-
-    if (hasErrors) {
-      toast.warning(
-        t(
-          'franchisee.crawler.finished_with_errors',
-          'Busca concluída, porém com alguns erros.',
-        ),
-      )
-    } else if (!stopRef.current) {
-      toast.success(
-        t(
-          'franchisee.crawler.done',
-          'Processo de crawler finalizado com sucesso!',
-        ),
-      )
-    }
+    sessionStorage.setItem('crawler_isScanning', 'false')
+    addLog('Extraction manually aborted.')
   }
 
-  const handleStopCrawler = () => {
-    stopRef.current = true
-    toast.info(t('franchisee.crawler.stopping', 'Parando o crawler...'))
+  const addLog = (msg: string) => {
+    setProgress((p) => ({
+      ...p,
+      logs: [`[${new Date().toLocaleTimeString()}] ${msg}`, ...p.logs].slice(
+        0,
+        50,
+      ),
+    }))
   }
 
-  const activeSeasonalEvents = seasonalEvents.filter(
-    (e) => e.status === 'active',
-  )
-  const manageableCategories = CATEGORIES.filter((c) => c.id !== 'all')
+  const progressPercentage =
+    progress.total > 0 ? (progress.current / progress.total) * 100 : 0
 
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="flex justify-between items-center">
-            <span>
-              {t('franchisee.crawler.config_title', 'Configuração de Busca')}
-            </span>
-            <span className="text-xs font-normal text-muted-foreground px-2 py-1 bg-slate-100 rounded-md">
-              {t('franchisee.crawler.last_search', 'Última Busca')}
-            </span>
-          </CardTitle>
+          <CardTitle>Real-Time Marketplace Connectors</CardTitle>
           <CardDescription>
-            {t(
-              'franchisee.crawler.config_desc',
-              'Defina os parâmetros para encontrar novas ofertas na web.',
-            )}
+            Extract live deals directly from Amazon, Walmart, and Target.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>{t('franchisee.crawler.search_by', 'Buscar por')}</Label>
-              <Select value={searchType} onValueChange={setSearchType}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="us_retailers">
-                    {t(
-                      'franchisee.crawler.by_us_retailers',
-                      'Varejistas Americanos (Amazon, Walmart, Target)',
-                    )}
-                  </SelectItem>
-                  <SelectItem value="region">
-                    {t('franchisee.crawler.by_region', 'Região / País')}
-                  </SelectItem>
-                  <SelectItem value="company">
-                    {t('franchisee.crawler.by_company', 'Empresas Específicas')}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {searchType === 'us_retailers' ? (
-              <div className="space-y-2">
-                <Label>
-                  {t('franchisee.crawler.keyword', 'Palavra-chave (Produto)')}
-                </Label>
-                <Input
-                  value={keyword}
-                  onChange={(e) => setKeyword(e.target.value)}
-                  placeholder="Ex: Laptop, TV, Shoes..."
-                />
-              </div>
-            ) : searchType === 'region' ? (
-              <div className="space-y-2">
-                <Label>{t('franchisee.crawler.region', 'Região / País')}</Label>
-                <Select value={region} onValueChange={setRegion}>
-                  <SelectTrigger>
-                    <SelectValue
-                      placeholder={t('common.select', 'Selecione...')}
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="BR">Brasil</SelectItem>
-                    <SelectItem value="US">Estados Unidos</SelectItem>
-                    <SelectItem value="EU">Europa</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <Label>
-                  {t('franchisee.crawler.company_names', 'Nomes das Empresas')}
-                </Label>
-                <Input
-                  value={company}
-                  onChange={(e) => setCompany(e.target.value)}
-                  placeholder="Ex: Decolar, Booking..."
-                />
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <Label>
-                {t('franchisee.crawler.category', 'Categoria Específica')}
-              </Label>
-              <Select value={category} onValueChange={setCategory}>
-                <SelectTrigger>
-                  <SelectValue placeholder={t('common.all', 'Todas')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">
-                    {t('common.all', 'Todas')}
-                  </SelectItem>
-                  {manageableCategories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id}>
-                      {t(cat.translationKey, cat.label)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>
-                {t('franchisee.crawler.holiday', 'Campanhas de Feriado')}
-              </Label>
-              <Select value={holiday} onValueChange={setHoliday}>
-                <SelectTrigger>
-                  <SelectValue placeholder={t('common.none', 'Nenhum')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">
-                    {t('common.none', 'Nenhum')}
-                  </SelectItem>
-                  {activeSeasonalEvents.map((event) => (
-                    <SelectItem key={event.id} value={event.id}>
-                      {event.title}
-                    </SelectItem>
-                  ))}
-                  {activeSeasonalEvents.length === 0 && (
-                    <SelectItem value="no_campaigns" disabled>
-                      {t(
-                        'franchisee.crawler.no_campaigns',
-                        'Nenhuma campanha ativa',
-                      )}
-                    </SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>
-                {t('franchisee.crawler.limit', 'Limite de Promoções')}
-              </Label>
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="space-y-2 md:col-span-2">
+              <Label>Search Query</Label>
               <Input
-                type="number"
-                value={limit}
-                onChange={(e) => setLimit(Number(e.target.value))}
-                min={1}
-                max={1000}
+                placeholder="e.g. Laptops, Headphones..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                disabled={isScanning}
               />
             </div>
-
             <div className="space-y-2">
-              <Label>
-                {t('franchisee.crawler.min_discount', 'Desconto Mínimo (%) >')}
-              </Label>
+              <Label>Target Marketplace</Label>
+              <Select
+                value={source}
+                onValueChange={setSource}
+                disabled={isScanning}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select source" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Marketplaces</SelectItem>
+                  <SelectItem value="Amazon">Amazon</SelectItem>
+                  <SelectItem value="Walmart">Walmart</SelectItem>
+                  <SelectItem value="Target">Target</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Batch Limit (Max 100)</Label>
               <Input
                 type="number"
-                value={minDiscount}
-                onChange={(e) => setMinDiscount(Number(e.target.value))}
                 min={1}
                 max={100}
-              />
-            </div>
-
-            <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border md:col-span-2">
-              <div className="space-y-0.5">
-                <Label>
-                  {t(
-                    'franchisee.crawler.differentiated',
-                    'Ofertas Diferenciadas',
-                  )}
-                </Label>
-                <p className="text-xs text-muted-foreground">
-                  {t(
-                    'franchisee.crawler.differentiated_desc',
-                    'Priorizar ofertas únicas ou de alto valor comercial.',
-                  )}
-                </p>
-              </div>
-              <Switch
-                checked={differentiated}
-                onCheckedChange={setDifferentiated}
+                value={limit}
+                onChange={(e) => setLimit(Number(e.target.value))}
+                disabled={isScanning}
               />
             </div>
           </div>
 
-          {isScanning && (
-            <div className="space-y-2 mt-6 p-4 border rounded-md bg-slate-50">
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-slate-700">
-                  {scanStatus}
-                </span>
-                <span className="text-sm font-bold text-primary">
-                  {scanProgress}%
-                </span>
-              </div>
-              <Progress value={scanProgress} className="h-2" />
-            </div>
-          )}
-
-          <div className="flex gap-3 mt-6">
+          <div className="flex items-center gap-4">
             {!isScanning ? (
-              <Button onClick={handleStartCrawler} className="w-full sm:w-auto">
+              <Button onClick={startExtraction} className="w-full sm:w-auto">
                 <Play className="w-4 h-4 mr-2" />
-                {t('franchisee.crawler.start', 'Iniciar Crawler')}
+                Start Extraction
               </Button>
             ) : (
               <Button
-                onClick={handleStopCrawler}
+                onClick={stopExtraction}
                 variant="destructive"
-                className="w-full sm:w-auto"
+                className="w-full sm:w-auto animate-pulse"
               >
                 <StopCircle className="w-4 h-4 mr-2" />
-                {t('franchisee.crawler.stop', 'Parar Crawler')}
+                Stop Extraction
               </Button>
             )}
           </div>
         </CardContent>
       </Card>
+
+      {(isScanning || progress.total > 0) && (
+        <Card className="animate-in fade-in slide-in-from-bottom-4">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center justify-between">
+              <span>Extraction Status</span>
+              {isScanning && (
+                <span className="text-sm text-muted-foreground flex items-center">
+                  <Globe className="w-4 h-4 mr-2 animate-spin" />
+                  Connecting...
+                </span>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>
+                  Processing item {progress.current} of {progress.total}
+                </span>
+                <span>{Math.round(progressPercentage)}%</span>
+              </div>
+              <Progress value={progressPercentage} className="h-2" />
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div className="bg-slate-50 p-4 rounded-lg border text-center">
+                <p className="text-sm text-muted-foreground font-medium mb-1">
+                  Raw Found
+                </p>
+                <p className="text-2xl font-bold">{progress.found}</p>
+              </div>
+              <div className="bg-green-50 p-4 rounded-lg border border-green-100 text-center">
+                <p className="text-sm text-green-600 font-medium mb-1 flex items-center justify-center gap-1">
+                  <CheckCircle2 className="w-4 h-4" /> Imported
+                </p>
+                <p className="text-2xl font-bold text-green-700">
+                  {progress.imported}
+                </p>
+              </div>
+              <div className="bg-red-50 p-4 rounded-lg border border-red-100 text-center">
+                <p className="text-sm text-red-600 font-medium mb-1 flex items-center justify-center gap-1">
+                  <AlertTriangle className="w-4 h-4" /> Discarded
+                </p>
+                <p className="text-2xl font-bold text-red-700">
+                  {progress.errors}
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-black text-green-400 p-4 rounded-lg font-mono text-xs h-48 overflow-y-auto space-y-1">
+              {progress.logs.map((log, i) => (
+                <div key={i} className="opacity-90">
+                  {log}
+                </div>
+              ))}
+              {progress.logs.length === 0 && (
+                <div className="text-muted-foreground">Waiting for logs...</div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }
