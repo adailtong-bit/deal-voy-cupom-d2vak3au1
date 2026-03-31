@@ -316,7 +316,9 @@ export const saveDiscoveredPromotion = async (
       try {
         const errData = await res.json()
         if (errData.message) errorMsg += ` - ${errData.message}`
-      } catch (_) {}
+      } catch (_) {
+        /* ignore */
+      }
       throw new Error(errorMsg)
     }
     return await res.json()
