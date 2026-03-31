@@ -217,10 +217,10 @@ export default function Profile() {
     if (formData.newPassword) {
       if (formData.newPassword !== formData.confirmPassword) {
         toast({
-          title: t('common.error', 'Error'),
+          title: t('common.error', 'Erro'),
           description: t(
             'profile.password_mismatch',
-            'New password and confirmation do not match.',
+            'A nova senha e a confirmação não coincidem.',
           ),
           variant: 'destructive',
         })
@@ -228,17 +228,16 @@ export default function Profile() {
       }
       if (!formData.currentPassword) {
         toast({
-          title: t('common.error', 'Error'),
+          title: t('common.error', 'Erro'),
           description: t(
             'profile.current_password_required',
-            'Please enter your current password to set a new one.',
+            'Por favor, insira sua senha atual para definir uma nova.',
           ),
           variant: 'destructive',
         })
         return
       }
     }
-
     setIsSaving(true)
     try {
       const updateData: any = {
@@ -275,16 +274,16 @@ export default function Profile() {
       } as any)
 
       toast({
-        title: t('profile.successTitle', 'Success!'),
-        description: t('profile.successDesc', 'Profile updated successfully'),
+        title: t('profile.successTitle', 'Sucesso!'),
+        description: t('profile.successDesc', 'Alterações salvas com sucesso!'),
       })
 
       if (formData.newPassword) {
         toast({
-          title: t('profile.passwordUpdated', 'Password Updated'),
+          title: t('profile.passwordUpdated', 'Senha Atualizada'),
           description: t(
             'profile.passwordUpdatedDesc',
-            'Your password has been changed successfully.',
+            'Sua senha foi alterada com sucesso.',
           ),
         })
       }
@@ -299,12 +298,12 @@ export default function Profile() {
       setIsEditing(false)
     } catch (error: any) {
       toast({
-        title: t('common.error', 'Error'),
+        title: t('common.error', 'Erro'),
         description:
           error.message ||
           t(
             'profile.errorDesc',
-            'An error occurred while saving the changes. Please try again.',
+            'Ocorreu um erro ao salvar as alterações. Por favor, tente novamente.',
           ),
         variant: 'destructive',
       })
@@ -747,12 +746,12 @@ export default function Profile() {
               {isEditing && (
                 <div className="space-y-4 animate-in fade-in-50">
                   <h3 className="text-sm font-medium text-slate-800 border-b pb-2">
-                    Change Password
+                    {t('profile.change_password', 'Alterar Senha')}
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl">
                     <div className="space-y-2 md:col-span-2">
                       <Label>
-                        {t('profile.current_password', 'Current Password')}
+                        {t('profile.current_password', 'Senha Atual')}
                       </Label>
                       <div className="relative">
                         <Input
@@ -771,8 +770,8 @@ export default function Profile() {
                           className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700"
                           title={
                             showCurrentPassword
-                              ? t('profile.hide_password', 'Hide password')
-                              : t('profile.show_password', 'Show password')
+                              ? t('profile.hide_password', 'Ocultar senha')
+                              : t('profile.show_password', 'Mostrar senha')
                           }
                         >
                           {showCurrentPassword ? (
@@ -784,7 +783,7 @@ export default function Profile() {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label>{t('profile.new_password', 'New Password')}</Label>
+                      <Label>{t('profile.new_password', 'Nova Senha')}</Label>
                       <div className="relative">
                         <Input
                           type={showNewPassword ? 'text' : 'password'}
@@ -800,8 +799,8 @@ export default function Profile() {
                           className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700"
                           title={
                             showNewPassword
-                              ? t('profile.hide_password', 'Hide password')
-                              : t('profile.show_password', 'Show password')
+                              ? t('profile.hide_password', 'Ocultar senha')
+                              : t('profile.show_password', 'Mostrar senha')
                           }
                         >
                           {showNewPassword ? (
@@ -814,7 +813,7 @@ export default function Profile() {
                     </div>
                     <div className="space-y-2">
                       <Label>
-                        {t('profile.confirm_password', 'Confirm New Password')}
+                        {t('profile.confirm_password', 'Confirmar Nova Senha')}
                       </Label>
                       <div className="relative">
                         <Input
@@ -833,8 +832,8 @@ export default function Profile() {
                           className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700"
                           title={
                             showConfirmPassword
-                              ? t('profile.hide_password', 'Hide password')
-                              : t('profile.show_password', 'Show password')
+                              ? t('profile.hide_password', 'Ocultar senha')
+                              : t('profile.show_password', 'Mostrar senha')
                           }
                         >
                           {showConfirmPassword ? (

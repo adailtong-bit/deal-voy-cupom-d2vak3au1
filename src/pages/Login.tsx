@@ -185,18 +185,18 @@ export default function Login() {
                     setIsLoading(true)
                     try {
                       await login('admin@dealvoy.com', '123456')
-                      toast.success('Emergency access granted')
+                      toast.success('Acesso rápido realizado com sucesso')
                     } catch (err: any) {
                       toast.error(
-                        'Emergency access failed: ' +
-                          (err.message || 'Server unavailable'),
+                        'Falha no acesso rápido: ' +
+                          (err.message || 'Servidor indisponível'),
                       )
                     }
                     setIsLoading(false)
                   }}
                   disabled={isLoading}
                 >
-                  Emergency Admin Access
+                  Acesso Rápido
                 </Button>
               </form>
             </TabsContent>
