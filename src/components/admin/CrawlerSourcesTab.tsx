@@ -7,10 +7,25 @@ import {
   CardDescription,
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Progress } from '@/components/ui/progress'
-import { Play, Square, Loader2, Globe } from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog'
+import {
+  Play,
+  Square,
+  Loader2,
+  Globe,
+  Plus,
+  Edit,
+  Trash2,
+  CheckCircle2,
+  XCircle,
+} from 'lucide-react'
 import {
   startExtractionTask,
   stopExtractionTask,
@@ -18,10 +33,34 @@ import {
   subscribeCrawler,
 } from '@/lib/crawlerTask'
 import { cn } from '@/lib/utils'
+import { CrawlerSourceForm } from './CrawlerSourceForm'
+import { CrawlerSource } from '@/lib/types'
+import { useToast } from '@/hooks/use-toast'
 
 export function CrawlerSourcesTab() {
-  const [query, setQuery] = useState('')
-  const [limit, setLimit] = useState(100)
+  const { toast } = useToast()
+  const [sources, setSources] = useState<CrawlerSource[]>(() => {
+    const saved = localStorage.getItem('crawler_sources')
+    if (saved) return JSON.parse(saved)
+    return [
+      {
+        id: '1',
+        name: 'Promoções Globais Web',
+        url: 'https://example.com/promos',
+        type: 'web',
+        region: 'Global',
+        country: 'Brasil',
+        state: 'SP',
+        city: 'São Paulo',
+        scanRadius: 50,
+        status: 'active',
+        lastScan: new Date(Date.now() - 86400000).toISOString(),
+      },
+    ]
+  })
+
+  const [isFormOpen, setIsFormOpen] = useState(false)
+  const [editingSource, setEditingSource] = useState<CrawlerSource | null>(null)
 
   const [progress, setProgress] = useState(getCrawlerProgress())
 
@@ -31,9 +70,65 @@ export function CrawlerSourcesTab() {
     })
   }, [])
 
-  const handleStart = () => {
-    if (!query.trim()) return
-    startExtractionTask(query, limit, 'all') // 'all' source for agnostic organic search
+  useEffect(() => {
+    localStorage.setItem('crawler_sources', JSON.stringify(sources))
+  }, [sources])
+
+  const pingUrl = async (url: string) => {
+    try {
+      await fetch(url, { method: 'HEAD', mode: 'no-cors' })
+      return true
+    } catch (e) {
+      return false
+    }
+  }
+
+  const handleSaveSource = async (
+    data: Omit<CrawlerSource, 'id' | 'status' | 'lastScan'>,
+  ) => {
+    const isValid = await pingUrl(data.url)
+    if (!isValid) {
+      toast({
+        title: 'URL Inválida ou Inacessível',
+        description:
+          'Não foi possível estabelecer conexão (Handshake) com a fonte. A entrada foi descartada.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    if (editingSource) {
+      setSources(
+        sources.map((s) => (s.id === editingSource.id ? { ...s, ...data } : s)),
+      )
+      toast({ title: 'Fonte atualizada com sucesso' })
+    } else {
+      const newSource: CrawlerSource = {
+        ...data,
+        id: Math.random().toString(36).substr(2, 9),
+        status: 'active',
+        lastScan: null,
+      }
+      setSources([newSource, ...sources])
+      toast({ title: 'Fonte adicionada com sucesso' })
+    }
+    setIsFormOpen(false)
+    setEditingSource(null)
+  }
+
+  const handleDelete = (id: string) => {
+    setSources(sources.filter((s) => s.id !== id))
+    toast({ title: 'Fonte removida' })
+  }
+
+  const handleStart = (source: CrawlerSource) => {
+    if (progress.isScanning) return
+    startExtractionTask(source.name, 50, source.type)
+    setSources(
+      sources.map((s) =>
+        s.id === source.id ? { ...s, lastScan: new Date().toISOString() } : s,
+      ),
+    )
   }
 
   const handleStop = () => {
@@ -46,65 +141,138 @@ export function CrawlerSourcesTab() {
   return (
     <div className="space-y-6">
       <Card className="shadow-sm border-slate-200">
-        <CardHeader className="pb-4">
-          <CardTitle className="flex items-center gap-2 text-xl">
-            <Globe className="h-5 w-5 text-blue-600" />
-            Agnostic Organic Search
-          </CardTitle>
-          <CardDescription className="text-sm">
-            Search and import promotional data from any source. The crawler will
-            validate links and require complete product data including Site Name
-            and Country of Origin.
-          </CardDescription>
+        <CardHeader className="pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <CardTitle className="flex items-center gap-2 text-xl">
+              <Globe className="h-5 w-5 text-blue-600" />
+              Fontes de Dados (Data Sources)
+            </CardTitle>
+            <CardDescription className="text-sm mt-1">
+              Gerencie e monitore as fontes de busca orgânica na web ou via API.
+            </CardDescription>
+          </div>
+          <Button
+            onClick={() => {
+              setEditingSource(null)
+              setIsFormOpen(true)
+            }}
+            className="gap-2 shrink-0"
+          >
+            <Plus className="h-4 w-4" />
+            Adicionar Fonte
+          </Button>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-3">
-              <Label className="text-slate-700 font-medium">Search Query</Label>
-              <Input
-                placeholder="e.g., Laptops, Flight Tickets, Fashion Deals..."
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                disabled={progress.isScanning}
-                className="bg-slate-50 focus-visible:bg-white"
-              />
+          <div className="border rounded-md overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left text-slate-600">
+                <thead className="text-xs text-slate-700 uppercase bg-slate-50 border-b">
+                  <tr>
+                    <th className="px-4 py-3 font-medium">Site</th>
+                    <th className="px-4 py-3 font-medium">URL</th>
+                    <th className="px-4 py-3 font-medium">Região / País</th>
+                    <th className="px-4 py-3 font-medium">Status</th>
+                    <th className="px-4 py-3 font-medium">Última Varredura</th>
+                    <th className="px-4 py-3 font-medium text-right">Ações</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {sources.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={6}
+                        className="px-4 py-8 text-center text-slate-500"
+                      >
+                        Nenhuma fonte de dados configurada.
+                      </td>
+                    </tr>
+                  ) : (
+                    sources.map((source) => (
+                      <tr
+                        key={source.id}
+                        className="hover:bg-slate-50/50 transition-colors bg-white"
+                      >
+                        <td className="px-4 py-3 font-medium text-slate-900 whitespace-nowrap">
+                          {source.name}
+                        </td>
+                        <td className="px-4 py-3">
+                          <a
+                            href={source.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-blue-600 hover:underline max-w-[200px] truncate block"
+                          >
+                            {source.url}
+                          </a>
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          {source.country
+                            ? `${source.country}${source.state ? ` - ${source.state}` : ''}`
+                            : source.region}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={cn(
+                              'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium',
+                              source.status === 'active'
+                                ? 'bg-emerald-50 text-emerald-700'
+                                : 'bg-slate-100 text-slate-700',
+                            )}
+                          >
+                            {source.status === 'active' ? (
+                              <CheckCircle2 className="h-3.5 w-3.5" />
+                            ) : (
+                              <XCircle className="h-3.5 w-3.5" />
+                            )}
+                            {source.status === 'active' ? 'Ativo' : 'Inativo'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">
+                          {source.lastScan
+                            ? new Date(source.lastScan).toLocaleString()
+                            : 'Nunca'}
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <div className="flex justify-end items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 gap-1.5 text-blue-600 border-blue-200 hover:bg-blue-50"
+                              onClick={() => handleStart(source)}
+                              disabled={progress.isScanning}
+                            >
+                              <Play className="h-3.5 w-3.5" />
+                              Start
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-slate-400 hover:text-slate-600"
+                              onClick={() => {
+                                setEditingSource(source)
+                                setIsFormOpen(true)
+                              }}
+                              disabled={progress.isScanning}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-slate-400 hover:text-red-600"
+                              onClick={() => handleDelete(source.id)}
+                              disabled={progress.isScanning}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
-            <div className="space-y-3">
-              <Label className="text-slate-700 font-medium">
-                Maximum Items to Process
-              </Label>
-              <Input
-                type="number"
-                min={1}
-                max={500}
-                value={limit}
-                onChange={(e) => setLimit(parseInt(e.target.value) || 100)}
-                disabled={progress.isScanning}
-                className="bg-slate-50 focus-visible:bg-white"
-              />
-            </div>
-          </div>
-
-          <div className="pt-2 flex gap-4 border-t border-slate-100">
-            {!progress.isScanning ? (
-              <Button
-                onClick={handleStart}
-                className="gap-2 w-full md:w-auto mt-4 px-6 font-semibold"
-                disabled={!query.trim()}
-              >
-                <Play className="h-4 w-4" />
-                Start Search Process
-              </Button>
-            ) : (
-              <Button
-                onClick={handleStop}
-                variant="destructive"
-                className="gap-2 w-full md:w-auto mt-4 px-6 font-semibold shadow-sm"
-              >
-                <Square className="h-4 w-4" />
-                Stop Search Process
-              </Button>
-            )}
           </div>
 
           {(progress.isScanning || progress.total > 0) && (
@@ -115,11 +283,11 @@ export function CrawlerSourcesTab() {
                     <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
                   )}
                   {progress.isScanning
-                    ? 'Executing Crawler Task...'
-                    : 'Extraction Cycle Completed'}
+                    ? 'Executando Varredura...'
+                    : 'Ciclo de Varredura Concluído'}
                 </span>
                 <span className="text-slate-500">
-                  {progress.current} / {progress.total} scanned
+                  {progress.current} / {progress.total} verificados
                 </span>
               </div>
 
@@ -131,7 +299,7 @@ export function CrawlerSourcesTab() {
                     {progress.found}
                   </div>
                   <div className="text-xs text-slate-500 font-medium mt-1">
-                    Items Found
+                    Itens Encontrados
                   </div>
                 </div>
                 <div className="p-4 bg-white rounded-lg border shadow-sm flex flex-col justify-center">
@@ -139,7 +307,7 @@ export function CrawlerSourcesTab() {
                     {progress.imported}
                   </div>
                   <div className="text-xs text-slate-500 font-medium mt-1">
-                    Verified & Imported
+                    Validados & Importados
                   </div>
                 </div>
                 <div className="p-4 bg-white rounded-lg border shadow-sm flex flex-col justify-center">
@@ -147,9 +315,22 @@ export function CrawlerSourcesTab() {
                     {progress.errors}
                   </div>
                   <div className="text-xs text-slate-500 font-medium mt-1">
-                    Discarded (Errors)
+                    Descartados (Erros)
                   </div>
                 </div>
+              </div>
+
+              <div className="pt-2 flex gap-4 border-t border-slate-200 mt-4">
+                {progress.isScanning && (
+                  <Button
+                    onClick={handleStop}
+                    variant="destructive"
+                    className="gap-2 w-full md:w-auto px-6 font-semibold shadow-sm"
+                  >
+                    <Square className="h-4 w-4" />
+                    Parar Processo
+                  </Button>
+                )}
               </div>
 
               <div className="mt-4 bg-slate-900 text-slate-300 p-4 rounded-lg h-48 overflow-y-auto font-mono text-[11px] leading-relaxed shadow-inner border border-slate-800">
@@ -176,7 +357,7 @@ export function CrawlerSourcesTab() {
                 ))}
                 {progress.logs.length === 0 && (
                   <div className="opacity-40 italic">
-                    Waiting for execution logs...
+                    Aguardando logs de execução...
                   </div>
                 )}
               </div>
@@ -184,6 +365,26 @@ export function CrawlerSourcesTab() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <DialogContent className="sm:max-w-[600px] w-[95vw]">
+          <DialogHeader>
+            <DialogTitle>
+              {editingSource ? 'Editar Fonte de Dados' : 'Nova Fonte de Dados'}
+            </DialogTitle>
+            <DialogDescription>
+              Configure os parâmetros e limites para a busca orgânica nesta
+              fonte.
+            </DialogDescription>
+          </DialogHeader>
+          <CrawlerSourceForm
+            initialData={editingSource}
+            onSave={handleSaveSource}
+            userRegion="Global"
+            isFranchisee={false}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

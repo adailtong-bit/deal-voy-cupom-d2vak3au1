@@ -69,16 +69,16 @@ export function CrawlerSourceForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label>Source Name</Label>
+        <Label>Nome do Site</Label>
         <Input
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
           required
-          placeholder="e.g. Local City Deals"
+          placeholder="Ex: Ofertas Locais"
         />
       </div>
       <div className="space-y-2">
-        <Label>URL / Endpoint</Label>
+        <Label>URL / Link da Fonte</Label>
         <Input
           value={formData.url}
           onChange={(e) => setFormData({ ...formData, url: e.target.value })}
@@ -88,7 +88,7 @@ export function CrawlerSourceForm({
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label>Source Type</Label>
+          <Label>Tipo de Fonte</Label>
           <Select
             value={formData.type}
             onValueChange={(v) => setFormData({ ...formData, type: v })}
@@ -104,7 +104,7 @@ export function CrawlerSourceForm({
           </Select>
         </div>
         <div className="space-y-2">
-          <Label>Target Region</Label>
+          <Label>Região Alvo</Label>
           <Select
             disabled={isFranchisee}
             value={formData.region}
@@ -154,7 +154,7 @@ export function CrawlerSourceForm({
         </div>
       </div>
       <div className="space-y-2">
-        <Label>Scan Radius (km)</Label>
+        <Label>Raio de Busca (km)</Label>
         <Input
           type="number"
           value={formData.scanRadius}
@@ -167,8 +167,44 @@ export function CrawlerSourceForm({
           min={1}
         />
       </div>
+      <div className="space-y-2">
+        <Label>Parâmetros de Validação (Obrigatórios)</Label>
+        <div className="flex gap-4 mt-2">
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked
+              disabled
+              className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+            />
+            Preço
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked
+              disabled
+              className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+            />
+            Link do Produto
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked
+              disabled
+              className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+            />
+            Imagem
+          </label>
+        </div>
+        <p className="text-xs text-slate-500">
+          Estes parâmetros são validados automaticamente pelo motor de busca na
+          captura dos links.
+        </p>
+      </div>
       <DialogFooter>
-        <Button type="submit">Save Configuration</Button>
+        <Button type="submit">Salvar Configuração</Button>
       </DialogFooter>
     </form>
   )

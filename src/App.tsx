@@ -201,7 +201,7 @@ export default function App() {
                   <Route path="leads" element={<MerchantLeads />} />
                 </Route>
                 <Route
-                  path="/admin"
+                  path="/admin/*"
                   element={
                     <RequireAuth roles={['super_admin', 'admin'] as any}>
                       <AdminDashboard />
