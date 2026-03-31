@@ -26,6 +26,7 @@ import { useToast } from '@/hooks/use-toast'
 import { COUNTRIES, LOCATION_DATA } from '@/lib/locationData'
 import { User } from '@/lib/types'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
+import { updateUser } from '@/lib/api'
 
 export default function Profile() {
   const { user, updateUserProfile, platformSettings } = useCouponStore()
@@ -231,29 +232,38 @@ export default function Profile() {
 
     setIsSaving(true)
     try {
-      await new Promise((resolve) => setTimeout(resolve, 800))
-      await Promise.resolve(
-        updateUserProfile({
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          birthday: formData.birthday,
-          gender: formData.gender as User['gender'],
-          documentNumber: formData.documentNumber,
-          country: formData.country,
-          state: formData.state,
-          city: formData.city,
-          zipCode: formData.zipCode,
-          companyName: formData.companyName,
-          businessEmail: formData.businessEmail,
-          businessPhone: formData.businessPhone,
-          preferences: {
-            ...user?.preferences,
-            categories: formData.categories,
-          },
-          ...(formData.newPassword ? { password: formData.newPassword } : {}),
-        } as any),
-      )
+      const updateData: any = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        birthday: formData.birthday,
+        gender: formData.gender,
+        documentNumber: formData.documentNumber,
+        country: formData.country,
+        state: formData.state,
+        city: formData.city,
+        zipCode: formData.zipCode,
+        companyName: formData.companyName,
+        businessEmail: formData.businessEmail,
+        businessPhone: formData.businessPhone,
+        preferences: {
+          ...user?.preferences,
+          categories: formData.categories,
+        },
+      }
+
+      if (formData.newPassword) {
+        updateData.oldPassword = formData.currentPassword
+        updateData.password = formData.newPassword
+        updateData.passwordConfirm = formData.confirmPassword
+      }
+
+      await updateUser(user.id, updateData)
+
+      updateUserProfile({
+        ...updateData,
+        ...(formData.newPassword ? { password: formData.newPassword } : {}),
+      } as any)
 
       toast({
         title: t('profile.successTitle', 'Profile Updated'),
@@ -281,13 +291,15 @@ export default function Profile() {
       }))
 
       setIsEditing(false)
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: t('common.error', 'Error'),
-        description: t(
-          'profile.errorDesc',
-          'An error occurred while saving your profile. Please try again.',
-        ),
+        description:
+          error.message ||
+          t(
+            'profile.errorDesc',
+            'An error occurred while saving your profile. Please try again.',
+          ),
         variant: 'destructive',
       })
     } finally {
