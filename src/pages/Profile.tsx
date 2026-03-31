@@ -248,7 +248,8 @@ export default function Profile() {
             ...user?.preferences,
             categories: formData.categories,
           },
-        }),
+          ...(formData.newPassword ? { password: formData.newPassword } : {}),
+        } as any),
       )
 
       toast({
