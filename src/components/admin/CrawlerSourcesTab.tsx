@@ -35,10 +35,13 @@ export function CrawlerSourcesTab() {
 
   // Load from session storage for persistence or fallback to defaults
   const [searchType, setSearchType] = useState(
-    () => sessionStorage.getItem('crawler_src_searchType') || 'region',
+    () => sessionStorage.getItem('crawler_src_searchType') || 'us_retailers',
   )
   const [region, setRegion] = useState(
     () => sessionStorage.getItem('crawler_src_region') || '',
+  )
+  const [keyword, setKeyword] = useState(
+    () => sessionStorage.getItem('crawler_src_keyword') || '',
   )
   const [company, setCompany] = useState(
     () => sessionStorage.getItem('crawler_src_company') || '',
@@ -69,6 +72,7 @@ export function CrawlerSourcesTab() {
   useEffect(() => {
     sessionStorage.setItem('crawler_src_searchType', searchType)
     sessionStorage.setItem('crawler_src_region', region)
+    sessionStorage.setItem('crawler_src_keyword', keyword)
     sessionStorage.setItem('crawler_src_company', company)
     sessionStorage.setItem('crawler_src_category', category)
     sessionStorage.setItem('crawler_src_limit', limit.toString())
@@ -87,19 +91,28 @@ export function CrawlerSourcesTab() {
   ])
 
   const handleStartCrawler = async () => {
-    let queries =
-      searchType === 'company'
-        ? company
-            .split(/[,;\n]+/)
-            .map((c) => c.trim())
-            .filter(Boolean)
-        : [region]
+    let targets: { query: string; platform?: string }[] = []
 
-    if (searchType === 'region' && category !== 'all') {
-      queries = [`${region} ${category}`]
+    if (searchType === 'us_retailers') {
+      const kw = keyword.trim() || 'deals'
+      targets = [
+        { query: kw, platform: 'Amazon' },
+        { query: kw, platform: 'Walmart' },
+        { query: kw, platform: 'Target' },
+      ]
+    } else if (searchType === 'company') {
+      targets = company
+        .split(/[,;\n]+/)
+        .map((c) => c.trim())
+        .filter(Boolean)
+        .map((c) => ({ query: c, platform: c }))
+    } else {
+      let q = region
+      if (category !== 'all') q = `${region} ${category}`
+      targets = [{ query: q }]
     }
 
-    if (!queries.length || !queries[0]) {
+    if (!targets.length || !targets[0].query) {
       toast.error(
         t(
           'franchisee.crawler.empty_query',
@@ -119,7 +132,7 @@ export function CrawlerSourcesTab() {
     let totalImported = 0
     let hasErrors = false
 
-    for (let i = 0; i < queries.length; i++) {
+    for (let i = 0; i < targets.length; i++) {
       if (stopRef.current) {
         setScanStatus(
           t('franchisee.crawler.stopped', 'Busca interrompida pelo usuário.'),
@@ -127,23 +140,31 @@ export function CrawlerSourcesTab() {
         break
       }
 
-      const q = queries[i]
+      const { query: q, platform } = targets[i]
       setScanStatus(
         t(
           'franchisee.crawler.searching_for',
-          `Processando (${i + 1}/${queries.length}): ${q}`,
+          `Processando (${i + 1}/${targets.length}): ${q} ${platform ? 'em ' + platform : ''}`,
         ),
       )
 
       try {
-        const results = await fetchWebSearchPromotions(q, limit, {
-          region: searchType === 'region' ? region : undefined,
-          category,
-          minDiscount,
-        })
+        const results = await fetchWebSearchPromotions(
+          q,
+          Math.max(1, limit - totalImported),
+          {
+            region: searchType === 'region' ? region : 'US',
+            category,
+            minDiscount,
+            platform,
+          },
+        )
 
-        const validResults = results.filter((r) => {
-          if (!r.title || !r.description) return false
+        const validResults = results.filter((r: any) => {
+          // Validation Layer: Must have name (title), price, and image to be considered valid
+          if (!r.title || (!r.price && !r.currentPrice)) return false
+          if (!r.image && !r.imageUrl) return false
+
           const textToInspect =
             `${r.title} ${r.description} ${r.storeName || ''}`.toLowerCase()
           const trashKeywords = [
@@ -177,29 +198,45 @@ export function CrawlerSourcesTab() {
           await saveDiscoveredPromotion({
             ...item,
             title: item.title?.trim(),
-            description: item.description?.trim(),
-            storeName: item.storeName?.trim() || q,
+            description: item.description?.trim() || item.title?.trim(),
+            storeName: item.storeName?.trim() || platform || q,
             discount: item.discount,
-            originalPrice: item.originalPrice,
-            currentPrice: item.currentPrice,
+            price: item.currentPrice || item.price,
+            image: item.imageUrl || item.image,
+            originalUrl: item.sourceUrl || item.originalUrl,
+            rawData: {
+              originalPrice: item.originalPrice,
+              ...item.rawData,
+            },
             expiryDate: expDate,
             state: item.state?.trim(),
             city: item.city?.trim(),
             latitude: item.latitude ? Number(item.latitude) : undefined,
             longitude: item.longitude ? Number(item.longitude) : undefined,
-            category: category !== 'all' ? category : item.category || 'other',
+            category: category !== 'all' ? category : item.category || 'retail',
             status: 'pending',
           })
           totalImported++
         }
 
         if (results.length === 0) {
-          toast.warning(
-            t(
-              'franchisee.crawler.no_results',
-              `Nenhum resultado encontrado na busca para: ${q}`,
-            ),
+          const msg = t(
+            'franchisee.crawler.no_results_platform',
+            `Nenhum resultado encontrado em ${platform || 'fonte'} para a busca: ${q}`,
           )
+          toast.warning(msg)
+          try {
+            await saveCrawlerLog({
+              storeName: platform || q,
+              status: 'warning',
+              errorMessage: msg,
+              itemsFound: 0,
+              itemsImported: 0,
+              date: new Date().toISOString(),
+            })
+          } catch (logErr) {
+            console.error('Failed to save warning crawler log', logErr)
+          }
         } else if (validResults.length === 0) {
           toast.warning(
             t(
@@ -207,29 +244,43 @@ export function CrawlerSourcesTab() {
               `Nenhum dado real (válido) encontrado para: ${q}`,
             ),
           )
-        }
-
-        try {
-          await saveCrawlerLog({
-            storeName: q,
-            status: toImport.length > 0 ? 'success' : 'warning',
-            errorMessage:
-              toImport.length === 0 ? 'No valid real data found' : undefined,
-            itemsFound: validResults.length,
-            itemsImported: toImport.length,
-            date: new Date().toISOString(),
-          })
-        } catch (logErr) {
-          console.error('Failed to save success crawler log', logErr)
+          try {
+            await saveCrawlerLog({
+              storeName: platform || q,
+              status: 'warning',
+              errorMessage: 'Sem dados válidos (falta nome, preço ou imagem)',
+              itemsFound: results.length,
+              itemsImported: 0,
+              date: new Date().toISOString(),
+            })
+          } catch (logErr) {
+            console.error('Failed to save warning crawler log', logErr)
+          }
+        } else {
+          try {
+            await saveCrawlerLog({
+              storeName: platform || q,
+              status: toImport.length > 0 ? 'success' : 'warning',
+              errorMessage:
+                toImport.length === 0
+                  ? 'No valid real data imported'
+                  : undefined,
+              itemsFound: validResults.length,
+              itemsImported: toImport.length,
+              date: new Date().toISOString(),
+            })
+          } catch (logErr) {
+            console.error('Failed to save success crawler log', logErr)
+          }
         }
       } catch (err: any) {
         hasErrors = true
         console.error(`Error searching for ${q}:`, err)
         try {
           await saveCrawlerLog({
-            storeName: q,
+            storeName: platform || q,
             status: 'error',
-            errorMessage: err.message || 'Erro de conexão',
+            errorMessage: err.message || 'Erro de conexão ou requisição falhou',
             itemsFound: 0,
             itemsImported: 0,
             date: new Date().toISOString(),
@@ -239,7 +290,7 @@ export function CrawlerSourcesTab() {
         }
       }
 
-      setScanProgress(Math.round(((i + 1) / queries.length) * 100))
+      setScanProgress(Math.round(((i + 1) / targets.length) * 100))
 
       if (totalImported >= limit) {
         toast.info(
@@ -312,6 +363,12 @@ export function CrawlerSourcesTab() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="us_retailers">
+                    {t(
+                      'franchisee.crawler.by_us_retailers',
+                      'Varejistas Americanos (Amazon, Walmart, Target)',
+                    )}
+                  </SelectItem>
                   <SelectItem value="region">
                     {t('franchisee.crawler.by_region', 'Região / País')}
                   </SelectItem>
@@ -322,7 +379,18 @@ export function CrawlerSourcesTab() {
               </Select>
             </div>
 
-            {searchType === 'region' ? (
+            {searchType === 'us_retailers' ? (
+              <div className="space-y-2">
+                <Label>
+                  {t('franchisee.crawler.keyword', 'Palavra-chave (Produto)')}
+                </Label>
+                <Input
+                  value={keyword}
+                  onChange={(e) => setKeyword(e.target.value)}
+                  placeholder="Ex: Laptop, TV, Shoes..."
+                />
+              </div>
+            ) : searchType === 'region' ? (
               <div className="space-y-2">
                 <Label>{t('franchisee.crawler.region', 'Região / País')}</Label>
                 <Select value={region} onValueChange={setRegion}>
