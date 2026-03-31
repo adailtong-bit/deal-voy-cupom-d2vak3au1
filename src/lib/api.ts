@@ -104,6 +104,7 @@ export const fetchWebSearchPromotions = async (
     category?: string
     minDiscount?: number
     platform?: string
+    page?: number
   } = {},
 ): Promise<DiscoveredPromotion[]> => {
   let token = localStorage.getItem('auth_token')
@@ -127,6 +128,7 @@ export const fetchWebSearchPromotions = async (
       url.searchParams.append('category', options.category)
     if (options.minDiscount)
       url.searchParams.append('minDiscount', options.minDiscount.toString())
+    if (options.page) url.searchParams.append('page', options.page.toString())
 
     const res = await fetch(url.toString(), {
       method: 'GET',
@@ -183,9 +185,10 @@ export const fetchWebSearchPromotions = async (
   }
 
   const mockPromotions: any[] = []
-  const { platform, minDiscount = 10, category } = options
+  const { platform, minDiscount = 10, category, page = 1 } = options
 
-  const generatedCount = Math.min(limit, Math.floor(Math.random() * 20) + 5)
+  // Generate exactly limit to ensure we fulfill pagination requests
+  const generatedCount = limit
 
   const techProducts = [
     { name: 'Apple MacBook Pro M3', basePrice: 1999, imgQuery: 'laptop' },
@@ -274,11 +277,11 @@ export const fetchWebSearchPromotions = async (
       category: category !== 'all' && category ? category : 'retail',
       sourceUrl: `https://www.${storeName.toLowerCase()}.com/p/${product.name.replace(/[^a-zA-Z0-9]+/g, '-').toLowerCase()}/dp/${Math.floor(Math.random() * 1000000)}`,
       sourceId: `${storeName.toLowerCase()}_crawler`,
-      image: `https://img.usecurling.com/p/400/300?q=${product.imgQuery}&seed=${Date.now() + i}`,
+      image: `https://img.usecurling.com/p/400/300?q=${product.imgQuery}&seed=${Date.now() + i + page * 100}`,
       price: currentPrice,
       originalPrice: originalPrice,
       currentPrice: currentPrice,
-      imageUrl: `https://img.usecurling.com/p/400/300?q=${product.imgQuery}&seed=${Date.now() + i}`,
+      imageUrl: `https://img.usecurling.com/p/400/300?q=${product.imgQuery}&seed=${Date.now() + i + page * 100}`,
       expiryDate: expiry.toISOString(),
       capturedAt: new Date().toISOString(),
       status: 'pending',

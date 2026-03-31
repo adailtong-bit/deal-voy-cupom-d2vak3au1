@@ -133,164 +133,171 @@ export function CrawlerSourcesTab() {
     let hasErrors = false
 
     for (let i = 0; i < targets.length; i++) {
-      if (stopRef.current) {
-        setScanStatus(
-          t('franchisee.crawler.stopped', 'Busca interrompida pelo usuário.'),
-        )
+      if (stopRef.current || totalImported >= limit) {
+        if (stopRef.current) {
+          setScanStatus(
+            t('franchisee.crawler.stopped', 'Busca interrompida pelo usuário.'),
+          )
+        }
         break
       }
 
       const { query: q, platform } = targets[i]
-      setScanStatus(
-        t(
-          'franchisee.crawler.searching_for',
-          `Processando (${i + 1}/${targets.length}): ${q} ${platform ? 'em ' + platform : ''}`,
-        ),
-      )
 
-      try {
-        const results = await fetchWebSearchPromotions(
-          q,
-          Math.max(1, limit - totalImported),
-          {
+      let page = 1
+      let platformFound = 0
+      let platformImported = 0
+      let emptyPages = 0
+      const maxPages = 10
+
+      while (totalImported < limit && page <= maxPages && emptyPages < 2) {
+        if (stopRef.current) break
+
+        setScanStatus(
+          t(
+            'franchisee.crawler.searching_page',
+            `Processando (${i + 1}/${targets.length}): ${q} ${platform ? 'em ' + platform : ''} (Pág ${page}) - Importados: ${totalImported}/${limit}`,
+          ),
+        )
+
+        try {
+          const chunkSize = Math.min(50, limit - totalImported)
+          const results = await fetchWebSearchPromotions(q, chunkSize, {
             region: searchType === 'region' ? region : 'US',
             category,
             minDiscount,
             platform,
-          },
-        )
-
-        const validResults = results.filter((r: any) => {
-          // Validation Layer: Must have name (title), price, and image to be considered valid
-          if (!r.title || (!r.price && !r.currentPrice)) return false
-          if (!r.image && !r.imageUrl) return false
-
-          const textToInspect =
-            `${r.title} ${r.description} ${r.storeName || ''}`.toLowerCase()
-          const trashKeywords = [
-            'lorem ipsum',
-            'test',
-            'teste',
-            'mock',
-            'dummy',
-          ]
-          if (trashKeywords.some((kw) => textToInspect.includes(kw)))
-            return false
-
-          if (!r.discount) return true
-          const discNum = parseInt(String(r.discount).replace(/\D/g, ''), 10)
-          return isNaN(discNum) || discNum >= minDiscount
-        })
-
-        const toImport = validResults.slice(
-          0,
-          Math.max(0, limit - totalImported),
-        )
-
-        for (const item of toImport) {
-          if (stopRef.current) break
-
-          const expDate =
-            item.expiryDate && !isNaN(Date.parse(item.expiryDate))
-              ? new Date(item.expiryDate).toISOString()
-              : undefined
-
-          await saveDiscoveredPromotion({
-            ...item,
-            title: item.title?.trim(),
-            description: item.description?.trim() || item.title?.trim(),
-            storeName: item.storeName?.trim() || platform || q,
-            discount: item.discount,
-            price: item.currentPrice || item.price,
-            image: item.imageUrl || item.image,
-            originalUrl: item.sourceUrl || item.originalUrl,
-            rawData: {
-              originalPrice: item.originalPrice,
-              ...item.rawData,
-            },
-            expiryDate: expDate,
-            state: item.state?.trim(),
-            city: item.city?.trim(),
-            latitude: item.latitude ? Number(item.latitude) : undefined,
-            longitude: item.longitude ? Number(item.longitude) : undefined,
-            category: category !== 'all' ? category : item.category || 'retail',
-            status: 'pending',
+            page,
           })
-          totalImported++
-        }
 
-        if (results.length === 0) {
-          const msg = t(
-            'franchisee.crawler.no_results_platform',
-            `Nenhum resultado encontrado em ${platform || 'fonte'} para a busca: ${q}`,
+          if (results.length === 0) {
+            emptyPages++
+            page++
+            continue
+          }
+          emptyPages = 0
+
+          const validResults = results.filter((r: any) => {
+            // Validation Layer: Must have name (title), price, image, and link to be considered valid
+            if (!r.title || (!r.price && !r.currentPrice && r.price !== 0))
+              return false
+            if (!r.image && !r.imageUrl) return false
+            if (!r.sourceUrl && !r.originalUrl) return false
+
+            const textToInspect =
+              `${r.title} ${r.description} ${r.storeName || ''}`.toLowerCase()
+            const trashKeywords = [
+              'lorem ipsum',
+              'test',
+              'teste',
+              'mock',
+              'dummy',
+            ]
+            if (trashKeywords.some((kw) => textToInspect.includes(kw)))
+              return false
+
+            if (!r.discount) return true
+            const discNum = parseInt(String(r.discount).replace(/\D/g, ''), 10)
+            return isNaN(discNum) || discNum >= minDiscount
+          })
+
+          const toImport = validResults.slice(
+            0,
+            Math.max(0, limit - totalImported),
           )
-          toast.warning(msg)
-          try {
-            await saveCrawlerLog({
-              storeName: platform || q,
-              status: 'warning',
-              errorMessage: msg,
-              itemsFound: 0,
-              itemsImported: 0,
-              date: new Date().toISOString(),
+
+          platformFound += toImport.length
+
+          for (const item of toImport) {
+            if (stopRef.current) break
+
+            const expDate =
+              item.expiryDate && !isNaN(Date.parse(item.expiryDate))
+                ? new Date(item.expiryDate).toISOString()
+                : undefined
+
+            await saveDiscoveredPromotion({
+              ...item,
+              title: item.title?.trim(),
+              description: item.description?.trim() || item.title?.trim(),
+              storeName: item.storeName?.trim() || platform || q,
+              discount: item.discount,
+              price: item.currentPrice || item.price,
+              image: item.imageUrl || item.image,
+              originalUrl: item.sourceUrl || item.originalUrl,
+              rawData: {
+                originalPrice: item.originalPrice,
+                ...item.rawData,
+              },
+              expiryDate: expDate,
+              state: item.state?.trim(),
+              city: item.city?.trim(),
+              latitude: item.latitude ? Number(item.latitude) : undefined,
+              longitude: item.longitude ? Number(item.longitude) : undefined,
+              category:
+                category !== 'all' ? category : item.category || 'retail',
+              status: 'pending',
             })
-          } catch (logErr) {
-            console.error('Failed to save warning crawler log', logErr)
+            totalImported++
+            platformImported++
           }
-        } else if (validResults.length === 0) {
-          toast.warning(
-            t(
-              'franchisee.crawler.no_valid_data',
-              `Nenhum dado real (válido) encontrado para: ${q}`,
-            ),
-          )
-          try {
-            await saveCrawlerLog({
-              storeName: platform || q,
-              status: 'warning',
-              errorMessage: 'Sem dados válidos (falta nome, preço ou imagem)',
-              itemsFound: results.length,
-              itemsImported: 0,
-              date: new Date().toISOString(),
-            })
-          } catch (logErr) {
-            console.error('Failed to save warning crawler log', logErr)
+
+          // Delay to prevent rate limiting
+          await new Promise((resolve) => setTimeout(resolve, 800))
+
+          if (results.length < chunkSize) {
+            break // Exhausated results for this query
           }
-        } else {
-          try {
-            await saveCrawlerLog({
-              storeName: platform || q,
-              status: toImport.length > 0 ? 'success' : 'warning',
-              errorMessage:
-                toImport.length === 0
-                  ? 'No valid real data imported'
-                  : undefined,
-              itemsFound: validResults.length,
-              itemsImported: toImport.length,
-              date: new Date().toISOString(),
-            })
-          } catch (logErr) {
-            console.error('Failed to save success crawler log', logErr)
-          }
+
+          page++
+        } catch (err: any) {
+          hasErrors = true
+          console.error(`Error searching for ${q} on page ${page}:`, err)
+          emptyPages++
+          page++
         }
-      } catch (err: any) {
-        hasErrors = true
-        console.error(`Error searching for ${q}:`, err)
+      }
+
+      if (platformFound === 0) {
+        const msg = t(
+          'franchisee.crawler.no_results_platform',
+          `Nenhum resultado válido encontrado em ${platform || 'fonte'} para a busca: ${q}`,
+        )
+        toast.warning(msg)
         try {
           await saveCrawlerLog({
             storeName: platform || q,
-            status: 'error',
-            errorMessage: err.message || 'Erro de conexão ou requisição falhou',
+            status: 'warning',
+            errorMessage: msg,
             itemsFound: 0,
             itemsImported: 0,
             date: new Date().toISOString(),
           })
         } catch (logErr) {
-          console.error('Failed to save error crawler log', logErr)
+          console.error('Failed to save warning crawler log', logErr)
+        }
+      } else {
+        try {
+          await saveCrawlerLog({
+            storeName: platform || q,
+            status: platformImported > 0 ? 'success' : 'warning',
+            errorMessage:
+              platformImported === 0
+                ? 'No valid real data imported'
+                : undefined,
+            itemsFound: platformFound,
+            itemsImported: platformImported,
+            date: new Date().toISOString(),
+          })
+        } catch (logErr) {
+          console.error('Failed to save success crawler log', logErr)
         }
       }
 
-      setScanProgress(Math.round(((i + 1) / targets.length) * 100))
+      // Update overall progress
+      const targetProgress = Math.round(((i + 1) / targets.length) * 100)
+      const limitProgress = Math.round((totalImported / limit) * 100)
+      setScanProgress(Math.max(targetProgress, limitProgress))
 
       if (totalImported >= limit) {
         toast.info(
@@ -301,9 +308,6 @@ export function CrawlerSourcesTab() {
         )
         break
       }
-
-      // Delay to prevent rate limiting
-      await new Promise((resolve) => setTimeout(resolve, 800))
     }
 
     setIsScanning(false)
