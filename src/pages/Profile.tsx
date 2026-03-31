@@ -144,6 +144,12 @@ export default function Profile() {
     }))
   }
 
+  const isSaveDisabled =
+    isSaving ||
+    (!!formData.newPassword &&
+      (formData.newPassword !== formData.confirmPassword ||
+        !formData.currentPassword))
+
   const handleCancel = () => {
     if (user) {
       setFormData({
@@ -343,7 +349,7 @@ export default function Profile() {
               >
                 {t('common.cancel', 'Cancel')}
               </Button>
-              <Button onClick={handleSave} size="lg" disabled={isSaving}>
+              <Button onClick={handleSave} size="lg" disabled={isSaveDisabled}>
                 {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isSaving
                   ? t('common.saving', 'Salvando...')
