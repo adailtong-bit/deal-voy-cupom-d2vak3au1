@@ -266,16 +266,16 @@ export default function Profile() {
       } as any)
 
       toast({
-        title: t('profile.successTitle', 'Sucesso!'),
-        description: t('profile.successDesc', 'Alterações salvas com sucesso!'),
+        title: t('profile.successTitle', 'Success!'),
+        description: t('profile.successDesc', 'Profile updated successfully.'),
       })
 
       if (formData.newPassword) {
         toast({
-          title: t('profile.passwordUpdated', 'Senha Atualizada'),
+          title: t('profile.passwordUpdated', 'Password Updated'),
           description: t(
             'profile.passwordUpdatedDesc',
-            'Sua senha foi alterada com sucesso.',
+            'Your password has been changed successfully.',
           ),
         })
       }
@@ -290,12 +290,12 @@ export default function Profile() {
       setIsEditing(false)
     } catch (error: any) {
       toast({
-        title: t('common.error', 'Erro'),
+        title: t('common.error', 'Error'),
         description:
           error.message ||
           t(
             'profile.errorDesc',
-            'Ocorreu um erro ao salvar as alterações. Tente novamente.',
+            'An error occurred while saving the changes. Please try again.',
           ),
         variant: 'destructive',
       })
