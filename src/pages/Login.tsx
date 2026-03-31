@@ -79,9 +79,40 @@ export default function Login() {
     if (email && password && name) {
       setIsLoading(true)
       try {
-        await register(name, email, password)
-        toast.success(t('auth.register_success', 'Conta criada com sucesso!'))
-        if (!user) {
+        let registerSuccess = false
+        try {
+          await register(name, email, password)
+          registerSuccess = true
+        } catch (err: any) {
+          const API_URL =
+            import.meta.env.VITE_API_URL || 'https://routevoy.goskip.app/api'
+          const res = await fetch(`${API_URL}/collections/users/records`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Accept: 'application/json',
+            },
+            body: JSON.stringify({
+              name,
+              email,
+              password,
+              passwordConfirm: password,
+              role: 'user',
+              emailVisibility: true,
+            }),
+          })
+
+          if (!res.ok) {
+            const errData = await res.json()
+            throw new Error(
+              errData.message || 'Erro ao criar conta no servidor',
+            )
+          }
+          registerSuccess = true
+        }
+
+        if (registerSuccess) {
+          toast.success(t('auth.register_success', 'Conta criada com sucesso!'))
           setActiveTab('login')
           setPassword('')
           setConfirmPassword('')

@@ -144,35 +144,7 @@ export default function Profile() {
     }))
   }
 
-  const hasChanges = useMemo(() => {
-    if (!user) return false
-    return (
-      formData.name !== (user.name || '') ||
-      formData.email !== (user.email || '') ||
-      formData.phone !== (user.phone || '') ||
-      formData.birthday !== (user.birthday || '') ||
-      formData.gender !== (user.gender || '') ||
-      formData.documentNumber !== (user.documentNumber || '') ||
-      formData.country !== (user.country || '') ||
-      formData.state !== (user.state || '') ||
-      formData.city !== (user.city || '') ||
-      formData.zipCode !== (user.zipCode || '') ||
-      formData.companyName !== (user.companyName || '') ||
-      formData.businessEmail !== (user.businessEmail || '') ||
-      formData.businessPhone !== (user.businessPhone || '') ||
-      JSON.stringify(formData.categories) !==
-        JSON.stringify(user.preferences?.categories || []) ||
-      !!formData.newPassword ||
-      !!formData.currentPassword
-    )
-  }, [formData, user])
-
-  const isSaveDisabled =
-    isSaving ||
-    !hasChanges ||
-    (!!formData.newPassword &&
-      (formData.newPassword !== formData.confirmPassword ||
-        !formData.currentPassword))
+  const isSaveDisabled = isSaving
 
   const handleCancel = () => {
     if (user) {

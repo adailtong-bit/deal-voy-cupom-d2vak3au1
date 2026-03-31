@@ -188,7 +188,17 @@ export const fetchCrawlerPromotions = async (
 }
 
 export const updateUser = async (userId: string, data: any): Promise<any> => {
-  const token = localStorage.getItem('auth_token')
+  let token = localStorage.getItem('auth_token')
+
+  if (!token) {
+    const pbAuth = localStorage.getItem('pocketbase_auth')
+    if (pbAuth) {
+      try {
+        const parsed = JSON.parse(pbAuth)
+        token = parsed.token
+      } catch (e) {}
+    }
+  }
 
   const res = await fetch(`${API_URL}/collections/users/records/${userId}`, {
     method: 'PATCH',

@@ -60,6 +60,7 @@ function AuthStateSync() {
     if (!user) {
       // Purge authentication tokens and role-related data upon logout
       localStorage.removeItem('auth_token')
+      localStorage.removeItem('pocketbase_auth')
       localStorage.removeItem('user_role')
       sessionStorage.clear()
     }
