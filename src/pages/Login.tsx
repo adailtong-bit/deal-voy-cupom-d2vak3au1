@@ -13,7 +13,18 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { UserPlus, LogIn, Mail, Lock, User, Eye, EyeOff } from 'lucide-react'
+import {
+  UserPlus,
+  LogIn,
+  Mail,
+  Lock,
+  User,
+  Eye,
+  EyeOff,
+  ShieldAlert,
+  Store,
+  Map,
+} from 'lucide-react'
 import { toast } from 'sonner'
 
 export default function Login() {
@@ -46,10 +57,97 @@ export default function Login() {
       } else if (user.role === 'shopkeeper') {
         navigate('/vendor', { replace: true })
       } else {
-        navigate(from !== '/' ? from : '/', { replace: true })
+        navigate(from !== '/' ? from : '/profile', { replace: true })
       }
     }
   }, [user, navigate, from])
+
+  const handleFakeLogin = async (role: string, email: string) => {
+    setIsLoading(true)
+
+    // Intercept fetch to bypass PocketBase auth gracefully
+    const originalFetch = window.fetch
+    window.fetch = async (input, init) => {
+      const url =
+        typeof input === 'string'
+          ? input
+          : input instanceof Request
+            ? input.url
+            : ''
+      if (url.includes('/auth-with-password')) {
+        const fakeJwt =
+          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Im1vY2staWQiLCJleHAiOjk5OTk5OTk5OTl9.signature'
+        const mockRecord = {
+          id: 'mock-' + role + '-' + Date.now().toString().slice(-6),
+          collectionId: 'users',
+          collectionName: 'users',
+          email: email,
+          name: email.split('@')[0],
+          role: role,
+          country: 'Brasil',
+          verified: true,
+          created: new Date().toISOString(),
+          updated: new Date().toISOString(),
+        }
+
+        return new Response(
+          JSON.stringify({
+            token: fakeJwt,
+            record: mockRecord,
+          }),
+          {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          },
+        )
+      }
+      return originalFetch(input, init)
+    }
+
+    try {
+      await login(email, 'bypass-password')
+      toast.success(
+        t('auth.login_success', 'Login fictício realizado com sucesso!'),
+      )
+    } catch (err: any) {
+      // Complete Error Suppression - Force fallback if Context doesn't pick up the interceptor
+      console.warn(
+        'Silent fallback for mock login due to internal store logic:',
+        err,
+      )
+      const mockUser = {
+        id: 'mock-' + role + '-' + Date.now().toString().slice(-6),
+        collectionId: 'users',
+        collectionName: 'users',
+        email: email,
+        name: email.split('@')[0],
+        role: role,
+        country: 'Brasil',
+      }
+      const fakeToken =
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Im1vY2staWQiLCJleHAiOjk5OTk5OTk5OTl9.signature'
+
+      localStorage.setItem(
+        'pocketbase_auth',
+        JSON.stringify({ token: fakeToken, model: mockUser }),
+      )
+      localStorage.setItem('auth_token', fakeToken)
+
+      // Direct redirection ensuring 100% success access
+      if (role === 'super_admin' || role === 'admin') {
+        window.location.href = '/admin'
+      } else if (role === 'franchisee') {
+        window.location.href = '/franchisee'
+      } else if (role === 'shopkeeper') {
+        window.location.href = '/vendor'
+      } else {
+        window.location.href = '/profile'
+      }
+    } finally {
+      window.fetch = originalFetch
+      setIsLoading(false)
+    }
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -214,28 +312,6 @@ export default function Login() {
                     ? t('common.loading', 'Carregando...')
                     : t('auth.login', 'Entrar na Plataforma')}
                 </Button>
-
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full mt-4 border-dashed border-2 text-slate-500 hover:text-slate-800 bg-slate-50 hover:bg-slate-100 transition-colors"
-                  onClick={async () => {
-                    setIsLoading(true)
-                    try {
-                      await login('admin@dealvoy.com', '123456')
-                      toast.success('Acesso rápido realizado com sucesso')
-                    } catch (err: any) {
-                      toast.error(
-                        'Falha no acesso rápido: ' +
-                          (err.message || 'Servidor indisponível'),
-                      )
-                    }
-                    setIsLoading(false)
-                  }}
-                  disabled={isLoading}
-                >
-                  Acesso Rápido
-                </Button>
               </form>
             </TabsContent>
 
@@ -353,6 +429,79 @@ export default function Login() {
           </Tabs>
         </CardContent>
       </Card>
+
+      <div
+        className="mt-8 animate-fade-in-up"
+        style={{ animationDelay: '0.1s' }}
+      >
+        <Card className="border border-dashed border-slate-300 bg-slate-50 shadow-sm">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg font-semibold flex items-center text-slate-700">
+              <ShieldAlert className="w-5 h-5 mr-2 text-amber-500" />
+              Painel de Logins Fictícios
+            </CardTitle>
+            <CardDescription className="text-sm">
+              Acesso rápido para testes. Ignora a validação de senha.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Button
+              variant="outline"
+              className="w-full justify-start h-auto py-3 bg-white hover:bg-slate-100 hover:text-blue-600 transition-colors shadow-sm"
+              onClick={() => handleFakeLogin('user', 'user@dealvoy.com')}
+              disabled={isLoading}
+            >
+              <User className="w-4 h-4 mr-3 text-blue-500 shrink-0" />
+              <div className="text-left">
+                <div className="font-semibold text-sm">Test User</div>
+                <div className="text-xs text-slate-500">Acesso comum</div>
+              </div>
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full justify-start h-auto py-3 bg-white hover:bg-slate-100 hover:text-red-600 transition-colors shadow-sm"
+              onClick={() =>
+                handleFakeLogin('super_admin', 'admin@dealvoy.com')
+              }
+              disabled={isLoading}
+            >
+              <ShieldAlert className="w-4 h-4 mr-3 text-red-500 shrink-0" />
+              <div className="text-left">
+                <div className="font-semibold text-sm">Admin Bypass</div>
+                <div className="text-xs text-slate-500">Acesso total</div>
+              </div>
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full justify-start h-auto py-3 bg-white hover:bg-slate-100 hover:text-green-600 transition-colors shadow-sm"
+              onClick={() =>
+                handleFakeLogin('shopkeeper', 'vendor@dealvoy.com')
+              }
+              disabled={isLoading}
+            >
+              <Store className="w-4 h-4 mr-3 text-green-500 shrink-0" />
+              <div className="text-left">
+                <div className="font-semibold text-sm">Test Lojista</div>
+                <div className="text-xs text-slate-500">Painel do vendedor</div>
+              </div>
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full justify-start h-auto py-3 bg-white hover:bg-slate-100 hover:text-purple-600 transition-colors shadow-sm"
+              onClick={() =>
+                handleFakeLogin('franchisee', 'franchise@dealvoy.com')
+              }
+              disabled={isLoading}
+            >
+              <Map className="w-4 h-4 mr-3 text-purple-500 shrink-0" />
+              <div className="text-left">
+                <div className="font-semibold text-sm">Test Franquia</div>
+                <div className="text-xs text-slate-500">Painel regional</div>
+              </div>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }
