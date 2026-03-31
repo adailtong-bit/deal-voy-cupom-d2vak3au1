@@ -66,6 +66,12 @@ export default function Login() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (password.length < 8) {
+      toast.error(
+        t('auth.password_too_short', 'A senha deve ter no mínimo 8 caracteres'),
+      )
+      return
+    }
     if (password !== confirmPassword) {
       toast.error(t('auth.passwords_mismatch', 'Senhas não conferem'))
       return
@@ -74,6 +80,12 @@ export default function Login() {
       setIsLoading(true)
       try {
         await register(name, email, password)
+        toast.success(t('auth.register_success', 'Conta criada com sucesso!'))
+        if (!user) {
+          setActiveTab('login')
+          setPassword('')
+          setConfirmPassword('')
+        }
       } catch (err: any) {
         toast.error(err.message || 'Erro ao criar conta')
       }

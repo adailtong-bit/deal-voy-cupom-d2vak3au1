@@ -195,7 +195,13 @@ export const updateUser = async (userId: string, data: any): Promise<any> => {
     headers: {
       'Content-Type': 'application/json',
       Accept: 'application/json',
-      ...(token ? { Authorization: token } : {}),
+      ...(token
+        ? {
+            Authorization: token.startsWith('Bearer')
+              ? token
+              : `Bearer ${token}`,
+          }
+        : {}),
     },
     body: JSON.stringify(data),
   })

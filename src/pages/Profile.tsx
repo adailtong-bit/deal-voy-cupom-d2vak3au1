@@ -144,8 +144,32 @@ export default function Profile() {
     }))
   }
 
+  const hasChanges = useMemo(() => {
+    if (!user) return false
+    return (
+      formData.name !== (user.name || '') ||
+      formData.email !== (user.email || '') ||
+      formData.phone !== (user.phone || '') ||
+      formData.birthday !== (user.birthday || '') ||
+      formData.gender !== (user.gender || '') ||
+      formData.documentNumber !== (user.documentNumber || '') ||
+      formData.country !== (user.country || '') ||
+      formData.state !== (user.state || '') ||
+      formData.city !== (user.city || '') ||
+      formData.zipCode !== (user.zipCode || '') ||
+      formData.companyName !== (user.companyName || '') ||
+      formData.businessEmail !== (user.businessEmail || '') ||
+      formData.businessPhone !== (user.businessPhone || '') ||
+      JSON.stringify(formData.categories) !==
+        JSON.stringify(user.preferences?.categories || []) ||
+      !!formData.newPassword ||
+      !!formData.currentPassword
+    )
+  }, [formData, user])
+
   const isSaveDisabled =
     isSaving ||
+    !hasChanges ||
     (!!formData.newPassword &&
       (formData.newPassword !== formData.confirmPassword ||
         !formData.currentPassword))
@@ -221,6 +245,17 @@ export default function Profile() {
     }
 
     if (formData.newPassword) {
+      if (formData.newPassword.length < 8) {
+        toast({
+          title: t('common.error', 'Erro'),
+          description: t(
+            'profile.password_too_short',
+            'A nova senha deve ter no mínimo 8 caracteres.',
+          ),
+          variant: 'destructive',
+        })
+        return
+      }
       if (formData.newPassword !== formData.confirmPassword) {
         toast({
           title: t('common.error', 'Erro'),
