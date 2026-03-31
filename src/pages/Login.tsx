@@ -104,18 +104,30 @@ export default function Login() {
 
           if (!res.ok) {
             const errData = await res.json()
-            throw new Error(
-              errData.message || 'Erro ao criar conta no servidor',
-            )
+            let errorMessage =
+              errData.message || 'Erro ao criar conta no servidor'
+            if (errData?.data) {
+              const details = Object.entries(errData.data)
+                .map(
+                  ([key, val]: any) => `${key}: ${val?.message || 'Invalid'}`,
+                )
+                .join(', ')
+              if (details) errorMessage += ` (${details})`
+            }
+            throw new Error(errorMessage)
           }
           registerSuccess = true
         }
 
         if (registerSuccess) {
           toast.success(t('auth.register_success', 'Conta criada com sucesso!'))
-          setActiveTab('login')
-          setPassword('')
-          setConfirmPassword('')
+          try {
+            await login(email, password)
+          } catch (loginErr) {
+            setActiveTab('login')
+            setPassword('')
+            setConfirmPassword('')
+          }
         }
       } catch (err: any) {
         toast.error(err.message || 'Erro ao criar conta')

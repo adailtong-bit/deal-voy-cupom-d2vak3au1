@@ -223,6 +223,12 @@ export const updateUser = async (userId: string, data: any): Promise<any> => {
     try {
       const errData = await res.json()
       if (errData?.message) errorMessage = errData.message
+      if (errData?.data) {
+        const details = Object.entries(errData.data)
+          .map(([key, val]: any) => `${key}: ${val?.message || 'Invalid'}`)
+          .join(', ')
+        if (details) errorMessage += ` (${details})`
+      }
     } catch (e) {
       // Ignore json parse error
     }

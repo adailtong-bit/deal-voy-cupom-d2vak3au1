@@ -255,7 +255,6 @@ export default function Profile() {
     try {
       const updateData: any = {
         name: formData.name,
-        email: formData.email,
         phone: formData.phone,
         birthday: formData.birthday,
         gender: formData.gender,
@@ -271,6 +270,11 @@ export default function Profile() {
           ...user?.preferences,
           categories: formData.categories,
         },
+      }
+
+      // Only include email if it has changed to avoid validation issues with the backend
+      if (formData.email !== user?.email) {
+        updateData.email = formData.email
       }
 
       if (formData.newPassword) {
