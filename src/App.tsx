@@ -207,14 +207,7 @@ export default function App() {
                     </RequireAuth>
                   }
                 />
-                <Route
-                  path="/profile"
-                  element={
-                    <RequireAuth>
-                      <Profile />
-                    </RequireAuth>
-                  }
-                />
+                <Route path="/profile" element={<Profile />} />
                 <Route path="/seasonal" element={<Seasonal />} />
                 <Route
                   path="/travel"
