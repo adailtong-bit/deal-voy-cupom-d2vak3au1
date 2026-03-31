@@ -10,12 +10,19 @@ import {
   CardDescription,
 } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Globe, Box, History } from 'lucide-react'
+import { Globe, Box, History, Square, Loader2 } from 'lucide-react'
 import { CrawlerSourcesTab } from './CrawlerSourcesTab'
 import { CrawlerPromotionsTab } from './CrawlerPromotionsTab'
 import { CrawlerHistoryTab } from './CrawlerHistoryTab'
 import { cn } from '@/lib/utils'
 import { useState, useEffect, useMemo } from 'react'
+import {
+  getCrawlerProgress,
+  subscribeCrawler,
+  stopExtractionTask,
+} from '@/lib/crawlerTask'
+import { Progress } from '@/components/ui/progress'
+import { Button } from '@/components/ui/button'
 
 export function PromotionCrawler({ franchiseId }: { franchiseId?: string }) {
   const { user, franchises, discoveredPromotions } = useCouponStore()
@@ -25,6 +32,14 @@ export function PromotionCrawler({ franchiseId }: { franchiseId?: string }) {
 
   const franchise = franchises.find((f) => f.id === franchiseId)
   const { formatNumber } = useRegionFormatting(franchise?.region)
+
+  const [crawlerState, setCrawlerState] = useState(getCrawlerProgress())
+
+  useEffect(() => {
+    return subscribeCrawler(() => {
+      setCrawlerState({ ...getCrawlerProgress() })
+    })
+  }, [])
 
   // Persist active tab
   const [activeTab, setActiveTab] = useState<string>(
@@ -115,18 +130,66 @@ export function PromotionCrawler({ franchiseId }: { franchiseId?: string }) {
       className={cn('space-y-6 w-full', !isFranchisee && 'min-w-0 max-w-full')}
     >
       <Card className="min-w-0 overflow-hidden w-full max-w-full">
-        <CardHeader className="min-w-0">
-          <CardTitle className="truncate">
-            {t('franchisee.crawler.title', 'Gerenciamento de Crawler')}
-          </CardTitle>
-          <CardDescription className="truncate">
-            {t(
-              'franchisee.crawler.desc',
-              'Configure fontes externas para capturar e importar ofertas para a plataforma.',
+        <CardHeader className="min-w-0 space-y-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="space-y-1">
+              <CardTitle className="truncate">
+                {t('franchisee.crawler.title', 'Gerenciamento de Crawler')}
+              </CardTitle>
+              <CardDescription className="truncate">
+                {t(
+                  'franchisee.crawler.desc',
+                  'Configure fontes externas para capturar e importar ofertas para a plataforma.',
+                )}
+              </CardDescription>
+            </div>
+            {crawlerState.isScanning && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={stopExtractionTask}
+              >
+                <Square className="w-4 h-4 mr-2" fill="currentColor" />
+                Parar Busca
+              </Button>
             )}
-          </CardDescription>
+          </div>
+
+          {crawlerState.isScanning && (
+            <div className="p-4 bg-slate-50 border rounded-lg space-y-3 animate-in fade-in slide-in-from-top-4">
+              <div className="flex justify-between text-sm font-medium">
+                <span className="flex items-center text-blue-600">
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Buscando ofertas...
+                </span>
+                <span>
+                  {crawlerState.current} / {crawlerState.total}
+                </span>
+              </div>
+              <Progress
+                value={
+                  (crawlerState.current / Math.max(crawlerState.total, 1)) * 100
+                }
+                className="h-2"
+              />
+              <div className="flex gap-4 text-xs font-medium text-slate-500">
+                <span>
+                  Encontrados:{' '}
+                  <strong className="text-slate-900">
+                    {crawlerState.found}
+                  </strong>
+                </span>
+                <span className="text-green-600">
+                  Importados: <strong>{crawlerState.imported}</strong>
+                </span>
+                <span className="text-red-500">
+                  Descartados: <strong>{crawlerState.errors}</strong>
+                </span>
+              </div>
+            </div>
+          )}
         </CardHeader>
-        <CardContent className="p-4 sm:p-6 min-w-0 overflow-x-hidden">
+        <CardContent className="p-4 sm:p-6 min-w-0 overflow-x-hidden pt-0 sm:pt-0">
           <Tabs
             value={activeTab}
             onValueChange={setActiveTab}

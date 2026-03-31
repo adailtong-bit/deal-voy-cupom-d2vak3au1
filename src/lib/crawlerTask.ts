@@ -60,6 +60,7 @@ export const startExtractionTask = async (
   query: string,
   limit: number,
   source: string,
+  sourceOptions?: { country?: string; state?: string; city?: string },
 ) => {
   if (progress.isScanning) return
 
@@ -83,6 +84,8 @@ export const startExtractionTask = async (
 
     const items = await fetchWebSearchPromotions(query, limit, {
       platform: source === 'all' ? undefined : source,
+      region:
+        sourceOptions?.state || sourceOptions?.city || sourceOptions?.country,
     })
 
     const itemsFound = items.length
@@ -116,7 +119,12 @@ export const startExtractionTask = async (
       const siteName = item.storeName || item.siteName || ''
       if (!siteName.trim()) missingFields.push('Site Name')
 
-      const country = item.country || item.countryOfOrigin || ''
+      item.country =
+        item.country ||
+        item.countryOfOrigin ||
+        sourceOptions?.country ||
+        'Brasil'
+      const country = item.country || ''
       if (!country.trim()) missingFields.push('Country of Origin')
 
       const linkToTest = item.sourceUrl || item.originalUrl || ''

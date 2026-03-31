@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Play } from 'lucide-react'
+import { startExtractionTask } from '@/lib/crawlerTask'
+import { useToast } from '@/hooks/use-toast'
 import {
   Select,
   SelectContent,
@@ -26,6 +29,7 @@ export function CrawlerSourceForm({
   userRegion,
   isFranchisee,
 }: CrawlerSourceFormProps) {
+  const { toast } = useToast()
   const [formData, setFormData] = useState({
     name: '',
     url: '',
@@ -63,6 +67,33 @@ export function CrawlerSourceForm({
       state: formData.state,
       city: formData.city,
       scanRadius: formData.scanRadius,
+    })
+  }
+
+  const handleStartSearch = () => {
+    if (!formData.name && !formData.url) {
+      toast({
+        title: 'Dados Incompletos',
+        description: 'Preencha o nome ou URL da fonte para iniciar a busca.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    startExtractionTask(
+      formData.name || 'ofertas',
+      formData.scanRadius || 50,
+      formData.url || 'all',
+      {
+        country: formData.country,
+        state: formData.state,
+        city: formData.city,
+      },
+    )
+
+    toast({
+      title: 'Busca Iniciada',
+      description: `Iniciando rastreamento para ${formData.name || formData.url}`,
     })
   }
 
@@ -203,8 +234,18 @@ export function CrawlerSourceForm({
           captura dos links.
         </p>
       </div>
-      <DialogFooter>
-        <Button type="submit">Salvar Configuração</Button>
+      <DialogFooter className="flex flex-col sm:flex-row justify-between w-full sm:justify-between mt-6 gap-3">
+        <Button
+          type="button"
+          onClick={handleStartSearch}
+          className="bg-green-600 hover:bg-green-700 text-white shadow-md transition-all w-full sm:w-auto order-last sm:order-first"
+        >
+          <Play className="w-4 h-4 mr-2" fill="currentColor" />
+          Iniciar Busca
+        </Button>
+        <Button type="submit" className="w-full sm:w-auto">
+          Salvar Configuração
+        </Button>
       </DialogFooter>
     </form>
   )
