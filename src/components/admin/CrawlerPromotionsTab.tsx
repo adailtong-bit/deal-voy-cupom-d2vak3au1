@@ -19,12 +19,14 @@ interface Props {
   setFilterCategory: (v: string) => void
   filterFetchDate: string
   setFilterFetchDate: (v: string) => void
+  isLoading?: boolean
 }
 
 export function CrawlerPromotionsTab({
   pendingPromotions,
   filterStore,
   setFilterStore,
+  isLoading,
 }: Props) {
   const { formatCurrency } = useRegionFormatting()
 
@@ -53,7 +55,16 @@ export function CrawlerPromotionsTab({
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {pendingPromotions.length === 0 ? (
+            {isLoading ? (
+              <tr>
+                <td
+                  colSpan={5}
+                  className="px-5 py-12 text-center text-slate-500 bg-slate-50/30"
+                >
+                  Carregando ofertas...
+                </td>
+              </tr>
+            ) : pendingPromotions.length === 0 ? (
               <tr>
                 <td
                   colSpan={5}

@@ -15,12 +15,14 @@ import { CrawlerSourcesTab } from './CrawlerSourcesTab'
 import { CrawlerPromotionsTab } from './CrawlerPromotionsTab'
 import { CrawlerHistoryTab } from './CrawlerHistoryTab'
 import { cn } from '@/lib/utils'
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import {
   getCrawlerProgress,
   subscribeCrawler,
   stopExtractionTask,
 } from '@/lib/crawlerTask'
+import { fetchCrawlerPromotions } from '@/lib/api'
+import { DiscoveredPromotion } from '@/lib/types'
 import { Progress } from '@/components/ui/progress'
 import { Button } from '@/components/ui/button'
 
@@ -86,16 +88,35 @@ export function PromotionCrawler({ franchiseId }: { franchiseId?: string }) {
     filterFetchDate,
   ])
 
-  const basePendingPromotions = useMemo(() => {
-    const allPromos = [...discoveredPromotions]
+  const [dbPromotions, setDbPromotions] = useState<DiscoveredPromotion[]>([])
+  const [isLoadingPromotions, setIsLoadingPromotions] = useState(false)
 
-    if (crawlerState.sessionImportedItems) {
-      crawlerState.sessionImportedItems.forEach((item: any) => {
-        if (!allPromos.some((p) => p.id === item.id)) {
-          allPromos.push(item)
-        }
-      })
+  const loadPromotions = useCallback(async () => {
+    setIsLoadingPromotions(true)
+    try {
+      const { data } = await fetchCrawlerPromotions({ limit: 500, franchiseId })
+      setDbPromotions(data)
+    } catch (e) {
+      console.error('Failed to load promotions', e)
+    } finally {
+      setIsLoadingPromotions(false)
     }
+  }, [franchiseId])
+
+  useEffect(() => {
+    if (activeTab === 'promotions') {
+      loadPromotions()
+    }
+  }, [activeTab, loadPromotions])
+
+  useEffect(() => {
+    if (!crawlerState.isScanning && activeTab === 'promotions') {
+      loadPromotions()
+    }
+  }, [crawlerState.isScanning, activeTab, loadPromotions])
+
+  const basePendingPromotions = useMemo(() => {
+    const allPromos = [...dbPromotions]
 
     return allPromos.filter(
       (p) =>
@@ -105,7 +126,7 @@ export function PromotionCrawler({ franchiseId }: { franchiseId?: string }) {
         p.description?.trim() &&
         (p.capturedAt || p.expiryDate),
     )
-  }, [discoveredPromotions, crawlerState.sessionImportedItems])
+  }, [dbPromotions])
 
   const pendingPromotions = useMemo(() => {
     return basePendingPromotions.filter((p) => {
@@ -261,6 +282,7 @@ export function PromotionCrawler({ franchiseId }: { franchiseId?: string }) {
                 setFilterCategory={setFilterCategory}
                 filterFetchDate={filterFetchDate}
                 setFilterFetchDate={setFilterFetchDate}
+                isLoading={isLoadingPromotions}
               />
             </TabsContent>
           </Tabs>

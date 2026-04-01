@@ -1,5 +1,8 @@
 import { Coupon, DiscoveredPromotion } from './types'
 
+const API_URL =
+  import.meta.env.VITE_API_URL || 'https://routevoy.goskip.app/api'
+
 export const fetchCategories = async (): Promise<any[]> => {
   let token = localStorage.getItem('auth_token')
   if (!token) {
@@ -31,25 +34,15 @@ export const fetchCategories = async (): Promise<any[]> => {
         },
       },
     )
-    if (res.ok) {
-      const data = await res.json()
-      if (data?.items && data.items.length > 0) {
-        return data.items
-      }
+    if (!res.ok) {
+      throw new Error(`Failed to fetch categories: ${res.status}`)
     }
+    const data = await res.json()
+    return data?.items || []
   } catch (e) {
-    console.warn('Failed to fetch categories, using mock fallback')
+    console.error('Failed to fetch categories', e)
+    throw e
   }
-
-  return [
-    { id: 'cat1', name: 'Alimentação' },
-    { id: 'cat2', name: 'Eletrônicos' },
-    { id: 'cat3', name: 'Moda' },
-    { id: 'cat4', name: 'Serviços' },
-    { id: 'cat5', name: 'Viagens' },
-    { id: 'cat6', name: 'Locação' },
-    { id: 'cat7', name: 'Pontos Turísticos' },
-  ]
 }
 
 export interface FetchCouponsParams {
@@ -67,15 +60,6 @@ export interface FetchCouponsResponse {
   hasMore: boolean
   total: number
 }
-
-/**
- * Mocks a server-side API call to a database (like Supabase or Skip Cloud).
- * Supports search, filtering, franchise scoping, pagination and server-side relevance logic.
- */
-const API_URL =
-  import.meta.env.VITE_API_URL || 'https://routevoy.goskip.app/api'
-
-const mockCrawlerLogs: any[] = []
 
 export const fetchCoupons = async (
   params: FetchCouponsParams = {},
@@ -206,74 +190,16 @@ export const fetchWebSearchPromotions = async (
     }
 
     const data = await res.json()
-    if (data?.items && data.items.length > 0) {
-      return data.items
-    }
+    return data?.items || []
   } catch (e: any) {
-    console.warn(
+    console.error(
       `Failed to fetch from organic search engine API for query: ${query}`,
+      e,
     )
+    throw e
   }
-
-  // MOCK FALLBACK: Fixes the 'zero results' issue by returning real-looking organic data
-  const mockLimit = Math.min(limit, 2000) // Increased to support high volume scraping for Amazon
-
-  const categoryQuery =
-    options.category && options.category !== 'all' ? options.category : ''
-  const isAmazon =
-    query.toLowerCase().includes('amazon') ||
-    options.platform?.toLowerCase().includes('amazon')
-
-  let baseImageQuery = isAmazon
-    ? 'amazon,product'
-    : categoryQuery || query || 'sale'
-  if (categoryQuery === 'Viagens') baseImageQuery = 'travel,trip'
-  if (categoryQuery === 'Locação') baseImageQuery = 'rental,car,house'
-  if (categoryQuery === 'Pontos Turísticos')
-    baseImageQuery = 'tourist,attraction,landmark'
-
-  return Array.from({ length: mockLimit }).map((_, i) => {
-    const isApp = options.platform?.includes('app')
-    const platformName =
-      options.platform && options.platform !== 'all'
-        ? options.platform
-        : isAmazon
-          ? 'Amazon'
-          : 'Busca Orgânica'
-
-    const price = +(Math.random() * 100 + 5).toFixed(2)
-    const originalPrice = price + +(Math.random() * 50 + 10).toFixed(2)
-    const discount = Math.round((1 - price / originalPrice) * 100)
-
-    return {
-      id: `organic-${Date.now()}-${i}`,
-      title: isAmazon
-        ? `Amazon Deal: ${query || 'Product'} ${categoryQuery} - Item ${i + 1}`
-        : `Oferta Exclusiva ${query} ${categoryQuery ? `- ${categoryQuery}` : ''} - ${i + 1}`,
-      description: isAmazon
-        ? `Amazing deal found on Amazon US for ${query}. Limited time offer!`
-        : `Encontramos esta super oferta organicamente na região de ${options.region || 'sua localização'}. Aproveite enquanto durar o estoque!`,
-      price: price,
-      originalPrice: originalPrice,
-      discount: discount,
-      image: `https://img.usecurling.com/p/400/400?q=${encodeURIComponent(baseImageQuery)}&seed=${i + 100}`,
-      sourceUrl: isApp
-        ? `https://example.com/app/offer/${i}`
-        : isAmazon
-          ? `https://www.amazon.com/dp/B08${Math.floor(Math.random() * 10000)}XYZ`
-          : `https://example.com/promo/${i}`,
-      storeName: platformName,
-      country: isAmazon ? 'United States' : 'Brasil',
-      status: 'pending',
-      capturedAt: new Date().toISOString(),
-      category: options.category || 'Geral',
-    } as any
-  })
 }
 
-/**
- * Mocks a server-side API call for real-time crawler data synchronization.
- */
 export const fetchCrawlerPromotions = async (
   params: FetchCrawlerPromotionsParams = {},
 ): Promise<FetchCrawlerPromotionsResponse> => {
@@ -302,20 +228,18 @@ export const fetchCrawlerPromotions = async (
         },
       },
     )
-    if (res.ok) {
-      try {
-        const data = await res.json()
-        apiData = data?.items || []
-        hasMore = (data?.page || 0) < (data?.totalPages || 0)
-        total = data?.totalItems || 0
-      } catch (jsonErr) {
-        console.warn('Failed to parse crawler promotions response', jsonErr)
-      }
+
+    if (!res.ok) {
+      throw new Error(`Failed to fetch crawler promotions: ${res.status}`)
     }
+
+    const data = await res.json()
+    apiData = data?.items || []
+    hasMore = (data?.page || 0) < (data?.totalPages || 0)
+    total = data?.totalItems || 0
   } catch (e: any) {
-    console.warn(
-      'Network error: Failed to fetch crawler promotions, using fallback.',
-    )
+    console.error('Network error: Failed to fetch crawler promotions', e)
+    throw e
   }
 
   return {
@@ -375,14 +299,7 @@ export const saveDiscoveredPromotion = async (
     }
     return await res.json()
   } catch (e: any) {
-    if (e.name === 'TypeError' || e.message === 'Failed to fetch') {
-      console.warn(
-        'Network error saving discovered promotion, using mock success:',
-        e,
-      )
-      // MOCK FALLBACK: Simulate successful save to prevent discarding valid results when backend is down
-      return { ...data, id: `mock-saved-${Date.now()}-${Math.random()}` }
-    }
+    console.error('Network error saving discovered promotion:', e)
     throw e
   }
 }
@@ -416,16 +333,16 @@ export const saveCrawlerLog = async (data: any): Promise<any> => {
       },
       body: JSON.stringify(data),
     })
+
     if (!res.ok) {
       console.warn('Failed to save crawler log:', res.status)
       throw new Error(`Failed to save log: ${res.status}`)
     }
+
     return await res.json()
   } catch (e) {
-    console.warn('Network error saving crawler log, using mock success:', e)
-    const mockLog = { ...data, id: `mock-log-${Date.now()}-${Math.random()}` }
-    mockCrawlerLogs.unshift(mockLog)
-    return mockLog
+    console.error('Network error saving crawler log:', e)
+    throw e
   }
 }
 
@@ -467,7 +384,7 @@ export const fetchCrawlerLogs = async (): Promise<any[]> => {
     console.warn('Failed to fetch crawler logs from API', e)
   }
 
-  const allLogs = [...apiLogs, ...mockCrawlerLogs].sort((a, b) => {
+  const allLogs = [...apiLogs].sort((a, b) => {
     return (
       new Date(b.created || b.date).getTime() -
       new Date(a.created || a.date).getTime()

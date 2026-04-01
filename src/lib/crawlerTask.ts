@@ -218,6 +218,7 @@ export const startExtractionTask = async (
           ? `Completed with ${errorDetails.length} errors/discards.`
           : undefined,
       errorDetails: errorDetails,
+      category: sourceOptions?.category || 'all',
     })
 
     addLog(
@@ -234,6 +235,7 @@ export const startExtractionTask = async (
       sourceId: `organic_${source.toLowerCase()}`,
       errorMessage: err.message,
       errorDetails: [err.message],
+      category: sourceOptions?.category || 'all',
     })
   } finally {
     progress.isScanning = false

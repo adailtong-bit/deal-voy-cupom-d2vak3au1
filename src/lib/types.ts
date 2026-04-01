@@ -750,6 +750,7 @@ export interface CrawlerHistory {
   sourceId: string
   errorMessage?: string
   errorDetails?: string[]
+  category?: string
 }
 
 export interface CrawlerSource {

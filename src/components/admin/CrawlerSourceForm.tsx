@@ -39,16 +39,14 @@ export function CrawlerSourceForm({
     const loadCategories = async () => {
       try {
         const cats = await fetchCategories()
-        if (cats && cats.length > 0) {
-          setCategories(
-            cats.map((c: any) => ({
-              id: c.id,
-              label: c.name || c.label || 'Categoria',
-            })),
-          )
-        }
+        setCategories(
+          cats.map((c: any) => ({
+            id: c.id,
+            label: c.name || c.label || 'Categoria',
+          })),
+        )
       } catch (err) {
-        console.warn('Failed to load categories', err)
+        console.error('Failed to load categories', err)
       }
     }
     loadCategories()

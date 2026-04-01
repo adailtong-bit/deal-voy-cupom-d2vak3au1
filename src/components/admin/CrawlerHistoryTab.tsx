@@ -32,6 +32,7 @@ export function CrawlerHistoryTab({ isScanning }: { isScanning?: boolean }) {
             <tr>
               <th className="px-5 py-4">Date</th>
               <th className="px-5 py-4">Source Engine</th>
+              <th className="px-5 py-4">Category</th>
               <th className="px-5 py-4">Status</th>
               <th className="px-5 py-4 text-right">Items Found</th>
               <th className="px-5 py-4 text-right">Imported</th>
@@ -42,7 +43,7 @@ export function CrawlerHistoryTab({ isScanning }: { isScanning?: boolean }) {
             {loading ? (
               <tr>
                 <td
-                  colSpan={6}
+                  colSpan={7}
                   className="px-5 py-12 text-center text-slate-500"
                 >
                   Loading execution history...
@@ -51,7 +52,7 @@ export function CrawlerHistoryTab({ isScanning }: { isScanning?: boolean }) {
             ) : logs.length === 0 ? (
               <tr>
                 <td
-                  colSpan={6}
+                  colSpan={7}
                   className="px-5 py-12 text-center text-slate-500 bg-slate-50/30"
                 >
                   No previous executions found.
@@ -71,6 +72,9 @@ export function CrawlerHistoryTab({ isScanning }: { isScanning?: boolean }) {
                   </td>
                   <td className="px-5 py-4 font-medium whitespace-nowrap text-slate-900">
                     {log.storeName}
+                  </td>
+                  <td className="px-5 py-4 text-slate-700 font-medium">
+                    {log.category || '-'}
                   </td>
                   <td className="px-5 py-4">
                     <Badge
