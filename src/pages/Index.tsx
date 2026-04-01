@@ -733,7 +733,8 @@ function IndexContent() {
                 </section>
               )}
 
-              {Array.isArray(filteredDbPromotions) &&
+              {Array.isArray(store.dbPromotions) &&
+                Array.isArray(filteredDbPromotions) &&
                 filteredDbPromotions.length > 0 && (
                   <section>
                     <h2 className="text-2xl font-bold flex items-center gap-2 mb-5 text-slate-800">

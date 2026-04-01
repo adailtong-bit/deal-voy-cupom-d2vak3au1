@@ -32,8 +32,18 @@ export function PromotionCard({
   const originalPrice = promotion.originalPrice
   const link = promotion.productLink || promotion.originalUrl
 
+  const calculatedDiscount =
+    !discountLabel &&
+    originalPrice !== undefined &&
+    currentPrice !== undefined &&
+    Number(originalPrice) > Number(currentPrice)
+      ? `${Math.round(((Number(originalPrice) - Number(currentPrice)) / Number(originalPrice)) * 100)}% OFF`
+      : null
+
+  const finalDiscountLabel = discountLabel || calculatedDiscount
+
   return (
-    <Card className="flex flex-col h-full overflow-hidden hover:shadow-lg transition-shadow duration-300">
+    <Card className="flex flex-col h-full overflow-hidden hover:shadow-lg transition-shadow duration-300 bg-white">
       <div className="relative h-48 w-full bg-slate-100 overflow-hidden group shrink-0">
         <img
           src={image}
@@ -44,9 +54,9 @@ export function PromotionCard({
               'https://img.usecurling.com/p/400/300?q=shopping'
           }}
         />
-        {discountLabel && (
+        {finalDiscountLabel && (
           <Badge className="absolute top-3 right-3 bg-red-500 hover:bg-red-600 text-white font-bold px-2 py-1 shadow-sm border-none z-10">
-            {discountLabel}
+            {finalDiscountLabel}
           </Badge>
         )}
       </div>
@@ -62,12 +72,13 @@ export function PromotionCard({
         <div className="mt-auto">
           {currentPrice !== undefined && currentPrice !== null ? (
             <div className="flex flex-col">
-              {originalPrice && originalPrice > currentPrice && (
-                <span className="text-sm text-slate-400 line-through decoration-slate-400">
-                  {promotion.currency || 'R$'}{' '}
-                  {Number(originalPrice).toFixed(2).replace('.', ',')}
-                </span>
-              )}
+              {originalPrice !== undefined &&
+                Number(originalPrice) > Number(currentPrice) && (
+                  <span className="text-sm text-slate-400 line-through decoration-slate-400">
+                    {promotion.currency || 'R$'}{' '}
+                    {Number(originalPrice).toFixed(2).replace('.', ',')}
+                  </span>
+                )}
               <div className="flex items-center gap-1 font-bold text-primary text-xl">
                 <span className="text-sm text-slate-500 font-normal">
                   {t('promotion.price', 'Por:')}{' '}
