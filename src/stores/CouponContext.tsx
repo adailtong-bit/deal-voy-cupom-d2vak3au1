@@ -150,6 +150,7 @@ interface CouponContextType {
   isReserved: (id: string) => boolean
   isInTrip: (id: string) => boolean
   isLoadingLocation: boolean
+  isLoadingCoupons: boolean
   addReview: (couponId: string, review: Omit<Review, 'id' | 'date'>) => void
   replyToReview: (couponId: string, reviewId: string, text: string) => void
   addUpload: (doc: UploadedDocument) => void
@@ -278,6 +279,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   const { t } = useLanguage()
   const [coupons, setCoupons] = useState<Coupon[]>([])
   const [companies, setCompanies] = useState<Company[]>([])
+  const [isLoadingCoupons, setIsLoadingCoupons] = useState(true)
 
   useEffect(() => {
     let mounted = true
@@ -298,12 +300,17 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
           console.error('Failed to load coupons, using fallback', e)
         }
         if (mounted) setCoupons(Array.isArray(MOCK_COUPONS) ? MOCK_COUPONS : [])
+      } finally {
+        if (mounted) setIsLoadingCoupons(false)
       }
     }
 
     loadCoupons().catch((err) => {
       console.error('Unhandled error in loadCoupons', err)
-      if (mounted) setCoupons(Array.isArray(MOCK_COUPONS) ? MOCK_COUPONS : [])
+      if (mounted) {
+        setCoupons(Array.isArray(MOCK_COUPONS) ? MOCK_COUPONS : [])
+        setIsLoadingCoupons(false)
+      }
     })
 
     return () => {
@@ -1361,6 +1368,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         isReserved,
         isInTrip,
         isLoadingLocation,
+        isLoadingCoupons,
         addReview,
         replyToReview,
         addUpload,

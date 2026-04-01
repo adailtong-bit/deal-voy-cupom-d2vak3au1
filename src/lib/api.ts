@@ -503,9 +503,10 @@ export const fetchCrawlerLogs = async (): Promise<any[]> => {
     }
   } catch (e) {
     console.warn('Failed to fetch crawler logs from API', e)
+    apiLogs = []
   }
 
-  const allLogs = [...apiLogs].sort((a, b) => {
+  const allLogs = (Array.isArray(apiLogs) ? [...apiLogs] : []).sort((a, b) => {
     return (
       new Date(b.created || b.date).getTime() -
       new Date(a.created || a.date).getTime()
@@ -516,55 +517,61 @@ export const fetchCrawlerLogs = async (): Promise<any[]> => {
 }
 
 export const updateUser = async (userId: string, data: any): Promise<any> => {
-  let token = localStorage.getItem('auth_token')
+  try {
+    let token = localStorage.getItem('auth_token')
 
-  if (!token) {
-    const pbAuth = localStorage.getItem('pocketbase_auth')
-    if (pbAuth) {
+    if (!token) {
+      const pbAuth = localStorage.getItem('pocketbase_auth')
+      if (pbAuth) {
+        try {
+          const parsed = JSON.parse(pbAuth)
+          token = parsed.token
+        } catch (e) {
+          // ignore parse error
+        }
+      }
+    }
+
+    const baseUrl = API_URL.replace(/\/$/, '')
+    const res = await fetch(`${baseUrl}/collections/users/records/${userId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        ...(token
+          ? {
+              Authorization: token.startsWith('Bearer')
+                ? token
+                : `Bearer ${token}`,
+            }
+          : {}),
+      },
+      body: JSON.stringify(data),
+    })
+
+    if (!res.ok) {
+      let errorMessage = `HTTP Error: ${res.status}`
       try {
-        const parsed = JSON.parse(pbAuth)
-        token = parsed.token
+        const errorData = await res.json()
+        if (errorData.message) errorMessage = errorData.message
+        if (errorData.data) {
+          const fieldErrors = Object.entries(errorData.data)
+            .map(
+              ([field, err]: [string, any]) =>
+                `${field}: ${err?.message || err}`,
+            )
+            .join(', ')
+          if (fieldErrors) errorMessage += ` (${fieldErrors})`
+        }
       } catch (e) {
-        // ignore parse error
+        // Ignore JSON parse error
       }
+      throw new Error(errorMessage)
     }
+
+    return await res.json()
+  } catch (e) {
+    console.error('Failed to update user', e)
+    throw e
   }
-
-  const baseUrl = API_URL.replace(/\/$/, '')
-  const res = await fetch(`${baseUrl}/collections/users/records/${userId}`, {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-      ...(token
-        ? {
-            Authorization: token.startsWith('Bearer')
-              ? token
-              : `Bearer ${token}`,
-          }
-        : {}),
-    },
-    body: JSON.stringify(data),
-  })
-
-  if (!res.ok) {
-    let errorMessage = `HTTP Error: ${res.status}`
-    try {
-      const errorData = await res.json()
-      if (errorData.message) errorMessage = errorData.message
-      if (errorData.data) {
-        const fieldErrors = Object.entries(errorData.data)
-          .map(
-            ([field, err]: [string, any]) => `${field}: ${err?.message || err}`,
-          )
-          .join(', ')
-        if (fieldErrors) errorMessage += ` (${fieldErrors})`
-      }
-    } catch (e) {
-      // Ignore JSON parse error
-    }
-    throw new Error(errorMessage)
-  }
-
-  return await res.json()
 }

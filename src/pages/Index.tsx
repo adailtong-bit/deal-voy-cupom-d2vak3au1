@@ -41,6 +41,7 @@ import {
   ImageOff,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
+import { Skeleton } from '@/components/ui/skeleton'
 
 function getDistanceFromLatLonInKm(
   lat1: number,
@@ -81,7 +82,8 @@ function IndexContent() {
   const dbPromotions = Array.isArray(store.dbPromotions)
     ? store.dbPromotions
     : []
-  const isLoadingLocation = !!store.isLoadingLocation
+  const isLoadingLocation =
+    !!store.isLoadingLocation || !!store.isLoadingCoupons
 
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
@@ -247,13 +249,21 @@ function IndexContent() {
     searchLocationInfo,
   ])
 
-  const trendingCoupons = filteredCoupons
-    .filter((c) => c.isTrending || (c.averageRating && c.averageRating > 4.5))
+  const safeFilteredCoupons = Array.isArray(filteredCoupons)
+    ? filteredCoupons
+    : []
+
+  const trendingCoupons = safeFilteredCoupons
+    .filter(
+      (c) => c && (c.isTrending || (c.averageRating && c.averageRating > 4.5)),
+    )
     .slice(0, 4)
   const finalTrending =
-    trendingCoupons.length >= 4 ? trendingCoupons : filteredCoupons.slice(0, 4)
-  const moreCoupons = filteredCoupons
-    .filter((c) => !finalTrending.find((tc) => tc.id === c.id))
+    trendingCoupons.length >= 4
+      ? trendingCoupons
+      : safeFilteredCoupons.slice(0, 4)
+  const moreCoupons = safeFilteredCoupons
+    .filter((c) => c && !finalTrending.find((tc) => tc.id === c.id))
     .slice(0, 12)
 
   const getCategoryIcon = (iconName: string) => {
@@ -451,14 +461,24 @@ function IndexContent() {
 
         <div className="space-y-10">
           {isLoadingLocation ? (
-            <div className="py-20 flex flex-col items-center justify-center space-y-4">
-              <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-              <p className="text-slate-500 font-medium">
-                {t(
-                  'home.loading_deals',
-                  'Buscando as melhores ofertas para você...',
-                )}
-              </p>
+            <div className="py-12 space-y-8 animate-pulse">
+              <div className="flex flex-col items-center justify-center space-y-4 mb-8">
+                <div className="w-10 h-10 border-4 border-primary/40 border-t-primary rounded-full animate-spin"></div>
+                <p className="text-slate-500 font-medium">
+                  {t(
+                    'home.loading_deals',
+                    'Buscando as melhores ofertas para você...',
+                  )}
+                </p>
+              </div>
+              <div className="space-y-4">
+                <Skeleton className="h-8 w-48 rounded-md" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+                  {[1, 2, 3, 4].map((i) => (
+                    <Skeleton key={i} className="h-72 w-full rounded-xl" />
+                  ))}
+                </div>
+              </div>
             </div>
           ) : (
             <>
@@ -603,9 +623,11 @@ function IndexContent() {
                       : t('home.trending', 'Em Alta')}
                   </h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-                    {finalTrending.map((coupon) => (
-                      <CouponCard key={coupon.id} coupon={coupon} />
-                    ))}
+                    {finalTrending.map((coupon) =>
+                      coupon ? (
+                        <CouponCard key={coupon.id} coupon={coupon} />
+                      ) : null,
+                    )}
                   </div>
                 </section>
               )}
@@ -617,13 +639,15 @@ function IndexContent() {
                     {t('home.more_deals', 'Mais Oportunidades')}
                   </h2>
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-                    {moreCoupons.map((coupon) => (
-                      <CouponCard
-                        key={coupon.id}
-                        coupon={coupon}
-                        variant="horizontal"
-                      />
-                    ))}
+                    {moreCoupons.map((coupon) =>
+                      coupon ? (
+                        <CouponCard
+                          key={coupon.id}
+                          coupon={coupon}
+                          variant="horizontal"
+                        />
+                      ) : null,
+                    )}
                   </div>
                 </section>
               )}

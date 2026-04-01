@@ -38,7 +38,7 @@ export class ErrorBoundary extends Component<Props, State> {
             </h2>
             <p className="text-slate-600 mb-8 text-sm leading-relaxed">
               Tivemos um problema inesperado ao carregar esta seção. Por favor,
-              recarregue a página para tentar novamente.
+              tente novamente.
             </p>
             <Button
               onClick={() => {
@@ -48,7 +48,7 @@ export class ErrorBoundary extends Component<Props, State> {
               className="w-full font-semibold shadow-sm"
               size="lg"
             >
-              Recarregar Página
+              Tentar Novamente
             </Button>
           </div>
         </div>

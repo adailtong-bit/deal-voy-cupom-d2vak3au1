@@ -282,11 +282,30 @@ function PromotionCrawlerContent({ franchiseId }: { franchiseId?: string }) {
               className="animate-in fade-in-50 min-w-0 w-full"
             >
               {isLoadingPromotions ? (
-                <div className="p-12 flex flex-col items-center justify-center space-y-4">
-                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                  <p className="text-slate-500 font-medium">
-                    Carregando promoções...
-                  </p>
+                <div className="p-8 space-y-4">
+                  <div className="flex justify-center mb-6">
+                    <div className="flex flex-col items-center space-y-2">
+                      <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                      <p className="text-slate-500 font-medium">
+                        Carregando promoções...
+                      </p>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <div
+                        key={i}
+                        className="flex flex-col sm:flex-row gap-4 w-full p-4 border rounded-lg bg-white/50 animate-pulse"
+                      >
+                        <div className="h-20 w-20 bg-slate-200 rounded-md shrink-0"></div>
+                        <div className="flex-1 space-y-2 py-1">
+                          <div className="h-4 bg-slate-200 rounded w-3/4"></div>
+                          <div className="h-3 bg-slate-200 rounded w-1/2"></div>
+                          <div className="h-3 bg-slate-200 rounded w-1/4"></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ) : !isLoadingPromotions &&
                 pendingPromotions.length === 0 &&
