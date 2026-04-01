@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
 import { CouponCard } from '@/components/CouponCard'
+import { PromotionCard } from '@/components/PromotionCard'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -162,12 +163,10 @@ function IndexContent() {
     const baseLoc = searchLocationInfo || userLocation
     const safeCoupons = Array.isArray(coupons) ? coupons : []
     const safeWebResults = Array.isArray(webResults) ? webResults : []
-    const safeDbPromotions = Array.isArray(dbPromotions) ? dbPromotions : []
 
     const combined = []
     if (Array.isArray(safeCoupons)) combined.push(...safeCoupons)
     if (Array.isArray(safeWebResults)) combined.push(...safeWebResults)
-    if (Array.isArray(safeDbPromotions)) combined.push(...safeDbPromotions)
 
     const allC = combined.filter(
       (v, i, a) => v && a.findIndex((t) => t?.id === v?.id) === i,
@@ -255,6 +254,35 @@ function IndexContent() {
     language,
     searchLocationInfo,
   ])
+
+  const filteredDbPromotions = useMemo(() => {
+    const safePromos = Array.isArray(dbPromotions) ? dbPromotions : []
+    return safePromos.filter((p) => {
+      if (!p) return false
+      let textToMatch = searchQuery.toLowerCase()
+      if (searchLocationInfo) {
+        textToMatch = textToMatch
+          .replace(searchLocationInfo.label.toLowerCase(), '')
+          .trim()
+        Object.keys(POPULAR_DESTINATIONS).forEach((k) => {
+          if (textToMatch.includes(k.toLowerCase())) {
+            textToMatch = textToMatch.replace(k.toLowerCase(), '').trim()
+          }
+        })
+      }
+
+      const matchesText =
+        textToMatch === '' ||
+        (p.title && p.title.toLowerCase().includes(textToMatch)) ||
+        (p.storeName && p.storeName.toLowerCase().includes(textToMatch)) ||
+        (p.category && p.category.toLowerCase().includes(textToMatch))
+
+      const matchesCategory =
+        selectedCategory === 'all' || p.category === selectedCategory
+
+      return matchesText && matchesCategory
+    })
+  }, [dbPromotions, searchQuery, selectedCategory, searchLocationInfo])
 
   const safeFilteredCoupons = Array.isArray(filteredCoupons)
     ? filteredCoupons
@@ -693,64 +721,79 @@ function IndexContent() {
                 </section>
               )}
 
-              {filteredCoupons.length === 0 && (
-                <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-slate-200 shadow-sm mt-8">
-                  <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Search className="h-8 w-8 text-slate-400" />
+              {filteredDbPromotions.length > 0 && (
+                <section>
+                  <h2 className="text-2xl font-bold flex items-center gap-2 mb-5 text-slate-800">
+                    <Globe className="h-6 w-6 text-blue-500" />
+                    {t('home.web_promotions', 'Promoções da Web')}
+                  </h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+                    {filteredDbPromotions.map((promo) => (
+                      <PromotionCard key={promo.id} promotion={promo} />
+                    ))}
                   </div>
-                  <h3 className="text-lg font-bold text-slate-700">
-                    {searchQuery || selectedCategory !== 'all'
-                      ? t(
-                          'home.no_offers',
-                          'Nenhuma oferta encontrada no momento.',
-                        )
-                      : t(
-                          'home.no_coupons_available',
-                          'Nenhum cupom disponível no momento.',
-                        )}
-                  </h3>
-                  <p className="text-slate-500 mt-1 max-w-md mx-auto px-4">
-                    {selectedCategory !== 'all' && !searchQuery
-                      ? t(
-                          'home.no_category_results',
-                          'Não temos ofertas disponíveis nesta categoria no momento.',
-                        )
-                      : searchQuery
+                </section>
+              )}
+
+              {filteredCoupons.length === 0 &&
+                filteredDbPromotions.length === 0 && (
+                  <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-slate-200 shadow-sm mt-8">
+                    <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Search className="h-8 w-8 text-slate-400" />
+                    </div>
+                    <h3 className="text-lg font-bold text-slate-700">
+                      {searchQuery || selectedCategory !== 'all'
                         ? t(
-                            'home.try_another_search',
-                            'Tente usar outros termos de busca ou navegue pelas categorias disponíveis.',
+                            'home.no_offers',
+                            'Nenhuma oferta encontrada no momento.',
                           )
                         : t(
-                            'home.check_back_later',
-                            'Verifique novamente mais tarde para novas promoções ou tente atualizar a página.',
+                            'home.no_coupons_available',
+                            'Nenhum cupom disponível no momento.',
                           )}
-                  </p>
-                  <div className="flex justify-center flex-wrap gap-3 mt-6">
-                    {(searchQuery || selectedCategory !== 'all') && (
+                    </h3>
+                    <p className="text-slate-500 mt-1 max-w-md mx-auto px-4">
+                      {selectedCategory !== 'all' && !searchQuery
+                        ? t(
+                            'home.no_category_results',
+                            'Não temos ofertas disponíveis nesta categoria no momento.',
+                          )
+                        : searchQuery
+                          ? t(
+                              'home.try_another_search',
+                              'Tente usar outros termos de busca ou navegue pelas categorias disponíveis.',
+                            )
+                          : t(
+                              'home.check_back_later',
+                              'Verifique novamente mais tarde para novas promoções ou tente atualizar a página.',
+                            )}
+                    </p>
+                    <div className="flex justify-center flex-wrap gap-3 mt-6">
+                      {(searchQuery || selectedCategory !== 'all') && (
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setSearchQuery('')
+                            setSelectedCategory('all')
+                          }}
+                        >
+                          {t('home.clear_search', 'Limpar Busca e Filtros')}
+                        </Button>
+                      )}
                       <Button
-                        variant="outline"
-                        onClick={() => {
-                          setSearchQuery('')
-                          setSelectedCategory('all')
-                        }}
+                        variant={
+                          searchQuery || selectedCategory !== 'all'
+                            ? 'ghost'
+                            : 'default'
+                        }
+                        onClick={() => refreshCoupons()}
                       >
-                        {t('home.clear_search', 'Limpar Busca e Filtros')}
+                        <RefreshCw className="w-4 h-4 mr-2" />
+                        {t('home.refresh_promotions', 'Atualizar Promoções')}
                       </Button>
-                    )}
-                    <Button
-                      variant={
-                        searchQuery || selectedCategory !== 'all'
-                          ? 'ghost'
-                          : 'default'
-                      }
-                      onClick={() => refreshCoupons()}
-                    >
-                      <RefreshCw className="w-4 h-4 mr-2" />
-                      {t('home.refresh_promotions', 'Atualizar Promoções')}
-                    </Button>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
             </>
           )}
         </div>
