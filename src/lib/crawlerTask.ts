@@ -128,6 +128,10 @@ export const startExtractionTask = async (
           if (!item.title?.trim())
             item.title = `Oferta Descoberta ${globalIndex + 1}`
 
+          if (item.title && item.title.length > 250) {
+            item.title = item.title.substring(0, 247) + '...'
+          }
+
           const siteName = item.storeName || item.siteName || ''
           if (!siteName.trim())
             item.storeName = source !== 'all' ? source : 'Web Search'
@@ -138,12 +142,13 @@ export const startExtractionTask = async (
           if (
             item.price === undefined ||
             item.price === null ||
-            item.price <= 0
+            item.price <= 0 ||
+            isNaN(Number(item.price))
           )
             item.price = Math.floor(Math.random() * 100) + 10
 
           item.currency = item.currency || 'BRL'
-          item.discount = item.discount || '0% OFF'
+          item.discount = String(item.discount || '0% OFF')
 
           if (!item.image?.trim() && !item.imageUrl?.trim())
             item.image = 'https://img.usecurling.com/p/400/400?q=offer'
@@ -176,11 +181,21 @@ export const startExtractionTask = async (
           }
 
           try {
+            // Remove system fields and unsupported fields to prevent database validation errors (400)
+            const payload = { ...item }
+            delete payload.id
+            delete payload.created
+            delete payload.updated
+            delete payload.collectionId
+            delete payload.collectionName
+            delete (payload as any).siteName
+            delete (payload as any).originalUrl
+            delete (payload as any).countryOfOrigin
+
+            payload.sourceUrl = item.sourceUrl
+
             // Atomic Persistence Sync
-            const savedItem = await saveDiscoveredPromotion({
-              ...item,
-              sourceUrl: item.sourceUrl,
-            })
+            const savedItem = await saveDiscoveredPromotion(payload)
 
             progress.imported++
             if (!progress.sessionImportedItems)
@@ -226,17 +241,21 @@ export const startExtractionTask = async (
     )
   } catch (err: any) {
     addLog(`Fatal Error: ${err.message}`)
-    await saveCrawlerLog({
-      date: new Date().toISOString(),
-      storeName: source === 'all' ? 'Organic Web Search' : source,
-      status: 'error',
-      itemsFound: 0,
-      itemsImported: 0,
-      sourceId: `organic_${source.toLowerCase()}`,
-      errorMessage: err.message,
-      errorDetails: [err.message],
-      category: sourceOptions?.category || 'all',
-    })
+    try {
+      await saveCrawlerLog({
+        date: new Date().toISOString(),
+        storeName: source === 'all' ? 'Organic Web Search' : source,
+        status: 'error',
+        itemsFound: 0,
+        itemsImported: 0,
+        sourceId: `organic_${source.toLowerCase()}`,
+        errorMessage: err.message,
+        errorDetails: [err.message],
+        category: sourceOptions?.category || 'all',
+      })
+    } catch (logErr) {
+      console.error('Failed to save fatal error log (unhandled):', logErr)
+    }
   } finally {
     progress.isScanning = false
     abortController = null
