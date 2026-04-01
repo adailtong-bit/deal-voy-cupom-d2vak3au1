@@ -94,7 +94,8 @@ export function PromotionCrawler({ franchiseId }: { franchiseId?: string }) {
   const loadPromotions = useCallback(async () => {
     setIsLoadingPromotions(true)
     try {
-      const { data } = await fetchCrawlerPromotions({ limit: 500, franchiseId })
+      const response = await fetchCrawlerPromotions({ limit: 500, franchiseId })
+      const data = response?.data || []
       setDbPromotions(Array.isArray(data) ? data : [])
     } catch (e) {
       console.error('Failed to load promotions', e)
@@ -117,10 +118,11 @@ export function PromotionCrawler({ franchiseId }: { franchiseId?: string }) {
   }, [crawlerState.isScanning, activeTab, loadPromotions])
 
   const basePendingPromotions = useMemo(() => {
-    const allPromos = Array.isArray(dbPromotions) ? [...dbPromotions] : []
+    const allPromos = Array.isArray(dbPromotions) ? dbPromotions : []
 
     return allPromos.filter(
       (p) =>
+        p &&
         p.status === 'pending' &&
         p.storeName?.trim() &&
         p.title?.trim() &&
@@ -130,7 +132,9 @@ export function PromotionCrawler({ franchiseId }: { franchiseId?: string }) {
   }, [dbPromotions])
 
   const pendingPromotions = useMemo(() => {
+    if (!Array.isArray(basePendingPromotions)) return []
     return basePendingPromotions.filter((p) => {
+      if (!p) return false
       if (filterState !== 'all' && p.state !== filterState) return false
       if (filterCity !== 'all' && p.city !== filterCity) return false
       if (filterStore !== 'all' && p.storeName !== filterStore) return false
@@ -268,23 +272,36 @@ export function PromotionCrawler({ franchiseId }: { franchiseId?: string }) {
               value="promotions"
               className="animate-in fade-in-50 min-w-0 w-full"
             >
-              <CrawlerPromotionsTab
-                pendingPromotions={pendingPromotions}
-                basePendingPromotions={basePendingPromotions}
-                filterState={filterState}
-                setFilterState={setFilterState}
-                filterCity={filterCity}
-                setFilterCity={setFilterCity}
-                filterStore={filterStore}
-                setFilterStore={setFilterStore}
-                filterSource={filterSource}
-                setFilterSource={setFilterSource}
-                filterCategory={filterCategory}
-                setFilterCategory={setFilterCategory}
-                filterFetchDate={filterFetchDate}
-                setFilterFetchDate={setFilterFetchDate}
-                isLoading={isLoadingPromotions}
-              />
+              {!isLoadingPromotions &&
+              pendingPromotions.length === 0 &&
+              basePendingPromotions.length === 0 ? (
+                <div className="p-8 text-center bg-slate-50 rounded-lg border border-dashed border-slate-200">
+                  <p className="text-slate-500 font-medium">
+                    {t(
+                      'franchisee.crawler.empty',
+                      'Nenhuma promoção pendente encontrada no momento.',
+                    )}
+                  </p>
+                </div>
+              ) : (
+                <CrawlerPromotionsTab
+                  pendingPromotions={pendingPromotions}
+                  basePendingPromotions={basePendingPromotions}
+                  filterState={filterState}
+                  setFilterState={setFilterState}
+                  filterCity={filterCity}
+                  setFilterCity={setFilterCity}
+                  filterStore={filterStore}
+                  setFilterStore={setFilterStore}
+                  filterSource={filterSource}
+                  setFilterSource={setFilterSource}
+                  filterCategory={filterCategory}
+                  setFilterCategory={setFilterCategory}
+                  filterFetchDate={filterFetchDate}
+                  setFilterFetchDate={setFilterFetchDate}
+                  isLoading={isLoadingPromotions}
+                />
+              )}
             </TabsContent>
           </Tabs>
         </CardContent>

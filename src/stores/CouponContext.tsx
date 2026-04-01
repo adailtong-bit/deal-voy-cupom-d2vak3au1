@@ -285,10 +285,10 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         const res = await fetchCoupons({ limit: 100 })
         if (!mounted) return
 
-        if (res && res.data !== null && Array.isArray(res.data)) {
+        if (res && res.data && Array.isArray(res.data)) {
           setCoupons(res.data)
         } else {
-          setCoupons(MOCK_COUPONS)
+          setCoupons(Array.isArray(MOCK_COUPONS) ? MOCK_COUPONS : [])
         }
       } catch (e: any) {
         if (e?.message === 'Failed to fetch' || e?.name === 'TypeError') {
@@ -296,13 +296,13 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         } else {
           console.error('Failed to load coupons, using fallback', e)
         }
-        if (mounted) setCoupons(MOCK_COUPONS)
+        if (mounted) setCoupons(Array.isArray(MOCK_COUPONS) ? MOCK_COUPONS : [])
       }
     }
 
     loadCoupons().catch((err) => {
       console.error('Unhandled error in loadCoupons', err)
-      if (mounted) setCoupons(MOCK_COUPONS)
+      if (mounted) setCoupons(Array.isArray(MOCK_COUPONS) ? MOCK_COUPONS : [])
     })
 
     return () => {
@@ -403,10 +403,14 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         const res = await fetchCrawlerPromotions({ limit: 100 })
         if (!mounted) return
 
-        if (res && res.data !== null && Array.isArray(res.data)) {
+        if (res && res.data && Array.isArray(res.data)) {
           setDiscoveredPromotions(res.data)
         } else {
-          setDiscoveredPromotions(MOCK_DISCOVERED_PROMOTIONS)
+          setDiscoveredPromotions(
+            Array.isArray(MOCK_DISCOVERED_PROMOTIONS)
+              ? MOCK_DISCOVERED_PROMOTIONS
+              : [],
+          )
         }
       } catch (e: any) {
         if (e?.message === 'Failed to fetch' || e?.name === 'TypeError') {
@@ -416,13 +420,23 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         } else {
           console.error('Failed to load promotions, using fallback', e)
         }
-        if (mounted) setDiscoveredPromotions(MOCK_DISCOVERED_PROMOTIONS)
+        if (mounted)
+          setDiscoveredPromotions(
+            Array.isArray(MOCK_DISCOVERED_PROMOTIONS)
+              ? MOCK_DISCOVERED_PROMOTIONS
+              : [],
+          )
       }
     }
 
     loadPromotions().catch((err) => {
       console.error('Unhandled error in loadPromotions', err)
-      if (mounted) setDiscoveredPromotions(MOCK_DISCOVERED_PROMOTIONS)
+      if (mounted)
+        setDiscoveredPromotions(
+          Array.isArray(MOCK_DISCOVERED_PROMOTIONS)
+            ? MOCK_DISCOVERED_PROMOTIONS
+            : [],
+        )
     })
 
     return () => {

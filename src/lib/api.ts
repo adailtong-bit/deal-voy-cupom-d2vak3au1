@@ -39,7 +39,11 @@ export const fetchCategories = async (): Promise<any[]> => {
       throw new Error(`Failed to fetch categories: ${res.status}`)
     }
     const data = await res.json()
-    return data?.items || []
+    return Array.isArray(data?.items)
+      ? data.items
+      : Array.isArray(data)
+        ? data
+        : []
   } catch (e) {
     console.error('Failed to fetch categories', e)
     throw e
@@ -98,10 +102,15 @@ export const fetchCoupons = async (
     if (res.ok) {
       try {
         const data = await res.json()
+        const items = Array.isArray(data?.items)
+          ? data.items
+          : Array.isArray(data)
+            ? data
+            : []
         return {
-          data: data?.items || [],
+          data: items,
           hasMore: (data?.page || 0) < (data?.totalPages || 0),
-          total: data?.totalItems || 0,
+          total: data?.totalItems || items.length,
         }
       } catch (jsonErr) {
         console.warn('Failed to parse coupons response as JSON', jsonErr)
@@ -193,7 +202,11 @@ export const fetchWebSearchPromotions = async (
     }
 
     const data = await res.json()
-    return data?.items || []
+    return Array.isArray(data?.items)
+      ? data.items
+      : Array.isArray(data)
+        ? data
+        : []
   } catch (e: any) {
     console.error(
       `Failed to fetch from organic search engine API for query: ${query}`,
@@ -251,7 +264,11 @@ export const fetchCrawlerPromotions = async (
     if (res.ok) {
       try {
         const data = await res.json()
-        const apiData = data?.items || []
+        const apiData = Array.isArray(data?.items)
+          ? data.items
+          : Array.isArray(data)
+            ? data
+            : []
         return {
           data: apiData.slice(0, limit),
           hasMore: (data?.page || 0) < (data?.totalPages || 0),
@@ -475,7 +492,11 @@ export const fetchCrawlerLogs = async (): Promise<any[]> => {
     )
     if (res.ok) {
       const data = await res.json()
-      apiLogs = data?.items || []
+      apiLogs = Array.isArray(data?.items)
+        ? data.items
+        : Array.isArray(data)
+          ? data
+          : []
     }
   } catch (e) {
     console.warn('Failed to fetch crawler logs from API', e)
