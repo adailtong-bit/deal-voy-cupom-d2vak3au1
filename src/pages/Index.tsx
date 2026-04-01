@@ -173,6 +173,7 @@ function IndexContent() {
     )
 
     return allC.map((c) => {
+      if (!c) return c
       let dist = c.distance || 0
 
       if (baseLoc && c.coordinates && typeof c.coordinates.lat === 'number') {
@@ -206,8 +207,11 @@ function IndexContent() {
 
   const filteredCoupons = useMemo(() => {
     const safeReservedIds = Array.isArray(reservedIds) ? reservedIds : []
+    const safeCouponsWithDistance = Array.isArray(couponsWithDistance)
+      ? couponsWithDistance
+      : []
 
-    const results = couponsWithDistance.filter((c) => {
+    const results = safeCouponsWithDistance.filter((c) => {
       if (!c) return false
       if (safeReservedIds.includes(c.id)) return false
 
@@ -433,73 +437,76 @@ function IndexContent() {
                 </span>
               </Button>
 
-              {mainCategories.map((cat) => {
-                const isActive = selectedCategory === cat.id
-                return (
-                  <Button
-                    key={cat.id}
-                    variant={isActive ? 'default' : 'outline'}
-                    className={cn(
-                      'rounded-full px-5 transition-all duration-300',
-                      isActive
-                        ? 'shadow-md shadow-primary/20 scale-105'
-                        : 'hover:border-primary/50 hover:bg-primary/5 text-slate-600 bg-white',
-                    )}
-                    onClick={() => setSelectedCategory(cat.id)}
-                  >
-                    {getCategoryIcon(cat.icon)}
-                    <span className="ml-2 font-medium">
-                      {t(cat.translationKey, cat.label)}
-                    </span>
-                  </Button>
-                )
-              })}
-
-              {secondaryCategories.length > 0 && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
+              {Array.isArray(mainCategories) &&
+                mainCategories.map((cat) => {
+                  const isActive = selectedCategory === cat.id
+                  return (
                     <Button
-                      variant={isSecondarySelected ? 'default' : 'outline'}
+                      key={cat.id}
+                      variant={isActive ? 'default' : 'outline'}
                       className={cn(
                         'rounded-full px-5 transition-all duration-300',
-                        isSecondarySelected
+                        isActive
                           ? 'shadow-md shadow-primary/20 scale-105'
                           : 'hover:border-primary/50 hover:bg-primary/5 text-slate-600 bg-white',
                       )}
+                      onClick={() => setSelectedCategory(cat.id)}
                     >
-                      <CircleEllipsis className="w-4 h-4" />
+                      {getCategoryIcon(cat.icon)}
                       <span className="ml-2 font-medium">
-                        {isSecondarySelected
-                          ? t(
-                              secondaryCategories.find(
-                                (c) => c.id === selectedCategory,
-                              )?.translationKey || 'category.others',
-                              'Outros',
-                            )
-                          : t('category.others', 'Outros')}
+                        {t(cat.translationKey, cat.label)}
                       </span>
-                      <ChevronDown className="w-4 h-4 ml-1 opacity-50" />
                     </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
-                    {secondaryCategories.map((cat) => (
-                      <DropdownMenuItem
-                        key={cat.id}
-                        onClick={() => setSelectedCategory(cat.id)}
-                        className="cursor-pointer"
-                      >
-                        {getCategoryIcon(cat.icon)}
-                        <span className="ml-2">
-                          {t(cat.translationKey, cat.label)}
-                        </span>
-                        {selectedCategory === cat.id && (
-                          <Check className="ml-auto w-4 h-4 text-primary" />
+                  )
+                })}
+
+              {Array.isArray(secondaryCategories) &&
+                secondaryCategories.length > 0 && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant={isSecondarySelected ? 'default' : 'outline'}
+                        className={cn(
+                          'rounded-full px-5 transition-all duration-300',
+                          isSecondarySelected
+                            ? 'shadow-md shadow-primary/20 scale-105'
+                            : 'hover:border-primary/50 hover:bg-primary/5 text-slate-600 bg-white',
                         )}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
+                      >
+                        <CircleEllipsis className="w-4 h-4" />
+                        <span className="ml-2 font-medium">
+                          {isSecondarySelected
+                            ? t(
+                                secondaryCategories.find(
+                                  (c) => c.id === selectedCategory,
+                                )?.translationKey || 'category.others',
+                                'Outros',
+                              )
+                            : t('category.others', 'Outros')}
+                        </span>
+                        <ChevronDown className="w-4 h-4 ml-1 opacity-50" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      {Array.isArray(secondaryCategories) &&
+                        secondaryCategories.map((cat) => (
+                          <DropdownMenuItem
+                            key={cat.id}
+                            onClick={() => setSelectedCategory(cat.id)}
+                            className="cursor-pointer"
+                          >
+                            {getCategoryIcon(cat.icon)}
+                            <span className="ml-2">
+                              {t(cat.translationKey, cat.label)}
+                            </span>
+                            {selectedCategory === cat.id && (
+                              <Check className="ml-auto w-4 h-4 text-primary" />
+                            )}
+                          </DropdownMenuItem>
+                        ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
             </div>
             <ScrollBar orientation="horizontal" className="invisible" />
           </ScrollArea>
@@ -551,7 +558,8 @@ function IndexContent() {
             </div>
           ) : (
             <>
-              {activeEvents.length > 0 &&
+              {Array.isArray(activeEvents) &&
+                activeEvents.length > 0 &&
                 !searchQuery &&
                 selectedCategory === 'all' && (
                   <section>
@@ -576,6 +584,7 @@ function IndexContent() {
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                       {activeEvents.slice(0, 2).map((event) => {
+                        if (!event) return null
                         const eventTitle =
                           event.translations?.[language]?.title ||
                           event.title ||
@@ -671,7 +680,7 @@ function IndexContent() {
                         )
                       })}
                     </div>
-                    {activeEvents.length > 2 && (
+                    {Array.isArray(activeEvents) && activeEvents.length > 2 && (
                       <div className="mt-5 text-center sm:hidden">
                         <Button variant="outline" asChild className="w-full">
                           <Link to="/seasonal">
@@ -683,7 +692,7 @@ function IndexContent() {
                   </section>
                 )}
 
-              {finalTrending.length > 0 && (
+              {Array.isArray(finalTrending) && finalTrending.length > 0 && (
                 <section>
                   <h2 className="text-2xl font-bold flex items-center gap-2 mb-5 text-slate-800">
                     <TrendingUp className="h-6 w-6 text-orange-500" />
@@ -694,14 +703,17 @@ function IndexContent() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                     {finalTrending.map((coupon) =>
                       coupon ? (
-                        <CouponCard key={coupon.id} coupon={coupon} />
+                        <CouponCard
+                          key={coupon.id || Math.random().toString()}
+                          coupon={coupon}
+                        />
                       ) : null,
                     )}
                   </div>
                 </section>
               )}
 
-              {moreCoupons.length > 0 && (
+              {Array.isArray(moreCoupons) && moreCoupons.length > 0 && (
                 <section>
                   <h2 className="text-2xl font-bold flex items-center gap-2 mb-5 text-slate-800">
                     <Sparkles className="h-6 w-6 text-yellow-500" />
@@ -711,7 +723,7 @@ function IndexContent() {
                     {moreCoupons.map((coupon) =>
                       coupon ? (
                         <CouponCard
-                          key={coupon.id}
+                          key={coupon.id || Math.random().toString()}
                           coupon={coupon}
                           variant="horizontal"
                         />
@@ -721,21 +733,27 @@ function IndexContent() {
                 </section>
               )}
 
-              {filteredDbPromotions.length > 0 && (
-                <section>
-                  <h2 className="text-2xl font-bold flex items-center gap-2 mb-5 text-slate-800">
-                    <Globe className="h-6 w-6 text-blue-500" />
-                    {t('home.web_promotions', 'Promoções da Web')}
-                  </h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-                    {filteredDbPromotions.map((promo) => (
-                      <PromotionCard key={promo.id} promotion={promo} />
-                    ))}
-                  </div>
-                </section>
-              )}
+              {Array.isArray(filteredDbPromotions) &&
+                filteredDbPromotions.length > 0 && (
+                  <section>
+                    <h2 className="text-2xl font-bold flex items-center gap-2 mb-5 text-slate-800">
+                      <Globe className="h-6 w-6 text-blue-500" />
+                      {t('home.web_promotions', 'Promoções da Web')}
+                    </h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+                      {filteredDbPromotions.map((promo) => (
+                        <PromotionCard
+                          key={promo?.id || Math.random().toString()}
+                          promotion={promo}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                )}
 
-              {filteredCoupons.length === 0 &&
+              {Array.isArray(filteredCoupons) &&
+                filteredCoupons.length === 0 &&
+                Array.isArray(filteredDbPromotions) &&
                 filteredDbPromotions.length === 0 && (
                   <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-slate-200 shadow-sm mt-8">
                     <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
