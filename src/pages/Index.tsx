@@ -11,6 +11,7 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { CATEGORIES, POPULAR_DESTINATIONS } from '@/lib/data'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,14 +42,13 @@ import {
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 
-// Helper for Haversine distance
 function getDistanceFromLatLonInKm(
   lat1: number,
   lon1: number,
   lat2: number,
   lon2: number,
 ) {
-  const R = 6371 // Radius of the earth in km
+  const R = 6371
   const dLat = (lat2 - lat1) * (Math.PI / 180)
   const dLon = (lon2 - lon1) * (Math.PI / 180)
   const a =
@@ -61,23 +61,28 @@ function getDistanceFromLatLonInKm(
   return R * c
 }
 
-export default function Index() {
+function IndexContent() {
   const { t, formatDate, language } = useLanguage()
   const navigate = useNavigate()
   const location = useLocation()
-  const {
-    user,
-    coupons,
-    seasonalEvents,
-    trackSeasonalClick,
-    userLocation,
-    reservedIds,
-    platformSettings,
-    reserveCoupon,
-    searchWeb,
-    dbPromotions,
-    isLoadingLocation,
-  } = useCouponStore()
+
+  const store = useCouponStore() || {}
+  const user = store.user
+  const coupons = Array.isArray(store.coupons) ? store.coupons : []
+  const seasonalEvents = Array.isArray(store.seasonalEvents)
+    ? store.seasonalEvents
+    : []
+  const trackSeasonalClick = store.trackSeasonalClick || (() => {})
+  const userLocation = store.userLocation
+  const reservedIds = Array.isArray(store.reservedIds) ? store.reservedIds : []
+  const platformSettings = store.platformSettings || {}
+  const reserveCoupon = store.reserveCoupon || (() => false)
+  const searchWeb = store.searchWeb || (async () => [])
+  const dbPromotions = Array.isArray(store.dbPromotions)
+    ? store.dbPromotions
+    : []
+  const isLoadingLocation = !!store.isLoadingLocation
+
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({})
@@ -132,7 +137,6 @@ export default function Index() {
     }
   }
 
-  // Determine if search query contains a known destination
   const searchLocationInfo = useMemo(() => {
     const sq = searchQuery.toLowerCase()
     if (!sq) return null
@@ -148,7 +152,6 @@ export default function Index() {
     return null
   }, [searchQuery])
 
-  // Map coupons with recalculated distances if destination overridden
   const couponsWithDistance = useMemo(() => {
     const baseLoc = searchLocationInfo || userLocation
     const safeCoupons = Array.isArray(coupons) ? coupons : []
@@ -160,6 +163,7 @@ export default function Index() {
       ...safeWebResults,
       ...safeDbPromotions,
     ].filter((v, i, a) => a.findIndex((t) => t.id === v.id) === i)
+
     return allC.map((c) => {
       let dist = c.distance || 0
 
@@ -175,15 +179,17 @@ export default function Index() {
       }
       return { ...c, distance: dist }
     })
-  }, [coupons, webResults, searchLocationInfo, userLocation])
+  }, [coupons, webResults, dbPromotions, searchLocationInfo, userLocation])
 
   const activeEvents = useMemo(() => {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
     const safeEvents = Array.isArray(seasonalEvents) ? seasonalEvents : []
+    const safeReservedIds = Array.isArray(reservedIds) ? reservedIds : []
+
     return safeEvents.filter((e) => {
-      if (e.status !== 'active') return false
-      if (reservedIds.includes(e.id)) return false
+      if (!e || e.status !== 'active') return false
+      if (safeReservedIds.includes(e.id)) return false
       const end = new Date(e.endDate)
       end.setHours(23, 59, 59, 999)
       return end >= today
@@ -191,13 +197,20 @@ export default function Index() {
   }, [seasonalEvents, reservedIds])
 
   const filteredCoupons = useMemo(() => {
-    const results = couponsWithDistance.filter((c) => {
-      if (reservedIds.includes(c.id)) return false
+    const safeReservedIds = Array.isArray(reservedIds) ? reservedIds : []
 
-      const title = c.translations?.[language]?.title || c.title
+    const results = couponsWithDistance.filter((c) => {
+      if (!c) return false
+      if (safeReservedIds.includes(c.id)) return false
+
+      const title = c.translations?.[language]?.title || c.title || ''
+      const storeName = c.storeName || ''
+      const category = c.category || ''
 
       let textToMatch = searchQuery.toLowerCase()
-      const isNearLocation = searchLocationInfo ? c.distance < 50000 : true
+      const isNearLocation = searchLocationInfo
+        ? (c.distance || 0) < 50000
+        : true
 
       if (searchLocationInfo) {
         textToMatch = textToMatch
@@ -213,17 +226,16 @@ export default function Index() {
       const matchesText =
         textToMatch === '' ||
         title.toLowerCase().includes(textToMatch) ||
-        c.storeName.toLowerCase().includes(textToMatch) ||
-        c.category.toLowerCase().includes(textToMatch)
+        storeName.toLowerCase().includes(textToMatch) ||
+        category.toLowerCase().includes(textToMatch)
 
       const matchesCategory =
-        selectedCategory === 'all' || c.category === selectedCategory
+        selectedCategory === 'all' || category === selectedCategory
 
       return isNearLocation && matchesText && matchesCategory
     })
 
-    // Sort prioritizing nearest locations based on active geo-logic focus
-    results.sort((a, b) => a.distance - b.distance)
+    results.sort((a, b) => (a.distance || 0) - (b.distance || 0))
 
     return results
   }, [
@@ -269,12 +281,14 @@ export default function Index() {
   }
 
   const mainCategoryIds =
-    platformSettings.mainCategories || CATEGORIES.slice(1, 5).map((c) => c.id)
-  const mainCategories = CATEGORIES.filter((c) =>
-    mainCategoryIds.includes(c.id),
+    platformSettings?.mainCategories || CATEGORIES.slice(1, 5).map((c) => c.id)
+  const mainCategories = CATEGORIES.filter(
+    (c) => Array.isArray(mainCategoryIds) && mainCategoryIds.includes(c.id),
   ).slice(0, 4)
   const secondaryCategories = CATEGORIES.filter(
-    (c) => c.id !== 'all' && !mainCategoryIds.includes(c.id),
+    (c) =>
+      c.id !== 'all' &&
+      (!Array.isArray(mainCategoryIds) || !mainCategoryIds.includes(c.id)),
   )
   const isSecondarySelected = secondaryCategories.some(
     (c) => c.id === selectedCategory,
@@ -474,10 +488,13 @@ export default function Index() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                       {activeEvents.slice(0, 2).map((event) => {
                         const eventTitle =
-                          event.translations?.[language]?.title || event.title
+                          event.translations?.[language]?.title ||
+                          event.title ||
+                          ''
                         const eventDesc =
                           event.translations?.[language]?.description ||
-                          event.description
+                          event.description ||
+                          ''
 
                         return (
                           <Card
@@ -513,7 +530,7 @@ export default function Index() {
                                     >
                                       {t(
                                         `event.type.${event.type}`,
-                                        event.type,
+                                        event.type || 'Evento',
                                       )}
                                     </Badge>
                                     {(event.offerType === 'online' ||
@@ -539,8 +556,13 @@ export default function Index() {
                                   <div className="flex items-center gap-2 text-xs sm:text-sm font-medium text-slate-600 bg-slate-50 p-2 rounded-lg">
                                     <CalendarIcon className="h-4 w-4 text-primary shrink-0" />
                                     <span className="truncate">
-                                      {formatDate(event.startDate)} -{' '}
-                                      {formatDate(event.endDate)}
+                                      {event.startDate
+                                        ? formatDate(event.startDate)
+                                        : ''}{' '}
+                                      -{' '}
+                                      {event.endDate
+                                        ? formatDate(event.endDate)
+                                        : ''}
                                     </span>
                                   </div>
                                   <Button
@@ -649,5 +671,13 @@ export default function Index() {
         <AdSpace position="bottom" className="border-t bg-white" />
       </div>
     </div>
+  )
+}
+
+export default function Index() {
+  return (
+    <ErrorBoundary>
+      <IndexContent />
+    </ErrorBoundary>
   )
 }

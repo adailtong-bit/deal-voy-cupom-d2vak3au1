@@ -46,7 +46,7 @@ export const fetchCategories = async (): Promise<any[]> => {
         : []
   } catch (e) {
     console.error('Failed to fetch categories', e)
-    throw e
+    return []
   }
 }
 
@@ -212,7 +212,7 @@ export const fetchWebSearchPromotions = async (
       `Failed to fetch from organic search engine API for query: ${query}`,
       e,
     )
-    throw e
+    return []
   }
 }
 

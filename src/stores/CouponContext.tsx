@@ -663,15 +663,20 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     setSystemLogs((prev) => [log, ...prev])
   }
 
-  const allAudienceCoupons = coupons.filter((c) => {
+  const safeCoupons = Array.isArray(coupons) ? coupons : []
+  const safeCompanies = Array.isArray(companies) ? companies : []
+
+  const allAudienceCoupons = safeCoupons.filter((c) => {
     let audienceMatch = true
     if (c.targetAudience === 'preferred') {
-      const company = companies.find((comp) => comp.id === c.companyId)
+      const company = safeCompanies.find((comp) => comp.id === c.companyId)
       const isMerchant =
         user?.role === 'super_admin' ||
         user?.role === 'shopkeeper' ||
         user?.companyId === c.companyId
-      const isPreferred = company?.preferredCustomers?.includes(user?.id || '')
+      const isPreferred = Array.isArray(company?.preferredCustomers)
+        ? company.preferredCustomers.includes(user?.id || '')
+        : false
       audienceMatch = isMerchant || !!isPreferred
     }
     return audienceMatch
@@ -693,18 +698,22 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
 
   const toggleSave = (id: string) => {
     setSavedIds((prev) => {
-      const newSaved = prev.includes(id)
-        ? prev.filter((sid) => sid !== id)
-        : [...prev, id]
+      const safePrev = Array.isArray(prev) ? prev : []
+      const newSaved = safePrev.includes(id)
+        ? safePrev.filter((sid) => sid !== id)
+        : [...safePrev, id]
       localStorage.setItem('savedCoupons', JSON.stringify(newSaved))
       return newSaved
     })
   }
 
   const toggleTrip = (id: string) => {
-    setTripIds((prev) =>
-      prev.includes(id) ? prev.filter((tid) => tid !== id) : [...prev, id],
-    )
+    setTripIds((prev) => {
+      const safePrev = Array.isArray(prev) ? prev : []
+      return safePrev.includes(id)
+        ? safePrev.filter((tid) => tid !== id)
+        : [...safePrev, id]
+    })
   }
 
   const reserveCoupon = (id: string) => {
@@ -724,11 +733,11 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       return false
     }
 
-    setReservedIds((prev) => [...prev, id])
+    setReservedIds((prev) => [...(Array.isArray(prev) ? prev : []), id])
 
     if (coupon) {
       setCoupons((prev) =>
-        prev.map((c) =>
+        (Array.isArray(prev) ? prev : []).map((c) =>
           c.id === id
             ? {
                 ...c,
@@ -740,7 +749,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       )
     } else if (event) {
       setSeasonalEvents((prev) =>
-        prev.map((e) =>
+        (Array.isArray(prev) ? prev : []).map((e) =>
           e.id === id
             ? {
                 ...e,
@@ -757,14 +766,19 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   }
 
   const cancelReservation = (id: string) => {
-    setReservedIds((prev) => prev.filter((rid) => rid !== id))
+    setReservedIds((prev) =>
+      (Array.isArray(prev) ? prev : []).filter((rid) => rid !== id),
+    )
 
-    const coupon = coupons.find((c) => c.id === id)
-    const event = seasonalEvents.find((e) => e.id === id)
+    const safeCouponsData = Array.isArray(coupons) ? coupons : []
+    const safeEventsData = Array.isArray(seasonalEvents) ? seasonalEvents : []
+
+    const coupon = safeCouponsData.find((c) => c.id === id)
+    const event = safeEventsData.find((e) => e.id === id)
 
     if (coupon) {
       setCoupons((prev) =>
-        prev.map((c) =>
+        (Array.isArray(prev) ? prev : []).map((c) =>
           c.id === id
             ? {
                 ...c,
@@ -776,7 +790,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       )
     } else if (event) {
       setSeasonalEvents((prev) =>
-        prev.map((e) =>
+        (Array.isArray(prev) ? prev : []).map((e) =>
           e.id === id
             ? { ...e, totalAvailable: (e.totalAvailable ?? 100) + 1 }
             : e,
@@ -790,9 +804,12 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     )
   }
 
-  const addCoupon = (coupon: Coupon) => setCoupons((prev) => [coupon, ...prev])
+  const addCoupon = (coupon: Coupon) =>
+    setCoupons((prev) => [coupon, ...(Array.isArray(prev) ? prev : [])])
   const deleteCoupon = (id: string) => {
-    setCoupons((prev) => prev.filter((c) => c.id !== id))
+    setCoupons((prev) =>
+      (Array.isArray(prev) ? prev : []).filter((c) => c.id !== id),
+    )
     toast.success('Promoção excluída com sucesso')
   }
 
@@ -1009,14 +1026,17 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
 
   const importPromotion = (id: string, customCategory?: string) => {
     setDiscoveredPromotions((prev) =>
-      prev.map((p) =>
+      (Array.isArray(prev) ? prev : []).map((p) =>
         p.id === id
           ? { ...p, status: 'imported', category: customCategory || p.category }
           : p,
       ),
     )
 
-    const promo = discoveredPromotions.find((p) => p.id === id)
+    const safeDiscovered = Array.isArray(discoveredPromotions)
+      ? discoveredPromotions
+      : []
+    const promo = safeDiscovered.find((p) => p.id === id)
     if (promo) {
       const newCoupon: Coupon = {
         id: Math.random().toString(),
@@ -1047,7 +1067,9 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
 
   const ignorePromotion = (id: string) => {
     setDiscoveredPromotions((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, status: 'ignored' } : p)),
+      (Array.isArray(prev) ? prev : []).map((p) =>
+        p.id === id ? { ...p, status: 'ignored' } : p,
+      ),
     )
   }
 
@@ -1062,7 +1084,11 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
       })
       if (res.ok) {
         const data = await res.json()
-        setDiscoveredPromotions((prev) => [...(data.items || []), ...prev])
+        const items = Array.isArray(data?.items) ? data.items : []
+        setDiscoveredPromotions((prev) => [
+          ...items,
+          ...(Array.isArray(prev) ? prev : []),
+        ])
         logSystemAction('Crawler Scan', `Scan completed for source ${sourceId}`)
         toast.success('Varredura concluída com sucesso')
       }
@@ -1241,7 +1267,8 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     if (!query) return []
     try {
       const results = await fetchWebSearchPromotions(query)
-      return results.map((p) => ({
+      const safeResults = Array.isArray(results) ? results : []
+      return safeResults.map((p) => ({
         id: p.id,
         storeName: p.storeName,
         title: p.title,

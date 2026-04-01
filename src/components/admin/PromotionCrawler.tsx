@@ -25,14 +25,18 @@ import { fetchCrawlerPromotions } from '@/lib/api'
 import { DiscoveredPromotion } from '@/lib/types'
 import { Progress } from '@/components/ui/progress'
 import { Button } from '@/components/ui/button'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 
-export function PromotionCrawler({ franchiseId }: { franchiseId?: string }) {
-  const { user, franchises, discoveredPromotions } = useCouponStore()
+function PromotionCrawlerContent({ franchiseId }: { franchiseId?: string }) {
+  const store = useCouponStore() || {}
+  const { user } = store
+  const franchises = Array.isArray(store.franchises) ? store.franchises : []
   const { t } = useLanguage()
   const location = useLocation()
   const isFranchisee = location.pathname.includes('/franchisee')
 
-  const franchise = franchises.find((f) => f.id === franchiseId)
+  const safeFranchises = Array.isArray(franchises) ? franchises : []
+  const franchise = safeFranchises.find((f) => f.id === franchiseId)
   const { formatNumber } = useRegionFormatting(franchise?.region)
 
   const [crawlerState, setCrawlerState] = useState(getCrawlerProgress())
@@ -319,5 +323,13 @@ export function PromotionCrawler({ franchiseId }: { franchiseId?: string }) {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+export function PromotionCrawler(props: { franchiseId?: string }) {
+  return (
+    <ErrorBoundary>
+      <PromotionCrawlerContent {...props} />
+    </ErrorBoundary>
   )
 }
