@@ -105,11 +105,11 @@ export const fetchCoupons = async (
         }
       } catch (jsonErr) {
         console.warn('Failed to parse coupons response as JSON', jsonErr)
-        return { data: [], hasMore: false, total: 0 }
+        return { data: null as any, hasMore: false, total: 0 }
       }
     } else {
       console.warn(`Fetch coupons failed: ${res.status} ${res.statusText}`)
-      return { data: [], hasMore: false, total: 0 }
+      return { data: null as any, hasMore: false, total: 0 }
     }
   } catch (e: any) {
     if (e?.name === 'TypeError' && e?.message === 'Failed to fetch') {
@@ -117,7 +117,7 @@ export const fetchCoupons = async (
     } else {
       console.error('Backend unavailable', e)
     }
-    return { data: [], hasMore: false, total: 0 }
+    return { data: null as any, hasMore: false, total: 0 }
   }
 }
 
@@ -208,9 +208,17 @@ export const fetchCrawlerPromotions = async (
 ): Promise<FetchCrawlerPromotionsResponse> => {
   const { page = 1, limit = 20, franchiseId, region, query, category } = params
 
-  let apiData: any[] = []
-  let hasMore = false
-  let total = 0
+  let token = localStorage.getItem('auth_token')
+  if (!token) {
+    const pbAuth = localStorage.getItem('pocketbase_auth')
+    if (pbAuth) {
+      try {
+        token = JSON.parse(pbAuth).token
+      } catch (e) {
+        /* ignore */
+      }
+    }
+  }
 
   try {
     const queryParams = new URLSearchParams()
@@ -229,27 +237,48 @@ export const fetchCrawlerPromotions = async (
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
+          ...(token
+            ? {
+                Authorization: token.startsWith('Bearer')
+                  ? token
+                  : `Bearer ${token}`,
+              }
+            : {}),
         },
       },
     )
 
-    if (!res.ok) {
-      throw new Error(`Failed to fetch crawler promotions: ${res.status}`)
+    if (res.ok) {
+      try {
+        const data = await res.json()
+        const apiData = data?.items || []
+        return {
+          data: apiData.slice(0, limit),
+          hasMore: (data?.page || 0) < (data?.totalPages || 0),
+          total: Math.max(data?.totalItems || 0, apiData.length),
+        }
+      } catch (jsonErr) {
+        console.warn(
+          'Failed to parse crawler promotions response as JSON',
+          jsonErr,
+        )
+        return { data: null as any, hasMore: false, total: 0 }
+      }
+    } else {
+      console.warn(
+        `Fetch crawler promotions failed: ${res.status} ${res.statusText}`,
+      )
+      return { data: null as any, hasMore: false, total: 0 }
     }
-
-    const data = await res.json()
-    apiData = data?.items || []
-    hasMore = (data?.page || 0) < (data?.totalPages || 0)
-    total = data?.totalItems || 0
   } catch (e: any) {
-    console.error('Network error: Failed to fetch crawler promotions', e)
-    throw e
-  }
-
-  return {
-    data: apiData.slice(0, limit),
-    hasMore: hasMore,
-    total: Math.max(total, apiData.length),
+    if (e?.name === 'TypeError' && e?.message === 'Failed to fetch') {
+      console.warn(
+        'Network error: Failed to fetch crawler promotions. Using fallback.',
+      )
+    } else {
+      console.error('Backend unavailable or fetch failed', e)
+    }
+    return { data: null as any, hasMore: false, total: 0 }
   }
 }
 

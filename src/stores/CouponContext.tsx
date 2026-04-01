@@ -285,7 +285,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         const res = await fetchCoupons({ limit: 100 })
         if (!mounted) return
 
-        if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
+        if (res && res.data !== null && Array.isArray(res.data)) {
           setCoupons(res.data)
         } else {
           setCoupons(MOCK_COUPONS)
@@ -403,7 +403,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         const res = await fetchCrawlerPromotions({ limit: 100 })
         if (!mounted) return
 
-        if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
+        if (res && res.data !== null && Array.isArray(res.data)) {
           setDiscoveredPromotions(res.data)
         } else {
           setDiscoveredPromotions(MOCK_DISCOVERED_PROMOTIONS)
