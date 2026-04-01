@@ -126,6 +126,7 @@ interface CouponContextType {
   systemLogs: SystemLog[]
   crawlerSources: CrawlerSource[]
   discoveredPromotions: DiscoveredPromotion[]
+  dbPromotions: DiscoveredPromotion[]
   adPricing: AdPricing[]
   advertisers: Advertiser[]
   adInvoices: AdInvoice[]
@@ -395,6 +396,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   const [discoveredPromotions, setDiscoveredPromotions] = useState<
     DiscoveredPromotion[]
   >([])
+  const [dbPromotions, setDbPromotions] = useState<DiscoveredPromotion[]>([])
 
   useEffect(() => {
     let mounted = true
@@ -405,12 +407,13 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
 
         if (res && res.data && Array.isArray(res.data)) {
           setDiscoveredPromotions(res.data)
+          setDbPromotions(res.data)
         } else {
-          setDiscoveredPromotions(
-            Array.isArray(MOCK_DISCOVERED_PROMOTIONS)
-              ? MOCK_DISCOVERED_PROMOTIONS
-              : [],
-          )
+          const fallback = Array.isArray(MOCK_DISCOVERED_PROMOTIONS)
+            ? MOCK_DISCOVERED_PROMOTIONS
+            : []
+          setDiscoveredPromotions(fallback)
+          setDbPromotions(fallback)
         }
       } catch (e: any) {
         if (e?.message === 'Failed to fetch' || e?.name === 'TypeError') {
@@ -420,23 +423,25 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         } else {
           console.error('Failed to load promotions, using fallback', e)
         }
-        if (mounted)
-          setDiscoveredPromotions(
-            Array.isArray(MOCK_DISCOVERED_PROMOTIONS)
-              ? MOCK_DISCOVERED_PROMOTIONS
-              : [],
-          )
+        if (mounted) {
+          const fallback = Array.isArray(MOCK_DISCOVERED_PROMOTIONS)
+            ? MOCK_DISCOVERED_PROMOTIONS
+            : []
+          setDiscoveredPromotions(fallback)
+          setDbPromotions(fallback)
+        }
       }
     }
 
     loadPromotions().catch((err) => {
       console.error('Unhandled error in loadPromotions', err)
-      if (mounted)
-        setDiscoveredPromotions(
-          Array.isArray(MOCK_DISCOVERED_PROMOTIONS)
-            ? MOCK_DISCOVERED_PROMOTIONS
-            : [],
-        )
+      if (mounted) {
+        const fallback = Array.isArray(MOCK_DISCOVERED_PROMOTIONS)
+          ? MOCK_DISCOVERED_PROMOTIONS
+          : []
+        setDiscoveredPromotions(fallback)
+        setDbPromotions(fallback)
+      }
     })
 
     return () => {
@@ -1305,6 +1310,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         systemLogs,
         crawlerSources,
         discoveredPromotions,
+        dbPromotions,
         adPricing,
         advertisers,
         adInvoices,

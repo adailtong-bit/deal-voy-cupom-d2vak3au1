@@ -132,7 +132,12 @@ export function PromotionCrawler({ franchiseId }: { franchiseId?: string }) {
   }, [dbPromotions])
 
   const pendingPromotions = useMemo(() => {
-    if (!Array.isArray(basePendingPromotions)) return []
+    const safeDbPromotions = Array.isArray(dbPromotions) ? dbPromotions : []
+    if (
+      !Array.isArray(basePendingPromotions) ||
+      (safeDbPromotions.length === 0 && basePendingPromotions.length === 0)
+    )
+      return []
     return basePendingPromotions.filter((p) => {
       if (!p) return false
       if (filterState !== 'all' && p.state !== filterState) return false
@@ -272,9 +277,16 @@ export function PromotionCrawler({ franchiseId }: { franchiseId?: string }) {
               value="promotions"
               className="animate-in fade-in-50 min-w-0 w-full"
             >
-              {!isLoadingPromotions &&
-              pendingPromotions.length === 0 &&
-              basePendingPromotions.length === 0 ? (
+              {isLoadingPromotions ? (
+                <div className="p-12 flex flex-col items-center justify-center space-y-4">
+                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                  <p className="text-slate-500 font-medium">
+                    Carregando promoções...
+                  </p>
+                </div>
+              ) : !isLoadingPromotions &&
+                pendingPromotions.length === 0 &&
+                basePendingPromotions.length === 0 ? (
                 <div className="p-8 text-center bg-slate-50 rounded-lg border border-dashed border-slate-200">
                   <p className="text-slate-500 font-medium">
                     {t(

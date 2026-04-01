@@ -75,6 +75,8 @@ export default function Index() {
     platformSettings,
     reserveCoupon,
     searchWeb,
+    dbPromotions,
+    isLoadingLocation,
   } = useCouponStore()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
@@ -88,9 +90,10 @@ export default function Index() {
         setIsSearchingWeb(true)
         try {
           const results = await searchWeb(searchQuery)
-          setWebResults(results)
+          setWebResults(Array.isArray(results) ? results : [])
         } catch (e) {
           console.error(e)
+          setWebResults([])
         } finally {
           setIsSearchingWeb(false)
         }
@@ -148,9 +151,15 @@ export default function Index() {
   // Map coupons with recalculated distances if destination overridden
   const couponsWithDistance = useMemo(() => {
     const baseLoc = searchLocationInfo || userLocation
-    const allC = [...coupons, ...webResults].filter(
-      (v, i, a) => a.findIndex((t) => t.id === v.id) === i,
-    )
+    const safeCoupons = Array.isArray(coupons) ? coupons : []
+    const safeWebResults = Array.isArray(webResults) ? webResults : []
+    const safeDbPromotions = Array.isArray(dbPromotions) ? dbPromotions : []
+
+    const allC = [
+      ...safeCoupons,
+      ...safeWebResults,
+      ...safeDbPromotions,
+    ].filter((v, i, a) => a.findIndex((t) => t.id === v.id) === i)
     return allC.map((c) => {
       let dist = c.distance || 0
 
@@ -171,7 +180,8 @@ export default function Index() {
   const activeEvents = useMemo(() => {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
-    return seasonalEvents.filter((e) => {
+    const safeEvents = Array.isArray(seasonalEvents) ? seasonalEvents : []
+    return safeEvents.filter((e) => {
       if (e.status !== 'active') return false
       if (reservedIds.includes(e.id)) return false
       const end = new Date(e.endDate)
@@ -426,188 +436,211 @@ export default function Index() {
         </div>
 
         <div className="space-y-10">
-          {activeEvents.length > 0 &&
-            !searchQuery &&
-            selectedCategory === 'all' && (
-              <section>
-                <div className="flex items-center justify-between mb-5">
-                  <h2 className="text-2xl font-bold flex items-center gap-2 text-slate-800">
-                    <Gift className="h-6 w-6 text-primary" />
-                    {t('home.seasonal_events', 'Ofertas Sazonais em Destaque')}
-                  </h2>
-                  <Button
-                    variant="ghost"
-                    asChild
-                    className="hidden sm:flex hover:bg-slate-100"
-                  >
-                    <Link to="/seasonal">
-                      {t('home.view_calendar', 'Ver calendário')}{' '}
-                      <ChevronRight className="h-4 w-4 ml-1" />
-                    </Link>
-                  </Button>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  {activeEvents.slice(0, 2).map((event) => {
-                    const eventTitle =
-                      event.translations?.[language]?.title || event.title
-                    const eventDesc =
-                      event.translations?.[language]?.description ||
-                      event.description
-
-                    return (
-                      <Card
-                        key={event.id}
-                        className="overflow-hidden border-primary/20 hover:border-primary/50 transition-all hover:shadow-md group cursor-pointer"
-                        onClick={() => handleCardClick(event.id)}
+          {isLoadingLocation ? (
+            <div className="py-20 flex flex-col items-center justify-center space-y-4">
+              <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+              <p className="text-slate-500 font-medium">
+                {t(
+                  'home.loading_deals',
+                  'Buscando as melhores ofertas para você...',
+                )}
+              </p>
+            </div>
+          ) : (
+            <>
+              {activeEvents.length > 0 &&
+                !searchQuery &&
+                selectedCategory === 'all' && (
+                  <section>
+                    <div className="flex items-center justify-between mb-5">
+                      <h2 className="text-2xl font-bold flex items-center gap-2 text-slate-800">
+                        <Gift className="h-6 w-6 text-primary" />
+                        {t(
+                          'home.seasonal_events',
+                          'Ofertas Sazonais em Destaque',
+                        )}
+                      </h2>
+                      <Button
+                        variant="ghost"
+                        asChild
+                        className="hidden sm:flex hover:bg-slate-100"
                       >
-                        <div className="flex flex-col sm:flex-row h-full">
-                          {event.image && (
-                            <div className="w-full sm:w-2/5 h-48 sm:h-auto relative overflow-hidden bg-slate-100 shrink-0">
-                              {!imgErrors[event.id] ? (
-                                <img
-                                  src={event.image}
-                                  alt={eventTitle}
-                                  crossOrigin="anonymous"
-                                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                                  onError={() =>
-                                    setImgErrors((prev) => ({
-                                      ...prev,
-                                      [event.id]: true,
-                                    }))
-                                  }
-                                />
-                              ) : (
-                                <div className="w-full h-full bg-slate-200 flex items-center justify-center">
-                                  <ImageOff className="h-8 w-8 text-slate-400" />
+                        <Link to="/seasonal">
+                          {t('home.view_calendar', 'Ver calendário')}{' '}
+                          <ChevronRight className="h-4 w-4 ml-1" />
+                        </Link>
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                      {activeEvents.slice(0, 2).map((event) => {
+                        const eventTitle =
+                          event.translations?.[language]?.title || event.title
+                        const eventDesc =
+                          event.translations?.[language]?.description ||
+                          event.description
+
+                        return (
+                          <Card
+                            key={event.id}
+                            className="overflow-hidden border-primary/20 hover:border-primary/50 transition-all hover:shadow-md group cursor-pointer"
+                            onClick={() => handleCardClick(event.id)}
+                          >
+                            <div className="flex flex-col sm:flex-row h-full">
+                              {event.image && (
+                                <div className="w-full sm:w-2/5 h-48 sm:h-auto relative overflow-hidden bg-slate-100 shrink-0">
+                                  {!imgErrors[event.id] ? (
+                                    <img
+                                      src={event.image}
+                                      alt={eventTitle}
+                                      crossOrigin="anonymous"
+                                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                      onError={() =>
+                                        setImgErrors((prev) => ({
+                                          ...prev,
+                                          [event.id]: true,
+                                        }))
+                                      }
+                                    />
+                                  ) : (
+                                    <div className="w-full h-full bg-slate-200 flex items-center justify-center">
+                                      <ImageOff className="h-8 w-8 text-slate-400" />
+                                    </div>
+                                  )}
+                                  <div className="absolute top-2 left-2 flex gap-1 flex-col items-start">
+                                    <Badge
+                                      variant="secondary"
+                                      className="bg-white/95 text-black backdrop-blur-sm shadow-sm font-bold capitalize"
+                                    >
+                                      {t(
+                                        `event.type.${event.type}`,
+                                        event.type,
+                                      )}
+                                    </Badge>
+                                    {(event.offerType === 'online' ||
+                                      event.externalUrl) && (
+                                      <Badge className="bg-blue-600 text-white font-bold shadow-sm border-none">
+                                        <Globe className="w-3 h-3 mr-1" />{' '}
+                                        {t('vouchers.online', 'Online')}
+                                      </Badge>
+                                    )}
+                                  </div>
                                 </div>
                               )}
-                              <div className="absolute top-2 left-2 flex gap-1 flex-col items-start">
-                                <Badge
-                                  variant="secondary"
-                                  className="bg-white/95 text-black backdrop-blur-sm shadow-sm font-bold capitalize"
-                                >
-                                  {t(`event.type.${event.type}`, event.type)}
-                                </Badge>
-                                {(event.offerType === 'online' ||
-                                  event.externalUrl) && (
-                                  <Badge className="bg-blue-600 text-white font-bold shadow-sm border-none">
-                                    <Globe className="w-3 h-3 mr-1" />{' '}
-                                    {t('vouchers.online', 'Online')}
-                                  </Badge>
-                                )}
+                              <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between bg-white">
+                                <div>
+                                  <h3 className="text-lg sm:text-xl font-bold text-primary mb-1.5 line-clamp-2">
+                                    {eventTitle}
+                                  </h3>
+                                  <p className="text-sm text-muted-foreground line-clamp-2 sm:line-clamp-3 mb-4">
+                                    {eventDesc}
+                                  </p>
+                                </div>
+                                <div className="space-y-4 mt-auto">
+                                  <div className="flex items-center gap-2 text-xs sm:text-sm font-medium text-slate-600 bg-slate-50 p-2 rounded-lg">
+                                    <CalendarIcon className="h-4 w-4 text-primary shrink-0" />
+                                    <span className="truncate">
+                                      {formatDate(event.startDate)} -{' '}
+                                      {formatDate(event.endDate)}
+                                    </span>
+                                  </div>
+                                  <Button
+                                    className="w-full gap-2 font-bold shadow-sm transition-transform hover:-translate-y-0.5"
+                                    size="lg"
+                                    onClick={(e) =>
+                                      handleReserveSeasonal(e, event.id)
+                                    }
+                                  >
+                                    <Ticket className="h-5 w-5" />
+                                    {t('home.get_voucher', 'Resgatar Voucher')}
+                                  </Button>
+                                </div>
                               </div>
                             </div>
-                          )}
-                          <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between bg-white">
-                            <div>
-                              <h3 className="text-lg sm:text-xl font-bold text-primary mb-1.5 line-clamp-2">
-                                {eventTitle}
-                              </h3>
-                              <p className="text-sm text-muted-foreground line-clamp-2 sm:line-clamp-3 mb-4">
-                                {eventDesc}
-                              </p>
-                            </div>
-                            <div className="space-y-4 mt-auto">
-                              <div className="flex items-center gap-2 text-xs sm:text-sm font-medium text-slate-600 bg-slate-50 p-2 rounded-lg">
-                                <CalendarIcon className="h-4 w-4 text-primary shrink-0" />
-                                <span className="truncate">
-                                  {formatDate(event.startDate)} -{' '}
-                                  {formatDate(event.endDate)}
-                                </span>
-                              </div>
-                              <Button
-                                className="w-full gap-2 font-bold shadow-sm transition-transform hover:-translate-y-0.5"
-                                size="lg"
-                                onClick={(e) =>
-                                  handleReserveSeasonal(e, event.id)
-                                }
-                              >
-                                <Ticket className="h-5 w-5" />
-                                {t('home.get_voucher', 'Resgatar Voucher')}
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      </Card>
-                    )
-                  })}
-                </div>
-                {activeEvents.length > 2 && (
-                  <div className="mt-5 text-center sm:hidden">
-                    <Button variant="outline" asChild className="w-full">
-                      <Link to="/seasonal">
-                        {t('home.view_all_events', 'Ver todos os eventos')}
-                      </Link>
-                    </Button>
-                  </div>
-                )}
-              </section>
-            )}
-
-          {finalTrending.length > 0 && (
-            <section>
-              <h2 className="text-2xl font-bold flex items-center gap-2 mb-5 text-slate-800">
-                <TrendingUp className="h-6 w-6 text-orange-500" />
-                {searchQuery || selectedCategory !== 'all'
-                  ? t('home.search_results', 'Resultados da Busca')
-                  : t('home.trending', 'Em Alta')}
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-                {finalTrending.map((coupon) => (
-                  <CouponCard key={coupon.id} coupon={coupon} />
-                ))}
-              </div>
-            </section>
-          )}
-
-          {moreCoupons.length > 0 && (
-            <section>
-              <h2 className="text-2xl font-bold flex items-center gap-2 mb-5 text-slate-800">
-                <Sparkles className="h-6 w-6 text-yellow-500" />
-                {t('home.more_deals', 'Mais Oportunidades')}
-              </h2>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-                {moreCoupons.map((coupon) => (
-                  <CouponCard
-                    key={coupon.id}
-                    coupon={coupon}
-                    variant="horizontal"
-                  />
-                ))}
-              </div>
-            </section>
-          )}
-
-          {filteredCoupons.length === 0 && (
-            <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-slate-200 shadow-sm mt-8">
-              <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Search className="h-8 w-8 text-slate-400" />
-              </div>
-              <h3 className="text-lg font-bold text-slate-700">
-                {t('home.no_offers', 'Nenhuma oferta encontrada no momento.')}
-              </h3>
-              <p className="text-slate-500 mt-1 max-w-md mx-auto px-4">
-                {selectedCategory !== 'all' && !searchQuery
-                  ? t(
-                      'home.no_category_results',
-                      'Não temos ofertas disponíveis nesta categoria no momento.',
-                    )
-                  : t(
-                      'home.try_another_search',
-                      'Tente usar outros termos de busca ou navegue pelas categorias disponíveis.',
+                          </Card>
+                        )
+                      })}
+                    </div>
+                    {activeEvents.length > 2 && (
+                      <div className="mt-5 text-center sm:hidden">
+                        <Button variant="outline" asChild className="w-full">
+                          <Link to="/seasonal">
+                            {t('home.view_all_events', 'Ver todos os eventos')}
+                          </Link>
+                        </Button>
+                      </div>
                     )}
-              </p>
-              <Button
-                variant="outline"
-                className="mt-6"
-                onClick={() => {
-                  setSearchQuery('')
-                  setSelectedCategory('all')
-                }}
-              >
-                {t('home.clear_search', 'Limpar Busca e Filtros')}
-              </Button>
-            </div>
+                  </section>
+                )}
+
+              {finalTrending.length > 0 && (
+                <section>
+                  <h2 className="text-2xl font-bold flex items-center gap-2 mb-5 text-slate-800">
+                    <TrendingUp className="h-6 w-6 text-orange-500" />
+                    {searchQuery || selectedCategory !== 'all'
+                      ? t('home.search_results', 'Resultados da Busca')
+                      : t('home.trending', 'Em Alta')}
+                  </h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+                    {finalTrending.map((coupon) => (
+                      <CouponCard key={coupon.id} coupon={coupon} />
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {moreCoupons.length > 0 && (
+                <section>
+                  <h2 className="text-2xl font-bold flex items-center gap-2 mb-5 text-slate-800">
+                    <Sparkles className="h-6 w-6 text-yellow-500" />
+                    {t('home.more_deals', 'Mais Oportunidades')}
+                  </h2>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                    {moreCoupons.map((coupon) => (
+                      <CouponCard
+                        key={coupon.id}
+                        coupon={coupon}
+                        variant="horizontal"
+                      />
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {filteredCoupons.length === 0 && (
+                <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-slate-200 shadow-sm mt-8">
+                  <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Search className="h-8 w-8 text-slate-400" />
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-700">
+                    {t(
+                      'home.no_offers',
+                      'Nenhuma oferta encontrada no momento.',
+                    )}
+                  </h3>
+                  <p className="text-slate-500 mt-1 max-w-md mx-auto px-4">
+                    {selectedCategory !== 'all' && !searchQuery
+                      ? t(
+                          'home.no_category_results',
+                          'Não temos ofertas disponíveis nesta categoria no momento.',
+                        )
+                      : t(
+                          'home.try_another_search',
+                          'Tente usar outros termos de busca ou navegue pelas categorias disponíveis.',
+                        )}
+                  </p>
+                  <Button
+                    variant="outline"
+                    className="mt-6"
+                    onClick={() => {
+                      setSearchQuery('')
+                      setSelectedCategory('all')
+                    }}
+                  >
+                    {t('home.clear_search', 'Limpar Busca e Filtros')}
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

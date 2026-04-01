@@ -263,7 +263,10 @@ export const fetchCrawlerPromotions = async (
 
     if (res.ok) {
       try {
-        const data = await res.json()
+        const text = await res.text()
+        if (!text) return { data: [], hasMore: false, total: 0 }
+
+        const data = JSON.parse(text)
         const apiData = Array.isArray(data?.items)
           ? data.items
           : Array.isArray(data)
