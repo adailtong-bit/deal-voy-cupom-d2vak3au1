@@ -1612,6 +1612,32 @@ export const MOCK_CRAWLER_SOURCES: CrawlerSource[] = [
 
 export const MOCK_DISCOVERED_PROMOTIONS: DiscoveredPromotion[] = [
   {
+    id: 'dp_amazon_sony',
+    sourceId: 'cs_amazon',
+    originalUrl:
+      'https://www.amazon.com/Sony-WH-1000XM5-Canceling-Headphones-Hands-Free/dp/B09XSDMT4F',
+    productLink:
+      'https://www.amazon.com/Sony-WH-1000XM5-Canceling-Headphones-Hands-Free/dp/B09XSDMT4F',
+    title: 'Sony WH-1000XM5 Wireless Noise Canceling Headphones',
+    discount: '18% OFF',
+    discountPercentage: 18,
+    description:
+      'Industry Leading Noise Canceling with Auto Noise Canceling Optimizer',
+    price: 328.0,
+    currentPrice: 328.0,
+    originalPrice: 398.0,
+    currency: 'USD',
+    expiryDate: '2025-12-31',
+    image: 'https://img.usecurling.com/p/600/400?q=headphones',
+    imageUrl: 'https://img.usecurling.com/p/600/400?q=headphones',
+    storeName: 'Amazon',
+    status: 'imported',
+    region: 'Global',
+    country: 'USA',
+    category: 'Eletrônicos',
+    capturedAt: new Date().toISOString(),
+  },
+  {
     id: 'dp1',
     sourceId: 'cs_amazon',
     originalUrl: 'https://amazon.com/dp/B08F7PTF53',

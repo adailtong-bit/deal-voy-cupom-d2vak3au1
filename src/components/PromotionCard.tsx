@@ -12,15 +12,25 @@ export function PromotionCard({
 }) {
   const { t } = useLanguage()
 
-  if (!promotion) return null
+  // Guard against unexpected missing object
+  if (!promotion || typeof promotion !== 'object') return null
 
+  // Gracefully handle missing required fields using fallbacks
   const image =
-    promotion.image || 'https://img.usecurling.com/p/400/300?q=shopping'
+    promotion.imageUrl ||
+    promotion.image ||
+    'https://img.usecurling.com/p/400/300?q=shopping'
   const title =
     promotion.title || t('promotion.untitled', 'Promoção sem título')
-  const discount = promotion.discount
-  const price = promotion.price
-  const link = promotion.originalUrl
+
+  const discountPercentage = promotion.discountPercentage
+  const discountLabel =
+    promotion.discount ||
+    (discountPercentage ? `${discountPercentage}% OFF` : null)
+
+  const currentPrice = promotion.currentPrice ?? promotion.price
+  const originalPrice = promotion.originalPrice
+  const link = promotion.productLink || promotion.originalUrl
 
   return (
     <Card className="flex flex-col h-full overflow-hidden hover:shadow-lg transition-shadow duration-300">
@@ -34,9 +44,9 @@ export function PromotionCard({
               'https://img.usecurling.com/p/400/300?q=shopping'
           }}
         />
-        {discount && (
+        {discountLabel && (
           <Badge className="absolute top-3 right-3 bg-red-500 hover:bg-red-600 text-white font-bold px-2 py-1 shadow-sm border-none z-10">
-            {discount}
+            {discountLabel}
           </Badge>
         )}
       </div>
@@ -50,13 +60,21 @@ export function PromotionCard({
       </CardHeader>
       <CardContent className="p-4 pt-0 flex-1 flex flex-col justify-end">
         <div className="mt-auto">
-          {price !== undefined && price !== null ? (
-            <div className="flex items-center gap-1 font-bold text-primary text-xl">
-              <span className="text-sm text-slate-500 font-normal">
-                {t('promotion.price', 'Por:')}{' '}
-              </span>
-              <span>{promotion.currency || 'R$'}</span>
-              <span>{Number(price).toFixed(2).replace('.', ',')}</span>
+          {currentPrice !== undefined && currentPrice !== null ? (
+            <div className="flex flex-col">
+              {originalPrice && originalPrice > currentPrice && (
+                <span className="text-sm text-slate-400 line-through decoration-slate-400">
+                  {promotion.currency || 'R$'}{' '}
+                  {Number(originalPrice).toFixed(2).replace('.', ',')}
+                </span>
+              )}
+              <div className="flex items-center gap-1 font-bold text-primary text-xl">
+                <span className="text-sm text-slate-500 font-normal">
+                  {t('promotion.price', 'Por:')}{' '}
+                </span>
+                <span>{promotion.currency || 'R$'}</span>
+                <span>{Number(currentPrice).toFixed(2).replace('.', ',')}</span>
+              </div>
             </div>
           ) : (
             <div className="h-7" />

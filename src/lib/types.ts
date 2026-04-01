@@ -774,13 +774,18 @@ export interface DiscoveredPromotion {
   id: string
   sourceId: string
   originalUrl?: string
+  productLink?: string
   title: string
   discount: string
+  discountPercentage?: number
   description: string
   price?: number
+  currentPrice?: number
+  originalPrice?: number
   currency?: string
   expiryDate: string
   image: string
+  imageUrl?: string
   storeName: string
   status: 'pending' | 'imported' | 'ignored'
   region: string

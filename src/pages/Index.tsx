@@ -741,12 +741,17 @@ function IndexContent() {
                       {t('home.web_promotions', 'Promoções da Web')}
                     </h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-                      {filteredDbPromotions.map((promo) => (
-                        <PromotionCard
-                          key={promo?.id || Math.random().toString()}
-                          promotion={promo}
-                        />
-                      ))}
+                      {filteredDbPromotions.map((promo) => {
+                        // Robust handling: verify object integrity before rendering
+                        if (!promo || typeof promo !== 'object') return null
+
+                        return (
+                          <PromotionCard
+                            key={promo.id || Math.random().toString()}
+                            promotion={promo}
+                          />
+                        )
+                      })}
                     </div>
                   </section>
                 )}
