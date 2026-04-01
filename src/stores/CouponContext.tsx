@@ -155,6 +155,7 @@ interface CouponContextType {
   replyToReview: (couponId: string, reviewId: string, text: string) => void
   addUpload: (doc: UploadedDocument) => void
   refreshCoupons: () => void
+  hasErrorLoading: boolean
   voteCoupon: (id: string, type: 'up' | 'down') => void
   reportCoupon: (id: string, issue: string) => void
   makeBooking: (booking: Omit<Booking, 'id' | 'status'>) => void
@@ -280,35 +281,38 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   const [coupons, setCoupons] = useState<Coupon[]>([])
   const [companies, setCompanies] = useState<Company[]>([])
   const [isLoadingCoupons, setIsLoadingCoupons] = useState(true)
+  const [hasErrorLoading, setHasErrorLoading] = useState(false)
+
+  const loadCoupons = async (isRetry = false) => {
+    if (isRetry) {
+      setIsLoadingCoupons(true)
+      setHasErrorLoading(false)
+    }
+    try {
+      const res = await fetchCoupons({ limit: 100 })
+
+      if (res && res.data && Array.isArray(res.data)) {
+        setCoupons(res.data)
+        setHasErrorLoading(false)
+      } else {
+        setCoupons(Array.isArray(MOCK_COUPONS) ? MOCK_COUPONS : [])
+      }
+    } catch (e: any) {
+      console.error('Failed to load coupons', e)
+      setHasErrorLoading(true)
+      setCoupons([])
+    } finally {
+      setIsLoadingCoupons(false)
+    }
+  }
 
   useEffect(() => {
     let mounted = true
-    const loadCoupons = async () => {
-      try {
-        const res = await fetchCoupons({ limit: 100 })
-        if (!mounted) return
-
-        if (res && res.data && Array.isArray(res.data)) {
-          setCoupons(res.data)
-        } else {
-          setCoupons(Array.isArray(MOCK_COUPONS) ? MOCK_COUPONS : [])
-        }
-      } catch (e: any) {
-        if (e?.message === 'Failed to fetch' || e?.name === 'TypeError') {
-          console.warn('Network error: Failed to load coupons, using fallback')
-        } else {
-          console.error('Failed to load coupons, using fallback', e)
-        }
-        if (mounted) setCoupons(Array.isArray(MOCK_COUPONS) ? MOCK_COUPONS : [])
-      } finally {
-        if (mounted) setIsLoadingCoupons(false)
-      }
-    }
-
     loadCoupons().catch((err) => {
       console.error('Unhandled error in loadCoupons', err)
       if (mounted) {
-        setCoupons(Array.isArray(MOCK_COUPONS) ? MOCK_COUPONS : [])
+        setHasErrorLoading(true)
+        setCoupons([])
         setIsLoadingCoupons(false)
       }
     })
@@ -405,49 +409,34 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   >([])
   const [dbPromotions, setDbPromotions] = useState<DiscoveredPromotion[]>([])
 
-  useEffect(() => {
-    let mounted = true
-    const loadPromotions = async () => {
-      try {
-        const res = await fetchCrawlerPromotions({ limit: 100 })
-        if (!mounted) return
+  const loadPromotions = async (isRetry = false) => {
+    try {
+      const res = await fetchCrawlerPromotions({ limit: 100 })
 
-        if (res && res.data && Array.isArray(res.data)) {
-          setDiscoveredPromotions(res.data)
-          setDbPromotions(res.data)
-        } else {
-          const fallback = Array.isArray(MOCK_DISCOVERED_PROMOTIONS)
-            ? MOCK_DISCOVERED_PROMOTIONS
-            : []
-          setDiscoveredPromotions(fallback)
-          setDbPromotions(fallback)
-        }
-      } catch (e: any) {
-        if (e?.message === 'Failed to fetch' || e?.name === 'TypeError') {
-          console.warn(
-            'Network error: Failed to load promotions, using fallback',
-          )
-        } else {
-          console.error('Failed to load promotions, using fallback', e)
-        }
-        if (mounted) {
-          const fallback = Array.isArray(MOCK_DISCOVERED_PROMOTIONS)
-            ? MOCK_DISCOVERED_PROMOTIONS
-            : []
-          setDiscoveredPromotions(fallback)
-          setDbPromotions(fallback)
-        }
-      }
-    }
-
-    loadPromotions().catch((err) => {
-      console.error('Unhandled error in loadPromotions', err)
-      if (mounted) {
+      if (res && res.data && Array.isArray(res.data)) {
+        setDiscoveredPromotions(res.data)
+        setDbPromotions(res.data)
+      } else {
         const fallback = Array.isArray(MOCK_DISCOVERED_PROMOTIONS)
           ? MOCK_DISCOVERED_PROMOTIONS
           : []
         setDiscoveredPromotions(fallback)
         setDbPromotions(fallback)
+      }
+    } catch (e: any) {
+      console.error('Failed to load promotions', e)
+      setDiscoveredPromotions([])
+      setDbPromotions([])
+    }
+  }
+
+  useEffect(() => {
+    let mounted = true
+    loadPromotions().catch((err) => {
+      console.error('Unhandled error in loadPromotions', err)
+      if (mounted) {
+        setDiscoveredPromotions([])
+        setDbPromotions([])
       }
     })
 
@@ -724,8 +713,11 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
   }
 
   const reserveCoupon = (id: string) => {
-    const coupon = coupons.find((c) => c.id === id)
-    const event = seasonalEvents.find((e) => e.id === id)
+    const safeCouponsData = Array.isArray(coupons) ? coupons : []
+    const safeEventsData = Array.isArray(seasonalEvents) ? seasonalEvents : []
+
+    const coupon = safeCouponsData.find((c) => c.id === id)
+    const event = safeEventsData.find((e) => e.id === id)
 
     let available = 0
     if (coupon)
@@ -848,7 +840,8 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
     /* ... */
   }
   const refreshCoupons = () => {
-    /* ... */
+    loadCoupons(true)
+    loadPromotions(true)
   }
   const voteCoupon = (id: string, type: any) => {
     /* ... */
@@ -1369,6 +1362,7 @@ export function CouponProvider({ children }: { children: React.ReactNode }) {
         isInTrip,
         isLoadingLocation,
         isLoadingCoupons,
+        hasErrorLoading,
         addReview,
         replyToReview,
         addUpload,

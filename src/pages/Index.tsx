@@ -39,6 +39,8 @@ import {
   ArrowLeft,
   Globe,
   ImageOff,
+  RefreshCw,
+  AlertTriangle,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -84,6 +86,8 @@ function IndexContent() {
     : []
   const isLoadingLocation =
     !!store.isLoadingLocation || !!store.isLoadingCoupons
+  const hasErrorLoading = !!store.hasErrorLoading
+  const refreshCoupons = store.refreshCoupons || (() => {})
 
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
@@ -160,11 +164,14 @@ function IndexContent() {
     const safeWebResults = Array.isArray(webResults) ? webResults : []
     const safeDbPromotions = Array.isArray(dbPromotions) ? dbPromotions : []
 
-    const allC = [
-      ...safeCoupons,
-      ...safeWebResults,
-      ...safeDbPromotions,
-    ].filter((v, i, a) => a.findIndex((t) => t.id === v.id) === i)
+    const combined = []
+    if (Array.isArray(safeCoupons)) combined.push(...safeCoupons)
+    if (Array.isArray(safeWebResults)) combined.push(...safeWebResults)
+    if (Array.isArray(safeDbPromotions)) combined.push(...safeDbPromotions)
+
+    const allC = combined.filter(
+      (v, i, a) => v && a.findIndex((t) => t?.id === v?.id) === i,
+    )
 
     return allC.map((c) => {
       let dist = c.distance || 0
@@ -337,24 +344,35 @@ function IndexContent() {
             </div>
 
             <div className="flex items-center justify-between pl-2 mt-1">
-              <div className="flex items-center gap-1.5 text-sm font-medium text-slate-600 animate-fade-in">
-                <MapPin className="h-4 w-4 text-primary" />
-                <span>
-                  {searchLocationInfo
-                    ? t(
-                        'home.location_override',
-                        `Mostrando ofertas perto de ${searchLocationInfo.label}`,
-                      ).replace('{location}', searchLocationInfo.label)
-                    : userLocation
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => refreshCoupons()}
+                  className="hidden sm:flex text-slate-500 hover:text-primary transition-colors h-8 px-2 -ml-2"
+                  title={t('home.refresh_promotions', 'Atualizar Promoções')}
+                >
+                  <RefreshCw className="w-4 h-4" />
+                </Button>
+                <div className="flex items-center gap-1.5 text-sm font-medium text-slate-600 animate-fade-in">
+                  <MapPin className="h-4 w-4 text-primary" />
+                  <span>
+                    {searchLocationInfo
                       ? t(
-                          'home.location_active',
-                          'Mostrando ofertas próximas a você',
-                        )
-                      : t(
-                          'home.detecting_location',
-                          'Detectando localização...',
-                        )}
-                </span>
+                          'home.location_override',
+                          `Mostrando ofertas perto de ${searchLocationInfo.label}`,
+                        ).replace('{location}', searchLocationInfo.label)
+                      : userLocation
+                        ? t(
+                            'home.location_active',
+                            'Mostrando ofertas próximas a você',
+                          )
+                        : t(
+                            'home.detecting_location',
+                            'Detectando localização...',
+                          )}
+                  </span>
+                </div>
               </div>
               {isSearchingWeb && (
                 <div className="text-xs text-primary animate-pulse flex items-center gap-1">
@@ -479,6 +497,29 @@ function IndexContent() {
                   ))}
                 </div>
               </div>
+            </div>
+          ) : hasErrorLoading ? (
+            <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-red-200 shadow-sm mt-8">
+              <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <AlertTriangle className="h-8 w-8 text-red-500" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-800">
+                {t('home.load_failed', 'Falha ao carregar cupons')}
+              </h3>
+              <p className="text-slate-500 mt-2 max-w-md mx-auto px-4">
+                {t(
+                  'home.load_failed_desc',
+                  'Tivemos um problema de comunicação com nossos servidores. Por favor, verifique sua conexão ou tente novamente.',
+                )}
+              </p>
+              <Button
+                variant="default"
+                className="mt-6 font-semibold"
+                onClick={() => refreshCoupons()}
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                {t('common.try_again', 'Tentar novamente')}
+              </Button>
             </div>
           ) : (
             <>
@@ -658,10 +699,15 @@ function IndexContent() {
                     <Search className="h-8 w-8 text-slate-400" />
                   </div>
                   <h3 className="text-lg font-bold text-slate-700">
-                    {t(
-                      'home.no_offers',
-                      'Nenhuma oferta encontrada no momento.',
-                    )}
+                    {searchQuery || selectedCategory !== 'all'
+                      ? t(
+                          'home.no_offers',
+                          'Nenhuma oferta encontrada no momento.',
+                        )
+                      : t(
+                          'home.no_coupons_available',
+                          'Nenhum cupom disponível no momento.',
+                        )}
                   </h3>
                   <p className="text-slate-500 mt-1 max-w-md mx-auto px-4">
                     {selectedCategory !== 'all' && !searchQuery
@@ -669,21 +715,40 @@ function IndexContent() {
                           'home.no_category_results',
                           'Não temos ofertas disponíveis nesta categoria no momento.',
                         )
-                      : t(
-                          'home.try_another_search',
-                          'Tente usar outros termos de busca ou navegue pelas categorias disponíveis.',
-                        )}
+                      : searchQuery
+                        ? t(
+                            'home.try_another_search',
+                            'Tente usar outros termos de busca ou navegue pelas categorias disponíveis.',
+                          )
+                        : t(
+                            'home.check_back_later',
+                            'Verifique novamente mais tarde para novas promoções ou tente atualizar a página.',
+                          )}
                   </p>
-                  <Button
-                    variant="outline"
-                    className="mt-6"
-                    onClick={() => {
-                      setSearchQuery('')
-                      setSelectedCategory('all')
-                    }}
-                  >
-                    {t('home.clear_search', 'Limpar Busca e Filtros')}
-                  </Button>
+                  <div className="flex justify-center flex-wrap gap-3 mt-6">
+                    {(searchQuery || selectedCategory !== 'all') && (
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setSearchQuery('')
+                          setSelectedCategory('all')
+                        }}
+                      >
+                        {t('home.clear_search', 'Limpar Busca e Filtros')}
+                      </Button>
+                    )}
+                    <Button
+                      variant={
+                        searchQuery || selectedCategory !== 'all'
+                          ? 'ghost'
+                          : 'default'
+                      }
+                      onClick={() => refreshCoupons()}
+                    >
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      {t('home.refresh_promotions', 'Atualizar Promoções')}
+                    </Button>
+                  </div>
                 </div>
               )}
             </>
