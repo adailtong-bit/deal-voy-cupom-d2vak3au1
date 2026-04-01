@@ -95,9 +95,10 @@ export function PromotionCrawler({ franchiseId }: { franchiseId?: string }) {
     setIsLoadingPromotions(true)
     try {
       const { data } = await fetchCrawlerPromotions({ limit: 500, franchiseId })
-      setDbPromotions(data)
+      setDbPromotions(Array.isArray(data) ? data : [])
     } catch (e) {
       console.error('Failed to load promotions', e)
+      setDbPromotions([])
     } finally {
       setIsLoadingPromotions(false)
     }
@@ -116,7 +117,7 @@ export function PromotionCrawler({ franchiseId }: { franchiseId?: string }) {
   }, [crawlerState.isScanning, activeTab, loadPromotions])
 
   const basePendingPromotions = useMemo(() => {
-    const allPromos = [...dbPromotions]
+    const allPromos = Array.isArray(dbPromotions) ? [...dbPromotions] : []
 
     return allPromos.filter(
       (p) =>

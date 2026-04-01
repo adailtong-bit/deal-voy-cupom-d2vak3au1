@@ -105,11 +105,11 @@ export const fetchCoupons = async (
         }
       } catch (jsonErr) {
         console.warn('Failed to parse coupons response as JSON', jsonErr)
-        return { data: null as any, hasMore: false, total: 0 }
+        return { data: [], hasMore: false, total: 0 }
       }
     } else {
       console.warn(`Fetch coupons failed: ${res.status} ${res.statusText}`)
-      return { data: null as any, hasMore: false, total: 0 }
+      return { data: [], hasMore: false, total: 0 }
     }
   } catch (e: any) {
     if (e?.name === 'TypeError' && e?.message === 'Failed to fetch') {
@@ -117,7 +117,7 @@ export const fetchCoupons = async (
     } else {
       console.error('Backend unavailable', e)
     }
-    return { data: null as any, hasMore: false, total: 0 }
+    return { data: [], hasMore: false, total: 0 }
   }
 }
 
@@ -262,13 +262,13 @@ export const fetchCrawlerPromotions = async (
           'Failed to parse crawler promotions response as JSON',
           jsonErr,
         )
-        return { data: null as any, hasMore: false, total: 0 }
+        return { data: [], hasMore: false, total: 0 }
       }
     } else {
       console.warn(
         `Fetch crawler promotions failed: ${res.status} ${res.statusText}`,
       )
-      return { data: null as any, hasMore: false, total: 0 }
+      return { data: [], hasMore: false, total: 0 }
     }
   } catch (e: any) {
     if (e?.name === 'TypeError' && e?.message === 'Failed to fetch') {
@@ -278,7 +278,7 @@ export const fetchCrawlerPromotions = async (
     } else {
       console.error('Backend unavailable or fetch failed', e)
     }
-    return { data: null as any, hasMore: false, total: 0 }
+    return { data: [], hasMore: false, total: 0 }
   }
 }
 
