@@ -11,11 +11,157 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: '14.5'
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
-      [_ in never]: never
+      crawler_logs: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          date: string | null
+          error_details: Json | null
+          error_message: string | null
+          id: string
+          items_found: number | null
+          items_imported: number | null
+          source_id: string | null
+          status: string | null
+          store_name: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          date?: string | null
+          error_details?: Json | null
+          error_message?: string | null
+          id?: string
+          items_found?: number | null
+          items_imported?: number | null
+          source_id?: string | null
+          status?: string | null
+          store_name?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          date?: string | null
+          error_details?: Json | null
+          error_message?: string | null
+          id?: string
+          items_found?: number | null
+          items_imported?: number | null
+          source_id?: string | null
+          status?: string | null
+          store_name?: string | null
+        }
+        Relationships: []
+      }
+      crawler_sources: {
+        Row: {
+          city: string | null
+          country: string | null
+          created_at: string | null
+          id: string
+          last_scan: string | null
+          name: string
+          region: string | null
+          scan_radius: number | null
+          state: string | null
+          status: string | null
+          type: string | null
+          url: string
+        }
+        Insert: {
+          city?: string | null
+          country?: string | null
+          created_at?: string | null
+          id?: string
+          last_scan?: string | null
+          name: string
+          region?: string | null
+          scan_radius?: number | null
+          state?: string | null
+          status?: string | null
+          type?: string | null
+          url: string
+        }
+        Update: {
+          city?: string | null
+          country?: string | null
+          created_at?: string | null
+          id?: string
+          last_scan?: string | null
+          name?: string
+          region?: string | null
+          scan_radius?: number | null
+          state?: string | null
+          status?: string | null
+          type?: string | null
+          url?: string
+        }
+        Relationships: []
+      }
+      discovered_promotions: {
+        Row: {
+          captured_at: string | null
+          category: string | null
+          country: string | null
+          created_at: string | null
+          currency: string | null
+          description: string | null
+          discount: string | null
+          discount_percentage: number | null
+          id: string
+          image_url: string | null
+          original_price: number | null
+          price: number | null
+          product_link: string | null
+          source_url: string | null
+          status: string | null
+          store_name: string | null
+          title: string
+        }
+        Insert: {
+          captured_at?: string | null
+          category?: string | null
+          country?: string | null
+          created_at?: string | null
+          currency?: string | null
+          description?: string | null
+          discount?: string | null
+          discount_percentage?: number | null
+          id?: string
+          image_url?: string | null
+          original_price?: number | null
+          price?: number | null
+          product_link?: string | null
+          source_url?: string | null
+          status?: string | null
+          store_name?: string | null
+          title: string
+        }
+        Update: {
+          captured_at?: string | null
+          category?: string | null
+          country?: string | null
+          created_at?: string | null
+          currency?: string | null
+          description?: string | null
+          discount?: string | null
+          discount_percentage?: number | null
+          id?: string
+          image_url?: string | null
+          original_price?: number | null
+          price?: number | null
+          product_link?: string | null
+          source_url?: string | null
+          status?: string | null
+          store_name?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -32,33 +178,33 @@ export type Database = {
   }
 }
 
-type DatabaseWithoutInternals = Omit<Database, '__InternalSupabase'>
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, 'public'>]
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema['Tables'] &
-        DefaultSchema['Views'])
-    ? (DefaultSchema['Tables'] &
-        DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R
       }
       ? R
@@ -67,23 +213,23 @@ export type Tables<
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema['Tables']
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Insert: infer I
       }
       ? I
@@ -92,23 +238,23 @@ export type TablesInsert<
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema['Tables']
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Update: infer U
       }
       ? U
@@ -117,36 +263,36 @@ export type TablesUpdate<
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema['Enums']
+    | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
-    ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema['CompositeTypes']
+    | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
-    ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
 
 export const Constants = {
@@ -155,12 +301,87 @@ export const Constants = {
   },
 } as const
 
+
 // ====== DATABASE EXTENDED CONTEXT (auto-generated) ======
 // This section contains actual PostgreSQL column types, constraints, RLS policies,
 // functions, triggers, indexes and materialized views not present in the type definitions above.
 // IMPORTANT: The TypeScript types above map UUID, TEXT, VARCHAR all to "string".
 // Use the COLUMN TYPES section below to know the real PostgreSQL type for each column.
 // Always use the correct PostgreSQL type when writing SQL migrations.
+
+// --- COLUMN TYPES (actual PostgreSQL types) ---
+// Use this to know the real database type when writing migrations.
+// "string" in TypeScript types above may be uuid, text, varchar, timestamptz, etc.
+// Table: crawler_logs
+//   id: uuid (not null, default: gen_random_uuid())
+//   date: timestamp with time zone (nullable, default: now())
+//   store_name: text (nullable)
+//   status: text (nullable)
+//   items_found: integer (nullable, default: 0)
+//   items_imported: integer (nullable, default: 0)
+//   source_id: text (nullable)
+//   error_message: text (nullable)
+//   error_details: jsonb (nullable)
+//   category: text (nullable)
+//   created_at: timestamp with time zone (nullable, default: now())
+// Table: crawler_sources
+//   id: uuid (not null, default: gen_random_uuid())
+//   name: text (not null)
+//   url: text (not null)
+//   type: text (nullable, default: 'web'::text)
+//   region: text (nullable)
+//   country: text (nullable)
+//   state: text (nullable)
+//   city: text (nullable)
+//   scan_radius: numeric (nullable)
+//   status: text (nullable, default: 'active'::text)
+//   last_scan: timestamp with time zone (nullable)
+//   created_at: timestamp with time zone (nullable, default: now())
+// Table: discovered_promotions
+//   id: uuid (not null, default: gen_random_uuid())
+//   title: text (not null)
+//   description: text (nullable)
+//   price: numeric (nullable)
+//   original_price: numeric (nullable)
+//   currency: text (nullable, default: 'BRL'::text)
+//   discount: text (nullable)
+//   discount_percentage: numeric (nullable)
+//   image_url: text (nullable)
+//   product_link: text (nullable)
+//   source_url: text (nullable)
+//   store_name: text (nullable)
+//   category: text (nullable)
+//   country: text (nullable)
+//   status: text (nullable, default: 'pending'::text)
+//   captured_at: timestamp with time zone (nullable, default: now())
+//   created_at: timestamp with time zone (nullable, default: now())
+
+// --- CONSTRAINTS ---
+// Table: crawler_logs
+//   PRIMARY KEY crawler_logs_pkey: PRIMARY KEY (id)
+// Table: crawler_sources
+//   PRIMARY KEY crawler_sources_pkey: PRIMARY KEY (id)
+// Table: discovered_promotions
+//   PRIMARY KEY discovered_promotions_pkey: PRIMARY KEY (id)
+
+// --- ROW LEVEL SECURITY POLICIES ---
+// Table: crawler_logs
+//   Policy "auth_insert_logs" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "public_read_logs" (SELECT, PERMISSIVE) roles={public}
+//     USING: true
+// Table: crawler_sources
+//   Policy "auth_all_sources" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+//   Policy "public_read_sources" (SELECT, PERMISSIVE) roles={public}
+//     USING: true
+// Table: discovered_promotions
+//   Policy "auth_all_promotions" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+//   Policy "public_read_promotions" (SELECT, PERMISSIVE) roles={public}
+//     USING: true
 
 // --- DATABASE FUNCTIONS ---
 // FUNCTION rls_auto_enable()
@@ -193,4 +414,5 @@ export const Constants = {
 //     END LOOP;
 //   END;
 //   $function$
-//
+//   
+
