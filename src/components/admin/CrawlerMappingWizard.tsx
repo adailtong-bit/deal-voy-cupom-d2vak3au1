@@ -54,60 +54,69 @@ export function CrawlerMappingWizard({ isOpen, onClose, onSuccess }: Props) {
   const handleFetch = async () => {
     if (!url) return toast({ title: 'URL obrigatória', variant: 'destructive' })
     setIsLoading(true)
-    // Simulating raw extraction from a target site
-    await new Promise((r) => setTimeout(r, 1500))
     try {
-      const urlObj = new URL(url.startsWith('http') ? url : `https://${url}`)
-      const domain = urlObj.hostname.replace('www.', '')
+      const { data, error } = await supabase.functions.invoke(
+        'crawl-promotions',
+        {
+          body: { query: 'extract', limit: 1, options: { url } },
+        },
+      )
 
-      const mockData = {
-        meta_domain: domain,
-        meta_url: url,
-        company_name: domain.split('.')[0].toUpperCase(),
-        campaign_name: `Ofertas ${domain.split('.')[0].toUpperCase()}`,
-        page_title: `Produto Fantástico Exemplo - ${domain}`,
-        price_current: 199.9,
-        price_original: 299.9,
-        discount_percentage: 33,
-        discount_badge: '33% OFF',
-        main_image_src: `https://img.usecurling.com/p/400/400?q=product&dpr=2`,
-        product_description:
-          'Detalhes completos e especificações técnicas extraídas do corpo da página.',
-        breadcrumb_path: 'Home > Eletrônicos > Ofertas',
-        campaign_rules: 'Regras padrão aplicáveis',
-        coverage_area: 'Nacional',
+      if (error) throw error
+
+      if (data?.items && data.items.length > 0) {
+        const item = data.items[0]
+        const extractedData = item.raw_data || {}
+
+        if (Object.keys(extractedData).length === 0) {
+          toast({
+            title: 'Nenhum dado encontrado',
+            description: 'Não foi possível extrair informações desta URL.',
+            variant: 'destructive',
+          })
+          setIsLoading(false)
+          return
+        }
+
+        setRawData(extractedData)
+
+        // Preenchimento inicial inteligente com dados reais
+        const initialMapping: Record<string, string> = {}
+        const keys = Object.keys(extractedData)
+
+        const findKey = (keywords: string[]) =>
+          keys.find((k) => keywords.some((kw) => k.toLowerCase().includes(kw)))
+
+        const titleKey = findKey(['title', 'name', 'produto'])
+        if (titleKey) initialMapping['title'] = titleKey
+
+        const descKey = findKey(['description', 'desc'])
+        if (descKey) initialMapping['description'] = descKey
+
+        const imgKey = findKey(['image', 'img', 'thumb'])
+        if (imgKey) initialMapping['image_url'] = imgKey
+
+        const priceKey = findKey(['price', 'preco', 'valor', 'amount'])
+        if (priceKey) initialMapping['price'] = priceKey
+
+        const domainKey = findKey(['domain', 'site'])
+        if (domainKey) {
+          initialMapping['store_name'] = domainKey
+          initialMapping['campaign_name'] = domainKey
+        }
+
+        const urlKey = findKey(['url', 'link'])
+        if (urlKey) initialMapping['product_link'] = urlKey
+
+        setTargetToRaw(initialMapping)
+        setStep(2)
+      } else {
+        throw new Error('Retorno vazio do crawler')
       }
-      setRawData(mockData)
-
-      // Preenchimento inicial inteligente (sugestão)
-      const initialMapping: Record<string, string> = {}
-      if (mockData.company_name) initialMapping['store_name'] = 'company_name'
-      if (mockData.campaign_name)
-        initialMapping['campaign_name'] = 'campaign_name'
-      if (mockData.page_title) initialMapping['title'] = 'page_title'
-      if (mockData.price_current) initialMapping['price'] = 'price_current'
-      if (mockData.price_original)
-        initialMapping['original_price'] = 'price_original'
-      if (mockData.discount_percentage)
-        initialMapping['discount_percentage'] = 'discount_percentage'
-      if (mockData.discount_badge) initialMapping['discount'] = 'discount_badge'
-      if (mockData.main_image_src)
-        initialMapping['image_url'] = 'main_image_src'
-      if (mockData.product_description)
-        initialMapping['description'] = 'product_description'
-      if (mockData.breadcrumb_path)
-        initialMapping['category'] = 'breadcrumb_path'
-      if (mockData.meta_url) initialMapping['product_link'] = 'meta_url'
-      if (mockData.coverage_area) initialMapping['coverage'] = 'coverage_area'
-      if (mockData.campaign_rules)
-        initialMapping['discount_rules'] = 'campaign_rules'
-
-      setTargetToRaw(initialMapping)
-      setStep(2)
-    } catch (e) {
+    } catch (e: any) {
       toast({
-        title: 'URL Inválida',
-        description: 'Verifique o formato da URL e tente novamente.',
+        title: 'Erro na extração',
+        description: e.message || 'Verifique a URL e tente novamente.',
         variant: 'destructive',
       })
     }
@@ -129,7 +138,16 @@ export function CrawlerMappingWizard({ isOpen, onClose, onSuccess }: Props) {
   const handleSave = async () => {
     setIsSaving(true)
     try {
-      const domain = rawData.meta_domain || 'unknown'
+      let domain = rawData.extracted_domain || rawData.meta_domain
+      if (!domain) {
+        try {
+          domain = new URL(
+            url.startsWith('http') ? url : `https://${url}`,
+          ).hostname.replace('www.', '')
+        } catch (e) {
+          domain = 'unknown'
+        }
+      }
 
       // Salvando o mapeamento exato: target_field -> raw_key
       const finalMapping = { ...targetToRaw }
@@ -255,15 +273,27 @@ export function CrawlerMappingWizard({ isOpen, onClose, onSuccess }: Props) {
                               >
                                 Não mapear este campo
                               </SelectItem>
-                              {Object.keys(rawData).map((rawKey) => (
-                                <SelectItem
-                                  key={rawKey}
-                                  value={rawKey}
-                                  className="font-mono text-xs"
-                                >
-                                  {rawKey}
-                                </SelectItem>
-                              ))}
+                              {Object.keys(rawData).map((rawKey) => {
+                                const valStr = String(rawData[rawKey])
+                                const displayVal =
+                                  valStr.length > 40
+                                    ? valStr.substring(0, 40) + '...'
+                                    : valStr
+                                return (
+                                  <SelectItem
+                                    key={rawKey}
+                                    value={rawKey}
+                                    className="font-mono text-xs"
+                                  >
+                                    <span className="font-bold text-slate-700">
+                                      {rawKey}
+                                    </span>
+                                    <span className="text-slate-400 ml-2">
+                                      ({displayVal})
+                                    </span>
+                                  </SelectItem>
+                                )
+                              })}
                             </SelectContent>
                           </Select>
                           <ArrowRight className="w-4 h-4 text-slate-300 shrink-0" />
@@ -290,19 +320,21 @@ export function CrawlerMappingWizard({ isOpen, onClose, onSuccess }: Props) {
 
               <div className="mt-8 bg-blue-50 border border-blue-100 rounded-lg p-4 shadow-sm">
                 <h4 className="text-sm font-semibold text-blue-900 mb-3">
-                  Dados Brutos Extraídos (Guia de Referência)
+                  Dados Brutos Extraídos da URL (Guia de Referência Real)
                 </h4>
-                <div className="flex flex-wrap gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {Object.entries(rawData).map(([k, v]) => (
                     <div
                       key={k}
-                      className="text-xs bg-white border border-blue-200 rounded-md px-2.5 py-1.5 max-w-full truncate shadow-sm"
+                      className="text-xs bg-white border border-blue-200 rounded-md px-3 py-2 flex flex-col gap-1 shadow-sm"
                       title={String(v)}
                     >
-                      <span className="font-mono font-semibold text-blue-700 mr-2">
-                        {k}:
+                      <span className="font-mono font-semibold text-blue-700">
+                        {k}
                       </span>
-                      <span className="text-slate-600">{String(v)}</span>
+                      <span className="text-slate-600 break-all line-clamp-2">
+                        {String(v)}
+                      </span>
                     </div>
                   ))}
                 </div>
