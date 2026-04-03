@@ -45,16 +45,17 @@ export function CrawlerSourcesTab() {
     return [
       {
         id: '1',
-        name: 'Promoções Globais Web',
-        url: 'https://example.com/promos',
+        name: 'Amazon',
+        url: 'https://www.amazon.com.br',
         type: 'web',
         region: 'Global',
         country: 'Brasil',
-        state: 'SP',
-        city: 'São Paulo',
+        state: '',
+        city: '',
         scanRadius: 50,
         status: 'active',
-        lastScan: new Date(Date.now() - 86400000).toISOString(),
+        category: 'Eletrônicos',
+        lastScan: null,
       },
     ]
   })
@@ -123,7 +124,12 @@ export function CrawlerSourcesTab() {
 
   const handleStart = (source: CrawlerSource) => {
     if (progress.isScanning) return
-    startExtractionTask(source.name, 50, source.type)
+    startExtractionTask(source.name, 50, source.url, {
+      country: source.country,
+      state: source.state,
+      city: source.city,
+      category: source.category,
+    })
     setSources(
       sources.map((s) =>
         s.id === source.id ? { ...s, lastScan: new Date().toISOString() } : s,

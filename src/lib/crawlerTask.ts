@@ -92,6 +92,7 @@ export const startExtractionTask = async (
 
     const fetchOptions: any = {
       platform: source === 'all' ? undefined : source,
+      url: source === 'all' ? undefined : source,
       region:
         sourceOptions?.state || sourceOptions?.city || sourceOptions?.country,
     }

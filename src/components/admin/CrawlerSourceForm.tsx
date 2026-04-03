@@ -279,41 +279,116 @@ export function CrawlerSourceForm({
             />
           </div>
         </div>
-        <div className="space-y-2">
-          <Label>Parâmetros de Validação (Obrigatórios)</Label>
-          <div className="flex gap-4 mt-2">
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked
-                disabled
-                className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-              />
-              Preço
-            </label>
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked
-                disabled
-                className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-              />
-              Link do Produto
-            </label>
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked
-                disabled
-                className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-              />
-              Imagem
-            </label>
-          </div>
-          <p className="text-xs text-slate-500">
-            Estes parâmetros são validados automaticamente pelo motor de busca
-            na captura dos links.
+        <div className="space-y-2 border-t border-slate-100 pt-4 mt-4">
+          <Label className="text-base font-semibold text-blue-700">
+            Mapeamento de Dados (De/Para)
+          </Label>
+          <p className="text-xs text-slate-500 mb-3">
+            O Crawler fará a extração dos 10 parâmetros de campanha configurados
+            abaixo:
           </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50/80 p-3 rounded-md border border-slate-200 shadow-inner">
+            <div className="space-y-1.5">
+              <Label className="text-[11px] font-medium text-slate-600">
+                1. Parceiro
+              </Label>
+              <Input
+                value={formData.name || 'Nome do Parceiro'}
+                disabled
+                className="h-7 text-xs bg-slate-100 text-slate-500"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-[11px] font-medium text-slate-600">
+                2. Nome da Campanha
+              </Label>
+              <Input
+                value={`busca organica- site www.${formData.url.replace('https://', '').replace('www.', '').split('/')[0] || 'site.com'}`}
+                disabled
+                className="h-7 text-xs bg-slate-100 text-slate-500"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-[11px] font-medium text-slate-600">
+                3. Descrição
+              </Label>
+              <Input
+                value="Extração automática do texto de chamada"
+                disabled
+                className="h-7 text-xs bg-slate-100 text-slate-500"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-[11px] font-medium text-slate-600">
+                4. Categoria (IA)
+              </Label>
+              <Input
+                value="Classificação baseada no produto"
+                disabled
+                className="h-7 text-xs bg-slate-100 text-slate-500"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-[11px] font-medium text-slate-600">
+                5. Regras de Campanha
+              </Label>
+              <Input
+                value="Conforme combinado previamente"
+                disabled
+                className="h-7 text-xs bg-slate-100 text-slate-500"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-[11px] font-medium text-slate-600">
+                6. URL
+              </Label>
+              <Input
+                value="Link exato do produto (Auto)"
+                disabled
+                className="h-7 text-xs bg-slate-100 text-slate-500"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-[11px] font-medium text-slate-600">
+                7. Imagem
+              </Label>
+              <Input
+                value="Primeira imagem da tela do produto"
+                disabled
+                className="h-7 text-xs bg-slate-100 text-slate-500"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-[11px] font-medium text-slate-600">
+                8. Abrangência
+              </Label>
+              <Input
+                value="toda a rede"
+                disabled
+                className="h-7 text-xs bg-slate-100 text-slate-500"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-[11px] font-medium text-slate-600">
+                9. Regras de Desconto
+              </Label>
+              <Input
+                value="percentual"
+                disabled
+                className="h-7 text-xs bg-slate-100 text-slate-500"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-[11px] font-medium text-slate-600">
+                10. Desconto
+              </Label>
+              <Input
+                value="Cálculo Automático (Atual / Anterior)"
+                disabled
+                className="h-7 text-xs bg-slate-100 text-slate-500"
+              />
+            </div>
+          </div>
         </div>
       </div>
       <div className="pt-4 pb-2 bg-background border-t mt-4 z-10 shrink-0">
