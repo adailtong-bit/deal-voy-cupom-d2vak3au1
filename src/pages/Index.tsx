@@ -45,6 +45,7 @@ import {
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
+import { supabase } from '@/lib/supabase/client'
 
 function getDistanceFromLatLonInKm(
   lat1: number,
@@ -95,6 +96,29 @@ function IndexContent() {
   const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({})
   const [webResults, setWebResults] = useState<any[]>([])
   const [isSearchingWeb, setIsSearchingWeb] = useState(false)
+  const [supabasePromos, setSupabasePromos] = useState<any[]>([])
+
+  useEffect(() => {
+    const fetchPromos = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('discovered_promotions')
+          .select('*')
+          .eq('status', 'approved')
+          .order('captured_at', { ascending: false })
+          .limit(20)
+
+        if (data && !error) {
+          // Map snake_case back to camelCase for the frontend if needed,
+          // or just pass as is (PromotionCard handles both now)
+          setSupabasePromos(data)
+        }
+      } catch (e) {
+        console.error('Error fetching from supabase', e)
+      }
+    }
+    fetchPromos()
+  }, [])
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(async () => {
@@ -259,9 +283,22 @@ function IndexContent() {
     searchLocationInfo,
   ])
 
-  const filteredDbPromotions = useMemo(() => {
+  const allDbPromotions = useMemo(() => {
     const safePromos = Array.isArray(dbPromotions) ? dbPromotions : []
-    return safePromos.filter((p) => {
+    // Combine mock data from store with real data from supabase
+    const combined = [...safePromos]
+
+    // Add supabase promos avoiding duplicates by ID
+    supabasePromos.forEach((sp) => {
+      if (!combined.find((p) => p.id === sp.id)) {
+        combined.push(sp)
+      }
+    })
+    return combined
+  }, [dbPromotions, supabasePromos])
+
+  const filteredDbPromotions = useMemo(() => {
+    return allDbPromotions.filter((p) => {
       if (!p) return false
       let textToMatch = searchQuery.toLowerCase()
       if (searchLocationInfo) {
@@ -733,13 +770,12 @@ function IndexContent() {
                 </section>
               )}
 
-              {Array.isArray(store.dbPromotions) &&
-                Array.isArray(filteredDbPromotions) &&
+              {Array.isArray(filteredDbPromotions) &&
                 filteredDbPromotions.length > 0 && (
                   <section>
                     <h2 className="text-2xl font-bold flex items-center gap-2 mb-5 text-slate-800">
                       <Globe className="h-6 w-6 text-blue-500" />
-                      {t('home.web_promotions', 'Promoções da Web')}
+                      {t('home.web_promotions', 'Ofertas Curadas da Web')}
                     </h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                       {filteredDbPromotions.map((promo) => {

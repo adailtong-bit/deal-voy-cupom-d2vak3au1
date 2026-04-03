@@ -2,7 +2,7 @@ import {
   fetchWebSearchPromotions,
   saveDiscoveredPromotion,
   saveCrawlerLog,
-} from '@/lib/api'
+} from '@/services/crawler'
 
 export interface CrawlerProgress {
   total: number
@@ -192,7 +192,33 @@ export const startExtractionTask = async (
             delete (payload as any).originalUrl
             delete (payload as any).countryOfOrigin
 
-            payload.sourceUrl = item.sourceUrl
+            // Map camelCase to snake_case for Supabase
+            if (payload.imageUrl) {
+              payload.image_url = payload.imageUrl
+              delete payload.imageUrl
+            }
+            if (payload.productLink) {
+              payload.product_link = payload.productLink
+              delete payload.productLink
+            }
+            if (payload.originalPrice) {
+              payload.original_price = payload.originalPrice
+              delete payload.originalPrice
+            }
+            if (payload.discountPercentage) {
+              payload.discount_percentage = payload.discountPercentage
+              delete payload.discountPercentage
+            }
+            if (payload.storeName) {
+              payload.store_name = payload.storeName
+              delete payload.storeName
+            }
+            if (payload.capturedAt) {
+              payload.captured_at = payload.capturedAt
+              delete payload.capturedAt
+            }
+
+            payload.source_url = item.sourceUrl
 
             // Atomic Persistence Sync
             const savedItem = await saveDiscoveredPromotion(payload)

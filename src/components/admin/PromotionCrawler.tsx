@@ -21,7 +21,7 @@ import {
   subscribeCrawler,
   stopExtractionTask,
 } from '@/lib/crawlerTask'
-import { fetchCrawlerPromotions } from '@/lib/api'
+import { fetchCrawlerPromotions } from '@/services/crawler'
 import { DiscoveredPromotion } from '@/lib/types'
 import { Progress } from '@/components/ui/progress'
 import { Button } from '@/components/ui/button'
@@ -335,6 +335,7 @@ function PromotionCrawlerContent({ franchiseId }: { franchiseId?: string }) {
                   filterFetchDate={filterFetchDate}
                   setFilterFetchDate={setFilterFetchDate}
                   isLoading={isLoadingPromotions}
+                  onStatusChange={loadPromotions}
                 />
               )}
             </TabsContent>

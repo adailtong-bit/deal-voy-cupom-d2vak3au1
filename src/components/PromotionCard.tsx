@@ -19,18 +19,25 @@ export function PromotionCard({
   const image =
     promotion.imageUrl ||
     promotion.image ||
+    promotion.image_url ||
     'https://img.usecurling.com/p/400/300?q=shopping'
   const title =
     promotion.title || t('promotion.untitled', 'Promoção sem título')
 
-  const discountPercentage = promotion.discountPercentage
+  const discountPercentage =
+    promotion.discountPercentage ?? promotion.discount_percentage
   const discountLabel =
     promotion.discount ||
     (discountPercentage ? `${discountPercentage}% OFF` : null)
 
   const currentPrice = promotion.currentPrice ?? promotion.price
-  const originalPrice = promotion.originalPrice
-  const link = promotion.productLink || promotion.originalUrl
+  const originalPrice = promotion.originalPrice ?? promotion.original_price
+  const link =
+    promotion.productLink ||
+    promotion.product_link ||
+    promotion.sourceUrl ||
+    promotion.source_url ||
+    promotion.originalUrl
 
   const calculatedDiscount =
     !discountLabel &&
