@@ -10,10 +10,11 @@ import {
   CardDescription,
 } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Globe, Box, History, Square, Loader2 } from 'lucide-react'
+import { Globe, Box, History, Square, Loader2, Settings2 } from 'lucide-react'
 import { CrawlerSourcesTab } from './CrawlerSourcesTab'
 import { CrawlerPromotionsTab } from './CrawlerPromotionsTab'
 import { CrawlerHistoryTab } from './CrawlerHistoryTab'
+import { CrawlerMappingsTab } from './CrawlerMappingsTab'
 import { cn } from '@/lib/utils'
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import {
@@ -261,6 +262,13 @@ function PromotionCrawlerContent({ franchiseId }: { franchiseId?: string }) {
                 {t('franchisee.crawler.promotions', 'Ofertas Pendentes')} (
                 {formatNumber(pendingPromotionsCount)})
               </TabsTrigger>
+              <TabsTrigger
+                value="mappings"
+                className="py-2 px-4 whitespace-nowrap"
+              >
+                <Settings2 className="h-4 w-4 mr-2 shrink-0" />
+                Mapeamentos (De/Para)
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent
@@ -275,6 +283,13 @@ function PromotionCrawlerContent({ franchiseId }: { franchiseId?: string }) {
               className="animate-in fade-in-50 min-w-0 w-full"
             >
               <CrawlerHistoryTab isScanning={crawlerState.isScanning} />
+            </TabsContent>
+
+            <TabsContent
+              value="mappings"
+              className="animate-in fade-in-50 min-w-0 w-full"
+            >
+              <CrawlerMappingsTab />
             </TabsContent>
 
             <TabsContent
