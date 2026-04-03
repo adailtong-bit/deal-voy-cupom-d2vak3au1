@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Loader2, Save, Globe, ArrowLeftRight } from 'lucide-react'
+import { Loader2, Save, Globe } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
@@ -81,7 +81,7 @@ export function CrawlerMappingWizard({ isOpen, onClose, onSuccess }: Props) {
 
         setRawData(extractedData)
 
-        // Preenchimento inicial inteligente com dados reais
+        // Preenchimento inicial inteligente com dados reais (como sugestão)
         const initialMapping: Record<string, string> = {}
         const keys = Object.keys(extractedData)
 
@@ -124,20 +124,13 @@ export function CrawlerMappingWizard({ isOpen, onClose, onSuccess }: Props) {
     setIsLoading(false)
   }
 
-  const handleSelectChange = (rawKey: string, newTargetId: string) => {
+  const handleSelectChange = (targetId: string, rawKey: string) => {
     setTargetToRaw((prev) => {
       const newMapping = { ...prev }
-
-      // Remove any existing assignment for this rawKey
-      const oldTargetId = Object.keys(newMapping).find(
-        (t) => newMapping[t] === rawKey,
-      )
-      if (oldTargetId) {
-        delete newMapping[oldTargetId]
-      }
-
-      if (newTargetId !== 'none') {
-        newMapping[newTargetId] = rawKey
+      if (rawKey === 'none') {
+        delete newMapping[targetId]
+      } else {
+        newMapping[targetId] = rawKey
       }
       return newMapping
     })
@@ -160,7 +153,6 @@ export function CrawlerMappingWizard({ isOpen, onClose, onSuccess }: Props) {
         }
       }
 
-      // Salvando o mapeamento exato: target_field -> raw_key
       const finalMapping = { ...targetToRaw }
 
       const { error } = await supabase.from('site_mappings').upsert(
@@ -189,14 +181,14 @@ export function CrawlerMappingWizard({ isOpen, onClose, onSuccess }: Props) {
     }
   }
 
-  const extractedKeys = Object.keys(rawData)
+  const extractedKeys = Object.keys(rawData).sort()
 
   return (
     <Dialog open={isOpen} onOpenChange={(o) => !o && onClose()}>
       <DialogContent
         className={
           step === 2
-            ? 'max-w-7xl w-[95vw] max-h-[90vh] flex flex-col p-0 gap-0'
+            ? 'max-w-6xl w-[95vw] h-[90vh] flex flex-col p-0 gap-0'
             : 'sm:max-w-md'
         }
       >
@@ -206,15 +198,15 @@ export function CrawlerMappingWizard({ isOpen, onClose, onSuccess }: Props) {
           <DialogTitle>Mapeamento de Dados Reais</DialogTitle>
           <DialogDescription>
             {step === 1
-              ? 'Insira a URL de um produto real para extrairmos os dados completos da página.'
-              : 'As duas primeiras colunas exibem os dados reais extraídos. Na terceira, escolha para qual campo do banco esse dado deve ir.'}
+              ? 'Insira a URL de uma página para extrairmos os dados completos. Se for a home, tentaremos encontrar um produto nela.'
+              : 'Na esquerda, selecione qual campo extraído corresponde ao campo do nosso banco. Na direita, veja todo o objeto JSON extraído.'}
           </DialogDescription>
         </DialogHeader>
 
         {step === 1 ? (
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>URL de Exemplo (Produto Real)</Label>
+              <Label>URL de Exemplo (Produto ou Loja)</Label>
               <Input
                 placeholder="https://www.site.com/produto-exemplo"
                 value={url}
@@ -233,104 +225,121 @@ export function CrawlerMappingWizard({ isOpen, onClose, onSuccess }: Props) {
                 <Globe className="w-4 h-4 mr-2" />
               )}
               {isLoading
-                ? 'Extraindo Dados Brutos...'
-                : 'Extrair Dados do Anúncio'}
+                ? 'Varrendo página e extraindo...'
+                : 'Extrair Dados Reais'}
             </Button>
           </div>
         ) : (
           <div className="flex flex-col flex-1 min-h-0 overflow-hidden bg-slate-50">
-            <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
-              <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
-                <div className="grid grid-cols-12 gap-6 font-semibold text-xs text-slate-500 p-4 border-b bg-slate-100 uppercase tracking-wider sticky top-0 z-10">
-                  <div className="col-span-3">Chave Extraída (Tag)</div>
-                  <div className="col-span-6">
-                    Valor Real Encontrado na Página
-                  </div>
-                  <div className="col-span-3">Mapear para o Campo do Banco</div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 overflow-y-auto flex-1 custom-scrollbar">
+              {/* Coluna Esquerda: Mapeamento */}
+              <div className="space-y-4">
+                <div className="sticky top-0 bg-slate-50 z-10 pb-2 border-b">
+                  <h3 className="font-semibold text-lg text-slate-800">
+                    Mapeamento dos Campos
+                  </h3>
+                  <p className="text-sm text-slate-500">
+                    Defina de onde virá cada dado do banco.
+                  </p>
                 </div>
 
-                <div className="divide-y divide-slate-100">
-                  {extractedKeys.map((rawKey) => {
-                    const rawValue = String(rawData[rawKey])
-                    const selectedTargetId =
-                      Object.keys(targetToRaw).find(
-                        (t) => targetToRaw[t] === rawKey,
-                      ) || 'none'
-                    const isMapped = selectedTargetId !== 'none'
+                <div className="space-y-4">
+                  {TARGET_FIELDS.map((f) => {
+                    const selectedRawKey = targetToRaw[f.id] || 'none'
+                    const selectedValue =
+                      selectedRawKey !== 'none'
+                        ? String(rawData[selectedRawKey] || '')
+                        : ''
 
                     return (
                       <div
-                        key={rawKey}
+                        key={f.id}
                         className={cn(
-                          'grid grid-cols-12 gap-6 items-start p-4 transition-colors',
-                          isMapped ? 'bg-emerald-50/30' : 'hover:bg-slate-50',
+                          'bg-white p-4 rounded-lg border shadow-sm space-y-3 transition-colors',
+                          selectedRawKey !== 'none'
+                            ? 'border-emerald-200 bg-emerald-50/10'
+                            : 'border-slate-200',
                         )}
                       >
-                        <div className="col-span-3 flex flex-col gap-1">
-                          <span className="font-mono text-xs font-bold text-slate-700 bg-slate-100 inline-flex w-fit px-2 py-1 rounded">
-                            {rawKey}
-                          </span>
-                        </div>
-
-                        <div className="col-span-6">
-                          <div className="text-sm text-slate-600 whitespace-pre-wrap break-all leading-relaxed bg-white border border-slate-200 p-3 rounded-md shadow-sm">
-                            {rawValue}
-                          </div>
-                        </div>
-
-                        <div className="col-span-3">
-                          <Select
-                            value={selectedTargetId}
-                            onValueChange={(val) =>
-                              handleSelectChange(rawKey, val)
-                            }
+                        <Label className="text-sm font-semibold text-slate-700">
+                          {f.label}
+                        </Label>
+                        <Select
+                          value={selectedRawKey}
+                          onValueChange={(val) => handleSelectChange(f.id, val)}
+                        >
+                          <SelectTrigger
+                            className={cn(
+                              'w-full bg-white',
+                              selectedRawKey !== 'none' &&
+                                'border-emerald-500 ring-1 ring-emerald-500',
+                            )}
                           >
-                            <SelectTrigger
-                              className={cn(
-                                'h-10 text-sm w-full font-medium shadow-sm transition-colors',
-                                isMapped
-                                  ? 'bg-emerald-50 border-emerald-200 text-emerald-800 focus:ring-emerald-500'
-                                  : 'bg-white border-slate-300 focus:ring-blue-500',
-                              )}
+                            <SelectValue placeholder="Selecione o dado extraído..." />
+                          </SelectTrigger>
+                          <SelectContent className="max-h-[350px]">
+                            <SelectItem
+                              value="none"
+                              className="text-slate-400 italic"
                             >
-                              <SelectValue placeholder="Selecione o destino..." />
-                            </SelectTrigger>
-                            <SelectContent className="max-h-[400px]">
-                              <SelectItem
-                                value="none"
-                                className="text-slate-400 italic"
-                              >
-                                Não mapear / Ignorar
-                              </SelectItem>
-                              {TARGET_FIELDS.map((f) => {
-                                const isUsedByAnother =
-                                  targetToRaw[f.id] &&
-                                  targetToRaw[f.id] !== rawKey
+                              Não mapear (Deixar em branco)
+                            </SelectItem>
+                            {extractedKeys.map((key) => {
+                              const rawVal = String(rawData[key])
+                              const isLong = rawVal.length > 60
+                              return (
+                                <SelectItem
+                                  key={key}
+                                  value={key}
+                                  className="py-2"
+                                >
+                                  <div className="flex flex-col gap-1 max-w-[300px]">
+                                    <span className="font-mono text-xs font-bold text-slate-800">
+                                      {key}
+                                    </span>
+                                    <span
+                                      className="text-xs text-slate-500 truncate"
+                                      title={rawVal}
+                                    >
+                                      {isLong
+                                        ? rawVal.substring(0, 60) + '...'
+                                        : rawVal}
+                                    </span>
+                                  </div>
+                                </SelectItem>
+                              )
+                            })}
+                          </SelectContent>
+                        </Select>
 
-                                return (
-                                  <SelectItem
-                                    key={f.id}
-                                    value={f.id}
-                                    disabled={!!isUsedByAnother}
-                                    className="font-medium"
-                                  >
-                                    {f.label} {isUsedByAnother && `(Já em uso)`}
-                                  </SelectItem>
-                                )
-                              })}
-                            </SelectContent>
-                          </Select>
-
-                          {isMapped && (
-                            <div className="mt-2 text-xs text-emerald-600 flex items-center gap-1 font-medium">
-                              <ArrowLeftRight className="w-3 h-3" />
-                              Mapeado com sucesso
-                            </div>
-                          )}
-                        </div>
+                        {selectedRawKey !== 'none' && (
+                          <div className="mt-2 text-sm text-slate-600 bg-slate-50 p-2.5 rounded-md border border-slate-100 break-words max-h-32 overflow-y-auto custom-scrollbar">
+                            <span className="text-xs text-slate-400 font-semibold uppercase tracking-wider block mb-1">
+                              Valor Exemplo:
+                            </span>
+                            {selectedValue}
+                          </div>
+                        )}
                       </div>
                     )
                   })}
+                </div>
+              </div>
+
+              {/* Coluna Direita: Objeto Bruto */}
+              <div className="space-y-4 flex flex-col h-full overflow-hidden border border-slate-200 rounded-xl bg-white shadow-sm">
+                <div className="p-4 border-b bg-slate-100/50 shrink-0">
+                  <h3 className="font-semibold text-lg text-slate-800">
+                    JSON Bruto Extraído
+                  </h3>
+                  <p className="text-sm text-slate-500">
+                    O Payload completo capturado pelo Crawler.
+                  </p>
+                </div>
+                <div className="p-4 overflow-y-auto flex-1 custom-scrollbar bg-slate-900">
+                  <pre className="text-emerald-400 font-mono text-xs whitespace-pre-wrap leading-relaxed">
+                    {JSON.stringify(rawData, null, 2)}
+                  </pre>
                 </div>
               </div>
             </div>
