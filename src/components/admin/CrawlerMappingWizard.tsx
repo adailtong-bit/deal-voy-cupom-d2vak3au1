@@ -5,12 +5,18 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Loader2, ArrowRight, Save, Globe } from 'lucide-react'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Loader2, Save, Globe } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { useToast } from '@/hooks/use-toast'
 
@@ -20,45 +26,17 @@ interface Props {
   onSuccess: () => void
 }
 
-const MAPPING_FIELDS = [
-  { id: 'partner', label: '1. Parceiro (Empresa)', placeholder: 'Ex: Amazon' },
-  {
-    id: 'campaign_name',
-    label: '2. Nome da Campanha',
-    placeholder: 'Ex: busca organica- site www.site.com',
-  },
-  {
-    id: 'description',
-    label: '3. Descrição (Texto Chamada)',
-    placeholder: 'Chave do JSON ou CSS Selector',
-  },
-  {
-    id: 'category',
-    label: '4. Categoria (IA baseada no produto)',
-    placeholder: 'Ex: breadcrumb_path',
-  },
-  {
-    id: 'campaign_rules',
-    label: '5. Regras de Campanha',
-    placeholder: 'Ex: Conforme combinado previamente',
-  },
-  { id: 'url', label: '6. URL (Link exato)', placeholder: 'Ex: meta_url' },
-  {
-    id: 'image',
-    label: '7. Imagem (1ª Imagem)',
-    placeholder: 'Ex: main_image_src',
-  },
-  { id: 'coverage', label: '8. Abrangência', placeholder: 'Ex: toda a rede' },
-  {
-    id: 'discount_rules',
-    label: '9. Regras de Desconto',
-    placeholder: 'Ex: percentual',
-  },
-  {
-    id: 'discount',
-    label: '10. Desconto (Cálculo Valor)',
-    placeholder: 'Ex: price_current',
-  },
+const TARGET_FIELDS = [
+  { id: 'partner', number: 1, label: 'Parceiro (Empresa)' },
+  { id: 'campaign_name', number: 2, label: 'Nome da Campanha' },
+  { id: 'description', number: 3, label: 'Descrição (Texto Chamada)' },
+  { id: 'category', number: 4, label: 'Categoria (IA baseada no produto)' },
+  { id: 'campaign_rules', number: 5, label: 'Regras de Campanha' },
+  { id: 'url', number: 6, label: 'URL (Link exato)' },
+  { id: 'image', number: 7, label: 'Imagem (1ª Imagem)' },
+  { id: 'coverage', number: 8, label: 'Abrangência' },
+  { id: 'discount_rules', number: 9, label: 'Regras de Desconto' },
+  { id: 'discount', number: 10, label: 'Desconto (Cálculo Valor)' },
 ]
 
 export function CrawlerMappingWizard({ isOpen, onClose, onSuccess }: Props) {
@@ -67,8 +45,8 @@ export function CrawlerMappingWizard({ isOpen, onClose, onSuccess }: Props) {
   const [url, setUrl] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
-  const [rawData, setRawData] = useState<any>(null)
-  const [mapping, setMapping] = useState<Record<string, string>>({})
+  const [rawData, setRawData] = useState<Record<string, any>>({})
+  const [rawToTarget, setRawToTarget] = useState<Record<string, string>>({})
 
   const handleFetch = async () => {
     if (!url) return toast({ title: 'URL obrigatória', variant: 'destructive' })
@@ -76,35 +54,24 @@ export function CrawlerMappingWizard({ isOpen, onClose, onSuccess }: Props) {
     // Simulating raw extraction from a target site
     await new Promise((r) => setTimeout(r, 1500))
     try {
-      const domain = new URL(
-        url.startsWith('http') ? url : `https://${url}`,
-      ).hostname.replace('www.', '')
+      const urlObj = new URL(url.startsWith('http') ? url : `https://${url}`)
+      const domain = urlObj.hostname.replace('www.', '')
+
       const mockData = {
-        _meta: { url, domain },
-        html_title: `Produto Fantástico Exemplo - ${domain}`,
-        price_current: 'R$ 199,90',
-        price_original: 'R$ 299,90',
+        meta_domain: domain,
+        meta_url: url,
+        page_title: `Produto Fantástico Exemplo - ${domain}`,
+        price_current: '199.90',
+        price_original: '299.90',
         main_image_src: `https://img.usecurling.com/p/400/400?q=product&dpr=2`,
         product_description:
           'Detalhes completos e especificações técnicas extraídas do corpo da página.',
-        breadcrumb: 'Home > Eletrônicos > Ofertas',
+        breadcrumb_path: 'Home > Eletrônicos > Ofertas',
         discount_badge: '33% OFF',
+        company_name: domain.split('.')[0].toUpperCase(),
       }
       setRawData(mockData)
-
-      // Pre-fill sensible defaults as requested
-      setMapping({
-        partner: domain.split('.')[0].toUpperCase(),
-        campaign_name: `busca organica- site www.${domain}`,
-        description: 'product_description',
-        category: 'breadcrumb',
-        campaign_rules: 'Regras de campanha padrão da rede aplicáveis.',
-        url: '_meta.url',
-        image: 'main_image_src',
-        coverage: 'toda a rede',
-        discount_rules: 'percentual',
-        discount: 'price_current',
-      })
+      setRawToTarget({})
       setStep(2)
     } catch (e) {
       toast({
@@ -116,15 +83,54 @@ export function CrawlerMappingWizard({ isOpen, onClose, onSuccess }: Props) {
     setIsLoading(false)
   }
 
+  const handleSelectChange = (rawKey: string, targetId: string) => {
+    setRawToTarget((prev) => {
+      const newMapping = { ...prev }
+      // Remove any existing assignment of this targetId
+      if (targetId !== 'none') {
+        Object.keys(newMapping).forEach((k) => {
+          if (newMapping[k] === targetId) {
+            delete newMapping[k]
+          }
+        })
+      }
+      if (targetId === 'none') {
+        delete newMapping[rawKey]
+      } else {
+        newMapping[rawKey] = targetId
+      }
+      return newMapping
+    })
+  }
+
   const handleSave = async () => {
     setIsSaving(true)
     try {
-      const domain = rawData?._meta?.domain || 'unknown'
+      const domain = rawData.meta_domain || 'unknown'
+
+      const finalMapping: Record<string, string> = {}
+      // Build final mapping: targetId -> rawKey
+      Object.entries(rawToTarget).forEach(([rawKey, targetId]) => {
+        if (targetId && targetId !== 'none') {
+          finalMapping[targetId] = rawKey
+        }
+      })
+
+      // Adicionando valores fixos para campos que podem não ser mapeados,
+      // mas são requeridos logicamente pelo sistema.
+      if (!finalMapping['coverage']) finalMapping['coverage'] = 'toda a rede'
+      if (!finalMapping['discount_rules'])
+        finalMapping['discount_rules'] = 'percentual'
+      if (!finalMapping['campaign_rules'])
+        finalMapping['campaign_rules'] = 'Regras padrão aplicáveis'
+      if (!finalMapping['partner'] && rawData.company_name)
+        finalMapping['partner'] = 'company_name'
+
       const { error } = await supabase.from('site_mappings').upsert(
         {
           domain,
           name: `Mapeamento ${domain}`,
-          mapping_rules: mapping,
+          mapping_rules: finalMapping,
         },
         { onConflict: 'domain' },
       )
@@ -132,7 +138,7 @@ export function CrawlerMappingWizard({ isOpen, onClose, onSuccess }: Props) {
       if (error) throw error
       toast({
         title: 'Mapeamento salvo com sucesso!',
-        description: 'O Crawler agora usará esta regra para o site.',
+        description: 'O banco de dados agora possui o De/Para correto.',
       })
       onSuccess()
     } catch (err: any) {
@@ -151,18 +157,18 @@ export function CrawlerMappingWizard({ isOpen, onClose, onSuccess }: Props) {
       <DialogContent
         className={
           step === 2
-            ? 'max-w-6xl w-[95vw] h-[85vh] flex flex-col p-0 gap-0'
+            ? 'max-w-4xl w-[95vw] max-h-[90vh] flex flex-col p-0 gap-0'
             : 'sm:max-w-md'
         }
       >
         <DialogHeader
-          className={step === 2 ? 'p-6 pb-4 border-b shrink-0' : ''}
+          className={step === 2 ? 'p-6 pb-4 border-b shrink-0 bg-white' : ''}
         >
           <DialogTitle>Wizard de Mapeamento Assistido (De/Para)</DialogTitle>
           <DialogDescription>
             {step === 1
               ? 'Insira a URL de um produto do site que deseja mapear.'
-              : 'Revise os dados brutos à esquerda e associe aos 10 parâmetros obrigatórios à direita.'}
+              : 'Associe os dados extraídos do site aos nossos 10 campos no banco de dados.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -190,47 +196,82 @@ export function CrawlerMappingWizard({ isOpen, onClose, onSuccess }: Props) {
                 <Globe className="w-4 h-4 mr-2" />
               )}
               {isLoading
-                ? 'Extraindo dados brutos...'
-                : 'Extrair Anúncio (Bruto)'}
+                ? 'Buscando dados na URL...'
+                : 'Trazer Dados do Anúncio'}
             </Button>
           </div>
         ) : (
-          <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-hidden bg-slate-50">
-            {/* Left Panel: Raw JSON */}
-            <div className="w-full md:w-1/2 flex flex-col border-r border-slate-200 bg-slate-950 text-emerald-400">
-              <div className="p-3 border-b border-slate-800 bg-slate-900 text-slate-300 text-xs font-semibold uppercase tracking-wider">
-                1. Anúncio Extraído (JSON Bruto)
-              </div>
-              <div className="p-4 overflow-y-auto text-xs font-mono whitespace-pre-wrap flex-1 custom-scrollbar">
-                {JSON.stringify(rawData, null, 2)}
-              </div>
-            </div>
+          <div className="flex flex-col flex-1 min-h-0 overflow-hidden bg-slate-50">
+            <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
+              <div className="bg-white rounded-lg border border-slate-200 shadow-sm">
+                <div className="grid grid-cols-12 gap-4 font-semibold text-xs text-slate-500 p-4 border-b bg-slate-100 uppercase tracking-wider rounded-t-lg">
+                  <div className="col-span-5">Valor Encontrado no Site</div>
+                  <div className="col-span-3">Chave Origem</div>
+                  <div className="col-span-4">Numerar no Nosso Banco</div>
+                </div>
 
-            {/* Right Panel: Mapping Fields */}
-            <div className="w-full md:w-1/2 flex flex-col bg-white">
-              <div className="p-3 border-b bg-slate-100 text-slate-700 text-xs font-semibold uppercase tracking-wider">
-                2. Associação (De/Para)
-              </div>
-              <div className="p-6 overflow-y-auto flex-1 space-y-5 custom-scrollbar">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {MAPPING_FIELDS.map((field) => (
-                    <div key={field.id} className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700">
-                        {field.label}
-                      </Label>
-                      <Input
-                        className="h-9 text-xs font-mono bg-slate-50 focus:bg-white transition-colors"
-                        placeholder={field.placeholder}
-                        value={mapping[field.id] || ''}
-                        onChange={(e) =>
-                          setMapping({ ...mapping, [field.id]: e.target.value })
-                        }
-                      />
+                <div className="divide-y divide-slate-100">
+                  {Object.entries(rawData).map(([key, value]) => (
+                    <div
+                      key={key}
+                      className="grid grid-cols-12 gap-4 items-center p-4 hover:bg-slate-50 transition-colors"
+                    >
+                      <div
+                        className="col-span-5 text-sm font-medium text-slate-900 truncate"
+                        title={String(value)}
+                      >
+                        {String(value)}
+                      </div>
+                      <div
+                        className="col-span-3 text-xs font-mono text-slate-500 truncate"
+                        title={key}
+                      >
+                        {key}
+                      </div>
+                      <div className="col-span-4">
+                        <Select
+                          value={rawToTarget[key] || 'none'}
+                          onValueChange={(val) => handleSelectChange(key, val)}
+                        >
+                          <SelectTrigger className="h-9 text-xs w-full bg-white border-slate-200 hover:bg-slate-50">
+                            <SelectValue placeholder="Não mapear" />
+                          </SelectTrigger>
+                          <SelectContent className="max-h-64">
+                            <SelectItem
+                              value="none"
+                              className="text-slate-500 italic"
+                            >
+                              Não mapear este dado
+                            </SelectItem>
+                            {TARGET_FIELDS.map((f) => (
+                              <SelectItem
+                                key={f.id}
+                                value={f.id}
+                                className="font-medium"
+                              >
+                                <span className="text-emerald-600 mr-2 font-bold">
+                                  {f.number}.
+                                </span>
+                                {f.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
                   ))}
                 </div>
               </div>
-              <div className="p-4 border-t bg-slate-50 flex justify-end gap-3 shrink-0">
+            </div>
+
+            <div className="p-4 border-t bg-white flex justify-between items-center shrink-0">
+              <div className="text-sm text-slate-500">
+                <span className="font-bold text-emerald-600">
+                  {Object.keys(rawToTarget).length}
+                </span>{' '}
+                de {TARGET_FIELDS.length} campos mapeados
+              </div>
+              <div className="flex gap-3">
                 <Button variant="outline" onClick={() => setStep(1)}>
                   Voltar
                 </Button>
