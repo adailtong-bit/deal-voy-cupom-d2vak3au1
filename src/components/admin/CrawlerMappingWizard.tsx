@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Loader2, Save, Globe } from 'lucide-react'
+import { Loader2, Save, Globe, ArrowRight } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { useToast } from '@/hooks/use-toast'
 
@@ -27,16 +27,19 @@ interface Props {
 }
 
 const TARGET_FIELDS = [
-  { id: 'partner', number: 1, label: 'Parceiro (Empresa)' },
-  { id: 'campaign_name', number: 2, label: 'Nome da Campanha' },
-  { id: 'description', number: 3, label: 'Descrição (Texto Chamada)' },
-  { id: 'category', number: 4, label: 'Categoria (IA baseada no produto)' },
-  { id: 'campaign_rules', number: 5, label: 'Regras de Campanha' },
-  { id: 'url', number: 6, label: 'URL (Link exato)' },
-  { id: 'image', number: 7, label: 'Imagem (1ª Imagem)' },
-  { id: 'coverage', number: 8, label: 'Abrangência' },
-  { id: 'discount_rules', number: 9, label: 'Regras de Desconto' },
-  { id: 'discount', number: 10, label: 'Desconto (Cálculo Valor)' },
+  { id: 'store_name', label: 'Parceiro / Loja (Empresa)' },
+  { id: 'campaign_name', label: 'Nome da Campanha' },
+  { id: 'title', label: 'Título do Produto/Oferta' },
+  { id: 'description', label: 'Descrição (Texto Chamada)' },
+  { id: 'category', label: 'Categoria' },
+  { id: 'product_link', label: 'URL do Produto (Link exato)' },
+  { id: 'image_url', label: 'Imagem (URL da 1ª Imagem)' },
+  { id: 'price', label: 'Preço Atual (Desconto)' },
+  { id: 'original_price', label: 'Preço Original (Cheio)' },
+  { id: 'discount', label: 'Texto do Desconto (Ex: 33% OFF)' },
+  { id: 'discount_percentage', label: 'Percentual de Desconto Numérico' },
+  { id: 'coverage', label: 'Abrangência' },
+  { id: 'discount_rules', label: 'Regras de Desconto' },
 ]
 
 export function CrawlerMappingWizard({ isOpen, onClose, onSuccess }: Props) {
@@ -46,7 +49,7 @@ export function CrawlerMappingWizard({ isOpen, onClose, onSuccess }: Props) {
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [rawData, setRawData] = useState<Record<string, any>>({})
-  const [rawToTarget, setRawToTarget] = useState<Record<string, string>>({})
+  const [targetToRaw, setTargetToRaw] = useState<Record<string, string>>({})
 
   const handleFetch = async () => {
     if (!url) return toast({ title: 'URL obrigatória', variant: 'destructive' })
@@ -60,18 +63,46 @@ export function CrawlerMappingWizard({ isOpen, onClose, onSuccess }: Props) {
       const mockData = {
         meta_domain: domain,
         meta_url: url,
+        company_name: domain.split('.')[0].toUpperCase(),
+        campaign_name: `Ofertas ${domain.split('.')[0].toUpperCase()}`,
         page_title: `Produto Fantástico Exemplo - ${domain}`,
-        price_current: '199.90',
-        price_original: '299.90',
+        price_current: 199.9,
+        price_original: 299.9,
+        discount_percentage: 33,
+        discount_badge: '33% OFF',
         main_image_src: `https://img.usecurling.com/p/400/400?q=product&dpr=2`,
         product_description:
           'Detalhes completos e especificações técnicas extraídas do corpo da página.',
         breadcrumb_path: 'Home > Eletrônicos > Ofertas',
-        discount_badge: '33% OFF',
-        company_name: domain.split('.')[0].toUpperCase(),
+        campaign_rules: 'Regras padrão aplicáveis',
+        coverage_area: 'Nacional',
       }
       setRawData(mockData)
-      setRawToTarget({})
+
+      // Preenchimento inicial inteligente (sugestão)
+      const initialMapping: Record<string, string> = {}
+      if (mockData.company_name) initialMapping['store_name'] = 'company_name'
+      if (mockData.campaign_name)
+        initialMapping['campaign_name'] = 'campaign_name'
+      if (mockData.page_title) initialMapping['title'] = 'page_title'
+      if (mockData.price_current) initialMapping['price'] = 'price_current'
+      if (mockData.price_original)
+        initialMapping['original_price'] = 'price_original'
+      if (mockData.discount_percentage)
+        initialMapping['discount_percentage'] = 'discount_percentage'
+      if (mockData.discount_badge) initialMapping['discount'] = 'discount_badge'
+      if (mockData.main_image_src)
+        initialMapping['image_url'] = 'main_image_src'
+      if (mockData.product_description)
+        initialMapping['description'] = 'product_description'
+      if (mockData.breadcrumb_path)
+        initialMapping['category'] = 'breadcrumb_path'
+      if (mockData.meta_url) initialMapping['product_link'] = 'meta_url'
+      if (mockData.coverage_area) initialMapping['coverage'] = 'coverage_area'
+      if (mockData.campaign_rules)
+        initialMapping['discount_rules'] = 'campaign_rules'
+
+      setTargetToRaw(initialMapping)
       setStep(2)
     } catch (e) {
       toast({
@@ -83,21 +114,13 @@ export function CrawlerMappingWizard({ isOpen, onClose, onSuccess }: Props) {
     setIsLoading(false)
   }
 
-  const handleSelectChange = (rawKey: string, targetId: string) => {
-    setRawToTarget((prev) => {
+  const handleSelectChange = (targetId: string, rawKey: string) => {
+    setTargetToRaw((prev) => {
       const newMapping = { ...prev }
-      // Remove any existing assignment of this targetId
-      if (targetId !== 'none') {
-        Object.keys(newMapping).forEach((k) => {
-          if (newMapping[k] === targetId) {
-            delete newMapping[k]
-          }
-        })
-      }
-      if (targetId === 'none') {
-        delete newMapping[rawKey]
+      if (rawKey === 'none') {
+        delete newMapping[targetId]
       } else {
-        newMapping[rawKey] = targetId
+        newMapping[targetId] = rawKey
       }
       return newMapping
     })
@@ -108,23 +131,8 @@ export function CrawlerMappingWizard({ isOpen, onClose, onSuccess }: Props) {
     try {
       const domain = rawData.meta_domain || 'unknown'
 
-      const finalMapping: Record<string, string> = {}
-      // Build final mapping: targetId -> rawKey
-      Object.entries(rawToTarget).forEach(([rawKey, targetId]) => {
-        if (targetId && targetId !== 'none') {
-          finalMapping[targetId] = rawKey
-        }
-      })
-
-      // Adicionando valores fixos para campos que podem não ser mapeados,
-      // mas são requeridos logicamente pelo sistema.
-      if (!finalMapping['coverage']) finalMapping['coverage'] = 'toda a rede'
-      if (!finalMapping['discount_rules'])
-        finalMapping['discount_rules'] = 'percentual'
-      if (!finalMapping['campaign_rules'])
-        finalMapping['campaign_rules'] = 'Regras padrão aplicáveis'
-      if (!finalMapping['partner'] && rawData.company_name)
-        finalMapping['partner'] = 'company_name'
+      // Salvando o mapeamento exato: target_field -> raw_key
+      const finalMapping = { ...targetToRaw }
 
       const { error } = await supabase.from('site_mappings').upsert(
         {
@@ -138,7 +146,7 @@ export function CrawlerMappingWizard({ isOpen, onClose, onSuccess }: Props) {
       if (error) throw error
       toast({
         title: 'Mapeamento salvo com sucesso!',
-        description: 'O banco de dados agora possui o De/Para correto.',
+        description: 'O crawler agora utilizará estas regras exatas.',
       })
       onSuccess()
     } catch (err: any) {
@@ -157,7 +165,7 @@ export function CrawlerMappingWizard({ isOpen, onClose, onSuccess }: Props) {
       <DialogContent
         className={
           step === 2
-            ? 'max-w-4xl w-[95vw] max-h-[90vh] flex flex-col p-0 gap-0'
+            ? 'max-w-5xl w-[95vw] max-h-[90vh] flex flex-col p-0 gap-0'
             : 'sm:max-w-md'
         }
       >
@@ -168,7 +176,7 @@ export function CrawlerMappingWizard({ isOpen, onClose, onSuccess }: Props) {
           <DialogDescription>
             {step === 1
               ? 'Insira a URL de um produto do site que deseja mapear.'
-              : 'Associe os dados extraídos do site aos nossos 10 campos no banco de dados.'}
+              : 'Para cada campo do nosso banco (à esquerda), escolha qual dado bruto extraído (no meio) deve ser usado. Veja o resultado final à direita.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -188,7 +196,7 @@ export function CrawlerMappingWizard({ isOpen, onClose, onSuccess }: Props) {
             <Button
               onClick={handleFetch}
               disabled={isLoading}
-              className="w-full"
+              className="w-full bg-emerald-600 hover:bg-emerald-700"
             >
               {isLoading ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -196,8 +204,8 @@ export function CrawlerMappingWizard({ isOpen, onClose, onSuccess }: Props) {
                 <Globe className="w-4 h-4 mr-2" />
               )}
               {isLoading
-                ? 'Buscando dados na URL...'
-                : 'Trazer Dados do Anúncio'}
+                ? 'Extraindo Dados Brutos...'
+                : 'Extrair Dados do Anúncio'}
             </Button>
           </div>
         ) : (
@@ -205,59 +213,96 @@ export function CrawlerMappingWizard({ isOpen, onClose, onSuccess }: Props) {
             <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
               <div className="bg-white rounded-lg border border-slate-200 shadow-sm">
                 <div className="grid grid-cols-12 gap-4 font-semibold text-xs text-slate-500 p-4 border-b bg-slate-100 uppercase tracking-wider rounded-t-lg">
-                  <div className="col-span-5">Valor Encontrado no Site</div>
-                  <div className="col-span-3">Chave Origem</div>
-                  <div className="col-span-4">Numerar no Nosso Banco</div>
+                  <div className="col-span-4">Campo no Nosso Banco</div>
+                  <div className="col-span-4">Dado Bruto do Site</div>
+                  <div className="col-span-4">Valor Encontrado (Prévia)</div>
                 </div>
 
                 <div className="divide-y divide-slate-100">
-                  {Object.entries(rawData).map(([key, value]) => (
-                    <div
-                      key={key}
-                      className="grid grid-cols-12 gap-4 items-center p-4 hover:bg-slate-50 transition-colors"
-                    >
+                  {TARGET_FIELDS.map((field, idx) => {
+                    const mappedRawKey = targetToRaw[field.id]
+                    const previewValue = mappedRawKey
+                      ? rawData[mappedRawKey]
+                      : ''
+
+                    return (
                       <div
-                        className="col-span-5 text-sm font-medium text-slate-900 truncate"
-                        title={String(value)}
+                        key={field.id}
+                        className="grid grid-cols-12 gap-4 items-center p-4 hover:bg-slate-50 transition-colors"
                       >
-                        {String(value)}
-                      </div>
-                      <div
-                        className="col-span-3 text-xs font-mono text-slate-500 truncate"
-                        title={key}
-                      >
-                        {key}
-                      </div>
-                      <div className="col-span-4">
-                        <Select
-                          value={rawToTarget[key] || 'none'}
-                          onValueChange={(val) => handleSelectChange(key, val)}
-                        >
-                          <SelectTrigger className="h-9 text-xs w-full bg-white border-slate-200 hover:bg-slate-50">
-                            <SelectValue placeholder="Não mapear" />
-                          </SelectTrigger>
-                          <SelectContent className="max-h-64">
-                            <SelectItem
-                              value="none"
-                              className="text-slate-500 italic"
-                            >
-                              Não mapear este dado
-                            </SelectItem>
-                            {TARGET_FIELDS.map((f) => (
+                        <div className="col-span-4 flex items-center gap-2">
+                          <span className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-bold">
+                            {idx + 1}
+                          </span>
+                          <span className="text-sm font-medium text-slate-900">
+                            {field.label}
+                          </span>
+                        </div>
+                        <div className="col-span-4 flex items-center gap-3">
+                          <Select
+                            value={targetToRaw[field.id] || 'none'}
+                            onValueChange={(val) =>
+                              handleSelectChange(field.id, val)
+                            }
+                          >
+                            <SelectTrigger className="h-9 text-sm w-full bg-white border-slate-200 focus:ring-emerald-500">
+                              <SelectValue placeholder="Selecione..." />
+                            </SelectTrigger>
+                            <SelectContent className="max-h-64">
                               <SelectItem
-                                key={f.id}
-                                value={f.id}
-                                className="font-medium"
+                                value="none"
+                                className="text-slate-500 italic"
                               >
-                                <span className="text-emerald-600 mr-2 font-bold">
-                                  {f.number}.
-                                </span>
-                                {f.label}
+                                Não mapear este campo
                               </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                              {Object.keys(rawData).map((rawKey) => (
+                                <SelectItem
+                                  key={rawKey}
+                                  value={rawKey}
+                                  className="font-mono text-xs"
+                                >
+                                  {rawKey}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <ArrowRight className="w-4 h-4 text-slate-300 shrink-0" />
+                        </div>
+                        <div className="col-span-4">
+                          <div
+                            className="text-sm text-emerald-700 font-medium truncate bg-emerald-50 px-3 py-2 rounded-md border border-emerald-100"
+                            title={String(previewValue)}
+                          >
+                            {mappedRawKey && mappedRawKey !== 'none' ? (
+                              String(previewValue)
+                            ) : (
+                              <span className="text-slate-400 italic font-normal">
+                                Sem valor mapeado
+                              </span>
+                            )}
+                          </div>
+                        </div>
                       </div>
+                    )
+                  })}
+                </div>
+              </div>
+
+              <div className="mt-8 bg-blue-50 border border-blue-100 rounded-lg p-4 shadow-sm">
+                <h4 className="text-sm font-semibold text-blue-900 mb-3">
+                  Dados Brutos Extraídos (Guia de Referência)
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {Object.entries(rawData).map(([k, v]) => (
+                    <div
+                      key={k}
+                      className="text-xs bg-white border border-blue-200 rounded-md px-2.5 py-1.5 max-w-full truncate shadow-sm"
+                      title={String(v)}
+                    >
+                      <span className="font-mono font-semibold text-blue-700 mr-2">
+                        {k}:
+                      </span>
+                      <span className="text-slate-600">{String(v)}</span>
                     </div>
                   ))}
                 </div>
@@ -267,13 +312,17 @@ export function CrawlerMappingWizard({ isOpen, onClose, onSuccess }: Props) {
             <div className="p-4 border-t bg-white flex justify-between items-center shrink-0">
               <div className="text-sm text-slate-500">
                 <span className="font-bold text-emerald-600">
-                  {Object.keys(rawToTarget).length}
+                  {
+                    Object.keys(targetToRaw).filter(
+                      (k) => targetToRaw[k] !== 'none',
+                    ).length
+                  }
                 </span>{' '}
                 de {TARGET_FIELDS.length} campos mapeados
               </div>
               <div className="flex gap-3">
                 <Button variant="outline" onClick={() => setStep(1)}>
-                  Voltar
+                  Voltar e Extrair Novamente
                 </Button>
                 <Button
                   onClick={handleSave}
@@ -285,7 +334,7 @@ export function CrawlerMappingWizard({ isOpen, onClose, onSuccess }: Props) {
                   ) : (
                     <Save className="w-4 h-4 mr-2" />
                   )}
-                  Testar e Salvar Mapeamento
+                  Confirmar e Salvar Mapeamento
                 </Button>
               </div>
             </div>
