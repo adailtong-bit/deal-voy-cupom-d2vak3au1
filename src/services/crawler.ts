@@ -11,17 +11,7 @@ export const fetchWebSearchPromotions = async (
 
   if (error) {
     console.error('Error fetching promotions:', error)
-    // fallback to mock data if edge function fails or doesn't exist
-    return Array.from({ length: Math.min(limit, 5) }).map((_, i) => ({
-      title: `${query} Offer ${i + 1}`,
-      description: `Description for ${query} offer`,
-      price: Math.floor(Math.random() * 100) + 10,
-      image_url: `https://img.usecurling.com/p/400/400?q=${encodeURIComponent(query)}`,
-      product_link: `https://example.com/offer/${i}`,
-      store_name: 'Mock Store',
-      status: 'pending',
-      captured_at: new Date().toISOString(),
-    }))
+    throw error
   }
 
   return data?.items || []

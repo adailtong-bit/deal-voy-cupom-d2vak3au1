@@ -64,6 +64,7 @@ export function CrawlerMappingWizard({ isOpen, onClose, onSuccess }: Props) {
       )
 
       if (error) throw error
+      if (data?.error) throw new Error(data.error)
 
       if (data?.items && data.items.length > 0) {
         const item = data.items[0]
