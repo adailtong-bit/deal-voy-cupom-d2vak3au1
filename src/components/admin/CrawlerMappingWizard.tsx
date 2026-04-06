@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Loader2, Save, Globe } from 'lucide-react'
+import { Loader2, Save, Globe, X } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
@@ -51,10 +51,18 @@ export function CrawlerMappingWizard({ isOpen, onClose, onSuccess }: Props) {
   const [isSaving, setIsSaving] = useState(false)
   const [rawData, setRawData] = useState<Record<string, any>>({})
   const [targetToRaw, setTargetToRaw] = useState<Record<string, string>>({})
+  const [errorDetails, setErrorDetails] = useState<{
+    message: string
+    debug?: any
+  } | null>(null)
 
   const handleFetch = async () => {
     if (!url) return toast({ title: 'URL obrigatória', variant: 'destructive' })
     setIsLoading(true)
+    setErrorDetails(null)
+    setRawData({})
+    setTargetToRaw({})
+
     try {
       const { data, error } = await supabase.functions.invoke(
         'crawl-promotions',
@@ -63,8 +71,17 @@ export function CrawlerMappingWizard({ isOpen, onClose, onSuccess }: Props) {
         },
       )
 
-      if (error) throw error
-      if (data?.error) throw new Error(data.error)
+      if (error) {
+        throw new Error(
+          error.message || 'Falha na comunicação com o servidor de extração.',
+        )
+      }
+
+      if (data?.error) {
+        setErrorDetails({ message: data.error, debug: data.debug_info })
+        setIsLoading(false)
+        return
+      }
 
       if (data?.items && data.items.length > 0) {
         const item = data.items[0]
@@ -113,12 +130,19 @@ export function CrawlerMappingWizard({ isOpen, onClose, onSuccess }: Props) {
         setTargetToRaw(initialMapping)
         setStep(2)
       } else {
-        throw new Error('Retorno vazio do crawler')
+        setErrorDetails({
+          message: 'Retorno vazio do crawler, sem itens encontrados.',
+          debug: data?.debug_info,
+        })
       }
     } catch (e: any) {
+      setErrorDetails({
+        message: e.message || 'Verifique a URL e tente novamente.',
+        debug: null,
+      })
       toast({
         title: 'Erro na extração',
-        description: e.message || 'Verifique a URL e tente novamente.',
+        description: 'Verifique os logs para mais detalhes.',
         variant: 'destructive',
       })
     }
@@ -205,7 +229,7 @@ export function CrawlerMappingWizard({ isOpen, onClose, onSuccess }: Props) {
         </DialogHeader>
 
         {step === 1 ? (
-          <div className="space-y-4 py-4">
+          <div className="space-y-4 py-4 flex-1 overflow-y-auto max-h-[70vh] custom-scrollbar px-1">
             <div className="space-y-2">
               <Label>URL de Exemplo (Produto ou Loja)</Label>
               <Input
@@ -213,6 +237,7 @@ export function CrawlerMappingWizard({ isOpen, onClose, onSuccess }: Props) {
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleFetch()}
+                autoFocus
               />
             </div>
             <Button
@@ -229,6 +254,56 @@ export function CrawlerMappingWizard({ isOpen, onClose, onSuccess }: Props) {
                 ? 'Varrendo página e extraindo...'
                 : 'Extrair Dados Reais'}
             </Button>
+
+            {errorDetails && (
+              <div className="mt-6 space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                <div className="p-4 bg-red-50 border border-red-200 rounded-lg shadow-sm">
+                  <h4 className="text-red-800 font-semibold mb-1 flex items-center gap-2">
+                    <X className="w-4 h-4" /> Falha na Extração
+                  </h4>
+                  <p className="text-sm text-red-700">{errorDetails.message}</p>
+                </div>
+
+                {errorDetails.debug && (
+                  <div className="border border-slate-200 rounded-lg overflow-hidden bg-slate-950 shadow-md">
+                    <div className="bg-slate-900 px-4 py-3 border-b border-slate-800 flex justify-between items-center">
+                      <span className="text-xs font-mono text-slate-400 uppercase tracking-wider font-semibold">
+                        Log de Execução (Debug)
+                      </span>
+                      {errorDetails.debug.status && (
+                        <span
+                          className={cn(
+                            'text-xs font-mono px-2 py-0.5 rounded font-bold',
+                            errorDetails.debug.status >= 400
+                              ? 'bg-red-500/20 text-red-400'
+                              : 'bg-emerald-500/20 text-emerald-400',
+                          )}
+                        >
+                          HTTP {errorDetails.debug.status}
+                        </span>
+                      )}
+                    </div>
+                    <div className="p-4 text-xs font-mono text-slate-300 space-y-3 max-h-64 overflow-y-auto custom-scrollbar">
+                      {errorDetails.debug.logs?.map((log: any, idx: number) => (
+                        <div key={idx} className="space-y-1">
+                          <div className="text-emerald-400 flex items-start gap-2">
+                            <span className="text-slate-500 shrink-0">
+                              [{new Date(log.time).toLocaleTimeString()}]
+                            </span>
+                            <span>{log.msg}</span>
+                          </div>
+                          {log.data && (
+                            <div className="pl-20 text-slate-400 break-words opacity-80 mt-1 bg-slate-900/50 p-2 rounded">
+                              {JSON.stringify(log.data, null, 2)}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         ) : (
           <div className="flex flex-col flex-1 min-h-0 overflow-hidden bg-slate-50">
