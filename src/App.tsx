@@ -27,6 +27,7 @@ import Profile from '@/pages/Profile'
 import Login from '@/pages/Login'
 import { useEffect } from 'react'
 import { UserRole } from '@/lib/types'
+import { AuthProvider } from '@/hooks/use-auth'
 
 function RequireAuth({
   children,
@@ -160,103 +161,105 @@ function GlobalLanguageSync() {
 
 export default function App() {
   return (
-    <LanguageProvider>
-      <NotificationProvider>
-        <CouponProvider>
-          <BrowserRouter>
-            <AuthStateSync />
-            <GlobalLanguageSync />
-            <PageTitleSync />
-            <Routes>
-              <Route element={<Layout />}>
-                <Route path="/" element={<Index />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/explore" element={<Explore />} />
-                <Route
-                  path="/vouchers"
-                  element={
-                    <RequireAuth>
-                      <MyVouchers />
-                    </RequireAuth>
-                  }
-                />
-                <Route
-                  path="/vendor"
-                  element={
-                    <RequireAuth roles={['shopkeeper']}>
-                      <VendorDashboard />
-                    </RequireAuth>
-                  }
-                />
-                <Route
-                  path="/merchant"
-                  element={
-                    <RequireAuth roles={['shopkeeper']}>
-                      <MerchantLayout />
-                    </RequireAuth>
-                  }
-                >
-                  <Route path="scanner" element={<MerchantScanner />} />
-                  <Route path="campaigns" element={<MerchantCampaigns />} />
-                  <Route path="leads" element={<MerchantLeads />} />
+    <AuthProvider>
+      <LanguageProvider>
+        <NotificationProvider>
+          <CouponProvider>
+            <BrowserRouter>
+              <AuthStateSync />
+              <GlobalLanguageSync />
+              <PageTitleSync />
+              <Routes>
+                <Route element={<Layout />}>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/explore" element={<Explore />} />
+                  <Route
+                    path="/vouchers"
+                    element={
+                      <RequireAuth>
+                        <MyVouchers />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route
+                    path="/vendor"
+                    element={
+                      <RequireAuth roles={['shopkeeper']}>
+                        <VendorDashboard />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route
+                    path="/merchant"
+                    element={
+                      <RequireAuth roles={['shopkeeper']}>
+                        <MerchantLayout />
+                      </RequireAuth>
+                    }
+                  >
+                    <Route path="scanner" element={<MerchantScanner />} />
+                    <Route path="campaigns" element={<MerchantCampaigns />} />
+                    <Route path="leads" element={<MerchantLeads />} />
+                  </Route>
+                  <Route
+                    path="/admin/*"
+                    element={
+                      <RequireAuth roles={['super_admin', 'admin'] as any}>
+                        <AdminDashboard />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route
+                    path="/franchisee"
+                    element={
+                      <RequireAuth roles={['franchisee']}>
+                        <FranchiseeDashboard />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/seasonal" element={<Seasonal />} />
+                  <Route
+                    path="/travel"
+                    element={
+                      <RequireAuth>
+                        <TravelPage />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route
+                    path="/travel/new"
+                    element={
+                      <RequireAuth>
+                        <TravelPage />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route
+                    path="/travel/:id"
+                    element={
+                      <RequireAuth>
+                        <TravelPage />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route
+                    path="/voucher/:id"
+                    element={
+                      <RequireAuth>
+                        <Voucher />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route path="*" element={<Navigate to="/" replace />} />
                 </Route>
-                <Route
-                  path="/admin/*"
-                  element={
-                    <RequireAuth roles={['super_admin', 'admin'] as any}>
-                      <AdminDashboard />
-                    </RequireAuth>
-                  }
-                />
-                <Route
-                  path="/franchisee"
-                  element={
-                    <RequireAuth roles={['franchisee']}>
-                      <FranchiseeDashboard />
-                    </RequireAuth>
-                  }
-                />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/seasonal" element={<Seasonal />} />
-                <Route
-                  path="/travel"
-                  element={
-                    <RequireAuth>
-                      <TravelPage />
-                    </RequireAuth>
-                  }
-                />
-                <Route
-                  path="/travel/new"
-                  element={
-                    <RequireAuth>
-                      <TravelPage />
-                    </RequireAuth>
-                  }
-                />
-                <Route
-                  path="/travel/:id"
-                  element={
-                    <RequireAuth>
-                      <TravelPage />
-                    </RequireAuth>
-                  }
-                />
-                <Route
-                  path="/voucher/:id"
-                  element={
-                    <RequireAuth>
-                      <Voucher />
-                    </RequireAuth>
-                  }
-                />
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Route>
-            </Routes>
-          </BrowserRouter>
-          <Toaster />
-        </CouponProvider>
-      </NotificationProvider>
-    </LanguageProvider>
+              </Routes>
+            </BrowserRouter>
+            <Toaster />
+          </CouponProvider>
+        </NotificationProvider>
+      </LanguageProvider>
+    </AuthProvider>
   )
 }

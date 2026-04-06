@@ -180,25 +180,38 @@ export function CrawlerMappingWizard({ isOpen, onClose, onSuccess }: Props) {
 
       const finalMapping = { ...targetToRaw }
 
-      const { error } = await supabase.from('site_mappings').upsert(
-        {
-          domain,
-          name: `Mapeamento ${domain}`,
-          mapping_rules: finalMapping,
-        },
-        { onConflict: 'domain' },
-      )
+      const { data, error } = await supabase
+        .from('site_mappings')
+        .upsert(
+          {
+            domain,
+            name: `Mapeamento ${domain}`,
+            mapping_rules: finalMapping,
+          },
+          { onConflict: 'domain' },
+        )
+        .select()
 
       if (error) throw error
+
+      if (!data || data.length === 0) {
+        throw new Error(
+          'Nenhum dado foi salvo. Pode haver um bloqueio de permissão no banco de dados.',
+        )
+      }
+
       toast({
         title: 'Mapeamento salvo com sucesso!',
         description: 'O crawler agora utilizará estas regras exatas.',
       })
       onSuccess()
     } catch (err: any) {
+      console.error('Save mapping error:', err)
       toast({
         title: 'Erro ao salvar',
-        description: err.message,
+        description:
+          err.message ||
+          'Houve uma falha técnica ao tentar salvar o mapeamento.',
         variant: 'destructive',
       })
     } finally {
