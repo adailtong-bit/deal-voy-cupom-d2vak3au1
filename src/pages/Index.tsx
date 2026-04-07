@@ -13,6 +13,7 @@ import { CATEGORIES, POPULAR_DESTINATIONS } from '@/lib/data'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
+import { searchAffiliateDeals } from '@/services/affiliates'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -97,6 +98,7 @@ function IndexContent() {
   const [webResults, setWebResults] = useState<any[]>([])
   const [isSearchingWeb, setIsSearchingWeb] = useState(false)
   const [supabasePromos, setSupabasePromos] = useState<any[]>([])
+  const [affiliateResults, setAffiliateResults] = useState<any[]>([])
 
   useEffect(() => {
     const fetchPromos = async () => {
@@ -125,16 +127,22 @@ function IndexContent() {
       if (searchQuery.trim().length > 2) {
         setIsSearchingWeb(true)
         try {
-          const results = await searchWeb(searchQuery)
+          const [results, affRes] = await Promise.all([
+            searchWeb(searchQuery).catch(() => []),
+            searchAffiliateDeals(searchQuery).catch(() => []),
+          ])
           setWebResults(Array.isArray(results) ? results : [])
+          setAffiliateResults(Array.isArray(affRes) ? affRes : [])
         } catch (e) {
           console.error(e)
           setWebResults([])
+          setAffiliateResults([])
         } finally {
           setIsSearchingWeb(false)
         }
       } else {
         setWebResults([])
+        setAffiliateResults([])
       }
     }, 800)
 
@@ -770,6 +778,33 @@ function IndexContent() {
                 </section>
               )}
 
+              {Array.isArray(affiliateResults) &&
+                affiliateResults.length > 0 && (
+                  <section>
+                    <h2 className="text-2xl font-bold flex items-center gap-2 mb-5 text-slate-800">
+                      <Sparkles className="h-6 w-6 text-indigo-500" />
+                      {t(
+                        'home.affiliate_promotions',
+                        'Recomendações Inteligentes',
+                      )}
+                      <Badge
+                        variant="secondary"
+                        className="ml-2 bg-indigo-100 text-indigo-700 hover:bg-indigo-100"
+                      >
+                        Patrocinado
+                      </Badge>
+                    </h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+                      {affiliateResults.map((promo) => (
+                        <PromotionCard
+                          key={promo.id || Math.random().toString()}
+                          promotion={promo}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                )}
+
               {Array.isArray(filteredDbPromotions) &&
                 filteredDbPromotions.length > 0 && (
                   <section>
@@ -796,7 +831,9 @@ function IndexContent() {
               {Array.isArray(filteredCoupons) &&
                 filteredCoupons.length === 0 &&
                 Array.isArray(filteredDbPromotions) &&
-                filteredDbPromotions.length === 0 && (
+                filteredDbPromotions.length === 0 &&
+                Array.isArray(affiliateResults) &&
+                affiliateResults.length === 0 && (
                   <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-slate-200 shadow-sm mt-8">
                     <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
                       <Search className="h-8 w-8 text-slate-400" />

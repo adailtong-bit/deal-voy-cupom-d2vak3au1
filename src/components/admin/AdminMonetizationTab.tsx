@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
 import {
   Bar,
   BarChart,
@@ -162,6 +163,30 @@ export function AdminMonetizationTab({
                   updatePlatformSettings({ globalProximityAlertsEnabled: c })
                 }
                 className="data-[state=checked]:bg-primary shrink-0"
+              />
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-white rounded-lg border border-indigo-200 shadow-sm gap-4 min-w-0 relative overflow-hidden">
+              <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500"></div>
+              <div className="space-y-1 min-w-0 pl-2">
+                <Label className="text-sm sm:text-base font-semibold text-indigo-900 block truncate flex items-center gap-2">
+                  Motor de Afiliados (Ranking Inteligente)
+                  <Badge
+                    variant="outline"
+                    className="text-[10px] h-5 bg-indigo-50 text-indigo-700 border-indigo-200"
+                  >
+                    Novo
+                  </Badge>
+                </Label>
+                <p className="text-xs sm:text-sm text-slate-500 line-clamp-2 sm:line-clamp-none">
+                  Ativa a rota paralela de monetização. Quando o usuário
+                  realizar uma busca, o sistema injetará ofertas patrocinadas
+                  usando o algoritmo de pontuação (Desconto + Comissão).
+                </p>
+              </div>
+              <Switch
+                checked={true}
+                className="data-[state=checked]:bg-indigo-600 shrink-0"
               />
             </div>
           </CardContent>
