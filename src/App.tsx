@@ -66,33 +66,42 @@ function RequireAuth({
     )
   }
 
-  // Unified auth state
-  const activeUser =
-    storeUser ||
-    (sbUser
-      ? {
-          id: sbUser.id,
-          role: (sbUser.user_metadata?.role || 'user') as UserRole,
-          email: sbUser.email,
-          country: 'Brasil',
-        }
-      : null) ||
-    localUser
+  // Unified auth state - priority to Supabase, but allow Mock users to bypass properly
+  let activeUser = null
+
+  if (isMockUser && localUser) {
+    activeUser = localUser
+  } else if (sbUser) {
+    activeUser = {
+      id: sbUser.id,
+      role: (sbUser.user_metadata?.role || 'user') as UserRole,
+      email: sbUser.email,
+      country: 'Brasil',
+    }
+  } else if (storeUser) {
+    activeUser = storeUser
+  } else if (localUser && !localUser.id?.toString().startsWith('mock-')) {
+    activeUser = localUser
+  }
 
   if (!activeUser) {
     return <Navigate to="/login" state={{ from: location }} replace />
   }
 
   if (roles && roles.length > 0 && !roles.includes(activeUser.role as any)) {
-    if (
-      activeUser.role === 'super_admin' ||
-      activeUser.role === ('admin' as any)
-    )
+    // Router Guard: Redirect to appropriate dashboard based on actual role
+    if (activeUser.role === 'super_admin' || activeUser.role === 'admin') {
       return <Navigate to="/admin" replace />
-    if (activeUser.role === 'franchisee')
+    }
+    if (activeUser.role === 'franchisee') {
       return <Navigate to="/franchisee" replace />
-    if (activeUser.role === 'shopkeeper')
+    }
+    if (activeUser.role === 'shopkeeper') {
       return <Navigate to="/vendor" replace />
+    }
+    if (activeUser.role === 'affiliate') {
+      return <Navigate to="/profile" replace />
+    }
     return <Navigate to="/" replace />
   }
 
