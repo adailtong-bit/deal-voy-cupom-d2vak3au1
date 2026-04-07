@@ -283,7 +283,9 @@ export default function Login() {
               role: role === 'affiliate' ? 'affiliate' : 'user',
               emailVisibility: true,
             }),
-          }).catch(() => {}) // Ignore fetch errors
+          }).catch(() => {
+            // Ignore fetch errors
+          })
         }
 
         try {
@@ -319,7 +321,10 @@ export default function Login() {
               const currentUser = JSON.parse(currentUserStr)
               currentUser.role = 'affiliate'
               localStorage.setItem('currentUser', JSON.stringify(currentUser))
-            } catch (e) {}
+            } catch (e) {
+              // Ignore parse error
+              console.warn('Failed to parse currentUser from localStorage', e)
+            }
           }
         }
 
