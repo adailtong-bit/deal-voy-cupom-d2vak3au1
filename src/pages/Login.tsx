@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
+import { useAuth } from '@/hooks/use-auth'
 import {
   Card,
   CardContent,
@@ -42,10 +43,15 @@ export default function Login() {
   const [showRegConfirmPassword, setShowRegConfirmPassword] = useState(false)
   const [role, setRole] = useState('user')
 
-  const { login, register, user } = useCouponStore()
+  const { login, register, user: storeUser } = useCouponStore()
+  const { user: sbUser } = useAuth()
   const { t } = useLanguage()
   const navigate = useNavigate()
   const location = useLocation()
+
+  const activeUser =
+    storeUser ||
+    (sbUser ? { role: sbUser.user_metadata?.role || 'user' } : null)
 
   const fromObj = location.state?.from
   const from = fromObj
@@ -53,140 +59,100 @@ export default function Login() {
     : '/'
 
   useEffect(() => {
-    if (user) {
-      if (user.role === 'super_admin' || user.role === ('admin' as any)) {
+    if (activeUser) {
+      if (activeUser.role === 'super_admin' || activeUser.role === 'admin') {
         navigate('/admin', { replace: true })
-      } else if (user.role === 'franchisee') {
+      } else if (activeUser.role === 'franchisee') {
         navigate('/franchisee', { replace: true })
-      } else if (user.role === 'shopkeeper') {
+      } else if (activeUser.role === 'shopkeeper') {
         navigate('/vendor', { replace: true })
       } else {
         navigate(from !== '/' ? from : '/profile', { replace: true })
       }
     }
-  }, [user, navigate, from])
+  }, [activeUser, navigate, from])
 
-  const handleFakeLogin = async (role: string, email: string) => {
+  const handleFakeLogin = async (roleType: string, fakeEmail: string) => {
     setIsLoading(true)
 
-    // Intercept fetch to bypass PocketBase auth gracefully
-    const originalFetch = window.fetch
-    window.fetch = async (input, init) => {
-      const url =
-        typeof input === 'string'
-          ? input
-          : input instanceof Request
-            ? input.url
-            : ''
-      if (url.includes('/auth-with-password')) {
-        const fakeJwt =
-          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Im1vY2staWQiLCJleHAiOjk5OTk5OTk5OTl9.signature'
-        const mockRecord = {
-          id: 'mock-' + role + '-' + Date.now().toString().slice(-6),
-          collectionId: 'users',
-          collectionName: 'users',
-          email: email,
-          name: email.split('@')[0],
-          role: role,
-          country: 'Brasil',
-          verified: true,
-          created: new Date().toISOString(),
-          updated: new Date().toISOString(),
-        }
-
-        return new Response(
-          JSON.stringify({
-            token: fakeJwt,
-            record: mockRecord,
-          }),
-          {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' },
-          },
-        )
-      }
-      return originalFetch(input, init)
+    // Bypass Interceptor block
+    const mockUser = {
+      id: 'mock-' + roleType + '-' + Date.now().toString().slice(-6),
+      email: fakeEmail,
+      name: fakeEmail.split('@')[0],
+      role: roleType,
+      country: 'Brasil',
     }
+    const fakeToken =
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Im1vY2staWQiLCJleHAiOjk5OTk5OTk5OTl9.signature'
 
-    if (role === 'affiliate') {
-      try {
-        await supabase.from('affiliate_partners').upsert(
-          {
-            email: email,
-            name: email.split('@')[0],
-            status: 'active',
-          },
-          { onConflict: 'email' },
-        )
-      } catch (e) {
-        console.error('Failed to create affiliate partner', e)
-      }
-    }
+    localStorage.setItem(
+      'pocketbase_auth',
+      JSON.stringify({ token: fakeToken, model: mockUser }),
+    )
+    localStorage.setItem('auth_token', fakeToken)
+    localStorage.setItem('currentUser', JSON.stringify(mockUser))
 
     try {
-      await login(email, 'bypass-password')
-
-      if (role === 'affiliate') {
-        const currentUser = JSON.parse(
-          localStorage.getItem('currentUser') || '{}',
-        )
-        currentUser.role = 'affiliate'
-        localStorage.setItem('currentUser', JSON.stringify(currentUser))
-      }
-
-      toast.success(
-        t('auth.login_success', 'Login fictício realizado com sucesso!'),
-      )
-    } catch (err: any) {
-      // Complete Error Suppression - Force fallback if Context doesn't pick up the interceptor
-      console.warn(
-        'Silent fallback for mock login due to internal store logic:',
-        err,
-      )
-      const mockUser = {
-        id: 'mock-' + role + '-' + Date.now().toString().slice(-6),
-        collectionId: 'users',
-        collectionName: 'users',
-        email: email,
-        name: email.split('@')[0],
-        role: role,
-        country: 'Brasil',
-      }
-      const fakeToken =
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Im1vY2staWQiLCJleHAiOjk5OTk5OTk5OTl9.signature'
-
-      localStorage.setItem(
-        'pocketbase_auth',
-        JSON.stringify({ token: fakeToken, model: mockUser }),
-      )
-      localStorage.setItem('auth_token', fakeToken)
-      localStorage.setItem('currentUser', JSON.stringify(mockUser))
-
-      // Direct redirection ensuring 100% success access
-      if (role === 'super_admin' || role === 'admin') {
-        window.location.href = '/admin'
-      } else if (role === 'franchisee') {
-        window.location.href = '/franchisee'
-      } else if (role === 'shopkeeper') {
-        window.location.href = '/vendor'
-      } else {
-        window.location.href = '/profile'
-      }
-    } finally {
-      window.fetch = originalFetch
-      setIsLoading(false)
+      await login(fakeEmail, 'bypass')
+    } catch (e) {
+      // ignore
     }
+
+    toast.success(
+      t('auth.login_success', 'Login fictício realizado com sucesso!'),
+    )
+
+    if (roleType === 'super_admin' || roleType === 'admin') {
+      window.location.href = '/admin'
+    } else if (roleType === 'franchisee') {
+      window.location.href = '/franchisee'
+    } else if (roleType === 'shopkeeper') {
+      window.location.href = '/vendor'
+    } else {
+      window.location.href = '/profile'
+    }
+
+    setIsLoading(false)
   }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     if (email && password) {
       setIsLoading(true)
+
+      const { error: sbError, data } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (sbError) {
+        toast.error(t('auth.login_error', 'Email ou senha inválidos.'))
+        setIsLoading(false)
+        return
+      }
+
       try {
         await login(email, password)
       } catch (err: any) {
-        toast.error(err.message || 'Erro ao fazer login')
+        console.warn('Pocketbase fallback log:', err)
+        if (data?.user) {
+          const userRole = data.user.user_metadata?.role || 'user'
+          const mockUser = {
+            id: data.user.id,
+            email: data.user.email,
+            name: data.user.user_metadata?.name || email.split('@')[0],
+            role: userRole,
+            country: 'Brasil',
+          }
+          localStorage.setItem('currentUser', JSON.stringify(mockUser))
+        }
       }
+
+      toast.success(t('auth.login_success', 'Bem-vindo de volta!'))
+      // Page reload to apply auth context sync naturally
+      window.location.href =
+        data?.user?.user_metadata?.role === 'admin' ? '/admin' : '/profile'
       setIsLoading(false)
     }
   }
@@ -202,7 +168,6 @@ export default function Login() {
     if (email && password && name) {
       setIsLoading(true)
       try {
-        // 1. Supabase Authentication Registration
         const { data: authData, error: authError } = await supabase.auth.signUp(
           {
             email,
@@ -220,116 +185,36 @@ export default function Login() {
           throw new Error(authError.message)
         }
 
-        // Wait briefly for auth triggers
-        await new Promise((resolve) => setTimeout(resolve, 500))
+        // Wait briefly for DB trigger to auto-confirm email and create profile/affiliate partner
+        await new Promise((resolve) => setTimeout(resolve, 800))
 
-        // Sign in with Supabase to establish session immediately
-        try {
-          await supabase.auth.signInWithPassword({
-            email,
-            password,
-          })
-        } catch (e) {
-          console.warn('Supabase auto-login failed:', e)
-        }
+        // Force sign in immediately
+        await supabase.auth.signInWithPassword({ email, password })
 
-        // 2. Affiliate Partners linking
-        if (role === 'affiliate') {
-          const {
-            data: { session },
-          } = await supabase.auth.getSession()
-          const userId = session?.user?.id || authData?.user?.id
-
-          if (userId) {
-            const { error: affiliateError } = await supabase
-              .from('affiliate_partners')
-              .upsert(
-                {
-                  email: email,
-                  name: name,
-                  status: 'pending',
-                  user_id: userId,
-                },
-                { onConflict: 'email' },
-              )
-
-            if (affiliateError) {
-              console.error(
-                'Failed to create affiliate partner',
-                affiliateError,
-              )
-            }
-          }
-        }
-
-        // 3. Fallback/Sync with Pocketbase Store (useCouponStore)
         try {
           await register(name, email, password)
         } catch (err: any) {
           console.warn('Pocketbase register fallback:', err)
-          const API_URL =
-            import.meta.env.VITE_API_URL || 'https://routevoy.goskip.app/api'
-          await fetch(`${API_URL}/collections/users/records`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Accept: 'application/json',
-            },
-            body: JSON.stringify({
-              name,
-              email,
-              password,
-              passwordConfirm: password,
-              role: role === 'affiliate' ? 'affiliate' : 'user',
-              emailVisibility: true,
-            }),
-          }).catch(() => {
-            // Ignore fetch errors
-          })
         }
 
         try {
           await login(email, password)
         } catch (loginErr) {
           console.warn('Pocketbase login fallback:', loginErr)
-          // Mock store login if Pocketbase is down to ensure user can enter
-          const mockUser = {
-            id:
-              authData?.user?.id ||
-              'mock-' + role + '-' + Date.now().toString().slice(-6),
-            collectionId: 'users',
-            collectionName: 'users',
-            email: email,
-            name: name,
-            role: role === 'affiliate' ? 'affiliate' : 'user',
-            country: 'Brasil',
-          }
-          const fakeToken =
-            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Im1vY2staWQiLCJleHAiOjk5OTk5OTk5OTl9.signature'
-          localStorage.setItem(
-            'pocketbase_auth',
-            JSON.stringify({ token: fakeToken, model: mockUser }),
-          )
-          localStorage.setItem('auth_token', fakeToken)
-          localStorage.setItem('currentUser', JSON.stringify(mockUser))
-        }
-
-        if (role === 'affiliate') {
-          const currentUserStr = localStorage.getItem('currentUser')
-          if (currentUserStr) {
-            try {
-              const currentUser = JSON.parse(currentUserStr)
-              currentUser.role = 'affiliate'
-              localStorage.setItem('currentUser', JSON.stringify(currentUser))
-            } catch (e) {
-              // Ignore parse error
-              console.warn('Failed to parse currentUser from localStorage', e)
+          if (authData?.user) {
+            const mockUser = {
+              id: authData.user.id,
+              email: email,
+              name: name,
+              role: role === 'affiliate' ? 'affiliate' : 'user',
+              country: 'Brasil',
             }
+            localStorage.setItem('currentUser', JSON.stringify(mockUser))
           }
         }
 
         toast.success(t('auth.register_success', 'Conta criada com sucesso!'))
-        window.location.href = '/profile'
+        window.location.href = role === 'affiliate' ? '/profile' : '/'
       } catch (err: any) {
         toast.error(err.message || 'Erro ao criar conta')
       } finally {
@@ -585,9 +470,7 @@ export default function Login() {
             <Button
               variant="outline"
               className="w-full justify-start h-auto py-3 bg-white hover:bg-slate-100 hover:text-red-600 transition-colors shadow-sm"
-              onClick={() =>
-                handleFakeLogin('super_admin', 'admin@dealvoy.com')
-              }
+              onClick={() => handleFakeLogin('admin', 'admin@dealvoy.com')}
               disabled={isLoading}
             >
               <ShieldAlert className="w-4 h-4 mr-3 text-red-500 shrink-0" />

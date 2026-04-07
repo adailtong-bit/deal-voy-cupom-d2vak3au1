@@ -27,7 +27,7 @@ import Profile from '@/pages/Profile'
 import Login from '@/pages/Login'
 import { useEffect } from 'react'
 import { UserRole } from '@/lib/types'
-import { AuthProvider } from '@/hooks/use-auth'
+import { AuthProvider, useAuth } from '@/hooks/use-auth'
 
 function RequireAuth({
   children,
@@ -36,7 +36,8 @@ function RequireAuth({
   children: React.ReactNode
   roles?: UserRole[]
 }) {
-  const { user } = useCouponStore()
+  const { user: storeUser } = useCouponStore()
+  const { user: sbUser, loading } = useAuth()
   const location = useLocation()
 
   // Admin Session Stability: Prevent unmounting if a background crawl is active
@@ -48,15 +49,40 @@ function RequireAuth({
     return <>{children}</>
   }
 
-  if (!user) {
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 text-slate-500">
+        Carregando permissões de acesso...
+      </div>
+    )
+  }
+
+  // Unified auth state
+  const activeUser =
+    storeUser ||
+    (sbUser
+      ? {
+          id: sbUser.id,
+          role: (sbUser.user_metadata?.role || 'user') as UserRole,
+          email: sbUser.email,
+          country: 'Brasil',
+        }
+      : null)
+
+  if (!activeUser) {
     return <Navigate to="/login" state={{ from: location }} replace />
   }
 
-  if (roles && roles.length > 0 && !roles.includes(user.role)) {
-    if (user.role === 'super_admin' || user.role === ('admin' as any))
+  if (roles && roles.length > 0 && !roles.includes(activeUser.role as any)) {
+    if (
+      activeUser.role === 'super_admin' ||
+      activeUser.role === ('admin' as any)
+    )
       return <Navigate to="/admin" replace />
-    if (user.role === 'franchisee') return <Navigate to="/franchisee" replace />
-    if (user.role === 'shopkeeper') return <Navigate to="/vendor" replace />
+    if (activeUser.role === 'franchisee')
+      return <Navigate to="/franchisee" replace />
+    if (activeUser.role === 'shopkeeper')
+      return <Navigate to="/vendor" replace />
     return <Navigate to="/" replace />
   }
 
@@ -64,17 +90,19 @@ function RequireAuth({
 }
 
 function AuthStateSync() {
-  const { user } = useCouponStore()
+  const { user: storeUser } = useCouponStore()
+  const { user: sbUser } = useAuth()
 
   useEffect(() => {
-    if (!user) {
+    if (!storeUser && !sbUser) {
       // Purge authentication tokens and role-related data upon logout
       localStorage.removeItem('auth_token')
       localStorage.removeItem('pocketbase_auth')
       localStorage.removeItem('user_role')
+      localStorage.removeItem('currentUser')
       sessionStorage.clear()
     }
-  }, [user])
+  }, [storeUser, sbUser])
 
   return null
 }
