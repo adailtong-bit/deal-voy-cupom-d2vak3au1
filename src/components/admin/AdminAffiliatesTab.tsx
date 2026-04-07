@@ -20,6 +20,7 @@ import {
   Activity,
   RefreshCw,
   Edit2,
+  Trash2,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useRegionFormatting } from '@/hooks/useRegionFormatting'
@@ -33,8 +34,7 @@ export function AdminAffiliatesTab() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [editingAffiliate, setEditingAffiliate] = useState<any>(null)
 
-  const [newName, setNewName] = useState('')
-  const [newEmail, setNewEmail] = useState('')
+  const [selectedPendingId, setSelectedPendingId] = useState('')
   const [newModel, setNewModel] = useState('percentage')
   const [newRate, setNewRate] = useState('30')
   const [newFee, setNewFee] = useState('0')
@@ -42,18 +42,23 @@ export function AdminAffiliatesTab() {
   const fetchData = async () => {
     setLoading(true)
     try {
-      const { data: affData } = await supabase
+      const { data: affData, error: affErr } = await supabase
         .from('affiliate_partners')
         .select('*')
         .order('created_at', { ascending: false })
+
+      if (affErr) throw affErr
       setAffiliates(affData || [])
-      const { data: txData } = await supabase
+
+      const { data: txData, error: txErr } = await supabase
         .from('affiliate_transactions')
         .select('*, affiliate_partners(name)')
         .order('created_at', { ascending: false })
+
+      if (txErr) throw txErr
       setTransactions(txData || [])
     } catch (error: any) {
-      toast.error('Erro ao buscar dados')
+      toast.error('Erro ao buscar dados: ' + error.message)
     } finally {
       setLoading(false)
     }
@@ -63,22 +68,29 @@ export function AdminAffiliatesTab() {
     fetchData()
   }, [])
 
-  const handleAddAffiliate = async () => {
+  const handleLinkAffiliate = async () => {
+    if (!selectedPendingId) {
+      toast.error('Selecione um afiliado pendente.')
+      return
+    }
     try {
-      const { error } = await supabase.from('affiliate_partners').insert({
-        name: newName,
-        email: newEmail,
-        status: 'active',
-        commission_model: newModel,
-        commission_rate: parseFloat(newRate) || 0,
-        monthly_fee: parseFloat(newFee) || 0,
-      })
+      const { error } = await supabase
+        .from('affiliate_partners')
+        .update({
+          status: 'active',
+          commission_model: newModel,
+          commission_rate: parseFloat(newRate) || 0,
+          monthly_fee: parseFloat(newFee) || 0,
+        })
+        .eq('id', selectedPendingId)
+
       if (error) throw error
-      toast.success('Sub-afiliado adicionado com sucesso!')
+      toast.success('Afiliado vinculado com sucesso!')
       setIsAddModalOpen(false)
+      setSelectedPendingId('')
       fetchData()
     } catch (error: any) {
-      toast.error('Erro ao adicionar afiliado: ' + error.message)
+      toast.error('Erro ao vincular afiliado: ' + error.message)
     }
   }
 
@@ -101,6 +113,26 @@ export function AdminAffiliatesTab() {
       fetchData()
     } catch (error: any) {
       toast.error('Erro ao atualizar: ' + error.message)
+    }
+  }
+
+  const handleDeleteAffiliate = async (id: string) => {
+    if (
+      !confirm(
+        'Tem certeza que deseja excluir este afiliado? Esta ação não pode ser desfeita.',
+      )
+    )
+      return
+    try {
+      const { error } = await supabase
+        .from('affiliate_partners')
+        .delete()
+        .eq('id', id)
+      if (error) throw error
+      toast.success('Afiliado excluído com sucesso!')
+      fetchData()
+    } catch (error: any) {
+      toast.error('Erro ao excluir afiliado: ' + error.message)
     }
   }
 
@@ -177,7 +209,7 @@ export function AdminAffiliatesTab() {
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold">Gestão de Sub-Afiliados</h3>
             <Button onClick={() => setIsAddModalOpen(true)} className="gap-2">
-              <Plus className="w-4 h-4" /> Novo Afiliado
+              <Plus className="w-4 h-4" /> Vincular Afiliado
             </Button>
           </div>
           <Card>
@@ -215,19 +247,25 @@ export function AdminAffiliatesTab() {
                           >
                             Split de Comissão
                           </Badge>
-                        ) : (
+                        ) : aff.commission_model === 'monthly' ? (
                           <Badge
                             variant="outline"
                             className="bg-purple-50 text-purple-700 border-purple-200"
                           >
                             SaaS (Mensal)
                           </Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-xs italic">
+                            Não configurado
+                          </span>
                         )}
                       </td>
                       <td className="p-4 text-green-600 font-semibold">
                         {aff.commission_model === 'percentage'
                           ? `${aff.commission_rate}%`
-                          : `${formatCurrency(aff.monthly_fee)}/mês`}
+                          : aff.commission_model === 'monthly'
+                            ? `${formatCurrency(aff.monthly_fee)}/mês`
+                            : '-'}
                       </td>
                       <td className="p-4">
                         <Badge
@@ -241,13 +279,22 @@ export function AdminAffiliatesTab() {
                               : 'Suspenso'}
                         </Badge>
                       </td>
-                      <td className="p-4 text-right">
+                      <td className="p-4 text-right flex justify-end gap-2">
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => setEditingAffiliate(aff)}
+                          title="Editar"
                         >
                           <Edit2 className="w-4 h-4 text-slate-500" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteAffiliate(aff.id)}
+                          title="Excluir"
+                        >
+                          <Trash2 className="w-4 h-4 text-red-500" />
                         </Button>
                       </td>
                     </tr>
@@ -361,28 +408,36 @@ export function AdminAffiliatesTab() {
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
           <Card className="w-full max-w-md shadow-lg animate-in zoom-in-95 duration-200">
             <CardHeader>
-              <CardTitle>Adicionar Sub-Afiliado</CardTitle>
+              <CardTitle>Vincular Afiliado</CardTitle>
               <p className="text-sm text-muted-foreground">
-                Cadastre um parceiro e defina a regra do seu lucro (Split).
+                Selecione um parceiro pendente e defina a regra do seu lucro
+                (Split).
               </p>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>Nome do Parceiro</Label>
-                <Input
-                  placeholder="Ex: Influenciador Tech"
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Email</Label>
-                <Input
-                  type="email"
-                  placeholder="contato@email.com"
-                  value={newEmail}
-                  onChange={(e) => setNewEmail(e.target.value)}
-                />
+                <Label>Selecionar Afiliado Pendente</Label>
+                <select
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+                  value={selectedPendingId}
+                  onChange={(e) => setSelectedPendingId(e.target.value)}
+                >
+                  <option value="">Selecione um afiliado...</option>
+                  {affiliates
+                    .filter((a) => a.status === 'pending')
+                    .map((a) => (
+                      <option key={a.id} value={a.id}>
+                        {a.name} ({a.email})
+                      </option>
+                    ))}
+                </select>
+                {affiliates.filter((a) => a.status === 'pending').length ===
+                  0 && (
+                  <p className="text-xs text-amber-600 mt-1">
+                    Nenhum afiliado pendente no momento. Os usuários precisam se
+                    cadastrar marcando a opção "Afiliado Parceiro".
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label>Modelo de Comissão (Sua Fatia)</Label>
@@ -425,7 +480,12 @@ export function AdminAffiliatesTab() {
               <Button variant="ghost" onClick={() => setIsAddModalOpen(false)}>
                 Cancelar
               </Button>
-              <Button onClick={handleAddAffiliate}>Salvar Parceiro</Button>
+              <Button
+                onClick={handleLinkAffiliate}
+                disabled={!selectedPendingId}
+              >
+                Vincular Parceiro
+              </Button>
             </CardFooter>
           </Card>
         </div>

@@ -26,7 +26,7 @@ import {
   Map,
   Users,
 } from 'lucide-react'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { Checkbox } from '@/components/ui/checkbox'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase/client'
 
@@ -232,24 +232,27 @@ export default function Login() {
         if (registerSuccess) {
           toast.success(t('auth.register_success', 'Conta criada com sucesso!'))
 
-          if (role === 'affiliate') {
-            try {
-              await supabase.from('affiliate_partners').upsert(
-                {
-                  email: email,
-                  name: name,
-                  status: 'pending',
-                },
-                { onConflict: 'email' },
-              )
-            } catch (e) {
-              console.error('Failed to create affiliate partner', e)
-            }
-          }
-
           try {
             await login(email, password)
+
             if (role === 'affiliate') {
+              try {
+                const {
+                  data: { session },
+                } = await supabase.auth.getSession()
+                await supabase.from('affiliate_partners').upsert(
+                  {
+                    email: email,
+                    name: name,
+                    status: 'pending',
+                    ...(session?.user?.id ? { user_id: session.user.id } : {}),
+                  },
+                  { onConflict: 'email' },
+                )
+              } catch (e) {
+                console.error('Failed to create affiliate partner', e)
+              }
+
               const currentUser = JSON.parse(
                 localStorage.getItem('currentUser') || '{}',
               )
@@ -258,7 +261,25 @@ export default function Login() {
               window.location.href = '/profile'
               return
             }
+
+            window.location.href = '/profile'
           } catch (loginErr) {
+            // If login fails but we wanted to be affiliate, try to insert anyway
+            if (role === 'affiliate') {
+              try {
+                await supabase.from('affiliate_partners').upsert(
+                  {
+                    email: email,
+                    name: name,
+                    status: 'pending',
+                  },
+                  { onConflict: 'email' },
+                )
+              } catch (e) {
+                console.error('Failed to create affiliate partner', e)
+              }
+            }
+
             setActiveTab('login')
             setPassword('')
             setConfirmPassword('')
@@ -408,35 +429,21 @@ export default function Login() {
                     />
                   </div>
                 </div>
-                <div className="space-y-3 pt-2 pb-1">
-                  <Label className="text-slate-700 font-semibold mb-1 block">
-                    Tipo de Conta
-                  </Label>
-                  <RadioGroup
-                    defaultValue="user"
-                    value={role}
-                    onValueChange={setRole}
-                    className="flex flex-col sm:flex-row gap-4"
+                <div className="flex items-center space-x-3 pt-4 pb-2">
+                  <Checkbox
+                    id="is-affiliate"
+                    checked={role === 'affiliate'}
+                    onCheckedChange={(checked) =>
+                      setRole(checked ? 'affiliate' : 'user')
+                    }
+                    className="h-5 w-5"
+                  />
+                  <Label
+                    htmlFor="is-affiliate"
+                    className="text-slate-700 font-medium cursor-pointer text-base"
                   >
-                    <div className="flex items-center space-x-2 bg-white border border-slate-200 px-4 py-2.5 rounded-md flex-1 cursor-pointer hover:border-primary/50 transition-colors">
-                      <RadioGroupItem value="user" id="r-user" />
-                      <Label
-                        htmlFor="r-user"
-                        className="cursor-pointer font-medium m-0 flex-1"
-                      >
-                        Cliente Padrão
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2 bg-white border border-slate-200 px-4 py-2.5 rounded-md flex-1 cursor-pointer hover:border-primary/50 transition-colors">
-                      <RadioGroupItem value="affiliate" id="r-affiliate" />
-                      <Label
-                        htmlFor="r-affiliate"
-                        className="cursor-pointer font-medium m-0 flex-1"
-                      >
-                        Afiliado Parceiro
-                      </Label>
-                    </div>
-                  </RadioGroup>
+                    Desejo me cadastrar como Afiliado Parceiro
+                  </Label>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="reg-password" className="text-slate-700">
