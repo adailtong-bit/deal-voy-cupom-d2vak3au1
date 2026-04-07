@@ -49,7 +49,16 @@ function RequireAuth({
     return <>{children}</>
   }
 
-  if (loading) {
+  let localUser = null
+  try {
+    const localUserStr = localStorage.getItem('currentUser')
+    if (localUserStr) localUser = JSON.parse(localUserStr)
+  } catch (e) {
+    // ignore
+  }
+  const isMockUser = localUser?.id?.toString().startsWith('mock-')
+
+  if (loading && !isMockUser) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 text-slate-500">
         Carregando permissões de acesso...
@@ -67,7 +76,8 @@ function RequireAuth({
           email: sbUser.email,
           country: 'Brasil',
         }
-      : null)
+      : null) ||
+    localUser
 
   if (!activeUser) {
     return <Navigate to="/login" state={{ from: location }} replace />
@@ -94,7 +104,18 @@ function AuthStateSync() {
   const { user: sbUser } = useAuth()
 
   useEffect(() => {
-    if (!storeUser && !sbUser) {
+    let isMockUser = false
+    try {
+      const localUserStr = localStorage.getItem('currentUser')
+      if (localUserStr) {
+        const localUser = JSON.parse(localUserStr)
+        isMockUser = localUser?.id?.toString().startsWith('mock-')
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    if (!storeUser && !sbUser && !isMockUser) {
       // Purge authentication tokens and role-related data upon logout
       localStorage.removeItem('auth_token')
       localStorage.removeItem('pocketbase_auth')

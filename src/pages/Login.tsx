@@ -49,9 +49,18 @@ export default function Login() {
   const navigate = useNavigate()
   const location = useLocation()
 
+  let localUser = null
+  try {
+    const localUserStr = localStorage.getItem('currentUser')
+    if (localUserStr) localUser = JSON.parse(localUserStr)
+  } catch (e) {
+    // ignore
+  }
+
   const activeUser =
     storeUser ||
-    (sbUser ? { role: sbUser.user_metadata?.role || 'user' } : null)
+    (sbUser ? { role: sbUser.user_metadata?.role || 'user' } : null) ||
+    localUser
 
   const fromObj = location.state?.from
   const from = fromObj
