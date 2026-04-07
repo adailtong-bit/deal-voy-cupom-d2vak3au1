@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import {
   Card,
   CardContent,
@@ -9,6 +9,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Input } from '@/components/ui/input'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -18,9 +19,13 @@ import {
   Store,
   Ticket,
   Clock,
+  Search,
+  Loader2,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { SeasonalEvent } from '@/lib/types'
+import { SeasonalEvent, DiscoveredPromotion } from '@/lib/types'
+import { searchAffiliateDeals } from '@/services/affiliates'
+import { PromotionCard } from '@/components/PromotionCard'
 
 function SeasonalCampaignCard({
   event,
@@ -158,6 +163,43 @@ export default function Seasonal() {
   const { t } = useLanguage()
   const { seasonalEvents, companies, user, selectedRegion } = useCouponStore()
 
+  const [searchQuery, setSearchQuery] = useState('')
+  const [isSearching, setIsSearching] = useState(false)
+  const [organicDeals, setOrganicDeals] = useState<DiscoveredPromotion[]>([])
+  const [hasSearched, setHasSearched] = useState(false)
+
+  useEffect(() => {
+    const fetchDefault = async () => {
+      setIsSearching(true)
+      try {
+        const results = await searchAffiliateDeals('ofertas', 12)
+        setOrganicDeals(results)
+        setHasSearched(true)
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setIsSearching(false)
+      }
+    }
+    fetchDefault()
+  }, [])
+
+  const handleSearch = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault()
+    if (!searchQuery.trim()) return
+
+    setIsSearching(true)
+    setHasSearched(true)
+    try {
+      const results = await searchAffiliateDeals(searchQuery, 12)
+      setOrganicDeals(results)
+    } catch (error) {
+      toast.error(t('seasonal.search_error', 'Erro ao buscar ofertas'))
+    } finally {
+      setIsSearching(false)
+    }
+  }
+
   const filteredEvents = useMemo(() => {
     return seasonalEvents.filter((e) => {
       if (
@@ -240,7 +282,7 @@ export default function Seasonal() {
       </h1>
 
       <Tabs defaultValue="active" className="w-full">
-        <TabsList className="grid w-full max-w-[400px] grid-cols-2 mb-8">
+        <TabsList className="grid w-full max-w-[600px] grid-cols-3 mb-8">
           <TabsTrigger value="active" className="text-base">
             {t('seasonal.active_tab', 'Ativas')}
             <Badge
@@ -258,6 +300,9 @@ export default function Seasonal() {
             >
               {futureEvents.length}
             </Badge>
+          </TabsTrigger>
+          <TabsTrigger value="organic" className="text-base">
+            {t('seasonal.organic_tab', 'Orgânicas')}
           </TabsTrigger>
         </TabsList>
 
@@ -309,6 +354,80 @@ export default function Seasonal() {
               </CardContent>
             </Card>
           )}
+        </TabsContent>
+
+        <TabsContent value="organic" className="space-y-6 outline-none">
+          <div className="flex items-center gap-2 mb-6">
+            <form
+              onSubmit={handleSearch}
+              className="flex w-full max-w-md gap-2"
+            >
+              <Input
+                placeholder={t(
+                  'seasonal.search_organic',
+                  'Buscar ofertas orgânicas...',
+                )}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="flex-1"
+              />
+              <Button
+                type="submit"
+                disabled={isSearching || !searchQuery.trim()}
+              >
+                {isSearching ? (
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                ) : (
+                  <Search className="w-4 h-4 mr-2" />
+                )}
+                {t('common.search', 'Buscar')}
+              </Button>
+            </form>
+          </div>
+
+          {isSearching ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                <Card
+                  key={i}
+                  className="flex flex-col h-full animate-pulse border-none shadow-sm"
+                >
+                  <div className="h-48 bg-muted w-full rounded-t-xl" />
+                  <CardHeader className="pb-2">
+                    <div className="h-6 bg-muted rounded w-3/4 mb-2" />
+                  </CardHeader>
+                  <CardContent className="flex-1 pb-4">
+                    <div className="h-4 bg-muted rounded w-1/2 mb-4" />
+                    <div className="h-8 bg-muted rounded w-1/3 mt-auto" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : organicDeals.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {organicDeals.map((deal, idx) => (
+                <PromotionCard key={deal.id || idx} promotion={deal} />
+              ))}
+            </div>
+          ) : hasSearched ? (
+            <Card className="bg-muted/50 border-dashed">
+              <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+                <Search className="h-16 w-16 text-muted-foreground/50 mb-4" />
+                <h3 className="text-xl font-semibold mb-2">
+                  {t(
+                    'seasonal.no_organic_results',
+                    'Nenhuma oferta encontrada',
+                  )}
+                </h3>
+                <p className="text-muted-foreground max-w-md">
+                  {t(
+                    'seasonal.no_organic_results_desc',
+                    'Tente buscar por outros termos para ver nossas recomendações inteligentes.',
+                  )}
+                </p>
+              </CardContent>
+            </Card>
+          ) : null}
         </TabsContent>
       </Tabs>
     </div>
