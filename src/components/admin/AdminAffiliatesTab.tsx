@@ -14,13 +14,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Label } from '@/components/ui/label'
 import {
   DollarSign,
-  Settings,
   Users,
   Wallet,
   Plus,
-  Save,
   Activity,
   RefreshCw,
+  Edit2,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useRegionFormatting } from '@/hooks/useRegionFormatting'
@@ -32,15 +31,13 @@ export function AdminAffiliatesTab() {
   const [transactions, setTransactions] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+  const [editingAffiliate, setEditingAffiliate] = useState<any>(null)
 
   const [newName, setNewName] = useState('')
   const [newEmail, setNewEmail] = useState('')
   const [newModel, setNewModel] = useState('percentage')
   const [newRate, setNewRate] = useState('30')
   const [newFee, setNewFee] = useState('0')
-
-  const [cjKey, setCjKey] = useState('cj_live_*******************')
-  const [awinKey, setAwinKey] = useState('awin_live_*****************')
 
   const fetchData = async () => {
     setLoading(true)
@@ -85,6 +82,28 @@ export function AdminAffiliatesTab() {
     }
   }
 
+  const handleUpdateAffiliate = async () => {
+    if (!editingAffiliate) return
+    try {
+      const { error } = await supabase
+        .from('affiliate_partners')
+        .update({
+          status: editingAffiliate.status,
+          commission_model: editingAffiliate.commission_model,
+          commission_rate: parseFloat(editingAffiliate.commission_rate) || 0,
+          monthly_fee: parseFloat(editingAffiliate.monthly_fee) || 0,
+        })
+        .eq('id', editingAffiliate.id)
+
+      if (error) throw error
+      toast.success('Regras do afiliado atualizadas!')
+      setEditingAffiliate(null)
+      fetchData()
+    } catch (error: any) {
+      toast.error('Erro ao atualizar: ' + error.message)
+    }
+  }
+
   const totalPlatformFee = transactions.reduce(
     (acc, curr) => acc + (Number(curr.platform_fee) || 0),
     0,
@@ -105,7 +124,9 @@ export function AdminAffiliatesTab() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{affiliates.length}</div>
+            <div className="text-2xl font-bold">
+              {affiliates.filter((a) => a.status === 'active').length}
+            </div>
             <p className="text-xs text-muted-foreground">
               Parceiros gerando tráfego
             </p>
@@ -150,9 +171,6 @@ export function AdminAffiliatesTab() {
           <TabsTrigger value="transactions" className="gap-2">
             <DollarSign className="w-4 h-4" /> Transações (Split)
           </TabsTrigger>
-          <TabsTrigger value="settings" className="gap-2">
-            <Settings className="w-4 h-4" /> Chaves de API
-          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="partners" className="space-y-4">
@@ -175,6 +193,9 @@ export function AdminAffiliatesTab() {
                       Sua Fatia
                     </th>
                     <th className="p-4 font-medium text-slate-600">Status</th>
+                    <th className="p-4 font-medium text-slate-600 text-right">
+                      Ações
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -209,16 +230,32 @@ export function AdminAffiliatesTab() {
                           : `${formatCurrency(aff.monthly_fee)}/mês`}
                       </td>
                       <td className="p-4">
-                        <Badge className="bg-green-100 text-green-800 border-none">
-                          Ativo
+                        <Badge
+                          className={`cursor-pointer ${aff.status === 'active' ? 'bg-green-100 text-green-800 border-none hover:bg-green-200' : 'bg-amber-100 text-amber-800 border-none hover:bg-amber-200'}`}
+                          onClick={() => setEditingAffiliate(aff)}
+                        >
+                          {aff.status === 'active'
+                            ? 'Ativo'
+                            : aff.status === 'pending'
+                              ? 'Pendente'
+                              : 'Suspenso'}
                         </Badge>
+                      </td>
+                      <td className="p-4 text-right">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setEditingAffiliate(aff)}
+                        >
+                          <Edit2 className="w-4 h-4 text-slate-500" />
+                        </Button>
                       </td>
                     </tr>
                   ))}
                   {affiliates.length === 0 && !loading && (
                     <tr>
                       <td
-                        colSpan={4}
+                        colSpan={5}
                         className="p-4 text-center text-muted-foreground"
                       >
                         Nenhum afiliado cadastrado.
@@ -318,46 +355,6 @@ export function AdminAffiliatesTab() {
             </div>
           </Card>
         </TabsContent>
-
-        <TabsContent value="settings" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Integração de Contas de Afiliado</CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Configure suas chaves de API reais dos marketplaces. O motor
-                usará essas chaves para gerar os links finais.
-              </p>
-            </CardHeader>
-            <CardContent className="space-y-4 md:grid md:grid-cols-2 md:gap-6 md:space-y-0">
-              <div className="space-y-2">
-                <Label>Commission Junction (CJ) API Key</Label>
-                <Input
-                  type="password"
-                  value={cjKey}
-                  onChange={(e) => setCjKey(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Awin API Token</Label>
-                <Input
-                  type="password"
-                  value={awinKey}
-                  onChange={(e) => setAwinKey(e.target.value)}
-                />
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button
-                onClick={() =>
-                  toast.success('Configurações salvas com sucesso!')
-                }
-                className="gap-2"
-              >
-                <Save className="w-4 h-4" /> Salvar Chaves
-              </Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
       </Tabs>
 
       {isAddModalOpen && (
@@ -429,6 +426,101 @@ export function AdminAffiliatesTab() {
                 Cancelar
               </Button>
               <Button onClick={handleAddAffiliate}>Salvar Parceiro</Button>
+            </CardFooter>
+          </Card>
+        </div>
+      )}
+
+      {editingAffiliate && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <Card className="w-full max-w-md shadow-lg animate-in zoom-in-95 duration-200">
+            <CardHeader>
+              <CardTitle>Editar Regras do Afiliado</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Ajuste o status e o split de comissão para{' '}
+                <span className="font-semibold text-slate-800">
+                  {editingAffiliate.name}
+                </span>
+                .
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Status da Conta</Label>
+                <select
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={editingAffiliate.status}
+                  onChange={(e) =>
+                    setEditingAffiliate({
+                      ...editingAffiliate,
+                      status: e.target.value,
+                    })
+                  }
+                >
+                  <option value="pending">
+                    Pendente (Aguardando Aprovação)
+                  </option>
+                  <option value="active">Ativo (Liberado)</option>
+                  <option value="suspended">Suspenso</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label>Modelo de Comissão (Sua Fatia)</Label>
+                <select
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={editingAffiliate.commission_model}
+                  onChange={(e) =>
+                    setEditingAffiliate({
+                      ...editingAffiliate,
+                      commission_model: e.target.value,
+                    })
+                  }
+                >
+                  <option value="percentage">Porcentagem do Lucro Dele</option>
+                  <option value="monthly">Mensalidade Fixa (SaaS)</option>
+                </select>
+              </div>
+              {editingAffiliate.commission_model === 'percentage' ? (
+                <div className="space-y-2">
+                  <Label>Sua Taxa (%)</Label>
+                  <Input
+                    value={editingAffiliate.commission_rate}
+                    onChange={(e) =>
+                      setEditingAffiliate({
+                        ...editingAffiliate,
+                        commission_rate: e.target.value,
+                      })
+                    }
+                    type="number"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Você retém este percentual.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label>Mensalidade (R$)</Label>
+                  <Input
+                    value={editingAffiliate.monthly_fee}
+                    onChange={(e) =>
+                      setEditingAffiliate({
+                        ...editingAffiliate,
+                        monthly_fee: e.target.value,
+                      })
+                    }
+                    type="number"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Valor fixo cobrado por mês.
+                  </p>
+                </div>
+              )}
+            </CardContent>
+            <CardFooter className="flex justify-end gap-2">
+              <Button variant="ghost" onClick={() => setEditingAffiliate(null)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleUpdateAffiliate}>Salvar Alterações</Button>
             </CardFooter>
           </Card>
         </div>

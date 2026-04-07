@@ -24,8 +24,11 @@ import {
   ShieldAlert,
   Store,
   Map,
+  Users,
 } from 'lucide-react'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { toast } from 'sonner'
+import { supabase } from '@/lib/supabase/client'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -37,6 +40,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false)
   const [showRegPassword, setShowRegPassword] = useState(false)
   const [showRegConfirmPassword, setShowRegConfirmPassword] = useState(false)
+  const [role, setRole] = useState('user')
 
   const { login, register, user } = useCouponStore()
   const { t } = useLanguage()
@@ -104,8 +108,30 @@ export default function Login() {
       return originalFetch(input, init)
     }
 
+    if (role === 'affiliate') {
+      try {
+        await supabase.from('affiliate_partners').upsert(
+          {
+            email: email,
+            name: email.split('@')[0],
+            status: 'active',
+          },
+          { onConflict: 'email' },
+        )
+      } catch (e) {}
+    }
+
     try {
       await login(email, 'bypass-password')
+
+      if (role === 'affiliate') {
+        const currentUser = JSON.parse(
+          localStorage.getItem('currentUser') || '{}',
+        )
+        currentUser.role = 'affiliate'
+        localStorage.setItem('currentUser', JSON.stringify(currentUser))
+      }
+
       toast.success(
         t('auth.login_success', 'Login fictício realizado com sucesso!'),
       )
@@ -203,8 +229,31 @@ export default function Login() {
 
         if (registerSuccess) {
           toast.success(t('auth.register_success', 'Conta criada com sucesso!'))
+
+          if (role === 'affiliate') {
+            try {
+              await supabase.from('affiliate_partners').upsert(
+                {
+                  email: email,
+                  name: name,
+                  status: 'pending',
+                },
+                { onConflict: 'email' },
+              )
+            } catch (e) {}
+          }
+
           try {
             await login(email, password)
+            if (role === 'affiliate') {
+              const currentUser = JSON.parse(
+                localStorage.getItem('currentUser') || '{}',
+              )
+              currentUser.role = 'affiliate'
+              localStorage.setItem('currentUser', JSON.stringify(currentUser))
+              window.location.href = '/profile'
+              return
+            }
           } catch (loginErr) {
             setActiveTab('login')
             setPassword('')
@@ -355,6 +404,36 @@ export default function Login() {
                     />
                   </div>
                 </div>
+                <div className="space-y-3 pt-2 pb-1">
+                  <Label className="text-slate-700 font-semibold mb-1 block">
+                    Tipo de Conta
+                  </Label>
+                  <RadioGroup
+                    defaultValue="user"
+                    value={role}
+                    onValueChange={setRole}
+                    className="flex flex-col sm:flex-row gap-4"
+                  >
+                    <div className="flex items-center space-x-2 bg-white border border-slate-200 px-4 py-2.5 rounded-md flex-1 cursor-pointer hover:border-primary/50 transition-colors">
+                      <RadioGroupItem value="user" id="r-user" />
+                      <Label
+                        htmlFor="r-user"
+                        className="cursor-pointer font-medium m-0 flex-1"
+                      >
+                        Cliente Padrão
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2 bg-white border border-slate-200 px-4 py-2.5 rounded-md flex-1 cursor-pointer hover:border-primary/50 transition-colors">
+                      <RadioGroupItem value="affiliate" id="r-affiliate" />
+                      <Label
+                        htmlFor="r-affiliate"
+                        className="cursor-pointer font-medium m-0 flex-1"
+                      >
+                        Afiliado Parceiro
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                </div>
                 <div className="space-y-2">
                   <Label htmlFor="reg-password" className="text-slate-700">
                     {t('auth.password', 'Senha')}
@@ -500,6 +579,22 @@ export default function Login() {
               <div className="text-left">
                 <div className="font-semibold text-sm">Usuário de Teste</div>
                 <div className="text-xs text-slate-500">Conta genérica</div>
+              </div>
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full justify-start h-auto py-3 bg-white hover:bg-slate-100 hover:text-orange-600 transition-colors shadow-sm md:col-span-2"
+              onClick={() =>
+                handleFakeLogin('affiliate', 'afiliado@dealvoy.com')
+              }
+              disabled={isLoading}
+            >
+              <Users className="w-4 h-4 mr-3 text-orange-500 shrink-0" />
+              <div className="text-left">
+                <div className="font-semibold text-sm">Acesso Afiliado</div>
+                <div className="text-xs text-slate-500">
+                  Parceiro de Ofertas (Acesso à API)
+                </div>
               </div>
             </Button>
           </CardContent>

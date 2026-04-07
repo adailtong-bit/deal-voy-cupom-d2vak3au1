@@ -68,6 +68,55 @@ export default function Profile() {
   })
 
   const [hasInitialized, setHasInitialized] = useState(false)
+  const [affiliateData, setAffiliateData] = useState<any>(null)
+  const [apiKeys, setApiKeys] = useState({ cj: '', awin: '', amazon: '' })
+
+  useEffect(() => {
+    if (user?.email) {
+      import('@/lib/supabase/client').then(({ supabase }) => {
+        supabase
+          .from('affiliate_partners')
+          .select('*')
+          .eq('email', user.email)
+          .single()
+          .then(({ data }) => {
+            if (data) {
+              setAffiliateData(data)
+              if (data.api_keys) {
+                setApiKeys({
+                  cj: data.api_keys.cj || '',
+                  awin: data.api_keys.awin || '',
+                  amazon: data.api_keys.amazon || '',
+                })
+              }
+            }
+          })
+      })
+    }
+  }, [user?.email])
+
+  const handleSaveApiKeys = async () => {
+    if (!affiliateData?.id) return
+    setIsSaving(true)
+    try {
+      const { supabase } = await import('@/lib/supabase/client')
+      const { error } = await supabase
+        .from('affiliate_partners')
+        .update({
+          api_keys: apiKeys,
+        })
+        .eq('id', affiliateData.id)
+      if (error) throw error
+      toast({
+        title: 'Sucesso',
+        description: 'Chaves de API salvas com sucesso!',
+      })
+    } catch (e: any) {
+      toast({ title: 'Erro', description: e.message, variant: 'destructive' })
+    } finally {
+      setIsSaving(false)
+    }
+  }
 
   useEffect(() => {
     if (user && !hasInitialized) {
@@ -279,37 +328,44 @@ export default function Profile() {
       </Card>
 
       <Tabs defaultValue="personal" className="space-y-6">
-        <TabsList className="grid grid-cols-2 md:grid-cols-4 w-full h-auto gap-2 p-1 bg-slate-100/50">
+        <TabsList className="flex flex-wrap w-full h-auto gap-2 p-1 bg-slate-100/50">
           <TabsTrigger
             value="personal"
-            className="py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            className="flex-1 min-w-[120px] py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm"
           >
             {t('profile.personal_tab', 'Personal Info')}
           </TabsTrigger>
           <TabsTrigger
             value="location"
-            className="py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            className="flex-1 min-w-[120px] py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm"
           >
             {t('profile.location_tab', 'Location')}
           </TabsTrigger>
           <TabsTrigger
             value="security"
-            className="py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            className="flex-1 min-w-[120px] py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm"
           >
             {t('profile.security_tab', 'Security')}
           </TabsTrigger>
-          <TabsTrigger
-            value="business"
-            className="py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm disabled:opacity-50"
-            disabled={
-              user?.role !== 'super_admin' &&
-              user?.role !== ('admin' as any) &&
-              user?.role !== 'franchisee' &&
-              user?.role !== 'shopkeeper'
-            }
-          >
-            {t('profile.business_tab', 'Business Identity')}
-          </TabsTrigger>
+          {(user?.role === 'super_admin' ||
+            user?.role === ('admin' as any) ||
+            user?.role === 'franchisee' ||
+            user?.role === 'shopkeeper') && (
+            <TabsTrigger
+              value="business"
+              className="flex-1 min-w-[120px] py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            >
+              {t('profile.business_tab', 'Business Identity')}
+            </TabsTrigger>
+          )}
+          {(user?.role === 'affiliate' || affiliateData) && (
+            <TabsTrigger
+              value="affiliate"
+              className="flex-1 min-w-[120px] py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-semibold text-primary"
+            >
+              API Afiliado
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent
@@ -749,6 +805,78 @@ export default function Profile() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {(user?.role === 'affiliate' || affiliateData) && (
+          <TabsContent
+            value="affiliate"
+            className="space-y-6 animate-in fade-in-50 duration-500"
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle>Painel do Afiliado: Chaves de API</CardTitle>
+                <CardDescription>
+                  Configure suas chaves de API exclusivas. Elas são
+                  confidenciais e usadas para gerar seus links monetizados.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {affiliateData?.status !== 'active' ? (
+                  <div className="p-4 bg-amber-50 text-amber-800 rounded-md border border-amber-200 flex flex-col items-center text-center">
+                    <span className="text-3xl mb-2">⏳</span>
+                    <h3 className="font-semibold text-lg mb-1">
+                      Aguardando Aprovação
+                    </h3>
+                    <p>
+                      Sua conta de afiliado está{' '}
+                      <strong>
+                        {affiliateData?.status === 'pending'
+                          ? 'em análise'
+                          : affiliateData?.status}
+                      </strong>
+                      .
+                    </p>
+                    <p className="text-sm mt-2 opacity-80">
+                      Aguarde a liberação do administrador para configurar suas
+                      chaves e gerar links monetizados.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Commission Junction (CJ) API Key</Label>
+                      <Input
+                        type="password"
+                        value={apiKeys.cj}
+                        onChange={(e) =>
+                          setApiKeys({ ...apiKeys, cj: e.target.value })
+                        }
+                        placeholder="cj_live_..."
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Awin API Token</Label>
+                      <Input
+                        type="password"
+                        value={apiKeys.awin}
+                        onChange={(e) =>
+                          setApiKeys({ ...apiKeys, awin: e.target.value })
+                        }
+                        placeholder="awin_live_..."
+                      />
+                    </div>
+                    <Button
+                      onClick={handleSaveApiKeys}
+                      disabled={isSaving}
+                      className="mt-4"
+                    >
+                      {isSaving ? 'Salvando...' : 'Salvar Chaves de API'}
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
 
         {(user?.role === 'super_admin' ||
           user?.role === ('admin' as any) ||
