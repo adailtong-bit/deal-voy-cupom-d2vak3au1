@@ -19,6 +19,7 @@ import { AdminCRM } from '@/components/admin/AdminCRM'
 import { PromotionCrawler } from '@/components/admin/PromotionCrawler'
 import { AdminAdsManager } from '@/components/admin/AdminAdsManager'
 import { AdminNetworkAdsTab } from '@/components/admin/AdminNetworkAdsTab'
+import { AdminAffiliatesTab } from '@/components/admin/AdminAffiliatesTab'
 import { DataInsightsTab } from '@/components/admin/DataInsightsTab'
 import { AdminMonetizationTab } from '@/components/admin/AdminMonetizationTab'
 import { PartnerPoliciesTab } from '@/components/admin/PartnerPoliciesTab'
@@ -257,6 +258,10 @@ export default function AdminDashboard() {
                 <Megaphone className="h-4 w-4" />
                 {t('admin.network_ads', 'Publicidade de Rede')}
               </TabsTrigger>
+              <TabsTrigger value="affiliates" className="gap-2">
+                <Users className="h-4 w-4" />
+                {t('admin.affiliates', 'Rede de Afiliados')}
+              </TabsTrigger>
               <TabsTrigger value="translations">Translations</TabsTrigger>
               <TabsTrigger value="insights">{t('admin.insights')}</TabsTrigger>
               <TabsTrigger value="performance">Performance</TabsTrigger>
@@ -382,6 +387,9 @@ export default function AdminDashboard() {
             </TabsContent>
             <TabsContent value="network-ads">
               <AdminNetworkAdsTab />
+            </TabsContent>
+            <TabsContent value="affiliates">
+              <AdminAffiliatesTab />
             </TabsContent>
             <TabsContent value="translations">
               <AdminTranslationsTab />
