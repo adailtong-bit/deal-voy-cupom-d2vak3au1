@@ -118,7 +118,9 @@ export default function Login() {
           },
           { onConflict: 'email' },
         )
-      } catch (e) {}
+      } catch (e) {
+        console.error('Failed to create affiliate partner', e)
+      }
     }
 
     try {
@@ -240,7 +242,9 @@ export default function Login() {
                 },
                 { onConflict: 'email' },
               )
-            } catch (e) {}
+            } catch (e) {
+              console.error('Failed to create affiliate partner', e)
+            }
           }
 
           try {

@@ -27,6 +27,7 @@ import { COUNTRIES, LOCATION_DATA } from '@/lib/locationData'
 import { User } from '@/lib/types'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import { updateUser } from '@/lib/api'
+import { supabase } from '@/lib/supabase/client'
 
 function FieldDisplay({ value }: { value: string | undefined }) {
   return (
@@ -73,25 +74,24 @@ export default function Profile() {
 
   useEffect(() => {
     if (user?.email) {
-      import('@/lib/supabase/client').then(({ supabase }) => {
-        supabase
-          .from('affiliate_partners')
-          .select('*')
-          .eq('email', user.email)
-          .single()
-          .then(({ data }) => {
-            if (data) {
-              setAffiliateData(data)
-              if (data.api_keys) {
-                setApiKeys({
-                  cj: data.api_keys.cj || '',
-                  awin: data.api_keys.awin || '',
-                  amazon: data.api_keys.amazon || '',
-                })
-              }
+      supabase
+        .from('affiliate_partners')
+        .select('*')
+        .eq('email', user.email)
+        .single()
+        .then(({ data }) => {
+          if (data) {
+            setAffiliateData(data)
+            if (data.api_keys) {
+              const keys = data.api_keys as any
+              setApiKeys({
+                cj: keys.cj || '',
+                awin: keys.awin || '',
+                amazon: keys.amazon || '',
+              })
             }
-          })
-      })
+          }
+        })
     }
   }, [user?.email])
 
@@ -99,11 +99,10 @@ export default function Profile() {
     if (!affiliateData?.id) return
     setIsSaving(true)
     try {
-      const { supabase } = await import('@/lib/supabase/client')
       const { error } = await supabase
         .from('affiliate_partners')
         .update({
-          api_keys: apiKeys,
+          api_keys: apiKeys as any,
         })
         .eq('id', affiliateData.id)
       if (error) throw error
