@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useAuth } from '@/hooks/use-auth'
+import { supabase } from '@/lib/supabase/client'
 import {
   Card,
   CardContent,
@@ -64,7 +65,7 @@ export default function Login() {
     } else if (userRole === 'franchisee') {
       navigate('/franchisee', { replace: true })
     } else if (userRole === 'shopkeeper') {
-      navigate('/vendor', { replace: true })
+      navigate('/merchant/scanner', { replace: true })
     } else if (userRole === 'affiliate') {
       navigate('/profile', { replace: true })
     } else {
@@ -90,9 +91,22 @@ export default function Login() {
     toast.success(
       t('auth.login_success', 'Autenticação concluída com sucesso!'),
     )
+
     if (data?.user) {
-      const userRole = data.user.user_metadata?.role || 'user'
-      performRedirect(userRole)
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', data.user.id)
+          .single()
+
+        const userRole =
+          profile?.role || data.user.user_metadata?.role || 'user'
+        performRedirect(userRole)
+      } catch (err) {
+        const userRole = data.user.user_metadata?.role || 'user'
+        performRedirect(userRole)
+      }
     }
   }
 
@@ -111,8 +125,20 @@ export default function Login() {
 
       toast.success(t('auth.login_success', 'Bem-vindo de volta!'))
       if (data?.user) {
-        const userRole = data.user.user_metadata?.role || 'user'
-        performRedirect(userRole)
+        try {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', data.user.id)
+            .single()
+
+          const userRole =
+            profile?.role || data.user.user_metadata?.role || 'user'
+          performRedirect(userRole)
+        } catch (err) {
+          const userRole = data.user.user_metadata?.role || 'user'
+          performRedirect(userRole)
+        }
       }
     }
   }
