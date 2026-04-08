@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Navigate, useSearchParams } from 'react-router-dom'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
+import { useAuth } from '@/hooks/use-auth'
 import { LayoutDashboard, Menu, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -26,16 +27,28 @@ import { TestingSandboxTab } from '@/components/admin/TestingSandboxTab'
 import { StaffTab } from '@/components/admin/hierarchy/StaffTab'
 
 export default function FranchiseeDashboard() {
-  const { user, franchises } = useCouponStore()
+  const { franchises } = useCouponStore()
+  const { user: authUser, role: authRole } = useAuth()
   const { t } = useLanguage()
   const [searchParams] = useSearchParams()
   const activeTab = searchParams.get('tab') || 'overview'
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
+  // Use either the franchise owned by the user, or the first one if they are a super_admin
   const myFranchise =
-    franchises.find((f) => f.ownerId === user?.id) || franchises[0]
+    franchises.find((f) => f.ownerId === authUser?.id) ||
+    (authRole === 'super_admin' ||
+    authRole === 'admin' ||
+    authUser?.email === 'adailtong@gmail.com'
+      ? franchises[0]
+      : null)
 
-  if (user?.role !== 'franchisee' && user?.role !== 'super_admin') {
+  if (
+    authRole !== 'franchisee' &&
+    authRole !== 'super_admin' &&
+    authRole !== 'admin' &&
+    authUser?.email !== 'adailtong@gmail.com'
+  ) {
     return <Navigate to="/" replace />
   }
 

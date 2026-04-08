@@ -28,8 +28,6 @@ import Login from '@/pages/Login'
 import { useEffect } from 'react'
 import { UserRole } from '@/lib/types'
 import { AuthProvider, useAuth } from '@/hooks/use-auth'
-import { useState } from 'react'
-import { supabase } from '@/lib/supabase/client'
 
 function RequireAuth({
   children,
@@ -38,47 +36,8 @@ function RequireAuth({
   children: React.ReactNode
   roles?: UserRole[]
 }) {
-  const { user, loading } = useAuth()
+  const { user, loading, role: authRole } = useAuth()
   const location = useLocation()
-  const [profileRole, setProfileRole] = useState<string | null>(null)
-  const [isVerifying, setIsVerifying] = useState(true)
-
-  useEffect(() => {
-    let isMounted = true
-
-    async function checkRole() {
-      if (!user) {
-        if (isMounted) setIsVerifying(false)
-        return
-      }
-
-      try {
-        const { data } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', user.id)
-          .single()
-
-        if (isMounted) {
-          setProfileRole(data?.role || user.user_metadata?.role || 'user')
-          setIsVerifying(false)
-        }
-      } catch (err) {
-        if (isMounted) {
-          setProfileRole(user.user_metadata?.role || 'user')
-          setIsVerifying(false)
-        }
-      }
-    }
-
-    if (!loading) {
-      checkRole()
-    }
-
-    return () => {
-      isMounted = false
-    }
-  }, [user, loading])
 
   // Admin Session Stability: Prevent unmounting se houver processamento em background
   const isCrawling = sessionStorage.getItem('crawler_isScanning') === 'true'
@@ -88,7 +47,7 @@ function RequireAuth({
     return <>{children}</>
   }
 
-  if (loading || isVerifying) {
+  if (loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-4">
         <div className="w-10 h-10 border-4 border-primary/40 border-t-primary rounded-full animate-spin mb-4"></div>
@@ -103,7 +62,7 @@ function RequireAuth({
     return <Navigate to="/login" state={{ from: location }} replace />
   }
 
-  const role = (profileRole || 'user') as UserRole
+  const role = (authRole || 'user') as UserRole
   const email = user.email
 
   // 🔥 MASTER ACESSO: Se for super_admin, admin ou o email master, tem acesso liberado
@@ -163,11 +122,11 @@ function PageTitleSync() {
 
 function GlobalLanguageSync() {
   const { user: storeUser, franchises } = useCouponStore()
-  const { user: sbUser } = useAuth()
+  const { user: sbUser, role: authRole } = useAuth()
   const { setLanguage } = useLanguage()
 
   useEffect(() => {
-    const role = sbUser?.user_metadata?.role || storeUser?.role
+    const role = authRole || sbUser?.user_metadata?.role || storeUser?.role
     let countryToUse = storeUser?.country || 'Brasil'
 
     if (role === 'franchisee') {

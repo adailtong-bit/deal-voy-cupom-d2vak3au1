@@ -11,6 +11,8 @@ import { supabase } from '@/lib/supabase/client'
 interface AuthContextType {
   user: User | null
   session: Session | null
+  profile: any | null
+  role: string | null
   signUp: (
     email: string,
     password: string,
@@ -35,30 +37,100 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
+  const [profile, setProfile] = useState<any | null>(null)
+  const [role, setRole] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    let isMounted = true
+
+    const fetchProfile = async (
+      userId: string,
+      currentEmail: string | undefined,
+    ) => {
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .single()
+
+        if (isMounted) {
+          if (data) {
+            setProfile(data)
+            if (currentEmail === 'adailtong@gmail.com') {
+              setRole('super_admin')
+            } else {
+              setRole(data.role || 'user')
+            }
+          } else if (currentEmail === 'adailtong@gmail.com') {
+            setRole('super_admin')
+          }
+        }
+      } catch (e) {
+        console.error('Error fetching profile:', e)
+        if (isMounted && currentEmail === 'adailtong@gmail.com') {
+          setRole('super_admin')
+        }
+      }
+    }
+
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!isMounted) return
+
       setSession(session)
-      setUser(session?.user ?? null)
-      setLoading(false)
+      const currentUser = session?.user ?? null
+      setUser(currentUser)
+
+      if (!currentUser) {
+        setProfile(null)
+        setRole(null)
+        setLoading(false)
+      } else {
+        // Assume basic role quickly, then update
+        setRole(
+          currentUser.email === 'adailtong@gmail.com'
+            ? 'super_admin'
+            : currentUser.user_metadata?.role || 'user',
+        )
+        fetchProfile(currentUser.id, currentUser.email).finally(() => {
+          if (isMounted) setLoading(false)
+        })
+      }
 
       if (event === 'SIGNED_OUT') {
-        // Limpeza total de qualquer cache legado que pudesse causar loop de roteamento
         localStorage.clear()
         sessionStorage.clear()
       }
     })
 
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!isMounted) return
+
       setSession(session)
-      setUser(session?.user ?? null)
-      setLoading(false)
+      const currentUser = session?.user ?? null
+      setUser(currentUser)
+
+      if (!currentUser) {
+        setLoading(false)
+      } else {
+        setRole(
+          currentUser.email === 'adailtong@gmail.com'
+            ? 'super_admin'
+            : currentUser.user_metadata?.role || 'user',
+        )
+        fetchProfile(currentUser.id, currentUser.email).finally(() => {
+          if (isMounted) setLoading(false)
+        })
+      }
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      isMounted = false
+      subscription.unsubscribe()
+    }
   }, [])
 
   const signUp = async (email: string, password: string, options?: any) => {
@@ -85,7 +157,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, session, signUp, signIn, signOut, loading }}
+      value={{ user, session, profile, role, signUp, signIn, signOut, loading }}
     >
       {children}
     </AuthContext.Provider>

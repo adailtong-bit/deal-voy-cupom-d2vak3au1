@@ -35,26 +35,32 @@ import { AdminSettingsTab } from '@/components/admin/AdminSettingsTab'
 import { FinanceDashboardTab } from '@/components/finance/FinanceDashboardTab'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useCouponStore } from '@/stores/CouponContext'
+import { useAuth } from '@/hooks/use-auth'
 import { useRegionFormatting } from '@/hooks/useRegionFormatting'
 import { cn } from '@/lib/utils'
 
 export default function AdminDashboard() {
   const { t } = useLanguage()
-  const { user, companies, franchises } = useCouponStore()
+  const { companies, franchises, user: storeUser } = useCouponStore()
+  const { user: authUser, role: authRole } = useAuth()
   const { formatNumber, formatCurrency } = useRegionFormatting(
-    user?.region,
-    user?.country,
+    storeUser?.region,
+    storeUser?.country,
   )
 
   const isCrawling = sessionStorage.getItem('crawler_isScanning') === 'true'
-  const isSuperAdmin = user?.role === 'super_admin' || isCrawling
-  const isFranchisee = user?.role === 'franchisee'
+  const isSuperAdmin =
+    authRole === 'super_admin' ||
+    authRole === 'admin' ||
+    isCrawling ||
+    authUser?.email === 'adailtong@gmail.com'
+  const isFranchisee = authRole === 'franchisee'
 
   const myFranchise = isFranchisee
-    ? franchises.find((f: any) => f.ownerId === user?.id)
+    ? franchises.find((f: any) => f.ownerId === authUser?.id)
     : null
   const currentFranchiseId = isFranchisee
-    ? user?.franchiseId || myFranchise?.id
+    ? storeUser?.franchiseId || myFranchise?.id
     : undefined
 
   const [activeTab, setActiveTab] = useState(

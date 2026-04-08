@@ -52,27 +52,7 @@ import { useEffect } from 'react'
 
 export function MobileHeader() {
   const { logout } = useCouponStore()
-  const { user: authUser, signOut } = useAuth()
-  const [profile, setProfile] = useState<any>(null)
-
-  useEffect(() => {
-    let isMounted = true
-    if (authUser) {
-      supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', authUser.id)
-        .single()
-        .then(({ data }) => {
-          if (data && isMounted) setProfile(data)
-        })
-    } else {
-      setProfile(null)
-    }
-    return () => {
-      isMounted = false
-    }
-  }, [authUser])
+  const { user: authUser, profile, role: authRole, signOut } = useAuth()
 
   const user = authUser
     ? {
@@ -83,7 +63,7 @@ export function MobileHeader() {
           authUser.email?.split('@')[0] ||
           'User',
         email: authUser.email,
-        role: profile?.role || authUser.user_metadata?.role || 'user',
+        role: authRole || 'user',
         avatar: authUser.user_metadata?.avatar_url || null,
       }
     : null
