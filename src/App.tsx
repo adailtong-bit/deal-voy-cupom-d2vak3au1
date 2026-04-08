@@ -77,8 +77,7 @@ function RequireAuth({
   // Roteamento condicional para roles específicos se tentarem acessar locais indevidos
   if (roles && roles.length > 0 && !roles.includes(role)) {
     if (role === 'franchisee') return <Navigate to="/franchisee" replace />
-    if (role === 'shopkeeper')
-      return <Navigate to="/merchant/scanner" replace />
+    if (role === 'shopkeeper') return <Navigate to="/vendor" replace />
     if (role === 'affiliate') return <Navigate to="/profile" replace />
     return <Navigate to="/" replace />
   }
@@ -198,12 +197,20 @@ export default function App() {
                   />
                   <Route
                     path="/vendor"
-                    element={<Navigate to="/merchant/scanner" replace />}
+                    element={
+                      <RequireAuth
+                        roles={['shopkeeper', 'admin', 'super_admin'] as any}
+                      >
+                        <VendorDashboard />
+                      </RequireAuth>
+                    }
                   />
                   <Route
                     path="/merchant"
                     element={
-                      <RequireAuth roles={['shopkeeper']}>
+                      <RequireAuth
+                        roles={['shopkeeper', 'admin', 'super_admin'] as any}
+                      >
                         <MerchantLayout />
                       </RequireAuth>
                     }
