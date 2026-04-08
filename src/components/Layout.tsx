@@ -15,8 +15,8 @@ export default function Layout() {
       </main>
       <ProximityAlertsToggle />
 
-      {/* Botões flutuantes para o Admin transitar de forma fácil entre ambientes (apenas no login conforme solicitado) */}
-      {location.pathname === '/login' && <DevNavigation />}
+      {/* Botão flutuante para QA / Admin transitar de forma fácil entre ambientes (disponível globalmente, minimizado por padrão) */}
+      <DevNavigation />
     </div>
   )
 }
