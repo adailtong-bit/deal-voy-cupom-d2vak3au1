@@ -52,7 +52,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 ...currentUser,
                 user_metadata: {
                   ...currentUser.user_metadata,
-                  role: data?.role || currentUser.user_metadata?.role || 'user',
+                  role:
+                    currentUser.email === 'adailtong@gmail.com'
+                      ? 'super_admin'
+                      : data?.role || currentUser.user_metadata?.role || 'user',
                   is_affiliate: data?.is_affiliate,
                 },
               } as User
@@ -82,7 +85,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 ...currentUser,
                 user_metadata: {
                   ...currentUser.user_metadata,
-                  role: data?.role || currentUser.user_metadata?.role || 'user',
+                  role:
+                    currentUser.email === 'adailtong@gmail.com'
+                      ? 'super_admin'
+                      : data?.role || currentUser.user_metadata?.role || 'user',
                   is_affiliate: data?.is_affiliate,
                 },
               } as User

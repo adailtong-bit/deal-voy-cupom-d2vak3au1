@@ -57,10 +57,19 @@ export default function Login() {
     // ignore
   }
 
-  const activeUser =
+  let activeUser: any =
     storeUser ||
-    (sbUser ? { role: sbUser.user_metadata?.role || 'user' } : null) ||
+    (sbUser
+      ? { role: sbUser.user_metadata?.role || 'user', email: sbUser.email }
+      : null) ||
     localUser
+
+  if (
+    activeUser?.email === 'adailtong@gmail.com' ||
+    activeUser?.email === 'adailtong@gmail.com'
+  ) {
+    activeUser = { ...activeUser, role: 'super_admin' }
+  }
 
   const fromObj = location.state?.from
   const from = fromObj
@@ -132,6 +141,38 @@ export default function Login() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    // Absolute Bypass for Owner/Developer
+    if (
+      email.toLowerCase().trim() === 'adailtong@gmail.com' &&
+      password === '123456'
+    ) {
+      setIsLoading(true)
+      await supabase.auth.signOut()
+
+      const mockUser = {
+        id: 'mock-super_admin-' + Date.now().toString().slice(-6),
+        email: 'adailtong@gmail.com',
+        name: 'Adailton (Owner)',
+        role: 'super_admin',
+        country: 'Brasil',
+      }
+      const fakeToken =
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Im1vY2staWQiLCJleHAiOjk5OTk5OTk5OTl9.signature'
+
+      localStorage.setItem(
+        'pocketbase_auth',
+        JSON.stringify({ token: fakeToken, model: mockUser }),
+      )
+      localStorage.setItem('auth_token', fakeToken)
+      localStorage.setItem('currentUser', JSON.stringify(mockUser))
+
+      toast.success('Bypass de Proprietário ativado com sucesso!')
+
+      window.location.href = '/admin'
+      return
+    }
+
     if (email && password) {
       setIsLoading(true)
 
@@ -168,6 +209,10 @@ export default function Login() {
           }
         } catch (e) {
           console.error('Error fetching profile role', e)
+        }
+
+        if (data.user.email === 'adailtong@gmail.com') {
+          userRole = 'super_admin'
         }
 
         const mockUser = {

@@ -73,7 +73,11 @@ function RequireAuth({
     activeUser = localUser
   } else if (sbUser) {
     let resolvedRole = sbUser.user_metadata?.role
-    if (!resolvedRole || resolvedRole === 'user') {
+
+    // Owner Override
+    if (sbUser.email === 'adailtong@gmail.com') {
+      resolvedRole = 'super_admin'
+    } else if (!resolvedRole || resolvedRole === 'user') {
       if (
         localUser &&
         localUser.email === sbUser.email &&
@@ -243,7 +247,15 @@ function GlobalRouterGuard({ children }: { children: React.ReactNode }) {
 
   const isMockUser = localUser?.id?.toString().startsWith('mock-')
 
-  const activeRole = sbUser?.user_metadata?.role || localUser?.role
+  let activeRole = sbUser?.user_metadata?.role || localUser?.role
+
+  // Owner Override
+  if (
+    sbUser?.email === 'adailtong@gmail.com' ||
+    localUser?.email === 'adailtong@gmail.com'
+  ) {
+    activeRole = 'super_admin'
+  }
 
   // Enforce root path redirects for specific roles
   if (location.pathname === '/') {
