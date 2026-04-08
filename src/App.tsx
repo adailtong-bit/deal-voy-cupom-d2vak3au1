@@ -78,6 +78,10 @@ function RequireAuth({
   // Roteamento condicional seguro: apenas bloqueia e joga para a Home se não for Master
   // e não tiver a role específica para a rota
   if (roles && roles.length > 0 && !roles.includes(role)) {
+    // Tolerância para QA/Testes: se o papel for 'merchant', aceita rotas de 'shopkeeper'
+    if (role === 'merchant' && roles.includes('shopkeeper' as any)) {
+      return <>{children}</>
+    }
     return <Navigate to="/" replace />
   }
 
@@ -200,7 +204,14 @@ export default function App() {
                     path="/merchant"
                     element={
                       <RequireAuth
-                        roles={['shopkeeper', 'admin', 'super_admin'] as any}
+                        roles={
+                          [
+                            'shopkeeper',
+                            'merchant',
+                            'admin',
+                            'super_admin',
+                          ] as any
+                        }
                       >
                         <MerchantLayout />
                       </RequireAuth>

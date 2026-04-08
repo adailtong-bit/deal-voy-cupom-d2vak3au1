@@ -47,6 +47,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const fetchProfile = async (
       userId: string,
       currentEmail: string | undefined,
+      userMetaRole: string | undefined,
     ) => {
       try {
         const { data } = await supabase
@@ -58,22 +59,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (isMounted) {
           if (data) {
             setProfile(data)
+            let resolvedRole = data.role || 'user'
+            if (resolvedRole === 'user' && userMetaRole) {
+              resolvedRole = userMetaRole
+            }
+
             if (
               currentEmail === 'adailtong@gmail.com' ||
-              data.role === 'super_admin'
+              resolvedRole === 'super_admin'
             ) {
               setRole('super_admin')
             } else {
-              setRole(data.role || 'user')
+              setRole(resolvedRole)
             }
-          } else if (currentEmail === 'adailtong@gmail.com') {
-            setRole('super_admin')
+          } else {
+            if (currentEmail === 'adailtong@gmail.com') {
+              setRole('super_admin')
+            } else if (userMetaRole) {
+              setRole(userMetaRole)
+            }
           }
         }
       } catch (e) {
         console.error('Error fetching profile:', e)
-        if (isMounted && currentEmail === 'adailtong@gmail.com') {
-          setRole('super_admin')
+        if (isMounted) {
+          if (currentEmail === 'adailtong@gmail.com') {
+            setRole('super_admin')
+          } else if (userMetaRole) {
+            setRole(userMetaRole)
+          }
         }
       }
     }
@@ -99,7 +113,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             ? 'super_admin'
             : currentUser.user_metadata?.role || 'user',
         )
-        fetchProfile(currentUser.id, currentUser.email).finally(() => {
+        fetchProfile(
+          currentUser.id,
+          currentUser.email,
+          currentUser.user_metadata?.role,
+        ).finally(() => {
           if (isMounted) setLoading(false)
         })
       }
@@ -128,7 +146,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               ? 'super_admin'
               : currentUser.user_metadata?.role || 'user',
           )
-          fetchProfile(currentUser.id, currentUser.email).finally(() => {
+          fetchProfile(
+            currentUser.id,
+            currentUser.email,
+            currentUser.user_metadata?.role,
+          ).finally(() => {
             if (isMounted) setLoading(false)
           })
         }

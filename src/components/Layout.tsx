@@ -1,10 +1,11 @@
-import { Outlet } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router-dom'
 import { DesktopHeader } from './DesktopHeader'
 import { MobileHeader } from './MobileHeader'
 import { ProximityAlertsToggle } from './ProximityAlertsToggle'
 import { DevNavigation } from './DevNavigation'
 
 export default function Layout() {
+  const location = useLocation()
   return (
     <div className="flex flex-col min-h-screen bg-background relative overflow-x-hidden w-full max-w-[100vw]">
       <DesktopHeader />
@@ -14,8 +15,8 @@ export default function Layout() {
       </main>
       <ProximityAlertsToggle />
 
-      {/* Botões flutuantes para o Admin transitar de forma fácil entre ambientes */}
-      <DevNavigation />
+      {/* Botões flutuantes para o Admin transitar de forma fácil entre ambientes (apenas no login conforme solicitado) */}
+      {location.pathname === '/login' && <DevNavigation />}
     </div>
   )
 }
