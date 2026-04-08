@@ -1,13 +1,19 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
 import { Store, Building, LogOut } from 'lucide-react'
 
 export function DevNavigation() {
   const { role, user, signOut } = useAuth()
+  const location = useLocation()
 
   // Exibir a navegação rápida apenas para quem tem permissão master.
   // Isso facilita a vida do gestor que precisa transitar pelos ambientes sem perder as rotas.
   if (role !== 'super_admin' && user?.email !== 'adailtong@gmail.com') {
+    return null
+  }
+
+  // A pedido do usuário, exibir este painel apenas na rota de login
+  if (location.pathname !== '/login') {
     return null
   }
 
