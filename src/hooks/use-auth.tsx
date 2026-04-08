@@ -110,27 +110,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     })
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!isMounted) return
+    supabase.auth
+      .getSession()
+      .then(({ data: { session } }) => {
+        if (!isMounted) return
 
-      setSession(session)
-      const currentUser = session?.user ?? null
-      setUser(currentUser)
+        setSession(session)
+        const currentUser = session?.user ?? null
+        setUser(currentUser)
 
-      if (!currentUser) {
-        setLoading(false)
-      } else {
-        setRole(
-          currentUser.email === 'adailtong@gmail.com' ||
-            currentUser.user_metadata?.role === 'super_admin'
-            ? 'super_admin'
-            : currentUser.user_metadata?.role || 'user',
-        )
-        fetchProfile(currentUser.id, currentUser.email).finally(() => {
-          if (isMounted) setLoading(false)
-        })
-      }
-    })
+        if (!currentUser) {
+          setLoading(false)
+        } else {
+          setRole(
+            currentUser.email === 'adailtong@gmail.com' ||
+              currentUser.user_metadata?.role === 'super_admin'
+              ? 'super_admin'
+              : currentUser.user_metadata?.role || 'user',
+          )
+          fetchProfile(currentUser.id, currentUser.email).finally(() => {
+            if (isMounted) setLoading(false)
+          })
+        }
+      })
+      .catch((err) => {
+        console.error('Auth session error:', err)
+        if (isMounted) setLoading(false)
+      })
 
     return () => {
       isMounted = false

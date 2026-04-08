@@ -63,7 +63,7 @@ function RequireAuth({
   }
 
   const role = (authRole || 'user') as UserRole
-  const email = user.email
+  const email = user?.email
 
   const isMaster =
     role === 'super_admin' ||
@@ -75,14 +75,9 @@ function RequireAuth({
     return <>{children}</>
   }
 
-  // Roteamento condicional para roles específicos se tentarem acessar locais indevidos
+  // Roteamento condicional seguro: apenas bloqueia e joga para a Home se não for Master
+  // e não tiver a role específica para a rota
   if (roles && roles.length > 0 && !roles.includes(role)) {
-    if (role === 'franchisee' && !location.pathname.startsWith('/franchisee'))
-      return <Navigate to="/franchisee" replace />
-    if (role === 'shopkeeper' && !location.pathname.startsWith('/vendor'))
-      return <Navigate to="/vendor" replace />
-    if (role === 'affiliate' && !location.pathname.startsWith('/profile'))
-      return <Navigate to="/profile" replace />
     return <Navigate to="/" replace />
   }
 
@@ -99,7 +94,7 @@ function PageTitleSync() {
 
     if (path.startsWith('/admin'))
       title = `Routevoy - ${t('nav.admin', 'Admin')}`
-    else if (path.startsWith('/vendor'))
+    else if (path.startsWith('/vendor') || path.startsWith('/merchant'))
       title = `Routevoy - ${t('nav.vendor', 'Painel do Lojista')}`
     else if (path.startsWith('/franchisee'))
       title = `Routevoy - ${t('nav.franchisee', 'Painel Regional')}`
@@ -199,18 +194,9 @@ export default function App() {
                       </RequireAuth>
                     }
                   />
+
+                  {/* Agrupando o arcabouço do lojista (Vendor + Merchant) no mesmo MerchantLayout */}
                   <Route
-                    path="/vendor"
-                    element={
-                      <RequireAuth
-                        roles={['shopkeeper', 'admin', 'super_admin'] as any}
-                      >
-                        <VendorDashboard />
-                      </RequireAuth>
-                    }
-                  />
-                  <Route
-                    path="/merchant"
                     element={
                       <RequireAuth
                         roles={['shopkeeper', 'admin', 'super_admin'] as any}
@@ -219,10 +205,22 @@ export default function App() {
                       </RequireAuth>
                     }
                   >
-                    <Route path="scanner" element={<MerchantScanner />} />
-                    <Route path="campaigns" element={<MerchantCampaigns />} />
-                    <Route path="leads" element={<MerchantLeads />} />
+                    <Route path="/vendor" element={<VendorDashboard />} />
+                    <Route
+                      path="/merchant"
+                      element={<Navigate to="/vendor" replace />}
+                    />
+                    <Route
+                      path="/merchant/scanner"
+                      element={<MerchantScanner />}
+                    />
+                    <Route
+                      path="/merchant/campaigns"
+                      element={<MerchantCampaigns />}
+                    />
+                    <Route path="/merchant/leads" element={<MerchantLeads />} />
                   </Route>
+
                   <Route
                     path="/admin/*"
                     element={
@@ -234,7 +232,9 @@ export default function App() {
                   <Route
                     path="/franchisee"
                     element={
-                      <RequireAuth roles={['franchisee']}>
+                      <RequireAuth
+                        roles={['franchisee', 'super_admin', 'admin'] as any}
+                      >
                         <FranchiseeDashboard />
                       </RequireAuth>
                     }
