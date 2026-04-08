@@ -82,33 +82,38 @@ export default function Login() {
     const { error, data } = await signIn(fakeEmail, 'Skip@Pass')
 
     if (error) {
-      toast.error(
-        `Erro ao acessar conta de teste. A migration foi executada? Detalhe: ${error.message}`,
-      )
+      toast.error(`Erro ao acessar conta de teste. Detalhe: ${error.message}`)
       setIsLoading(false)
       return
     }
 
     toast.success(
-      t('auth.login_success', 'Autenticação concluída com sucesso!'),
+      t(
+        'auth.login_success',
+        'Autenticação concluída com sucesso! Carregando painel...',
+      ),
     )
 
-    if (data?.user) {
-      try {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', data.user.id)
-          .single()
+    // Pequeno delay para assegurar que a sessão foi registrada globalmente e as claims atualizadas
+    setTimeout(async () => {
+      if (data?.user) {
+        try {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', data.user.id)
+            .single()
 
-        const userRole =
-          profile?.role || data.user.user_metadata?.role || 'user'
-        performRedirect(userRole)
-      } catch (err) {
-        const userRole = data.user.user_metadata?.role || 'user'
-        performRedirect(userRole)
+          const userRole =
+            profile?.role || data.user.user_metadata?.role || roleType
+          performRedirect(userRole)
+        } catch (err) {
+          const userRole = data.user.user_metadata?.role || roleType
+          performRedirect(userRole)
+        }
       }
-    }
+      setIsLoading(false)
+    }, 600)
   }
 
   const handleLogin = async (e: React.FormEvent) => {
