@@ -65,20 +65,24 @@ function RequireAuth({
   const role = (authRole || 'user') as UserRole
   const email = user.email
 
-  // 🔥 MASTER ACESSO: Se for super_admin, admin ou o email master, tem acesso liberado
-  if (
+  const isMaster =
     role === 'super_admin' ||
     role === 'admin' ||
     email === 'adailtong@gmail.com'
-  ) {
+
+  // 🔥 MASTER ACESSO: Se for super_admin, admin ou o email master, tem acesso liberado
+  if (isMaster) {
     return <>{children}</>
   }
 
   // Roteamento condicional para roles específicos se tentarem acessar locais indevidos
   if (roles && roles.length > 0 && !roles.includes(role)) {
-    if (role === 'franchisee') return <Navigate to="/franchisee" replace />
-    if (role === 'shopkeeper') return <Navigate to="/vendor" replace />
-    if (role === 'affiliate') return <Navigate to="/profile" replace />
+    if (role === 'franchisee' && !location.pathname.startsWith('/franchisee'))
+      return <Navigate to="/franchisee" replace />
+    if (role === 'shopkeeper' && !location.pathname.startsWith('/vendor'))
+      return <Navigate to="/vendor" replace />
+    if (role === 'affiliate' && !location.pathname.startsWith('/profile'))
+      return <Navigate to="/profile" replace />
     return <Navigate to="/" replace />
   }
 

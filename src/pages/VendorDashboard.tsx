@@ -52,10 +52,23 @@ export default function VendorDashboard() {
   const isSuperAdmin =
     authRole === 'super_admin' || authUser?.email === 'adailtong@gmail.com'
 
+  const mockCompany = {
+    id: 'mock-company-admin',
+    name: 'Empresa Teste (Visão Admin)',
+    region: 'Global',
+    addressCountry: 'Brasil',
+    addressState: 'SP',
+    addressCity: 'São Paulo',
+    addressStreet: 'Avenida Paulista',
+    addressNumber: '1000',
+  } as any
+
+  const matchedCompany = companies.find(
+    (c) => c.ownerId === authUser?.id || c.email === authUser?.email,
+  )
+
   const myCompany =
-    companies.find(
-      (c) => c.ownerId === authUser?.id || c.email === authUser?.email,
-    ) || (isSuperAdmin ? companies[0] : null)
+    matchedCompany || (isSuperAdmin ? companies[0] || mockCompany : null)
 
   const coupons = allCoupons.filter(
     (c) =>

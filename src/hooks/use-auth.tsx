@@ -58,7 +58,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (isMounted) {
           if (data) {
             setProfile(data)
-            if (currentEmail === 'adailtong@gmail.com') {
+            if (
+              currentEmail === 'adailtong@gmail.com' ||
+              data.role === 'super_admin'
+            ) {
               setRole('super_admin')
             } else {
               setRole(data.role || 'user')
@@ -91,7 +94,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       } else {
         // Assume basic role quickly, then update
         setRole(
-          currentUser.email === 'adailtong@gmail.com'
+          currentUser.email === 'adailtong@gmail.com' ||
+            currentUser.user_metadata?.role === 'super_admin'
             ? 'super_admin'
             : currentUser.user_metadata?.role || 'user',
         )
@@ -117,7 +121,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setLoading(false)
       } else {
         setRole(
-          currentUser.email === 'adailtong@gmail.com'
+          currentUser.email === 'adailtong@gmail.com' ||
+            currentUser.user_metadata?.role === 'super_admin'
             ? 'super_admin'
             : currentUser.user_metadata?.role || 'user',
         )

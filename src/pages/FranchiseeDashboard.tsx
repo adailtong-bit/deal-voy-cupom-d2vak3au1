@@ -30,7 +30,17 @@ export default function FranchiseeDashboard() {
       f.id === profile?.franchiseId,
   )
 
-  if (!myFranchise && !isSuperAdmin) {
+  const mockFranchise = {
+    id: 'mock-franchise-admin',
+    name: 'Franquia Teste (Visão Admin)',
+    addressCountry: 'Brasil',
+  } as any
+
+  // Fallback to first franchise for super admins testing the view
+  const franchiseToUse =
+    myFranchise || (isSuperAdmin ? franchises[0] || mockFranchise : null)
+
+  if (!franchiseToUse) {
     return (
       <div className="container py-16 text-center animate-fade-in flex flex-col items-center justify-center min-h-[60vh]">
         <Store className="w-16 h-16 text-slate-300 mb-4" />
@@ -48,11 +58,6 @@ export default function FranchiseeDashboard() {
       </div>
     )
   }
-
-  // Fallback to first franchise for super admins testing the view
-  const franchiseToUse = myFranchise || franchises[0]
-
-  if (!franchiseToUse) return null
 
   return (
     <div className="flex min-h-screen bg-slate-50 w-full relative z-0">
