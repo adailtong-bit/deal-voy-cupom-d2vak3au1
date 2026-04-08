@@ -30,6 +30,8 @@ export default function MerchantLeads() {
     companies.find((c) => c.id === user?.companyId) || companies[0]
 
   const leads = useMemo(() => {
+    if (!myCompany) return []
+
     const companyLogs = validationLogs.filter(
       (l) => l.companyId === myCompany.id,
     )
@@ -51,7 +53,7 @@ export default function MerchantLeads() {
         (a, b) =>
           new Date(b.acquiredAt).getTime() - new Date(a.acquiredAt).getTime(),
       )
-  }, [validationLogs, myCompany.id, users])
+  }, [validationLogs, myCompany?.id, users])
 
   const campaigns = useMemo(() => {
     const names = new Set(leads.map((l) => l.campaignName))
@@ -94,7 +96,7 @@ export default function MerchantLeads() {
     link.setAttribute('href', url)
     link.setAttribute(
       'download',
-      `leads_${myCompany.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`,
+      `leads_${myCompany?.name?.replace(/\s+/g, '_') || 'empresa'}_${new Date().toISOString().split('T')[0]}.csv`,
     )
     link.style.visibility = 'hidden'
     document.body.appendChild(link)
