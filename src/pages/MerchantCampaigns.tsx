@@ -11,6 +11,25 @@ export default function MerchantCampaigns() {
 
   const myCompany =
     companies.find((c) => c.id === user?.companyId) || companies[0]
+
+  if (!myCompany) {
+    return (
+      <div className="container py-8 px-4 max-w-6xl mx-auto space-y-6 animate-fade-in">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+          <div>
+            <h1 className="text-2xl font-bold flex items-center gap-2 text-slate-800">
+              <Megaphone className="h-6 w-6 text-primary" />
+              Minhas Promoções
+            </h1>
+            <p className="text-slate-500 text-sm mt-1">
+              Nenhuma empresa associada ao seu perfil.
+            </p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   const myCoupons = coupons.filter(
     (c) => c.companyId === myCompany.id && c.source !== 'aggregated',
   )
