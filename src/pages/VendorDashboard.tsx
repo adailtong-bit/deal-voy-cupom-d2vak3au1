@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useCouponStore } from '@/stores/CouponContext'
+import { useAuth } from '@/hooks/use-auth'
 import { VendorAnalytics } from '@/components/VendorAnalytics'
 import { CouponValidation } from '@/components/CouponValidation'
 import { VendorStats } from '@/components/vendor/VendorStats'
@@ -38,7 +39,8 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 
 export default function VendorDashboard() {
   const { t } = useLanguage()
-  const { user, companies, coupons: allCoupons, bookings } = useCouponStore()
+  const { companies, coupons: allCoupons, bookings } = useCouponStore()
+  const { user: authUser, role: authRole } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
 
   const activeTab = searchParams.get('tab') || 'overview'
@@ -47,15 +49,19 @@ export default function VendorDashboard() {
     setSearchParams({ tab })
   }
 
+  const isSuperAdmin =
+    authRole === 'super_admin' || authUser?.email === 'adailtong@gmail.com'
+
   const myCompany =
-    companies.find((c) => c.id === user?.companyId) || companies[0]
-  const coupons = allCoupons
-    .filter(
-      (c) =>
-        c.source !== 'aggregated' &&
-        (c.companyId === myCompany?.id || user?.role === 'super_admin'),
-    )
-    .slice(0, 15)
+    companies.find(
+      (c) => c.ownerId === authUser?.id || c.email === authUser?.email,
+    ) || (isSuperAdmin ? companies[0] : null)
+
+  const coupons = allCoupons.filter(
+    (c) =>
+      c.source !== 'aggregated' &&
+      (c.companyId === myCompany?.id || isSuperAdmin),
+  )
 
   const myBookings = bookings.filter((b) => b.storeName === myCompany?.name)
 
@@ -66,7 +72,23 @@ export default function VendorDashboard() {
     myCompany?.addressStreet &&
     myCompany?.addressNumber
 
-  if (!myCompany) return null
+  if (!myCompany) {
+    return (
+      <div className="container py-16 text-center animate-fade-in flex flex-col items-center justify-center min-h-[60vh]">
+        <Briefcase className="w-16 h-16 text-slate-300 mb-4" />
+        <h2 className="text-2xl font-bold text-slate-800 mb-2">
+          Nenhum lojista associado encontrado
+        </h2>
+        <p className="text-slate-500 mb-6 max-w-md">
+          Seu perfil não possui um estabelecimento vinculado. Entre em contato
+          com o administrador ou cadastre sua loja.
+        </p>
+        <Button asChild variant="outline">
+          <Link to="/">Voltar para a Home</Link>
+        </Button>
+      </div>
+    )
+  }
 
   return (
     <div className="container mx-auto px-4 py-8 mb-16 md:mb-0 animate-fade-in-up">
@@ -130,6 +152,12 @@ export default function VendorDashboard() {
           >
             <ShoppingBag className="h-4 w-4 mr-2 text-emerald-500" />{' '}
             {t('vendor.campaigns', 'Campanhas')}
+          </TabsTrigger>
+          <TabsTrigger
+            value="staff"
+            className="py-2.5 px-4 font-semibold data-[state=active]:shadow-sm"
+          >
+            <Users className="h-4 w-4 mr-2" /> {t('vendor.staff', 'Equipe')}
           </TabsTrigger>
           <TabsTrigger
             value="customers"
@@ -200,12 +228,6 @@ export default function VendorDashboard() {
             {t('vendor.seasonal', 'Sazonal')}
           </TabsTrigger>
           <TabsTrigger
-            value="staff"
-            className="py-2.5 px-4 font-semibold data-[state=active]:shadow-sm"
-          >
-            <Users className="h-4 w-4 mr-2" /> {t('vendor.staff', 'Equipe')}
-          </TabsTrigger>
-          <TabsTrigger
             value="settings"
             className="py-2.5 px-4 font-semibold data-[state=active]:shadow-sm"
           >
@@ -220,6 +242,9 @@ export default function VendorDashboard() {
         </TabsContent>
         <TabsContent value="offers" className="mt-4">
           <VendorCampaignsTab coupons={coupons} company={myCompany} />
+        </TabsContent>
+        <TabsContent value="staff" className="mt-4">
+          <StaffTab parentType="company" parentId={myCompany.id} />
         </TabsContent>
         <TabsContent value="customers" className="mt-4">
           <VendorCustomersTab company={myCompany} />
@@ -250,9 +275,6 @@ export default function VendorDashboard() {
         </TabsContent>
         <TabsContent value="history" className="mt-4">
           <HistoryTable />
-        </TabsContent>
-        <TabsContent value="staff" className="mt-4">
-          <StaffTab parentType="company" parentId={myCompany.id} />
         </TabsContent>
         <TabsContent value="settings" className="mt-4">
           <VendorSettingsTab company={myCompany} />
