@@ -12,6 +12,24 @@ import { CommunicationCampaignsTab } from '@/components/admin/crm/CommunicationC
 import { FranchiseeOverviewTab } from '@/components/franchisee/FranchiseeOverviewTab'
 import { VendorCampaignsTab } from '@/components/vendor/VendorCampaignsTab'
 import { AdminCRM } from '@/components/admin/AdminCRM'
+import {
+  FinanceTab,
+  BillingTab,
+  MonetizationTab,
+  AdsRoyaltiesTab,
+} from '@/components/franchisee/FinanceTabs'
+import {
+  SeasonalTab,
+  CategoriesTab,
+  InterestsTab,
+  PoliciesTab,
+} from '@/components/franchisee/OperationalTabs'
+import {
+  CrawlerTab,
+  InsightsTab,
+  SandboxTab,
+  SettingsTab,
+} from '@/components/franchisee/ExtraTabs'
 
 export default function FranchiseeDashboard() {
   const { franchises, companies, coupons: allCoupons } = useCouponStore()
@@ -133,6 +151,69 @@ export default function FranchiseeDashboard() {
             </div>
           )}
 
+          {activeTab === 'finance' && (
+            <div className="animate-fade-in-up">
+              <FinanceTab />
+            </div>
+          )}
+          {activeTab === 'billing' && (
+            <div className="animate-fade-in-up">
+              <BillingTab />
+            </div>
+          )}
+          {activeTab === 'monetization' && (
+            <div className="animate-fade-in-up">
+              <MonetizationTab />
+            </div>
+          )}
+          {activeTab === 'ads-royalties' && (
+            <div className="animate-fade-in-up">
+              <AdsRoyaltiesTab />
+            </div>
+          )}
+
+          {activeTab === 'seasonal' && (
+            <div className="animate-fade-in-up">
+              <SeasonalTab />
+            </div>
+          )}
+          {activeTab === 'categories' && (
+            <div className="animate-fade-in-up">
+              <CategoriesTab />
+            </div>
+          )}
+          {activeTab === 'interests' && (
+            <div className="animate-fade-in-up">
+              <InterestsTab />
+            </div>
+          )}
+          {activeTab === 'policies' && (
+            <div className="animate-fade-in-up">
+              <PoliciesTab />
+            </div>
+          )}
+
+          {activeTab === 'crawler' && (
+            <div className="animate-fade-in-up">
+              <CrawlerTab />
+            </div>
+          )}
+          {activeTab === 'insights' && (
+            <div className="animate-fade-in-up">
+              <InsightsTab />
+            </div>
+          )}
+          {activeTab === 'sandbox' && (
+            <div className="animate-fade-in-up">
+              <SandboxTab />
+            </div>
+          )}
+          {activeTab === 'settings' && (
+            <div className="animate-fade-in-up">
+              <SettingsTab />
+            </div>
+          )}
+
           {/* Fallback for other tabs in development */}
           {![
             'overview',
@@ -141,6 +222,18 @@ export default function FranchiseeDashboard() {
             'team',
             'crm',
             'leads',
+            'finance',
+            'billing',
+            'monetization',
+            'ads-royalties',
+            'seasonal',
+            'categories',
+            'interests',
+            'policies',
+            'crawler',
+            'insights',
+            'sandbox',
+            'settings',
           ].includes(activeTab) && (
             <div className="bg-white p-12 text-center rounded-xl border border-dashed border-slate-300 animate-fade-in-up">
               <h3 className="text-lg font-semibold text-slate-700 mb-2">
