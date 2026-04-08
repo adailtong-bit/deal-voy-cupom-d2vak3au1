@@ -31,13 +31,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    let isMounted = true
-
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session)
-      const currentUser = session?.user ?? null
+      setUser(session?.user ?? null)
 
       if (event === 'SIGNED_OUT') {
         localStorage.removeItem('auth_token')
@@ -47,71 +45,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         sessionStorage.clear()
       }
 
-      if (currentUser) {
-        // Fetch role from profile asynchronously but wait to clear loading state
-        supabase
-          .from('profiles')
-          .select('role, is_affiliate')
-          .eq('id', currentUser.id)
-          .maybeSingle()
-          .then(({ data }) => {
-            if (isMounted) {
-              const updatedUser = {
-                ...currentUser,
-                user_metadata: {
-                  ...currentUser.user_metadata,
-                  role:
-                    currentUser.email === 'adailtong@gmail.com'
-                      ? 'super_admin'
-                      : data?.role || currentUser.user_metadata?.role || 'user',
-                  is_affiliate: data?.is_affiliate,
-                },
-              } as User
-              setUser(updatedUser)
-              setLoading(false)
-            }
-          })
-      } else {
-        setUser(null)
-        setLoading(false)
-      }
+      setLoading(false)
     })
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
-      const currentUser = session?.user ?? null
-
-      if (currentUser) {
-        supabase
-          .from('profiles')
-          .select('role, is_affiliate')
-          .eq('id', currentUser.id)
-          .maybeSingle()
-          .then(({ data }) => {
-            if (isMounted) {
-              const updatedUser = {
-                ...currentUser,
-                user_metadata: {
-                  ...currentUser.user_metadata,
-                  role:
-                    currentUser.email === 'adailtong@gmail.com'
-                      ? 'super_admin'
-                      : data?.role || currentUser.user_metadata?.role || 'user',
-                  is_affiliate: data?.is_affiliate,
-                },
-              } as User
-              setUser(updatedUser)
-              setLoading(false)
-            }
-          })
-      } else {
-        setUser(null)
-        setLoading(false)
-      }
+      setUser(session?.user ?? null)
+      setLoading(false)
     })
 
     return () => {
-      isMounted = false
       subscription.unsubscribe()
     }
   }, [])
@@ -124,6 +67,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     })
     return { error }
   }
+
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
       email,
@@ -131,12 +75,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     })
     return { error }
   }
+
   const signOut = async () => {
     localStorage.removeItem('auth_token')
     localStorage.removeItem('pocketbase_auth')
     localStorage.removeItem('user_role')
     localStorage.removeItem('currentUser')
     sessionStorage.clear()
+
     const { error } = await supabase.auth.signOut()
     window.location.href = '/login'
     return { error }

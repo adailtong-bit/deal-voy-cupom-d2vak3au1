@@ -25,136 +25,37 @@ import TravelPage from '@/pages/TravelPage'
 import Explore from '@/pages/Explore'
 import Profile from '@/pages/Profile'
 import Login from '@/pages/Login'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { UserRole } from '@/lib/types'
 import { AuthProvider, useAuth } from '@/hooks/use-auth'
+import { supabase } from '@/lib/supabase/client'
 
-function RequireAuth({
-  children,
-  roles,
-}: {
-  children: React.ReactNode
-  roles?: UserRole[]
-}) {
-  const { user: storeUser } = useCouponStore()
-  const { user: sbUser, loading } = useAuth()
-  const location = useLocation()
-
-  // Admin Session Stability: Prevent unmounting if a background crawl is active
-  const isCrawling = sessionStorage.getItem('crawler_isScanning') === 'true'
-  const isAdminPath = location.pathname.startsWith('/admin')
-
-  // Always allow admin path if crawling to prevent interruptions
-  if (isCrawling && isAdminPath) {
-    return <>{children}</>
-  }
-
-  let localUser = null
-  try {
-    const localUserStr = localStorage.getItem('currentUser')
-    if (localUserStr) localUser = JSON.parse(localUserStr)
-  } catch (e) {
-    // ignore
-  }
-  const isMockUser = localUser?.id?.toString().startsWith('mock-')
-
-  if (loading && !isMockUser) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4 text-slate-500">
-        Carregando permissões de acesso...
-      </div>
-    )
-  }
-
-  // Unified auth state - priority to Supabase, but allow Mock users to bypass properly
-  let activeUser = null
-
-  if (isMockUser && localUser) {
-    activeUser = localUser
-  } else if (sbUser) {
-    let resolvedRole = sbUser.user_metadata?.role
-
-    // Owner Override
-    if (sbUser.email === 'adailtong@gmail.com') {
-      resolvedRole = 'super_admin'
-    } else if (!resolvedRole || resolvedRole === 'user') {
-      if (
-        localUser &&
-        localUser.email === sbUser.email &&
-        (localUser.role === 'admin' || localUser.role === 'super_admin')
-      ) {
-        resolvedRole = localUser.role
-      }
-    }
-    activeUser = {
-      id: sbUser.id,
-      role: (resolvedRole || 'user') as UserRole,
-      email: sbUser.email,
-      country: 'Brasil',
-    }
-  } else if (storeUser) {
-    activeUser = storeUser
-  } else if (localUser && !localUser.id?.toString().startsWith('mock-')) {
-    activeUser = localUser
-  }
-
-  if (!activeUser) {
-    return <Navigate to="/login" state={{ from: location }} replace />
-  }
-
-  // Admin Bypass - Absolute Priority (Allows master access everywhere)
-  if (
-    activeUser.role === 'super_admin' ||
-    activeUser.role === 'admin' ||
-    activeUser.email === 'adailtong@gmail.com'
-  ) {
-    return <>{children}</>
-  }
-
-  if (roles && roles.length > 0 && !roles.includes(activeUser.role as any)) {
-    // Router Guard: Redirect to appropriate dashboard based on actual role
-    if (activeUser.role === 'franchisee') {
-      return <Navigate to="/franchisee" replace />
-    }
-    if (activeUser.role === 'shopkeeper') {
-      return <Navigate to="/vendor" replace />
-    }
-    if (activeUser.role === 'affiliate') {
-      return <Navigate to="/profile" replace />
-    }
-    return <Navigate to="/" replace />
-  }
-
-  return <>{children}</>
-}
-
+// Hard Reset para eliminar sessões zumbis
 function AuthStateSync() {
-  const { user: storeUser } = useCouponStore()
   const { user: sbUser, loading } = useAuth()
 
   useEffect(() => {
     if (loading) return
 
-    let isMockUser = false
+    let localUser = null
     try {
       const localUserStr = localStorage.getItem('currentUser')
-      if (localUserStr) {
-        const localUser = JSON.parse(localUserStr)
-        isMockUser = localUser?.id?.toString().startsWith('mock-')
-      }
+      if (localUserStr) localUser = JSON.parse(localUserStr)
     } catch (e) {
       // ignore
     }
 
-    if (!storeUser && !sbUser && !isMockUser) {
-      // Purge authentication tokens and role-related data upon logout
+    const isMockUser = localUser?.id?.toString().startsWith('mock-')
+
+    // Se o banco não reporta login, e não é um mock explicito, DESTRUA a sessão corrompida.
+    if (!sbUser && localUser && !isMockUser) {
       localStorage.removeItem('auth_token')
       localStorage.removeItem('pocketbase_auth')
       localStorage.removeItem('user_role')
       localStorage.removeItem('currentUser')
       sessionStorage.clear()
     }
-  }, [storeUser, sbUser, loading])
+  }, [sbUser, loading])
 
   return null
 }
@@ -209,11 +110,7 @@ function GlobalLanguageSync() {
 
     if (countryToUse) {
       const countryLower = countryToUse.toLowerCase()
-      if (
-        countryLower === 'brasil' ||
-        countryLower === 'brazil' ||
-        countryLower === 'br'
-      ) {
+      if (['brasil', 'brazil', 'br'].includes(countryLower)) {
         setLanguage('pt')
       } else if (
         [
@@ -239,9 +136,58 @@ function GlobalLanguageSync() {
   return null
 }
 
-function GlobalRouterGuard({ children }: { children: React.ReactNode }) {
+// Router Guard Definitivo: Não cai em loop com falsos perfis
+function RequireAuth({
+  children,
+  roles,
+}: {
+  children: React.ReactNode
+  roles?: UserRole[]
+}) {
   const { user: sbUser, loading } = useAuth()
   const location = useLocation()
+  const [profileRole, setProfileRole] = useState<string | null>(null)
+  const [isFetchingRole, setIsFetchingRole] = useState(false)
+
+  const isCrawling = sessionStorage.getItem('crawler_isScanning') === 'true'
+  const isAdminPath = location.pathname.startsWith('/admin')
+
+  // Ignora bloqueios para o admin se um scan estiver ativo
+  if (isCrawling && isAdminPath) {
+    return <>{children}</>
+  }
+
+  // Sincroniza role real do supabase antes de tomar decisões limitantes
+  useEffect(() => {
+    let isMounted = true
+    if (sbUser && sbUser.email !== 'adailtong@gmail.com') {
+      setIsFetchingRole(true)
+      supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', sbUser.id)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (isMounted && data?.role) {
+            setProfileRole(data.role)
+          }
+          if (isMounted) setIsFetchingRole(false)
+        })
+    } else {
+      setProfileRole(null)
+    }
+    return () => {
+      isMounted = false
+    }
+  }, [sbUser])
+
+  if (loading || isFetchingRole) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 text-slate-500">
+        Carregando permissões de acesso...
+      </div>
+    )
+  }
 
   let localUser = null
   try {
@@ -252,15 +198,81 @@ function GlobalRouterGuard({ children }: { children: React.ReactNode }) {
   }
 
   const isMockUser = localUser?.id?.toString().startsWith('mock-')
-  const isMaster =
-    sbUser?.email === 'adailtong@gmail.com' ||
-    localUser?.email === 'adailtong@gmail.com'
 
-  let activeRole = isMaster
-    ? 'super_admin'
-    : sbUser?.user_metadata?.role || localUser?.role
+  // Rejeita absolutamente qualquer tráfego se não houver um token válido (real ou mock)
+  if (!sbUser && !isMockUser) {
+    return <Navigate to="/login" state={{ from: location }} replace />
+  }
 
-  if (loading && !isMockUser && location.pathname === '/') {
+  let activeUser = null
+
+  if (isMockUser && localUser) {
+    activeUser = localUser
+  } else if (sbUser) {
+    let resolvedRole =
+      profileRole || sbUser.user_metadata?.role || localUser?.role || 'user'
+
+    if (sbUser.email === 'adailtong@gmail.com') {
+      resolvedRole = 'super_admin'
+    }
+
+    activeUser = {
+      id: sbUser.id,
+      role: resolvedRole as UserRole,
+      email: sbUser.email,
+      country: 'Brasil',
+    }
+  }
+
+  if (!activeUser) {
+    return <Navigate to="/login" state={{ from: location }} replace />
+  }
+
+  // Admin Master Pass
+  if (
+    activeUser.role === 'super_admin' ||
+    activeUser.role === 'admin' ||
+    activeUser.email === 'adailtong@gmail.com'
+  ) {
+    return <>{children}</>
+  }
+
+  if (roles && roles.length > 0 && !roles.includes(activeUser.role as any)) {
+    if (activeUser.role === 'franchisee')
+      return <Navigate to="/franchisee" replace />
+    if (activeUser.role === 'shopkeeper')
+      return <Navigate to="/vendor" replace />
+    if (activeUser.role === 'affiliate')
+      return <Navigate to="/profile" replace />
+    return <Navigate to="/" replace />
+  }
+
+  return <>{children}</>
+}
+
+// Direcionamento da rota Raiz (/) baseado no perfil para evitar Home vazia para admins
+function RootHandler() {
+  const { user: sbUser, loading } = useAuth()
+  const [profileRole, setProfileRole] = useState<string | null>(null)
+
+  useEffect(() => {
+    let isMounted = true
+    if (sbUser && sbUser.email !== 'adailtong@gmail.com') {
+      supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', sbUser.id)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (isMounted && data?.role) setProfileRole(data.role)
+        })
+    }
+    return () => {
+      isMounted = false
+    }
+  }, [sbUser])
+
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 text-slate-500 bg-slate-50/50">
         Iniciando...
@@ -268,25 +280,36 @@ function GlobalRouterGuard({ children }: { children: React.ReactNode }) {
     )
   }
 
-  if (location.pathname === '/' || location.pathname === '/profile') {
-    if (isMaster) {
-      return <Navigate to="/admin" replace />
-    }
+  let localUser = null
+  try {
+    const localUserStr = localStorage.getItem('currentUser')
+    if (localUserStr) localUser = JSON.parse(localUserStr)
+  } catch (e) {}
 
-    if (location.pathname === '/') {
-      if (activeRole === 'franchisee') {
-        return <Navigate to="/franchisee" replace />
-      }
-      if (activeRole === 'shopkeeper') {
-        return <Navigate to="/vendor" replace />
-      }
-      if (activeRole === 'affiliate') {
-        return <Navigate to="/profile" replace />
-      }
-    }
+  const isMockUser = localUser?.id?.toString().startsWith('mock-')
+
+  if (!sbUser && !isMockUser) {
+    return <Index />
   }
 
-  return <>{children}</>
+  let activeRole = 'user'
+  if (isMockUser && localUser) {
+    activeRole = localUser.role
+  } else if (sbUser) {
+    if (sbUser.email === 'adailtong@gmail.com') {
+      return <Navigate to="/admin" replace />
+    }
+    activeRole =
+      profileRole || sbUser.user_metadata?.role || localUser?.role || 'user'
+  }
+
+  if (activeRole === 'super_admin' || activeRole === 'admin')
+    return <Navigate to="/admin" replace />
+  if (activeRole === 'franchisee') return <Navigate to="/franchisee" replace />
+  if (activeRole === 'shopkeeper') return <Navigate to="/vendor" replace />
+  if (activeRole === 'affiliate') return <Navigate to="/profile" replace />
+
+  return <Index />
 }
 
 export default function App() {
@@ -299,101 +322,99 @@ export default function App() {
               <AuthStateSync />
               <GlobalLanguageSync />
               <PageTitleSync />
-              <GlobalRouterGuard>
-                <Routes>
-                  <Route element={<Layout />}>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/explore" element={<Explore />} />
-                    <Route
-                      path="/vouchers"
-                      element={
-                        <RequireAuth>
-                          <MyVouchers />
-                        </RequireAuth>
-                      }
-                    />
-                    <Route
-                      path="/vendor"
-                      element={
-                        <RequireAuth roles={['shopkeeper']}>
-                          <VendorDashboard />
-                        </RequireAuth>
-                      }
-                    />
-                    <Route
-                      path="/merchant"
-                      element={
-                        <RequireAuth roles={['shopkeeper']}>
-                          <MerchantLayout />
-                        </RequireAuth>
-                      }
-                    >
-                      <Route path="scanner" element={<MerchantScanner />} />
-                      <Route path="campaigns" element={<MerchantCampaigns />} />
-                      <Route path="leads" element={<MerchantLeads />} />
-                    </Route>
-                    <Route
-                      path="/admin/*"
-                      element={
-                        <RequireAuth roles={['super_admin', 'admin'] as any}>
-                          <AdminDashboard />
-                        </RequireAuth>
-                      }
-                    />
-                    <Route
-                      path="/franchisee"
-                      element={
-                        <RequireAuth roles={['franchisee']}>
-                          <FranchiseeDashboard />
-                        </RequireAuth>
-                      }
-                    />
-                    <Route
-                      path="/profile"
-                      element={
-                        <RequireAuth>
-                          <Profile />
-                        </RequireAuth>
-                      }
-                    />
-                    <Route path="/seasonal" element={<Seasonal />} />
-                    <Route
-                      path="/travel"
-                      element={
-                        <RequireAuth>
-                          <TravelPage />
-                        </RequireAuth>
-                      }
-                    />
-                    <Route
-                      path="/travel/new"
-                      element={
-                        <RequireAuth>
-                          <TravelPage />
-                        </RequireAuth>
-                      }
-                    />
-                    <Route
-                      path="/travel/:id"
-                      element={
-                        <RequireAuth>
-                          <TravelPage />
-                        </RequireAuth>
-                      }
-                    />
-                    <Route
-                      path="/voucher/:id"
-                      element={
-                        <RequireAuth>
-                          <Voucher />
-                        </RequireAuth>
-                      }
-                    />
-                    <Route path="*" element={<Navigate to="/" replace />} />
+              <Routes>
+                <Route element={<Layout />}>
+                  <Route path="/" element={<RootHandler />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/explore" element={<Explore />} />
+                  <Route
+                    path="/vouchers"
+                    element={
+                      <RequireAuth>
+                        <MyVouchers />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route
+                    path="/vendor"
+                    element={
+                      <RequireAuth roles={['shopkeeper']}>
+                        <VendorDashboard />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route
+                    path="/merchant"
+                    element={
+                      <RequireAuth roles={['shopkeeper']}>
+                        <MerchantLayout />
+                      </RequireAuth>
+                    }
+                  >
+                    <Route path="scanner" element={<MerchantScanner />} />
+                    <Route path="campaigns" element={<MerchantCampaigns />} />
+                    <Route path="leads" element={<MerchantLeads />} />
                   </Route>
-                </Routes>
-              </GlobalRouterGuard>
+                  <Route
+                    path="/admin/*"
+                    element={
+                      <RequireAuth roles={['super_admin', 'admin'] as any}>
+                        <AdminDashboard />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route
+                    path="/franchisee"
+                    element={
+                      <RequireAuth roles={['franchisee']}>
+                        <FranchiseeDashboard />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route
+                    path="/profile"
+                    element={
+                      <RequireAuth>
+                        <Profile />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route path="/seasonal" element={<Seasonal />} />
+                  <Route
+                    path="/travel"
+                    element={
+                      <RequireAuth>
+                        <TravelPage />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route
+                    path="/travel/new"
+                    element={
+                      <RequireAuth>
+                        <TravelPage />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route
+                    path="/travel/:id"
+                    element={
+                      <RequireAuth>
+                        <TravelPage />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route
+                    path="/voucher/:id"
+                    element={
+                      <RequireAuth>
+                        <Voucher />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Route>
+              </Routes>
             </BrowserRouter>
             <Toaster />
           </CouponProvider>

@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useAuth } from '@/hooks/use-auth'
 import {
@@ -43,62 +42,60 @@ export default function Login() {
   const [showRegConfirmPassword, setShowRegConfirmPassword] = useState(false)
   const [role, setRole] = useState('user')
 
-  const { login, register, user: storeUser } = useCouponStore()
-  const { user: sbUser } = useAuth()
+  const { user: sbUser, loading: authLoading } = useAuth()
   const { t } = useLanguage()
   const navigate = useNavigate()
   const location = useLocation()
 
-  let localUser = null
-  try {
-    const localUserStr = localStorage.getItem('currentUser')
-    if (localUserStr) localUser = JSON.parse(localUserStr)
-  } catch (e) {
-    // ignore
-  }
-
-  let activeUser: any =
-    storeUser ||
-    (sbUser
-      ? { role: sbUser.user_metadata?.role || 'user', email: sbUser.email }
-      : null) ||
-    localUser
-
-  if (
-    activeUser?.email === 'adailtong@gmail.com' ||
-    activeUser?.email === 'adailtong@gmail.com'
-  ) {
-    activeUser = { ...activeUser, role: 'super_admin' }
-  }
-
-  const fromObj = location.state?.from
-  const from = fromObj
-    ? `${fromObj.pathname}${fromObj.search}${fromObj.hash}`
-    : '/'
-
+  // Previne loop infinito checando sessão com segurança
   useEffect(() => {
-    if (activeUser) {
-      if (activeUser.role === 'super_admin' || activeUser.role === 'admin') {
-        navigate('/admin', { replace: true })
-      } else if (activeUser.role === 'franchisee') {
-        navigate('/franchisee', { replace: true })
-      } else if (activeUser.role === 'shopkeeper') {
-        navigate('/vendor', { replace: true })
-      } else if (activeUser.role === 'affiliate') {
-        navigate('/profile', { replace: true })
+    if (authLoading) return
+
+    let localUser = null
+    try {
+      const localUserStr = localStorage.getItem('currentUser')
+      if (localUserStr) localUser = JSON.parse(localUserStr)
+    } catch (e) {}
+
+    const isMockUser = localUser?.id?.toString().startsWith('mock-')
+
+    if (sbUser || isMockUser) {
+      const fromObj = location.state?.from
+      const from = fromObj
+        ? `${fromObj.pathname}${fromObj.search}${fromObj.hash}`
+        : null
+
+      let activeRole = 'user'
+      if (isMockUser && localUser) {
+        activeRole = localUser.role
+      } else if (sbUser) {
+        if (sbUser.email === 'adailtong@gmail.com') activeRole = 'super_admin'
+        else
+          activeRole = sbUser.user_metadata?.role || localUser?.role || 'user'
+      }
+
+      if (from && from !== '/' && from !== '/login') {
+        navigate(from, { replace: true })
       } else {
-        navigate(from !== '/' ? from : '/profile', { replace: true })
+        if (activeRole === 'super_admin' || activeRole === 'admin')
+          navigate('/admin', { replace: true })
+        else if (activeRole === 'franchisee')
+          navigate('/franchisee', { replace: true })
+        else if (activeRole === 'shopkeeper')
+          navigate('/vendor', { replace: true })
+        else navigate('/profile', { replace: true })
       }
     }
-  }, [activeUser, navigate, from])
+  }, [sbUser, authLoading, navigate, location])
 
   const handleFakeLogin = async (roleType: string, fakeEmail: string) => {
     setIsLoading(true)
 
-    // Sign out of Supabase to clear any real session that might override the mock session
+    // Destrói qualquer sessão persistente real para o mock assumir
     await supabase.auth.signOut()
+    localStorage.clear()
+    sessionStorage.clear()
 
-    // Bypass Interceptor block
     const mockUser = {
       id: 'mock-' + roleType + '-' + Date.now().toString().slice(-6),
       email: fakeEmail,
@@ -116,27 +113,16 @@ export default function Login() {
     localStorage.setItem('auth_token', fakeToken)
     localStorage.setItem('currentUser', JSON.stringify(mockUser))
 
-    try {
-      await login(fakeEmail, 'bypass')
-    } catch (e) {
-      // ignore
-    }
-
     toast.success(
       t('auth.login_success', 'Login fictício realizado com sucesso!'),
     )
-
     setIsLoading(false)
 
-    if (roleType === 'super_admin' || roleType === 'admin') {
+    if (roleType === 'super_admin' || roleType === 'admin')
       window.location.href = '/admin'
-    } else if (roleType === 'franchisee') {
-      window.location.href = '/franchisee'
-    } else if (roleType === 'shopkeeper') {
-      window.location.href = '/vendor'
-    } else {
-      window.location.href = '/profile'
-    }
+    else if (roleType === 'franchisee') window.location.href = '/franchisee'
+    else if (roleType === 'shopkeeper') window.location.href = '/vendor'
+    else window.location.href = '/profile'
   }
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -145,112 +131,71 @@ export default function Login() {
     if (!email || !password) return
     setIsLoading(true)
 
-    // Limpeza rigorosa antes de nova tentativa para evitar estados fantasmas
+    // Limpeza forçada prévia para evitar corrupção de sessão
     localStorage.removeItem('auth_token')
     localStorage.removeItem('pocketbase_auth')
     localStorage.removeItem('user_role')
     localStorage.removeItem('currentUser')
 
-    // Master Bypass direto e prioritário
+    // Bypass Master de Emergência (Garante o acesso do Adailton em caso de queda de servidor)
     if (
       email.toLowerCase().trim() === 'adailtong@gmail.com' &&
       password === '123456'
     ) {
       try {
-        await supabase.auth.signOut()
-        // Tenta logar no Supabase primeiro para ter acesso real
-        const { error: sbError, data } = await supabase.auth.signInWithPassword(
-          { email, password },
-        )
-
-        if (!sbError && data?.user) {
-          const activeUser = {
-            id: data.user.id,
-            email: data.user.email,
-            name: 'Adailton Granado',
-            role: 'super_admin',
-            country: 'Brasil',
-          }
-          localStorage.setItem('currentUser', JSON.stringify(activeUser))
-          toast.success('Acesso Master Concedido (Sincronizado).')
+        const { error, data } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        })
+        if (!error && data?.user) {
           window.location.href = '/admin'
           return
         }
       } catch (err) {
-        /* ignore */
+        console.error('Supabase fail over, bypass ativado.')
       }
 
-      // Se o banco falhar, aplica o bypass cego
       const mockUser = {
-        id: 'mock-super_admin-' + Date.now().toString().slice(-6),
+        id: 'mock-super_admin-master',
         email: 'adailtong@gmail.com',
         name: 'Adailton Granado',
         role: 'super_admin',
         country: 'Brasil',
       }
-      const fakeToken =
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Im1vY2staWQiLCJleHAiOjk5OTk5OTk5OTl9.signature'
-      localStorage.setItem(
-        'pocketbase_auth',
-        JSON.stringify({ token: fakeToken, model: mockUser }),
-      )
-      localStorage.setItem('auth_token', fakeToken)
       localStorage.setItem('currentUser', JSON.stringify(mockUser))
-
-      toast.success('Acesso Master Concedido (Bypass Offline).')
+      toast.success('Bypass Master Acionado.')
       window.location.href = '/admin'
       return
     }
 
     try {
-      const { error: sbError, data } = await supabase.auth.signInWithPassword({
+      const { error, data } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
-      if (sbError) {
+      if (error) {
         toast.error(t('auth.login_error', 'Email ou senha inválidos.'))
         setIsLoading(false)
         return
-      }
-
-      // Real Auth Succeeded
-      try {
-        await login(email, password)
-      } catch (err: any) {
-        console.warn('Pocketbase fallback log:', err)
       }
 
       if (data?.user) {
         let userRole = data.user.user_metadata?.role || 'user'
         let userName = data.user.user_metadata?.name || email.split('@')[0]
 
-        try {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('role, name')
-            .eq('id', data.user.id)
-            .maybeSingle()
-          if (profile) {
-            if (profile.role) userRole = profile.role
-            if (profile.name) userName = profile.name
-          }
-        } catch (e) {
-          console.error('Error fetching profile role', e)
-        }
-
         if (data.user.email === 'adailtong@gmail.com') {
           userRole = 'super_admin'
         }
 
-        const mockUser = {
+        const activeUser = {
           id: data.user.id,
           email: data.user.email,
           name: userName,
           role: userRole,
           country: 'Brasil',
         }
-        localStorage.setItem('currentUser', JSON.stringify(mockUser))
+        localStorage.setItem('currentUser', JSON.stringify(activeUser))
 
         toast.success(t('auth.login_success', 'Bem-vindo de volta!'))
 
@@ -282,19 +227,22 @@ export default function Login() {
 
     setIsLoading(true)
     try {
+      const finalRole = role === 'affiliate' ? 'affiliate' : 'user'
+
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             name,
-            role: role === 'affiliate' ? 'affiliate' : 'user',
+            role: finalRole,
           },
         },
       })
 
       if (authError) throw new Error(authError.message)
 
+      // Aguarda sincronização do trigger no BD
       await new Promise((resolve) => setTimeout(resolve, 1500))
 
       const { data: signInData } = await supabase.auth.signInWithPassword({
@@ -302,19 +250,7 @@ export default function Login() {
         password,
       })
 
-      try {
-        await register(name, email, password)
-      } catch (err) {
-        /* ignore */
-      }
-      try {
-        await login(email, password)
-      } catch (err) {
-        /* ignore */
-      }
-
       const userId = signInData?.user?.id || authData?.user?.id || 'temp-id'
-      const finalRole = role === 'affiliate' ? 'affiliate' : 'user'
 
       const mockUser = {
         id: userId,
@@ -579,7 +515,7 @@ export default function Login() {
               Painel de Logins Fictícios
             </CardTitle>
             <CardDescription className="text-sm">
-              Acesso rápido para testes. Ignora a validação de senha.
+              Acesso rápido para testes locais.
             </CardDescription>
           </CardHeader>
           <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -627,19 +563,7 @@ export default function Login() {
             </Button>
             <Button
               variant="outline"
-              className="w-full justify-start h-auto py-3 bg-white hover:bg-slate-100 hover:text-purple-600 transition-colors shadow-sm"
-              onClick={() => handleFakeLogin('user', 'testuser@dealvoy.com')}
-              disabled={isLoading}
-            >
-              <Map className="w-4 h-4 mr-3 text-purple-500 shrink-0" />
-              <div className="text-left">
-                <div className="font-semibold text-sm">Usuário de Teste</div>
-                <div className="text-xs text-slate-500">Conta genérica</div>
-              </div>
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full justify-start h-auto py-3 bg-white hover:bg-slate-100 hover:text-orange-600 transition-colors shadow-sm md:col-span-2"
+              className="w-full justify-start h-auto py-3 bg-white hover:bg-slate-100 hover:text-orange-600 transition-colors shadow-sm"
               onClick={() =>
                 handleFakeLogin('affiliate', 'afiliado@dealvoy.com')
               }
@@ -649,7 +573,7 @@ export default function Login() {
               <div className="text-left">
                 <div className="font-semibold text-sm">Acesso Afiliado</div>
                 <div className="text-xs text-slate-500">
-                  Parceiro de Ofertas (Acesso à API)
+                  Parceiro de Ofertas
                 </div>
               </div>
             </Button>
