@@ -209,7 +209,9 @@ function RootHandler() {
   try {
     const localUserStr = localStorage.getItem('currentUser')
     if (localUserStr) localUser = JSON.parse(localUserStr)
-  } catch (e) {}
+  } catch (e) {
+    // ignorar erros de conversão silenciados
+  }
 
   const isMockUser = localUser?.id?.toString().startsWith('mock-')
 
