@@ -165,9 +165,15 @@ export default function Login() {
           window.location.href = '/admin'
           return
         }
+        if (error) {
+          console.warn(
+            'Erro no login oficial do Master, ativando bypass de emergência:',
+            error.message,
+          )
+        }
       } catch (err: any) {
-        console.error(
-          'Supabase fail over, bypass ativado. Detalhes:',
+        console.warn(
+          'Falha severa de rede/Supabase, ativando bypass de emergência:',
           err.message,
         )
       }
@@ -227,7 +233,10 @@ export default function Login() {
         setIsLoading(false)
       }
     } catch (err: any) {
-      toast.error('Ocorreu um erro inesperado ao fazer login.')
+      console.error('Erro detalhado no login:', err.message)
+      toast.error(
+        'Ocorreu um erro inesperado ao fazer login. Detalhes no console.',
+      )
       setIsLoading(false)
     }
   }

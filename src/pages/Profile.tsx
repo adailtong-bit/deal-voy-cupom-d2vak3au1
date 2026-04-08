@@ -79,7 +79,11 @@ export default function Profile() {
         .select('*')
         .eq('email', user.email)
         .single()
-        .then(({ data }) => {
+        .then(({ data, error }) => {
+          if (error) {
+            console.warn('Falha ao carregar dados de afiliado:', error.message)
+            return
+          }
           if (data) {
             setAffiliateData(data)
             if (data.api_keys) {
@@ -92,6 +96,9 @@ export default function Profile() {
             }
           }
         })
+        .catch((e) =>
+          console.warn('Erro de rede na busca de afiliado:', e.message),
+        )
     }
   }, [user?.email])
 

@@ -25,44 +25,48 @@ import TravelPage from '@/pages/TravelPage'
 import Explore from '@/pages/Explore'
 import Profile from '@/pages/Profile'
 import Login from '@/pages/Login'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { UserRole } from '@/lib/types'
 import { AuthProvider, useAuth } from '@/hooks/use-auth'
-import { supabase } from '@/lib/supabase/client'
 
-// Hard Reset para eliminar sessões zumbis
-function AuthStateSync() {
+// RootGuard: Roteamento Auth-First estrito. Purga cache de usuários desconectados.
+function RootGuard({ children }: { children: React.ReactNode }) {
   const { user: sbUser, loading } = useAuth()
   const location = useLocation()
 
   useEffect(() => {
-    if (loading) return
+    if (!loading && !sbUser) {
+      let localUser = null
+      try {
+        const localUserStr = localStorage.getItem('currentUser')
+        if (localUserStr) localUser = JSON.parse(localUserStr)
+      } catch (e) {
+        // Ignora erro de parse silenciosamente para evitar poluição no console
+      }
 
-    let localUser = null
-    try {
-      const localUserStr = localStorage.getItem('currentUser')
-      if (localUserStr) localUser = JSON.parse(localUserStr)
-    } catch (e: any) {
-      console.error('AuthStateSync: Erro ao analisar cache local:', e.message)
+      const isMockUser = localUser?.id?.toString().startsWith('mock-')
+
+      // Hard clear se não houver mock e não houver usuário real logado
+      if (!isMockUser) {
+        localStorage.removeItem('auth_token')
+        localStorage.removeItem('pocketbase_auth')
+        localStorage.removeItem('user_role')
+        localStorage.removeItem('currentUser')
+        sessionStorage.clear()
+      }
     }
+  }, [loading, sbUser, location.pathname])
 
-    const isMockUser = localUser?.id?.toString().startsWith('mock-')
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-slate-50/50">
+        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mb-4"></div>
+        <p className="text-slate-500 font-medium">Validando sessão...</p>
+      </div>
+    )
+  }
 
-    // Se não há usuário real, nem um mock ativo, garante a aniquilação completa do cache
-    if (!sbUser && !isMockUser && localUser) {
-      localStorage.clear()
-      sessionStorage.clear()
-    }
-
-    // Auto-correção de Rota Presa: Se tentar acessar profile sem token real/mock, força reload pro login
-    if (!sbUser && !isMockUser && location.pathname === '/profile') {
-      localStorage.clear()
-      sessionStorage.clear()
-      window.location.href = '/login'
-    }
-  }, [sbUser, loading, location.pathname])
-
-  return null
+  return <>{children}</>
 }
 
 function PageTitleSync() {
@@ -141,7 +145,7 @@ function GlobalLanguageSync() {
   return null
 }
 
-// Router Guard Definitivo: Não cai em loop com falsos perfis
+// Router Guard Refatorado: Não busca perfis no Supabase (evita RLS e travamentos), força redirecionamento seguro
 function RequireAuth({
   children,
   roles,
@@ -149,150 +153,63 @@ function RequireAuth({
   children: React.ReactNode
   roles?: UserRole[]
 }) {
-  const { user: sbUser, loading } = useAuth()
-  const [profileRole, setProfileRole] = useState<string | null>(null)
-  const [isFetchingRole, setIsFetchingRole] = useState(false)
-
-  useEffect(() => {
-    let isMounted = true
-    if (sbUser && sbUser.email !== 'adailtong@gmail.com') {
-      setIsFetchingRole(true)
-      supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', sbUser.id)
-        .maybeSingle()
-        .then(({ data }) => {
-          if (isMounted) {
-            if (data?.role) setProfileRole(data.role)
-            setIsFetchingRole(false)
-          }
-        })
-        .catch((e) => {
-          console.error('RequireAuth: Falha ao buscar role', e.message)
-          if (isMounted) setIsFetchingRole(false)
-        })
-    } else {
-      setProfileRole(null)
-    }
-    return () => {
-      isMounted = false
-    }
-  }, [sbUser])
-
-  if (loading || isFetchingRole) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4 text-slate-500">
-        Validando credenciais...
-      </div>
-    )
-  }
+  const { user: sbUser } = useAuth()
 
   let localUser = null
   try {
     const localUserStr = localStorage.getItem('currentUser')
     if (localUserStr) localUser = JSON.parse(localUserStr)
-  } catch (e: any) {
-    console.error('RequireAuth: Erro de parse no currentUser:', e.message)
+  } catch (e) {
+    // ignorar erros de conversão silenciados
   }
 
   const isMockUser = localUser?.id?.toString().startsWith('mock-')
 
-  // Hard Reset: Se tentar acessar rota restrita sem login válido, DESTRÓI estados zumbis
+  // Redirecionamento brutal se não houver usuário. Previne o sistema de ficar preso em rotas protegidas
   if (!sbUser && !isMockUser) {
-    localStorage.removeItem('auth_token')
-    localStorage.removeItem('pocketbase_auth')
-    localStorage.removeItem('user_role')
-    localStorage.removeItem('currentUser')
-    sessionStorage.clear()
-
-    // Impede loop com state.from, limpa o histórico e redireciona cru para o login
     return <Navigate to="/login" replace />
   }
 
-  let activeUser = null
+  let activeRole = 'user'
+  let isAdailton = false
+
   if (isMockUser && localUser) {
-    activeUser = localUser
+    activeRole = localUser.role
+    isAdailton = localUser.email === 'adailtong@gmail.com'
   } else if (sbUser) {
-    let resolvedRole =
-      profileRole || sbUser.user_metadata?.role || localUser?.role || 'user'
-    if (sbUser.email === 'adailtong@gmail.com') {
-      resolvedRole = 'super_admin'
-    }
-    activeUser = {
-      id: sbUser.id,
-      role: resolvedRole as UserRole,
-      email: sbUser.email,
+    isAdailton = sbUser.email === 'adailtong@gmail.com'
+    if (isAdailton) {
+      activeRole = 'super_admin'
+    } else {
+      activeRole = localUser?.role || sbUser.user_metadata?.role || 'user'
     }
   }
 
-  if (!activeUser) {
-    return <Navigate to="/login" replace />
-  }
-
-  // Master Bypass Total
-  if (
-    activeUser.role === 'super_admin' ||
-    activeUser.role === 'admin' ||
-    activeUser.email === 'adailtong@gmail.com'
-  ) {
+  // Master Bypass Total - Adailton e super admins passam direto
+  if (isAdailton || activeRole === 'super_admin' || activeRole === 'admin') {
     return <>{children}</>
   }
 
   // Controle de acesso baseado em roles
-  if (roles && roles.length > 0 && !roles.includes(activeUser.role as any)) {
-    if (activeUser.role === 'franchisee')
+  if (roles && roles.length > 0 && !roles.includes(activeRole as any)) {
+    if (activeRole === 'franchisee')
       return <Navigate to="/franchisee" replace />
-    if (activeUser.role === 'shopkeeper')
-      return <Navigate to="/vendor" replace />
-    if (activeUser.role === 'affiliate')
-      return <Navigate to="/profile" replace />
+    if (activeRole === 'shopkeeper') return <Navigate to="/vendor" replace />
     return <Navigate to="/" replace />
   }
 
   return <>{children}</>
 }
 
-// Direcionamento da rota Raiz (/) baseado no perfil para evitar Home vazia para admins
+// Direcionamento da rota Raiz (/) baseado no perfil para evitar rotas vazias
 function RootHandler() {
-  const { user: sbUser, loading } = useAuth()
-  const [profileRole, setProfileRole] = useState<string | null>(null)
-
-  useEffect(() => {
-    let isMounted = true
-    if (sbUser && sbUser.email !== 'adailtong@gmail.com') {
-      supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', sbUser.id)
-        .maybeSingle()
-        .then(({ data }) => {
-          if (isMounted && data?.role) setProfileRole(data.role)
-        })
-        .catch((e) =>
-          console.error('RootHandler: Erro ao buscar perfil', e.message),
-        )
-    }
-    return () => {
-      isMounted = false
-    }
-  }, [sbUser])
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4 text-slate-500 bg-slate-50/50">
-        Iniciando...
-      </div>
-    )
-  }
+  const { user: sbUser } = useAuth()
 
   let localUser = null
   try {
     const localUserStr = localStorage.getItem('currentUser')
     if (localUserStr) localUser = JSON.parse(localUserStr)
-  } catch (e: any) {
-    console.error('RootHandler: Falha no parse do usuário local:', e.message)
-  }
+  } catch (e) {}
 
   const isMockUser = localUser?.id?.toString().startsWith('mock-')
 
@@ -311,8 +228,7 @@ function RootHandler() {
     if (isAdailton) {
       activeRole = 'super_admin'
     } else {
-      activeRole =
-        profileRole || sbUser.user_metadata?.role || localUser?.role || 'user'
+      activeRole = localUser?.role || sbUser.user_metadata?.role || 'user'
     }
   }
 
@@ -320,7 +236,6 @@ function RootHandler() {
     return <Navigate to="/admin" replace />
   if (activeRole === 'franchisee') return <Navigate to="/franchisee" replace />
   if (activeRole === 'shopkeeper') return <Navigate to="/vendor" replace />
-  if (activeRole === 'affiliate') return <Navigate to="/profile" replace />
 
   return <Index />
 }
@@ -332,102 +247,103 @@ export default function App() {
         <NotificationProvider>
           <CouponProvider>
             <BrowserRouter>
-              <AuthStateSync />
-              <GlobalLanguageSync />
-              <PageTitleSync />
-              <Routes>
-                <Route element={<Layout />}>
-                  <Route path="/" element={<RootHandler />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/explore" element={<Explore />} />
-                  <Route
-                    path="/vouchers"
-                    element={
-                      <RequireAuth>
-                        <MyVouchers />
-                      </RequireAuth>
-                    }
-                  />
-                  <Route
-                    path="/vendor"
-                    element={
-                      <RequireAuth roles={['shopkeeper']}>
-                        <VendorDashboard />
-                      </RequireAuth>
-                    }
-                  />
-                  <Route
-                    path="/merchant"
-                    element={
-                      <RequireAuth roles={['shopkeeper']}>
-                        <MerchantLayout />
-                      </RequireAuth>
-                    }
-                  >
-                    <Route path="scanner" element={<MerchantScanner />} />
-                    <Route path="campaigns" element={<MerchantCampaigns />} />
-                    <Route path="leads" element={<MerchantLeads />} />
+              <RootGuard>
+                <GlobalLanguageSync />
+                <PageTitleSync />
+                <Routes>
+                  <Route element={<Layout />}>
+                    <Route path="/" element={<RootHandler />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/explore" element={<Explore />} />
+                    <Route
+                      path="/vouchers"
+                      element={
+                        <RequireAuth>
+                          <MyVouchers />
+                        </RequireAuth>
+                      }
+                    />
+                    <Route
+                      path="/vendor"
+                      element={
+                        <RequireAuth roles={['shopkeeper']}>
+                          <VendorDashboard />
+                        </RequireAuth>
+                      }
+                    />
+                    <Route
+                      path="/merchant"
+                      element={
+                        <RequireAuth roles={['shopkeeper']}>
+                          <MerchantLayout />
+                        </RequireAuth>
+                      }
+                    >
+                      <Route path="scanner" element={<MerchantScanner />} />
+                      <Route path="campaigns" element={<MerchantCampaigns />} />
+                      <Route path="leads" element={<MerchantLeads />} />
+                    </Route>
+                    <Route
+                      path="/admin/*"
+                      element={
+                        <RequireAuth roles={['super_admin', 'admin'] as any}>
+                          <AdminDashboard />
+                        </RequireAuth>
+                      }
+                    />
+                    <Route
+                      path="/franchisee"
+                      element={
+                        <RequireAuth roles={['franchisee']}>
+                          <FranchiseeDashboard />
+                        </RequireAuth>
+                      }
+                    />
+                    <Route
+                      path="/profile"
+                      element={
+                        <RequireAuth>
+                          <Profile />
+                        </RequireAuth>
+                      }
+                    />
+                    <Route path="/seasonal" element={<Seasonal />} />
+                    <Route
+                      path="/travel"
+                      element={
+                        <RequireAuth>
+                          <TravelPage />
+                        </RequireAuth>
+                      }
+                    />
+                    <Route
+                      path="/travel/new"
+                      element={
+                        <RequireAuth>
+                          <TravelPage />
+                        </RequireAuth>
+                      }
+                    />
+                    <Route
+                      path="/travel/:id"
+                      element={
+                        <RequireAuth>
+                          <TravelPage />
+                        </RequireAuth>
+                      }
+                    />
+                    <Route
+                      path="/voucher/:id"
+                      element={
+                        <RequireAuth>
+                          <Voucher />
+                        </RequireAuth>
+                      }
+                    />
+                    <Route path="*" element={<Navigate to="/" replace />} />
                   </Route>
-                  <Route
-                    path="/admin/*"
-                    element={
-                      <RequireAuth roles={['super_admin', 'admin'] as any}>
-                        <AdminDashboard />
-                      </RequireAuth>
-                    }
-                  />
-                  <Route
-                    path="/franchisee"
-                    element={
-                      <RequireAuth roles={['franchisee']}>
-                        <FranchiseeDashboard />
-                      </RequireAuth>
-                    }
-                  />
-                  <Route
-                    path="/profile"
-                    element={
-                      <RequireAuth>
-                        <Profile />
-                      </RequireAuth>
-                    }
-                  />
-                  <Route path="/seasonal" element={<Seasonal />} />
-                  <Route
-                    path="/travel"
-                    element={
-                      <RequireAuth>
-                        <TravelPage />
-                      </RequireAuth>
-                    }
-                  />
-                  <Route
-                    path="/travel/new"
-                    element={
-                      <RequireAuth>
-                        <TravelPage />
-                      </RequireAuth>
-                    }
-                  />
-                  <Route
-                    path="/travel/:id"
-                    element={
-                      <RequireAuth>
-                        <TravelPage />
-                      </RequireAuth>
-                    }
-                  />
-                  <Route
-                    path="/voucher/:id"
-                    element={
-                      <RequireAuth>
-                        <Voucher />
-                      </RequireAuth>
-                    }
-                  />
-                  <Route path="*" element={<Navigate to="/" replace />} />
-                </Route>
-              </Routes>
+                </Routes>
+              </RootGuard>
             </BrowserRouter>
             <Toaster />
           </CouponProvider>
