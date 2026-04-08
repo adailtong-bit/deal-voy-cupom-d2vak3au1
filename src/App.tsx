@@ -4,7 +4,6 @@ import {
   Route,
   Navigate,
   useLocation,
-  useNavigate,
 } from 'react-router-dom'
 import { LanguageProvider, useLanguage } from '@/stores/LanguageContext'
 import { NotificationProvider } from '@/stores/NotificationContext'
@@ -27,64 +26,120 @@ import Explore from '@/pages/Explore'
 import Profile from '@/pages/Profile'
 import Login from '@/pages/Login'
 import { useEffect } from 'react'
+import { UserRole } from '@/lib/types'
 import { AuthProvider, useAuth } from '@/hooks/use-auth'
 
-// RootGuard: Roteamento Auth-First estrito. Purga cache de usuários desconectados instantaneamente.
-function RootGuard({ children }: { children: React.ReactNode }) {
+function RequireAuth({
+  children,
+  roles,
+}: {
+  children: React.ReactNode
+  roles?: UserRole[]
+}) {
+  const { user: storeUser } = useCouponStore()
   const { user: sbUser, loading } = useAuth()
   const location = useLocation()
-  const navigate = useNavigate()
 
-  useEffect(() => {
-    if (!loading && !sbUser) {
-      let isMockUser = false
-      try {
-        const localUserStr = localStorage.getItem('currentUser')
-        if (localUserStr) {
-          const localUser = JSON.parse(localUserStr)
-          isMockUser = Boolean(localUser?.id?.toString().startsWith('mock-'))
-        }
-      } catch (e) {
-        console.warn(
-          'RootGuard: Limpeza preventiva por erro de parse local.',
-          e,
-        )
-      }
+  // Admin Session Stability: Prevent unmounting if a background crawl is active
+  const isCrawling = sessionStorage.getItem('crawler_isScanning') === 'true'
+  const isAdminPath = location.pathname.startsWith('/admin')
 
-      // Limpeza segura se não houver mock e não houver usuário real logado
-      if (!isMockUser) {
-        localStorage.removeItem('currentUser')
-        localStorage.removeItem('pocketbase_auth')
-        localStorage.removeItem('auth_token')
-        sessionStorage.clear()
+  // Always allow admin path if crawling to prevent interruptions
+  if (isCrawling && isAdminPath) {
+    return <>{children}</>
+  }
 
-        // Invalidação de Cache de Roteamento: Redirecionamento forçado
-        if (
-          location.pathname === '/' ||
-          location.pathname.startsWith('/profile') ||
-          location.pathname.startsWith('/admin') ||
-          location.pathname.startsWith('/vendor') ||
-          location.pathname.startsWith('/franchisee') ||
-          location.pathname.startsWith('/vouchers')
-        ) {
-          if (location.pathname !== '/login') {
-            navigate('/login', { replace: true })
-          }
-        }
-      }
-    }
-  }, [loading, sbUser, location.pathname, navigate])
+  let localUser = null
+  try {
+    const localUserStr = localStorage.getItem('currentUser')
+    if (localUserStr) localUser = JSON.parse(localUserStr)
+  } catch (e) {
+    // ignore
+  }
+  const isMockUser = localUser?.id?.toString().startsWith('mock-')
 
-  if (loading) {
+  if (loading && !isMockUser) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-slate-50/50">
-        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mb-4"></div>
-        <p className="text-slate-500 font-medium">Validando sessão segura...</p>
+      <div className="min-h-screen flex items-center justify-center p-4 text-slate-500">
+        Carregando permissões de acesso...
       </div>
     )
   }
 
+  // Unified auth state - priority to Supabase, but allow Mock users to bypass properly
+  let activeUser = null
+
+  if (isMockUser && localUser) {
+    activeUser = localUser
+  } else if (sbUser) {
+    activeUser = {
+      id: sbUser.id,
+      role: (sbUser.user_metadata?.role || 'user') as UserRole,
+      email: sbUser.email,
+      country: 'Brasil',
+    }
+  }
+
+  if (!activeUser) {
+    // Limpar storage se chegou aqui achando que estava logado
+    if (localUser && !isMockUser) {
+      localStorage.removeItem('currentUser')
+      localStorage.removeItem('auth_token')
+      localStorage.removeItem('pocketbase_auth')
+    }
+    return <Navigate to="/login" state={{ from: location }} replace />
+  }
+
+  if (roles && roles.length > 0 && !roles.includes(activeUser.role as any)) {
+    // Router Guard: Redirect to appropriate dashboard based on actual role
+    if (activeUser.role === 'super_admin' || activeUser.role === 'admin') {
+      return <Navigate to="/admin" replace />
+    }
+    if (activeUser.role === 'franchisee') {
+      return <Navigate to="/franchisee" replace />
+    }
+    if (activeUser.role === 'shopkeeper') {
+      return <Navigate to="/vendor" replace />
+    }
+    if (activeUser.role === 'affiliate') {
+      return <Navigate to="/profile" replace />
+    }
+    return <Navigate to="/" replace />
+  }
+
   return <>{children}</>
+}
+
+function AuthStateSync() {
+  const { user: storeUser } = useCouponStore()
+  const { user: sbUser, loading } = useAuth()
+
+  useEffect(() => {
+    if (loading) return
+
+    let isMockUser = false
+    try {
+      const localUserStr = localStorage.getItem('currentUser')
+      if (localUserStr) {
+        const localUser = JSON.parse(localUserStr)
+        isMockUser = localUser?.id?.toString().startsWith('mock-')
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    // Se o usuário não está autenticado no Supabase e não é um mock, força a limpeza
+    if (!sbUser && !isMockUser) {
+      // Purge authentication tokens and role-related data upon logout
+      localStorage.removeItem('auth_token')
+      localStorage.removeItem('pocketbase_auth')
+      localStorage.removeItem('user_role')
+      localStorage.removeItem('currentUser')
+      sessionStorage.clear()
+    }
+  }, [sbUser, loading])
+
+  return null
 }
 
 function PageTitleSync() {
@@ -137,7 +192,11 @@ function GlobalLanguageSync() {
 
     if (countryToUse) {
       const countryLower = countryToUse.toLowerCase()
-      if (['brasil', 'brazil', 'br'].includes(countryLower)) {
+      if (
+        countryLower === 'brasil' ||
+        countryLower === 'brazil' ||
+        countryLower === 'br'
+      ) {
         setLanguage('pt')
       } else if (
         [
@@ -163,116 +222,6 @@ function GlobalLanguageSync() {
   return null
 }
 
-function RootHandler({
-  activeRole,
-  isAdailton,
-}: {
-  activeRole: string
-  isAdailton: boolean
-}) {
-  if (isAdailton || activeRole === 'super_admin' || activeRole === 'admin')
-    return <Navigate to="/admin" replace />
-  if (activeRole === 'franchisee') return <Navigate to="/franchisee" replace />
-  if (activeRole === 'shopkeeper') return <Navigate to="/vendor" replace />
-
-  return <Index />
-}
-
-// AppRoutes reconstrói o roteador para que as rotas protegidas
-// sequer existam na árvore caso não haja sessão válida.
-function AppRoutes() {
-  const { user: sbUser } = useAuth()
-
-  let localUser = null
-  try {
-    const localUserStr = localStorage.getItem('currentUser')
-    if (localUserStr) {
-      localUser = JSON.parse(localUserStr)
-    }
-  } catch (e) {
-    // ignore
-  }
-
-  const isMockUser = Boolean(localUser?.id?.toString().startsWith('mock-'))
-  const isAuthenticated = !!sbUser || isMockUser
-
-  let activeRole = 'user'
-  let isAdailton = false
-
-  if (isMockUser && localUser) {
-    activeRole = localUser.role
-    isAdailton = localUser.email === 'adailtong@gmail.com'
-  } else if (sbUser) {
-    isAdailton = sbUser.email === 'adailtong@gmail.com'
-    if (isAdailton) {
-      activeRole = 'super_admin'
-    } else {
-      activeRole = localUser?.role || sbUser.user_metadata?.role || 'user'
-    }
-  }
-
-  const isAdmin =
-    isAdailton || activeRole === 'super_admin' || activeRole === 'admin'
-  const isShopkeeper = isAdmin || activeRole === 'shopkeeper'
-  const isFranchisee = isAdmin || activeRole === 'franchisee'
-
-  if (!isAuthenticated) {
-    return (
-      <Routes>
-        <Route element={<Layout />}>
-          <Route path="/" element={<Navigate to="/login" replace />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/explore" element={<Explore />} />
-          <Route path="/seasonal" element={<Seasonal />} />
-          {/* Fallback interceptando qualquer rota de perfil/admin vazada e jogando para o login estritamente */}
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Route>
-      </Routes>
-    )
-  }
-
-  return (
-    <Routes>
-      <Route element={<Layout />}>
-        <Route
-          path="/"
-          element={
-            <RootHandler activeRole={activeRole} isAdailton={isAdailton} />
-          }
-        />
-        <Route path="/login" element={<Navigate to="/" replace />} />
-        <Route path="/explore" element={<Explore />} />
-        <Route path="/seasonal" element={<Seasonal />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/vouchers" element={<MyVouchers />} />
-        <Route path="/voucher/:id" element={<Voucher />} />
-        <Route path="/travel" element={<TravelPage />} />
-        <Route path="/travel/new" element={<TravelPage />} />
-        <Route path="/travel/:id" element={<TravelPage />} />
-
-        {isShopkeeper && (
-          <>
-            <Route path="/vendor" element={<VendorDashboard />} />
-            <Route path="/merchant" element={<MerchantLayout />}>
-              <Route path="scanner" element={<MerchantScanner />} />
-              <Route path="campaigns" element={<MerchantCampaigns />} />
-              <Route path="leads" element={<MerchantLeads />} />
-            </Route>
-          </>
-        )}
-
-        {isAdmin && <Route path="/admin/*" element={<AdminDashboard />} />}
-
-        {isFranchisee && (
-          <Route path="/franchisee" element={<FranchiseeDashboard />} />
-        )}
-
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Route>
-    </Routes>
-  )
-}
-
 export default function App() {
   return (
     <AuthProvider>
@@ -280,11 +229,102 @@ export default function App() {
         <NotificationProvider>
           <CouponProvider>
             <BrowserRouter>
-              <RootGuard>
-                <GlobalLanguageSync />
-                <PageTitleSync />
-                <AppRoutes />
-              </RootGuard>
+              <AuthStateSync />
+              <GlobalLanguageSync />
+              <PageTitleSync />
+              <Routes>
+                <Route element={<Layout />}>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/explore" element={<Explore />} />
+                  <Route
+                    path="/vouchers"
+                    element={
+                      <RequireAuth>
+                        <MyVouchers />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route
+                    path="/vendor"
+                    element={
+                      <RequireAuth roles={['shopkeeper']}>
+                        <VendorDashboard />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route
+                    path="/merchant"
+                    element={
+                      <RequireAuth roles={['shopkeeper']}>
+                        <MerchantLayout />
+                      </RequireAuth>
+                    }
+                  >
+                    <Route path="scanner" element={<MerchantScanner />} />
+                    <Route path="campaigns" element={<MerchantCampaigns />} />
+                    <Route path="leads" element={<MerchantLeads />} />
+                  </Route>
+                  <Route
+                    path="/admin/*"
+                    element={
+                      <RequireAuth roles={['super_admin', 'admin'] as any}>
+                        <AdminDashboard />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route
+                    path="/franchisee"
+                    element={
+                      <RequireAuth roles={['franchisee']}>
+                        <FranchiseeDashboard />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route
+                    path="/profile"
+                    element={
+                      <RequireAuth>
+                        <Profile />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route path="/seasonal" element={<Seasonal />} />
+                  <Route
+                    path="/travel"
+                    element={
+                      <RequireAuth>
+                        <TravelPage />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route
+                    path="/travel/new"
+                    element={
+                      <RequireAuth>
+                        <TravelPage />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route
+                    path="/travel/:id"
+                    element={
+                      <RequireAuth>
+                        <TravelPage />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route
+                    path="/voucher/:id"
+                    element={
+                      <RequireAuth>
+                        <Voucher />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Route>
+              </Routes>
             </BrowserRouter>
             <Toaster />
           </CouponProvider>

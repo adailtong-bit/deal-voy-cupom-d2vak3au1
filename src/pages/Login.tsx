@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useAuth } from '@/hooks/use-auth'
 import {
@@ -42,78 +43,64 @@ export default function Login() {
   const [showRegConfirmPassword, setShowRegConfirmPassword] = useState(false)
   const [role, setRole] = useState('user')
 
+  const { login, register, user: storeUser } = useCouponStore()
   const { user: sbUser, loading: authLoading } = useAuth()
   const { t } = useLanguage()
   const navigate = useNavigate()
   const location = useLocation()
 
-  // Redirecionamento blindado pós-login
+  let localUser = null
+  let isMockUser = false
+  try {
+    const localUserStr = localStorage.getItem('currentUser')
+    if (localUserStr) {
+      localUser = JSON.parse(localUserStr)
+      isMockUser = localUser?.id?.toString().startsWith('mock-')
+    }
+  } catch (e) {
+    // ignore
+  }
+
+  const activeUser = isMockUser
+    ? localUser
+    : sbUser
+      ? { role: sbUser.user_metadata?.role || 'user' }
+      : null
+
+  const fromObj = location.state?.from
+  const from = fromObj
+    ? `${fromObj.pathname}${fromObj.search}${fromObj.hash}`
+    : '/'
+
   useEffect(() => {
     if (authLoading) return
-
-    let localUser = null
-    try {
-      const localUserStr = localStorage.getItem('currentUser')
-      if (localUserStr) {
-        localUser = JSON.parse(localUserStr)
-      }
-    } catch (e: any) {
-      console.error('Falha ao analisar cache de usuário local:', e.message)
-    }
-
-    const isMockUser = Boolean(localUser?.id?.toString().startsWith('mock-'))
-
-    if (sbUser || isMockUser) {
-      let activeRole = 'user'
-      let isAdailton = false
-
-      if (isMockUser && localUser) {
-        activeRole = localUser.role
-        isAdailton = localUser.email === 'adailtong@gmail.com'
-      } else if (sbUser) {
-        isAdailton = sbUser.email === 'adailtong@gmail.com'
-        if (isAdailton) activeRole = 'super_admin'
-        else
-          activeRole = sbUser.user_metadata?.role || localUser?.role || 'user'
-      }
-
-      // Bypass absoluto para Admin, não importa de onde veio
-      if (
-        isAdailton ||
-        activeRole === 'super_admin' ||
-        activeRole === 'admin'
-      ) {
+    if (activeUser) {
+      if (activeUser.role === 'super_admin' || activeUser.role === 'admin') {
         navigate('/admin', { replace: true })
-        return
-      }
-
-      const fromObj = location.state?.from
-      const from = fromObj
-        ? `${fromObj.pathname}${fromObj.search}${fromObj.hash}`
-        : null
-
-      if (from && from !== '/' && from !== '/login') {
-        navigate(from, { replace: true })
+      } else if (activeUser.role === 'franchisee') {
+        navigate('/franchisee', { replace: true })
+      } else if (activeUser.role === 'shopkeeper') {
+        navigate('/vendor', { replace: true })
+      } else if (activeUser.role === 'affiliate') {
+        navigate('/profile', { replace: true })
       } else {
-        if (activeRole === 'franchisee')
-          navigate('/franchisee', { replace: true })
-        else if (activeRole === 'shopkeeper')
-          navigate('/vendor', { replace: true })
-        else navigate('/profile', { replace: true })
+        navigate(from !== '/' ? from : '/profile', { replace: true })
       }
+    } else if (localUser && !isMockUser) {
+      // Clear zombie session data
+      localStorage.removeItem('currentUser')
+      localStorage.removeItem('auth_token')
+      localStorage.removeItem('pocketbase_auth')
     }
-  }, [sbUser, authLoading, navigate, location])
+  }, [activeUser, authLoading, navigate, from, localUser, isMockUser])
 
   const handleFakeLogin = async (roleType: string, fakeEmail: string) => {
     setIsLoading(true)
 
-    // Destrói qualquer sessão persistente real para o mock assumir
+    // Sign out of Supabase to clear any real session that might override the mock session
     await supabase.auth.signOut()
-    localStorage.removeItem('currentUser')
-    localStorage.removeItem('pocketbase_auth')
-    localStorage.removeItem('auth_token')
-    sessionStorage.clear()
 
+    // Bypass Interceptor block
     const mockUser = {
       id: 'mock-' + roleType + '-' + Date.now().toString().slice(-6),
       email: fakeEmail,
@@ -131,125 +118,75 @@ export default function Login() {
     localStorage.setItem('auth_token', fakeToken)
     localStorage.setItem('currentUser', JSON.stringify(mockUser))
 
+    try {
+      await login(fakeEmail, 'bypass')
+    } catch (e) {
+      // ignore
+    }
+
     toast.success(
       t('auth.login_success', 'Login fictício realizado com sucesso!'),
     )
+
     setIsLoading(false)
 
-    if (roleType === 'super_admin' || roleType === 'admin')
+    if (roleType === 'super_admin' || roleType === 'admin') {
       window.location.href = '/admin'
-    else if (roleType === 'franchisee') window.location.href = '/franchisee'
-    else if (roleType === 'shopkeeper') window.location.href = '/vendor'
-    else window.location.href = '/profile'
+    } else if (roleType === 'franchisee') {
+      window.location.href = '/franchisee'
+    } else if (roleType === 'shopkeeper') {
+      window.location.href = '/vendor'
+    } else {
+      window.location.href = '/profile'
+    }
   }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (email && password) {
+      setIsLoading(true)
 
-    if (!email || !password) {
-      toast.error('Por favor, preencha o email e a senha.')
-      return
-    }
-
-    setIsLoading(true)
-
-    // Ao invés de clear agressivo que dispara SIGNED_OUT e recarrega a página atrapalhando o login,
-    // apenas limpamos itens customizados, mantendo o supabase.auth.token intacto durante o processo.
-    localStorage.removeItem('currentUser')
-    localStorage.removeItem('pocketbase_auth')
-    localStorage.removeItem('auth_token')
-    sessionStorage.clear()
-
-    // Bypass Master de Emergência (Garante o acesso do Adailton em caso de queda de servidor)
-    if (
-      email.toLowerCase().trim() === 'adailtong@gmail.com' &&
-      password === '123456'
-    ) {
-      try {
-        const { error, data } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        })
-        if (!error && data?.user) {
-          window.location.href = '/admin'
-          return
-        }
-        if (error) {
-          console.warn(
-            'Erro no login oficial do Master, ativando bypass de emergência:',
-            error.message,
-          )
-        }
-      } catch (err: any) {
-        console.warn(
-          'Falha severa de rede/Supabase, ativando bypass de emergência:',
-          err.message,
-        )
-      }
-
-      const mockUser = {
-        id: 'mock-super_admin-master',
-        email: 'adailtong@gmail.com',
-        name: 'Adailton Granado',
-        role: 'super_admin',
-        country: 'Brasil',
-      }
-      localStorage.setItem('currentUser', JSON.stringify(mockUser))
-      toast.success('Bypass Master Acionado.')
-      window.location.href = '/admin'
-      return
-    }
-
-    try {
-      const { error, data } = await supabase.auth.signInWithPassword({
+      const { error: sbError, data } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
-      if (error) {
+      if (sbError) {
         toast.error(t('auth.login_error', 'Email ou senha inválidos.'))
         setIsLoading(false)
         return
       }
 
+      try {
+        await login(email, password)
+      } catch (err: any) {
+        console.warn('Pocketbase fallback log:', err)
+      }
+
       if (data?.user) {
-        let userRole = data.user.user_metadata?.role || 'user'
-        let userName = data.user.user_metadata?.name || email.split('@')[0]
-
-        if (data.user.email === 'adailtong@gmail.com') {
-          userRole = 'super_admin'
-        }
-
-        const activeUser = {
+        const userRole = data.user.user_metadata?.role || 'user'
+        const mockUser = {
           id: data.user.id,
           email: data.user.email,
-          name: userName,
+          name: data.user.user_metadata?.name || email.split('@')[0],
           role: userRole,
           country: 'Brasil',
         }
-        localStorage.setItem('currentUser', JSON.stringify(activeUser))
-
-        toast.success(t('auth.login_success', 'Bem-vindo de volta!'))
-
-        let dest = '/profile'
-        if (userRole === 'admin' || userRole === 'super_admin') dest = '/admin'
-        else if (userRole === 'franchisee') dest = '/franchisee'
-        else if (userRole === 'shopkeeper') dest = '/vendor'
-        else if (userRole === 'affiliate') dest = '/profile'
-
-        // Garantir que a navegação só ocorra após o storage ser persistido
-        setTimeout(() => {
-          window.location.href = dest
-        }, 100)
-      } else {
-        toast.error('Erro desconhecido. Não foi possível autenticar o usuário.')
-        setIsLoading(false)
+        localStorage.setItem('currentUser', JSON.stringify(mockUser))
       }
-    } catch (err: any) {
-      console.error('Erro detalhado no login:', err.message)
-      toast.error(
-        'Ocorreu um erro inesperado ao fazer login. Detalhes no console.',
-      )
+
+      toast.success(t('auth.login_success', 'Bem-vindo de volta!'))
+
+      const roleToRedirect = data?.user?.user_metadata?.role || 'user'
+      let dest = '/profile'
+      if (roleToRedirect === 'admin' || roleToRedirect === 'super_admin')
+        dest = '/admin'
+      else if (roleToRedirect === 'franchisee') dest = '/franchisee'
+      else if (roleToRedirect === 'shopkeeper') dest = '/vendor'
+      else if (roleToRedirect === 'affiliate') dest = '/profile'
+
+      // Page reload to apply auth context sync naturally
+      window.location.href = dest
       setIsLoading(false)
     }
   }
@@ -262,58 +199,65 @@ export default function Login() {
       return
     }
 
-    if (!email || !password || !name) {
-      toast.error('Por favor, preencha todos os campos obrigatórios.')
-      return
-    }
-
-    setIsLoading(true)
-    try {
-      const finalRole = role === 'affiliate' ? 'affiliate' : 'user'
-
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            name,
-            role: finalRole,
+    if (email && password && name) {
+      setIsLoading(true)
+      try {
+        const { data: authData, error: authError } = await supabase.auth.signUp(
+          {
+            email,
+            password,
+            options: {
+              data: {
+                name,
+                role: role === 'affiliate' ? 'affiliate' : 'user',
+              },
+            },
           },
-        },
-      })
+        )
 
-      if (authError) throw new Error(authError.message)
+        if (authError) {
+          throw new Error(authError.message)
+        }
 
-      // Aguarda sincronização do trigger no BD
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+        // Wait briefly for DB trigger to auto-confirm email and create profile/affiliate partner
+        await new Promise((resolve) => setTimeout(resolve, 1500))
 
-      const { data: signInData } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
+        // Force sign in immediately
+        const { data: signInData } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        })
 
-      const userId = signInData?.user?.id || authData?.user?.id || 'temp-id'
+        try {
+          await register(name, email, password)
+        } catch (err: any) {
+          console.warn('Pocketbase register fallback:', err)
+        }
 
-      const mockUser = {
-        id: userId,
-        email: email,
-        name: name,
-        role: finalRole,
-        country: 'Brasil',
+        try {
+          await login(email, password)
+        } catch (loginErr) {
+          console.warn('Pocketbase login fallback:', loginErr)
+        }
+
+        // Force the local user state to be the newly created user to avoid race conditions
+        const finalRole = role === 'affiliate' ? 'affiliate' : 'user'
+        const mockUser = {
+          id: signInData?.user?.id || authData.user.id,
+          email: email,
+          name: name,
+          role: finalRole,
+          country: 'Brasil',
+        }
+        localStorage.setItem('currentUser', JSON.stringify(mockUser))
+
+        toast.success(t('auth.register_success', 'Conta criada com sucesso!'))
+        window.location.href = finalRole === 'affiliate' ? '/profile' : '/'
+      } catch (err: any) {
+        toast.error(err.message || 'Erro ao criar conta')
+      } finally {
+        setIsLoading(false)
       }
-      localStorage.setItem('currentUser', JSON.stringify(mockUser))
-
-      toast.success(t('auth.register_success', 'Conta criada com sucesso!'))
-
-      let redirectDest = '/'
-      if (finalRole === 'affiliate') redirectDest = '/profile'
-      if (finalRole === 'admin' || finalRole === 'super_admin')
-        redirectDest = '/admin'
-
-      window.location.href = redirectDest
-    } catch (err: any) {
-      toast.error(err.message || 'Erro ao criar conta')
-      setIsLoading(false)
     }
   }
 
@@ -557,7 +501,7 @@ export default function Login() {
               Painel de Logins Fictícios
             </CardTitle>
             <CardDescription className="text-sm">
-              Acesso rápido para testes locais.
+              Acesso rápido para testes. Ignora a validação de senha.
             </CardDescription>
           </CardHeader>
           <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -605,7 +549,19 @@ export default function Login() {
             </Button>
             <Button
               variant="outline"
-              className="w-full justify-start h-auto py-3 bg-white hover:bg-slate-100 hover:text-orange-600 transition-colors shadow-sm"
+              className="w-full justify-start h-auto py-3 bg-white hover:bg-slate-100 hover:text-purple-600 transition-colors shadow-sm"
+              onClick={() => handleFakeLogin('user', 'testuser@dealvoy.com')}
+              disabled={isLoading}
+            >
+              <Map className="w-4 h-4 mr-3 text-purple-500 shrink-0" />
+              <div className="text-left">
+                <div className="font-semibold text-sm">Usuário de Teste</div>
+                <div className="text-xs text-slate-500">Conta genérica</div>
+              </div>
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full justify-start h-auto py-3 bg-white hover:bg-slate-100 hover:text-orange-600 transition-colors shadow-sm md:col-span-2"
               onClick={() =>
                 handleFakeLogin('affiliate', 'afiliado@dealvoy.com')
               }
@@ -615,7 +571,7 @@ export default function Login() {
               <div className="text-left">
                 <div className="font-semibold text-sm">Acesso Afiliado</div>
                 <div className="text-xs text-slate-500">
-                  Parceiro de Ofertas
+                  Parceiro de Ofertas (Acesso à API)
                 </div>
               </div>
             </Button>
