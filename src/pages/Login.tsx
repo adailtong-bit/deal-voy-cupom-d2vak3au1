@@ -47,7 +47,7 @@ export default function Login() {
   const navigate = useNavigate()
   const location = useLocation()
 
-  // Previne loop infinito checando sessão com segurança
+  // Redirecionamento blindado pós-login
   useEffect(() => {
     if (authLoading) return
 
@@ -55,33 +55,45 @@ export default function Login() {
     try {
       const localUserStr = localStorage.getItem('currentUser')
       if (localUserStr) localUser = JSON.parse(localUserStr)
-    } catch (e) {
-      // ignore
+    } catch (e: any) {
+      console.error('Falha ao analisar cache de usuário local:', e.message)
     }
 
     const isMockUser = localUser?.id?.toString().startsWith('mock-')
 
     if (sbUser || isMockUser) {
+      let activeRole = 'user'
+      let isAdailton = false
+
+      if (isMockUser && localUser) {
+        activeRole = localUser.role
+        isAdailton = localUser.email === 'adailtong@gmail.com'
+      } else if (sbUser) {
+        isAdailton = sbUser.email === 'adailtong@gmail.com'
+        if (isAdailton) activeRole = 'super_admin'
+        else
+          activeRole = sbUser.user_metadata?.role || localUser?.role || 'user'
+      }
+
+      // Bypass absoluto para Admin, não importa de onde veio
+      if (
+        isAdailton ||
+        activeRole === 'super_admin' ||
+        activeRole === 'admin'
+      ) {
+        navigate('/admin', { replace: true })
+        return
+      }
+
       const fromObj = location.state?.from
       const from = fromObj
         ? `${fromObj.pathname}${fromObj.search}${fromObj.hash}`
         : null
 
-      let activeRole = 'user'
-      if (isMockUser && localUser) {
-        activeRole = localUser.role
-      } else if (sbUser) {
-        if (sbUser.email === 'adailtong@gmail.com') activeRole = 'super_admin'
-        else
-          activeRole = sbUser.user_metadata?.role || localUser?.role || 'user'
-      }
-
       if (from && from !== '/' && from !== '/login') {
         navigate(from, { replace: true })
       } else {
-        if (activeRole === 'super_admin' || activeRole === 'admin')
-          navigate('/admin', { replace: true })
-        else if (activeRole === 'franchisee')
+        if (activeRole === 'franchisee')
           navigate('/franchisee', { replace: true })
         else if (activeRole === 'shopkeeper')
           navigate('/vendor', { replace: true })
@@ -153,8 +165,11 @@ export default function Login() {
           window.location.href = '/admin'
           return
         }
-      } catch (err) {
-        console.error('Supabase fail over, bypass ativado.')
+      } catch (err: any) {
+        console.error(
+          'Supabase fail over, bypass ativado. Detalhes:',
+          err.message,
+        )
       }
 
       const mockUser = {

@@ -33,6 +33,7 @@ import { supabase } from '@/lib/supabase/client'
 // Hard Reset para eliminar sessões zumbis
 function AuthStateSync() {
   const { user: sbUser, loading } = useAuth()
+  const location = useLocation()
 
   useEffect(() => {
     if (loading) return
@@ -41,21 +42,25 @@ function AuthStateSync() {
     try {
       const localUserStr = localStorage.getItem('currentUser')
       if (localUserStr) localUser = JSON.parse(localUserStr)
-    } catch (e) {
-      // ignore
+    } catch (e: any) {
+      console.error('AuthStateSync: Erro ao analisar cache local:', e.message)
     }
 
     const isMockUser = localUser?.id?.toString().startsWith('mock-')
 
-    // Se o banco não reporta login, e não é um mock explicito, DESTRUA a sessão corrompida.
-    if (!sbUser && localUser && !isMockUser) {
-      localStorage.removeItem('auth_token')
-      localStorage.removeItem('pocketbase_auth')
-      localStorage.removeItem('user_role')
-      localStorage.removeItem('currentUser')
+    // Se não há usuário real, nem um mock ativo, garante a aniquilação completa do cache
+    if (!sbUser && !isMockUser && localUser) {
+      localStorage.clear()
       sessionStorage.clear()
     }
-  }, [sbUser, loading])
+
+    // Auto-correção de Rota Presa: Se tentar acessar profile sem token real/mock, força reload pro login
+    if (!sbUser && !isMockUser && location.pathname === '/profile') {
+      localStorage.clear()
+      sessionStorage.clear()
+      window.location.href = '/login'
+    }
+  }, [sbUser, loading, location.pathname])
 
   return null
 }
@@ -145,14 +150,9 @@ function RequireAuth({
   roles?: UserRole[]
 }) {
   const { user: sbUser, loading } = useAuth()
-  const location = useLocation()
   const [profileRole, setProfileRole] = useState<string | null>(null)
   const [isFetchingRole, setIsFetchingRole] = useState(false)
 
-  const isCrawling = sessionStorage.getItem('crawler_isScanning') === 'true'
-  const isAdminPath = location.pathname.startsWith('/admin')
-
-  // Sincroniza role real do supabase antes de tomar decisões limitantes
   useEffect(() => {
     let isMounted = true
     if (sbUser && sbUser.email !== 'adailtong@gmail.com') {
@@ -163,9 +163,13 @@ function RequireAuth({
         .eq('id', sbUser.id)
         .maybeSingle()
         .then(({ data }) => {
-          if (isMounted && data?.role) {
-            setProfileRole(data.role)
+          if (isMounted) {
+            if (data?.role) setProfileRole(data.role)
+            setIsFetchingRole(false)
           }
+        })
+        .catch((e) => {
+          console.error('RequireAuth: Falha ao buscar role', e.message)
           if (isMounted) setIsFetchingRole(false)
         })
     } else {
@@ -176,15 +180,10 @@ function RequireAuth({
     }
   }, [sbUser])
 
-  // Ignora bloqueios para o admin se um scan estiver ativo
-  if (isCrawling && isAdminPath) {
-    return <>{children}</>
-  }
-
   if (loading || isFetchingRole) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 text-slate-500">
-        Carregando permissões de acesso...
+        Validando credenciais...
       </div>
     )
   }
@@ -193,42 +192,45 @@ function RequireAuth({
   try {
     const localUserStr = localStorage.getItem('currentUser')
     if (localUserStr) localUser = JSON.parse(localUserStr)
-  } catch (e) {
-    // ignore
+  } catch (e: any) {
+    console.error('RequireAuth: Erro de parse no currentUser:', e.message)
   }
 
   const isMockUser = localUser?.id?.toString().startsWith('mock-')
 
-  // Rejeita absolutamente qualquer tráfego se não houver um token válido (real ou mock)
+  // Hard Reset: Se tentar acessar rota restrita sem login válido, DESTRÓI estados zumbis
   if (!sbUser && !isMockUser) {
-    return <Navigate to="/login" state={{ from: location }} replace />
+    localStorage.removeItem('auth_token')
+    localStorage.removeItem('pocketbase_auth')
+    localStorage.removeItem('user_role')
+    localStorage.removeItem('currentUser')
+    sessionStorage.clear()
+
+    // Impede loop com state.from, limpa o histórico e redireciona cru para o login
+    return <Navigate to="/login" replace />
   }
 
   let activeUser = null
-
   if (isMockUser && localUser) {
     activeUser = localUser
   } else if (sbUser) {
     let resolvedRole =
       profileRole || sbUser.user_metadata?.role || localUser?.role || 'user'
-
     if (sbUser.email === 'adailtong@gmail.com') {
       resolvedRole = 'super_admin'
     }
-
     activeUser = {
       id: sbUser.id,
       role: resolvedRole as UserRole,
       email: sbUser.email,
-      country: 'Brasil',
     }
   }
 
   if (!activeUser) {
-    return <Navigate to="/login" state={{ from: location }} replace />
+    return <Navigate to="/login" replace />
   }
 
-  // Admin Master Pass
+  // Master Bypass Total
   if (
     activeUser.role === 'super_admin' ||
     activeUser.role === 'admin' ||
@@ -237,6 +239,7 @@ function RequireAuth({
     return <>{children}</>
   }
 
+  // Controle de acesso baseado em roles
   if (roles && roles.length > 0 && !roles.includes(activeUser.role as any)) {
     if (activeUser.role === 'franchisee')
       return <Navigate to="/franchisee" replace />
@@ -266,6 +269,9 @@ function RootHandler() {
         .then(({ data }) => {
           if (isMounted && data?.role) setProfileRole(data.role)
         })
+        .catch((e) =>
+          console.error('RootHandler: Erro ao buscar perfil', e.message),
+        )
     }
     return () => {
       isMounted = false
@@ -284,8 +290,8 @@ function RootHandler() {
   try {
     const localUserStr = localStorage.getItem('currentUser')
     if (localUserStr) localUser = JSON.parse(localUserStr)
-  } catch (e) {
-    // ignore
+  } catch (e: any) {
+    console.error('RootHandler: Falha no parse do usuário local:', e.message)
   }
 
   const isMockUser = localUser?.id?.toString().startsWith('mock-')
@@ -295,17 +301,22 @@ function RootHandler() {
   }
 
   let activeRole = 'user'
+  let isAdailton = false
+
   if (isMockUser && localUser) {
     activeRole = localUser.role
+    isAdailton = localUser.email === 'adailtong@gmail.com'
   } else if (sbUser) {
-    if (sbUser.email === 'adailtong@gmail.com') {
-      return <Navigate to="/admin" replace />
+    isAdailton = sbUser.email === 'adailtong@gmail.com'
+    if (isAdailton) {
+      activeRole = 'super_admin'
+    } else {
+      activeRole =
+        profileRole || sbUser.user_metadata?.role || localUser?.role || 'user'
     }
-    activeRole =
-      profileRole || sbUser.user_metadata?.role || localUser?.role || 'user'
   }
 
-  if (activeRole === 'super_admin' || activeRole === 'admin')
+  if (isAdailton || activeRole === 'super_admin' || activeRole === 'admin')
     return <Navigate to="/admin" replace />
   if (activeRole === 'franchisee') return <Navigate to="/franchisee" replace />
   if (activeRole === 'shopkeeper') return <Navigate to="/vendor" replace />
