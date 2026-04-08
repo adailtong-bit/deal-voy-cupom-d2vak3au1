@@ -63,9 +63,14 @@ function RequireAuth({
   }
 
   const role = (user.user_metadata?.role || 'user') as UserRole
+  const email = user.email
 
-  // 🔥 MASTER ACESSO: Se for super_admin ou admin, tem acesso liberado em toda a plataforma
-  if (role === 'super_admin' || role === 'admin') {
+  // 🔥 MASTER ACESSO: Se for super_admin, admin ou o email master, tem acesso liberado
+  if (
+    role === 'super_admin' ||
+    role === 'admin' ||
+    email === 'adailtong@gmail.com'
+  ) {
     return <>{children}</>
   }
 

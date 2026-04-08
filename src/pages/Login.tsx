@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useAuth } from '@/hooks/use-auth'
@@ -23,8 +23,9 @@ import {
   EyeOff,
   ShieldAlert,
   Store,
-  Map,
   Users,
+  LogOut,
+  ArrowRight,
 } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
 import { toast } from 'sonner'
@@ -41,7 +42,13 @@ export default function Login() {
   const [showRegConfirmPassword, setShowRegConfirmPassword] = useState(false)
   const [role, setRole] = useState('user')
 
-  const { user: sbUser, loading: authLoading, signIn, signUp } = useAuth()
+  const {
+    user: sbUser,
+    loading: authLoading,
+    signIn,
+    signUp,
+    signOut,
+  } = useAuth()
   const { t } = useLanguage()
   const navigate = useNavigate()
   const location = useLocation()
@@ -51,31 +58,26 @@ export default function Login() {
     ? `${fromObj.pathname}${fromObj.search}${fromObj.hash}`
     : '/'
 
-  useEffect(() => {
-    if (authLoading) return
-
-    // Roteamento robusto após login (Master Access redireciona pro Admin por padrão ou destino)
-    if (sbUser) {
-      const userRole = sbUser.user_metadata?.role || 'user'
-      if (userRole === 'super_admin' || userRole === 'admin') {
-        navigate('/admin', { replace: true })
-      } else if (userRole === 'franchisee') {
-        navigate('/franchisee', { replace: true })
-      } else if (userRole === 'shopkeeper') {
-        navigate('/vendor', { replace: true })
-      } else if (userRole === 'affiliate') {
-        navigate('/profile', { replace: true })
-      } else {
-        navigate(from !== '/' ? from : '/profile', { replace: true })
-      }
+  const performRedirect = (userRole: string) => {
+    if (userRole === 'super_admin' || userRole === 'admin') {
+      navigate('/admin', { replace: true })
+    } else if (userRole === 'franchisee') {
+      navigate('/franchisee', { replace: true })
+    } else if (userRole === 'shopkeeper') {
+      navigate('/vendor', { replace: true })
+    } else if (userRole === 'affiliate') {
+      navigate('/profile', { replace: true })
+    } else {
+      navigate(from !== '/' && !from.includes('/login') ? from : '/profile', {
+        replace: true,
+      })
     }
-  }, [sbUser, authLoading, navigate, from])
+  }
 
   const handleFakeLogin = async (roleType: string, fakeEmail: string) => {
     setIsLoading(true)
 
-    // Usa diretamente a conta real criada pela migration no Supabase (não mais mock)
-    const { error } = await signIn(fakeEmail, 'Skip@Pass')
+    const { error, data } = await signIn(fakeEmail, 'Skip@Pass')
 
     if (error) {
       toast.error(
@@ -85,7 +87,13 @@ export default function Login() {
       return
     }
 
-    toast.success(t('auth.login_success', 'Autenticação Master concluída!'))
+    toast.success(
+      t('auth.login_success', 'Autenticação concluída com sucesso!'),
+    )
+    if (data?.user) {
+      const userRole = data.user.user_metadata?.role || 'user'
+      performRedirect(userRole)
+    }
   }
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -93,7 +101,7 @@ export default function Login() {
     if (email && password) {
       setIsLoading(true)
 
-      const { error } = await signIn(email, password)
+      const { error, data } = await signIn(email, password)
 
       if (error) {
         toast.error(t('auth.login_error', 'Email ou senha inválidos.'))
@@ -102,6 +110,10 @@ export default function Login() {
       }
 
       toast.success(t('auth.login_success', 'Bem-vindo de volta!'))
+      if (data?.user) {
+        const userRole = data.user.user_metadata?.role || 'user'
+        performRedirect(userRole)
+      }
     }
   }
 
@@ -117,7 +129,7 @@ export default function Login() {
       setIsLoading(true)
       const finalRole = role === 'affiliate' ? 'affiliate' : 'user'
 
-      const { error } = await signUp(email, password, {
+      const { error, data } = await signUp(email, password, {
         data: {
           name,
           role: finalRole,
@@ -131,7 +143,65 @@ export default function Login() {
       }
 
       toast.success(t('auth.register_success', 'Conta criada com sucesso!'))
+      if (data?.user) {
+        performRedirect(finalRole)
+      }
     }
+  }
+
+  const handleLogout = async () => {
+    setIsLoading(true)
+    await signOut()
+    setIsLoading(false)
+    toast.success('Desconectado com sucesso.')
+  }
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-4">
+        <div className="w-10 h-10 border-4 border-primary/40 border-t-primary rounded-full animate-spin mb-4"></div>
+      </div>
+    )
+  }
+
+  // Previne o "loop de rota" ao não auto-redirecionar cegamente.
+  // Em vez disso, se o usuário estiver logado, exibe uma interface clara para prosseguir ou deslogar.
+  if (sbUser) {
+    const uRole = sbUser.user_metadata?.role || 'user'
+    return (
+      <div className="container max-w-md py-16 animate-fade-in-up">
+        <Card className="border-0 shadow-xl shadow-primary/5 text-center">
+          <CardHeader>
+            <div className="mx-auto bg-green-100 p-3 rounded-full mb-4 w-16 h-16 flex items-center justify-center">
+              <User className="w-8 h-8 text-green-600" />
+            </div>
+            <CardTitle className="text-2xl font-bold">
+              Você já está logado
+            </CardTitle>
+            <CardDescription className="text-base mt-2">
+              Conectado como{' '}
+              <strong className="text-slate-800">{sbUser.email}</strong>
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4 pt-4">
+            <Button
+              className="w-full h-12 text-base font-bold"
+              onClick={() => performRedirect(uRole)}
+            >
+              Ir para o meu Painel <ArrowRight className="ml-2 w-5 h-5" />
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full h-12 text-base text-red-600 hover:text-red-700 hover:bg-red-50"
+              onClick={handleLogout}
+              disabled={isLoading}
+            >
+              <LogOut className="mr-2 w-5 h-5" /> Sair desta conta
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   return (
@@ -363,7 +433,6 @@ export default function Login() {
         </CardContent>
       </Card>
 
-      {/* PAINEL DE TESTES RECONSTRUÍDO - AGORA COM AUTENTICAÇÃO REAL */}
       <div
         className="mt-8 animate-fade-in-up"
         style={{ animationDelay: '0.1s' }}
@@ -383,7 +452,9 @@ export default function Login() {
             <Button
               variant="outline"
               className="w-full justify-start h-auto py-3 bg-white hover:bg-slate-100 hover:text-red-600 transition-colors shadow-sm"
-              onClick={() => handleFakeLogin('admin', 'adailtong@gmail.com')}
+              onClick={() =>
+                handleFakeLogin('super_admin', 'adailtong@gmail.com')
+              }
               disabled={isLoading}
             >
               <ShieldAlert className="w-4 h-4 mr-3 text-red-500 shrink-0" />
