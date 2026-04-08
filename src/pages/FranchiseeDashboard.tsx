@@ -1,176 +1,44 @@
-import { useState } from 'react'
-import { Navigate, useSearchParams } from 'react-router-dom'
 import { useCouponStore } from '@/stores/CouponContext'
-import { useLanguage } from '@/stores/LanguageContext'
 import { useAuth } from '@/hooks/use-auth'
-import { LayoutDashboard, Menu, X } from 'lucide-react'
+import AdminDashboardComponent from '@/components/admin/AdminDashboard'
+import { Store } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-
-import { FranchiseeSidebar } from '@/components/franchisee/FranchiseeSidebar'
-import { FranchiseeOverviewTab } from '@/components/franchisee/FranchiseeOverviewTab'
-import { FranchiseeLeadsTab } from '@/components/franchisee/FranchiseeLeadsTab'
-import { FranchiseeSettingsTab } from '@/components/franchisee/FranchiseeSettingsTab'
-
-import { MerchantsTab } from '@/components/admin/hierarchy/MerchantsTab'
-import { FranchiseeAdsTab } from '@/components/franchisee/FranchiseeAdsTab'
-import { FinanceDashboardTab } from '@/components/finance/FinanceDashboardTab'
-import { PartnerBillingTab } from '@/components/admin/PartnerBillingTab'
-import { AdminMonetizationTab } from '@/components/admin/AdminMonetizationTab'
-import { AdminSeasonalTab } from '@/components/admin/AdminSeasonalTab'
-import { AdminCategoriesTab } from '@/components/admin/AdminCategoriesTab'
-import { AdminInterestsTab } from '@/components/admin/AdminInterestsTab'
-import { PartnerPoliciesTab } from '@/components/admin/PartnerPoliciesTab'
-import { AdminCRM } from '@/components/admin/AdminCRM'
-import { PromotionCrawler } from '@/components/admin/PromotionCrawler'
-import { DataInsightsTab } from '@/components/admin/DataInsightsTab'
-import { TestingSandboxTab } from '@/components/admin/TestingSandboxTab'
-import { StaffTab } from '@/components/admin/hierarchy/StaffTab'
+import { useNavigate } from 'react-router-dom'
 
 export default function FranchiseeDashboard() {
   const { franchises } = useCouponStore()
-  const { user: authUser, role: authRole } = useAuth()
-  const { t } = useLanguage()
-  const [searchParams] = useSearchParams()
-  const activeTab = searchParams.get('tab') || 'overview'
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const { user, role } = useAuth()
+  const navigate = useNavigate()
 
-  // Use either the franchise owned by the user, or the first one if they are a super_admin
-  const myFranchise =
-    franchises.find(
-      (f) =>
-        f.ownerId === authUser?.id ||
-        f.contactEmail === authUser?.email ||
-        f.email === authUser?.email,
-    ) ||
-    (authRole === 'super_admin' ||
-    authRole === 'admin' ||
-    authRole === 'franchisee' ||
-    authUser?.email === 'adailtong@gmail.com'
-      ? franchises[0]
-      : null)
+  const myFranchise = franchises.find(
+    (f) =>
+      f.ownerId === user?.id ||
+      f.ownerId === user?.email ||
+      f.email === user?.email ||
+      f.contactEmail === user?.email,
+  )
 
-  if (
-    authRole !== 'franchisee' &&
-    authRole !== 'super_admin' &&
-    authRole !== 'admin' &&
-    authUser?.email !== 'adailtong@gmail.com'
-  ) {
-    return <Navigate to="/" replace />
-  }
-
-  if (!myFranchise) {
+  if (!myFranchise && role === 'franchisee') {
     return (
-      <div className="flex h-[calc(100vh-4rem)] items-center justify-center w-full max-w-full">
-        <p className="text-xl font-semibold text-slate-500">
-          {t('franchisee.no_franchise', 'No associated franchise found.')}
+      <div className="container py-16 text-center animate-fade-in flex flex-col items-center justify-center min-h-[60vh]">
+        <Store className="w-16 h-16 text-slate-300 mb-4" />
+        <h2 className="text-2xl font-bold text-slate-800 mb-2">
+          Nenhuma franquia associada encontrada
+        </h2>
+        <p className="text-slate-500 mb-6 max-w-md">
+          Seu perfil está configurado como Franqueado, mas ainda não existe uma
+          unidade regional vinculada ao seu e-mail ({user?.email}).
+          <br />
+          <br />
+          Entre em contato com o Administrador do sistema para que ele crie a
+          sua franquia na aba "Hierarchy & Team".
         </p>
+        <Button onClick={() => navigate('/')} variant="outline">
+          Voltar para a Home
+        </Button>
       </div>
     )
   }
 
-  return (
-    <div className="flex flex-col md:flex-row h-[calc(100vh-3.5rem)] md:h-[calc(100vh-4rem)] bg-slate-50/50 overflow-hidden relative w-full">
-      {/* Mobile Header for Sidebar Toggle */}
-      <div className="md:hidden flex items-center justify-between bg-white border-b p-4 z-40 shadow-sm shrink-0 w-full">
-        <div className="flex items-center gap-2 min-w-0">
-          <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center shrink-0">
-            <LayoutDashboard className="w-4 h-4 text-primary" />
-          </div>
-          <span className="font-bold text-slate-800 truncate">
-            {t('franchisee.dashboard', 'Regional Panel')}
-          </span>
-        </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="shrink-0"
-        >
-          {isMobileMenuOpen ? (
-            <X className="h-6 w-6" />
-          ) : (
-            <Menu className="h-6 w-6" />
-          )}
-        </Button>
-      </div>
-
-      <FranchiseeSidebar
-        myFranchise={myFranchise}
-        activeTab={activeTab}
-        isMobileMenuOpen={isMobileMenuOpen}
-        setIsMobileMenuOpen={setIsMobileMenuOpen}
-      />
-
-      {/* Mobile Overlay */}
-      {isMobileMenuOpen && (
-        <div
-          className="fixed inset-0 bg-slate-900/50 z-40 md:hidden"
-          onClick={() => setIsMobileMenuOpen(false)}
-        />
-      )}
-
-      {/* Main Content */}
-      <main className="flex-1 h-full overflow-y-auto bg-slate-50/50 custom-scrollbar relative">
-        <div className="p-4 sm:p-5 lg:p-6 pb-20 md:pb-8 w-full max-w-full mx-auto flex flex-col">
-          {activeTab === 'overview' && (
-            <FranchiseeOverviewTab franchiseId={myFranchise.id} />
-          )}
-          {activeTab === 'merchants' && (
-            <MerchantsTab franchiseId={myFranchise.id} />
-          )}
-
-          {/* Financeiro */}
-          {activeTab === 'finance' && (
-            <FinanceDashboardTab franchiseId={myFranchise.id} />
-          )}
-          {activeTab === 'billing' && (
-            <PartnerBillingTab franchiseId={myFranchise.id} />
-          )}
-          {activeTab === 'monetization' && (
-            <AdminMonetizationTab franchiseId={myFranchise.id} />
-          )}
-          {activeTab === 'ads-royalties' && (
-            <FranchiseeAdsTab franchiseId={myFranchise.id} />
-          )}
-
-          {/* Operacional */}
-          {activeTab === 'seasonal' && (
-            <AdminSeasonalTab franchiseId={myFranchise.id} />
-          )}
-          {activeTab === 'categories' && (
-            <AdminCategoriesTab franchiseId={myFranchise.id} />
-          )}
-          {activeTab === 'interests' && (
-            <AdminInterestsTab franchiseId={myFranchise.id} />
-          )}
-          {activeTab === 'policies' && (
-            <PartnerPoliciesTab franchiseId={myFranchise.id} />
-          )}
-
-          {/* Inteligência */}
-          {activeTab === 'crm' && <AdminCRM franchiseId={myFranchise.id} />}
-          {activeTab === 'leads' && (
-            <FranchiseeLeadsTab franchiseId={myFranchise.id} />
-          )}
-          {activeTab === 'crawler' && (
-            <PromotionCrawler franchiseId={myFranchise.id} />
-          )}
-          {activeTab === 'insights' && (
-            <DataInsightsTab franchiseId={myFranchise.id} />
-          )}
-
-          {/* Apoio */}
-          {activeTab === 'sandbox' && (
-            <TestingSandboxTab franchiseId={myFranchise.id} />
-          )}
-          {activeTab === 'team' && (
-            <StaffTab parentType="franchise" parentId={myFranchise.id} />
-          )}
-          {activeTab === 'settings' && (
-            <FranchiseeSettingsTab franchiseId={myFranchise.id} />
-          )}
-        </div>
-      </main>
-    </div>
-  )
+  return <AdminDashboardComponent />
 }

@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
+import { useAuth } from '@/hooks/use-auth'
 import { FranchisesTab } from './hierarchy/FranchisesTab'
 import { MerchantsTab } from './hierarchy/MerchantsTab'
 import { StaffTab } from './hierarchy/StaffTab'
@@ -18,14 +19,28 @@ import { PerformanceDashboardTab } from './hierarchy/PerformanceDashboardTab'
 import { useRegionFormatting } from '@/hooks/useRegionFormatting'
 
 export function AdminHierarchyTab() {
-  const { user, franchises, companies } = useCouponStore()
+  const { user: storeUser, franchises, companies } = useCouponStore()
+  const { user: authUser, role: authRole } = useAuth()
   const { t } = useLanguage()
-  const { formatNumber } = useRegionFormatting(user?.region, user?.country)
+  const { formatNumber } = useRegionFormatting(
+    storeUser?.region,
+    storeUser?.country,
+  )
 
-  const isSuperAdmin = user?.role === 'super_admin'
+  const isSuperAdmin =
+    authRole === 'super_admin' ||
+    authRole === 'admin' ||
+    authUser?.email === 'adailtong@gmail.com'
+
   const myFranchiseId =
-    user?.role === 'franchisee'
-      ? franchises.find((f) => f.ownerId === user.id)?.id
+    authRole === 'franchisee'
+      ? franchises.find(
+          (f) =>
+            f.ownerId === authUser?.id ||
+            f.ownerId === authUser?.email ||
+            f.email === authUser?.email ||
+            f.contactEmail === authUser?.email,
+        )?.id
       : undefined
 
   const pendingCount = companies.filter((c) => c.status === 'pending').length

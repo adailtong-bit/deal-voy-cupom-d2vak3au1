@@ -57,7 +57,13 @@ export default function AdminDashboard() {
   const isFranchisee = authRole === 'franchisee'
 
   const myFranchise = isFranchisee
-    ? franchises.find((f: any) => f.ownerId === authUser?.id)
+    ? franchises.find(
+        (f: any) =>
+          f.ownerId === authUser?.id ||
+          f.ownerId === authUser?.email ||
+          f.email === authUser?.email ||
+          f.contactEmail === authUser?.email,
+      )
     : null
   const currentFranchiseId = isFranchisee
     ? storeUser?.franchiseId || myFranchise?.id
