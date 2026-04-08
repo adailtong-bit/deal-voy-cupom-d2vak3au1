@@ -41,66 +41,78 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [role, setRole] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
-  // QA Override Role
   const applyRole = (fetchedRole: string) => {
     const override = localStorage.getItem('qa_bypass_role')
-    setRole(override || fetchedRole)
+    const finalRole = override || fetchedRole
+    setRole(finalRole)
+    localStorage.setItem('role', finalRole)
+    localStorage.setItem('userRole', finalRole)
   }
 
   useEffect(() => {
     let isMounted = true
 
-    const fetchProfile = async (
-      userId: string,
-      currentEmail: string | undefined,
-      userMetaRole: string | undefined,
-    ) => {
+    const loadProfile = async (currentUser: User) => {
       try {
         const { data } = await supabase
           .from('profiles')
           .select('*')
-          .eq('id', userId)
+          .eq('id', currentUser.id)
           .single()
 
         if (isMounted) {
-          if (data) {
-            const override = localStorage.getItem('qa_bypass_role')
-            if (override) {
-              data.role = override
-            }
-            setProfile(data)
-            let resolvedRole = data.role || 'user'
-            if (resolvedRole === 'user' && userMetaRole) {
-              resolvedRole = userMetaRole
-            }
+          setProfile(data || null)
+          const resolvedRole =
+            data?.role || currentUser.user_metadata?.role || 'user'
 
-            if (
-              currentEmail === 'adailtong@gmail.com' ||
-              resolvedRole === 'super_admin'
-            ) {
-              applyRole('super_admin')
-            } else {
-              applyRole(resolvedRole)
-            }
-          } else {
-            if (currentEmail === 'adailtong@gmail.com') {
-              applyRole('super_admin')
-            } else if (userMetaRole) {
-              applyRole(userMetaRole)
-            }
-          }
-        }
-      } catch (e) {
-        console.error('Error fetching profile:', e)
-        if (isMounted) {
-          if (currentEmail === 'adailtong@gmail.com') {
+          if (
+            currentUser.email === 'adailtong@gmail.com' ||
+            resolvedRole === 'super_admin'
+          ) {
             applyRole('super_admin')
-          } else if (userMetaRole) {
-            applyRole(userMetaRole)
+          } else {
+            applyRole(resolvedRole)
           }
         }
+      } catch (error) {
+        console.error('Error fetching profile:', error)
+        if (isMounted) {
+          const fallback = currentUser.user_metadata?.role || 'user'
+          applyRole(
+            currentUser.email === 'adailtong@gmail.com'
+              ? 'super_admin'
+              : fallback,
+          )
+        }
+      } finally {
+        if (isMounted) setLoading(false)
       }
     }
+
+    const initAuth = async () => {
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
+        if (!isMounted) return
+
+        setSession(session)
+        setUser(session?.user ?? null)
+
+        if (session?.user) {
+          await loadProfile(session.user)
+        } else {
+          setProfile(null)
+          setRole(null)
+          setLoading(false)
+        }
+      } catch (err) {
+        console.error('Auth init error:', err)
+        if (isMounted) setLoading(false)
+      }
+    }
+
+    initAuth()
 
     const {
       data: { subscription },
@@ -108,67 +120,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (!isMounted) return
 
       setSession(session)
-      const currentUser = session?.user ?? null
-      setUser(currentUser)
+      setUser(session?.user ?? null)
 
-      if (!currentUser) {
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        if (session?.user) {
+          setLoading(true)
+          loadProfile(session.user)
+        }
+      } else if (event === 'SIGNED_OUT') {
+        localStorage.clear()
+        sessionStorage.clear()
         setProfile(null)
         setRole(null)
         setLoading(false)
-      } else {
-        // Assume basic role quickly, then update
-        applyRole(
-          currentUser.email === 'adailtong@gmail.com' ||
-            currentUser.user_metadata?.role === 'super_admin'
-            ? 'super_admin'
-            : currentUser.user_metadata?.role || 'user',
-        )
-        fetchProfile(
-          currentUser.id,
-          currentUser.email,
-          currentUser.user_metadata?.role,
-        ).finally(() => {
-          if (isMounted) setLoading(false)
-        })
-      }
-
-      if (event === 'SIGNED_OUT') {
-        localStorage.clear()
-        sessionStorage.clear()
       }
     })
-
-    supabase.auth
-      .getSession()
-      .then(({ data: { session } }) => {
-        if (!isMounted) return
-
-        setSession(session)
-        const currentUser = session?.user ?? null
-        setUser(currentUser)
-
-        if (!currentUser) {
-          setLoading(false)
-        } else {
-          applyRole(
-            currentUser.email === 'adailtong@gmail.com' ||
-              currentUser.user_metadata?.role === 'super_admin'
-              ? 'super_admin'
-              : currentUser.user_metadata?.role || 'user',
-          )
-          fetchProfile(
-            currentUser.id,
-            currentUser.email,
-            currentUser.user_metadata?.role,
-          ).finally(() => {
-            if (isMounted) setLoading(false)
-          })
-        }
-      })
-      .catch((err) => {
-        console.error('Auth session error:', err)
-        if (isMounted) setLoading(false)
-      })
 
     return () => {
       isMounted = false

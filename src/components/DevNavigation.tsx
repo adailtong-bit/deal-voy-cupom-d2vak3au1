@@ -26,13 +26,17 @@ export function DevNavigation() {
 
   const handleAccess = (targetRole: string, path: string) => {
     localStorage.setItem('qa_bypass_role', targetRole)
-    // Force a full reload to ensure all contexts (Auth, CouponStore) pick up the mock bypass
-    window.location.href = path
+    localStorage.setItem('role', targetRole)
+    localStorage.setItem('userRole', targetRole)
+    // Usamos location.assign para garantir que a navegação dispare os lifecycles corretamente
+    window.location.assign(path)
   }
 
   const handleClearBypass = () => {
     localStorage.removeItem('qa_bypass_role')
-    window.location.href = '/'
+    localStorage.removeItem('role')
+    localStorage.removeItem('userRole')
+    window.location.assign('/')
   }
 
   if (!isOpen) {
@@ -110,8 +114,9 @@ export function DevNavigation() {
         <button
           onClick={() =>
             signOut().then(() => {
-              localStorage.removeItem('qa_bypass_role')
-              window.location.href = '/login'
+              localStorage.clear()
+              sessionStorage.clear()
+              window.location.assign('/login')
             })
           }
           className="flex items-center w-full gap-3 hover:bg-red-900/40 text-red-400 p-2.5 rounded-lg transition-colors border-t border-slate-800 pt-3 mt-1 text-left"

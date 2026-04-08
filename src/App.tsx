@@ -62,8 +62,7 @@ function RequireAuth({
     return <Navigate to="/login" state={{ from: location }} replace />
   }
 
-  const bypassRole = localStorage.getItem('qa_bypass_role')
-  const role = (bypassRole || authRole || 'user') as UserRole
+  const role = (authRole || 'user') as UserRole
   const email = user?.email
 
   const isMaster =
@@ -71,18 +70,17 @@ function RequireAuth({
     role === 'admin' ||
     email === 'adailtong@gmail.com'
 
-  // 🛠️ QA BYPASS ACESSO: Se a role mockada corresponder às roles permitidas, deixa passar
-  if (roles && roles.includes(role)) {
-    return <>{children}</>
-  }
-
-  // 🔥 MASTER ACESSO: Se for super_admin, admin ou o email master, tem acesso liberado
+  // 🔥 MASTER ACESSO ABSOLUTO: Se for super_admin, admin ou o email master, tem acesso liberado global
   if (isMaster) {
     return <>{children}</>
   }
 
-  // Roteamento condicional seguro: apenas bloqueia e joga para a Home se não for Master
-  // e não tiver a role específica para a rota
+  // 🛠️ QA BYPASS ACESSO: Se a role mockada (já inclusa em authRole) corresponder às roles permitidas, deixa passar
+  if (roles && roles.includes(role)) {
+    return <>{children}</>
+  }
+
+  // Roteamento condicional seguro
   if (roles && roles.length > 0 && !roles.includes(role)) {
     // Tolerância para QA/Testes: se o papel for 'merchant', aceita rotas de 'shopkeeper'
     if (role === 'merchant' && roles.includes('shopkeeper' as any)) {
