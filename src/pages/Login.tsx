@@ -176,7 +176,9 @@ export default function Login() {
           window.location.href = '/admin'
           return
         }
-      } catch (err) {}
+      } catch (err) {
+        /* ignore */
+      }
 
       // Se o banco falhar, aplica o bypass cego
       const mockUser = {
