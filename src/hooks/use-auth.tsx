@@ -47,18 +47,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           }
 
           if (!isMock) {
-            localStorage.clear()
+            localStorage.removeItem('currentUser')
+            localStorage.removeItem('pocketbase_auth')
+            localStorage.removeItem('auth_token')
             sessionStorage.clear()
             // Reset forçado em caso de logout assíncrono para garantir que não haja tela presa
-            if (
-              window.location.pathname !== '/login' &&
-              window.location.pathname !== '/'
-            ) {
+            if (window.location.pathname !== '/login') {
               window.location.href = '/login'
             }
           }
         } catch (error) {
-          localStorage.clear()
+          localStorage.removeItem('currentUser')
+          localStorage.removeItem('pocketbase_auth')
+          localStorage.removeItem('auth_token')
           sessionStorage.clear()
         }
       }
@@ -97,12 +98,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signOut = async () => {
     try {
       const { error } = await supabase.auth.signOut()
-      localStorage.clear()
+      localStorage.removeItem('currentUser')
+      localStorage.removeItem('pocketbase_auth')
+      localStorage.removeItem('auth_token')
       sessionStorage.clear()
       window.location.href = '/login'
       return { error }
     } catch (error) {
-      localStorage.clear()
+      localStorage.removeItem('currentUser')
+      localStorage.removeItem('pocketbase_auth')
+      localStorage.removeItem('auth_token')
       sessionStorage.clear()
       window.location.href = '/login'
       return { error: error }

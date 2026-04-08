@@ -4,6 +4,7 @@ import {
   Route,
   Navigate,
   useLocation,
+  useNavigate,
 } from 'react-router-dom'
 import { LanguageProvider, useLanguage } from '@/stores/LanguageContext'
 import { NotificationProvider } from '@/stores/NotificationContext'
@@ -32,6 +33,7 @@ import { AuthProvider, useAuth } from '@/hooks/use-auth'
 function RootGuard({ children }: { children: React.ReactNode }) {
   const { user: sbUser, loading } = useAuth()
   const location = useLocation()
+  const navigate = useNavigate()
 
   useEffect(() => {
     if (!loading && !sbUser) {
@@ -49,24 +51,29 @@ function RootGuard({ children }: { children: React.ReactNode }) {
         )
       }
 
-      // Hard clear se não houver mock e não houver usuário real logado
+      // Limpeza segura se não houver mock e não houver usuário real logado
       if (!isMockUser) {
-        localStorage.clear()
+        localStorage.removeItem('currentUser')
+        localStorage.removeItem('pocketbase_auth')
+        localStorage.removeItem('auth_token')
         sessionStorage.clear()
 
-        // Invalidação de Cache de Roteamento: Redirecionamento limpo e forçado via window.location
+        // Invalidação de Cache de Roteamento: Redirecionamento forçado
         if (
+          location.pathname === '/' ||
           location.pathname.startsWith('/profile') ||
           location.pathname.startsWith('/admin') ||
           location.pathname.startsWith('/vendor') ||
           location.pathname.startsWith('/franchisee') ||
           location.pathname.startsWith('/vouchers')
         ) {
-          window.location.href = '/login'
+          if (location.pathname !== '/login') {
+            navigate('/login', { replace: true })
+          }
         }
       }
     }
-  }, [loading, sbUser, location.pathname])
+  }, [loading, sbUser, location.pathname, navigate])
 
   if (loading) {
     return (
@@ -213,7 +220,7 @@ function AppRoutes() {
     return (
       <Routes>
         <Route element={<Layout />}>
-          <Route path="/" element={<Index />} />
+          <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<Login />} />
           <Route path="/explore" element={<Explore />} />
           <Route path="/seasonal" element={<Seasonal />} />

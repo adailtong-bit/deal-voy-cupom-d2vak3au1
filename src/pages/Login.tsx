@@ -109,7 +109,9 @@ export default function Login() {
 
     // Destrói qualquer sessão persistente real para o mock assumir
     await supabase.auth.signOut()
-    localStorage.clear()
+    localStorage.removeItem('currentUser')
+    localStorage.removeItem('pocketbase_auth')
+    localStorage.removeItem('auth_token')
     sessionStorage.clear()
 
     const mockUser = {
@@ -154,6 +156,8 @@ export default function Login() {
     // Ao invés de clear agressivo que dispara SIGNED_OUT e recarrega a página atrapalhando o login,
     // apenas limpamos itens customizados, mantendo o supabase.auth.token intacto durante o processo.
     localStorage.removeItem('currentUser')
+    localStorage.removeItem('pocketbase_auth')
+    localStorage.removeItem('auth_token')
     sessionStorage.clear()
 
     // Bypass Master de Emergência (Garante o acesso do Adailton em caso de queda de servidor)
