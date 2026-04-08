@@ -55,7 +55,9 @@ export default function Login() {
     try {
       const localUserStr = localStorage.getItem('currentUser')
       if (localUserStr) localUser = JSON.parse(localUserStr)
-    } catch (e) {}
+    } catch (e) {
+      // ignore
+    }
 
     const isMockUser = localUser?.id?.toString().startsWith('mock-')
 

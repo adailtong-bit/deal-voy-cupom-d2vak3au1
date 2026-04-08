@@ -152,11 +152,6 @@ function RequireAuth({
   const isCrawling = sessionStorage.getItem('crawler_isScanning') === 'true'
   const isAdminPath = location.pathname.startsWith('/admin')
 
-  // Ignora bloqueios para o admin se um scan estiver ativo
-  if (isCrawling && isAdminPath) {
-    return <>{children}</>
-  }
-
   // Sincroniza role real do supabase antes de tomar decisões limitantes
   useEffect(() => {
     let isMounted = true
@@ -180,6 +175,11 @@ function RequireAuth({
       isMounted = false
     }
   }, [sbUser])
+
+  // Ignora bloqueios para o admin se um scan estiver ativo
+  if (isCrawling && isAdminPath) {
+    return <>{children}</>
+  }
 
   if (loading || isFetchingRole) {
     return (
@@ -284,7 +284,9 @@ function RootHandler() {
   try {
     const localUserStr = localStorage.getItem('currentUser')
     if (localUserStr) localUser = JSON.parse(localUserStr)
-  } catch (e) {}
+  } catch (e) {
+    // ignore
+  }
 
   const isMockUser = localUser?.id?.toString().startsWith('mock-')
 
