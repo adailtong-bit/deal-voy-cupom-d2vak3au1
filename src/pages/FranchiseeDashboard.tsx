@@ -36,9 +36,15 @@ export default function FranchiseeDashboard() {
 
   // Use either the franchise owned by the user, or the first one if they are a super_admin
   const myFranchise =
-    franchises.find((f) => f.ownerId === authUser?.id) ||
+    franchises.find(
+      (f) =>
+        f.ownerId === authUser?.id ||
+        f.contactEmail === authUser?.email ||
+        f.email === authUser?.email,
+    ) ||
     (authRole === 'super_admin' ||
     authRole === 'admin' ||
+    authRole === 'franchisee' ||
     authUser?.email === 'adailtong@gmail.com'
       ? franchises[0]
       : null)

@@ -130,7 +130,13 @@ function GlobalLanguageSync() {
     let countryToUse = storeUser?.country || 'Brasil'
 
     if (role === 'franchisee') {
-      const myFranchise = franchises.find((f) => f.ownerId === sbUser?.id)
+      const myFranchise =
+        franchises.find(
+          (f) =>
+            f.ownerId === sbUser?.id ||
+            f.email === sbUser?.email ||
+            f.contactEmail === sbUser?.email,
+        ) || franchises[0]
       if (myFranchise?.addressCountry) {
         countryToUse = myFranchise.addressCountry
       }

@@ -104,9 +104,16 @@ export function AdvancedCompanyForm({
         <TabsContent value="general" className="space-y-4 mt-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>{t('admin.company.name', 'Nome da Empresa')}</Label>
+              <Label>
+                {type === 'franchise'
+                  ? t('admin.company.name', 'Nome da Franquia / Região')
+                  : t('admin.company.name', 'Nome da Empresa')}
+              </Label>
               <Input
                 required
+                placeholder={
+                  type === 'franchise' ? 'Ex: Franquia São Paulo' : ''
+                }
                 value={formData.name || ''}
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
@@ -115,11 +122,17 @@ export function AdvancedCompanyForm({
             </div>
             <div className="space-y-2">
               <Label>
-                {t('admin.company.master_email', 'E-mail Principal')}
+                {type === 'franchise'
+                  ? t(
+                      'admin.company.master_email',
+                      'E-mail de Acesso do Franqueado (Login)',
+                    )
+                  : t('admin.company.master_email', 'E-mail Principal')}
               </Label>
               <Input
                 required
                 type="email"
+                placeholder="email@exemplo.com"
                 value={formData.email || ''}
                 onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })

@@ -30,6 +30,7 @@ import { Franchise } from '@/lib/types'
 import { AdvancedCompanyForm } from './AdvancedCompanyForm'
 import { exportAccountingData } from '@/lib/exportUtils'
 import { toast } from 'sonner'
+import { supabase } from '@/lib/supabase/client'
 
 export function FranchisesTab() {
   const {
@@ -56,19 +57,46 @@ export function FranchisesTab() {
     setIsDialogOpen(true)
   }
 
-  const handleSave = (finalData: any) => {
+  const handleSave = async (finalData: any) => {
     if (editingFranchise) {
       updateFranchise(editingFranchise.id, finalData)
+      toast.success(
+        t('admin.franchises.updated', 'Franqueado atualizado com sucesso!'),
+      )
     } else {
+      const tempId = Math.random().toString()
       const newFranchise: Franchise = {
         ...(finalData as Franchise),
-        id: Math.random().toString(),
+        id: tempId,
         region: finalData.addressState || finalData.addressCity || 'Global',
-        ownerId: 'u_fran', // Mocked, ideally from dropdown of users
+        ownerId: finalData.email || 'u_fran',
         licenseExpiry: new Date(Date.now() + 31536000000).toISOString(),
         credentialsSent: false,
       }
+
+      if (finalData.email) {
+        try {
+          await supabase
+            .from('profiles')
+            .insert({
+              id: crypto.randomUUID(),
+              email: finalData.email,
+              name: finalData.contactPerson || finalData.name,
+              role: 'franchisee',
+            })
+            .select()
+        } catch (e) {
+          console.error('Error creating profile mapping', e)
+        }
+      }
+
       addFranchise(newFranchise)
+      toast.success(
+        t(
+          'admin.franchises.created',
+          'Franqueado criado com sucesso! O acesso está liberado para o email informado. (Ele deve usar a opção Cadastrar com este email)',
+        ),
+      )
     }
     setIsDialogOpen(false)
   }
@@ -142,12 +170,12 @@ export function FranchisesTab() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-card p-4 rounded-lg border gap-4">
         <div>
           <h3 className="text-lg font-bold">
-            {t('admin.franchises.network', 'Franchise Network')}
+            {t('admin.franchises.network', 'Rede de Franqueados')}
           </h3>
           <p className="text-sm text-muted-foreground">
             {t(
               'admin.franchises.network_desc',
-              'Manage your master franchises and their primary contacts.',
+              'Gerencie seus franqueados, crie novos acessos regionais e monitore a rede.',
             )}
           </p>
         </div>
@@ -166,9 +194,12 @@ export function FranchisesTab() {
             <Download className="w-4 h-4 mr-2" />{' '}
             {t('admin.franchises.export_pdf', 'PDF')}
           </Button>
-          <Button onClick={() => handleOpenDialog()}>
+          <Button
+            onClick={() => handleOpenDialog()}
+            className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold"
+          >
             <Plus className="w-4 h-4 mr-2" />{' '}
-            {t('admin.franchises.add', 'Add Franchise')}
+            {t('admin.franchises.add', 'Criar Franqueado')}
           </Button>
         </div>
       </div>
@@ -177,10 +208,10 @@ export function FranchisesTab() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>{t('admin.title', 'Franchise Name')}</TableHead>
-              <TableHead>{t('admin.tax_id', 'Tax ID')}</TableHead>
-              <TableHead>{t('profile.phone', 'Contact')}</TableHead>
-              <TableHead>{t('profile.state', 'Region')}</TableHead>
+              <TableHead>{t('admin.title', 'Nome / Franquia')}</TableHead>
+              <TableHead>{t('admin.tax_id', 'CNPJ/Doc')}</TableHead>
+              <TableHead>{t('profile.phone', 'Contato/Acesso')}</TableHead>
+              <TableHead>{t('profile.state', 'Região')}</TableHead>
               <TableHead>{t('admin.status', 'Status')}</TableHead>
               <TableHead>
                 {t('franchisee.merchants.credentials', 'Credentials')}
@@ -198,9 +229,11 @@ export function FranchisesTab() {
                   <TableCell className="font-medium">{f.name}</TableCell>
                   <TableCell>{f.taxId || 'N/A'}</TableCell>
                   <TableCell>
-                    <p className="text-sm">{f.contactPerson || 'N/A'}</p>
+                    <p className="text-sm font-medium">
+                      {f.contactPerson || 'N/A'}
+                    </p>
                     <p className="text-xs text-muted-foreground">
-                      {f.contactEmail || f.ownerId}
+                      {f.email || f.contactEmail || f.ownerId}
                     </p>
                   </TableCell>
                   <TableCell>
@@ -280,8 +313,8 @@ export function FranchisesTab() {
           <DialogHeader>
             <DialogTitle>
               {editingFranchise
-                ? t('admin.franchises.edit', 'Editar Franquia')
-                : t('admin.franchises.add', 'Cadastrar Franquia')}
+                ? t('admin.franchises.edit', 'Editar Franqueado / Franquia')
+                : t('admin.franchises.add', 'Criar Novo Franqueado')}
             </DialogTitle>
           </DialogHeader>
           <AdvancedCompanyForm
