@@ -30,8 +30,8 @@ export function VendorAnalytics() {
   const myCompany =
     companies.find((c) => c.id === user?.companyId) || companies[0]
 
-  const myLogs = validationLogs.filter((l) => l.companyId === myCompany.id)
-  const myCoupons = coupons.filter((c) => c.companyId === myCompany.id)
+  const myLogs = validationLogs.filter((l) => l.companyId === myCompany?.id)
+  const myCoupons = coupons.filter((c) => c.companyId === myCompany?.id)
 
   const redemptionData = [
     { name: 'Seg', redemptions: Math.max(2, myLogs.length % 5) },
