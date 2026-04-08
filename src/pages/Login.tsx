@@ -183,14 +183,6 @@ export default function Login() {
     toast.success('Desconectado com sucesso.')
   }
 
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4">
-        <div className="w-10 h-10 border-4 border-primary/40 border-t-primary rounded-full animate-spin mb-4"></div>
-      </div>
-    )
-  }
-
   const [currentRole, setCurrentRole] = useState<string | null>(null)
 
   useEffect(() => {
@@ -211,6 +203,14 @@ export default function Login() {
       isMounted = false
     }
   }, [sbUser])
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-4">
+        <div className="w-10 h-10 border-4 border-primary/40 border-t-primary rounded-full animate-spin mb-4"></div>
+      </div>
+    )
+  }
 
   const qaTestingPanel = (
     <div className="mt-8 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
