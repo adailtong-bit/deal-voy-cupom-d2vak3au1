@@ -38,11 +38,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(session?.user ?? null)
 
       if (event === 'SIGNED_OUT') {
-        localStorage.removeItem('auth_token')
-        localStorage.removeItem('pocketbase_auth')
-        localStorage.removeItem('user_role')
-        localStorage.removeItem('currentUser')
-        sessionStorage.clear()
+        try {
+          const localUserStr = localStorage.getItem('currentUser')
+          if (localUserStr) {
+            const userObj = JSON.parse(localUserStr)
+            // Protege a sessão mockada de ser destruída por um evento tardio de logout do supabase
+            if (!userObj?.id?.toString().startsWith('mock-')) {
+              localStorage.clear()
+              sessionStorage.clear()
+            }
+          } else {
+            localStorage.clear()
+            sessionStorage.clear()
+          }
+        } catch (error) {
+          localStorage.clear()
+          sessionStorage.clear()
+        }
       }
 
       setLoading(false)
@@ -77,15 +89,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   const signOut = async () => {
-    localStorage.removeItem('auth_token')
-    localStorage.removeItem('pocketbase_auth')
-    localStorage.removeItem('user_role')
-    localStorage.removeItem('currentUser')
-    sessionStorage.clear()
-
-    const { error } = await supabase.auth.signOut()
-    window.location.href = '/login'
-    return { error }
+    try {
+      localStorage.clear()
+      sessionStorage.clear()
+      const { error } = await supabase.auth.signOut()
+      window.location.href = '/login'
+      return { error }
+    } catch (error) {
+      window.location.href = '/login'
+      return { error: error }
+    }
   }
 
   return (

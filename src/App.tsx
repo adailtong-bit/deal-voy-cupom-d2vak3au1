@@ -29,7 +29,7 @@ import { useEffect } from 'react'
 import { UserRole } from '@/lib/types'
 import { AuthProvider, useAuth } from '@/hooks/use-auth'
 
-// RootGuard: Roteamento Auth-First estrito. Purga cache de usuários desconectados.
+// RootGuard: Roteamento Auth-First estrito. Purga cache de usuários desconectados instantaneamente.
 function RootGuard({ children }: { children: React.ReactNode }) {
   const { user: sbUser, loading } = useAuth()
   const location = useLocation()
@@ -39,19 +39,21 @@ function RootGuard({ children }: { children: React.ReactNode }) {
       let localUser = null
       try {
         const localUserStr = localStorage.getItem('currentUser')
-        if (localUserStr) localUser = JSON.parse(localUserStr)
+        if (localUserStr) {
+          localUser = JSON.parse(localUserStr)
+        }
       } catch (e) {
-        // Ignora erro de parse silenciosamente para evitar poluição no console
+        console.warn(
+          'RootGuard: Limpeza preventiva por erro de parse local.',
+          e,
+        )
       }
 
-      const isMockUser = localUser?.id?.toString().startsWith('mock-')
+      const isMockUser = Boolean(localUser?.id?.toString().startsWith('mock-'))
 
       // Hard clear se não houver mock e não houver usuário real logado
       if (!isMockUser) {
-        localStorage.removeItem('auth_token')
-        localStorage.removeItem('pocketbase_auth')
-        localStorage.removeItem('user_role')
-        localStorage.removeItem('currentUser')
+        localStorage.clear()
         sessionStorage.clear()
       }
     }
@@ -61,7 +63,7 @@ function RootGuard({ children }: { children: React.ReactNode }) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-slate-50/50">
         <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mb-4"></div>
-        <p className="text-slate-500 font-medium">Validando sessão...</p>
+        <p className="text-slate-500 font-medium">Validando sessão segura...</p>
       </div>
     )
   }
@@ -145,7 +147,7 @@ function GlobalLanguageSync() {
   return null
 }
 
-// Router Guard Refatorado: Não busca perfis no Supabase (evita RLS e travamentos), força redirecionamento seguro
+// Router Guard Refatorado: Redirecionamento brutal preventivo (Auth-First)
 function RequireAuth({
   children,
   roles,
@@ -154,20 +156,26 @@ function RequireAuth({
   roles?: UserRole[]
 }) {
   const { user: sbUser } = useAuth()
+  const location = useLocation()
 
   let localUser = null
   try {
     const localUserStr = localStorage.getItem('currentUser')
-    if (localUserStr) localUser = JSON.parse(localUserStr)
+    if (localUserStr) {
+      localUser = JSON.parse(localUserStr)
+    }
   } catch (e) {
-    // ignorar erros de conversão silenciados
+    console.warn('RequireAuth: Falha ao validar estado do usuário.', e)
   }
 
-  const isMockUser = localUser?.id?.toString().startsWith('mock-')
+  const isMockUser = Boolean(localUser?.id?.toString().startsWith('mock-'))
 
-  // Redirecionamento brutal se não houver usuário. Previne o sistema de ficar preso em rotas protegidas
+  // Redirecionamento brutal se não houver usuário autêntico ou mock validado
   if (!sbUser && !isMockUser) {
-    return <Navigate to="/login" replace />
+    // Purga imediata para neutralizar estados zumbis
+    localStorage.clear()
+    sessionStorage.clear()
+    return <Navigate to="/login" state={{ from: location }} replace />
   }
 
   let activeRole = 'user'
@@ -208,12 +216,14 @@ function RootHandler() {
   let localUser = null
   try {
     const localUserStr = localStorage.getItem('currentUser')
-    if (localUserStr) localUser = JSON.parse(localUserStr)
+    if (localUserStr) {
+      localUser = JSON.parse(localUserStr)
+    }
   } catch (e) {
-    // ignorar erros de conversão silenciados
+    console.warn('RootHandler: Falha de parse local.', e)
   }
 
-  const isMockUser = localUser?.id?.toString().startsWith('mock-')
+  const isMockUser = Boolean(localUser?.id?.toString().startsWith('mock-'))
 
   if (!sbUser && !isMockUser) {
     return <Index />

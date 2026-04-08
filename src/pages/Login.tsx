@@ -54,12 +54,14 @@ export default function Login() {
     let localUser = null
     try {
       const localUserStr = localStorage.getItem('currentUser')
-      if (localUserStr) localUser = JSON.parse(localUserStr)
+      if (localUserStr) {
+        localUser = JSON.parse(localUserStr)
+      }
     } catch (e: any) {
       console.error('Falha ao analisar cache de usuário local:', e.message)
     }
 
-    const isMockUser = localUser?.id?.toString().startsWith('mock-')
+    const isMockUser = Boolean(localUser?.id?.toString().startsWith('mock-'))
 
     if (sbUser || isMockUser) {
       let activeRole = 'user'
@@ -142,14 +144,16 @@ export default function Login() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!email || !password) return
+    if (!email || !password) {
+      toast.error('Por favor, preencha o email e a senha.')
+      return
+    }
+
     setIsLoading(true)
 
     // Limpeza forçada prévia para evitar corrupção de sessão
-    localStorage.removeItem('auth_token')
-    localStorage.removeItem('pocketbase_auth')
-    localStorage.removeItem('user_role')
-    localStorage.removeItem('currentUser')
+    localStorage.clear()
+    sessionStorage.clear()
 
     // Bypass Master de Emergência (Garante o acesso do Adailton em caso de queda de servidor)
     if (
@@ -230,6 +234,7 @@ export default function Login() {
 
         window.location.href = dest
       } else {
+        toast.error('Erro desconhecido. Não foi possível autenticar o usuário.')
         setIsLoading(false)
       }
     } catch (err: any) {
@@ -249,7 +254,10 @@ export default function Login() {
       return
     }
 
-    if (!email || !password || !name) return
+    if (!email || !password || !name) {
+      toast.error('Por favor, preencha todos os campos obrigatórios.')
+      return
+    }
 
     setIsLoading(true)
     try {
