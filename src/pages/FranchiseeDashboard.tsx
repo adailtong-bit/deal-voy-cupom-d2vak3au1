@@ -9,9 +9,12 @@ import { MerchantsTab } from '@/components/admin/hierarchy/MerchantsTab'
 import { StaffTab } from '@/components/admin/hierarchy/StaffTab'
 import { TargetGroupsTab } from '@/components/admin/crm/TargetGroupsTab'
 import { CommunicationCampaignsTab } from '@/components/admin/crm/CommunicationCampaignsTab'
+import { FranchiseeOverviewTab } from '@/components/franchisee/FranchiseeOverviewTab'
+import { VendorCampaignsTab } from '@/components/vendor/VendorCampaignsTab'
+import { AdminCRM } from '@/components/admin/AdminCRM'
 
 export default function FranchiseeDashboard() {
-  const { franchises } = useCouponStore()
+  const { franchises, companies, coupons: allCoupons } = useCouponStore()
   const { user, role, profile } = useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -84,15 +87,25 @@ export default function FranchiseeDashboard() {
 
         <div className="flex-1 overflow-y-auto p-4 md:p-6 custom-scrollbar w-full relative pb-24 md:pb-6">
           {activeTab === 'overview' && (
-            <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm animate-fade-in-up">
-              <h2 className="text-xl font-bold mb-4">
-                Visão Geral da Franquia
-              </h2>
-              <p className="text-slate-600">
-                Bem-vindo ao painel regional de {franchiseToUse.name}. Em breve
-                você terá relatórios e gráficos de performance consolidados aqui
-                para a sua rede.
-              </p>
+            <div className="animate-fade-in-up">
+              <FranchiseeOverviewTab franchiseId={franchiseToUse.id} />
+            </div>
+          )}
+          {activeTab === 'campaigns' && (
+            <div className="animate-fade-in-up">
+              <VendorCampaignsTab
+                coupons={allCoupons.filter(
+                  (c) =>
+                    c.source !== 'aggregated' &&
+                    (isSuperAdmin ||
+                      companies.some(
+                        (comp) =>
+                          comp.franchiseId === franchiseToUse.id &&
+                          comp.id === c.companyId,
+                      )),
+                )}
+                company={franchiseToUse}
+              />
             </div>
           )}
           {activeTab === 'merchants' && (
@@ -116,18 +129,19 @@ export default function FranchiseeDashboard() {
           )}
           {activeTab === 'leads' && (
             <div className="animate-fade-in-up bg-white p-6 rounded-xl border shadow-sm">
-              <h2 className="text-xl font-bold mb-4">Campanhas de Leads</h2>
-              <p className="text-slate-600 mb-4">
-                Gerencie o envio de campanhas de comunicação na sua região.
-              </p>
-              <CommunicationCampaignsTab />
+              <AdminCRM franchiseId={franchiseToUse.id} />
             </div>
           )}
 
           {/* Fallback for other tabs in development */}
-          {!['overview', 'merchants', 'team', 'crm', 'leads'].includes(
-            activeTab,
-          ) && (
+          {![
+            'overview',
+            'campaigns',
+            'merchants',
+            'team',
+            'crm',
+            'leads',
+          ].includes(activeTab) && (
             <div className="bg-white p-12 text-center rounded-xl border border-dashed border-slate-300 animate-fade-in-up">
               <h3 className="text-lg font-semibold text-slate-700 mb-2">
                 Módulo em Desenvolvimento

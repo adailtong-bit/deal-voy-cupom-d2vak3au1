@@ -34,6 +34,7 @@ import { VendorRewardsTab } from '@/components/vendor/VendorRewardsTab'
 import { StaffTab } from '@/components/admin/hierarchy/StaffTab'
 import { TargetGroupsTab } from '@/components/admin/crm/TargetGroupsTab'
 import { CommunicationCampaignsTab } from '@/components/admin/crm/CommunicationCampaignsTab'
+import { AdminCRM } from '@/components/admin/AdminCRM'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 
@@ -266,7 +267,9 @@ export default function VendorDashboard() {
           <TargetGroupsTab companyId={myCompany.id} />
         </TabsContent>
         <TabsContent value="comms" className="mt-4">
-          <CommunicationCampaignsTab companyId={myCompany.id} />
+          <div className="bg-white p-6 rounded-xl border shadow-sm">
+            <AdminCRM franchiseId={myCompany.id} />
+          </div>
         </TabsContent>
         <TabsContent value="rules" className="mt-4">
           <VendorRulesTab company={myCompany} />

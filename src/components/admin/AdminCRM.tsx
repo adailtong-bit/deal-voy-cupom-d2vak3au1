@@ -57,8 +57,22 @@ export function AdminCRM({ franchiseId }: { franchiseId?: string }) {
   const [showConfirm, setShowConfirm] = useState(false)
 
   const activeOffers = useMemo(
-    () => coupons.filter((c) => c.status === 'active'),
-    [coupons],
+    () =>
+      coupons.filter((c) => {
+        if (c.status !== 'active') return false
+        // Se franchiseId for passado (pode ser ID da loja ou franquia), filtra
+        if (
+          franchiseId &&
+          c.companyId !== franchiseId &&
+          c.franchiseId !== franchiseId &&
+          franchiseId !== 'mock-company-admin' &&
+          franchiseId !== 'mock-franchise-admin'
+        ) {
+          return false
+        }
+        return true
+      }),
+    [coupons, franchiseId],
   )
   const selectedOffer = useMemo(
     () => activeOffers.find((c) => c.id === offerId),
