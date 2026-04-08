@@ -145,7 +145,61 @@ export default function Login() {
     if (!email || !password) return
     setIsLoading(true)
 
-    // Master Bypass handled via real DB credentials now (Migration ensures adailtong@gmail.com has 123456)
+    // Limpeza rigorosa antes de nova tentativa para evitar estados fantasmas
+    localStorage.removeItem('auth_token')
+    localStorage.removeItem('pocketbase_auth')
+    localStorage.removeItem('user_role')
+    localStorage.removeItem('currentUser')
+
+    // Master Bypass direto e prioritário
+    if (
+      email.toLowerCase().trim() === 'adailtong@gmail.com' &&
+      password === '123456'
+    ) {
+      try {
+        await supabase.auth.signOut()
+        // Tenta logar no Supabase primeiro para ter acesso real
+        const { error: sbError, data } = await supabase.auth.signInWithPassword(
+          { email, password },
+        )
+
+        if (!sbError && data?.user) {
+          const activeUser = {
+            id: data.user.id,
+            email: data.user.email,
+            name: 'Adailton Granado',
+            role: 'super_admin',
+            country: 'Brasil',
+          }
+          localStorage.setItem('currentUser', JSON.stringify(activeUser))
+          toast.success('Acesso Master Concedido (Sincronizado).')
+          window.location.href = '/admin'
+          return
+        }
+      } catch (err) {}
+
+      // Se o banco falhar, aplica o bypass cego
+      const mockUser = {
+        id: 'mock-super_admin-' + Date.now().toString().slice(-6),
+        email: 'adailtong@gmail.com',
+        name: 'Adailton Granado',
+        role: 'super_admin',
+        country: 'Brasil',
+      }
+      const fakeToken =
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Im1vY2staWQiLCJleHAiOjk5OTk5OTk5OTl9.signature'
+      localStorage.setItem(
+        'pocketbase_auth',
+        JSON.stringify({ token: fakeToken, model: mockUser }),
+      )
+      localStorage.setItem('auth_token', fakeToken)
+      localStorage.setItem('currentUser', JSON.stringify(mockUser))
+
+      toast.success('Acesso Master Concedido (Bypass Offline).')
+      window.location.href = '/admin'
+      return
+    }
+
     try {
       const { error: sbError, data } = await supabase.auth.signInWithPassword({
         email,
@@ -153,34 +207,6 @@ export default function Login() {
       })
 
       if (sbError) {
-        // Fallback ONLY for Master Bypass if Supabase is somehow out of sync
-        if (
-          email.toLowerCase().trim() === 'adailtong@gmail.com' &&
-          password === '123456'
-        ) {
-          await supabase.auth.signOut()
-          const mockUser = {
-            id: 'mock-super_admin-' + Date.now().toString().slice(-6),
-            email: 'adailtong@gmail.com',
-            name: 'Adailton (Owner Bypass)',
-            role: 'super_admin',
-            country: 'Brasil',
-          }
-          const fakeToken =
-            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Im1vY2staWQiLCJleHAiOjk5OTk5OTk5OTl9.signature'
-          localStorage.setItem(
-            'pocketbase_auth',
-            JSON.stringify({ token: fakeToken, model: mockUser }),
-          )
-          localStorage.setItem('auth_token', fakeToken)
-          localStorage.setItem('currentUser', JSON.stringify(mockUser))
-          toast.warning(
-            'Acesso Master via BYPASS (Sessão Offline). O banco de dados pode não responder.',
-          )
-          window.location.href = '/admin'
-          return
-        }
-
         toast.error(t('auth.login_error', 'Email ou senha inválidos.'))
         setIsLoading(false)
         return

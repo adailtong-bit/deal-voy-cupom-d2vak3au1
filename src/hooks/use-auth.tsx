@@ -39,6 +39,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setSession(session)
       const currentUser = session?.user ?? null
 
+      if (event === 'SIGNED_OUT') {
+        localStorage.removeItem('auth_token')
+        localStorage.removeItem('pocketbase_auth')
+        localStorage.removeItem('user_role')
+        localStorage.removeItem('currentUser')
+        sessionStorage.clear()
+      }
+
       if (currentUser) {
         // Fetch role from profile asynchronously but wait to clear loading state
         supabase
@@ -124,7 +132,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return { error }
   }
   const signOut = async () => {
+    localStorage.removeItem('auth_token')
+    localStorage.removeItem('pocketbase_auth')
+    localStorage.removeItem('user_role')
+    localStorage.removeItem('currentUser')
+    sessionStorage.clear()
     const { error } = await supabase.auth.signOut()
+    window.location.href = '/login'
     return { error }
   }
 

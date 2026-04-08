@@ -130,9 +130,11 @@ function RequireAuth({
 
 function AuthStateSync() {
   const { user: storeUser } = useCouponStore()
-  const { user: sbUser } = useAuth()
+  const { user: sbUser, loading } = useAuth()
 
   useEffect(() => {
+    if (loading) return
+
     let isMockUser = false
     try {
       const localUserStr = localStorage.getItem('currentUser')
@@ -152,7 +154,7 @@ function AuthStateSync() {
       localStorage.removeItem('currentUser')
       sessionStorage.clear()
     }
-  }, [storeUser, sbUser])
+  }, [storeUser, sbUser, loading])
 
   return null
 }
@@ -250,34 +252,24 @@ function GlobalRouterGuard({ children }: { children: React.ReactNode }) {
   }
 
   const isMockUser = localUser?.id?.toString().startsWith('mock-')
-
-  let activeRole = sbUser?.user_metadata?.role || localUser?.role
-
-  // Owner Override
-  if (
+  const isMaster =
     sbUser?.email === 'adailtong@gmail.com' ||
     localUser?.email === 'adailtong@gmail.com'
-  ) {
-    activeRole = 'super_admin'
+
+  let activeRole = isMaster
+    ? 'super_admin'
+    : sbUser?.user_metadata?.role || localUser?.role
+
+  if (loading && !isMockUser && location.pathname === '/') {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 text-slate-500 bg-slate-50/50">
+        Iniciando...
+      </div>
+    )
   }
 
-  // Enforce root path redirects for specific roles
   if (location.pathname === '/' || location.pathname === '/profile') {
-    if (loading && !isMockUser && location.pathname === '/') {
-      return (
-        <div className="min-h-screen flex items-center justify-center p-4 text-slate-500 bg-slate-50/50">
-          Iniciando...
-        </div>
-      )
-    }
-
-    if (
-      activeRole === 'admin' ||
-      activeRole === 'super_admin' ||
-      sbUser?.email === 'adailtong@gmail.com' ||
-      localUser?.email === 'adailtong@gmail.com'
-    ) {
-      // Se for admin e tentar acessar raiz ou profile, forçamos sempre para o dashboard admin
+    if (isMaster) {
       return <Navigate to="/admin" replace />
     }
 
@@ -357,7 +349,14 @@ export default function App() {
                         </RequireAuth>
                       }
                     />
-                    <Route path="/profile" element={<Profile />} />
+                    <Route
+                      path="/profile"
+                      element={
+                        <RequireAuth>
+                          <Profile />
+                        </RequireAuth>
+                      }
+                    />
                     <Route path="/seasonal" element={<Seasonal />} />
                     <Route
                       path="/travel"
