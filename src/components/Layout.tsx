@@ -2,6 +2,7 @@ import { Outlet } from 'react-router-dom'
 import { DesktopHeader } from './DesktopHeader'
 import { MobileHeader } from './MobileHeader'
 import { ProximityAlertsToggle } from './ProximityAlertsToggle'
+import { DevNavigation } from './DevNavigation'
 
 export default function Layout() {
   return (
@@ -12,6 +13,9 @@ export default function Layout() {
         <Outlet />
       </main>
       <ProximityAlertsToggle />
+
+      {/* Botões flutuantes para o Admin transitar de forma fácil entre ambientes */}
+      <DevNavigation />
     </div>
   )
 }

@@ -195,8 +195,9 @@ export default function App() {
                     }
                   />
 
-                  {/* Agrupando o arcabouço do lojista (Vendor + Merchant) no mesmo MerchantLayout */}
+                  {/* Agrupando o arcabouço do lojista no MerchantLayout (acessível via /merchant) */}
                   <Route
+                    path="/merchant"
                     element={
                       <RequireAuth
                         roles={['shopkeeper', 'admin', 'super_admin'] as any}
@@ -205,21 +206,16 @@ export default function App() {
                       </RequireAuth>
                     }
                   >
-                    <Route path="/vendor" element={<VendorDashboard />} />
-                    <Route
-                      path="/merchant"
-                      element={<Navigate to="/vendor" replace />}
-                    />
-                    <Route
-                      path="/merchant/scanner"
-                      element={<MerchantScanner />}
-                    />
-                    <Route
-                      path="/merchant/campaigns"
-                      element={<MerchantCampaigns />}
-                    />
-                    <Route path="/merchant/leads" element={<MerchantLeads />} />
+                    <Route index element={<VendorDashboard />} />
+                    <Route path="scanner" element={<MerchantScanner />} />
+                    <Route path="campaigns" element={<MerchantCampaigns />} />
+                    <Route path="leads" element={<MerchantLeads />} />
                   </Route>
+                  {/* Redirecionar /vendor antigo para /merchant de forma segura */}
+                  <Route
+                    path="/vendor"
+                    element={<Navigate to="/merchant" replace />}
+                  />
 
                   <Route
                     path="/admin/*"

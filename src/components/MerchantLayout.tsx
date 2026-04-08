@@ -1,82 +1,81 @@
 import { Outlet, Link, useLocation } from 'react-router-dom'
-import { ScanLine, Megaphone, Users, LayoutDashboard } from 'lucide-react'
+import {
+  LayoutDashboard,
+  Megaphone,
+  Users,
+  ScanLine,
+  Store,
+  Menu,
+  X,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
-
-const navItems = [
-  { label: 'Dashboard', path: '/vendor', icon: LayoutDashboard },
-  { label: 'Scanner', path: '/merchant/scanner', icon: ScanLine },
-  { label: 'Campanhas', path: '/merchant/campaigns', icon: Megaphone },
-  { label: 'Leads', path: '/merchant/leads', icon: Users },
-]
+import { useState } from 'react'
 
 export default function MerchantLayout() {
   const location = useLocation()
+  const currentPath = location.pathname
+  const [mobileOpen, setMobileOpen] = useState(false)
+
+  const navItems = [
+    { name: 'Dashboard', path: '/merchant', icon: LayoutDashboard },
+    { name: 'Campanhas', path: '/merchant/campaigns', icon: Megaphone },
+    { name: 'Leads', path: '/merchant/leads', icon: Users },
+    { name: 'Scanner', path: '/merchant/scanner', icon: ScanLine },
+  ]
 
   return (
-    <div className="flex flex-col min-h-[calc(100vh-4rem)] bg-slate-50/50">
-      <div className="bg-white border-b px-4 py-3 shadow-sm z-10 hidden md:block">
-        <div className="container mx-auto flex items-center justify-start gap-4">
-          <nav className="flex items-center gap-2">
-            {navItems.map((item) => (
+    <div className="flex min-h-[calc(100vh-4rem)] flex-col md:flex-row bg-slate-50 relative w-full">
+      {/* Botão Mobile */}
+      <button
+        className="md:hidden flex items-center justify-center gap-2 p-4 bg-white border-b border-slate-200 text-slate-700 font-medium w-full"
+        onClick={() => setMobileOpen(!mobileOpen)}
+      >
+        {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        <span>{mobileOpen ? 'Fechar Menu Lojista' : 'Abrir Menu Lojista'}</span>
+      </button>
+
+      {/* Sidebar Lojista */}
+      <aside
+        className={cn(
+          'w-full md:w-64 bg-white border-r border-slate-200 shrink-0 md:block transition-all',
+          mobileOpen ? 'block' : 'hidden',
+        )}
+      >
+        <div className="p-6 border-b border-slate-200 hidden md:block">
+          <div className="flex items-center gap-2 text-primary font-bold text-lg">
+            <Store className="h-6 w-6" />
+            <span>Painel do Lojista</span>
+          </div>
+        </div>
+        <nav className="p-4 flex flex-col gap-2">
+          {navItems.map((item) => {
+            const isActive =
+              currentPath === item.path ||
+              (item.path !== '/merchant' && currentPath.startsWith(item.path))
+            return (
               <Link
                 key={item.path}
                 to={item.path}
+                onClick={() => setMobileOpen(false)}
                 className={cn(
-                  'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all',
-                  location.pathname === item.path
+                  'flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200',
+                  isActive
                     ? 'bg-primary text-white shadow-md shadow-primary/20'
                     : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
                 )}
               >
-                <item.icon className="h-4 w-4" />
-                {item.label}
+                <item.icon className="h-5 w-5 shrink-0" />
+                {item.name}
               </Link>
-            ))}
-          </nav>
-        </div>
-      </div>
+            )
+          })}
+        </nav>
+      </aside>
 
-      <main className="flex-1 w-full pb-20 md:pb-0 overflow-y-auto">
-        <div className="h-full">
-          <Outlet />
-        </div>
+      {/* Conteúdo Lojista */}
+      <main className="flex-1 p-4 md:p-8 min-w-0 overflow-x-hidden relative bg-slate-50/50">
+        <Outlet />
       </main>
-
-      {/* Mobile Bottom Nav */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 border-t bg-white z-50 px-2 py-2 flex justify-around items-center shadow-[0_-4px_20px_rgba(0,0,0,0.05)] pb-safe">
-        {navItems.map((item) => {
-          const isActive = location.pathname === item.path
-          return (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={cn(
-                'flex flex-col items-center justify-center gap-1.5 p-2 w-16 transition-colors',
-                isActive
-                  ? 'text-primary'
-                  : 'text-slate-400 hover:text-slate-600',
-              )}
-            >
-              <div
-                className={cn(
-                  'p-1.5 rounded-full transition-colors',
-                  isActive && 'bg-primary/10',
-                )}
-              >
-                <item.icon className="h-5 w-5" />
-              </div>
-              <span
-                className={cn(
-                  'text-[10px] font-semibold text-center leading-tight',
-                  isActive ? 'text-primary' : 'text-slate-500',
-                )}
-              >
-                {item.label}
-              </span>
-            </Link>
-          )
-        })}
-      </div>
     </div>
   )
 }
