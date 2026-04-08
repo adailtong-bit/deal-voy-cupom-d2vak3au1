@@ -11,7 +11,11 @@ import { supabase } from '@/lib/supabase/client'
 interface AuthContextType {
   user: User | null
   session: Session | null
-  signUp: (email: string, password: string) => Promise<{ error: any }>
+  signUp: (
+    email: string,
+    password: string,
+    options?: any,
+  ) => Promise<{ error: any }>
   signIn: (email: string, password: string) => Promise<{ error: any }>
   signOut: () => Promise<{ error: any }>
   loading: boolean
@@ -39,27 +43,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(false)
 
       if (event === 'SIGNED_OUT') {
-        localStorage.removeItem('currentUser')
-        localStorage.removeItem('auth_token')
-        localStorage.removeItem('pocketbase_auth')
+        // Limpeza total de qualquer cache legado que pudesse causar loop de roteamento
+        localStorage.clear()
+        sessionStorage.clear()
       }
     })
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
       setUser(session?.user ?? null)
       setLoading(false)
     })
+
     return () => subscription.unsubscribe()
   }, [])
 
-  const signUp = async (email: string, password: string) => {
+  const signUp = async (email: string, password: string, options?: any) => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: `${window.location.origin}/` },
+      options: options || { emailRedirectTo: `${window.location.origin}/` },
     })
     return { error }
   }
+
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
       email,
@@ -67,6 +74,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     })
     return { error }
   }
+
   const signOut = async () => {
     const { error } = await supabase.auth.signOut()
     return { error }

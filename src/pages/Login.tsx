@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useAuth } from '@/hooks/use-auth'
 import {
@@ -29,7 +28,6 @@ import {
 } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
 import { toast } from 'sonner'
-import { supabase } from '@/lib/supabase/client'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -43,29 +41,10 @@ export default function Login() {
   const [showRegConfirmPassword, setShowRegConfirmPassword] = useState(false)
   const [role, setRole] = useState('user')
 
-  const { login, register, user: storeUser } = useCouponStore()
-  const { user: sbUser, loading: authLoading } = useAuth()
+  const { user: sbUser, loading: authLoading, signIn, signUp } = useAuth()
   const { t } = useLanguage()
   const navigate = useNavigate()
   const location = useLocation()
-
-  let localUser = null
-  let isMockUser = false
-  try {
-    const localUserStr = localStorage.getItem('currentUser')
-    if (localUserStr) {
-      localUser = JSON.parse(localUserStr)
-      isMockUser = localUser?.id?.toString().startsWith('mock-')
-    }
-  } catch (e) {
-    // ignore
-  }
-
-  const activeUser = isMockUser
-    ? localUser
-    : sbUser
-      ? { role: sbUser.user_metadata?.role || 'user' }
-      : null
 
   const fromObj = location.state?.from
   const from = fromObj
@@ -74,71 +53,39 @@ export default function Login() {
 
   useEffect(() => {
     if (authLoading) return
-    if (activeUser) {
-      if (activeUser.role === 'super_admin' || activeUser.role === 'admin') {
+
+    // Roteamento robusto após login (Master Access redireciona pro Admin por padrão ou destino)
+    if (sbUser) {
+      const userRole = sbUser.user_metadata?.role || 'user'
+      if (userRole === 'super_admin' || userRole === 'admin') {
         navigate('/admin', { replace: true })
-      } else if (activeUser.role === 'franchisee') {
+      } else if (userRole === 'franchisee') {
         navigate('/franchisee', { replace: true })
-      } else if (activeUser.role === 'shopkeeper') {
+      } else if (userRole === 'shopkeeper') {
         navigate('/vendor', { replace: true })
-      } else if (activeUser.role === 'affiliate') {
+      } else if (userRole === 'affiliate') {
         navigate('/profile', { replace: true })
       } else {
         navigate(from !== '/' ? from : '/profile', { replace: true })
       }
-    } else if (localUser && !isMockUser) {
-      // Clear zombie session data
-      localStorage.removeItem('currentUser')
-      localStorage.removeItem('auth_token')
-      localStorage.removeItem('pocketbase_auth')
     }
-  }, [activeUser, authLoading, navigate, from, localUser, isMockUser])
+  }, [sbUser, authLoading, navigate, from])
 
   const handleFakeLogin = async (roleType: string, fakeEmail: string) => {
     setIsLoading(true)
 
-    // Sign out of Supabase to clear any real session that might override the mock session
-    await supabase.auth.signOut()
+    // Usa diretamente a conta real criada pela migration no Supabase (não mais mock)
+    const { error } = await signIn(fakeEmail, 'Skip@Pass')
 
-    // Bypass Interceptor block
-    const mockUser = {
-      id: 'mock-' + roleType + '-' + Date.now().toString().slice(-6),
-      email: fakeEmail,
-      name: fakeEmail.split('@')[0],
-      role: roleType,
-      country: 'Brasil',
-    }
-    const fakeToken =
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Im1vY2staWQiLCJleHAiOjk5OTk5OTk5OTl9.signature'
-
-    localStorage.setItem(
-      'pocketbase_auth',
-      JSON.stringify({ token: fakeToken, model: mockUser }),
-    )
-    localStorage.setItem('auth_token', fakeToken)
-    localStorage.setItem('currentUser', JSON.stringify(mockUser))
-
-    try {
-      await login(fakeEmail, 'bypass')
-    } catch (e) {
-      // ignore
+    if (error) {
+      toast.error(
+        `Erro ao acessar conta de teste. A migration foi executada? Detalhe: ${error.message}`,
+      )
+      setIsLoading(false)
+      return
     }
 
-    toast.success(
-      t('auth.login_success', 'Login fictício realizado com sucesso!'),
-    )
-
-    setIsLoading(false)
-
-    if (roleType === 'super_admin' || roleType === 'admin') {
-      window.location.href = '/admin'
-    } else if (roleType === 'franchisee') {
-      window.location.href = '/franchisee'
-    } else if (roleType === 'shopkeeper') {
-      window.location.href = '/vendor'
-    } else {
-      window.location.href = '/profile'
-    }
+    toast.success(t('auth.login_success', 'Autenticação Master concluída!'))
   }
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -146,48 +93,15 @@ export default function Login() {
     if (email && password) {
       setIsLoading(true)
 
-      const { error: sbError, data } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
+      const { error } = await signIn(email, password)
 
-      if (sbError) {
+      if (error) {
         toast.error(t('auth.login_error', 'Email ou senha inválidos.'))
         setIsLoading(false)
         return
       }
 
-      try {
-        await login(email, password)
-      } catch (err: any) {
-        console.warn('Pocketbase fallback log:', err)
-      }
-
-      if (data?.user) {
-        const userRole = data.user.user_metadata?.role || 'user'
-        const mockUser = {
-          id: data.user.id,
-          email: data.user.email,
-          name: data.user.user_metadata?.name || email.split('@')[0],
-          role: userRole,
-          country: 'Brasil',
-        }
-        localStorage.setItem('currentUser', JSON.stringify(mockUser))
-      }
-
       toast.success(t('auth.login_success', 'Bem-vindo de volta!'))
-
-      const roleToRedirect = data?.user?.user_metadata?.role || 'user'
-      let dest = '/profile'
-      if (roleToRedirect === 'admin' || roleToRedirect === 'super_admin')
-        dest = '/admin'
-      else if (roleToRedirect === 'franchisee') dest = '/franchisee'
-      else if (roleToRedirect === 'shopkeeper') dest = '/vendor'
-      else if (roleToRedirect === 'affiliate') dest = '/profile'
-
-      // Page reload to apply auth context sync naturally
-      window.location.href = dest
-      setIsLoading(false)
     }
   }
 
@@ -201,63 +115,22 @@ export default function Login() {
 
     if (email && password && name) {
       setIsLoading(true)
-      try {
-        const { data: authData, error: authError } = await supabase.auth.signUp(
-          {
-            email,
-            password,
-            options: {
-              data: {
-                name,
-                role: role === 'affiliate' ? 'affiliate' : 'user',
-              },
-            },
-          },
-        )
+      const finalRole = role === 'affiliate' ? 'affiliate' : 'user'
 
-        if (authError) {
-          throw new Error(authError.message)
-        }
-
-        // Wait briefly for DB trigger to auto-confirm email and create profile/affiliate partner
-        await new Promise((resolve) => setTimeout(resolve, 1500))
-
-        // Force sign in immediately
-        const { data: signInData } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        })
-
-        try {
-          await register(name, email, password)
-        } catch (err: any) {
-          console.warn('Pocketbase register fallback:', err)
-        }
-
-        try {
-          await login(email, password)
-        } catch (loginErr) {
-          console.warn('Pocketbase login fallback:', loginErr)
-        }
-
-        // Force the local user state to be the newly created user to avoid race conditions
-        const finalRole = role === 'affiliate' ? 'affiliate' : 'user'
-        const mockUser = {
-          id: signInData?.user?.id || authData.user.id,
-          email: email,
-          name: name,
+      const { error } = await signUp(email, password, {
+        data: {
+          name,
           role: finalRole,
-          country: 'Brasil',
-        }
-        localStorage.setItem('currentUser', JSON.stringify(mockUser))
+        },
+      })
 
-        toast.success(t('auth.register_success', 'Conta criada com sucesso!'))
-        window.location.href = finalRole === 'affiliate' ? '/profile' : '/'
-      } catch (err: any) {
-        toast.error(err.message || 'Erro ao criar conta')
-      } finally {
+      if (error) {
+        toast.error(error.message || 'Erro ao criar conta')
         setIsLoading(false)
+        return
       }
+
+      toast.success(t('auth.register_success', 'Conta criada com sucesso!'))
     }
   }
 
@@ -490,6 +363,7 @@ export default function Login() {
         </CardContent>
       </Card>
 
+      {/* PAINEL DE TESTES RECONSTRUÍDO - AGORA COM AUTENTICAÇÃO REAL */}
       <div
         className="mt-8 animate-fade-in-up"
         style={{ animationDelay: '0.1s' }}
@@ -498,24 +372,27 @@ export default function Login() {
           <CardHeader className="pb-4">
             <CardTitle className="text-lg font-semibold flex items-center text-slate-700">
               <ShieldAlert className="w-5 h-5 mr-2 text-amber-500" />
-              Painel de Logins Fictícios
+              Acessos de Teste (Validação QA)
             </CardTitle>
             <CardDescription className="text-sm">
-              Acesso rápido para testes. Ignora a validação de senha.
+              Use estes acessos rápidos gerados via banco de dados para avaliar
+              toda a plataforma.
             </CardDescription>
           </CardHeader>
           <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Button
               variant="outline"
               className="w-full justify-start h-auto py-3 bg-white hover:bg-slate-100 hover:text-red-600 transition-colors shadow-sm"
-              onClick={() => handleFakeLogin('admin', 'admin@dealvoy.com')}
+              onClick={() => handleFakeLogin('admin', 'adailtong@gmail.com')}
               disabled={isLoading}
             >
               <ShieldAlert className="w-4 h-4 mr-3 text-red-500 shrink-0" />
               <div className="text-left">
-                <div className="font-semibold text-sm">Acesso Admin</div>
+                <div className="font-semibold text-sm">
+                  Acesso Master (Admin)
+                </div>
                 <div className="text-xs text-slate-500">
-                  Privilégios administrativos
+                  adailtong@gmail.com
                 </div>
               </div>
             </Button>
@@ -530,9 +407,7 @@ export default function Login() {
               <Store className="w-4 h-4 mr-3 text-green-500 shrink-0" />
               <div className="text-left">
                 <div className="font-semibold text-sm">Acesso Lojista</div>
-                <div className="text-xs text-slate-500">
-                  Dono de loja/comerciante
-                </div>
+                <div className="text-xs text-slate-500">vendor@dealvoy.com</div>
               </div>
             </Button>
             <Button
@@ -543,25 +418,17 @@ export default function Login() {
             >
               <User className="w-4 h-4 mr-3 text-blue-500 shrink-0" />
               <div className="text-left">
-                <div className="font-semibold text-sm">Acesso Cliente</div>
-                <div className="text-xs text-slate-500">Cliente padrão</div>
+                <div className="font-semibold text-sm">
+                  Acesso Cliente Padrão
+                </div>
+                <div className="text-xs text-slate-500">
+                  cliente@dealvoy.com
+                </div>
               </div>
             </Button>
             <Button
               variant="outline"
-              className="w-full justify-start h-auto py-3 bg-white hover:bg-slate-100 hover:text-purple-600 transition-colors shadow-sm"
-              onClick={() => handleFakeLogin('user', 'testuser@dealvoy.com')}
-              disabled={isLoading}
-            >
-              <Map className="w-4 h-4 mr-3 text-purple-500 shrink-0" />
-              <div className="text-left">
-                <div className="font-semibold text-sm">Usuário de Teste</div>
-                <div className="text-xs text-slate-500">Conta genérica</div>
-              </div>
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full justify-start h-auto py-3 bg-white hover:bg-slate-100 hover:text-orange-600 transition-colors shadow-sm md:col-span-2"
+              className="w-full justify-start h-auto py-3 bg-white hover:bg-slate-100 hover:text-orange-600 transition-colors shadow-sm"
               onClick={() =>
                 handleFakeLogin('affiliate', 'afiliado@dealvoy.com')
               }
@@ -571,7 +438,7 @@ export default function Login() {
               <div className="text-left">
                 <div className="font-semibold text-sm">Acesso Afiliado</div>
                 <div className="text-xs text-slate-500">
-                  Parceiro de Ofertas (Acesso à API)
+                  afiliado@dealvoy.com
                 </div>
               </div>
             </Button>

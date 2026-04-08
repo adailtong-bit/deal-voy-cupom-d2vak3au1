@@ -36,110 +36,48 @@ function RequireAuth({
   children: React.ReactNode
   roles?: UserRole[]
 }) {
-  const { user: storeUser } = useCouponStore()
-  const { user: sbUser, loading } = useAuth()
+  const { user, loading } = useAuth()
   const location = useLocation()
 
-  // Admin Session Stability: Prevent unmounting if a background crawl is active
+  // Admin Session Stability: Prevent unmounting se houver processamento em background
   const isCrawling = sessionStorage.getItem('crawler_isScanning') === 'true'
   const isAdminPath = location.pathname.startsWith('/admin')
 
-  // Always allow admin path if crawling to prevent interruptions
   if (isCrawling && isAdminPath) {
     return <>{children}</>
   }
 
-  let localUser = null
-  try {
-    const localUserStr = localStorage.getItem('currentUser')
-    if (localUserStr) localUser = JSON.parse(localUserStr)
-  } catch (e) {
-    // ignore
-  }
-  const isMockUser = localUser?.id?.toString().startsWith('mock-')
-
-  if (loading && !isMockUser) {
+  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 text-slate-500">
-        Carregando permissões de acesso...
+      <div className="min-h-screen flex flex-col items-center justify-center p-4">
+        <div className="w-10 h-10 border-4 border-primary/40 border-t-primary rounded-full animate-spin mb-4"></div>
+        <p className="text-slate-500 font-medium">
+          Autenticando acesso seguro...
+        </p>
       </div>
     )
   }
 
-  // Unified auth state - priority to Supabase, but allow Mock users to bypass properly
-  let activeUser = null
-
-  if (isMockUser && localUser) {
-    activeUser = localUser
-  } else if (sbUser) {
-    activeUser = {
-      id: sbUser.id,
-      role: (sbUser.user_metadata?.role || 'user') as UserRole,
-      email: sbUser.email,
-      country: 'Brasil',
-    }
-  }
-
-  if (!activeUser) {
-    // Limpar storage se chegou aqui achando que estava logado
-    if (localUser && !isMockUser) {
-      localStorage.removeItem('currentUser')
-      localStorage.removeItem('auth_token')
-      localStorage.removeItem('pocketbase_auth')
-    }
+  if (!user) {
     return <Navigate to="/login" state={{ from: location }} replace />
   }
 
-  if (roles && roles.length > 0 && !roles.includes(activeUser.role as any)) {
-    // Router Guard: Redirect to appropriate dashboard based on actual role
-    if (activeUser.role === 'super_admin' || activeUser.role === 'admin') {
-      return <Navigate to="/admin" replace />
-    }
-    if (activeUser.role === 'franchisee') {
-      return <Navigate to="/franchisee" replace />
-    }
-    if (activeUser.role === 'shopkeeper') {
-      return <Navigate to="/vendor" replace />
-    }
-    if (activeUser.role === 'affiliate') {
-      return <Navigate to="/profile" replace />
-    }
+  const role = (user.user_metadata?.role || 'user') as UserRole
+
+  // 🔥 MASTER ACESSO: Se for super_admin ou admin, tem acesso liberado em toda a plataforma
+  if (role === 'super_admin' || role === 'admin') {
+    return <>{children}</>
+  }
+
+  // Roteamento condicional para roles específicos se tentarem acessar locais indevidos
+  if (roles && roles.length > 0 && !roles.includes(role)) {
+    if (role === 'franchisee') return <Navigate to="/franchisee" replace />
+    if (role === 'shopkeeper') return <Navigate to="/vendor" replace />
+    if (role === 'affiliate') return <Navigate to="/profile" replace />
     return <Navigate to="/" replace />
   }
 
   return <>{children}</>
-}
-
-function AuthStateSync() {
-  const { user: storeUser } = useCouponStore()
-  const { user: sbUser, loading } = useAuth()
-
-  useEffect(() => {
-    if (loading) return
-
-    let isMockUser = false
-    try {
-      const localUserStr = localStorage.getItem('currentUser')
-      if (localUserStr) {
-        const localUser = JSON.parse(localUserStr)
-        isMockUser = localUser?.id?.toString().startsWith('mock-')
-      }
-    } catch (e) {
-      // ignore
-    }
-
-    // Se o usuário não está autenticado no Supabase e não é um mock, força a limpeza
-    if (!sbUser && !isMockUser) {
-      // Purge authentication tokens and role-related data upon logout
-      localStorage.removeItem('auth_token')
-      localStorage.removeItem('pocketbase_auth')
-      localStorage.removeItem('user_role')
-      localStorage.removeItem('currentUser')
-      sessionStorage.clear()
-    }
-  }, [sbUser, loading])
-
-  return null
 }
 
 function PageTitleSync() {
@@ -177,14 +115,16 @@ function PageTitleSync() {
 }
 
 function GlobalLanguageSync() {
-  const { user, franchises } = useCouponStore()
+  const { user: storeUser, franchises } = useCouponStore()
+  const { user: sbUser } = useAuth()
   const { setLanguage } = useLanguage()
 
   useEffect(() => {
-    let countryToUse = user?.country
+    const role = sbUser?.user_metadata?.role || storeUser?.role
+    let countryToUse = storeUser?.country || 'Brasil'
 
-    if (user?.role === 'franchisee') {
-      const myFranchise = franchises.find((f) => f.ownerId === user.id)
+    if (role === 'franchisee') {
+      const myFranchise = franchises.find((f) => f.ownerId === sbUser?.id)
       if (myFranchise?.addressCountry) {
         countryToUse = myFranchise.addressCountry
       }
@@ -217,7 +157,7 @@ function GlobalLanguageSync() {
         setLanguage('en')
       }
     }
-  }, [user?.country, user?.role, user?.id, franchises, setLanguage])
+  }, [storeUser?.country, sbUser, franchises, setLanguage])
 
   return null
 }
@@ -229,7 +169,6 @@ export default function App() {
         <NotificationProvider>
           <CouponProvider>
             <BrowserRouter>
-              <AuthStateSync />
               <GlobalLanguageSync />
               <PageTitleSync />
               <Routes>
