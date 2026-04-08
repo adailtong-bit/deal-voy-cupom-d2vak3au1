@@ -62,13 +62,19 @@ function RequireAuth({
     return <Navigate to="/login" state={{ from: location }} replace />
   }
 
-  const role = (authRole || 'user') as UserRole
+  const bypassRole = localStorage.getItem('qa_bypass_role')
+  const role = (bypassRole || authRole || 'user') as UserRole
   const email = user?.email
 
   const isMaster =
     role === 'super_admin' ||
     role === 'admin' ||
     email === 'adailtong@gmail.com'
+
+  // 🛠️ QA BYPASS ACESSO: Se a role mockada corresponder às roles permitidas, deixa passar
+  if (roles && roles.includes(role)) {
+    return <>{children}</>
+  }
 
   // 🔥 MASTER ACESSO: Se for super_admin, admin ou o email master, tem acesso liberado
   if (isMaster) {

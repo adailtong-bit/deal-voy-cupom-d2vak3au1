@@ -41,6 +41,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [role, setRole] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
+  // QA Override Role
+  const applyRole = (fetchedRole: string) => {
+    const override = localStorage.getItem('qa_bypass_role')
+    setRole(override || fetchedRole)
+  }
+
   useEffect(() => {
     let isMounted = true
 
@@ -58,6 +64,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         if (isMounted) {
           if (data) {
+            const override = localStorage.getItem('qa_bypass_role')
+            if (override) {
+              data.role = override
+            }
             setProfile(data)
             let resolvedRole = data.role || 'user'
             if (resolvedRole === 'user' && userMetaRole) {
@@ -68,15 +78,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               currentEmail === 'adailtong@gmail.com' ||
               resolvedRole === 'super_admin'
             ) {
-              setRole('super_admin')
+              applyRole('super_admin')
             } else {
-              setRole(resolvedRole)
+              applyRole(resolvedRole)
             }
           } else {
             if (currentEmail === 'adailtong@gmail.com') {
-              setRole('super_admin')
+              applyRole('super_admin')
             } else if (userMetaRole) {
-              setRole(userMetaRole)
+              applyRole(userMetaRole)
             }
           }
         }
@@ -84,9 +94,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         console.error('Error fetching profile:', e)
         if (isMounted) {
           if (currentEmail === 'adailtong@gmail.com') {
-            setRole('super_admin')
+            applyRole('super_admin')
           } else if (userMetaRole) {
-            setRole(userMetaRole)
+            applyRole(userMetaRole)
           }
         }
       }
@@ -107,7 +117,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setLoading(false)
       } else {
         // Assume basic role quickly, then update
-        setRole(
+        applyRole(
           currentUser.email === 'adailtong@gmail.com' ||
             currentUser.user_metadata?.role === 'super_admin'
             ? 'super_admin'
@@ -140,7 +150,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (!currentUser) {
           setLoading(false)
         } else {
-          setRole(
+          applyRole(
             currentUser.email === 'adailtong@gmail.com' ||
               currentUser.user_metadata?.role === 'super_admin'
               ? 'super_admin'
