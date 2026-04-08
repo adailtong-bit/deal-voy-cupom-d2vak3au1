@@ -276,10 +276,14 @@ export default function Login() {
 
       try {
         await register(name, email, password)
-      } catch (err) {}
+      } catch (err) {
+        /* ignore */
+      }
       try {
         await login(email, password)
-      } catch (err) {}
+      } catch (err) {
+        /* ignore */
+      }
 
       const userId = signInData?.user?.id || authData?.user?.id || 'temp-id'
       const finalRole = role === 'affiliate' ? 'affiliate' : 'user'
