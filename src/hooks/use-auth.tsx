@@ -40,16 +40,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (event === 'SIGNED_OUT') {
         try {
           const localUserStr = localStorage.getItem('currentUser')
+          let isMock = false
           if (localUserStr) {
             const userObj = JSON.parse(localUserStr)
-            // Protege a sessão mockada de ser destruída por um evento tardio de logout do supabase
-            if (!userObj?.id?.toString().startsWith('mock-')) {
-              localStorage.clear()
-              sessionStorage.clear()
-            }
-          } else {
+            isMock = Boolean(userObj?.id?.toString().startsWith('mock-'))
+          }
+
+          if (!isMock) {
             localStorage.clear()
             sessionStorage.clear()
+            // Reset forçado em caso de logout assíncrono para garantir que não haja tela presa
+            if (
+              window.location.pathname !== '/login' &&
+              window.location.pathname !== '/'
+            ) {
+              window.location.href = '/login'
+            }
           }
         } catch (error) {
           localStorage.clear()
@@ -90,12 +96,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     try {
+      const { error } = await supabase.auth.signOut()
       localStorage.clear()
       sessionStorage.clear()
-      const { error } = await supabase.auth.signOut()
       window.location.href = '/login'
       return { error }
     } catch (error) {
+      localStorage.clear()
+      sessionStorage.clear()
       window.location.href = '/login'
       return { error: error }
     }

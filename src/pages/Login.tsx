@@ -151,8 +151,9 @@ export default function Login() {
 
     setIsLoading(true)
 
-    // Limpeza forçada prévia para evitar corrupção de sessão
-    localStorage.clear()
+    // Ao invés de clear agressivo que dispara SIGNED_OUT e recarrega a página atrapalhando o login,
+    // apenas limpamos itens customizados, mantendo o supabase.auth.token intacto durante o processo.
+    localStorage.removeItem('currentUser')
     sessionStorage.clear()
 
     // Bypass Master de Emergência (Garante o acesso do Adailton em caso de queda de servidor)
@@ -232,7 +233,10 @@ export default function Login() {
         else if (userRole === 'shopkeeper') dest = '/vendor'
         else if (userRole === 'affiliate') dest = '/profile'
 
-        window.location.href = dest
+        // Garantir que a navegação só ocorra após o storage ser persistido
+        setTimeout(() => {
+          window.location.href = dest
+        }, 100)
       } else {
         toast.error('Erro desconhecido. Não foi possível autenticar o usuário.')
         setIsLoading(false)
