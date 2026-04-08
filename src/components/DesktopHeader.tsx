@@ -4,6 +4,9 @@ import { NotificationPopover } from '@/components/shared/NotificationPopover'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { LanguageSelector } from '@/components/LanguageSelector'
+import { useAuth } from '@/hooks/use-auth'
+import { supabase } from '@/lib/supabase/client'
+import { useEffect, useState } from 'react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,9 +21,45 @@ import { useCouponStore } from '@/stores/CouponContext'
 import { cn } from '@/lib/utils'
 
 export function DesktopHeader() {
-  const { user, logout } = useCouponStore()
+  const { logout } = useCouponStore()
+  const { user: authUser, signOut } = useAuth()
   const { t } = useLanguage()
   const navigate = useNavigate()
+  const [profile, setProfile] = useState<any>(null)
+
+  useEffect(() => {
+    let isMounted = true
+    if (authUser) {
+      supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', authUser.id)
+        .single()
+        .then(({ data }) => {
+          if (data && isMounted) setProfile(data)
+        })
+    } else {
+      setProfile(null)
+    }
+    return () => {
+      isMounted = false
+    }
+  }, [authUser])
+
+  const user = authUser
+    ? {
+        id: authUser.id,
+        name:
+          profile?.name ||
+          authUser.user_metadata?.name ||
+          authUser.email?.split('@')[0] ||
+          'User',
+        email: authUser.email,
+        role: profile?.role || authUser.user_metadata?.role || 'user',
+        avatar: authUser.user_metadata?.avatar_url || null,
+      }
+    : null
+
   const [searchParams, setSearchParams] = useSearchParams()
   const searchQuery = searchParams.get('q') || ''
 
@@ -36,7 +75,8 @@ export function DesktopHeader() {
     )
   }
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await signOut()
     logout()
     navigate('/')
   }

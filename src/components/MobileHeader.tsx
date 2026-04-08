@@ -43,12 +43,51 @@ import {
 } from '@/components/ui/dropdown-menu'
 import logoUrl from '@/assets/whatsapp-image-2026-01-25-at-5.34.51-am-1-9b370.jpeg'
 import { useCouponStore } from '@/stores/CouponContext'
+import { useAuth } from '@/hooks/use-auth'
+import { supabase } from '@/lib/supabase/client'
 import { useLanguage } from '@/stores/LanguageContext'
 import { CATEGORIES } from '@/lib/data'
 import { NotificationPopover } from '@/components/shared/NotificationPopover'
+import { useEffect } from 'react'
 
 export function MobileHeader() {
-  const { user, logout } = useCouponStore()
+  const { logout } = useCouponStore()
+  const { user: authUser, signOut } = useAuth()
+  const [profile, setProfile] = useState<any>(null)
+
+  useEffect(() => {
+    let isMounted = true
+    if (authUser) {
+      supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', authUser.id)
+        .single()
+        .then(({ data }) => {
+          if (data && isMounted) setProfile(data)
+        })
+    } else {
+      setProfile(null)
+    }
+    return () => {
+      isMounted = false
+    }
+  }, [authUser])
+
+  const user = authUser
+    ? {
+        id: authUser.id,
+        name:
+          profile?.name ||
+          authUser.user_metadata?.name ||
+          authUser.email?.split('@')[0] ||
+          'User',
+        email: authUser.email,
+        role: profile?.role || authUser.user_metadata?.role || 'user',
+        avatar: authUser.user_metadata?.avatar_url || null,
+      }
+    : null
+
   const { t, language, setLanguage } = useLanguage()
   const navigate = useNavigate()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -72,7 +111,8 @@ export function MobileHeader() {
     )
   }
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await signOut()
     logout()
     navigate('/')
   }

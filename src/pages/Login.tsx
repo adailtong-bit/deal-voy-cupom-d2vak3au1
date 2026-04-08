@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useAuth } from '@/hooks/use-auth'
@@ -27,6 +27,7 @@ import {
   Users,
   LogOut,
   ArrowRight,
+  Building,
 } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
 import { toast } from 'sonner'
@@ -190,10 +191,117 @@ export default function Login() {
     )
   }
 
+  const [currentRole, setCurrentRole] = useState<string | null>(null)
+
+  useEffect(() => {
+    let isMounted = true
+    if (sbUser) {
+      supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', sbUser.id)
+        .single()
+        .then(({ data }) => {
+          if (isMounted && data) {
+            setCurrentRole(data.role)
+          }
+        })
+    }
+    return () => {
+      isMounted = false
+    }
+  }, [sbUser])
+
+  const qaTestingPanel = (
+    <div className="mt-8 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+      <Card className="border border-dashed border-slate-300 bg-slate-50 shadow-sm">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg font-semibold flex items-center text-slate-700">
+            <ShieldAlert className="w-5 h-5 mr-2 text-amber-500" />
+            Acessos de Teste (Validação QA)
+          </CardTitle>
+          <CardDescription className="text-sm">
+            Use estes acessos rápidos gerados via banco de dados para avaliar
+            toda a plataforma.{' '}
+            {sbUser ? 'Ao clicar, sua sessão atual será substituída.' : ''}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <Button
+            variant="outline"
+            className="w-full justify-start h-auto py-3 bg-white hover:bg-slate-100 hover:text-red-600 transition-colors shadow-sm"
+            onClick={() =>
+              handleFakeLogin('super_admin', 'adailtong@gmail.com')
+            }
+            disabled={isLoading}
+          >
+            <ShieldAlert className="w-4 h-4 mr-3 text-red-500 shrink-0" />
+            <div className="text-left">
+              <div className="font-semibold text-sm">Acesso Master (Admin)</div>
+              <div className="text-xs text-slate-500">adailtong@gmail.com</div>
+            </div>
+          </Button>
+          <Button
+            variant="outline"
+            className="w-full justify-start h-auto py-3 bg-white hover:bg-slate-100 hover:text-purple-600 transition-colors shadow-sm"
+            onClick={() =>
+              handleFakeLogin('franchisee', 'franqueado@dealvoy.com')
+            }
+            disabled={isLoading}
+          >
+            <Building className="w-4 h-4 mr-3 text-purple-500 shrink-0" />
+            <div className="text-left">
+              <div className="font-semibold text-sm">Acesso Franqueado</div>
+              <div className="text-xs text-slate-500">
+                franqueado@dealvoy.com
+              </div>
+            </div>
+          </Button>
+          <Button
+            variant="outline"
+            className="w-full justify-start h-auto py-3 bg-white hover:bg-slate-100 hover:text-green-600 transition-colors shadow-sm"
+            onClick={() => handleFakeLogin('shopkeeper', 'vendor@dealvoy.com')}
+            disabled={isLoading}
+          >
+            <Store className="w-4 h-4 mr-3 text-green-500 shrink-0" />
+            <div className="text-left">
+              <div className="font-semibold text-sm">Acesso Lojista</div>
+              <div className="text-xs text-slate-500">vendor@dealvoy.com</div>
+            </div>
+          </Button>
+          <Button
+            variant="outline"
+            className="w-full justify-start h-auto py-3 bg-white hover:bg-slate-100 hover:text-blue-600 transition-colors shadow-sm"
+            onClick={() => handleFakeLogin('user', 'cliente@dealvoy.com')}
+            disabled={isLoading}
+          >
+            <User className="w-4 h-4 mr-3 text-blue-500 shrink-0" />
+            <div className="text-left">
+              <div className="font-semibold text-sm">Acesso Cliente Padrão</div>
+              <div className="text-xs text-slate-500">cliente@dealvoy.com</div>
+            </div>
+          </Button>
+          <Button
+            variant="outline"
+            className="w-full justify-start h-auto py-3 bg-white hover:bg-slate-100 hover:text-orange-600 transition-colors shadow-sm sm:col-span-2"
+            onClick={() => handleFakeLogin('affiliate', 'afiliado@dealvoy.com')}
+            disabled={isLoading}
+          >
+            <Users className="w-4 h-4 mr-3 text-orange-500 shrink-0" />
+            <div className="text-left">
+              <div className="font-semibold text-sm">Acesso Afiliado</div>
+              <div className="text-xs text-slate-500">afiliado@dealvoy.com</div>
+            </div>
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  )
+
   // Previne o "loop de rota" ao não auto-redirecionar cegamente.
   // Em vez disso, se o usuário estiver logado, exibe uma interface clara para prosseguir ou deslogar.
   if (sbUser) {
-    const uRole = sbUser.user_metadata?.role || 'user'
+    const uRole = currentRole || sbUser.user_metadata?.role || 'user'
     return (
       <div className="container max-w-md py-16 animate-fade-in-up">
         <Card className="border-0 shadow-xl shadow-primary/5 text-center">
@@ -226,6 +334,7 @@ export default function Login() {
             </Button>
           </CardContent>
         </Card>
+        {qaTestingPanel}
       </div>
     )
   }
@@ -459,89 +568,7 @@ export default function Login() {
         </CardContent>
       </Card>
 
-      <div
-        className="mt-8 animate-fade-in-up"
-        style={{ animationDelay: '0.1s' }}
-      >
-        <Card className="border border-dashed border-slate-300 bg-slate-50 shadow-sm">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-lg font-semibold flex items-center text-slate-700">
-              <ShieldAlert className="w-5 h-5 mr-2 text-amber-500" />
-              Acessos de Teste (Validação QA)
-            </CardTitle>
-            <CardDescription className="text-sm">
-              Use estes acessos rápidos gerados via banco de dados para avaliar
-              toda a plataforma.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Button
-              variant="outline"
-              className="w-full justify-start h-auto py-3 bg-white hover:bg-slate-100 hover:text-red-600 transition-colors shadow-sm"
-              onClick={() =>
-                handleFakeLogin('super_admin', 'adailtong@gmail.com')
-              }
-              disabled={isLoading}
-            >
-              <ShieldAlert className="w-4 h-4 mr-3 text-red-500 shrink-0" />
-              <div className="text-left">
-                <div className="font-semibold text-sm">
-                  Acesso Master (Admin)
-                </div>
-                <div className="text-xs text-slate-500">
-                  adailtong@gmail.com
-                </div>
-              </div>
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full justify-start h-auto py-3 bg-white hover:bg-slate-100 hover:text-green-600 transition-colors shadow-sm"
-              onClick={() =>
-                handleFakeLogin('shopkeeper', 'vendor@dealvoy.com')
-              }
-              disabled={isLoading}
-            >
-              <Store className="w-4 h-4 mr-3 text-green-500 shrink-0" />
-              <div className="text-left">
-                <div className="font-semibold text-sm">Acesso Lojista</div>
-                <div className="text-xs text-slate-500">vendor@dealvoy.com</div>
-              </div>
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full justify-start h-auto py-3 bg-white hover:bg-slate-100 hover:text-blue-600 transition-colors shadow-sm"
-              onClick={() => handleFakeLogin('user', 'cliente@dealvoy.com')}
-              disabled={isLoading}
-            >
-              <User className="w-4 h-4 mr-3 text-blue-500 shrink-0" />
-              <div className="text-left">
-                <div className="font-semibold text-sm">
-                  Acesso Cliente Padrão
-                </div>
-                <div className="text-xs text-slate-500">
-                  cliente@dealvoy.com
-                </div>
-              </div>
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full justify-start h-auto py-3 bg-white hover:bg-slate-100 hover:text-orange-600 transition-colors shadow-sm"
-              onClick={() =>
-                handleFakeLogin('affiliate', 'afiliado@dealvoy.com')
-              }
-              disabled={isLoading}
-            >
-              <Users className="w-4 h-4 mr-3 text-orange-500 shrink-0" />
-              <div className="text-left">
-                <div className="font-semibold text-sm">Acesso Afiliado</div>
-                <div className="text-xs text-slate-500">
-                  afiliado@dealvoy.com
-                </div>
-              </div>
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      {qaTestingPanel}
     </div>
   )
 }
