@@ -102,8 +102,12 @@ function RequireAuth({
     return <Navigate to="/login" state={{ from: location }} replace />
   }
 
-  // Admin Bypass - Absolute Priority
-  if (activeUser.role === 'super_admin' || activeUser.role === 'admin') {
+  // Admin Bypass - Absolute Priority (Allows master access everywhere)
+  if (
+    activeUser.role === 'super_admin' ||
+    activeUser.role === 'admin' ||
+    activeUser.email === 'adailtong@gmail.com'
+  ) {
     return <>{children}</>
   }
 
@@ -258,8 +262,8 @@ function GlobalRouterGuard({ children }: { children: React.ReactNode }) {
   }
 
   // Enforce root path redirects for specific roles
-  if (location.pathname === '/') {
-    if (loading && !isMockUser) {
+  if (location.pathname === '/' || location.pathname === '/profile') {
+    if (loading && !isMockUser && location.pathname === '/') {
       return (
         <div className="min-h-screen flex items-center justify-center p-4 text-slate-500 bg-slate-50/50">
           Iniciando...
@@ -267,17 +271,26 @@ function GlobalRouterGuard({ children }: { children: React.ReactNode }) {
       )
     }
 
-    if (activeRole === 'admin' || activeRole === 'super_admin') {
+    if (
+      activeRole === 'admin' ||
+      activeRole === 'super_admin' ||
+      sbUser?.email === 'adailtong@gmail.com' ||
+      localUser?.email === 'adailtong@gmail.com'
+    ) {
+      // Se for admin e tentar acessar raiz ou profile, forçamos sempre para o dashboard admin
       return <Navigate to="/admin" replace />
     }
-    if (activeRole === 'franchisee') {
-      return <Navigate to="/franchisee" replace />
-    }
-    if (activeRole === 'shopkeeper') {
-      return <Navigate to="/vendor" replace />
-    }
-    if (activeRole === 'affiliate') {
-      return <Navigate to="/profile" replace />
+
+    if (location.pathname === '/') {
+      if (activeRole === 'franchisee') {
+        return <Navigate to="/franchisee" replace />
+      }
+      if (activeRole === 'shopkeeper') {
+        return <Navigate to="/vendor" replace />
+      }
+      if (activeRole === 'affiliate') {
+        return <Navigate to="/profile" replace />
+      }
     }
   }
 

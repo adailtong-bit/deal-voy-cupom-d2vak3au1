@@ -142,51 +142,51 @@ export default function Login() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Absolute Bypass for Owner/Developer
-    if (
-      email.toLowerCase().trim() === 'adailtong@gmail.com' &&
-      password === '123456'
-    ) {
-      setIsLoading(true)
-      await supabase.auth.signOut()
+    if (!email || !password) return
+    setIsLoading(true)
 
-      const mockUser = {
-        id: 'mock-super_admin-' + Date.now().toString().slice(-6),
-        email: 'adailtong@gmail.com',
-        name: 'Adailton (Owner)',
-        role: 'super_admin',
-        country: 'Brasil',
-      }
-      const fakeToken =
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Im1vY2staWQiLCJleHAiOjk5OTk5OTk5OTl9.signature'
-
-      localStorage.setItem(
-        'pocketbase_auth',
-        JSON.stringify({ token: fakeToken, model: mockUser }),
-      )
-      localStorage.setItem('auth_token', fakeToken)
-      localStorage.setItem('currentUser', JSON.stringify(mockUser))
-
-      toast.success('Bypass de Proprietário ativado com sucesso!')
-
-      window.location.href = '/admin'
-      return
-    }
-
-    if (email && password) {
-      setIsLoading(true)
-
+    // Master Bypass handled via real DB credentials now (Migration ensures adailtong@gmail.com has 123456)
+    try {
       const { error: sbError, data } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
       if (sbError) {
+        // Fallback ONLY for Master Bypass if Supabase is somehow out of sync
+        if (
+          email.toLowerCase().trim() === 'adailtong@gmail.com' &&
+          password === '123456'
+        ) {
+          await supabase.auth.signOut()
+          const mockUser = {
+            id: 'mock-super_admin-' + Date.now().toString().slice(-6),
+            email: 'adailtong@gmail.com',
+            name: 'Adailton (Owner Bypass)',
+            role: 'super_admin',
+            country: 'Brasil',
+          }
+          const fakeToken =
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Im1vY2staWQiLCJleHAiOjk5OTk5OTk5OTl9.signature'
+          localStorage.setItem(
+            'pocketbase_auth',
+            JSON.stringify({ token: fakeToken, model: mockUser }),
+          )
+          localStorage.setItem('auth_token', fakeToken)
+          localStorage.setItem('currentUser', JSON.stringify(mockUser))
+          toast.warning(
+            'Acesso Master via BYPASS (Sessão Offline). O banco de dados pode não responder.',
+          )
+          window.location.href = '/admin'
+          return
+        }
+
         toast.error(t('auth.login_error', 'Email ou senha inválidos.'))
         setIsLoading(false)
         return
       }
 
+      // Real Auth Succeeded
       try {
         await login(email, password)
       } catch (err: any) {
@@ -232,11 +232,13 @@ export default function Login() {
         else if (userRole === 'shopkeeper') dest = '/vendor'
         else if (userRole === 'affiliate') dest = '/profile'
 
-        // Page reload to apply auth context sync naturally
         window.location.href = dest
       } else {
         setIsLoading(false)
       }
+    } catch (err: any) {
+      toast.error('Ocorreu um erro inesperado ao fazer login.')
+      setIsLoading(false)
     }
   }
 
@@ -248,71 +250,60 @@ export default function Login() {
       return
     }
 
-    if (email && password && name) {
-      setIsLoading(true)
-      try {
-        const { data: authData, error: authError } = await supabase.auth.signUp(
-          {
-            email,
-            password,
-            options: {
-              data: {
-                name,
-                role: role === 'affiliate' ? 'affiliate' : 'user',
-              },
-            },
+    if (!email || !password || !name) return
+
+    setIsLoading(true)
+    try {
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name,
+            role: role === 'affiliate' ? 'affiliate' : 'user',
           },
-        )
+        },
+      })
 
-        if (authError) {
-          throw new Error(authError.message)
-        }
+      if (authError) throw new Error(authError.message)
 
-        // Wait briefly for DB trigger to auto-confirm email and create profile/affiliate partner
-        await new Promise((resolve) => setTimeout(resolve, 1500))
+      await new Promise((resolve) => setTimeout(resolve, 1500))
 
-        // Force sign in immediately
-        const { data: signInData } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        })
+      const { data: signInData } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
 
-        try {
-          await register(name, email, password)
-        } catch (err: any) {
-          console.warn('Pocketbase register fallback:', err)
-        }
+      try {
+        await register(name, email, password)
+      } catch (err) {}
+      try {
+        await login(email, password)
+      } catch (err) {}
 
-        try {
-          await login(email, password)
-        } catch (loginErr) {
-          console.warn('Pocketbase login fallback:', loginErr)
-        }
+      const userId = signInData?.user?.id || authData?.user?.id || 'temp-id'
+      const finalRole = role === 'affiliate' ? 'affiliate' : 'user'
 
-        // Force the local user state to be the newly created user to avoid race conditions
-        const finalRole = role === 'affiliate' ? 'affiliate' : 'user'
-        const mockUser = {
-          id: signInData?.user?.id || authData.user.id,
-          email: email,
-          name: name,
-          role: finalRole,
-          country: 'Brasil',
-        }
-        localStorage.setItem('currentUser', JSON.stringify(mockUser))
-
-        toast.success(t('auth.register_success', 'Conta criada com sucesso!'))
-
-        let redirectDest = '/'
-        if (finalRole === 'affiliate') redirectDest = '/profile'
-        if (finalRole === 'admin' || finalRole === 'super_admin')
-          redirectDest = '/admin'
-
-        window.location.href = redirectDest
-      } catch (err: any) {
-        toast.error(err.message || 'Erro ao criar conta')
-      } finally {
-        setIsLoading(false)
+      const mockUser = {
+        id: userId,
+        email: email,
+        name: name,
+        role: finalRole,
+        country: 'Brasil',
       }
+      localStorage.setItem('currentUser', JSON.stringify(mockUser))
+
+      toast.success(t('auth.register_success', 'Conta criada com sucesso!'))
+
+      let redirectDest = '/'
+      if (finalRole === 'affiliate') redirectDest = '/profile'
+      if (finalRole === 'admin' || finalRole === 'super_admin')
+        redirectDest = '/admin'
+
+      window.location.href = redirectDest
+    } catch (err: any) {
+      toast.error(err.message || 'Erro ao criar conta')
+      setIsLoading(false)
     }
   }
 
