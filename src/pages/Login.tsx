@@ -153,30 +153,45 @@ export default function Login() {
       }
 
       if (data?.user) {
-        const userRole = data.user.user_metadata?.role || 'user'
+        let userRole = data.user.user_metadata?.role || 'user'
+        let userName = data.user.user_metadata?.name || email.split('@')[0]
+
+        try {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('role, name')
+            .eq('id', data.user.id)
+            .maybeSingle()
+          if (profile) {
+            if (profile.role) userRole = profile.role
+            if (profile.name) userName = profile.name
+          }
+        } catch (e) {
+          console.error('Error fetching profile role', e)
+        }
+
         const mockUser = {
           id: data.user.id,
           email: data.user.email,
-          name: data.user.user_metadata?.name || email.split('@')[0],
+          name: userName,
           role: userRole,
           country: 'Brasil',
         }
         localStorage.setItem('currentUser', JSON.stringify(mockUser))
+
+        toast.success(t('auth.login_success', 'Bem-vindo de volta!'))
+
+        let dest = '/profile'
+        if (userRole === 'admin' || userRole === 'super_admin') dest = '/admin'
+        else if (userRole === 'franchisee') dest = '/franchisee'
+        else if (userRole === 'shopkeeper') dest = '/vendor'
+        else if (userRole === 'affiliate') dest = '/profile'
+
+        // Page reload to apply auth context sync naturally
+        window.location.href = dest
+      } else {
+        setIsLoading(false)
       }
-
-      toast.success(t('auth.login_success', 'Bem-vindo de volta!'))
-
-      const roleToRedirect = data?.user?.user_metadata?.role || 'user'
-      let dest = '/profile'
-      if (roleToRedirect === 'admin' || roleToRedirect === 'super_admin')
-        dest = '/admin'
-      else if (roleToRedirect === 'franchisee') dest = '/franchisee'
-      else if (roleToRedirect === 'shopkeeper') dest = '/vendor'
-      else if (roleToRedirect === 'affiliate') dest = '/profile'
-
-      // Page reload to apply auth context sync naturally
-      window.location.href = dest
-      setIsLoading(false)
     }
   }
 
@@ -241,7 +256,13 @@ export default function Login() {
         localStorage.setItem('currentUser', JSON.stringify(mockUser))
 
         toast.success(t('auth.register_success', 'Conta criada com sucesso!'))
-        window.location.href = finalRole === 'affiliate' ? '/profile' : '/'
+
+        let redirectDest = '/'
+        if (finalRole === 'affiliate') redirectDest = '/profile'
+        if (finalRole === 'admin' || finalRole === 'super_admin')
+          redirectDest = '/admin'
+
+        window.location.href = redirectDest
       } catch (err: any) {
         toast.error(err.message || 'Erro ao criar conta')
       } finally {

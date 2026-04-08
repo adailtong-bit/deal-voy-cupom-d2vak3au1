@@ -31,19 +31,75 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    let isMounted = true
+
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session)
-      setUser(session?.user ?? null)
-      setLoading(false)
+      const currentUser = session?.user ?? null
+
+      if (currentUser) {
+        // Fetch role from profile asynchronously but wait to clear loading state
+        supabase
+          .from('profiles')
+          .select('role, is_affiliate')
+          .eq('id', currentUser.id)
+          .maybeSingle()
+          .then(({ data }) => {
+            if (isMounted) {
+              const updatedUser = {
+                ...currentUser,
+                user_metadata: {
+                  ...currentUser.user_metadata,
+                  role: data?.role || currentUser.user_metadata?.role || 'user',
+                  is_affiliate: data?.is_affiliate,
+                },
+              } as User
+              setUser(updatedUser)
+              setLoading(false)
+            }
+          })
+      } else {
+        setUser(null)
+        setLoading(false)
+      }
     })
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
-      setUser(session?.user ?? null)
-      setLoading(false)
+      const currentUser = session?.user ?? null
+
+      if (currentUser) {
+        supabase
+          .from('profiles')
+          .select('role, is_affiliate')
+          .eq('id', currentUser.id)
+          .maybeSingle()
+          .then(({ data }) => {
+            if (isMounted) {
+              const updatedUser = {
+                ...currentUser,
+                user_metadata: {
+                  ...currentUser.user_metadata,
+                  role: data?.role || currentUser.user_metadata?.role || 'user',
+                  is_affiliate: data?.is_affiliate,
+                },
+              } as User
+              setUser(updatedUser)
+              setLoading(false)
+            }
+          })
+      } else {
+        setUser(null)
+        setLoading(false)
+      }
     })
-    return () => subscription.unsubscribe()
+
+    return () => {
+      isMounted = false
+      subscription.unsubscribe()
+    }
   }, [])
 
   const signUp = async (email: string, password: string) => {
