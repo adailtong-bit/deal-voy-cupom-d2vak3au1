@@ -42,17 +42,19 @@ export function FranchiseeSettingsTab({
 
   useEffect(() => {
     const fetchRealState = async () => {
-      if (myFranchise?.id && myFranchise.id !== 'mock-company-admin') {
+      if (myFranchise?.id) {
         const { data: remoteData, error } = await supabase
           .from('franchises')
           .select('*')
           .eq('id', myFranchise.id)
-          .single()
+          .maybeSingle()
 
         if (remoteData && !error) {
           setData({
             ...myFranchise,
             ...remoteData,
+            name: remoteData.name || myFranchise.name || '',
+            email: remoteData.email || myFranchise.email || '',
             region:
               remoteData.region ||
               remoteData.region_id ||
@@ -99,16 +101,6 @@ export function FranchiseeSettingsTab({
   if (!myFranchise) return null
 
   const handleSave = async () => {
-    if (franchiseId === 'mock-company-admin') {
-      toast.success(
-        t(
-          'franchisee.settings.save_success',
-          'Settings saved successfully (Mock)',
-        ),
-      )
-      return
-    }
-
     try {
       const payload = {
         region: data.region,

@@ -31,17 +31,19 @@ export function VendorSettingsTab({ company }: any) {
 
   useEffect(() => {
     const fetchRealState = async () => {
-      if (company?.id && company.id !== 'mock-company-admin') {
+      if (company?.id) {
         const { data: remoteData, error } = await supabase
           .from('merchants')
           .select('*')
           .eq('id', company.id)
-          .single()
+          .maybeSingle()
 
         if (remoteData && !error) {
           setData({
             ...company,
             ...remoteData,
+            name: remoteData.name || company.name || '',
+            email: remoteData.email || company.email || '',
             addressCountry:
               remoteData.address_country ||
               remoteData.country ||
@@ -134,16 +136,6 @@ export function VendorSettingsTab({ company }: any) {
   }, [data, t])
 
   const handleSave = async () => {
-    if (company.id === 'mock-company-admin') {
-      toast.success(
-        t(
-          'vendor.settings_tab.save_success',
-          'Store settings updated successfully (Mock)',
-        ),
-      )
-      return
-    }
-
     try {
       const payload = {
         ...data,
