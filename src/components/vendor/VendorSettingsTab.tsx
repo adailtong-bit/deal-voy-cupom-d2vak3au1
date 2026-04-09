@@ -90,6 +90,16 @@ export function VendorSettingsTab({ company }: any) {
   }, [data, t])
 
   const handleSave = async () => {
+    if (company.id === 'mock-company-admin') {
+      toast.success(
+        t(
+          'vendor.settings_tab.save_success',
+          'Store settings updated successfully (Mock)',
+        ),
+      )
+      return
+    }
+
     try {
       const payload = {
         ...data,
@@ -97,6 +107,14 @@ export function VendorSettingsTab({ company }: any) {
         addressCountry: data.addressCountry || data.country,
         region: data.region,
       }
+
+      // Sanitize payload for backend read-only fields to prevent 400 Bad Request errors
+      delete payload.id
+      delete payload.created
+      delete payload.updated
+      delete payload.collectionId
+      delete payload.collectionName
+      delete payload.expand
 
       await updateCompany(company.id, payload)
 
@@ -107,6 +125,7 @@ export function VendorSettingsTab({ company }: any) {
         ),
       )
     } catch (e) {
+      console.error('Error saving company:', e)
       toast.error(t('common.error', 'An error occurred while saving.'))
     }
   }

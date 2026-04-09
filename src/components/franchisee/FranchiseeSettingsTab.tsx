@@ -63,12 +63,27 @@ export function FranchiseeSettingsTab({
   if (!myFranchise) return null
 
   const handleSave = async () => {
+    if (franchiseId === 'mock-company-admin') {
+      toast.success(
+        t(
+          'franchisee.settings.save_success',
+          'Settings saved successfully (Mock)',
+        ),
+      )
+      return
+    }
+
     try {
-      await updateCompany(franchiseId, { region: data.region })
+      await updateCompany(franchiseId, {
+        region: data.region,
+        country: data.addressCountry || data.country,
+        addressCountry: data.addressCountry || data.country,
+      })
       toast.success(
         t('franchisee.settings.save_success', 'Settings saved successfully'),
       )
     } catch (e) {
+      console.error('Error saving franchise settings:', e)
       toast.error(t('common.error', 'An error occurred while saving.'))
     }
   }

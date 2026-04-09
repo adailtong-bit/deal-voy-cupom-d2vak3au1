@@ -79,7 +79,17 @@ export function AdvancedCompanyForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    onSave(formData)
+
+    // Sanitize payload to prevent backend 400 errors with read-only fields
+    const payload = { ...formData }
+    delete (payload as any).id
+    delete (payload as any).created
+    delete (payload as any).updated
+    delete (payload as any).collectionId
+    delete (payload as any).collectionName
+    delete (payload as any).expand
+
+    onSave(payload)
   }
 
   const handleNumberChange = (field: keyof Company, value: string) => {
