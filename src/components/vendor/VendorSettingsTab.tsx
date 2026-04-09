@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/select'
 import { Store, Save, MapPin } from 'lucide-react'
 import { useCouponStore } from '@/stores/CouponContext'
+import { supabase } from '@/lib/supabase/client'
 import { useLanguage } from '@/stores/LanguageContext'
 import { COUNTRIES, LOCATION_DATA, REGIONS } from '@/lib/locationData'
 import { PhoneInput } from '@/components/PhoneInput'
@@ -29,7 +30,46 @@ export function VendorSettingsTab({ company }: any) {
   const [data, setData] = useState<any>({})
 
   useEffect(() => {
-    if (company) {
+    const fetchRealState = async () => {
+      if (company?.id && company.id !== 'mock-company-admin') {
+        const { data: remoteData, error } = await supabase
+          .from('merchants')
+          .select('*')
+          .eq('id', company.id)
+          .single()
+
+        if (remoteData && !error) {
+          setData({
+            ...company,
+            ...remoteData,
+            addressCountry:
+              remoteData.address_country ||
+              remoteData.country ||
+              company.addressCountry ||
+              'USA',
+            country:
+              remoteData.country ||
+              remoteData.address_country ||
+              company.country ||
+              'USA',
+            region:
+              remoteData.region ||
+              remoteData.region_id ||
+              company.region ||
+              'Global',
+            businessPhone: remoteData.business_phone || company.businessPhone,
+            addressState: remoteData.address_state || company.addressState,
+            addressCity: remoteData.address_city || company.addressCity,
+            addressZip: remoteData.address_zip || company.addressZip,
+            addressStreet: remoteData.address_street || company.addressStreet,
+            addressNumber: remoteData.address_number || company.addressNumber,
+            addressComplement:
+              remoteData.address_complement || company.addressComplement,
+          })
+          return
+        }
+      }
+
       setData({
         ...company,
         addressCountry: company.addressCountry || company.country || 'USA',
@@ -40,6 +80,10 @@ export function VendorSettingsTab({ company }: any) {
           company.country ||
           'Global',
       })
+    }
+
+    if (company) {
+      fetchRealState()
     }
   }, [company])
 
@@ -108,7 +152,7 @@ export function VendorSettingsTab({ company }: any) {
         region: data.region,
       }
 
-      // Sanitize payload for backend read-only fields to prevent 400 Bad Request errors
+      // Sanitize payload for backend read-only fields
       delete payload.id
       delete payload.created
       delete payload.updated
@@ -116,7 +160,37 @@ export function VendorSettingsTab({ company }: any) {
       delete payload.collectionName
       delete payload.expand
 
-      await updateCompany(company.id, payload)
+      try {
+        await updateCompany(company.id, payload)
+      } catch (e) {
+        console.warn('Store update warning', e)
+      }
+
+      // Sync directly to Supabase as requested
+      const { error: sbError } = await supabase.from('merchants').upsert(
+        {
+          id: company.id,
+          name: data.name || '',
+          email: data.email || '',
+          business_phone: data.businessPhone || '',
+          region: data.region || '',
+          region_id: data.region || '',
+          country: payload.country || '',
+          address_country: payload.addressCountry || '',
+          address_state: data.addressState || '',
+          address_city: data.addressCity || '',
+          address_zip: data.addressZip || '',
+          address_street: data.addressStreet || '',
+          address_number: data.addressNumber || '',
+          address_complement: data.addressComplement || '',
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'id' },
+      )
+
+      if (sbError) {
+        throw new Error(sbError.message)
+      }
 
       toast.success(
         t(
@@ -124,9 +198,11 @@ export function VendorSettingsTab({ company }: any) {
           'Store settings updated successfully',
         ),
       )
-    } catch (e) {
+    } catch (e: any) {
       console.error('Error saving company:', e)
-      toast.error(t('common.error', 'An error occurred while saving.'))
+      toast.error(
+        e.message || t('common.error', 'An error occurred while saving.'),
+      )
     }
   }
 

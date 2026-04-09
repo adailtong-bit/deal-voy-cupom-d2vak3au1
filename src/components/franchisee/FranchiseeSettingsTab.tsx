@@ -24,6 +24,7 @@ import { cn } from '@/lib/utils'
 import { Save } from 'lucide-react'
 import { toast } from 'sonner'
 import { REGIONS } from '@/lib/locationData'
+import { supabase } from '@/lib/supabase/client'
 
 export function FranchiseeSettingsTab({
   franchiseId,
@@ -40,11 +41,46 @@ export function FranchiseeSettingsTab({
   const [data, setData] = useState<any>({})
 
   useEffect(() => {
-    if (myFranchise) {
+    const fetchRealState = async () => {
+      if (myFranchise?.id && myFranchise.id !== 'mock-company-admin') {
+        const { data: remoteData, error } = await supabase
+          .from('franchises')
+          .select('*')
+          .eq('id', myFranchise.id)
+          .single()
+
+        if (remoteData && !error) {
+          setData({
+            ...myFranchise,
+            ...remoteData,
+            region:
+              remoteData.region ||
+              remoteData.region_id ||
+              myFranchise.region ||
+              'Global',
+            addressCountry:
+              remoteData.address_country ||
+              remoteData.country ||
+              myFranchise.addressCountry ||
+              'USA',
+            country:
+              remoteData.country ||
+              remoteData.address_country ||
+              myFranchise.country ||
+              'USA',
+          })
+          return
+        }
+      }
+
       setData({
         ...myFranchise,
         region: myFranchise.region || myFranchise.addressCountry || 'Global',
       })
+    }
+
+    if (myFranchise) {
+      fetchRealState()
     }
   }, [myFranchise])
 
@@ -74,17 +110,45 @@ export function FranchiseeSettingsTab({
     }
 
     try {
-      await updateCompany(franchiseId, {
+      const payload = {
         region: data.region,
         country: data.addressCountry || data.country,
         addressCountry: data.addressCountry || data.country,
-      })
+      }
+
+      try {
+        await updateCompany(franchiseId, payload)
+      } catch (e) {
+        console.warn('Store update warning', e)
+      }
+
+      // Sync to Supabase directly
+      const { error: sbError } = await supabase.from('franchises').upsert(
+        {
+          id: franchiseId,
+          name: data.name || myFranchise.name || 'Franchise',
+          email: data.email || myFranchise.email || '',
+          region: data.region || '',
+          region_id: data.region || '',
+          country: payload.country || '',
+          address_country: payload.addressCountry || '',
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'id' },
+      )
+
+      if (sbError) {
+        throw new Error(sbError.message)
+      }
+
       toast.success(
         t('franchisee.settings.save_success', 'Settings saved successfully'),
       )
-    } catch (e) {
+    } catch (e: any) {
       console.error('Error saving franchise settings:', e)
-      toast.error(t('common.error', 'An error occurred while saving.'))
+      toast.error(
+        e.message || t('common.error', 'An error occurred while saving.'),
+      )
     }
   }
 
