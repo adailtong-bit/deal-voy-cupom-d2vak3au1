@@ -99,9 +99,9 @@ export function FranchiseeSettingsTab({
   const customRegions = settings.customRegions || []
   const ALL_REGIONS = Array.from(new Set([...REGIONS, ...customRegions]))
 
-  if (!myFranchise) return null
-
   const [isSaving, setIsSaving] = useState(false)
+
+  if (!myFranchise) return null
 
   const handleSave = async () => {
     try {

@@ -129,7 +129,9 @@ export function PartnerPoliciesTab({ franchiseId }: { franchiseId?: string }) {
 
     try {
       updatePartnerPolicy(newPolicy)
-    } catch (e) {}
+    } catch (e) {
+      console.error(e)
+    }
 
     setIsDialogOpen(false)
   }
@@ -138,7 +140,9 @@ export function PartnerPoliciesTab({ franchiseId }: { franchiseId?: string }) {
     setLocalPolicies((prev) => prev.filter((p) => p.id !== id))
     try {
       deletePartnerPolicy(id)
-    } catch (e) {}
+    } catch (e) {
+      console.error(e)
+    }
   }
 
   return (
