@@ -29,22 +29,31 @@ export function VendorSettingsTab({ company }: any) {
   const [data, setData] = useState<any>({})
 
   useEffect(() => {
-    if (company) setData(company)
+    if (company) {
+      // Ensure country and addressCountry are synced when loading
+      setData({
+        ...company,
+        addressCountry: company.addressCountry || company.country || 'USA',
+        country: company.country || company.addressCountry || 'USA',
+      })
+    }
   }, [company])
 
   const handleChange = (k: string, v: any) => setData({ ...data, [k]: v })
 
-  const states = data.addressCountry
-    ? Object.keys(LOCATION_DATA[data.addressCountry]?.states || {})
+  const currentCountry = data.addressCountry || data.country
+  const states = currentCountry
+    ? Object.keys(LOCATION_DATA[currentCountry]?.states || {})
     : []
   const cities =
-    data.addressCountry && data.addressState
-      ? LOCATION_DATA[data.addressCountry]?.states[data.addressState] || []
+    currentCountry && data.addressState
+      ? LOCATION_DATA[currentCountry]?.states[data.addressState] || []
       : []
 
   const formattedAddress = useMemo(() => {
     const {
-      addressCountry: c,
+      addressCountry,
+      country,
       addressState: s,
       addressCity: ci,
       addressZip: z,
@@ -52,6 +61,7 @@ export function VendorSettingsTab({ company }: any) {
       addressNumber: n,
       addressComplement: comp,
     } = data
+    const c = addressCountry || country
     if (!st || !n)
       return t(
         'vendor.settings_tab.fill_address',
@@ -67,14 +77,26 @@ export function VendorSettingsTab({ company }: any) {
     return `${st}, ${n}${cText}, ${ci || 'City'} - ${s || 'State'}, ${z || 'ZIP'}`
   }, [data, t])
 
-  const handleSave = () => {
-    updateCompany(company.id, data)
-    toast.success(
-      t(
-        'vendor.settings_tab.save_success',
-        'Store settings updated successfully',
-      ),
-    )
+  const handleSave = async () => {
+    try {
+      // Force sync both fields before saving to ensure backend persists it
+      const payload = {
+        ...data,
+        country: data.addressCountry || data.country,
+        addressCountry: data.addressCountry || data.country,
+      }
+
+      await updateCompany(company.id, payload)
+
+      toast.success(
+        t(
+          'vendor.settings_tab.save_success',
+          'Store settings updated successfully',
+        ),
+      )
+    } catch (e) {
+      toast.error(t('common.error', 'An error occurred while saving.'))
+    }
   }
 
   return (
@@ -159,11 +181,12 @@ export function VendorSettingsTab({ company }: any) {
                 {t('vendor.settings_tab.country', 'Country')}
               </Label>
               <Select
-                value={data.addressCountry || ''}
+                value={data.addressCountry || data.country || ''}
                 onValueChange={(v) =>
                   setData({
                     ...data,
                     addressCountry: v,
+                    country: v,
                     addressState: '',
                     addressCity: '',
                   })
@@ -239,7 +262,9 @@ export function VendorSettingsTab({ company }: any) {
                 value={data.addressZip || ''}
                 onChange={(e) => handleChange('addressZip', e.target.value)}
                 placeholder={
-                  data.addressCountry === 'USA' ? '12345' : '00000-000'
+                  (data.addressCountry || data.country) === 'USA'
+                    ? '12345'
+                    : '00000-000'
                 }
                 className="bg-white"
               />

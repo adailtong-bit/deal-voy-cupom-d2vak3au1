@@ -32,13 +32,16 @@ export function AdvancedCompanyForm({
   onCancel,
 }: Props) {
   const { t } = useLanguage()
-  const [formData, setFormData] = useState<Partial<Company>>({
+  const [formData, setFormData] = useState<
+    Partial<Company & { country?: string }>
+  >({
     name: '',
     email: '',
     status: 'active',
     franchiseId: franchiseId || 'independent',
     businessPhone: '',
     addressCountry: 'USA',
+    country: 'USA',
 
     // Primary contact
     contactPerson: '',
@@ -155,9 +158,9 @@ export function AdvancedCompanyForm({
               <Label>{t('profile.country', 'Country')}</Label>
               <Select
                 required
-                value={formData.addressCountry || ''}
+                value={formData.addressCountry || formData.country || ''}
                 onValueChange={(v) =>
-                  setFormData({ ...formData, addressCountry: v })
+                  setFormData({ ...formData, addressCountry: v, country: v })
                 }
               >
                 <SelectTrigger>
