@@ -87,10 +87,13 @@ export default function AdminDashboard() {
       ? [
           {
             id: 'notif-1',
-            title: 'Pending Approvals',
-            desc: `${pendingMerchants.length} new merchants waiting for review.`,
+            title: t('admin.notif.pending_approvals', 'Pending Approvals'),
+            desc: t(
+              'admin.notif.pending_desc',
+              '{count} new merchants waiting for review.',
+            ).replace('{count}', pendingMerchants.length.toString()),
             tab: 'hierarchy',
-            time: 'Just now',
+            time: t('admin.notif.just_now', 'Just now'),
           },
         ]
       : []),
@@ -98,19 +101,25 @@ export default function AdminDashboard() {
       ? [
           {
             id: 'notif-2',
-            title: 'Incomplete Profiles',
-            desc: `${incompleteCompanies.length} companies have missing billing records.`,
+            title: t('admin.notif.incomplete_profiles', 'Incomplete Profiles'),
+            desc: t(
+              'admin.notif.incomplete_desc',
+              '{count} companies have missing billing records.',
+            ).replace('{count}', incompleteCompanies.length.toString()),
             tab: 'overview',
-            time: '1 hour ago',
+            time: t('admin.notif.1_hour_ago', '1 hour ago'),
           },
         ]
       : []),
     {
       id: 'notif-3',
-      title: 'New Document Uploaded',
-      desc: 'A new "Contrato Social" was uploaded by a merchant.',
+      title: t('admin.notif.new_doc', 'New Document Uploaded'),
+      desc: t(
+        'admin.notif.new_doc_desc',
+        'A new document was uploaded by a merchant.',
+      ),
       tab: 'hierarchy',
-      time: '3 hours ago',
+      time: t('admin.notif.3_hours_ago', '3 hours ago'),
     },
   ]
 
@@ -258,25 +267,35 @@ export default function AdminDashboard() {
               <TabsTrigger value="billing">{t('admin.billing')}</TabsTrigger>
               <TabsTrigger value="seasonal">{t('admin.seasonal')}</TabsTrigger>
               <TabsTrigger value="categories">
-                {t('admin.categoriesTab', 'Categorias')}
+                {t('admin.categoriesTab', 'Categories')}
               </TabsTrigger>
               <TabsTrigger value="interests">
-                {t('admin.interestsTab', 'Interesses')}
+                {t('admin.interestsTab', 'Interests')}
               </TabsTrigger>
-              <TabsTrigger value="crm">CRM & Campanhas</TabsTrigger>
-              <TabsTrigger value="crawler">{t('admin.crawler')}</TabsTrigger>
-              <TabsTrigger value="ads">{t('admin.ads')}</TabsTrigger>
+              <TabsTrigger value="crm">
+                {t('admin.crm_campaigns', 'CRM & Campaigns')}
+              </TabsTrigger>
+              <TabsTrigger value="crawler">
+                {t('admin.crawler', 'Offers Crawler')}
+              </TabsTrigger>
+              <TabsTrigger value="ads">{t('admin.ads', 'Ads')}</TabsTrigger>
               <TabsTrigger value="network-ads" className="gap-2">
                 <Megaphone className="h-4 w-4" />
-                {t('admin.network_ads', 'Publicidade de Rede')}
+                {t('admin.network_ads', 'Network Advertising')}
               </TabsTrigger>
               <TabsTrigger value="affiliates" className="gap-2">
                 <Users className="h-4 w-4" />
-                {t('admin.affiliates', 'Rede de Afiliados')}
+                {t('admin.affiliates', 'Affiliate Network')}
               </TabsTrigger>
-              <TabsTrigger value="translations">Translations</TabsTrigger>
-              <TabsTrigger value="insights">{t('admin.insights')}</TabsTrigger>
-              <TabsTrigger value="performance">Performance</TabsTrigger>
+              <TabsTrigger value="translations">
+                {t('admin.translations.title', 'Translations')}
+              </TabsTrigger>
+              <TabsTrigger value="insights">
+                {t('admin.insights', 'Data Insights')}
+              </TabsTrigger>
+              <TabsTrigger value="performance">
+                {t('admin.performance.title', 'Performance')}
+              </TabsTrigger>
               <TabsTrigger value="notifications">
                 {t('admin.push_notifications', 'Push Notifications')}
               </TabsTrigger>

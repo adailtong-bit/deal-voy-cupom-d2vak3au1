@@ -6,7 +6,6 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
   CardFooter,
 } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
@@ -60,7 +59,6 @@ export function AdminCRM({ franchiseId }: { franchiseId?: string }) {
     () =>
       coupons.filter((c) => {
         if (c.status !== 'active') return false
-        // Se franchiseId for passado (pode ser ID da loja ou franquia), filtra
         if (
           franchiseId &&
           c.companyId !== franchiseId &&
@@ -113,10 +111,13 @@ export function AdminCRM({ franchiseId }: { franchiseId?: string }) {
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold tracking-tight text-slate-800">
-          {t('crm.title', 'Campaign Dispatch')}
+          {t('crm.dispatch.title', 'Campaign Dispatch')}
         </h2>
         <p className="text-slate-500 text-sm">
-          Target and send campaigns via WhatsApp or Email.
+          {t(
+            'crm.dispatch.desc',
+            'Target and send campaigns via WhatsApp or Email.',
+          )}
         </p>
       </div>
 
@@ -125,28 +126,47 @@ export function AdminCRM({ franchiseId }: { franchiseId?: string }) {
           <Card>
             <CardHeader className="pb-4">
               <CardTitle className="text-lg flex items-center gap-2">
-                <Users className="w-5 h-5 text-primary" /> Target Filters
+                <Users className="w-5 h-5 text-primary" />{' '}
+                {t('crm.dispatch.target_filters', 'Target Filters')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>User Behavior</Label>
+                <Label>
+                  {t('crm.dispatch.user_behavior', 'User Behavior')}
+                </Label>
                 <Select value={behavior} onValueChange={setBehavior}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select behavior" />
+                    <SelectValue
+                      placeholder={t(
+                        'crm.dispatch.select_behavior',
+                        'Select behavior',
+                      )}
+                    />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Active Users</SelectItem>
-                    <SelectItem value="frequent">Frequent Buyers</SelectItem>
-                    <SelectItem value="recent">Recent Signups</SelectItem>
+                    <SelectItem value="all">
+                      {t('crm.dispatch.all_active', 'All Active Users')}
+                    </SelectItem>
+                    <SelectItem value="frequent">
+                      {t('crm.dispatch.frequent_buyers', 'Frequent Buyers')}
+                    </SelectItem>
+                    <SelectItem value="recent">
+                      {t('crm.dispatch.recent_signups', 'Recent Signups')}
+                    </SelectItem>
                     <SelectItem value="inactive">
-                      Inactive Users (&gt; 30 days)
+                      {t(
+                        'crm.dispatch.inactive_users',
+                        'Inactive Users (> 30 days)',
+                      )}
                     </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Category Interests</Label>
+                <Label>
+                  {t('crm.dispatch.category_interests', 'Category Interests')}
+                </Label>
                 <div className="flex flex-wrap gap-2">
                   {CATEGORIES.filter((c) => c.id !== 'all').map((cat) => {
                     const isSelected = interests.includes(cat.id)
@@ -166,7 +186,7 @@ export function AdminCRM({ franchiseId }: { franchiseId?: string }) {
                           )
                         }
                       >
-                        {cat.label}
+                        {t(cat.translationKey, cat.label)}
                       </Badge>
                     )
                   })}
@@ -174,7 +194,7 @@ export function AdminCRM({ franchiseId }: { franchiseId?: string }) {
               </div>
               <div className="bg-slate-50 rounded-lg p-3 flex justify-between items-center border">
                 <span className="text-sm font-medium text-slate-600">
-                  Estimated Audience
+                  {t('crm.dispatch.estimated_audience', 'Estimated Audience')}
                 </span>
                 <span className="text-xl font-bold text-primary">
                   {filteredUsers.length}
@@ -186,13 +206,13 @@ export function AdminCRM({ franchiseId }: { franchiseId?: string }) {
           <Card>
             <CardHeader className="pb-4">
               <CardTitle className="text-lg flex items-center gap-2">
-                <LayoutTemplate className="w-5 h-5 text-primary" /> Campaign
-                Content
+                <LayoutTemplate className="w-5 h-5 text-primary" />{' '}
+                {t('crm.dispatch.campaign_content', 'Campaign Content')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>Channel</Label>
+                <Label>{t('crm.dispatch.channel', 'Channel')}</Label>
                 <ToggleGroup
                   type="single"
                   value={channel}
@@ -216,13 +236,20 @@ export function AdminCRM({ franchiseId }: { franchiseId?: string }) {
                 </ToggleGroup>
               </div>
               <div className="space-y-2">
-                <Label>Link Offer</Label>
+                <Label>{t('crm.dispatch.link_offer', 'Link Offer')}</Label>
                 <Select value={offerId} onValueChange={setOfferId}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select offer" />
+                    <SelectValue
+                      placeholder={t(
+                        'crm.dispatch.select_offer',
+                        'Select offer',
+                      )}
+                    />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">No specific offer</SelectItem>
+                    <SelectItem value="none">
+                      {t('crm.dispatch.no_offer', 'No specific offer')}
+                    </SelectItem>
                     {activeOffers.map((o) => (
                       <SelectItem key={o.id} value={o.id}>
                         {o.title}
@@ -232,12 +259,17 @@ export function AdminCRM({ franchiseId }: { franchiseId?: string }) {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Custom Message</Label>
+                <Label>
+                  {t('crm.dispatch.custom_message', 'Custom Message')}
+                </Label>
                 <Textarea
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   rows={3}
-                  placeholder="Type your message..."
+                  placeholder={t(
+                    'crm.dispatch.type_message',
+                    'Type your message...',
+                  )}
                 />
               </div>
             </CardContent>
@@ -248,7 +280,8 @@ export function AdminCRM({ franchiseId }: { franchiseId?: string }) {
           <Card className="sticky top-6">
             <CardHeader className="pb-4">
               <CardTitle className="text-lg flex items-center gap-2">
-                <Eye className="w-5 h-5 text-primary" /> Preview
+                <Eye className="w-5 h-5 text-primary" />{' '}
+                {t('crm.dispatch.preview', 'Preview')}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0 sm:px-6 sm:pb-6">
@@ -256,12 +289,18 @@ export function AdminCRM({ franchiseId }: { franchiseId?: string }) {
                 <div className="border rounded-lg bg-white overflow-hidden shadow-sm mx-4 sm:mx-0 mb-4 sm:mb-0">
                   <div className="bg-slate-100 p-3 border-b text-sm flex flex-col gap-1">
                     <div>
-                      <span className="text-slate-500 mr-2">To:</span>
-                      {filteredUsers.length} Users
+                      <span className="text-slate-500 mr-2">
+                        {t('crm.dispatch.to', 'To:')}
+                      </span>
+                      {filteredUsers.length} {t('crm.dispatch.users', 'Users')}
                     </div>
                     <div>
-                      <span className="text-slate-500 mr-2">Subj:</span>
-                      {selectedOffer ? selectedOffer.title : 'Updates'}
+                      <span className="text-slate-500 mr-2">
+                        {t('crm.dispatch.subj', 'Subj:')}
+                      </span>
+                      {selectedOffer
+                        ? selectedOffer.title
+                        : t('crm.dispatch.updates', 'Updates')}
                     </div>
                   </div>
                   <div className="p-5 text-center flex flex-col items-center gap-3">
@@ -269,17 +308,19 @@ export function AdminCRM({ franchiseId }: { franchiseId?: string }) {
                       <img
                         src={selectedOffer.image}
                         className="w-full h-32 object-cover rounded-md"
+                        alt="Offer preview"
                       />
                     )}
                     <h3 className="font-bold">
-                      {selectedOffer?.title || 'Update'}
+                      {selectedOffer?.title ||
+                        t('crm.dispatch.updates', 'Updates')}
                     </h3>
                     <p className="text-sm text-slate-600 whitespace-pre-wrap">
                       {message || selectedOffer?.description}
                     </p>
                     {selectedOffer && (
                       <Button size="sm" className="mt-2 w-full">
-                        View Offer
+                        {t('crm.dispatch.view_offer', 'View Offer')}
                       </Button>
                     )}
                   </div>
@@ -296,6 +337,7 @@ export function AdminCRM({ franchiseId }: { franchiseId?: string }) {
                         <img
                           src={selectedOffer.image}
                           className="w-full h-24 object-cover rounded-md mb-2"
+                          alt="Offer preview"
                         />
                       )}
                       {selectedOffer && (
@@ -330,27 +372,38 @@ export function AdminCRM({ franchiseId }: { franchiseId?: string }) {
                     className="w-full"
                     disabled={filteredUsers.length === 0}
                   >
-                    <Send className="w-4 h-4 mr-2" /> Review & Dispatch
+                    <Send className="w-4 h-4 mr-2" />{' '}
+                    {t('crm.dispatch.review_dispatch', 'Review & Dispatch')}
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Confirm Dispatch</DialogTitle>
+                    <DialogTitle>
+                      {t('crm.dispatch.confirm_title', 'Confirm Dispatch')}
+                    </DialogTitle>
                     <DialogDescription>
-                      Send campaign to audience.
+                      {t(
+                        'crm.dispatch.confirm_desc',
+                        'Send campaign to audience.',
+                      )}
                     </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-3 py-4">
                     <div className="flex justify-between p-3 bg-slate-50 rounded-lg border">
-                      <span className="text-sm text-slate-500">Channel</span>
-                      <span className="font-semibold">
-                        {channel === 'whatsapp' ? 'WhatsApp' : 'Email'}
+                      <span className="text-sm text-slate-500">
+                        {t('crm.dispatch.channel', 'Channel')}
+                      </span>
+                      <span className="font-semibold capitalize">
+                        {channel}
                       </span>
                     </div>
                     <div className="flex justify-between p-3 bg-slate-50 rounded-lg border">
-                      <span className="text-sm text-slate-500">Audience</span>
+                      <span className="text-sm text-slate-500">
+                        {t('crm.dispatch.audience', 'Audience')}
+                      </span>
                       <span className="font-semibold">
-                        {filteredUsers.length} Users
+                        {filteredUsers.length}{' '}
+                        {t('crm.dispatch.users', 'Users')}
                       </span>
                     </div>
                   </div>
@@ -359,10 +412,12 @@ export function AdminCRM({ franchiseId }: { franchiseId?: string }) {
                       variant="outline"
                       onClick={() => setShowConfirm(false)}
                     >
-                      Cancel
+                      {t('common.cancel', 'Cancel')}
                     </Button>
                     <Button onClick={handleDispatch} disabled={isDispatching}>
-                      {isDispatching ? 'Sending...' : 'Confirm'}
+                      {isDispatching
+                        ? t('crm.dispatch.sending', 'Sending...')
+                        : t('common.confirm', 'Confirm')}
                     </Button>
                   </DialogFooter>
                 </DialogContent>

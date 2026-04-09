@@ -28,11 +28,11 @@ export function FinanceDashboardTab({ franchiseId }: { franchiseId?: string }) {
       </div>
 
       <div className="w-full">
-        <div className="flex items-center gap-1 mb-6 bg-slate-100 p-1 rounded-lg border border-slate-200 w-fit">
+        <div className="flex items-center gap-1 mb-6 bg-slate-100 p-1 rounded-lg border border-slate-200 w-fit overflow-x-auto">
           <button
             onClick={() => setActiveView('statement')}
             className={cn(
-              'flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all',
+              'flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all whitespace-nowrap',
               activeView === 'statement'
                 ? 'bg-white text-slate-900 shadow-sm'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50',
@@ -44,7 +44,7 @@ export function FinanceDashboardTab({ franchiseId }: { franchiseId?: string }) {
           <button
             onClick={() => setActiveView('reconciliation')}
             className={cn(
-              'flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all',
+              'flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all whitespace-nowrap',
               activeView === 'reconciliation'
                 ? 'bg-white text-slate-900 shadow-sm'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50',
@@ -56,7 +56,7 @@ export function FinanceDashboardTab({ franchiseId }: { franchiseId?: string }) {
           <button
             onClick={() => setActiveView('billing')}
             className={cn(
-              'flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all',
+              'flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all whitespace-nowrap',
               activeView === 'billing'
                 ? 'bg-white text-slate-900 shadow-sm'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50',

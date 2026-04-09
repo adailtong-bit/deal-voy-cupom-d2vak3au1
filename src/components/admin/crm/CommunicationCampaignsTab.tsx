@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useCouponStore } from '@/stores/CouponContext'
+import { useLanguage } from '@/stores/LanguageContext'
 import {
   Table,
   TableBody,
@@ -86,6 +87,8 @@ export function CommunicationCampaignsTab({
     users,
   } = useCouponStore()
 
+  const { t } = useLanguage()
+
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingCampaign, setEditingCampaign] =
     useState<CommunicationCampaign | null>(null)
@@ -102,15 +105,15 @@ export function CommunicationCampaignsTab({
     return [
       {
         id: 't1',
-        name: 'Boas-vindas Padrão',
+        name: 'Welcome Default',
         content:
-          'Olá! Bem-vindo ao nosso programa. Aproveite os cupons disponíveis na nossa plataforma!',
+          'Hello! Welcome to our program. Enjoy the available coupons on our platform!',
       },
       {
         id: 't2',
-        name: 'Lembrete de Oferta',
+        name: 'Offer Reminder',
         content:
-          'Sua oferta favorita está prestes a expirar. Não perca tempo e resgate agora mesmo.',
+          'Your favorite offer is about to expire. Do not waste time and redeem it right now.',
       },
     ]
   })
@@ -198,8 +201,13 @@ export function CommunicationCampaignsTab({
       const newTgId = Math.random().toString()
       const tg: TargetGroup = {
         id: newTgId,
-        name: newTargetGroup.name || 'Novo Grupo Alvo',
-        description: 'Grupo criado via campanha exclusiva',
+        name:
+          newTargetGroup.name ||
+          t('crm.dispatch.new_target_group', 'New Target Group'),
+        description: t(
+          'crm.dispatch.created_via_campaign',
+          'Group created via exclusive campaign',
+        ),
         filters: newTargetGroup.filters || {},
         createdAt: new Date().toISOString(),
         franchiseId: franchiseId,
@@ -223,10 +231,10 @@ export function CommunicationCampaignsTab({
 
     if (editingCampaign) {
       updateCommunicationCampaign(payload.id, payload)
-      toast.success('Campanha atualizada com sucesso!')
+      toast.success(t('common.success', 'Campaign updated successfully!'))
     } else {
       createCommunicationCampaign(payload)
-      toast.success('Campanha agendada com sucesso!')
+      toast.success(t('common.success', 'Campaign scheduled successfully!'))
     }
     setIsDialogOpen(false)
   }
@@ -243,7 +251,7 @@ export function CommunicationCampaignsTab({
     localStorage.setItem('crm_message_templates', JSON.stringify(updated))
     setIsSavingTemplate(false)
     setNewTemplateName('')
-    toast.success('Template salvo na biblioteca!')
+    toast.success(t('common.success', 'Template saved to library!'))
   }
 
   const getChannelIcon = (channel: string) => {
@@ -332,19 +340,24 @@ export function CommunicationCampaignsTab({
       <div className="mb-6 space-y-4">
         <div>
           <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-primary" /> Dashboard de
-            Conversão de Disparos
+            <TrendingUp className="w-5 h-5 text-primary" />{' '}
+            {t(
+              'crm.dispatch.conversion_dashboard',
+              'Dispatch Conversion Dashboard',
+            )}
           </h3>
           <p className="text-sm text-slate-500">
-            Métricas de engajamento para campanhas programadas de Email e
-            WhatsApp
+            {t(
+              'crm.dispatch.engagement_metrics',
+              'Engagement metrics for scheduled Email and WhatsApp campaigns',
+            )}
           </p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           <Card className="bg-white border-slate-200 shadow-sm">
             <CardHeader className="pb-2">
               <CardTitle className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Disparos Realizados
+                {t('crm.dispatch.dispatches_made', 'Dispatches Made')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -352,14 +365,14 @@ export function CommunicationCampaignsTab({
                 {dashboardStats.total}
               </div>
               <p className="text-[10px] text-muted-foreground mt-1">
-                Via WhatsApp e Email
+                {t('crm.dispatch.via_whatsapp_email', 'Via WhatsApp and Email')}
               </p>
             </CardContent>
           </Card>
           <Card className="bg-white border-slate-200 shadow-sm">
             <CardHeader className="pb-2">
               <CardTitle className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Cliques Totais
+                {t('crm.dispatch.total_clicks', 'Total Clicks')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -367,14 +380,20 @@ export function CommunicationCampaignsTab({
                 {dashboardStats.clicks}
               </div>
               <p className="text-[10px] text-muted-foreground mt-1">
-                Interações nos links enviados
+                {t(
+                  'crm.dispatch.interactions_links',
+                  'Interactions on sent links',
+                )}
               </p>
             </CardContent>
           </Card>
           <Card className="bg-white border-slate-200 shadow-sm">
             <CardHeader className="pb-2">
               <CardTitle className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Resgates Gerados
+                {t(
+                  'crm.dispatch.redemptions_generated',
+                  'Redemptions Generated',
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -382,14 +401,14 @@ export function CommunicationCampaignsTab({
                 {dashboardStats.redemptions}
               </div>
               <p className="text-[10px] text-muted-foreground mt-1">
-                Ofertas vinculadas utilizadas
+                {t('crm.dispatch.used_offers', 'Linked offers used')}
               </p>
             </CardContent>
           </Card>
           <Card className="bg-white border-slate-200 shadow-sm">
             <CardHeader className="pb-2">
               <CardTitle className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Taxa de Conversão
+                {t('crm.dispatch.conversion_rate', 'Conversion Rate')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -397,7 +416,10 @@ export function CommunicationCampaignsTab({
                 {conversionRate}%
               </div>
               <p className="text-[10px] text-muted-foreground mt-1">
-                Resgates baseados em cliques
+                {t(
+                  'crm.dispatch.redemptions_based_clicks',
+                  'Redemptions based on clicks',
+                )}
               </p>
             </CardContent>
           </Card>
@@ -407,14 +429,22 @@ export function CommunicationCampaignsTab({
       <Card>
         <CardHeader className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
           <div>
-            <CardTitle>Gestão de Disparos & Campanhas</CardTitle>
+            <CardTitle>
+              {t(
+                'admin.crm_tabs.comms_title',
+                'Dispatches & Campaigns Management',
+              )}
+            </CardTitle>
             <CardDescription>
-              Crie campanhas multicanal vinculadas a grupos de segmentação e
-              templates de mensagens.
+              {t(
+                'admin.crm_tabs.comms_desc',
+                'Create multichannel campaigns linked to target groups and message templates.',
+              )}
             </CardDescription>
           </div>
           <Button onClick={() => handleOpenDialog()}>
-            <Plus className="mr-2 h-4 w-4" /> Novo Disparo
+            <Plus className="mr-2 h-4 w-4" />{' '}
+            {t('admin.crm_tabs.new_comm', 'New Dispatch')}
           </Button>
         </CardHeader>
         <CardContent>
@@ -422,13 +452,25 @@ export function CommunicationCampaignsTab({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Campanha</TableHead>
-                  <TableHead>Grupo Alvo</TableHead>
-                  <TableHead>Canal</TableHead>
-                  <TableHead>Identificador</TableHead>
-                  <TableHead>Métricas</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
+                  <TableHead>
+                    {t('admin.crm_tabs.campaign', 'Campaign')}
+                  </TableHead>
+                  <TableHead>
+                    {t('admin.crm_tabs.target_group', 'Target Group')}
+                  </TableHead>
+                  <TableHead>
+                    {t('admin.crm_tabs.channel', 'Channel')}
+                  </TableHead>
+                  <TableHead>
+                    {t('admin.crm_tabs.identifier', 'Identifier')}
+                  </TableHead>
+                  <TableHead>
+                    {t('admin.crm_tabs.metrics', 'Metrics')}
+                  </TableHead>
+                  <TableHead>{t('admin.crm_tabs.status', 'Status')}</TableHead>
+                  <TableHead className="text-right">
+                    {t('common.actions', 'Actions')}
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -446,7 +488,8 @@ export function CommunicationCampaignsTab({
                         {camp.name}
                         {camp.linkedOfferId && (
                           <div className="flex items-center text-[10px] text-primary mt-1">
-                            <Ticket className="w-3 h-3 mr-1" /> Oferta Vinculada
+                            <Ticket className="w-3 h-3 mr-1" />{' '}
+                            {t('crm.dispatch.linked_offer', 'Linked Offer')}
                           </div>
                         )}
                       </TableCell>
@@ -476,11 +519,13 @@ export function CommunicationCampaignsTab({
                           <div className="flex flex-col text-[11px] text-slate-600 space-y-1">
                             <span className="flex items-center gap-1.5">
                               <MousePointerClick className="w-3 h-3 text-blue-500" />{' '}
-                              {getMockMetrics(camp).clicks} cliques
+                              {getMockMetrics(camp).clicks}{' '}
+                              {t('crm.dispatch.clicks', 'clicks')}
                             </span>
                             <span className="flex items-center gap-1.5">
                               <Ticket className="w-3 h-3 text-emerald-500" />{' '}
-                              {getMockMetrics(camp).redemptions} resgates
+                              {getMockMetrics(camp).redemptions}{' '}
+                              {t('crm.dispatch.redemptions', 'redemptions')}
                             </span>
                           </div>
                         ) : (
@@ -504,7 +549,7 @@ export function CommunicationCampaignsTab({
                               : 'capitalize'
                           }
                         >
-                          {camp.status}
+                          {t(`common.${camp.status}`, camp.status)}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right whitespace-nowrap">
@@ -513,7 +558,7 @@ export function CommunicationCampaignsTab({
                             variant="ghost"
                             size="icon"
                             onClick={() => handleOpenDialog(camp)}
-                            title="Editar"
+                            title={t('common.edit', 'Edit')}
                           >
                             <Edit2 className="h-4 w-4 text-muted-foreground" />
                           </Button>
@@ -522,7 +567,7 @@ export function CommunicationCampaignsTab({
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                title="Excluir"
+                                title={t('common.delete', 'Delete')}
                               >
                                 <Trash2 className="h-4 w-4 text-destructive" />
                               </Button>
@@ -530,23 +575,32 @@ export function CommunicationCampaignsTab({
                             <AlertDialogContent>
                               <AlertDialogHeader>
                                 <AlertDialogTitle>
-                                  Excluir Campanha?
+                                  {t(
+                                    'vendor.campaigns_tab.delete_title',
+                                    'Delete Campaign?',
+                                  )}
                                 </AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  Esta ação removerá a campanha "{camp.name}" e
-                                  não poderá ser desfeita.
+                                  {t(
+                                    'vendor.campaigns_tab.delete_desc',
+                                    'This action cannot be undone.',
+                                  )}
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
-                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogCancel>
+                                  {t('common.cancel', 'Cancel')}
+                                </AlertDialogCancel>
                                 <AlertDialogAction
                                   className="bg-red-600 hover:bg-red-700 text-white"
                                   onClick={() => {
                                     deleteCommunicationCampaign(camp.id)
-                                    toast.success('Campanha excluída.')
+                                    toast.success(
+                                      t('common.success', 'Campaign deleted.'),
+                                    )
                                   }}
                                 >
-                                  Excluir
+                                  {t('common.delete', 'Delete')}
                                 </AlertDialogAction>
                               </AlertDialogFooter>
                             </AlertDialogContent>
@@ -559,17 +613,23 @@ export function CommunicationCampaignsTab({
                             disabled={!canDispatch}
                             title={
                               !canDispatch
-                                ? 'A campanha ou oferta vinculada não está ativa.'
-                                : 'Disparar agora'
+                                ? t(
+                                    'crm.dispatch.cannot_dispatch',
+                                    'Campaign or linked offer is not active.',
+                                  )
+                                : t('crm.dispatch.dispatch_now', 'Dispatch now')
                             }
                             onClick={() => {
                               updateCommunicationCampaign(camp.id, {
                                 status: 'sent',
                               })
-                              toast.success('Disparo realizado com sucesso!')
+                              toast.success(
+                                t('common.success', 'Dispatched successfully!'),
+                              )
                             }}
                           >
-                            <Send className="h-4 w-4 mr-2" /> Disparar
+                            <Send className="h-4 w-4 mr-2" />{' '}
+                            {t('crm.dispatch.dispatch', 'Dispatch')}
                           </Button>
                         </div>
                       </TableCell>
@@ -582,7 +642,7 @@ export function CommunicationCampaignsTab({
                       colSpan={7}
                       className="text-center py-8 text-muted-foreground"
                     >
-                      Nenhuma campanha de comunicação criada.
+                      {t('common.none', 'No communication campaigns created.')}
                     </TableCell>
                   </TableRow>
                 )}
@@ -596,17 +656,22 @@ export function CommunicationCampaignsTab({
         <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {editingCampaign ? 'Editar Disparo' : 'Configurar Novo Disparo'}
+              {editingCampaign
+                ? t('admin.crm_tabs.edit_comm', 'Edit Dispatch')
+                : t('admin.crm_tabs.create_comm', 'Configure New Dispatch')}
             </DialogTitle>
           </DialogHeader>
           <div className="grid gap-6 py-4">
             <div className="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-lg shadow-sm">
               <div className="space-y-0.5">
                 <Label className="text-base font-semibold">
-                  Campanha Ativa
+                  {t('crm.dispatch.active_campaign', 'Active Campaign')}
                 </Label>
                 <p className="text-xs text-muted-foreground">
-                  Somente campanhas ativas podem ser disparadas.
+                  {t(
+                    'crm.dispatch.only_active_dispatched',
+                    'Only active campaigns can be dispatched.',
+                  )}
                 </p>
               </div>
               <Switch
@@ -621,19 +686,26 @@ export function CommunicationCampaignsTab({
             </div>
 
             <div className="space-y-2">
-              <Label>Nome da Campanha Interna</Label>
+              <Label>
+                {t('admin.crm_tabs.internal_name', 'Internal Campaign Name')}
+              </Label>
               <Input
                 value={formData.name}
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
                 }
-                placeholder="Ex: Lembrete Promoção Inverno"
+                placeholder={t(
+                  'crm.dispatch.name_placeholder',
+                  'e.g., Winter Promo Reminder',
+                )}
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Agendamento de Campanhas (Data e Hora)</Label>
+                <Label>
+                  {t('admin.crm_tabs.scheduled_date', 'Scheduled Date')}
+                </Label>
                 <Input
                   type="datetime-local"
                   value={formatDatetimeLocal(formData.scheduledAt)}
@@ -646,7 +718,9 @@ export function CommunicationCampaignsTab({
                 />
               </div>
               <div className="space-y-2">
-                <Label>Canal de Comunicação</Label>
+                <Label>
+                  {t('admin.crm_tabs.channel', 'Communication Channel')}
+                </Label>
                 <Select
                   value={formData.channel}
                   onValueChange={(v: any) =>
@@ -686,7 +760,9 @@ export function CommunicationCampaignsTab({
             </div>
 
             <div className="space-y-2">
-              <Label>Oferta Vinculada (Opcional)</Label>
+              <Label>
+                {t('admin.crm_tabs.linked_offer', 'Linked Offer (Optional)')}
+              </Label>
               <Select
                 value={formData.linkedOfferId || 'none'}
                 onValueChange={(v) =>
@@ -697,10 +773,12 @@ export function CommunicationCampaignsTab({
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione uma oferta" />
+                  <SelectValue placeholder={t('common.select', 'Select...')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">Nenhuma</SelectItem>
+                  <SelectItem value="none">
+                    {t('common.none', 'None')}
+                  </SelectItem>
                   {activeCoupons.map((c) => (
                     <SelectItem key={c.id} value={c.id}>
                       {c.title}
@@ -713,11 +791,16 @@ export function CommunicationCampaignsTab({
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-slate-50 border rounded-lg gap-4">
               <div className="space-y-0.5">
                 <Label className="font-semibold text-slate-800">
-                  Vincular Grupo Alvo Exclusivo
+                  {t(
+                    'admin.crm_tabs.exclusive_group',
+                    'Link Exclusive Target Group',
+                  )}
                 </Label>
                 <p className="text-xs text-muted-foreground">
-                  Marque para gerar um identificador de agrupamento único para
-                  rastrear a origem exata.
+                  {t(
+                    'crm.dispatch.exclusive_group_desc',
+                    'Check to generate a unique grouping identifier to track the exact origin.',
+                  )}
                 </p>
               </div>
               <Switch
@@ -739,7 +822,9 @@ export function CommunicationCampaignsTab({
             {formData.isExclusive && (
               <div className="space-y-4 animate-in fade-in slide-in-from-top-2 p-4 border border-blue-100 bg-white rounded-lg shadow-sm">
                 <div className="space-y-2">
-                  <Label>Identificador de Agrupamento</Label>
+                  <Label>
+                    {t('admin.crm_tabs.identifier', 'Grouping Identifier')}
+                  </Label>
                   <Input
                     value={formData.groupingIdentifier || ''}
                     readOnly
@@ -749,7 +834,10 @@ export function CommunicationCampaignsTab({
 
                 <div className="space-y-2 mt-4">
                   <Label className="font-semibold">
-                    Definição de Target Group
+                    {t(
+                      'crm.dispatch.target_group_def',
+                      'Target Group Definition',
+                    )}
                   </Label>
                   <RadioGroup
                     value={targetGroupMode}
@@ -759,13 +847,13 @@ export function CommunicationCampaignsTab({
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="existing" id="tg-existing" />
                       <Label htmlFor="tg-existing" className="cursor-pointer">
-                        Selecionar Existente
+                        {t('crm.dispatch.select_existing', 'Select Existing')}
                       </Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="new" id="tg-new" />
                       <Label htmlFor="tg-new" className="cursor-pointer">
-                        Criar Novo Grupo
+                        {t('crm.dispatch.create_new', 'Create New Group')}
                       </Label>
                     </div>
                   </RadioGroup>
@@ -774,10 +862,12 @@ export function CommunicationCampaignsTab({
                 {targetGroupMode === 'new' && (
                   <div className="space-y-4 pt-4 border-t mt-4 bg-slate-50 p-4 rounded-md">
                     <h4 className="font-semibold text-sm">
-                      Filtros do Novo Grupo Alvo
+                      {t('crm.dispatch.new_group_filters', 'New Group Filters')}
                     </h4>
                     <div className="space-y-2">
-                      <Label>Nome do Grupo</Label>
+                      <Label>
+                        {t('admin.crm_tabs.group_name', 'Group Name')}
+                      </Label>
                       <Input
                         value={newTargetGroup.name}
                         onChange={(e) =>
@@ -786,12 +876,15 @@ export function CommunicationCampaignsTab({
                             name: e.target.value,
                           })
                         }
-                        placeholder="Ex: Mulheres +25 SP"
+                        placeholder={t(
+                          'crm.dispatch.group_name_ph',
+                          'e.g., Women 25+ NY',
+                        )}
                       />
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label>Gênero</Label>
+                        <Label>{t('admin.crm_tabs.gender', 'Gender')}</Label>
                         <Select
                           value={newTargetGroup.filters?.gender || 'all'}
                           onValueChange={(v) =>
@@ -808,16 +901,26 @@ export function CommunicationCampaignsTab({
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="all">Todos</SelectItem>
-                            <SelectItem value="male">Masculino</SelectItem>
-                            <SelectItem value="female">Feminino</SelectItem>
-                            <SelectItem value="other">Outros</SelectItem>
+                            <SelectItem value="all">
+                              {t('common.all', 'All')}
+                            </SelectItem>
+                            <SelectItem value="male">
+                              {t('crm.dispatch.male', 'Male')}
+                            </SelectItem>
+                            <SelectItem value="female">
+                              {t('crm.dispatch.female', 'Female')}
+                            </SelectItem>
+                            <SelectItem value="other">
+                              {t('crm.dispatch.other', 'Other')}
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                       <div className="flex gap-2">
                         <div className="space-y-2 w-1/2">
-                          <Label>Idade Mín.</Label>
+                          <Label>
+                            {t('admin.crm_tabs.min_age', 'Min Age')}
+                          </Label>
                           <Input
                             type="number"
                             value={newTargetGroup.filters?.minAge || ''}
@@ -835,7 +938,9 @@ export function CommunicationCampaignsTab({
                           />
                         </div>
                         <div className="space-y-2 w-1/2">
-                          <Label>Idade Máx.</Label>
+                          <Label>
+                            {t('admin.crm_tabs.max_age', 'Max Age')}
+                          </Label>
                           <Input
                             type="number"
                             value={newTargetGroup.filters?.maxAge || ''}
@@ -854,7 +959,7 @@ export function CommunicationCampaignsTab({
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <Label>Estado</Label>
+                        <Label>{t('admin.crm_tabs.state', 'State')}</Label>
                         <Select
                           value={newTargetGroup.filters?.state || 'all'}
                           onValueChange={(v) =>
@@ -869,10 +974,12 @@ export function CommunicationCampaignsTab({
                           }
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder="Todos" />
+                            <SelectValue placeholder={t('common.all', 'All')} />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="all">Todos</SelectItem>
+                            <SelectItem value="all">
+                              {t('common.all', 'All')}
+                            </SelectItem>
                             {availableStates.map((s) => (
                               <SelectItem key={s} value={s}>
                                 {s}
@@ -882,7 +989,7 @@ export function CommunicationCampaignsTab({
                         </Select>
                       </div>
                       <div className="space-y-2">
-                        <Label>Cidade</Label>
+                        <Label>{t('admin.crm_tabs.city', 'City')}</Label>
                         <Select
                           value={newTargetGroup.filters?.city || 'all'}
                           onValueChange={(v) =>
@@ -897,10 +1004,12 @@ export function CommunicationCampaignsTab({
                           }
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder="Todas" />
+                            <SelectValue placeholder={t('common.all', 'All')} />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="all">Todas</SelectItem>
+                            <SelectItem value="all">
+                              {t('common.all', 'All')}
+                            </SelectItem>
                             {availableCities.map((c) => (
                               <SelectItem key={c} value={c}>
                                 {c}
@@ -917,7 +1026,9 @@ export function CommunicationCampaignsTab({
 
             {(!formData.isExclusive || targetGroupMode === 'existing') && (
               <div className="space-y-2">
-                <Label>Grupo Alvo (Segmento)</Label>
+                <Label>
+                  {t('admin.crm_tabs.target_group', 'Target Group')}
+                </Label>
                 <Select
                   value={formData.targetGroupId}
                   onValueChange={(v) =>
@@ -925,7 +1036,9 @@ export function CommunicationCampaignsTab({
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione..." />
+                    <SelectValue
+                      placeholder={t('common.select', 'Select...')}
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     {availableGroups.map((g) => (
@@ -940,13 +1053,16 @@ export function CommunicationCampaignsTab({
 
             <div className="space-y-3 p-4 bg-white rounded-lg border border-slate-200">
               <Label className="text-base font-semibold">
-                Configurações de Alcance
+                {t('admin.crm_tabs.reach_settings', 'Reach Settings')}
               </Label>
 
               <div className="space-y-4 mt-4">
                 <div className="space-y-2">
                   <Label className="text-muted-foreground">
-                    Escopo Geográfico (Permissões)
+                    {t(
+                      'admin.crm_tabs.geo_scope',
+                      'Geographic Scope (Permissions)',
+                    )}
                   </Label>
                   {isMasterAdmin ? (
                     <Select
@@ -959,21 +1075,32 @@ export function CommunicationCampaignsTab({
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="local">Local</SelectItem>
-                        <SelectItem value="state">Estadual</SelectItem>
-                        <SelectItem value="national">Nacional</SelectItem>
+                        <SelectItem value="local">
+                          {t('crm.dispatch.local', 'Local')}
+                        </SelectItem>
+                        <SelectItem value="state">
+                          {t('crm.dispatch.state', 'State')}
+                        </SelectItem>
+                        <SelectItem value="national">
+                          {t('crm.dispatch.national', 'National')}
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   ) : (
                     <div className="flex flex-col gap-2">
                       <Input
-                        value="Local (Restrito à sua região)"
+                        value={t(
+                          'crm.dispatch.local_restricted',
+                          'Local (Restricted to your region)',
+                        )}
                         disabled
                         className="bg-slate-100 text-slate-500 cursor-not-allowed w-full sm:w-[250px]"
                       />
                       <p className="text-[11px] text-slate-500">
-                        O alcance geográfico é bloqueado e limitado à sua praça
-                        de atuação.
+                        {t(
+                          'crm.dispatch.geo_blocked',
+                          'Geographic reach is locked and limited to your area of operation.',
+                        )}
                       </p>
                     </div>
                   )}
@@ -982,7 +1109,10 @@ export function CommunicationCampaignsTab({
                 <div className="space-y-4 pt-4 border-t mt-4">
                   <div className="flex justify-between items-center">
                     <Label className="text-muted-foreground">
-                      Controle de Randomização (A/B Test)
+                      {t(
+                        'admin.crm_tabs.ab_test',
+                        'Randomization Control (A/B Test)',
+                      )}
                     </Label>
                   </div>
                   <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
@@ -1001,10 +1131,10 @@ export function CommunicationCampaignsTab({
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="percentage">
-                          Percentual (%)
+                          {t('crm.dispatch.percentage', 'Percentage (%)')}
                         </SelectItem>
                         <SelectItem value="absolute">
-                          Número Absoluto
+                          {t('crm.dispatch.absolute', 'Absolute Number')}
                         </SelectItem>
                       </SelectContent>
                     </Select>
@@ -1049,14 +1179,18 @@ export function CommunicationCampaignsTab({
             <div className="space-y-3 pt-4 border-t">
               <div className="flex justify-between items-center">
                 <Label className="flex items-center gap-2 text-base">
-                  <Library className="w-4 h-4" /> Biblioteca de Templates
+                  <Library className="w-4 h-4" />{' '}
+                  {t('crm.dispatch.template_library', 'Template Library')}
                 </Label>
                 <div className="flex gap-2">
                   {isSavingTemplate ? (
                     <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-md border border-slate-200">
                       <Input
                         className="h-7 text-xs w-36 px-2 bg-white"
-                        placeholder="Nome do Template..."
+                        placeholder={t(
+                          'crm.dispatch.template_name',
+                          'Template Name...',
+                        )}
                         value={newTemplateName}
                         onChange={(e) => setNewTemplateName(e.target.value)}
                         autoFocus
@@ -1066,7 +1200,7 @@ export function CommunicationCampaignsTab({
                         className="h-7 px-3 text-xs"
                         onClick={handleSaveTemplate}
                       >
-                        Salvar
+                        {t('common.save', 'Save')}
                       </Button>
                       <Button
                         size="icon"
@@ -1084,7 +1218,8 @@ export function CommunicationCampaignsTab({
                       disabled={!formData.content}
                       onClick={() => setIsSavingTemplate(true)}
                     >
-                      <Save className="w-3 h-3 mr-2" /> Salvar Mensagem Atual
+                      <Save className="w-3 h-3 mr-2" />{' '}
+                      {t('crm.dispatch.save_current', 'Save Current Message')}
                     </Button>
                   )}
                 </div>
@@ -1096,7 +1231,12 @@ export function CommunicationCampaignsTab({
                 }}
               >
                 <SelectTrigger className="bg-slate-50 border-slate-200 text-slate-600">
-                  <SelectValue placeholder="Selecione um template salvo para carregar..." />
+                  <SelectValue
+                    placeholder={t(
+                      'crm.dispatch.select_template',
+                      'Select a saved template to load...',
+                    )}
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {templates.map((t) => (
@@ -1109,7 +1249,9 @@ export function CommunicationCampaignsTab({
             </div>
 
             <div className="space-y-2 mt-2">
-              <Label>Conteúdo da Mensagem</Label>
+              <Label>
+                {t('admin.crm_tabs.message_content', 'Message Content')}
+              </Label>
               <Textarea
                 value={formData.content}
                 onChange={(e) =>
@@ -1117,13 +1259,17 @@ export function CommunicationCampaignsTab({
                 }
                 placeholder={
                   formData.channel === 'push'
-                    ? 'Título curto e mensagem direta...'
-                    : 'Escreva sua mensagem...'
+                    ? t(
+                        'crm.dispatch.push_ph',
+                        'Short title and direct message...',
+                      )
+                    : t('crm.dispatch.msg_ph', 'Write your message...')
                 }
                 className="resize-none h-28"
               />
               <div className="text-right text-xs text-muted-foreground">
-                {formData.content?.length || 0} caracteres
+                {formData.content?.length || 0}{' '}
+                {t('crm.dispatch.chars', 'characters')}
               </div>
             </div>
 
@@ -1131,28 +1277,39 @@ export function CommunicationCampaignsTab({
               <Users className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
               <div>
                 <p className="text-sm font-semibold text-blue-900">
-                  Resumo da Audiência
+                  {t('admin.crm_tabs.audience_summary', 'Audience Summary')}
                 </p>
                 <p className="text-xs text-blue-800 mt-1 leading-relaxed">
-                  O grupo alvo selecionado possui{' '}
-                  <strong>{baseLeads} leads</strong>. Com a randomização de{' '}
+                  {t(
+                    'crm.dispatch.audience_text1',
+                    'The selected target group has',
+                  )}
+                  <strong>
+                    {baseLeads} {t('crm.dispatch.leads', 'leads')}
+                  </strong>
+                  .{' '}
+                  {t('crm.dispatch.audience_text2', 'With a randomization of')}
                   <strong>
                     {formData.randomizationType === 'percentage'
                       ? `${formData.randomizationValue}%`
                       : formData.randomizationValue}
                   </strong>
-                  , esta campanha será enviada para aproximadamente{' '}
+                  ,{' '}
+                  {t(
+                    'crm.dispatch.audience_text3',
+                    'this campaign will be sent to approximately',
+                  )}
                   <strong className="text-blue-950 bg-blue-200 px-1 rounded">
                     {impactedLeads}
                   </strong>{' '}
-                  leads únicos.
+                  {t('crm.dispatch.unique_leads', 'unique leads')}.
                 </p>
               </div>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-              Cancelar
+              {t('common.cancel', 'Cancel')}
             </Button>
             <Button
               onClick={handleSave}
@@ -1162,7 +1319,8 @@ export function CommunicationCampaignsTab({
                 !formData.content
               }
             >
-              <Send className="w-4 h-4 mr-2" /> Agendar Disparo
+              <Send className="w-4 h-4 mr-2" />{' '}
+              {t('crm.dispatch.schedule_dispatch', 'Schedule Dispatch')}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -79,7 +79,7 @@ export function AdminInterestsTab({ franchiseId }: { franchiseId?: string }) {
     const allInterests = platformSettings.availableInterests || []
 
     if (allInterests.find((i) => i.id === cleanId)) {
-      toast.error(t('common.error', 'Ocorreu um erro'))
+      toast.error(t('common.error', 'An error occurred'))
       return
     }
 
@@ -166,12 +166,12 @@ export function AdminInterestsTab({ franchiseId }: { franchiseId?: string }) {
       >
         <CardHeader className="min-w-0">
           <CardTitle className="truncate">
-            {t('franchisee.interests.title', 'Gerenciar Interesses')}
+            {t('franchisee.interests.title', 'Manage Interests')}
           </CardTitle>
           <CardDescription className="line-clamp-2">
             {t(
               'franchisee.interests.desc',
-              'Adicione, edite ou remova as categorias de interesse que os usuários podem selecionar em seus perfis.',
+              'Add, edit or remove interest categories users can select in their profiles.',
             )}
           </CardDescription>
         </CardHeader>
@@ -185,7 +185,7 @@ export function AdminInterestsTab({ franchiseId }: { franchiseId?: string }) {
             <Input
               placeholder={t(
                 'franchisee.interests.new',
-                'Novo interesse (ex: Tecnologia)',
+                'New interest (e.g. Technology)',
               )}
               value={newLabel}
               onChange={handleLabelChange}
@@ -195,7 +195,7 @@ export function AdminInterestsTab({ franchiseId }: { franchiseId?: string }) {
             <Input
               placeholder={t(
                 'franchisee.interests.new_id',
-                'ID (ex: tecnologia)',
+                'ID (e.g. technology)',
               )}
               value={newId}
               onChange={handleIdChange}
@@ -204,7 +204,7 @@ export function AdminInterestsTab({ franchiseId }: { franchiseId?: string }) {
             />
             <Button onClick={handleAdd} className="shrink-0 w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />{' '}
-              {t('franchisee.interests.add', 'Adicionar')}
+              {t('franchisee.interests.add', 'Add')}
             </Button>
           </div>
 
@@ -212,13 +212,13 @@ export function AdminInterestsTab({ franchiseId }: { franchiseId?: string }) {
             <TableHeader>
               <TableRow>
                 <TableHead className="whitespace-nowrap">
-                  {t('franchisee.interests.name', 'Nome do Interesse')}
+                  {t('franchisee.interests.name', 'Interest Name')}
                 </TableHead>
                 <TableHead className="whitespace-nowrap">
-                  {t('franchisee.interests.id', 'ID (Sistema)')}
+                  {t('franchisee.interests.id', 'ID (System)')}
                 </TableHead>
                 <TableHead className="text-right whitespace-nowrap">
-                  {t('franchisee.interests.actions', 'Ações')}
+                  {t('franchisee.interests.actions', 'Actions')}
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -298,7 +298,7 @@ export function AdminInterestsTab({ franchiseId }: { franchiseId?: string }) {
                   >
                     {t(
                       'franchisee.interests.no_interests',
-                      'Nenhum interesse encontrado.',
+                      'No interests found.',
                     )}
                   </TableCell>
                 </TableRow>

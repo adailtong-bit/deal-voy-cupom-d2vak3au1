@@ -219,7 +219,10 @@ export function TransactionsList({ franchiseId }: { franchiseId?: string }) {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={exportGAAP}>
-                  {t('finance.export_us_gaap', 'Padrão US (GAAP) / QuickBooks')}
+                  {t(
+                    'finance.export_us_gaap',
+                    'US Standard (GAAP) / QuickBooks',
+                  )}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

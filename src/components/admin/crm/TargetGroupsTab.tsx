@@ -280,7 +280,11 @@ export function TargetGroupsTab({
                               variant="outline"
                               className="bg-slate-50 text-[10px]"
                             >
-                              Gênero: {group.filters.gender}
+                              {t('admin.crm_tabs.gender', 'Gênero')}:{' '}
+                              {t(
+                                `crm.dispatch.${group.filters.gender}`,
+                                group.filters.gender,
+                              )}
                             </Badge>
                           )}
                         {group.filters?.state &&
@@ -314,11 +318,17 @@ export function TargetGroupsTab({
                       user?.role === 'super_admin' && (
                         <TableCell>
                           {group.companyId ? (
-                            <Badge className="bg-purple-500">Loja</Badge>
+                            <Badge className="bg-purple-500">
+                              {t('admin.crm_tabs.store', 'Store')}
+                            </Badge>
                           ) : group.franchiseId ? (
-                            <Badge variant="secondary">Franquia</Badge>
+                            <Badge variant="secondary">
+                              {t('admin.crm_tabs.franchise', 'Franchise')}
+                            </Badge>
                           ) : (
-                            <Badge className="bg-blue-500">Global</Badge>
+                            <Badge className="bg-blue-500">
+                              {t('admin.crm_tabs.global', 'Global')}
+                            </Badge>
                           )}
                         </TableCell>
                       )}
@@ -420,9 +430,15 @@ export function TargetGroupsTab({
                       <SelectItem value="all">
                         {t('common.all', 'Todos')}
                       </SelectItem>
-                      <SelectItem value="male">Masculino</SelectItem>
-                      <SelectItem value="female">Feminino</SelectItem>
-                      <SelectItem value="other">Outros</SelectItem>
+                      <SelectItem value="male">
+                        {t('crm.dispatch.male', 'Male')}
+                      </SelectItem>
+                      <SelectItem value="female">
+                        {t('crm.dispatch.female', 'Female')}
+                      </SelectItem>
+                      <SelectItem value="other">
+                        {t('crm.dispatch.other', 'Other')}
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -586,12 +602,18 @@ export function TargetGroupsTab({
                       <SelectValue placeholder={t('common.any', 'Qualquer')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">Qualquer Frequência</SelectItem>
-                      <SelectItem value="high">
-                        Alta (Comprador Frequente)
+                      <SelectItem value="all">
+                        {t('franchisee.crm.all_frequencies', 'Any Frequency')}
                       </SelectItem>
-                      <SelectItem value="medium">Média (Ocasional)</SelectItem>
-                      <SelectItem value="low">Baixa (Raro)</SelectItem>
+                      <SelectItem value="high">
+                        {t('franchisee.crm.freq_high', 'High (10+)')}
+                      </SelectItem>
+                      <SelectItem value="medium">
+                        {t('franchisee.crm.freq_medium', 'Medium (3-9)')}
+                      </SelectItem>
+                      <SelectItem value="low">
+                        {t('franchisee.crm.freq_low', 'Low (1-2)')}
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -605,7 +627,10 @@ export function TargetGroupsTab({
                   {t('admin.crm_tabs.est_leads', 'Leads Estimados')}
                 </span>
                 <p className="text-xs text-blue-600">
-                  Total de usuários que correspondem aos filtros atuais.
+                  {t(
+                    'crm.dispatch.total_users_matched',
+                    'Total users matching current filters.',
+                  )}
                 </p>
               </div>
               <span className="font-black text-2xl text-blue-600">

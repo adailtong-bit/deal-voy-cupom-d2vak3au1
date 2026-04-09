@@ -12,11 +12,11 @@ export function AdminAdsManager() {
   return (
     <div className="space-y-6 animate-fade-in-up">
       <div>
-        <h2 className="text-2xl font-bold">{t('admin.ads', 'Anúncios')}</h2>
+        <h2 className="text-2xl font-bold">{t('admin.ads', 'Ads')}</h2>
         <p className="text-muted-foreground">
           {t(
             'admin.dashboardDesc',
-            'Gerencie campanhas de anúncios, precificação e anunciantes.',
+            'Manage ad campaigns, pricing, and advertisers.',
           )}
         </p>
       </div>
@@ -25,17 +25,19 @@ export function AdminAdsManager() {
         <TabsList className="mb-4 flex flex-wrap h-auto">
           <TabsTrigger value="campaigns">
             <LayoutDashboard className="h-4 w-4 mr-2" />{' '}
-            {t('franchisee.menu.crm', 'Campanhas')}
+            {t('admin.ads.campaigns', 'Campaigns')}
           </TabsTrigger>
           <TabsTrigger value="advertisers">
-            <Users className="h-4 w-4 mr-2" /> Anunciantes
+            <Users className="h-4 w-4 mr-2" />{' '}
+            {t('admin.ads.advertisers', 'Advertisers')}
           </TabsTrigger>
           <TabsTrigger value="pricing">
-            <DollarSign className="h-4 w-4 mr-2" /> Precificação
+            <DollarSign className="h-4 w-4 mr-2" />{' '}
+            {t('admin.ads.pricing', 'Pricing')}
           </TabsTrigger>
           <TabsTrigger value="billing">
             <FileText className="h-4 w-4 mr-2" />{' '}
-            {t('admin.billing', 'Faturamento')}
+            {t('admin.billing', 'Billing')}
           </TabsTrigger>
         </TabsList>
 
