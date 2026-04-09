@@ -88,16 +88,16 @@ export function AdvancedCompanyForm({
       <Tabs defaultValue="general" className="w-full">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="general">
-            {t('admin.company.tabs.general', 'Geral')}
+            {t('admin.company.tabs.general', 'General')}
           </TabsTrigger>
           <TabsTrigger value="contacts">
-            {t('admin.company.tabs.contacts', 'Contatos')}
+            {t('admin.company.tabs.contacts', 'Contacts')}
           </TabsTrigger>
           <TabsTrigger value="billing">
-            {t('admin.company.tabs.billing', 'Faturamento')}
+            {t('admin.company.tabs.billing', 'Billing')}
           </TabsTrigger>
           <TabsTrigger value="address">
-            {t('admin.company.tabs.address', 'Endereçamento')}
+            {t('admin.company.tabs.address', 'Addressing')}
           </TabsTrigger>
         </TabsList>
 
@@ -106,8 +106,8 @@ export function AdvancedCompanyForm({
             <div className="space-y-2">
               <Label>
                 {type === 'franchise'
-                  ? t('admin.company.name', 'Nome da Franquia / Região')
-                  : t('admin.company.name', 'Nome da Empresa')}
+                  ? t('admin.company.name', 'Franchise / Region Name')
+                  : t('admin.company.name', 'Company Name')}
               </Label>
               <Input
                 required
@@ -125,14 +125,14 @@ export function AdvancedCompanyForm({
                 {type === 'franchise'
                   ? t(
                       'admin.company.master_email',
-                      'E-mail de Acesso do Franqueado (Login)',
+                      'Franchisee Access Email (Login)',
                     )
-                  : t('admin.company.master_email', 'E-mail Principal')}
+                  : t('admin.company.master_email', 'Main Email')}
               </Label>
               <Input
                 required
                 type="email"
-                placeholder="email@exemplo.com"
+                placeholder="email@example.com"
                 value={formData.email || ''}
                 onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })
@@ -141,7 +141,7 @@ export function AdvancedCompanyForm({
             </div>
             <div className="space-y-2">
               <Label>
-                {t('admin.company.business_phone', 'Telefone Principal')}
+                {t('admin.company.business_phone', 'Business Phone')}
               </Label>
               <Input
                 required
@@ -152,7 +152,7 @@ export function AdvancedCompanyForm({
               />
             </div>
             <div className="space-y-2">
-              <Label>{t('profile.country', 'País')}</Label>
+              <Label>{t('profile.country', 'Country')}</Label>
               <Select
                 required
                 value={formData.addressCountry || ''}
@@ -161,9 +161,7 @@ export function AdvancedCompanyForm({
                 }
               >
                 <SelectTrigger>
-                  <SelectValue
-                    placeholder={t('common.select', 'Selecione...')}
-                  />
+                  <SelectValue placeholder={t('common.select', 'Select...')} />
                 </SelectTrigger>
                 <SelectContent>
                   {COUNTRIES?.map((c) => (
@@ -180,13 +178,11 @@ export function AdvancedCompanyForm({
         <TabsContent value="contacts" className="space-y-6 mt-4">
           <div className="space-y-4">
             <h4 className="text-sm font-medium leading-none">
-              {t('admin.company.primary_contact', 'Contato Primário')}
+              {t('admin.company.primary_contact', 'Primary Contact')}
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>
-                  {t('admin.company.contact_name', 'Nome Completo')}
-                </Label>
+                <Label>{t('admin.company.contact_name', 'Full Name')}</Label>
                 <Input
                   required
                   value={formData.contactPerson || ''}
@@ -196,7 +192,7 @@ export function AdvancedCompanyForm({
                 />
               </div>
               <div className="space-y-2">
-                <Label>{t('admin.company.department', 'Departamento')}</Label>
+                <Label>{t('admin.company.department', 'Department')}</Label>
                 <Input
                   required
                   value={formData.contactDepartment || ''}
@@ -209,7 +205,7 @@ export function AdvancedCompanyForm({
                 />
               </div>
               <div className="space-y-2">
-                <Label>{t('admin.company.contact_email', 'E-mail')}</Label>
+                <Label>{t('admin.company.contact_email', 'Email')}</Label>
                 <Input
                   required
                   type="email"
@@ -220,7 +216,7 @@ export function AdvancedCompanyForm({
                 />
               </div>
               <div className="space-y-2">
-                <Label>{t('admin.company.contact_phone', 'Telefone')}</Label>
+                <Label>{t('admin.company.contact_phone', 'Phone')}</Label>
                 <Input
                   required
                   value={formData.contactPhone || ''}
@@ -236,13 +232,11 @@ export function AdvancedCompanyForm({
 
           <div className="space-y-4">
             <h4 className="text-sm font-medium leading-none">
-              {t('admin.company.secondary_contact', 'Contato Secundário')}
+              {t('admin.company.secondary_contact', 'Secondary Contact')}
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>
-                  {t('admin.company.contact_name', 'Nome Completo')}
-                </Label>
+                <Label>{t('admin.company.contact_name', 'Full Name')}</Label>
                 <Input
                   value={formData.secondaryContactName || ''}
                   onChange={(e) =>
@@ -254,7 +248,7 @@ export function AdvancedCompanyForm({
                 />
               </div>
               <div className="space-y-2">
-                <Label>{t('admin.company.department', 'Departamento')}</Label>
+                <Label>{t('admin.company.department', 'Department')}</Label>
                 <Input
                   value={formData.secondaryContactDepartment || ''}
                   onChange={(e) =>
@@ -266,7 +260,7 @@ export function AdvancedCompanyForm({
                 />
               </div>
               <div className="space-y-2">
-                <Label>{t('admin.company.contact_email', 'E-mail')}</Label>
+                <Label>{t('admin.company.contact_email', 'Email')}</Label>
                 <Input
                   type="email"
                   value={formData.secondaryContactEmail || ''}
@@ -279,7 +273,7 @@ export function AdvancedCompanyForm({
                 />
               </div>
               <div className="space-y-2">
-                <Label>{t('admin.company.contact_phone', 'Telefone')}</Label>
+                <Label>{t('admin.company.contact_phone', 'Phone')}</Label>
                 <Input
                   value={formData.secondaryContactPhone || ''}
                   onChange={(e) =>
@@ -298,7 +292,7 @@ export function AdvancedCompanyForm({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>
-                {t('admin.company.state_reg', 'Inscrição Estadual')}
+                {t('admin.company.state_reg', 'State Registration / Tax ID')}
               </Label>
               <Input
                 value={formData.stateRegistration || ''}
@@ -311,9 +305,7 @@ export function AdvancedCompanyForm({
               />
             </div>
             <div className="space-y-2">
-              <Label>
-                {t('admin.company.billing_email', 'E-mail de Faturamento')}
-              </Label>
+              <Label>{t('admin.company.billing_email', 'Billing Email')}</Label>
               <Input
                 type="email"
                 value={formData.billingEmail || ''}
@@ -328,7 +320,9 @@ export function AdvancedCompanyForm({
         <TabsContent value="address" className="space-y-4 mt-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>{t('admin.company.address.street', 'Rua/Avenida')}</Label>
+              <Label>
+                {t('admin.company.address.street', 'Street Address')}
+              </Label>
               <Input
                 required
                 value={formData.addressStreet || ''}
@@ -338,7 +332,7 @@ export function AdvancedCompanyForm({
               />
             </div>
             <div className="space-y-2">
-              <Label>{t('admin.company.address.number', 'Número')}</Label>
+              <Label>{t('admin.company.address.number', 'Number')}</Label>
               <Input
                 required
                 value={formData.addressNumber || ''}
@@ -348,7 +342,9 @@ export function AdvancedCompanyForm({
               />
             </div>
             <div className="space-y-2">
-              <Label>{t('admin.company.address.neighborhood', 'Bairro')}</Label>
+              <Label>
+                {t('admin.company.address.neighborhood', 'Neighborhood')}
+              </Label>
               <Input
                 required
                 value={formData.addressNeighborhood || ''}
@@ -361,7 +357,7 @@ export function AdvancedCompanyForm({
               />
             </div>
             <div className="space-y-2">
-              <Label>{t('admin.company.address.city', 'Cidade')}</Label>
+              <Label>{t('admin.company.address.city', 'City')}</Label>
               <Input
                 required
                 value={formData.addressCity || ''}
@@ -371,7 +367,9 @@ export function AdvancedCompanyForm({
               />
             </div>
             <div className="space-y-2">
-              <Label>{t('admin.company.address.state', 'Estado')}</Label>
+              <Label>
+                {t('admin.company.address.state', 'State / Province')}
+              </Label>
               <Input
                 required
                 value={formData.addressState || ''}
@@ -381,7 +379,7 @@ export function AdvancedCompanyForm({
               />
             </div>
             <div className="space-y-2">
-              <Label>{t('admin.company.address.zip', 'CEP')}</Label>
+              <Label>{t('admin.company.address.zip', 'ZIP Code')}</Label>
               <Input
                 required
                 value={formData.addressZip || ''}
@@ -420,9 +418,9 @@ export function AdvancedCompanyForm({
 
       <DialogFooter className="mt-6 pt-4 border-t">
         <Button variant="outline" type="button" onClick={onCancel}>
-          {t('common.cancel', 'Cancelar')}
+          {t('common.cancel', 'Cancel')}
         </Button>
-        <Button type="submit">{t('common.save', 'Salvar')}</Button>
+        <Button type="submit">{t('common.save', 'Save')}</Button>
       </DialogFooter>
     </form>
   )

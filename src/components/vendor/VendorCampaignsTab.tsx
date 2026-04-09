@@ -86,7 +86,7 @@ export function VendorCampaignsTab({
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-2">
         <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
           <Megaphone className="h-5 w-5 text-primary" />
-          {t('dashboard.your_campaigns', 'Suas Campanhas Ativas')}
+          {t('dashboard.your_campaigns', 'Your Active Campaigns')}
         </h2>
         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
           {coupons && coupons.length > 0 && (
@@ -95,19 +95,19 @@ export function VendorCampaignsTab({
                 <SelectValue
                   placeholder={t(
                     'vendor.campaigns_tab.filter',
-                    'Filtrar por tipo',
+                    'Filter by type',
                   )}
                 />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">
-                  {t('vendor.campaigns_tab.filter_all', 'Todas')}
+                  {t('vendor.campaigns_tab.filter_all', 'All')}
                 </SelectItem>
                 <SelectItem value="regular">
-                  {t('vendor.campaigns_tab.filter_regular', 'Regulares')}
+                  {t('vendor.campaigns_tab.filter_regular', 'Regular')}
                 </SelectItem>
                 <SelectItem value="seasonal">
-                  {t('vendor.campaigns_tab.filter_seasonal', 'Sazonais')}
+                  {t('vendor.campaigns_tab.filter_seasonal', 'Seasonal')}
                 </SelectItem>
               </SelectContent>
             </Select>
@@ -118,7 +118,7 @@ export function VendorCampaignsTab({
               className="font-bold shadow-md bg-primary hover:bg-primary/90"
             >
               <Plus className="w-4 h-4 mr-2" />{' '}
-              {t('vendor.campaigns_tab.create', 'Criar Campanha')}
+              {t('vendor.campaigns_tab.create', 'Create Campaign')}
             </Button>
           )}
         </div>
@@ -128,25 +128,22 @@ export function VendorCampaignsTab({
         <div className="py-16 text-center bg-white rounded-xl border border-dashed border-slate-300">
           <Megaphone className="h-12 w-12 text-slate-300 mx-auto mb-3" />
           <h3 className="text-lg font-semibold text-slate-700">
-            {t(
-              'vendor.campaigns_tab.empty_title',
-              'Nenhuma campanha encontrada',
-            )}
+            {t('vendor.campaigns_tab.empty_title', 'No campaigns found')}
           </h3>
           <p className="text-slate-500 mt-1 max-w-md mx-auto mb-6">
             {filter === 'all'
               ? t(
                   'vendor.campaigns_tab.empty_desc',
-                  'Você ainda não criou nenhuma campanha. Crie sua primeira campanha para atrair mais clientes e aumentar suas vendas.',
+                  'You have not created any campaigns yet. Create your first campaign to attract more customers and increase your sales.',
                 )
               : t(
                   'vendor.campaigns_tab.empty_filter_desc',
-                  'Nenhuma campanha corresponde ao filtro selecionado.',
+                  'No campaigns match the selected filter.',
                 )}
           </p>
           <Button onClick={handleCreate} className="font-bold shadow-md">
             <Plus className="w-4 h-4 mr-2" />{' '}
-            {t('vendor.campaigns_tab.create', 'Criar Campanha')}
+            {t('vendor.campaigns_tab.create', 'Create Campaign')}
           </Button>
         </div>
       ) : (
@@ -175,7 +172,7 @@ export function VendorCampaignsTab({
 
             let statusBadge = (
               <Badge className="bg-emerald-500 hover:bg-emerald-600 border-none shadow-sm">
-                {t('vendor.campaigns_tab.active', 'Ativa')}
+                {t('vendor.campaigns_tab.active', 'Active')}
               </Badge>
             )
             if (isSoldOut) {
@@ -184,19 +181,19 @@ export function VendorCampaignsTab({
                   variant="destructive"
                   className="bg-red-500 hover:bg-red-600 border-none shadow-sm"
                 >
-                  {t('vendor.campaigns_tab.sold_out', 'Esgotado')}
+                  {t('vendor.campaigns_tab.sold_out', 'Sold Out')}
                 </Badge>
               )
             } else if (isExpired) {
               statusBadge = (
                 <Badge variant="secondary" className="shadow-sm">
-                  {t('vendor.campaigns_tab.expired', 'Expirada')}
+                  {t('vendor.campaigns_tab.expired', 'Expired')}
                 </Badge>
               )
             } else if (isScheduled) {
               statusBadge = (
                 <Badge className="bg-blue-500 hover:bg-blue-600 border-none shadow-sm">
-                  {t('vendor.campaigns_tab.scheduled', 'Agendada')}
+                  {t('vendor.campaigns_tab.scheduled', 'Scheduled')}
                 </Badge>
               )
             }
@@ -219,7 +216,7 @@ export function VendorCampaignsTab({
                     {statusBadge}
                     {coupon.isSeasonal && (
                       <Badge className="bg-orange-500 hover:bg-orange-600 border-none shadow-sm text-white">
-                        {t('vouchers.seasonal_badge', 'Sazonal')}
+                        {t('vouchers.seasonal_badge', 'Seasonal')}
                       </Badge>
                     )}
                   </div>
@@ -232,11 +229,8 @@ export function VendorCampaignsTab({
                       {startDateStr && endDateStr
                         ? `${formatDate(startDateStr)} - ${formatDate(endDateStr)}`
                         : endDateStr
-                          ? `${t('vendor.campaigns_tab.expires_in', 'Expira em')}: ${formatDate(endDateStr)}`
-                          : t(
-                              'vendor.campaigns_tab.indefinite',
-                              'Indeterminado',
-                            )}
+                          ? `${t('vendor.campaigns_tab.expires_in', 'Expires in')}: ${formatDate(endDateStr)}`
+                          : t('vendor.campaigns_tab.indefinite', 'Indefinite')}
                     </div>
                   </div>
                 </div>
@@ -244,7 +238,7 @@ export function VendorCampaignsTab({
                 <CardContent className="pt-4 flex-1 flex flex-col gap-4 p-5 pb-3">
                   <div className="flex justify-between items-center text-sm font-medium bg-slate-50 px-3.5 py-2.5 rounded-lg border border-slate-100">
                     <span className="text-slate-600">
-                      {t('vendor.campaigns_tab.discount', 'Desconto:')}
+                      {t('vendor.campaigns_tab.discount', 'Discount:')}
                     </span>
                     <span className="text-primary font-bold text-base">
                       {coupon.discount}
@@ -254,7 +248,7 @@ export function VendorCampaignsTab({
                   <div className="space-y-2.5 mt-auto">
                     <div className="flex justify-between items-end text-sm">
                       <span className="font-semibold text-slate-700">
-                        {t('vendor.campaigns_tab.redemptions', 'Resgates')}
+                        {t('vendor.campaigns_tab.redemptions', 'Redemptions')}
                       </span>
                       <span
                         className={cn(
@@ -263,7 +257,7 @@ export function VendorCampaignsTab({
                         )}
                       >
                         {isUnlimited
-                          ? `${used} ${t('vendor.campaigns_tab.utilized', 'utilizados')}`
+                          ? `${used} ${t('vendor.campaigns_tab.utilized', 'utilized')}`
                           : `${used} / ${limit}`}
                       </span>
                     </div>
@@ -285,7 +279,7 @@ export function VendorCampaignsTab({
                       className="w-full font-semibold bg-primary/5 text-primary hover:bg-primary/10 border border-primary/10"
                     >
                       <Smartphone className="w-4 h-4 mr-2" />
-                      {t('vendor.campaigns_tab.view_journey', 'Ver Jornada')}
+                      {t('vendor.campaigns_tab.view_journey', 'View Journey')}
                     </Button>
 
                     <div className="flex flex-wrap items-center justify-between gap-2 mt-1">
@@ -299,7 +293,7 @@ export function VendorCampaignsTab({
                           <ExternalLink className="h-4 w-4 mr-1.5" />{' '}
                           {t(
                             'vendor.campaigns_tab.view_customer',
-                            'Ver cliente',
+                            'View customer',
                           )}
                         </Link>
                       </Button>
@@ -312,7 +306,7 @@ export function VendorCampaignsTab({
                           className="text-slate-600 hover:text-primary hover:bg-primary/5"
                         >
                           <Edit2 className="h-4 w-4 mr-1.5" />{' '}
-                          {t('vendor.campaigns_tab.edit', 'Editar')}
+                          {t('vendor.campaigns_tab.edit', 'Edit')}
                         </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
@@ -329,19 +323,19 @@ export function VendorCampaignsTab({
                               <AlertDialogTitle>
                                 {t(
                                   'vendor.campaigns_tab.delete_title',
-                                  'Excluir Campanha?',
+                                  'Delete Campaign?',
                                 )}
                               </AlertDialogTitle>
                               <AlertDialogDescription>
                                 {t(
                                   'vendor.campaigns_tab.delete_desc',
-                                  'Esta ação não pode ser desfeita. A campanha será permanentemente removida e não estará mais acessível aos clientes.',
+                                  'This action cannot be undone. The campaign will be permanently removed and no longer accessible to customers.',
                                 )}
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>
-                                {t('common.cancel', 'Cancelar')}
+                                {t('common.cancel', 'Cancel')}
                               </AlertDialogCancel>
                               <AlertDialogAction
                                 onClick={() => deleteCoupon(coupon.id)}
@@ -349,7 +343,7 @@ export function VendorCampaignsTab({
                               >
                                 {t(
                                   'vendor.campaigns_tab.delete_confirm',
-                                  'Excluir Campanha',
+                                  'Delete Campaign',
                                 )}
                               </AlertDialogAction>
                             </AlertDialogFooter>
@@ -368,7 +362,7 @@ export function VendorCampaignsTab({
                       <AccordionTrigger className="py-3 text-sm text-primary hover:no-underline font-semibold rounded-lg">
                         {t(
                           'vendor.campaigns_tab.expand_details',
-                          'Ver Detalhes da Campanha',
+                          'View Campaign Details',
                         )}
                       </AccordionTrigger>
                       <AccordionContent className="pt-2 pb-4 space-y-6">
@@ -376,7 +370,7 @@ export function VendorCampaignsTab({
                           <h4 className="text-sm font-semibold text-slate-700">
                             {t(
                               'vendor.campaigns_tab.desc_title',
-                              'Descrição da Campanha',
+                              'Campaign Description',
                             )}
                           </h4>
                           <p className="text-sm text-slate-600">
@@ -386,11 +380,11 @@ export function VendorCampaignsTab({
 
                         <div className="space-y-1">
                           <h4 className="text-sm font-semibold text-slate-700">
-                            {t('vendor.campaigns_tab.validity', 'Validade')}
+                            {t('vendor.campaigns_tab.validity', 'Validity')}
                           </h4>
                           <p className="text-sm text-slate-600">
                             {startDateStr ? formatDate(startDateStr) : 'N/A'}{' '}
-                            {t('common.to', 'até')}{' '}
+                            {t('common.to', 'to')}{' '}
                             {endDateStr ? formatDate(endDateStr) : 'N/A'}
                           </p>
                         </div>
@@ -399,7 +393,7 @@ export function VendorCampaignsTab({
                           <h4 className="text-sm font-semibold text-slate-700">
                             {t(
                               'vendor.campaigns_tab.preview_title',
-                              'Visualização do Voucher',
+                              'Voucher Preview',
                             )}
                           </h4>
                           <div className="max-w-[280px] pointer-events-none ring-1 ring-slate-200 rounded-xl overflow-hidden mx-auto bg-white shadow-sm">
@@ -411,7 +405,7 @@ export function VendorCampaignsTab({
                           <h4 className="text-sm font-semibold text-slate-700">
                             {t(
                               'vendor.campaigns_tab.redemption_title',
-                              'Interface de Resgate',
+                              'Redemption Interface',
                             )}
                           </h4>
                           <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex items-center justify-center">
@@ -421,7 +415,7 @@ export function VendorCampaignsTab({
                                 <p className="text-xs text-slate-600 font-medium">
                                   {t(
                                     'vendor.campaigns_tab.redemption_online',
-                                    'Resgate via Link Online / Código Promocional',
+                                    'Redemption via Online Link / Promo Code',
                                   )}
                                 </p>
                               </div>
@@ -431,7 +425,7 @@ export function VendorCampaignsTab({
                                 <p className="text-xs text-slate-600 font-medium">
                                   {t(
                                     'vendor.campaigns_tab.redemption_qr',
-                                    'Validação Física via QR Code no PDV',
+                                    'Physical POS Validation via QR Code',
                                   )}
                                 </p>
                               </div>

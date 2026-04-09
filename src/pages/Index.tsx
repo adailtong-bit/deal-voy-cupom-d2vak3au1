@@ -403,7 +403,7 @@ function IndexContent() {
                 className="font-semibold text-slate-700 bg-white border-slate-200 shadow-sm hover:bg-slate-50 transition-colors"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                {t('common.back', 'Voltar')}
+                {t('common.back', 'Back')}
               </Button>
             </div>
 
@@ -414,7 +414,7 @@ function IndexContent() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t(
                   'home.search_placeholder_new',
-                  'Para onde você vai? Buscar hotéis, parques, cupons...',
+                  'Where are you going? Search hotels, parks, coupons...',
                 )}
                 className="pl-12 h-12 sm:h-14 text-base rounded-full shadow-sm bg-slate-50 border-slate-200 focus-visible:ring-primary/30 focus-visible:bg-white transition-all w-full"
               />
@@ -427,7 +427,7 @@ function IndexContent() {
                   size="sm"
                   onClick={() => refreshCoupons()}
                   className="hidden sm:flex text-slate-500 hover:text-primary transition-colors h-8 px-2 -ml-2"
-                  title={t('home.refresh_promotions', 'Atualizar Promoções')}
+                  title={t('home.refresh_promotions', 'Refresh Promotions')}
                 >
                   <RefreshCw className="w-4 h-4" />
                 </Button>
@@ -437,24 +437,18 @@ function IndexContent() {
                     {searchLocationInfo
                       ? t(
                           'home.location_override',
-                          `Mostrando ofertas perto de ${searchLocationInfo.label}`,
+                          `Showing offers near ${searchLocationInfo.label}`,
                         ).replace('{location}', searchLocationInfo.label)
                       : userLocation
-                        ? t(
-                            'home.location_active',
-                            'Mostrando ofertas próximas a você',
-                          )
-                        : t(
-                            'home.detecting_location',
-                            'Detectando localização...',
-                          )}
+                        ? t('home.location_active', 'Showing offers near you')
+                        : t('home.detecting_location', 'Detecting location...')}
                   </span>
                 </div>
               </div>
               {isSearchingWeb && (
                 <div className="text-xs text-primary animate-pulse flex items-center gap-1">
                   <Globe className="w-3 h-3" />
-                  {t('home.searching_web', 'Buscando na web...')}
+                  {t('home.searching_web', 'Searching the web...')}
                 </div>
               )}
             </div>
@@ -478,7 +472,7 @@ function IndexContent() {
               >
                 <LayoutGrid className="w-4 h-4" />
                 <span className="ml-2 font-medium">
-                  {t('category.all', 'Todos')}
+                  {t('category.all', 'All')}
                 </span>
               </Button>
 
@@ -525,9 +519,9 @@ function IndexContent() {
                                 secondaryCategories.find(
                                   (c) => c.id === selectedCategory,
                                 )?.translationKey || 'category.others',
-                                'Outros',
+                                'Others',
                               )
-                            : t('category.others', 'Outros')}
+                            : t('category.others', 'Others')}
                         </span>
                         <ChevronDown className="w-4 h-4 ml-1 opacity-50" />
                       </Button>
@@ -565,7 +559,7 @@ function IndexContent() {
                 <p className="text-slate-500 font-medium">
                   {t(
                     'home.loading_deals',
-                    'Buscando as melhores ofertas para você...',
+                    'Searching for the best deals for you...',
                   )}
                 </p>
               </div>
@@ -584,12 +578,12 @@ function IndexContent() {
                 <AlertTriangle className="h-8 w-8 text-red-500" />
               </div>
               <h3 className="text-lg font-bold text-slate-800">
-                {t('home.load_failed', 'Falha ao carregar cupons')}
+                {t('home.load_failed', 'Failed to load coupons')}
               </h3>
               <p className="text-slate-500 mt-2 max-w-md mx-auto px-4">
                 {t(
                   'home.load_failed_desc',
-                  'Tivemos um problema de comunicação com nossos servidores. Por favor, verifique sua conexão ou tente novamente.',
+                  'We had a communication problem with our servers. Please check your connection or try again.',
                 )}
               </p>
               <Button
@@ -598,7 +592,7 @@ function IndexContent() {
                 onClick={() => refreshCoupons()}
               >
                 <RefreshCw className="w-4 h-4 mr-2" />
-                {t('common.try_again', 'Tentar novamente')}
+                {t('common.try_again', 'Try again')}
               </Button>
             </div>
           ) : (
@@ -611,10 +605,7 @@ function IndexContent() {
                     <div className="flex items-center justify-between mb-5">
                       <h2 className="text-2xl font-bold flex items-center gap-2 text-slate-800">
                         <Gift className="h-6 w-6 text-primary" />
-                        {t(
-                          'home.seasonal_events',
-                          'Ofertas Sazonais em Destaque',
-                        )}
+                        {t('home.seasonal_events', 'Featured Seasonal Offers')}
                       </h2>
                       <Button
                         variant="ghost"
@@ -622,7 +613,7 @@ function IndexContent() {
                         className="hidden sm:flex hover:bg-slate-100"
                       >
                         <Link to="/seasonal">
-                          {t('home.view_calendar', 'Ver calendário')}{' '}
+                          {t('home.view_calendar', 'View calendar')}{' '}
                           <ChevronRight className="h-4 w-4 ml-1" />
                         </Link>
                       </Button>
@@ -673,7 +664,7 @@ function IndexContent() {
                                     >
                                       {t(
                                         `event.type.${event.type}`,
-                                        event.type || 'Evento',
+                                        event.type || 'Event',
                                       )}
                                     </Badge>
                                     {(event.offerType === 'online' ||
@@ -682,7 +673,7 @@ function IndexContent() {
                                         <Globe className="w-3 h-3 mr-1" />{' '}
                                         {t('vouchers.online', 'Online')}
                                       </Badge>
-                                    )}
+                                    )}{' '}
                                   </div>
                                 </div>
                               )}
@@ -716,7 +707,7 @@ function IndexContent() {
                                     }
                                   >
                                     <Ticket className="h-5 w-5" />
-                                    {t('home.get_voucher', 'Resgatar Voucher')}
+                                    {t('home.get_voucher', 'Get Voucher')}
                                   </Button>
                                 </div>
                               </div>
@@ -729,7 +720,7 @@ function IndexContent() {
                       <div className="mt-5 text-center sm:hidden">
                         <Button variant="outline" asChild className="w-full">
                           <Link to="/seasonal">
-                            {t('home.view_all_events', 'Ver todos os eventos')}
+                            {t('home.view_all_events', 'View all events')}
                           </Link>
                         </Button>
                       </div>
@@ -742,8 +733,8 @@ function IndexContent() {
                   <h2 className="text-2xl font-bold flex items-center gap-2 mb-5 text-slate-800">
                     <TrendingUp className="h-6 w-6 text-orange-500" />
                     {searchQuery || selectedCategory !== 'all'
-                      ? t('home.search_results', 'Resultados da Busca')
-                      : t('home.trending', 'Em Alta')}
+                      ? t('home.search_results', 'Search Results')
+                      : t('home.trending', 'Trending')}
                   </h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                     {finalTrending.map((coupon) =>
@@ -762,7 +753,7 @@ function IndexContent() {
                 <section>
                   <h2 className="text-2xl font-bold flex items-center gap-2 mb-5 text-slate-800">
                     <Sparkles className="h-6 w-6 text-yellow-500" />
-                    {t('home.more_deals', 'Mais Oportunidades')}
+                    {t('home.more_deals', 'More Opportunities')}
                   </h2>
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                     {moreCoupons.map((coupon) =>
@@ -783,15 +774,12 @@ function IndexContent() {
                   <section>
                     <h2 className="text-2xl font-bold flex items-center gap-2 mb-5 text-slate-800">
                       <Sparkles className="h-6 w-6 text-indigo-500" />
-                      {t(
-                        'home.affiliate_promotions',
-                        'Recomendações Inteligentes',
-                      )}
+                      {t('home.affiliate_promotions', 'Smart Recommendations')}
                       <Badge
                         variant="secondary"
                         className="ml-2 bg-indigo-100 text-indigo-700 hover:bg-indigo-100"
                       >
-                        Patrocinado
+                        Sponsored
                       </Badge>
                     </h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
@@ -810,7 +798,7 @@ function IndexContent() {
                   <section>
                     <h2 className="text-2xl font-bold flex items-center gap-2 mb-5 text-slate-800">
                       <Globe className="h-6 w-6 text-blue-500" />
-                      {t('home.web_promotions', 'Ofertas Curadas da Web')}
+                      {t('home.web_promotions', 'Curated Web Offers')}
                     </h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                       {filteredDbPromotions.map((promo) => {
@@ -840,29 +828,26 @@ function IndexContent() {
                     </div>
                     <h3 className="text-lg font-bold text-slate-700">
                       {searchQuery || selectedCategory !== 'all'
-                        ? t(
-                            'home.no_offers',
-                            'Nenhuma oferta encontrada no momento.',
-                          )
+                        ? t('home.no_offers', 'No offers found right now.')
                         : t(
                             'home.no_coupons_available',
-                            'Nenhum cupom disponível no momento.',
+                            'No coupons available right now.',
                           )}
                     </h3>
                     <p className="text-slate-500 mt-1 max-w-md mx-auto px-4">
                       {selectedCategory !== 'all' && !searchQuery
                         ? t(
                             'home.no_category_results',
-                            'Não temos ofertas disponíveis nesta categoria no momento.',
+                            'We have no offers available in this category right now.',
                           )
                         : searchQuery
                           ? t(
                               'home.try_another_search',
-                              'Tente usar outros termos de busca ou navegue pelas categorias disponíveis.',
+                              'Try other search terms or browse available categories.',
                             )
                           : t(
                               'home.check_back_later',
-                              'Verifique novamente mais tarde para novas promoções ou tente atualizar a página.',
+                              'Check back later for new promotions or try refreshing the page.',
                             )}
                     </p>
                     <div className="flex justify-center flex-wrap gap-3 mt-6">
@@ -874,7 +859,7 @@ function IndexContent() {
                             setSelectedCategory('all')
                           }}
                         >
-                          {t('home.clear_search', 'Limpar Busca e Filtros')}
+                          {t('home.clear_search', 'Clear Search and Filters')}
                         </Button>
                       )}
                       <Button
@@ -886,7 +871,7 @@ function IndexContent() {
                         onClick={() => refreshCoupons()}
                       >
                         <RefreshCw className="w-4 h-4 mr-2" />
-                        {t('home.refresh_promotions', 'Atualizar Promoções')}
+                        {t('home.refresh_promotions', 'Refresh Promotions')}
                       </Button>
                     </div>
                   </div>

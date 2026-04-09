@@ -2,16 +2,24 @@ import { useMemo } from 'react'
 
 export function useRegionFormatting(regionCode?: string, country?: string) {
   return useMemo(() => {
-    let locale = 'pt-BR'
-    let currency = 'BRL'
-    let distanceUnit = 'km'
+    let locale = 'en-US'
+    let currency = 'USD'
+    let distanceUnit = 'mi'
 
     const targetScope = (country || regionCode || '').toUpperCase()
 
-    if (targetScope.includes('US') || targetScope.includes('USA')) {
-      locale = 'en-US'
-      currency = 'USD'
-      distanceUnit = 'mi'
+    if (
+      targetScope.includes('BRASIL') ||
+      targetScope.includes('BRAZIL') ||
+      targetScope === 'BR'
+    ) {
+      locale = 'pt-BR'
+      currency = 'BRL'
+      distanceUnit = 'km'
+    } else if (targetScope.includes('MEXICO') || targetScope === 'MX') {
+      locale = 'es-MX'
+      currency = 'MXN'
+      distanceUnit = 'km'
     } else if (
       targetScope.includes('ESPANHA') ||
       targetScope.includes('SPAIN') ||
@@ -31,10 +39,6 @@ export function useRegionFormatting(regionCode?: string, country?: string) {
     ) {
       locale = 'fr-FR'
       currency = 'EUR'
-      distanceUnit = 'km'
-    } else {
-      locale = 'pt-BR'
-      currency = 'BRL'
       distanceUnit = 'km'
     }
 

@@ -55,16 +55,16 @@ export function VendorSettingsTab({ company }: any) {
     if (!st || !n)
       return t(
         'vendor.settings_tab.fill_address',
-        'Preencha Rua e Número para visualizar',
+        'Fill Street and Number to preview',
       )
 
     const cText = comp ? ` - ${comp}` : ''
     const usCText = comp ? `, ${comp}` : ''
 
     if (c === 'USA') {
-      return `${n} ${st}${usCText}, ${ci || 'Cidade'}, ${s || 'Estado'} ${z || 'CEP'}`
+      return `${n} ${st}${usCText}, ${ci || 'City'}, ${s || 'State'} ${z || 'ZIP'}`
     }
-    return `${st}, ${n}${cText}, ${ci || 'Cidade'} - ${s || 'Estado'}, ${z || 'CEP'}`
+    return `${st}, ${n}${cText}, ${ci || 'City'} - ${s || 'State'}, ${z || 'ZIP'}`
   }, [data, t])
 
   const handleSave = () => {
@@ -72,7 +72,7 @@ export function VendorSettingsTab({ company }: any) {
     toast.success(
       t(
         'vendor.settings_tab.save_success',
-        'Configurações da loja atualizadas com sucesso',
+        'Store settings updated successfully',
       ),
     )
   }
@@ -86,12 +86,12 @@ export function VendorSettingsTab({ company }: any) {
           </div>
           <div>
             <CardTitle className="text-xl">
-              {t('vendor.settings_tab.title', 'Configurações da Loja')}
+              {t('vendor.settings_tab.title', 'Store Settings')}
             </CardTitle>
             <CardDescription>
               {t(
                 'vendor.settings_tab.desc',
-                'Gerencie o perfil da sua empresa e detalhes de localização.',
+                'Manage your company profile and location details.',
               )}
             </CardDescription>
           </div>
@@ -101,7 +101,7 @@ export function VendorSettingsTab({ company }: any) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="space-y-2">
             <Label className="text-slate-700">
-              {t('vendor.settings_tab.store_name', 'Nome da Loja')}
+              {t('vendor.settings_tab.store_name', 'Store Name')}
             </Label>
             <Input
               value={data.name || ''}
@@ -111,7 +111,7 @@ export function VendorSettingsTab({ company }: any) {
           </div>
           <div className="space-y-2">
             <Label className="text-slate-700">
-              {t('vendor.settings_tab.contact_email', 'E-mail de Contato')}
+              {t('vendor.settings_tab.contact_email', 'Contact Email')}
             </Label>
             <Input
               type="email"
@@ -122,7 +122,7 @@ export function VendorSettingsTab({ company }: any) {
           </div>
           <div className="space-y-2">
             <Label className="text-slate-700">
-              {t('vendor.settings_tab.business_phone', 'Telefone Comercial')}
+              {t('vendor.settings_tab.business_phone', 'Business Phone')}
             </Label>
             <PhoneInput
               value={data.businessPhone || ''}
@@ -132,7 +132,7 @@ export function VendorSettingsTab({ company }: any) {
           </div>
           <div className="space-y-2">
             <Label className="text-slate-700">
-              {t('vendor.settings_tab.assigned_region', 'Região Atribuída')}
+              {t('vendor.settings_tab.assigned_region', 'Assigned Region')}
             </Label>
             <Input
               value={data.region || 'Global'}
@@ -148,7 +148,7 @@ export function VendorSettingsTab({ company }: any) {
             <h3 className="text-lg font-semibold text-slate-800">
               {t(
                 'vendor.settings_tab.physical_address',
-                'Endereço Físico (Mapa)',
+                'Physical Address (Map)',
               )}
             </h3>
           </div>
@@ -156,7 +156,7 @@ export function VendorSettingsTab({ company }: any) {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
             <div className="space-y-2">
               <Label className="text-slate-700">
-                {t('vendor.settings_tab.country', 'País')}
+                {t('vendor.settings_tab.country', 'Country')}
               </Label>
               <Select
                 value={data.addressCountry || ''}
@@ -171,10 +171,7 @@ export function VendorSettingsTab({ company }: any) {
               >
                 <SelectTrigger className="bg-white">
                   <SelectValue
-                    placeholder={t(
-                      'vendor.settings_tab.select',
-                      'Selecione...',
-                    )}
+                    placeholder={t('vendor.settings_tab.select', 'Select...')}
                   />
                 </SelectTrigger>
                 <SelectContent>
@@ -188,7 +185,7 @@ export function VendorSettingsTab({ company }: any) {
             </div>
             <div className="space-y-2">
               <Label className="text-slate-700">
-                {t('vendor.settings_tab.state', 'Estado / Província')}
+                {t('vendor.settings_tab.state', 'State / Province')}
               </Label>
               <Select
                 value={data.addressState || ''}
@@ -199,10 +196,7 @@ export function VendorSettingsTab({ company }: any) {
               >
                 <SelectTrigger className="bg-white">
                   <SelectValue
-                    placeholder={t(
-                      'vendor.settings_tab.select',
-                      'Selecione...',
-                    )}
+                    placeholder={t('vendor.settings_tab.select', 'Select...')}
                   />
                 </SelectTrigger>
                 <SelectContent>
@@ -216,7 +210,7 @@ export function VendorSettingsTab({ company }: any) {
             </div>
             <div className="space-y-2">
               <Label className="text-slate-700">
-                {t('vendor.settings_tab.city', 'Cidade')}
+                {t('vendor.settings_tab.city', 'City')}
               </Label>
               <Select
                 value={data.addressCity || ''}
@@ -225,10 +219,7 @@ export function VendorSettingsTab({ company }: any) {
               >
                 <SelectTrigger className="bg-white">
                   <SelectValue
-                    placeholder={t(
-                      'vendor.settings_tab.select',
-                      'Selecione...',
-                    )}
+                    placeholder={t('vendor.settings_tab.select', 'Select...')}
                   />
                 </SelectTrigger>
                 <SelectContent>
@@ -242,7 +233,7 @@ export function VendorSettingsTab({ company }: any) {
             </div>
             <div className="space-y-2">
               <Label className="text-slate-700">
-                {t('vendor.settings_tab.zip', 'CEP / Código Postal')}
+                {t('vendor.settings_tab.zip', 'ZIP / Postal Code')}
               </Label>
               <Input
                 value={data.addressZip || ''}
@@ -258,18 +249,18 @@ export function VendorSettingsTab({ company }: any) {
           <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
             <div className="space-y-2 sm:col-span-6">
               <Label className="text-slate-700">
-                {t('vendor.settings_tab.street', 'Rua / Logradouro')}
+                {t('vendor.settings_tab.street', 'Street / Address')}
               </Label>
               <Input
                 value={data.addressStreet || ''}
                 onChange={(e) => handleChange('addressStreet', e.target.value)}
-                placeholder="Ex: Avenida Paulista"
+                placeholder="e.g. 123 Ocean Drive"
                 className="bg-white"
               />
             </div>
             <div className="space-y-2 sm:col-span-2">
               <Label className="text-slate-700">
-                {t('vendor.settings_tab.number', 'Número')}
+                {t('vendor.settings_tab.number', 'Number')}
               </Label>
               <Input
                 value={data.addressNumber || ''}
@@ -280,14 +271,14 @@ export function VendorSettingsTab({ company }: any) {
             </div>
             <div className="space-y-2 sm:col-span-4">
               <Label className="text-slate-700">
-                {t('vendor.settings_tab.complement', 'Complemento (Opcional)')}
+                {t('vendor.settings_tab.complement', 'Complement (Optional)')}
               </Label>
               <Input
                 value={data.addressComplement || ''}
                 onChange={(e) =>
                   handleChange('addressComplement', e.target.value)
                 }
-                placeholder="Sala, Andar, Bloco"
+                placeholder="Suite, Floor, etc."
                 className="bg-white"
               />
             </div>
@@ -295,7 +286,10 @@ export function VendorSettingsTab({ company }: any) {
 
           <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 mt-5">
             <p className="text-[11px] text-slate-500 font-bold mb-1.5 uppercase tracking-wider">
-              {t('vendor.settings_tab.app_preview', 'Como aparecerá no app')}
+              {t(
+                'vendor.settings_tab.app_preview',
+                'How it will appear in the app',
+              )}
             </p>
             <p className="text-slate-800 font-medium flex items-center gap-2">
               <MapPin className="h-4 w-4 text-primary shrink-0" />{' '}
@@ -307,7 +301,7 @@ export function VendorSettingsTab({ company }: any) {
         <div className="pt-4 border-t border-slate-100 flex justify-end">
           <Button onClick={handleSave} className="font-bold shadow-sm">
             <Save className="w-4 h-4 mr-2" />{' '}
-            {t('vendor.settings_tab.save', 'Salvar Alterações')}
+            {t('vendor.settings_tab.save', 'Save Changes')}
           </Button>
         </div>
       </CardContent>

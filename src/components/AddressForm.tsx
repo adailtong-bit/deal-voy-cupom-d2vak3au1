@@ -57,21 +57,21 @@ export function AddressForm({
     <div className="space-y-4 animate-in slide-in-from-top-2">
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label>{t('address.zip')}</Label>
+          <Label>{t('address.zip', 'ZIP / Postal Code')}</Label>
           <Input
             value={zip}
             onChange={handleZipChange}
             placeholder={
-              country === 'Brasil'
+              country === 'Brasil' || country === 'Brazil'
                 ? '00000-000'
                 : country === 'USA'
                   ? '33101'
-                  : '0000'
+                  : '00000'
             }
           />
         </div>
         <div className="space-y-2">
-          <Label>{t('address.state')}</Label>
+          <Label>{t('address.state', 'State / Province')}</Label>
           <Select
             value={state}
             onValueChange={(val) =>
@@ -80,7 +80,9 @@ export function AddressForm({
             disabled={!country || availableStates.length === 0}
           >
             <SelectTrigger>
-              <SelectValue placeholder={t('address.state')} />
+              <SelectValue
+                placeholder={t('address.state', 'State / Province')}
+              />
             </SelectTrigger>
             <SelectContent>
               {availableStates.map((s) => (
@@ -94,14 +96,14 @@ export function AddressForm({
       </div>
 
       <div className="space-y-2">
-        <Label>{t('address.city')}</Label>
+        <Label>{t('address.city', 'City')}</Label>
         <Select
           value={city}
           onValueChange={(val) => onChange({ state, city: val, zip, address })}
           disabled={!state || availableCities.length === 0}
         >
           <SelectTrigger>
-            <SelectValue placeholder={t('address.city')} />
+            <SelectValue placeholder={t('address.city', 'City')} />
           </SelectTrigger>
           <SelectContent>
             {availableCities.map((c) => (
@@ -114,7 +116,7 @@ export function AddressForm({
       </div>
 
       <div className="space-y-2">
-        <Label>{t('address.street')}</Label>
+        <Label>{t('address.street', 'Street Address')}</Label>
         <Input
           value={address}
           onChange={(e) => {
@@ -122,7 +124,9 @@ export function AddressForm({
             onChange({ state, city, zip, address: e.target.value })
           }}
           placeholder={
-            country === 'Brasil' ? 'Rua Paulista, 1000' : '123 Ocean Drive'
+            country === 'Brasil' || country === 'Brazil'
+              ? 'Rua Paulista, 1000'
+              : '123 Ocean Drive'
           }
         />
       </div>

@@ -103,19 +103,19 @@ function PageTitleSync() {
     if (path.startsWith('/admin'))
       title = `Routevoy - ${t('nav.admin', 'Admin')}`
     else if (path.startsWith('/vendor') || path.startsWith('/merchant'))
-      title = `Routevoy - ${t('nav.vendor', 'Painel do Lojista')}`
+      title = `Routevoy - ${t('nav.vendor', 'Vendor Dashboard')}`
     else if (path.startsWith('/franchisee'))
-      title = `Routevoy - ${t('nav.franchisee', 'Painel Regional')}`
+      title = `Routevoy - ${t('nav.franchisee', 'Regional Dashboard')}`
     else if (path.startsWith('/explore'))
-      title = `Routevoy - ${t('nav.explore', 'Explorar')}`
+      title = `Routevoy - ${t('nav.explore', 'Explore')}`
     else if (path.startsWith('/vouchers'))
-      title = `Routevoy - ${t('nav.vouchers', 'Meus Vouchers')}`
+      title = `Routevoy - ${t('nav.vouchers', 'My Vouchers')}`
     else if (path.startsWith('/travel'))
-      title = `Routevoy - ${t('nav.travel', 'Experiências')}`
+      title = `Routevoy - ${t('nav.travel', 'Experiences')}`
     else if (path.startsWith('/seasonal'))
-      title = `Routevoy - ${t('nav.seasonal', 'Ofertas')}`
+      title = `Routevoy - ${t('nav.seasonal', 'Offers')}`
     else if (path.startsWith('/profile'))
-      title = `Routevoy - ${t('profile.title', 'Perfil')}`
+      title = `Routevoy - ${t('profile.title', 'Profile')}`
     else if (path.startsWith('/login'))
       title = `Routevoy - ${t('auth.login', 'Login')}`
     else if (path === '/') title = `Routevoy - ${t('nav.home', 'Home')}`
@@ -133,7 +133,7 @@ function GlobalLanguageSync() {
 
   useEffect(() => {
     const role = authRole || sbUser?.user_metadata?.role || storeUser?.role
-    let countryToUse = storeUser?.country || 'Brasil'
+    let countryToUse = storeUser?.country || 'USA'
 
     if (role === 'franchisee') {
       const myFranchise =
@@ -172,8 +172,10 @@ function GlobalLanguageSync() {
       } else if (['france', 'fr', 'frança'].includes(countryLower)) {
         setLanguage('fr')
       } else {
-        setLanguage('en')
+        setLanguage('en') // Global default is English
       }
+    } else {
+      setLanguage('en') // Always default to English if no country is set
     }
   }, [storeUser?.country, sbUser, franchises, setLanguage])
 

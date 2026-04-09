@@ -18,8 +18,9 @@ interface PhoneInputProps {
 }
 
 const COUNTRIES = [
-  { name: 'Brasil', code: 'BR', dial: '+55', mask: '(99) 99999-9999' },
   { name: 'USA', code: 'US', dial: '+1', mask: '(999) 999-9999' },
+  { name: 'Brazil', code: 'BR', dial: '+55', mask: '(99) 99999-9999' },
+  { name: 'Mexico', code: 'MX', dial: '+52', mask: '99 9999 9999' },
   { name: 'Portugal', code: 'PT', dial: '+351', mask: '999 999 999' },
   { name: 'Spain', code: 'ES', dial: '+34', mask: '999 99 99 99' },
   { name: 'France', code: 'FR', dial: '+33', mask: '9 99 99 99 99' },
@@ -60,8 +61,10 @@ export function PhoneInput({
         (c) =>
           c.name === targetCode ||
           c.code === targetCode ||
-          (targetCode === 'Brasil' && c.code === 'BR') ||
-          (targetCode === 'USA' && c.code === 'US'),
+          (targetCode.includes('Brasil') && c.code === 'BR') ||
+          (targetCode.includes('Brazil') && c.code === 'BR') ||
+          (targetCode.includes('Mexico') && c.code === 'MX') ||
+          (targetCode.includes('US') && c.code === 'US'),
       )
       if (found) setCountry(found)
     }
