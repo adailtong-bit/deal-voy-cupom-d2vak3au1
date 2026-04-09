@@ -2,8 +2,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { BillingGenerationTab } from './billing/BillingGenerationTab'
 import { BillingStagingTab } from './billing/BillingStagingTab'
 import { BillingHistoryTab } from './billing/BillingHistoryTab'
+import { useLanguage } from '@/stores/LanguageContext'
 
 export function PartnerBillingTab({ franchiseId }: { franchiseId?: string }) {
+  const { t } = useLanguage()
   return (
     <div className="space-y-6 animate-fade-in-up w-full max-w-full min-w-0">
       <Tabs defaultValue="generation" className="w-full">
@@ -12,19 +14,19 @@ export function PartnerBillingTab({ franchiseId }: { franchiseId?: string }) {
             value="generation"
             className="py-2.5 px-4 font-semibold whitespace-nowrap"
           >
-            Geração de Faturas
+            {t('admin.billing_generation', 'Geração de Faturas')}
           </TabsTrigger>
           <TabsTrigger
             value="staging"
             className="py-2.5 px-4 font-semibold whitespace-nowrap"
           >
-            Área de Preparação (Rascunhos)
+            {t('admin.billing_staging', 'Área de Preparação (Rascunhos)')}
           </TabsTrigger>
           <TabsTrigger
             value="history"
             className="py-2.5 px-4 font-semibold whitespace-nowrap"
           >
-            Histórico e Gestão
+            {t('admin.billing_history', 'Histórico e Gestão')}
           </TabsTrigger>
         </TabsList>
         <TabsContent value="generation" className="mt-0 min-w-0 w-full">

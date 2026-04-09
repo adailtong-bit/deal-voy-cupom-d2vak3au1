@@ -9,66 +9,87 @@ import {
   DollarSign,
   ArrowUpRight,
   ArrowDownRight,
-  CreditCard,
-  Receipt,
-  Download,
   TrendingUp,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { useLanguage } from '@/stores/LanguageContext'
+import { PartnerBillingTab } from '@/components/admin/PartnerBillingTab'
 
 export function FinanceTab() {
+  const { t } = useLanguage()
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in-up">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Visão Financeira</h2>
+        <h2 className="text-2xl font-bold tracking-tight">
+          {t('franchisee.finance_tab.title', 'Visão Financeira')}
+        </h2>
         <p className="text-muted-foreground">
-          Acompanhe as métricas financeiras gerais da sua franquia.
+          {t(
+            'franchisee.finance_tab.desc',
+            'Acompanhe as métricas financeiras gerais da sua franquia.',
+          )}
         </p>
       </div>
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Receita Total</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t('franchisee.finance_tab.total_revenue', 'Receita Total')}
+            </CardTitle>
             <DollarSign className="h-4 w-4 text-slate-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">R$ 45.231,89</div>
             <p className="text-xs text-emerald-600 flex items-center mt-1">
-              <ArrowUpRight className="h-3 w-3 mr-1" /> +20.1% este mês
+              <ArrowUpRight className="h-3 w-3 mr-1" /> +20.1%{' '}
+              {t('franchisee.finance_tab.this_month', 'este mês')}
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Despesas</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t('franchisee.finance_tab.expenses', 'Despesas')}
+            </CardTitle>
             <ArrowDownRight className="h-4 w-4 text-slate-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">R$ 12.034,50</div>
             <p className="text-xs text-red-600 flex items-center mt-1">
-              <ArrowUpRight className="h-3 w-3 mr-1" /> +4.5% este mês
+              <ArrowUpRight className="h-3 w-3 mr-1" /> +4.5%{' '}
+              {t('franchisee.finance_tab.this_month', 'este mês')}
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Lucro Líquido</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t('franchisee.finance_tab.net_profit', 'Lucro Líquido')}
+            </CardTitle>
             <TrendingUp className="h-4 w-4 text-slate-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">R$ 33.197,39</div>
             <p className="text-xs text-emerald-600 flex items-center mt-1">
-              <ArrowUpRight className="h-3 w-3 mr-1" /> +12.3% este mês
+              <ArrowUpRight className="h-3 w-3 mr-1" /> +12.3%{' '}
+              {t('franchisee.finance_tab.this_month', 'este mês')}
             </p>
           </CardContent>
         </Card>
       </div>
       <Card>
         <CardHeader>
-          <CardTitle>Últimas Transações</CardTitle>
+          <CardTitle>
+            {t(
+              'franchisee.finance_tab.latest_transactions',
+              'Últimas Transações',
+            )}
+          </CardTitle>
           <CardDescription>
-            Histórico de repasses e recebimentos.
+            {t(
+              'franchisee.finance_tab.history_desc',
+              'Histórico de repasses e recebimentos.',
+            )}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -84,10 +105,14 @@ export function FinanceTab() {
                   </div>
                   <div>
                     <p className="text-sm font-medium leading-none">
-                      Repasse Lojista #{1000 + i}
+                      {t(
+                        'franchisee.finance_tab.merchant_transfer',
+                        'Repasse Lojista',
+                      )}{' '}
+                      #{1000 + i}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      Hoje às 14:32
+                      {t('franchisee.finance_tab.today_at', 'Hoje às')} 14:32
                     </p>
                   </div>
                 </div>
@@ -103,100 +128,58 @@ export function FinanceTab() {
   )
 }
 
-export function BillingTab() {
+export function BillingTab({ franchiseId }: { franchiseId?: string }) {
+  const { t } = useLanguage()
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in-up">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">
-            Faturamento e Cobranças
+            {t('franchisee.billing_tab.title', 'Faturamento e Cobranças')}
           </h2>
           <p className="text-muted-foreground">
-            Gerencie faturas e métodos de pagamento.
+            {t(
+              'franchisee.billing_tab.desc',
+              'Gerencie faturas e métodos de pagamento.',
+            )}
           </p>
         </div>
-        <Button>
-          <CreditCard className="w-4 h-4 mr-2" /> Novo Cartão
-        </Button>
       </div>
-      <Card>
-        <CardHeader>
-          <CardTitle>Faturas Recentes</CardTitle>
-          <CardDescription>
-            Visualize ou baixe o histórico de cobranças.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {[
-              {
-                id: 'FAT-2023-10',
-                status: 'Pago',
-                amount: 'R$ 1.500,00',
-                date: '01/10/2023',
-              },
-              {
-                id: 'FAT-2023-09',
-                status: 'Pago',
-                amount: 'R$ 1.500,00',
-                date: '01/09/2023',
-              },
-              {
-                id: 'FAT-2023-08',
-                status: 'Pago',
-                amount: 'R$ 1.500,00',
-                date: '01/08/2023',
-              },
-            ].map((f) => (
-              <div
-                key={f.id}
-                className="flex items-center justify-between border p-4 rounded-lg bg-slate-50/50"
-              >
-                <div className="flex items-center gap-4">
-                  <Receipt className="h-8 w-8 text-slate-400" />
-                  <div>
-                    <p className="text-sm font-bold">{f.id}</p>
-                    <p className="text-xs text-slate-500">
-                      Vencimento em {f.date}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4">
-                  <span className="font-medium">{f.amount}</span>
-                  <Badge
-                    variant="default"
-                    className="bg-emerald-500 hover:bg-emerald-600"
-                  >
-                    {f.status}
-                  </Badge>
-                  <Button variant="ghost" size="icon">
-                    <Download className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+
+      <PartnerBillingTab franchiseId={franchiseId} />
     </div>
   )
 }
 
 export function MonetizationTab() {
+  const { t } = useLanguage()
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in-up">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Monetização</h2>
+        <h2 className="text-2xl font-bold tracking-tight">
+          {t('franchisee.monetization_tab.title', 'Monetização')}
+        </h2>
         <p className="text-muted-foreground">
-          Configuração de taxas e comissões da sua rede.
+          {t(
+            'franchisee.monetization_tab.desc',
+            'Configuração de taxas e comissões da sua rede.',
+          )}
         </p>
       </div>
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Taxa de Setup Lojista</CardTitle>
+            <CardTitle>
+              {t(
+                'franchisee.monetization_tab.setup_fee',
+                'Taxa de Setup Lojista',
+              )}
+            </CardTitle>
             <CardDescription>
-              Valor cobrado na adesão de novos estabelecimentos.
+              {t(
+                'franchisee.monetization_tab.setup_desc',
+                'Valor cobrado na adesão de novos estabelecimentos.',
+              )}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -204,21 +187,29 @@ export function MonetizationTab() {
               R$ 299,00
             </div>
             <Button variant="outline" className="w-full">
-              Ajustar Valor
+              {t('franchisee.monetization_tab.adjust_value', 'Ajustar Valor')}
             </Button>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Comissão sobre Vendas</CardTitle>
+            <CardTitle>
+              {t(
+                'franchisee.monetization_tab.commission',
+                'Comissão sobre Vendas',
+              )}
+            </CardTitle>
             <CardDescription>
-              Percentual retido por transação via app.
+              {t(
+                'franchisee.monetization_tab.commission_desc',
+                'Percentual retido por transação via app.',
+              )}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold mb-4 text-slate-800">12%</div>
             <Button variant="outline" className="w-full">
-              Ajustar Margem
+              {t('franchisee.monetization_tab.adjust_margin', 'Ajustar Margem')}
             </Button>
           </CardContent>
         </Card>
@@ -228,19 +219,33 @@ export function MonetizationTab() {
 }
 
 export function AdsRoyaltiesTab() {
+  const { t } = useLanguage()
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in-up">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Ads & Royalties</h2>
+        <h2 className="text-2xl font-bold tracking-tight">
+          {t('franchisee.ads_royalties_tab.title', 'Ads & Royalties')}
+        </h2>
         <p className="text-muted-foreground">
-          Receitas de publicidade e repasses da franqueadora.
+          {t(
+            'franchisee.ads_royalties_tab.desc',
+            'Receitas de publicidade e repasses da franqueadora.',
+          )}
         </p>
       </div>
       <Card>
         <CardHeader>
-          <CardTitle>Ganhos com Anúncios (Rede)</CardTitle>
+          <CardTitle>
+            {t(
+              'franchisee.ads_royalties_tab.ad_revenue',
+              'Ganhos com Anúncios (Rede)',
+            )}
+          </CardTitle>
           <CardDescription>
-            Receita gerada por banners e espaços patrocinados.
+            {t(
+              'franchisee.ads_royalties_tab.ad_revenue_desc',
+              'Receita gerada por banners e espaços patrocinados.',
+            )}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -248,19 +253,37 @@ export function AdsRoyaltiesTab() {
             R$ 8.450,00
           </div>
           <p className="text-sm text-slate-500 mb-6">
-            Acumulado no mês atual. O repasse será realizado dia 05.
+            {t(
+              'franchisee.ads_royalties_tab.accumulated',
+              'Acumulado no mês atual. O repasse será realizado dia 05.',
+            )}
           </p>
           <div className="space-y-3">
             <div className="flex justify-between items-center text-sm border-b pb-2">
-              <span className="text-slate-600">Banner Principal App</span>
+              <span className="text-slate-600">
+                {t(
+                  'franchisee.ads_royalties_tab.main_banner',
+                  'Banner Principal App',
+                )}
+              </span>
               <span className="font-bold text-slate-800">R$ 4.200,00</span>
             </div>
             <div className="flex justify-between items-center text-sm border-b pb-2">
-              <span className="text-slate-600">Destaque na Busca</span>
+              <span className="text-slate-600">
+                {t(
+                  'franchisee.ads_royalties_tab.search_highlight',
+                  'Destaque na Busca',
+                )}
+              </span>
               <span className="font-bold text-slate-800">R$ 3.100,00</span>
             </div>
             <div className="flex justify-between items-center text-sm pb-2">
-              <span className="text-slate-600">Notificações Push</span>
+              <span className="text-slate-600">
+                {t(
+                  'franchisee.ads_royalties_tab.push_notifications',
+                  'Notificações Push',
+                )}
+              </span>
               <span className="font-bold text-slate-800">R$ 1.150,00</span>
             </div>
           </div>

@@ -88,12 +88,18 @@ export function AdminInterestsTab({ franchiseId }: { franchiseId?: string }) {
       label: newLabel.trim(),
       icon: 'Tag',
     }
-    updatePlatformSettings({
-      availableInterests: [...allInterests, newInterest],
-    })
-    setNewLabel('')
-    setNewId('')
-    setNewIdManuallyEdited(false)
+
+    try {
+      updatePlatformSettings({
+        availableInterests: [...allInterests, newInterest],
+      })
+      setNewLabel('')
+      setNewId('')
+      setNewIdManuallyEdited(false)
+      toast.success(t('common.success', 'Success!'))
+    } catch (e) {
+      toast.error(t('common.error', 'An error occurred'))
+    }
   }
 
   const handleDelete = (id: string) => {

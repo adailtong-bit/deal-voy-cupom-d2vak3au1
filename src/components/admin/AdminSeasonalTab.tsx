@@ -87,10 +87,10 @@ export function AdminSeasonalTab({ franchiseId }: { franchiseId?: string }) {
     })
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [editingEvent, setEditingEvent] = useState<any>(null)
+  const [editingEvent, setEditingEvent] = useState<any>(undefined)
 
   const handleOpenDialog = (event?: any) => {
-    setEditingEvent(event || null)
+    setEditingEvent(event || undefined)
     setIsDialogOpen(true)
   }
 
