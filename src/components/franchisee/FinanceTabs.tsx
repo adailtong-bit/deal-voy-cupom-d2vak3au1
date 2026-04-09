@@ -14,9 +14,15 @@ import {
 import { Button } from '@/components/ui/button'
 import { useLanguage } from '@/stores/LanguageContext'
 import { PartnerBillingTab } from '@/components/admin/PartnerBillingTab'
+import { useRegionFormatting } from '@/hooks/useRegionFormatting'
+import { useCouponStore } from '@/stores/CouponContext'
 
-export function FinanceTab() {
+export function FinanceTab({ franchiseId }: { franchiseId?: string }) {
   const { t } = useLanguage()
+  const { franchises } = useCouponStore()
+  const franchise = franchises.find((f) => f.id === franchiseId)
+  const { formatCurrency } = useRegionFormatting(franchise?.region)
+
   return (
     <div className="space-y-6 animate-fade-in-up">
       <div>
@@ -39,7 +45,7 @@ export function FinanceTab() {
             <DollarSign className="h-4 w-4 text-slate-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">R$ 45.231,89</div>
+            <div className="text-2xl font-bold">{formatCurrency(45231.89)}</div>
             <p className="text-xs text-emerald-600 flex items-center mt-1">
               <ArrowUpRight className="h-3 w-3 mr-1" /> +20.1%{' '}
               {t('franchisee.finance_tab.this_month', 'este mês')}
@@ -54,7 +60,7 @@ export function FinanceTab() {
             <ArrowDownRight className="h-4 w-4 text-slate-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">R$ 12.034,50</div>
+            <div className="text-2xl font-bold">{formatCurrency(12034.5)}</div>
             <p className="text-xs text-red-600 flex items-center mt-1">
               <ArrowUpRight className="h-3 w-3 mr-1" /> +4.5%{' '}
               {t('franchisee.finance_tab.this_month', 'este mês')}
@@ -69,7 +75,7 @@ export function FinanceTab() {
             <TrendingUp className="h-4 w-4 text-slate-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">R$ 33.197,39</div>
+            <div className="text-2xl font-bold">{formatCurrency(33197.39)}</div>
             <p className="text-xs text-emerald-600 flex items-center mt-1">
               <ArrowUpRight className="h-3 w-3 mr-1" /> +12.3%{' '}
               {t('franchisee.finance_tab.this_month', 'este mês')}
@@ -117,7 +123,7 @@ export function FinanceTab() {
                   </div>
                 </div>
                 <div className="font-medium text-emerald-600">
-                  + R$ {(Math.random() * 1000).toFixed(2)}
+                  + {formatCurrency(Math.random() * 1000)}
                 </div>
               </div>
             ))}
@@ -151,8 +157,12 @@ export function BillingTab({ franchiseId }: { franchiseId?: string }) {
   )
 }
 
-export function MonetizationTab() {
+export function MonetizationTab({ franchiseId }: { franchiseId?: string }) {
   const { t } = useLanguage()
+  const { franchises } = useCouponStore()
+  const franchise = franchises.find((f) => f.id === franchiseId)
+  const { formatCurrency } = useRegionFormatting(franchise?.region)
+
   return (
     <div className="space-y-6 animate-fade-in-up">
       <div>
@@ -184,7 +194,7 @@ export function MonetizationTab() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold mb-4 text-slate-800">
-              R$ 299,00
+              {formatCurrency(299)}
             </div>
             <Button variant="outline" className="w-full">
               {t('franchisee.monetization_tab.adjust_value', 'Ajustar Valor')}
@@ -218,8 +228,12 @@ export function MonetizationTab() {
   )
 }
 
-export function AdsRoyaltiesTab() {
+export function AdsRoyaltiesTab({ franchiseId }: { franchiseId?: string }) {
   const { t } = useLanguage()
+  const { franchises } = useCouponStore()
+  const franchise = franchises.find((f) => f.id === franchiseId)
+  const { formatCurrency } = useRegionFormatting(franchise?.region)
+
   return (
     <div className="space-y-6 animate-fade-in-up">
       <div>
@@ -250,7 +264,7 @@ export function AdsRoyaltiesTab() {
         </CardHeader>
         <CardContent>
           <div className="text-4xl font-bold text-primary mb-2">
-            R$ 8.450,00
+            {formatCurrency(8450)}
           </div>
           <p className="text-sm text-slate-500 mb-6">
             {t(
@@ -266,7 +280,9 @@ export function AdsRoyaltiesTab() {
                   'Banner Principal App',
                 )}
               </span>
-              <span className="font-bold text-slate-800">R$ 4.200,00</span>
+              <span className="font-bold text-slate-800">
+                {formatCurrency(4200)}
+              </span>
             </div>
             <div className="flex justify-between items-center text-sm border-b pb-2">
               <span className="text-slate-600">
@@ -275,7 +291,9 @@ export function AdsRoyaltiesTab() {
                   'Destaque na Busca',
                 )}
               </span>
-              <span className="font-bold text-slate-800">R$ 3.100,00</span>
+              <span className="font-bold text-slate-800">
+                {formatCurrency(3100)}
+              </span>
             </div>
             <div className="flex justify-between items-center text-sm pb-2">
               <span className="text-slate-600">
@@ -284,7 +302,9 @@ export function AdsRoyaltiesTab() {
                   'Notificações Push',
                 )}
               </span>
-              <span className="font-bold text-slate-800">R$ 1.150,00</span>
+              <span className="font-bold text-slate-800">
+                {formatCurrency(1150)}
+              </span>
             </div>
           </div>
         </CardContent>

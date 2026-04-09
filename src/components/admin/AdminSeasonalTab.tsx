@@ -87,10 +87,10 @@ export function AdminSeasonalTab({ franchiseId }: { franchiseId?: string }) {
     })
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [editingEvent, setEditingEvent] = useState<any>(undefined)
+  const [editingEvent, setEditingEvent] = useState<any>(null)
 
   const handleOpenDialog = (event?: any) => {
-    setEditingEvent(event || undefined)
+    setEditingEvent(event || null)
     setIsDialogOpen(true)
   }
 
@@ -120,13 +120,13 @@ export function AdminSeasonalTab({ franchiseId }: { franchiseId?: string }) {
     return days >= 0 && days <= 7
   }
 
-  const renewCampaign = (id: string) => {
+  const renewCampaign = async (id: string) => {
     const c = coupons.find((c) => c.id === id)
     if (c) {
       const newEndDate = new Date(Date.now() + 30 * 86400000)
         .toISOString()
         .split('T')[0]
-      updateCampaign(id, { endDate: newEndDate, status: 'active' })
+      await updateCampaign(id, { endDate: newEndDate, status: 'active' })
     }
   }
 
@@ -188,7 +188,7 @@ export function AdminSeasonalTab({ franchiseId }: { franchiseId?: string }) {
           {t('admin.seasonal')}
         </h2>
         <Button
-          onClick={() => handleOpenDialog()}
+          onClick={() => handleOpenDialog(null)}
           className="shrink-0 w-full sm:w-auto"
         >
           <Plus className="mr-2 h-4 w-4" />

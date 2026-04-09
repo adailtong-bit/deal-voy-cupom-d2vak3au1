@@ -46,14 +46,22 @@ export function VendorSeasonalTab({ company }: { company: Company }) {
     clicks: e.clickCount || 0,
   }))
 
-  const handleApprove = (id: string) => {
-    approveSeasonalCampaign(id)
-    setSelectedEvent(null)
+  const handleApprove = async (id: string) => {
+    try {
+      await approveSeasonalCampaign(id)
+      setSelectedEvent(null)
+    } catch (e) {
+      console.error(e)
+    }
   }
 
-  const handleReject = (id: string) => {
-    rejectSeasonalCampaign(id)
-    setSelectedEvent(null)
+  const handleReject = async (id: string) => {
+    try {
+      await rejectSeasonalCampaign(id)
+      setSelectedEvent(null)
+    } catch (e) {
+      console.error(e)
+    }
   }
 
   return (

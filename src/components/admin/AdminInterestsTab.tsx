@@ -46,9 +46,9 @@ export function AdminInterestsTab({ franchiseId }: { franchiseId?: string }) {
 
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editLabel, setEditLabel] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
 
   const handleLabelChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Mask: Prevent double spaces and start with letter
     const val = e.target.value.replace(/\s{2,}/g, ' ')
     setNewLabel(val)
 
@@ -64,7 +64,6 @@ export function AdminInterestsTab({ franchiseId }: { franchiseId?: string }) {
 
   const handleIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setNewIdManuallyEdited(true)
-    // Mask: Only lowercase letters, numbers, and hyphens
     setNewId(
       e.target.value
         .toLowerCase()
@@ -73,8 +72,8 @@ export function AdminInterestsTab({ franchiseId }: { franchiseId?: string }) {
     )
   }
 
-  const handleAdd = () => {
-    if (!newLabel.trim() || !newId.trim()) return
+  const handleAdd = async () => {
+    if (!newLabel.trim() || !newId.trim() || isLoading) return
     const cleanId = newId.trim().replace(/-$/, '') // remove trailing dash
     const allInterests = platformSettings.availableInterests || []
 
@@ -89,8 +88,9 @@ export function AdminInterestsTab({ franchiseId }: { franchiseId?: string }) {
       icon: 'Tag',
     }
 
+    setIsLoading(true)
     try {
-      updatePlatformSettings({
+      await updatePlatformSettings({
         availableInterests: [...allInterests, newInterest],
       })
       setNewLabel('')
@@ -99,14 +99,24 @@ export function AdminInterestsTab({ franchiseId }: { franchiseId?: string }) {
       toast.success(t('common.success', 'Success!'))
     } catch (e) {
       toast.error(t('common.error', 'An error occurred'))
+    } finally {
+      setIsLoading(false)
     }
   }
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     const allInterests = platformSettings.availableInterests || []
-    updatePlatformSettings({
-      availableInterests: allInterests.filter((i) => i.id !== id),
-    })
+    setIsLoading(true)
+    try {
+      await updatePlatformSettings({
+        availableInterests: allInterests.filter((i) => i.id !== id),
+      })
+      toast.success(t('common.success', 'Success!'))
+    } catch (e) {
+      toast.error(t('common.error', 'An error occurred'))
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const startEdit = (id: string, label: string) => {
@@ -114,17 +124,25 @@ export function AdminInterestsTab({ franchiseId }: { franchiseId?: string }) {
     setEditLabel(label)
   }
 
-  const saveEdit = () => {
-    if (!editLabel.trim()) return
+  const saveEdit = async () => {
+    if (!editLabel.trim() || isLoading) return
     const allInterests = platformSettings.availableInterests || []
-    // Mask edit label as well to prevent double spaces
     const cleanLabel = editLabel.replace(/\s{2,}/g, ' ').trim()
-    updatePlatformSettings({
-      availableInterests: allInterests.map((i) =>
-        i.id === editingId ? { ...i, label: cleanLabel } : i,
-      ),
-    })
-    setEditingId(null)
+
+    setIsLoading(true)
+    try {
+      await updatePlatformSettings({
+        availableInterests: allInterests.map((i) =>
+          i.id === editingId ? { ...i, label: cleanLabel } : i,
+        ),
+      })
+      setEditingId(null)
+      toast.success(t('common.success', 'Success!'))
+    } catch (e) {
+      toast.error(t('common.error', 'An error occurred'))
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const getTranslatedInterest = (interest: { id: string; label: string }) => {
@@ -197,6 +215,7 @@ export function AdminInterestsTab({ franchiseId }: { franchiseId?: string }) {
               onChange={handleLabelChange}
               onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
               className="flex-1 min-w-[200px]"
+              disabled={isLoading}
             />
             <Input
               placeholder={t(
@@ -207,8 +226,13 @@ export function AdminInterestsTab({ franchiseId }: { franchiseId?: string }) {
               onChange={handleIdChange}
               onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
               className="sm:w-48 bg-slate-50 font-mono text-sm shrink-0"
+              disabled={isLoading}
             />
-            <Button onClick={handleAdd} className="shrink-0 w-full sm:w-auto">
+            <Button
+              onClick={handleAdd}
+              className="shrink-0 w-full sm:w-auto"
+              disabled={isLoading}
+            >
               <Plus className="h-4 w-4 mr-2" />{' '}
               {t('franchisee.interests.add', 'Add')}
             </Button>
@@ -238,6 +262,7 @@ export function AdminInterestsTab({ franchiseId }: { franchiseId?: string }) {
                         onChange={(e) => setEditLabel(e.target.value)}
                         className="max-w-[200px]"
                         onKeyDown={(e) => e.key === 'Enter' && saveEdit()}
+                        disabled={isLoading}
                       />
                     ) : (
                       <div className="flex items-center gap-2">
@@ -262,6 +287,7 @@ export function AdminInterestsTab({ franchiseId }: { franchiseId?: string }) {
                           size="icon"
                           onClick={saveEdit}
                           className="text-green-600"
+                          disabled={isLoading}
                         >
                           <Check className="h-4 w-4" />
                         </Button>
@@ -270,6 +296,7 @@ export function AdminInterestsTab({ franchiseId }: { franchiseId?: string }) {
                           size="icon"
                           onClick={() => setEditingId(null)}
                           className="text-destructive"
+                          disabled={isLoading}
                         >
                           <X className="h-4 w-4" />
                         </Button>
@@ -280,6 +307,7 @@ export function AdminInterestsTab({ franchiseId }: { franchiseId?: string }) {
                           variant="ghost"
                           size="icon"
                           onClick={() => startEdit(interest.id, interest.label)}
+                          disabled={isLoading}
                         >
                           <Edit2 className="h-4 w-4" />
                         </Button>
@@ -288,6 +316,7 @@ export function AdminInterestsTab({ franchiseId }: { franchiseId?: string }) {
                           size="icon"
                           onClick={() => handleDelete(interest.id)}
                           className="text-destructive"
+                          disabled={isLoading}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
