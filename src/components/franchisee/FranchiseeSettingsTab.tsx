@@ -39,52 +39,53 @@ export function FranchiseeSettingsTab({
   const myFranchise = franchises.find((f) => f.id === franchiseId)
 
   const [data, setData] = useState<any>({})
+  const [isLoading, setIsLoading] = useState(true)
 
-  useEffect(() => {
-    const fetchRealState = async () => {
-      if (myFranchise?.id) {
-        const { data: remoteData, error } = await supabase
-          .from('franchises')
-          .select('*')
-          .eq('id', myFranchise.id)
-          .maybeSingle()
+  const fetchRealState = async () => {
+    if (!myFranchise?.id) return
+    setIsLoading(true)
 
-        if (remoteData && !error) {
-          setData({
-            ...myFranchise,
-            ...remoteData,
-            name: remoteData.name || myFranchise.name || '',
-            email: remoteData.email || myFranchise.email || '',
-            region:
-              remoteData.region ||
-              remoteData.region_id ||
-              myFranchise.region ||
-              'Global',
-            addressCountry:
-              remoteData.address_country ||
-              remoteData.country ||
-              myFranchise.addressCountry ||
-              'USA',
-            country:
-              remoteData.country ||
-              remoteData.address_country ||
-              myFranchise.country ||
-              'USA',
-          })
-          return
-        }
-      }
+    // Force fetch to avoid cache
+    const { data: remoteData, error } = await supabase
+      .from('franchises')
+      .select('*')
+      .eq('id', myFranchise.id)
+      .maybeSingle()
 
+    if (remoteData && !error) {
+      setData({
+        ...myFranchise,
+        ...remoteData,
+        name: remoteData.name || myFranchise.name || '',
+        email: remoteData.email || myFranchise.email || '',
+        region:
+          remoteData.region ||
+          remoteData.region_id ||
+          myFranchise.region ||
+          'Global',
+        addressCountry:
+          remoteData.address_country ||
+          remoteData.country ||
+          myFranchise.addressCountry ||
+          'USA',
+        country:
+          remoteData.country ||
+          remoteData.address_country ||
+          myFranchise.country ||
+          'USA',
+      })
+    } else {
       setData({
         ...myFranchise,
         region: myFranchise.region || myFranchise.addressCountry || 'Global',
       })
     }
+    setIsLoading(false)
+  }
 
-    if (myFranchise) {
-      fetchRealState()
-    }
-  }, [myFranchise])
+  useEffect(() => {
+    fetchRealState()
+  }, [franchiseId, myFranchise?.id])
 
   const { formatNumber, currency } = useRegionFormatting(
     data.region,
@@ -100,8 +101,11 @@ export function FranchiseeSettingsTab({
 
   if (!myFranchise) return null
 
+  const [isSaving, setIsSaving] = useState(false)
+
   const handleSave = async () => {
     try {
+      setIsSaving(true)
       const payload = {
         region: data.region,
         country: data.addressCountry || data.country,
@@ -133,6 +137,7 @@ export function FranchiseeSettingsTab({
         throw new Error(sbError.message)
       }
 
+      await fetchRealState() // Reload latest data directly from Supabase
       toast.success(
         t('franchisee.settings.save_success', 'Settings saved successfully'),
       )
@@ -141,6 +146,8 @@ export function FranchiseeSettingsTab({
       toast.error(
         e.message || t('common.error', 'An error occurred while saving.'),
       )
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -230,9 +237,11 @@ export function FranchiseeSettingsTab({
             </div>
           </div>
           <div className="pt-4 border-t flex justify-end">
-            <Button onClick={handleSave}>
+            <Button onClick={handleSave} disabled={isSaving || isLoading}>
               <Save className="w-4 h-4 mr-2" />
-              {t('common.save', 'Save Changes')}
+              {isSaving
+                ? t('common.saving', 'Saving...')
+                : t('common.save', 'Save Changes')}
             </Button>
           </div>
         </CardContent>

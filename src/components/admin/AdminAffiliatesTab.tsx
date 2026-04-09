@@ -25,6 +25,7 @@ import {
 import { toast } from 'sonner'
 import { useRegionFormatting } from '@/hooks/useRegionFormatting'
 import { useLanguage } from '@/stores/LanguageContext'
+import { REGIONS } from '@/lib/locationData'
 
 export function AdminAffiliatesTab() {
   const { formatCurrency } = useRegionFormatting()
@@ -40,6 +41,12 @@ export function AdminAffiliatesTab() {
   const [newModel, setNewModel] = useState('percentage')
   const [newRate, setNewRate] = useState('30')
   const [newFee, setNewFee] = useState('0')
+  const [newRegion, setNewRegion] = useState('Global')
+
+  const savedSettings = localStorage.getItem('system_settings')
+  const settings = savedSettings ? JSON.parse(savedSettings) : {}
+  const customRegions = settings.customRegions || []
+  const ALL_REGIONS = Array.from(new Set([...REGIONS, ...customRegions]))
 
   const fetchData = async () => {
     setLoading(true)
@@ -83,7 +90,9 @@ export function AdminAffiliatesTab() {
           commission_model: newModel,
           commission_rate: parseFloat(newRate) || 0,
           monthly_fee: parseFloat(newFee) || 0,
-        })
+          region: newRegion,
+          region_id: newRegion,
+        } as any)
         .eq('id', selectedPendingId)
 
       if (error) throw error
@@ -106,7 +115,9 @@ export function AdminAffiliatesTab() {
           commission_model: editingAffiliate.commission_model,
           commission_rate: parseFloat(editingAffiliate.commission_rate) || 0,
           monthly_fee: parseFloat(editingAffiliate.monthly_fee) || 0,
-        })
+          region: editingAffiliate.region || 'Global',
+          region_id: editingAffiliate.region || 'Global',
+        } as any)
         .eq('id', editingAffiliate.id)
 
       if (error) throw error
@@ -517,6 +528,23 @@ export function AdminAffiliatesTab() {
                   </option>
                 </select>
               </div>
+
+              <div className="space-y-2">
+                <Label>{t('admin.affiliates.region', 'Region')}</Label>
+                <select
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+                  value={newRegion}
+                  onChange={(e) => setNewRegion(e.target.value)}
+                >
+                  <option value="Global">Global</option>
+                  {ALL_REGIONS.filter((r) => r !== 'Global').map((r) => (
+                    <option key={r} value={r}>
+                      {r}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               {newModel === 'percentage' ? (
                 <div className="space-y-2">
                   <Label>
@@ -646,6 +674,28 @@ export function AdminAffiliatesTab() {
                   </option>
                 </select>
               </div>
+
+              <div className="space-y-2">
+                <Label>{t('admin.affiliates.region', 'Region')}</Label>
+                <select
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={editingAffiliate.region || 'Global'}
+                  onChange={(e) =>
+                    setEditingAffiliate({
+                      ...editingAffiliate,
+                      region: e.target.value,
+                    })
+                  }
+                >
+                  <option value="Global">Global</option>
+                  {ALL_REGIONS.filter((r) => r !== 'Global').map((r) => (
+                    <option key={r} value={r}>
+                      {r}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               {editingAffiliate.commission_model === 'percentage' ? (
                 <div className="space-y-2">
                   <Label>

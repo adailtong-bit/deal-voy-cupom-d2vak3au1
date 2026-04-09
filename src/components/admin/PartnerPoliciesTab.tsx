@@ -57,10 +57,20 @@ export function PartnerPoliciesTab({ franchiseId }: { franchiseId?: string }) {
   const getCompanyName = (id: string) =>
     displayCompanies.find((c) => c.id === id)?.name || id
 
+  const [localPolicies, setLocalPolicies] =
+    useState<PartnerPolicy[]>(partnerPolicies)
+
+  useEffect(() => {
+    // Sync initially
+    if (partnerPolicies.length > 0 && localPolicies.length === 0) {
+      setLocalPolicies(partnerPolicies)
+    }
+  }, [partnerPolicies])
+
   const displayPolicies = (
     franchiseId
-      ? partnerPolicies.filter((p) => companyIds.includes(p.companyId))
-      : partnerPolicies
+      ? localPolicies.filter((p) => companyIds.includes(p.companyId))
+      : localPolicies
   ).filter((p) => {
     if (!searchQuery) return true
     return (
@@ -108,12 +118,27 @@ export function PartnerPoliciesTab({ franchiseId }: { franchiseId?: string }) {
       taxId: formData.taxId || '',
       contractTerms: formData.contractTerms || '',
     }
-    updatePartnerPolicy(newPolicy)
+
+    if (editingPolicy) {
+      setLocalPolicies((prev) =>
+        prev.map((p) => (p.id === editingPolicy.id ? newPolicy : p)),
+      )
+    } else {
+      setLocalPolicies((prev) => [...prev, newPolicy])
+    }
+
+    try {
+      updatePartnerPolicy(newPolicy)
+    } catch (e) {}
+
     setIsDialogOpen(false)
   }
 
   const handleDelete = (id: string) => {
-    deletePartnerPolicy(id)
+    setLocalPolicies((prev) => prev.filter((p) => p.id !== id))
+    try {
+      deletePartnerPolicy(id)
+    } catch (e) {}
   }
 
   return (

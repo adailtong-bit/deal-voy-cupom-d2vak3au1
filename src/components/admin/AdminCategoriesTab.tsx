@@ -92,6 +92,12 @@ export function AdminCategoriesTab({ franchiseId }: { franchiseId?: string }) {
       createdAt: '2024-01-01',
     }))
 
+  const [localCategories, setLocalCategories] = useState<any[]>(categoriesList)
+  useEffect(() => {
+    // Only update local if it grows or is different to avoid jumping
+    setLocalCategories(categoriesList)
+  }, [platformSettings.categories])
+
   const [search, setSearch] = useState('')
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingCategory, setEditingCategory] = useState<any>(null)
@@ -104,12 +110,12 @@ export function AdminCategoriesTab({ franchiseId }: { franchiseId?: string }) {
   })
 
   const filteredCategories = useMemo(() => {
-    return categoriesList.filter(
+    return localCategories.filter(
       (c) =>
         c.label.toLowerCase().includes(search.toLowerCase()) ||
-        c.description.toLowerCase().includes(search.toLowerCase()),
+        c.description?.toLowerCase().includes(search.toLowerCase()),
     )
-  }, [categoriesList, search])
+  }, [localCategories, search])
 
   const handleToggleMain = (categoryId: string, checked: boolean) => {
     if (checked) {
@@ -137,12 +143,13 @@ export function AdminCategoriesTab({ franchiseId }: { franchiseId?: string }) {
       toast.error('Nome da categoria é obrigatório')
       return
     }
+    let updated
     if (editingCategory) {
-      updatePlatformSettings({
-        categories: categoriesList.map((c) =>
-          c.id === editingCategory.id ? { ...c, ...formData } : c,
-        ),
-      })
+      updated = localCategories.map((c) =>
+        c.id === editingCategory.id ? { ...c, ...formData } : c,
+      )
+      setLocalCategories(updated)
+      updatePlatformSettings({ categories: updated })
       toast.success('Categoria atualizada com sucesso!')
     } else {
       const newCategory = {
@@ -151,9 +158,9 @@ export function AdminCategoriesTab({ franchiseId }: { franchiseId?: string }) {
         createdAt: new Date().toISOString().split('T')[0],
         ...formData,
       }
-      updatePlatformSettings({
-        categories: [...categoriesList, newCategory as any],
-      })
+      updated = [...localCategories, newCategory as any]
+      setLocalCategories(updated)
+      updatePlatformSettings({ categories: updated })
       toast.success('Categoria criada com sucesso!')
     }
     setIsDialogOpen(false)
@@ -470,16 +477,17 @@ export function AdminCategoriesTab({ franchiseId }: { franchiseId?: string }) {
               className="bg-red-500 hover:bg-red-600"
               onClick={() => {
                 if (categoryToDelete) {
-                  updatePlatformSettings({
-                    categories: categoriesList.filter(
-                      (c) => c.id !== categoryToDelete,
-                    ),
-                  })
+                  const updated = localCategories.filter(
+                    (c) => c.id !== categoryToDelete,
+                  )
+                  setLocalCategories(updated)
+                  updatePlatformSettings({ categories: updated })
                   setCategoryToDelete(null)
                   toast.success('Categoria removida com sucesso!')
                 }
               }}
             >
+              {' '}
               Excluir
             </AlertDialogAction>
           </AlertDialogFooter>

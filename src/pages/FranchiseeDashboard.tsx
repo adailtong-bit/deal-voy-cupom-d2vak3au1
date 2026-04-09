@@ -8,7 +8,6 @@ import { FranchiseeSidebar } from '@/components/franchisee/FranchiseeSidebar'
 import { MerchantsTab } from '@/components/admin/hierarchy/MerchantsTab'
 import { StaffTab } from '@/components/admin/hierarchy/StaffTab'
 import { TargetGroupsTab } from '@/components/admin/crm/TargetGroupsTab'
-import { CommunicationCampaignsTab } from '@/components/admin/crm/CommunicationCampaignsTab'
 import { FranchiseeOverviewTab } from '@/components/franchisee/FranchiseeOverviewTab'
 import { VendorCampaignsTab } from '@/components/vendor/VendorCampaignsTab'
 import { AdminCRM } from '@/components/admin/AdminCRM'
@@ -20,16 +19,15 @@ import {
 } from '@/components/franchisee/FinanceTabs'
 import {
   SeasonalTab,
-  CategoriesTab,
   InterestsTab,
-  PoliciesTab,
 } from '@/components/franchisee/OperationalTabs'
-import {
-  CrawlerTab,
-  InsightsTab,
-  SandboxTab,
-  SettingsTab,
-} from '@/components/franchisee/ExtraTabs'
+
+import { PromotionCrawler } from '@/components/admin/PromotionCrawler'
+import { DataInsightsTab } from '@/components/admin/DataInsightsTab'
+import { TestingSandboxTab } from '@/components/admin/TestingSandboxTab'
+import { FranchiseeSettingsTab } from '@/components/franchisee/FranchiseeSettingsTab'
+import { PartnerPoliciesTab } from '@/components/admin/PartnerPoliciesTab'
+import { AdminCategoriesTab } from '@/components/admin/AdminCategoriesTab'
 
 export default function FranchiseeDashboard() {
   const { franchises, companies, coupons: allCoupons } = useCouponStore()
@@ -179,7 +177,7 @@ export default function FranchiseeDashboard() {
           )}
           {activeTab === 'categories' && (
             <div className="animate-fade-in-up">
-              <CategoriesTab />
+              <AdminCategoriesTab franchiseId={franchiseToUse.id} />
             </div>
           )}
           {activeTab === 'interests' && (
@@ -189,28 +187,28 @@ export default function FranchiseeDashboard() {
           )}
           {activeTab === 'policies' && (
             <div className="animate-fade-in-up">
-              <PoliciesTab />
+              <PartnerPoliciesTab franchiseId={franchiseToUse.id} />
             </div>
           )}
 
           {activeTab === 'crawler' && (
             <div className="animate-fade-in-up">
-              <CrawlerTab />
+              <PromotionCrawler franchiseId={franchiseToUse.id} />
             </div>
           )}
           {activeTab === 'insights' && (
             <div className="animate-fade-in-up">
-              <InsightsTab />
+              <DataInsightsTab franchiseId={franchiseToUse.id} />
             </div>
           )}
           {activeTab === 'sandbox' && (
             <div className="animate-fade-in-up">
-              <SandboxTab />
+              <TestingSandboxTab />
             </div>
           )}
           {activeTab === 'settings' && (
             <div className="animate-fade-in-up">
-              <SettingsTab />
+              <FranchiseeSettingsTab franchiseId={franchiseToUse.id} />
             </div>
           )}
 
