@@ -28,16 +28,17 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useForm } from 'react-hook-form'
-import { formatCurrency, formatDate } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { CATEGORIES } from '@/lib/data'
 import { useLanguage } from '@/stores/LanguageContext'
+import { useRegionFormatting } from '@/hooks/useRegionFormatting'
 
 export function AdCampaignsTab() {
   const { ads, advertisers, adPricing, createAdCampaign } = useCouponStore()
   const [isOpen, setIsOpen] = useState(false)
   const { register, handleSubmit, reset, watch, setValue } = useForm()
   const { t } = useLanguage()
+  const { formatCurrency, formatNumber } = useRegionFormatting()
 
   const watchPlacement = watch('placement')
   const watchDuration = watch('durationDays')
@@ -258,7 +259,7 @@ export function AdCampaignsTab() {
                   {t('ads.amount_to_bill')}
                 </span>
                 <span className="text-2xl font-bold text-primary">
-                  {formatCurrency(calculatedPrice, 'BRL')}
+                  {formatCurrency(calculatedPrice)}
                 </span>
               </div>
               <div className="space-y-2">
@@ -330,7 +331,7 @@ export function AdCampaignsTab() {
                   </TableCell>
                   <TableCell>
                     <div className="text-sm">
-                      V: {a.views} | C: {a.clicks}
+                      V: {formatNumber(a.views)} | C: {formatNumber(a.clicks)}
                     </div>
                     {a.budget && (
                       <div className="text-xs text-muted-foreground">
