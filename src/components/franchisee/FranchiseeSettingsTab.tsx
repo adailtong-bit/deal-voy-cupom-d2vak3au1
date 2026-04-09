@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useRegionFormatting } from '@/hooks/useRegionFormatting'
@@ -11,7 +12,18 @@ import {
 } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { cn } from '@/lib/utils'
+import { Save } from 'lucide-react'
+import { toast } from 'sonner'
+import { REGIONS } from '@/lib/locationData'
 
 export function FranchiseeSettingsTab({
   franchiseId,
@@ -19,19 +31,47 @@ export function FranchiseeSettingsTab({
   franchiseId: string
 }) {
   const { t } = useLanguage()
-  const { franchises, platformSettings } = useCouponStore()
+  const { franchises, platformSettings, updateCompany } = useCouponStore()
   const location = useLocation()
   const isFranchisee = location.pathname.includes('/franchisee')
 
   const myFranchise = franchises.find((f) => f.id === franchiseId)
+
+  const [data, setData] = useState<any>({})
+
+  useEffect(() => {
+    if (myFranchise) {
+      setData({
+        ...myFranchise,
+        region: myFranchise.region || myFranchise.addressCountry || 'Global',
+      })
+    }
+  }, [myFranchise])
+
   const { formatNumber, currency } = useRegionFormatting(
-    myFranchise?.region,
-    myFranchise?.addressCountry,
+    data.region,
+    data.addressCountry,
   )
 
   const royaltyRate = platformSettings.franchiseRoyaltyRate || 15
 
+  const savedSettings = localStorage.getItem('system_settings')
+  const settings = savedSettings ? JSON.parse(savedSettings) : {}
+  const customRegions = settings.customRegions || []
+  const ALL_REGIONS = Array.from(new Set([...REGIONS, ...customRegions]))
+
   if (!myFranchise) return null
+
+  const handleSave = async () => {
+    try {
+      await updateCompany(franchiseId, { region: data.region })
+      toast.success(
+        t('franchisee.settings.save_success', 'Settings saved successfully'),
+      )
+    } catch (e) {
+      toast.error(t('common.error', 'An error occurred while saving.'))
+    }
+  }
 
   return (
     <div
@@ -65,11 +105,27 @@ export function FranchiseeSettingsTab({
             <Label className="font-semibold text-slate-700 truncate block">
               {t('franchisee.settings.region', 'Operating Region')}
             </Label>
-            <Input
-              value={myFranchise.region || myFranchise.addressCountry || ''}
-              disabled
-              className="bg-slate-100 font-medium w-full"
-            />
+            <Select
+              value={data.region || ''}
+              onValueChange={(v) => setData({ ...data, region: v })}
+            >
+              <SelectTrigger className="bg-white">
+                <SelectValue placeholder={t('common.select', 'Select...')} />
+              </SelectTrigger>
+              <SelectContent>
+                {ALL_REGIONS.map((r) => (
+                  <SelectItem key={r} value={r}>
+                    {r}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground mt-1">
+              {t(
+                'franchisee.settings.region_help',
+                'Defines standard formats for this franchise',
+              )}
+            </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 min-w-0">
             <div className="space-y-2 min-w-0">
@@ -101,6 +157,12 @@ export function FranchiseeSettingsTab({
                 className="bg-slate-100 font-medium text-orange-600 w-full"
               />
             </div>
+          </div>
+          <div className="pt-4 border-t flex justify-end">
+            <Button onClick={handleSave}>
+              <Save className="w-4 h-4 mr-2" />
+              {t('common.save', 'Save Changes')}
+            </Button>
           </div>
         </CardContent>
       </Card>

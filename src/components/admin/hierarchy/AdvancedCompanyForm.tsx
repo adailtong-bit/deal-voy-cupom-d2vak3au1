@@ -42,6 +42,7 @@ export function AdvancedCompanyForm({
     businessPhone: '',
     addressCountry: 'USA',
     country: 'USA',
+    region: 'Global',
 
     // Primary contact
     contactPerson: '',
@@ -85,6 +86,12 @@ export function AdvancedCompanyForm({
     const num = parseFloat(value)
     setFormData((prev) => ({ ...prev, [field]: isNaN(num) ? undefined : num }))
   }
+
+  const savedSettings = localStorage.getItem('system_settings')
+  const settings = savedSettings ? JSON.parse(savedSettings) : {}
+  const customRegions = settings.customRegions || []
+  const ALL_REGIONS = Array.from(new Set([...REGIONS, ...customRegions]))
+  const ALL_COUNTRIES = Array.from(new Set([...COUNTRIES, ...customRegions]))
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 py-4">
@@ -174,7 +181,7 @@ export function AdvancedCompanyForm({
                   <SelectValue placeholder={t('common.select', 'Select...')} />
                 </SelectTrigger>
                 <SelectContent>
-                  {COUNTRIES?.map((c) => (
+                  {ALL_COUNTRIES.map((c) => (
                     <SelectItem key={c} value={c}>
                       {c}
                     </SelectItem>
@@ -187,9 +194,14 @@ export function AdvancedCompanyForm({
                 {t('vendor.settings_tab.assigned_region', 'Assigned Region')}
               </Label>
               <Select
-                value={formData.region || ''}
+                value={
+                  formData.region ||
+                  formData.addressCountry ||
+                  formData.country ||
+                  ''
+                }
                 onValueChange={(v) => {
-                  const isCountry = COUNTRIES.includes(v)
+                  const isCountry = ALL_COUNTRIES.includes(v)
                   setFormData((prev) => ({
                     ...prev,
                     region: v,
@@ -208,7 +220,7 @@ export function AdvancedCompanyForm({
                   <SelectValue placeholder={t('common.select', 'Select...')} />
                 </SelectTrigger>
                 <SelectContent>
-                  {REGIONS.map((r) => (
+                  {ALL_REGIONS.map((r) => (
                     <SelectItem key={r} value={r}>
                       {r}
                     </SelectItem>

@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
-import { Save } from 'lucide-react'
+import { Save, X, Plus } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
 import {
   Select,
@@ -33,8 +33,11 @@ export function AdminSettingsTab() {
           sessionTimeout: 30,
           maintenanceMode: false,
           defaultRegion: 'Global',
+          customRegions: [],
         }
   })
+
+  const [newRegion, setNewRegion] = useState('')
 
   const handleSave = () => {
     localStorage.setItem('system_settings', JSON.stringify(settings))
@@ -45,6 +48,31 @@ export function AdminSettingsTab() {
       ),
     )
   }
+
+  const handleAddRegion = () => {
+    if (!newRegion.trim()) return
+    const current = settings.customRegions || []
+    if (!current.includes(newRegion.trim())) {
+      setSettings({
+        ...settings,
+        customRegions: [...current, newRegion.trim()],
+      })
+      setNewRegion('')
+    }
+  }
+
+  const handleRemoveRegion = (regionToRemove: string) => {
+    setSettings({
+      ...settings,
+      customRegions: (settings.customRegions || []).filter(
+        (r: string) => r !== regionToRemove,
+      ),
+    })
+  }
+
+  const ALL_REGIONS = Array.from(
+    new Set([...REGIONS, ...(settings.customRegions || [])]),
+  )
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -76,7 +104,7 @@ export function AdminSettingsTab() {
               )}
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6">
             <div className="space-y-2 md:w-1/2">
               <Label>
                 {t(
@@ -94,7 +122,7 @@ export function AdminSettingsTab() {
                   <SelectValue placeholder="Select master region" />
                 </SelectTrigger>
                 <SelectContent>
-                  {REGIONS.map((r) => (
+                  {ALL_REGIONS.map((r) => (
                     <SelectItem key={r} value={r}>
                       {r}
                     </SelectItem>
@@ -107,6 +135,60 @@ export function AdminSettingsTab() {
                   'All new franchises and merchants will inherit this region format unless overridden individually in their specific settings.',
                 )}
               </p>
+            </div>
+
+            <div className="pt-4 border-t">
+              <Label className="mb-2 block">
+                {t(
+                  'admin.settings_tab.manage_regions',
+                  'Manage Custom Regions / Countries',
+                )}
+              </Label>
+              <div className="flex gap-2 max-w-md">
+                <Input
+                  value={newRegion}
+                  onChange={(e) => setNewRegion(e.target.value)}
+                  placeholder={t(
+                    'admin.settings_tab.new_region_placeholder',
+                    'e.g. Argentina',
+                  )}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddRegion()}
+                />
+                <Button
+                  onClick={handleAddRegion}
+                  type="button"
+                  variant="secondary"
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  {t('common.add', 'Add')}
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-2 mt-4">
+                {(settings.customRegions || []).map((r: string) => (
+                  <div
+                    key={r}
+                    className="flex items-center gap-2 bg-slate-100 text-slate-800 px-3 py-1.5 rounded-full text-sm font-medium"
+                  >
+                    {r}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveRegion(r)}
+                      className="text-slate-400 hover:text-red-500 transition-colors"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+                {(!settings.customRegions ||
+                  settings.customRegions.length === 0) && (
+                  <p className="text-sm text-muted-foreground italic">
+                    {t(
+                      'admin.settings_tab.no_custom_regions',
+                      'No custom regions added yet.',
+                    )}
+                  </p>
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>

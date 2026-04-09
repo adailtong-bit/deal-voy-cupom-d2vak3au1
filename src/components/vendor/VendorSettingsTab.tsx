@@ -19,7 +19,7 @@ import {
 import { Store, Save, MapPin } from 'lucide-react'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
-import { COUNTRIES, LOCATION_DATA } from '@/lib/locationData'
+import { COUNTRIES, LOCATION_DATA, REGIONS } from '@/lib/locationData'
 import { PhoneInput } from '@/components/PhoneInput'
 import { toast } from 'sonner'
 
@@ -30,23 +30,35 @@ export function VendorSettingsTab({ company }: any) {
 
   useEffect(() => {
     if (company) {
-      // Ensure country and addressCountry are synced when loading
       setData({
         ...company,
         addressCountry: company.addressCountry || company.country || 'USA',
         country: company.country || company.addressCountry || 'USA',
+        region:
+          company.region ||
+          company.addressCountry ||
+          company.country ||
+          'Global',
       })
     }
   }, [company])
 
   const handleChange = (k: string, v: any) => setData({ ...data, [k]: v })
 
+  const savedSettings = localStorage.getItem('system_settings')
+  const settings = savedSettings ? JSON.parse(savedSettings) : {}
+  const customRegions = settings.customRegions || []
+
+  const ALL_COUNTRIES = Array.from(new Set([...COUNTRIES, ...customRegions]))
+  const ALL_REGIONS = Array.from(new Set([...REGIONS, ...customRegions]))
+
   const currentCountry = data.addressCountry || data.country
-  const states = currentCountry
-    ? Object.keys(LOCATION_DATA[currentCountry]?.states || {})
-    : []
+  const states =
+    currentCountry && LOCATION_DATA[currentCountry]
+      ? Object.keys(LOCATION_DATA[currentCountry]?.states || {})
+      : []
   const cities =
-    currentCountry && data.addressState
+    currentCountry && data.addressState && LOCATION_DATA[currentCountry]
       ? LOCATION_DATA[currentCountry]?.states[data.addressState] || []
       : []
 
@@ -79,11 +91,11 @@ export function VendorSettingsTab({ company }: any) {
 
   const handleSave = async () => {
     try {
-      // Force sync both fields before saving to ensure backend persists it
       const payload = {
         ...data,
         country: data.addressCountry || data.country,
         addressCountry: data.addressCountry || data.country,
+        region: data.region,
       }
 
       await updateCompany(company.id, payload)
@@ -156,20 +168,27 @@ export function VendorSettingsTab({ company }: any) {
             <Label className="text-slate-700">
               {t('vendor.settings_tab.assigned_region', 'Assigned Region')}
             </Label>
-            <Input
-              value={data.region || 'Global'}
-              readOnly
-              disabled
-              className="bg-slate-50 cursor-not-allowed text-slate-500"
-              title={t(
-                'vendor.settings_tab.region_readonly',
-                'Region is managed by Admin',
-              )}
-            />
+            <Select
+              value={data.region || ''}
+              onValueChange={(v) => handleChange('region', v)}
+            >
+              <SelectTrigger className="bg-white">
+                <SelectValue
+                  placeholder={t('vendor.settings_tab.select', 'Select...')}
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {ALL_REGIONS.map((r) => (
+                  <SelectItem key={r} value={r}>
+                    {r}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <p className="text-[10px] text-slate-400 mt-1 font-medium">
               {t(
-                'vendor.settings_tab.region_help',
-                'Managed globally by Admin Master',
+                'vendor.settings_tab.region_help_editable',
+                'Defines standard formats for this store',
               )}
             </p>
           </div>
@@ -209,7 +228,7 @@ export function VendorSettingsTab({ company }: any) {
                   />
                 </SelectTrigger>
                 <SelectContent>
-                  {COUNTRIES.map((c) => (
+                  {ALL_COUNTRIES.map((c) => (
                     <SelectItem key={c} value={c}>
                       {c}
                     </SelectItem>
