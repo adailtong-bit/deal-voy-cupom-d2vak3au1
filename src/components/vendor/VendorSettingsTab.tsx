@@ -157,9 +157,10 @@ export function VendorSettingsTab({ company }: any) {
               {t('vendor.settings_tab.assigned_region', 'Assigned Region')}
             </Label>
             <Input
-              value={data.region || 'Global'}
-              disabled
-              className="bg-slate-50 text-slate-500 font-medium"
+              value={data.region || ''}
+              onChange={(e) => handleChange('region', e.target.value)}
+              placeholder="Global"
+              className="bg-white"
             />
           </div>
         </div>
@@ -210,49 +211,74 @@ export function VendorSettingsTab({ company }: any) {
               <Label className="text-slate-700">
                 {t('vendor.settings_tab.state', 'State / Province')}
               </Label>
-              <Select
-                value={data.addressState || ''}
-                onValueChange={(v) =>
-                  setData({ ...data, addressState: v, addressCity: '' })
-                }
-                disabled={!states.length}
-              >
-                <SelectTrigger className="bg-white">
-                  <SelectValue
-                    placeholder={t('vendor.settings_tab.select', 'Select...')}
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  {states.map((s) => (
-                    <SelectItem key={s} value={s}>
-                      {s}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {states.length > 0 ? (
+                <Select
+                  value={data.addressState || ''}
+                  onValueChange={(v) =>
+                    setData({ ...data, addressState: v, addressCity: '' })
+                  }
+                >
+                  <SelectTrigger className="bg-white">
+                    <SelectValue
+                      placeholder={t('vendor.settings_tab.select', 'Select...')}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {states.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {s}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input
+                  value={data.addressState || ''}
+                  onChange={(e) =>
+                    setData({
+                      ...data,
+                      addressState: e.target.value,
+                      addressCity: '',
+                    })
+                  }
+                  placeholder={t(
+                    'vendor.settings_tab.state',
+                    'State / Province',
+                  )}
+                  className="bg-white"
+                />
+              )}
             </div>
             <div className="space-y-2">
               <Label className="text-slate-700">
                 {t('vendor.settings_tab.city', 'City')}
               </Label>
-              <Select
-                value={data.addressCity || ''}
-                onValueChange={(v) => handleChange('addressCity', v)}
-                disabled={!cities.length}
-              >
-                <SelectTrigger className="bg-white">
-                  <SelectValue
-                    placeholder={t('vendor.settings_tab.select', 'Select...')}
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  {cities.map((c) => (
-                    <SelectItem key={c} value={c}>
-                      {c}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {cities.length > 0 ? (
+                <Select
+                  value={data.addressCity || ''}
+                  onValueChange={(v) => handleChange('addressCity', v)}
+                >
+                  <SelectTrigger className="bg-white">
+                    <SelectValue
+                      placeholder={t('vendor.settings_tab.select', 'Select...')}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {cities.map((c) => (
+                      <SelectItem key={c} value={c}>
+                        {c}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input
+                  value={data.addressCity || ''}
+                  onChange={(e) => handleChange('addressCity', e.target.value)}
+                  placeholder={t('vendor.settings_tab.city', 'City')}
+                  className="bg-white"
+                />
+              )}
             </div>
             <div className="space-y-2">
               <Label className="text-slate-700">

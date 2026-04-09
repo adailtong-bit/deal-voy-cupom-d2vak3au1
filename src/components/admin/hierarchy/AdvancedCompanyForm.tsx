@@ -175,6 +175,18 @@ export function AdvancedCompanyForm({
                 </SelectContent>
               </Select>
             </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label>
+                {t('vendor.settings_tab.assigned_region', 'Assigned Region')}
+              </Label>
+              <Input
+                value={formData.region || ''}
+                placeholder="Ex: Global, Europe, North America"
+                onChange={(e) =>
+                  setFormData({ ...formData, region: e.target.value })
+                }
+              />
+            </div>
           </div>
         </TabsContent>
 
