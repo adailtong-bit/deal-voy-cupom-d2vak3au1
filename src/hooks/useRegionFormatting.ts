@@ -40,6 +40,14 @@ export function useRegionFormatting(regionCode?: string, country?: string) {
       locale = 'fr-FR'
       currency = 'EUR'
       distanceUnit = 'km'
+    } else if (
+      targetScope.includes('USA') ||
+      targetScope.includes('UNITED STATES') ||
+      targetScope === 'US'
+    ) {
+      locale = 'en-US'
+      currency = 'USD'
+      distanceUnit = 'mi'
     }
 
     const formatCurrency = (amount: number | null | undefined) => {

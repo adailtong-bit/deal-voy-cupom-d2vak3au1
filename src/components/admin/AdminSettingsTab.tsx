@@ -12,6 +12,14 @@ import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { Save } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { REGIONS } from '@/lib/locationData'
 
 export function AdminSettingsTab() {
   const { t } = useLanguage()
@@ -24,6 +32,7 @@ export function AdminSettingsTab() {
           maxPushPerDay: 3,
           sessionTimeout: 30,
           maintenanceMode: false,
+          defaultRegion: 'Global',
         }
   })
 
@@ -52,6 +61,56 @@ export function AdminSettingsTab() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle>
+              {t(
+                'admin.settings_tab.global_region_title',
+                'Global Region & Standards',
+              )}
+            </CardTitle>
+            <CardDescription>
+              {t(
+                'admin.settings_tab.global_region_desc',
+                'Define the master default region for the entire platform. This applies standard formats (currency, phone, dates) globally.',
+              )}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2 md:w-1/2">
+              <Label>
+                {t(
+                  'admin.settings_tab.default_region',
+                  'Master Default Region',
+                )}
+              </Label>
+              <Select
+                value={settings.defaultRegion || 'Global'}
+                onValueChange={(v) =>
+                  setSettings({ ...settings, defaultRegion: v })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select master region" />
+                </SelectTrigger>
+                <SelectContent>
+                  {REGIONS.map((r) => (
+                    <SelectItem key={r} value={r}>
+                      {r}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-2">
+                {t(
+                  'admin.settings_tab.default_region_help',
+                  'All new franchises and merchants will inherit this region format unless overridden individually in their specific settings.',
+                )}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle>

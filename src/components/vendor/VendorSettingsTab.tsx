@@ -157,11 +157,21 @@ export function VendorSettingsTab({ company }: any) {
               {t('vendor.settings_tab.assigned_region', 'Assigned Region')}
             </Label>
             <Input
-              value={data.region || ''}
-              onChange={(e) => handleChange('region', e.target.value)}
-              placeholder="Global"
-              className="bg-white"
+              value={data.region || 'Global'}
+              readOnly
+              disabled
+              className="bg-slate-50 cursor-not-allowed text-slate-500"
+              title={t(
+                'vendor.settings_tab.region_readonly',
+                'Region is managed by Admin',
+              )}
             />
+            <p className="text-[10px] text-slate-400 mt-1 font-medium">
+              {t(
+                'vendor.settings_tab.region_help',
+                'Managed globally by Admin Master',
+              )}
+            </p>
           </div>
         </div>
 

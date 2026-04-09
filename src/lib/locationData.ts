@@ -109,6 +109,38 @@ export const LOCATION_DATA: Record<string, LocationData> = {
       Hokkaido: ['Sapporo'],
     },
   },
+  Mexico: {
+    states: {
+      'Mexico City': ['Mexico City'],
+      Jalisco: ['Guadalajara'],
+      'Nuevo León': ['Monterrey'],
+    },
+  },
+  Spain: {
+    states: {
+      Madrid: ['Madrid'],
+      Catalonia: ['Barcelona'],
+      Andalusia: ['Seville', 'Malaga'],
+      Valencia: ['Valencia', 'Alicante'],
+    },
+  },
 }
 
 export const COUNTRIES = Object.keys(LOCATION_DATA).sort()
+
+export const REGIONS = [
+  'Global',
+  'Brasil',
+  'USA',
+  'Mexico',
+  'Spain',
+  'Portugal',
+  'France',
+  'Germany',
+  'Italy',
+  'China',
+  'Japan',
+  'Europe',
+  'North America',
+  'South America',
+]

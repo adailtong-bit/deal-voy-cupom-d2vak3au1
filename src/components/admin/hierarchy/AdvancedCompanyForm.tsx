@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Separator } from '@/components/ui/separator'
-import { COUNTRIES } from '@/lib/locationData'
+import { COUNTRIES, REGIONS } from '@/lib/locationData'
 import { useLanguage } from '@/stores/LanguageContext'
 
 interface Props {
@@ -160,7 +160,14 @@ export function AdvancedCompanyForm({
                 required
                 value={formData.addressCountry || formData.country || ''}
                 onValueChange={(v) =>
-                  setFormData({ ...formData, addressCountry: v, country: v })
+                  setFormData((prev) => ({
+                    ...prev,
+                    addressCountry: v,
+                    country: v,
+                    region: prev.region || v,
+                    addressState: '',
+                    addressCity: '',
+                  }))
                 }
               >
                 <SelectTrigger>
@@ -179,13 +186,41 @@ export function AdvancedCompanyForm({
               <Label>
                 {t('vendor.settings_tab.assigned_region', 'Assigned Region')}
               </Label>
-              <Input
+              <Select
                 value={formData.region || ''}
-                placeholder="Ex: Global, Europe, North America"
-                onChange={(e) =>
-                  setFormData({ ...formData, region: e.target.value })
-                }
-              />
+                onValueChange={(v) => {
+                  const isCountry = COUNTRIES.includes(v)
+                  setFormData((prev) => ({
+                    ...prev,
+                    region: v,
+                    ...(isCountry
+                      ? {
+                          country: v,
+                          addressCountry: v,
+                          addressState: '',
+                          addressCity: '',
+                        }
+                      : {}),
+                  }))
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={t('common.select', 'Select...')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {REGIONS.map((r) => (
+                    <SelectItem key={r} value={r}>
+                      {r}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                {t(
+                  'admin.company.region_help',
+                  'Controls default formats (currency, numbers, etc.) for this entity and its children.',
+                )}
+              </p>
             </div>
           </div>
         </TabsContent>
