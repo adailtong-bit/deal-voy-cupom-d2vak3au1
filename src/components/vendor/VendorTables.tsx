@@ -85,12 +85,15 @@ export function HistoryTable() {
   const { t, formatDate } = useLanguage()
   const myCompany =
     companies.find((c) => c.id === user?.companyId) || companies[0]
-  const logs = validationLogs
-    .filter((l) => l.companyId === myCompany.id)
-    .sort(
-      (a, b) =>
-        new Date(b.validatedAt).getTime() - new Date(a.validatedAt).getTime(),
-    )
+  const logs = myCompany
+    ? validationLogs
+        .filter((l) => l.companyId === myCompany.id)
+        .sort(
+          (a, b) =>
+            new Date(b.validatedAt).getTime() -
+            new Date(a.validatedAt).getTime(),
+        )
+    : []
 
   if (logs.length === 0)
     return (
