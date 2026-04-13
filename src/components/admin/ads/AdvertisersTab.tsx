@@ -1,5 +1,4 @@
-import { useState } from 'react'
-import { useCouponStore } from '@/stores/CouponContext'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Table,
@@ -22,30 +21,58 @@ import {
 } from '@/components/ui/dialog'
 import { useForm } from 'react-hook-form'
 import { useLanguage } from '@/stores/LanguageContext'
+import { toast } from 'sonner'
+import {
+  fetchAdvertisers,
+  createAdvertiser,
+  Advertiser,
+} from '@/services/ad_advertisers'
 
 export function AdvertisersTab() {
-  const { advertisers, addAdvertiser } = useCouponStore()
+  const [advertisers, setAdvertisers] = useState<Advertiser[]>([])
   const [isOpen, setIsOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
   const { register, handleSubmit, reset } = useForm()
   const { t } = useLanguage()
 
-  const onSubmit = (data: any) => {
-    addAdvertiser({
-      id: Math.random().toString(),
-      companyName: data.companyName,
-      taxId: data.taxId,
-      email: data.email,
-      phone: data.phone,
-      address: {
+  const loadAdvertisers = async () => {
+    try {
+      const data = await fetchAdvertisers()
+      setAdvertisers(data || [])
+    } catch (err) {
+      console.error(err)
+      toast.error(t('common.error', 'Erro ao carregar anunciantes'))
+    }
+  }
+
+  useEffect(() => {
+    loadAdvertisers()
+  }, [])
+
+  const onSubmit = async (data: any) => {
+    setIsLoading(true)
+    try {
+      await createAdvertiser({
+        company_name: data.companyName,
+        tax_id: data.taxId,
+        email: data.email,
+        phone: data.phone,
         street: data.street,
-        number: data.number,
+        address_number: data.number,
         city: data.city,
         state: data.state,
         zip: data.zip,
-      },
-    })
-    setIsOpen(false)
-    reset()
+      })
+      toast.success(t('common.success', 'Salvo com sucesso!'))
+      setIsOpen(false)
+      reset()
+      await loadAdvertisers()
+    } catch (err: any) {
+      console.error(err)
+      toast.error(err.message || 'Erro ao salvar anunciante')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -102,7 +129,11 @@ export function AdvertisersTab() {
                 <Input {...register('zip')} required />
               </div>
               <DialogFooter>
-                <Button type="submit">{t('common.save')}</Button>
+                <Button type="submit" disabled={isLoading}>
+                  {isLoading
+                    ? t('common.loading', 'Salvando...')
+                    : t('common.save')}
+                </Button>
               </DialogFooter>
             </form>
           </DialogContent>
@@ -120,9 +151,9 @@ export function AdvertisersTab() {
           </TableHeader>
           <TableBody>
             {advertisers.map((a) => (
-              <TableRow key={a.id}>
-                <TableCell className="font-bold">{a.companyName}</TableCell>
-                <TableCell>{a.taxId}</TableCell>
+              <TableRow key={a.id || Math.random().toString()}>
+                <TableCell className="font-bold">{a.company_name}</TableCell>
+                <TableCell>{a.tax_id}</TableCell>
                 <TableCell>
                   {a.email}
                   <br />
@@ -131,7 +162,7 @@ export function AdvertisersTab() {
                   </span>
                 </TableCell>
                 <TableCell>
-                  {a.address.city}, {a.address.state}
+                  {a.city}, {a.state}
                 </TableCell>
               </TableRow>
             ))}
