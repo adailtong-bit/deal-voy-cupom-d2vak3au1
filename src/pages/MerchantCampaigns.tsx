@@ -30,9 +30,7 @@ export default function MerchantCampaigns() {
     )
   }
 
-  const myCoupons = coupons.filter(
-    (c) => c.companyId === myCompany.id && c.source !== 'aggregated',
-  )
+  const myCoupons = coupons.filter((c) => c.companyId === myCompany.id)
 
   return (
     <div className="container py-8 px-4 max-w-6xl mx-auto space-y-6 animate-fade-in">

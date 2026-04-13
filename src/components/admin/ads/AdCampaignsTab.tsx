@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useCouponStore } from '@/stores/CouponContext'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -32,10 +32,22 @@ import { Badge } from '@/components/ui/badge'
 import { CATEGORIES } from '@/lib/data'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useRegionFormatting } from '@/hooks/useRegionFormatting'
+import { supabase } from '@/lib/supabase/client'
+import { toast } from 'sonner'
+import { Loader2 } from 'lucide-react'
 
 export function AdCampaignsTab() {
-  const { ads, advertisers, adPricing, createAdCampaign } = useCouponStore()
+  const {
+    ads: storeAds,
+    advertisers,
+    adPricing,
+    createAdCampaign,
+  } = useCouponStore()
   const [isOpen, setIsOpen] = useState(false)
+  const [dbAds, setDbAds] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
   const { register, handleSubmit, reset, watch, setValue } = useForm()
   const { t } = useLanguage()
   const { formatCurrency, formatNumber } = useRegionFormatting()
@@ -43,6 +55,29 @@ export function AdCampaignsTab() {
   const watchPlacement = watch('placement')
   const watchDuration = watch('durationDays')
   const watchBudget = watch('budget')
+
+  useEffect(() => {
+    fetchAds()
+  }, [])
+
+  const fetchAds = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('ad_campaigns')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        console.error('Error fetching ads from Supabase', error)
+      } else if (data) {
+        setDbAds(data)
+      }
+    } catch (err) {
+      console.error('Failed to load ads', err)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const availableRules = useMemo(() => {
     if (!watchPlacement) return []
@@ -56,100 +91,166 @@ export function AdCampaignsTab() {
         (r) => r.durationDays === parseInt(watchDuration),
       )
     }
-    return availableRules[0] // For CPC/CPA usually one rule per placement
+    return availableRules[0]
   }, [availableRules, watchDuration])
 
   const calculatedPrice = useMemo(() => {
     if (!selectedRule) return 0
     if (selectedRule.billingType === 'fixed') return selectedRule.price
-    // For CPC/CPA, the invoice amount is based on budget
     return watchBudget ? parseFloat(watchBudget) : 0
   }, [selectedRule, watchBudget])
 
-  const onSubmit = (data: any) => {
-    if (!selectedRule) return alert(t('ads.no_rule_found'))
+  const displayAds = useMemo(() => {
+    const dbIds = new Set(dbAds.map((a) => a.id))
+    const uniqueStoreAds = storeAds.filter((a) => !dbIds.has(a.id))
+    return [...dbAds, ...uniqueStoreAds]
+  }, [dbAds, storeAds])
+
+  const onSubmit = async (data: any) => {
+    if (!selectedRule)
+      return toast.error(
+        t('ads.no_rule_found', 'Regra de precificação não encontrada.'),
+      )
     if (selectedRule.billingType !== 'fixed' && !data.budget)
-      return alert(t('ads.budget_required'))
+      return toast.error(
+        t(
+          'ads.budget_required',
+          'Orçamento total é obrigatório para este modelo.',
+        ),
+      )
 
-    const adId = Math.random().toString()
-    const now = new Date()
-    const endDate = new Date()
-    if (selectedRule.billingType === 'fixed') {
-      endDate.setDate(now.getDate() + (selectedRule.durationDays || 30))
-    } else {
-      endDate.setDate(now.getDate() + 30) // Default 30 days for performance
-    }
+    setIsSubmitting(true)
+    try {
+      const now = new Date()
+      const endDate = new Date()
+      if (selectedRule.billingType === 'fixed') {
+        endDate.setDate(now.getDate() + (selectedRule.durationDays || 30))
+      } else {
+        endDate.setDate(now.getDate() + 30)
+      }
 
-    const dueDate = new Date()
-    dueDate.setDate(now.getDate() + 15)
-
-    const refNumber = `INV-${now.getFullYear()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`
-
-    createAdCampaign(
-      {
-        id: adId,
+      const dbPayload = {
         title: data.title,
-        companyId: 'admin_created',
-        advertiserId: data.advertiserId,
+        company_id: 'admin_created',
+        advertiser_id: data.advertiserId,
         region: 'Global',
         category: data.category || 'all',
-        billingType: selectedRule.billingType,
+        billing_type: selectedRule.billingType,
         placement: data.placement,
         status: 'active',
         views: 0,
         clicks: 0,
-        startDate: now.toISOString(),
-        endDate: endDate.toISOString(),
+        start_date: now.toISOString(),
+        end_date: endDate.toISOString(),
         image: data.image,
         link: data.link,
-        price:
-          selectedRule.billingType === 'fixed' ? calculatedPrice : undefined,
+        price: selectedRule.billingType === 'fixed' ? calculatedPrice : null,
         budget:
-          selectedRule.billingType !== 'fixed'
-            ? parseFloat(data.budget)
-            : undefined,
-        costPerClick:
-          selectedRule.billingType === 'cpc' ? selectedRule.price : undefined,
+          selectedRule.billingType !== 'fixed' ? parseFloat(data.budget) : null,
+        cost_per_click:
+          selectedRule.billingType === 'cpc' ? selectedRule.price : null,
         currency: 'BRL',
-        durationDays: selectedRule.durationDays,
-      },
-      {
-        id: Math.random().toString(),
-        referenceNumber: refNumber,
-        adId,
-        advertiserId: data.advertiserId,
-        amount: calculatedPrice,
-        issueDate: now.toISOString(),
-        dueDate: dueDate.toISOString(),
-        status: 'draft',
-      },
-    )
+        duration_days: selectedRule.durationDays,
+      }
 
-    setIsOpen(false)
-    reset()
+      const { data: insertedData, error } = await supabase
+        .from('ad_campaigns')
+        .insert(dbPayload)
+        .select()
+        .single()
+
+      if (error) throw error
+
+      setDbAds((prev) => [insertedData, ...prev])
+
+      const adId = insertedData.id
+      const dueDate = new Date()
+      dueDate.setDate(now.getDate() + 15)
+      const refNumber = `INV-${now.getFullYear()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`
+
+      createAdCampaign(
+        {
+          id: adId,
+          title: data.title,
+          companyId: 'admin_created',
+          advertiserId: data.advertiserId,
+          region: 'Global',
+          category: data.category || 'all',
+          billingType: selectedRule.billingType,
+          placement: data.placement,
+          status: 'active',
+          views: 0,
+          clicks: 0,
+          startDate: now.toISOString(),
+          endDate: endDate.toISOString(),
+          image: data.image,
+          link: data.link,
+          price:
+            selectedRule.billingType === 'fixed' ? calculatedPrice : undefined,
+          budget:
+            selectedRule.billingType !== 'fixed'
+              ? parseFloat(data.budget)
+              : undefined,
+          costPerClick:
+            selectedRule.billingType === 'cpc' ? selectedRule.price : undefined,
+          currency: 'BRL',
+          durationDays: selectedRule.durationDays,
+        },
+        {
+          id: Math.random().toString(),
+          referenceNumber: refNumber,
+          adId,
+          advertiserId: data.advertiserId,
+          amount: calculatedPrice,
+          issueDate: now.toISOString(),
+          dueDate: dueDate.toISOString(),
+          status: 'draft',
+        },
+      )
+
+      toast.success(
+        t('ads.campaign_created', 'Campanha de ADS criada com sucesso!'),
+      )
+      setIsOpen(false)
+      reset()
+    } catch (err: any) {
+      console.error('Error creating ad campaign:', err)
+      toast.error(
+        t('ads.create_error', 'Erro ao criar campanha. Tente novamente.'),
+      )
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>{t('ads.active_campaigns')}</CardTitle>
+        <CardTitle>{t('ads.active_campaigns', 'Campanhas Ativas')}</CardTitle>
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>
-            <Button>{t('ads.create_campaign')}</Button>
+            <Button>{t('ads.create_campaign', 'Criar Campanha')}</Button>
           </DialogTrigger>
           <DialogContent className="max-h-[90vh] overflow-y-auto max-w-2xl">
             <DialogHeader>
-              <DialogTitle>{t('ads.new_campaign')}</DialogTitle>
+              <DialogTitle>
+                {t('ads.new_campaign', 'Nova Campanha')}
+              </DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
-                <Label>{t('ads.advertiser')}</Label>
+                <Label>{t('ads.advertiser', 'Anunciante')}</Label>
                 <Select
                   onValueChange={(v) => setValue('advertiserId', v)}
                   required
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder={t('ads.select_advertiser')} />
+                    <SelectValue
+                      placeholder={t(
+                        'ads.select_advertiser',
+                        'Selecione o anunciante',
+                      )}
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     {advertisers.map((a) => (
@@ -161,18 +262,20 @@ export function AdCampaignsTab() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>{t('ads.ad_title')}</Label>
+                <Label>{t('ads.ad_title', 'Título do Anúncio')}</Label>
                 <Input {...register('title')} required />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>{t('ads.location')}</Label>
+                  <Label>{t('ads.location', 'Localização (Placement)')}</Label>
                   <Select
                     onValueChange={(v) => setValue('placement', v)}
                     required
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder={t('common.select')} />
+                      <SelectValue
+                        placeholder={t('common.select', 'Selecione')}
+                      />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="top">Top Banner</SelectItem>
@@ -190,16 +293,20 @@ export function AdCampaignsTab() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>{t('ads.target_category')}</Label>
+                  <Label>{t('ads.target_category', 'Categoria Alvo')}</Label>
                   <Select
                     onValueChange={(v) => setValue('category', v)}
                     defaultValue="all"
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder={t('category.all')} />
+                      <SelectValue
+                        placeholder={t('category.all', 'Todas as Categorias')}
+                      />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">{t('category.all')}</SelectItem>
+                      <SelectItem value="all">
+                        {t('category.all', 'Todas as Categorias')}
+                      </SelectItem>
                       {CATEGORIES.filter((c) => c.id !== 'all').map((c) => (
                         <SelectItem key={c.id} value={c.id}>
                           {c.label}
@@ -213,13 +320,15 @@ export function AdCampaignsTab() {
               {availableRules.length > 0 &&
                 availableRules[0].billingType === 'fixed' && (
                   <div className="space-y-2">
-                    <Label>{t('ads.fixed_duration')}</Label>
+                    <Label>{t('ads.fixed_duration', 'Duração Fixa')}</Label>
                     <Select
                       onValueChange={(v) => setValue('durationDays', v)}
                       required
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder={t('common.select')} />
+                        <SelectValue
+                          placeholder={t('common.select', 'Selecione')}
+                        />
                       </SelectTrigger>
                       <SelectContent>
                         {availableRules.map((r) => (
@@ -227,7 +336,7 @@ export function AdCampaignsTab() {
                             key={r.id}
                             value={r.durationDays?.toString() || ''}
                           >
-                            {r.durationDays} {t('ads.days')} -{' '}
+                            {r.durationDays} {t('ads.days', 'dias')} -{' '}
                             {formatCurrency(r.price)}
                           </SelectItem>
                         ))}
@@ -239,7 +348,7 @@ export function AdCampaignsTab() {
               {availableRules.length > 0 &&
                 availableRules[0].billingType !== 'fixed' && (
                   <div className="space-y-2">
-                    <Label>{t('ads.total_budget')}</Label>
+                    <Label>{t('ads.total_budget', 'Orçamento Total')}</Label>
                     <Input
                       type="number"
                       step="0.01"
@@ -247,8 +356,9 @@ export function AdCampaignsTab() {
                       placeholder="Ex: 1000.00"
                     />
                     <p className="text-xs text-muted-foreground">
-                      {t('ads.applied_rate')}{' '}
-                      {formatCurrency(availableRules[0].price)} {t('ads.per')}{' '}
+                      {t('ads.applied_rate', 'Taxa Aplicada:')}{' '}
+                      {formatCurrency(availableRules[0].price)}{' '}
+                      {t('ads.per', 'por')}{' '}
                       {availableRules[0].billingType.toUpperCase()}
                     </p>
                   </div>
@@ -256,14 +366,14 @@ export function AdCampaignsTab() {
 
               <div className="p-4 bg-muted rounded-md text-center">
                 <span className="text-sm text-muted-foreground block mb-1">
-                  {t('ads.amount_to_bill')}
+                  {t('ads.amount_to_bill', 'Valor a Faturar')}
                 </span>
                 <span className="text-2xl font-bold text-primary">
                   {formatCurrency(calculatedPrice)}
                 </span>
               </div>
               <div className="space-y-2">
-                <Label>{t('ads.campaign_banner')}</Label>
+                <Label>{t('ads.campaign_banner', 'Banner da Campanha')}</Label>
                 <div className="flex flex-col gap-2">
                   <Input
                     type="file"
@@ -276,7 +386,7 @@ export function AdCampaignsTab() {
                     }}
                   />
                   <span className="text-xs text-muted-foreground text-center">
-                    {t('ads.paste_image_url')}
+                    {t('ads.paste_image_url', 'Ou cole a URL da imagem')}
                   </span>
                   <Input
                     {...register('image')}
@@ -286,7 +396,9 @@ export function AdCampaignsTab() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>{t('ads.redirect_url')}</Label>
+                <Label>
+                  {t('ads.redirect_url', 'URL de Redirecionamento')}
+                </Label>
                 <Input
                   {...register('link')}
                   placeholder="https://..."
@@ -294,8 +406,14 @@ export function AdCampaignsTab() {
                 />
               </div>
               <DialogFooter>
-                <Button type="submit" disabled={calculatedPrice === 0}>
-                  {t('ads.save_generate_billing')}
+                <Button
+                  type="submit"
+                  disabled={calculatedPrice === 0 || isSubmitting}
+                >
+                  {isSubmitting && (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  )}
+                  {t('ads.save_generate_billing', 'Salvar e Gerar Fatura')}
                 </Button>
               </DialogFooter>
             </form>
@@ -303,50 +421,72 @@ export function AdCampaignsTab() {
         </Dialog>
       </CardHeader>
       <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{t('ads.campaign')}</TableHead>
-              <TableHead>{t('ads.location_model')}</TableHead>
-              <TableHead>{t('ads.performance')}</TableHead>
-              <TableHead>{t('admin.status')}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {ads.map((a) => {
-              const adv = advertisers.find((ad) => ad.id === a.advertiserId)
-              return (
-                <TableRow key={a.id}>
-                  <TableCell>
-                    <span className="font-bold block">{a.title}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {adv?.companyName || 'N/A'}
-                    </span>
-                  </TableCell>
-                  <TableCell className="capitalize">
-                    {a.placement.replace(/_/g, ' ')}
-                    <Badge variant="outline" className="ml-2 uppercase">
-                      {a.billingType}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm">
-                      V: {formatNumber(a.views)} | C: {formatNumber(a.clicks)}
-                    </div>
-                    {a.budget && (
-                      <div className="text-xs text-muted-foreground">
-                        Budget: {formatCurrency(a.budget)}
+        {isLoading ? (
+          <div className="flex justify-center p-8">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t('ads.campaign', 'Campanha')}</TableHead>
+                <TableHead>
+                  {t('ads.location_model', 'Local & Modelo')}
+                </TableHead>
+                <TableHead>{t('ads.performance', 'Performance')}</TableHead>
+                <TableHead>{t('admin.status', 'Status')}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {displayAds.map((a) => {
+                const advertiserId = a.advertiser_id || a.advertiserId
+                const adv = advertisers.find((ad) => ad.id === advertiserId)
+                const billingType = a.billing_type || a.billingType
+
+                return (
+                  <TableRow key={a.id}>
+                    <TableCell>
+                      <span className="font-bold block">{a.title}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {adv?.companyName || 'N/A'}
+                      </span>
+                    </TableCell>
+                    <TableCell className="capitalize">
+                      {a.placement?.replace(/_/g, ' ')}
+                      <Badge variant="outline" className="ml-2 uppercase">
+                        {billingType}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-sm">
+                        V: {formatNumber(a.views || 0)} | C:{' '}
+                        {formatNumber(a.clicks || 0)}
                       </div>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Badge>{a.status}</Badge>
+                      {a.budget && (
+                        <div className="text-xs text-muted-foreground">
+                          Budget: {formatCurrency(a.budget)}
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Badge>{a.status}</Badge>
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
+              {displayAds.length === 0 && (
+                <TableRow>
+                  <TableCell
+                    colSpan={4}
+                    className="text-center text-muted-foreground py-8"
+                  >
+                    Nenhuma campanha encontrada.
                   </TableCell>
                 </TableRow>
-              )
-            })}
-          </TableBody>
-        </Table>
+              )}
+            </TableBody>
+          </Table>
+        )}
       </CardContent>
     </Card>
   )
