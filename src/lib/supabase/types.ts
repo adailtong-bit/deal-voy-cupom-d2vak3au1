@@ -11,7 +11,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: '14.5'
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -99,11 +99,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'affiliate_transactions_affiliate_id_fkey'
-            columns: ['affiliate_id']
+            foreignKeyName: "affiliate_transactions_affiliate_id_fkey"
+            columns: ["affiliate_id"]
             isOneToOne: false
-            referencedRelation: 'affiliate_partners'
-            referencedColumns: ['id']
+            referencedRelation: "affiliate_partners"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -196,9 +196,11 @@ export type Database = {
       }
       discovered_promotions: {
         Row: {
+          alert_radius: number | null
           campaign_name: string | null
           captured_at: string | null
           category: string | null
+          company_id: string | null
           country: string | null
           coverage: string | null
           created_at: string | null
@@ -207,20 +209,32 @@ export type Database = {
           discount: string | null
           discount_percentage: number | null
           discount_rules: string | null
+          enable_proximity_alerts: boolean | null
+          enable_trigger: boolean | null
+          end_date: string | null
           id: string
           image_url: string | null
+          is_seasonal: boolean | null
+          limit_type: string | null
           original_price: number | null
           price: number | null
           product_link: string | null
+          reward_id: string | null
           source_url: string | null
+          start_date: string | null
           status: string | null
           store_name: string | null
           title: string
+          total_limit: number | null
+          trigger_threshold: number | null
+          trigger_type: string | null
         }
         Insert: {
+          alert_radius?: number | null
           campaign_name?: string | null
           captured_at?: string | null
           category?: string | null
+          company_id?: string | null
           country?: string | null
           coverage?: string | null
           created_at?: string | null
@@ -229,20 +243,32 @@ export type Database = {
           discount?: string | null
           discount_percentage?: number | null
           discount_rules?: string | null
+          enable_proximity_alerts?: boolean | null
+          enable_trigger?: boolean | null
+          end_date?: string | null
           id?: string
           image_url?: string | null
+          is_seasonal?: boolean | null
+          limit_type?: string | null
           original_price?: number | null
           price?: number | null
           product_link?: string | null
+          reward_id?: string | null
           source_url?: string | null
+          start_date?: string | null
           status?: string | null
           store_name?: string | null
           title: string
+          total_limit?: number | null
+          trigger_threshold?: number | null
+          trigger_type?: string | null
         }
         Update: {
+          alert_radius?: number | null
           campaign_name?: string | null
           captured_at?: string | null
           category?: string | null
+          company_id?: string | null
           country?: string | null
           coverage?: string | null
           created_at?: string | null
@@ -251,15 +277,25 @@ export type Database = {
           discount?: string | null
           discount_percentage?: number | null
           discount_rules?: string | null
+          enable_proximity_alerts?: boolean | null
+          enable_trigger?: boolean | null
+          end_date?: string | null
           id?: string
           image_url?: string | null
+          is_seasonal?: boolean | null
+          limit_type?: string | null
           original_price?: number | null
           price?: number | null
           product_link?: string | null
+          reward_id?: string | null
           source_url?: string | null
+          start_date?: string | null
           status?: string | null
           store_name?: string | null
           title?: string
+          total_limit?: number | null
+          trigger_threshold?: number | null
+          trigger_type?: string | null
         }
         Relationships: []
       }
@@ -426,33 +462,33 @@ export type Database = {
   }
 }
 
-type DatabaseWithoutInternals = Omit<Database, '__InternalSupabase'>
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, 'public'>]
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema['Tables'] &
-        DefaultSchema['Views'])
-    ? (DefaultSchema['Tables'] &
-        DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R
       }
       ? R
@@ -461,23 +497,23 @@ export type Tables<
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema['Tables']
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Insert: infer I
       }
       ? I
@@ -486,23 +522,23 @@ export type TablesInsert<
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema['Tables']
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Update: infer U
       }
       ? U
@@ -511,36 +547,36 @@ export type TablesUpdate<
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema['Enums']
+    | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
-    ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema['CompositeTypes']
+    | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
-    ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
 
 export const Constants = {
@@ -548,6 +584,7 @@ export const Constants = {
     Enums: {},
   },
 } as const
+
 
 // ====== DATABASE EXTENDED CONTEXT (auto-generated) ======
 // This section contains actual PostgreSQL column types, constraints, RLS policies,
@@ -629,6 +666,18 @@ export const Constants = {
 //   campaign_name: text (nullable)
 //   coverage: text (nullable, default: 'toda a rede'::text)
 //   discount_rules: text (nullable, default: 'percentual'::text)
+//   start_date: timestamp with time zone (nullable)
+//   end_date: timestamp with time zone (nullable)
+//   limit_type: text (nullable)
+//   total_limit: integer (nullable)
+//   enable_proximity_alerts: boolean (nullable, default: false)
+//   alert_radius: numeric (nullable)
+//   is_seasonal: boolean (nullable, default: false)
+//   enable_trigger: boolean (nullable, default: false)
+//   trigger_type: text (nullable)
+//   trigger_threshold: numeric (nullable)
+//   reward_id: text (nullable)
+//   company_id: text (nullable)
 // Table: franchises
 //   id: text (not null)
 //   name: text (nullable)
@@ -738,6 +787,11 @@ export const Constants = {
 //   Policy "auth_all_promotions" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
+//   Policy "auth_insert_promotions" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "auth_update_promotions" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
 //   Policy "public_all_discovered_promotions" (ALL, PERMISSIVE) roles={public}
 //     USING: true
 //     WITH CHECK: true
@@ -791,12 +845,12 @@ export const Constants = {
 //       (NEW.raw_user_meta_data->>'role' = 'affiliate')
 //     )
 //     ON CONFLICT (id) DO UPDATE
-//     SET
+//     SET 
 //       email = EXCLUDED.email,
 //       name = COALESCE(EXCLUDED.name, public.profiles.name),
 //       role = COALESCE(EXCLUDED.role, public.profiles.role),
 //       is_affiliate = COALESCE(EXCLUDED.is_affiliate, public.profiles.is_affiliate);
-//
+//   
 //     -- 2. Insert into affiliate_partners if affiliate
 //     IF NEW.raw_user_meta_data->>'role' = 'affiliate' THEN
 //       INSERT INTO public.affiliate_partners (id, user_id, email, name, status)
@@ -807,14 +861,14 @@ export const Constants = {
 //         COALESCE(NEW.raw_user_meta_data->>'name', split_part(NEW.email, '@', 1)),
 //         'pending'
 //       )
-//       ON CONFLICT (email) DO UPDATE
+//       ON CONFLICT (email) DO UPDATE 
 //       SET user_id = EXCLUDED.user_id;
 //     END IF;
-//
+//   
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION handle_new_user_before()
 //   CREATE OR REPLACE FUNCTION public.handle_new_user_before()
 //    RETURNS trigger
@@ -826,7 +880,7 @@ export const Constants = {
 //       RETURN NEW;
 //     END;
 //     $function$
-//
+//   
 // FUNCTION rls_auto_enable()
 //   CREATE OR REPLACE FUNCTION public.rls_auto_enable()
 //    RETURNS event_trigger
@@ -857,10 +911,11 @@ export const Constants = {
 //     END LOOP;
 //   END;
 //   $function$
-//
+//   
 
 // --- INDEXES ---
 // Table: affiliate_partners
 //   CREATE UNIQUE INDEX affiliate_partners_email_key ON public.affiliate_partners USING btree (email)
 // Table: site_mappings
 //   CREATE UNIQUE INDEX site_mappings_domain_key ON public.site_mappings USING btree (domain)
+
