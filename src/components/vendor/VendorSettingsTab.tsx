@@ -108,10 +108,10 @@ export function VendorSettingsTab({ company }: any) {
       ? LOCATION_DATA[currentCountry]?.states[data.addressState] || []
       : []
 
+  const isUSA = ['USA', 'US', 'United States'].includes(currentCountry || 'USA')
+
   const formattedAddress = useMemo(() => {
     const {
-      addressCountry,
-      country,
       addressState: s,
       addressCity: ci,
       addressZip: z,
@@ -119,29 +119,48 @@ export function VendorSettingsTab({ company }: any) {
       addressNumber: n,
       addressComplement: comp,
     } = data
-    const c = addressCountry || country
-    if (!st || !n)
-      return t(
-        'vendor.settings_tab.fill_address',
-        'Fill Street and Number to preview',
-      )
+
+    if (!st && !n)
+      return t('vendor.settings_tab.fill_address', 'Fill Street to preview')
 
     const cText = comp ? ` - ${comp}` : ''
     const usCText = comp ? `, ${comp}` : ''
 
-    if (c === 'USA') {
-      return `${n} ${st}${usCText}, ${ci || 'City'}, ${s || 'State'} ${z || 'ZIP'}`
+    if (isUSA) {
+      const streetPart = n ? `${n} ${st}` : st
+      return `${streetPart}${usCText}, ${ci || 'City'}, ${s || 'State'} ${z || 'ZIP'}`
     }
-    return `${st}, ${n}${cText}, ${ci || 'City'} - ${s || 'State'}, ${z || 'ZIP'}`
-  }, [data, t])
+    return `${st}${n ? `, ${n}` : ''}${cText}, ${ci || 'City'} - ${s || 'State'}, ${z || 'ZIP'}`
+  }, [data, isUSA, t])
+
+  const handleZipChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let val = e.target.value.replace(/\D/g, '')
+    if (
+      currentCountry === 'Brasil' ||
+      currentCountry === 'Brazil' ||
+      currentCountry === 'BR'
+    ) {
+      if (val.length > 8) val = val.slice(0, 8)
+      val = val.replace(/^(\d{5})(\d{0,3})/, '$1-$2').replace(/-$/, '')
+    } else if (isUSA) {
+      if (val.length > 5) val = val.slice(0, 5)
+    } else {
+      if (val.length > 10) val = val.slice(0, 10)
+    }
+    handleChange('addressZip', val)
+  }
 
   const handleSave = async () => {
     try {
+      const targetCountry = data.addressCountry || data.country || 'USA'
+      const targetIsUSA = ['USA', 'US', 'United States'].includes(targetCountry)
+
       const payload = {
         ...data,
-        country: data.addressCountry || data.country,
-        addressCountry: data.addressCountry || data.country,
+        country: targetCountry,
+        addressCountry: targetCountry,
         region: data.region,
+        addressNumber: targetIsUSA ? '' : data.addressNumber,
       }
 
       // Sanitize payload for backend read-only fields
@@ -173,7 +192,7 @@ export function VendorSettingsTab({ company }: any) {
           address_city: data.addressCity || '',
           address_zip: data.addressZip || '',
           address_street: data.addressStreet || '',
-          address_number: data.addressNumber || '',
+          address_number: payload.addressNumber || '',
           address_complement: data.addressComplement || '',
           updated_at: new Date().toISOString(),
         },
@@ -402,40 +421,46 @@ export function VendorSettingsTab({ company }: any) {
               </Label>
               <Input
                 value={data.addressZip || ''}
-                onChange={(e) => handleChange('addressZip', e.target.value)}
-                placeholder={
-                  (data.addressCountry || data.country) === 'USA'
-                    ? '12345'
-                    : '00000-000'
-                }
+                onChange={handleZipChange}
+                placeholder={isUSA ? '12345' : '00000-000'}
                 className="bg-white"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
-            <div className="space-y-2 sm:col-span-6">
+            <div
+              className={`space-y-2 ${isUSA ? 'sm:col-span-8' : 'sm:col-span-6'}`}
+            >
               <Label className="text-slate-700">
                 {t('vendor.settings_tab.street', 'Street / Address')}
               </Label>
               <Input
                 value={data.addressStreet || ''}
                 onChange={(e) => handleChange('addressStreet', e.target.value)}
-                placeholder="e.g. 123 Ocean Drive"
+                placeholder={
+                  isUSA ? 'e.g. 123 Ocean Drive' : 'e.g. Rua Paulista'
+                }
                 className="bg-white"
               />
             </div>
-            <div className="space-y-2 sm:col-span-2">
-              <Label className="text-slate-700">
-                {t('vendor.settings_tab.number', 'Number')}
-              </Label>
-              <Input
-                value={data.addressNumber || ''}
-                onChange={(e) => handleChange('addressNumber', e.target.value)}
-                placeholder="1000"
-                className="bg-white"
-              />
-            </div>
+
+            {!isUSA && (
+              <div className="space-y-2 sm:col-span-2 animate-in fade-in zoom-in duration-200">
+                <Label className="text-slate-700">
+                  {t('vendor.settings_tab.number', 'Number')}
+                </Label>
+                <Input
+                  value={data.addressNumber || ''}
+                  onChange={(e) =>
+                    handleChange('addressNumber', e.target.value)
+                  }
+                  placeholder="1000"
+                  className="bg-white"
+                />
+              </div>
+            )}
+
             <div className="space-y-2 sm:col-span-4">
               <Label className="text-slate-700">
                 {t('vendor.settings_tab.complement', 'Complement (Optional)')}

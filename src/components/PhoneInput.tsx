@@ -107,8 +107,10 @@ export function PhoneInput({
       if (val.length > 7) {
         formatted = val.replace(/^(\d{3})(\d{4})(\d{4})/, '$1-$2-$3')
       }
+    } else {
+      if (val.length > 15) val = val.slice(0, 15) // Max generic length
+      formatted = val
     }
-    // Generic fallback for others if needed, though simple input works
 
     setPhoneNumber(formatted)
     onChange(`${country.dial} ${formatted}`)

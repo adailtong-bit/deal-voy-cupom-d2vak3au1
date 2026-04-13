@@ -43,11 +43,13 @@ export function AddressForm({
   const handleZipChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let val = e.target.value.replace(/\D/g, '')
     // Dynamic Masking
-    if (country === 'Brasil') {
+    if (country === 'Brasil' || country === 'Brazil' || country === 'BR') {
       if (val.length > 8) val = val.slice(0, 8)
-      val = val.replace(/^(\d{5})(\d{0,3})/, '$1-$2')
-    } else if (country === 'USA') {
+      val = val.replace(/^(\d{5})(\d{0,3})/, '$1-$2').replace(/-$/, '')
+    } else if (country === 'USA' || country === 'US') {
       if (val.length > 5) val = val.slice(0, 5)
+    } else {
+      if (val.length > 10) val = val.slice(0, 10)
     }
     setZip(val)
     onChange({ state, city, zip: val, address })
