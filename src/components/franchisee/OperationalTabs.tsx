@@ -13,9 +13,12 @@ import {
   Plus,
   Edit,
   Trash2,
+  X,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { useState, useEffect } from 'react'
+import { Input } from '@/components/ui/input'
 
 export function SeasonalTab() {
   return (
@@ -157,8 +160,47 @@ export function CategoriesTab() {
 }
 
 export function InterestsTab() {
+  const [tags, setTags] = useState<string[]>([])
+  const [isAdding, setIsAdding] = useState(false)
+  const [newTag, setNewTag] = useState('')
+
+  useEffect(() => {
+    const saved = localStorage.getItem('franchisee_interests')
+    if (saved) {
+      setTags(JSON.parse(saved))
+    } else {
+      setTags([
+        'Comida Vegana',
+        'Música Ao Vivo',
+        'Pet Friendly',
+        'Artesanal',
+        'Ao Ar Livre',
+        'Desconto Estudante',
+        'Gourmet',
+        'Fitness',
+        'Happy Hour',
+      ])
+    }
+  }, [])
+
+  const handleAdd = () => {
+    if (newTag.trim() && !tags.includes(newTag.trim())) {
+      const updated = [...tags, newTag.trim()]
+      setTags(updated)
+      localStorage.setItem('franchisee_interests', JSON.stringify(updated))
+    }
+    setNewTag('')
+    setIsAdding(false)
+  }
+
+  const handleRemove = (tagToRemove: string) => {
+    const updated = tags.filter((t) => t !== tagToRemove)
+    setTags(updated)
+    localStorage.setItem('franchisee_interests', JSON.stringify(updated))
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in-up">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">
@@ -168,34 +210,55 @@ export function InterestsTab() {
             Mapeamento de preferências dos consumidores locais.
           </p>
         </div>
-        <Button>
+        <Button onClick={() => setIsAdding(true)}>
           <Plus className="w-4 h-4 mr-2" /> Nova Tag
         </Button>
       </div>
+
+      {isAdding && (
+        <Card className="border-primary/50 bg-primary/5">
+          <CardContent className="p-4 flex items-center gap-3">
+            <Input
+              placeholder="Nome da nova tag de interesse..."
+              value={newTag}
+              onChange={(e) => setNewTag(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+              autoFocus
+            />
+            <Button onClick={handleAdd}>Salvar</Button>
+            <Button variant="ghost" onClick={() => setIsAdding(false)}>
+              Cancelar
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardContent className="p-6">
-          <div className="flex flex-wrap gap-3">
-            {[
-              'Comida Vegana',
-              'Música Ao Vivo',
-              'Pet Friendly',
-              'Artesanal',
-              'Ao Ar Livre',
-              'Desconto Estudante',
-              'Gourmet',
-              'Fitness',
-              'Happy Hour',
-            ].map((tag, i) => (
-              <Badge
-                key={i}
-                variant="secondary"
-                className="px-4 py-2 text-sm cursor-pointer hover:bg-primary hover:text-white transition-colors bg-slate-100 text-slate-700 border border-slate-200 shadow-sm"
-              >
-                <Tag className="w-3 h-3 mr-2 inline opacity-70" />
-                {tag}
-              </Badge>
-            ))}
-          </div>
+          {tags.length === 0 ? (
+            <p className="text-muted-foreground text-center py-8">
+              Nenhuma tag cadastrada.
+            </p>
+          ) : (
+            <div className="flex flex-wrap gap-3">
+              {tags.map((tag, i) => (
+                <Badge
+                  key={i}
+                  variant="secondary"
+                  className="px-4 py-2 text-sm group flex items-center bg-slate-100 text-slate-700 border border-slate-200 shadow-sm hover:bg-slate-200 transition-colors"
+                >
+                  <Tag className="w-3 h-3 mr-2 inline opacity-70" />
+                  {tag}
+                  <button
+                    onClick={() => handleRemove(tag)}
+                    className="ml-2 hover:bg-red-100 text-slate-400 hover:text-red-600 rounded-full p-0.5 transition-colors"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </Badge>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

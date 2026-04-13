@@ -17,10 +17,8 @@ import {
   MonetizationTab,
   AdsRoyaltiesTab,
 } from '@/components/franchisee/FinanceTabs'
-import {
-  SeasonalTab,
-  InterestsTab,
-} from '@/components/franchisee/OperationalTabs'
+import { InterestsTab } from '@/components/franchisee/OperationalTabs'
+import { AdminSeasonalTab } from '@/components/admin/AdminSeasonalTab'
 
 import { PromotionCrawler } from '@/components/admin/PromotionCrawler'
 import { DataInsightsTab } from '@/components/admin/DataInsightsTab'
@@ -172,7 +170,7 @@ export default function FranchiseeDashboard() {
 
           {activeTab === 'seasonal' && (
             <div className="animate-fade-in-up">
-              <SeasonalTab />
+              <AdminSeasonalTab franchiseId={franchiseToUse.id} />
             </div>
           )}
           {activeTab === 'categories' && (
