@@ -437,6 +437,7 @@ export function CampaignFormDialog({
     const finalCompanyId = data.companyId || companyId || ''
     if (needsCompanySelection && !finalCompanyId) {
       form.setError('companyId', { message: 'Selecione uma loja.' })
+      toast.error('Por favor, selecione uma loja parceira.')
       return
     }
 
@@ -469,68 +470,91 @@ export function CampaignFormDialog({
         ]
       : []
 
-    if (coupon) {
-      updateCampaign(coupon.id, {
-        title: data.title,
-        description: data.description,
-        category: data.category,
-        companyId: finalCompanyId,
-        franchiseId: franchiseId || coupon.franchiseId,
-        instructions: data.instructions,
-        discount: formattedDiscount,
-        image: data.image || coupon.image,
-        externalUrl: finalUrl || coupon.externalUrl,
-        offerType: finalUrl ? 'online' : coupon.offerType || 'in-store',
-        address: data.scope === 'specific' ? data.specificStore : '',
-        startDate: data.startDate,
-        endDate: data.endDate,
-        totalLimit: totalLimit,
-        isUnlimited: isUnlimited,
-        totalAvailable: isUnlimited
-          ? undefined
-          : Math.max(0, (data.totalLimit || 100) - (coupon.reservedCount || 0)),
-        enableProximityAlerts: data.enableProximityAlerts,
-        alertRadius: data.enableProximityAlerts ? data.alertRadius : undefined,
-        isSeasonal: data.isSeasonal,
-        behavioralTriggers: triggers,
-      })
-    } else {
-      addCoupon({
-        id: Math.random().toString(),
-        companyId: finalCompanyId,
-        franchiseId: franchiseId,
-        storeName:
-          data.scope === 'specific' && data.specificStore
-            ? data.specificStore
-            : company?.name || 'Loja',
-        title: data.title,
-        description: data.description,
-        instructions: data.instructions,
-        discount: formattedDiscount,
-        image: data.image || 'https://img.usecurling.com/p/400/300?q=sale',
-        externalUrl: finalUrl,
-        offerType: finalUrl ? 'online' : 'in-store',
-        address: data.scope === 'specific' ? data.specificStore : '',
-        startDate: data.startDate,
-        endDate: data.endDate,
-        expiryDate: data.endDate,
-        totalLimit: totalLimit,
-        isUnlimited: isUnlimited,
-        totalAvailable: totalLimit,
-        reservedCount: 0,
-        category: data.category || 'Outros',
-        distance: 0,
-        code: `CMP-${Math.floor(Math.random() * 10000)}`,
-        coordinates: { lat: -23.55052, lng: -46.633308 },
-        status: 'active',
-        source: 'partner',
-        enableProximityAlerts: data.enableProximityAlerts,
-        alertRadius: data.enableProximityAlerts ? data.alertRadius : undefined,
-        isSeasonal: data.isSeasonal,
-        behavioralTriggers: triggers,
-      })
+    try {
+      if (coupon) {
+        updateCampaign(coupon.id, {
+          title: data.title,
+          description: data.description,
+          category: data.category,
+          companyId: finalCompanyId,
+          franchiseId: franchiseId || coupon.franchiseId,
+          instructions: data.instructions,
+          discount: formattedDiscount,
+          image: data.image || coupon.image,
+          externalUrl: finalUrl || coupon.externalUrl,
+          offerType: finalUrl ? 'online' : coupon.offerType || 'in-store',
+          address: data.scope === 'specific' ? data.specificStore : '',
+          startDate: data.startDate,
+          endDate: data.endDate,
+          totalLimit: totalLimit,
+          isUnlimited: isUnlimited,
+          totalAvailable: isUnlimited
+            ? undefined
+            : Math.max(
+                0,
+                (data.totalLimit || 100) - (coupon.reservedCount || 0),
+              ),
+          enableProximityAlerts: data.enableProximityAlerts,
+          alertRadius: data.enableProximityAlerts
+            ? data.alertRadius
+            : undefined,
+          isSeasonal: data.isSeasonal,
+          behavioralTriggers: triggers,
+        })
+        toast.success(
+          t('vendor.form.success_update', 'Campanha atualizada com sucesso!'),
+        )
+      } else {
+        addCoupon({
+          id: Math.random().toString(),
+          companyId: finalCompanyId,
+          franchiseId: franchiseId,
+          storeName:
+            data.scope === 'specific' && data.specificStore
+              ? data.specificStore
+              : company?.name || 'Loja',
+          title: data.title,
+          description: data.description,
+          instructions: data.instructions,
+          discount: formattedDiscount,
+          image: data.image || 'https://img.usecurling.com/p/400/300?q=sale',
+          externalUrl: finalUrl,
+          offerType: finalUrl ? 'online' : 'in-store',
+          address: data.scope === 'specific' ? data.specificStore : '',
+          startDate: data.startDate,
+          endDate: data.endDate,
+          expiryDate: data.endDate,
+          totalLimit: totalLimit,
+          isUnlimited: isUnlimited,
+          totalAvailable: totalLimit,
+          reservedCount: 0,
+          category: data.category || 'Outros',
+          distance: 0,
+          code: `CMP-${Math.floor(Math.random() * 10000)}`,
+          coordinates: { lat: -23.55052, lng: -46.633308 },
+          status: 'active',
+          source: 'partner',
+          enableProximityAlerts: data.enableProximityAlerts,
+          alertRadius: data.enableProximityAlerts
+            ? data.alertRadius
+            : undefined,
+          isSeasonal: data.isSeasonal,
+          behavioralTriggers: triggers,
+        })
+        toast.success(
+          t('vendor.form.success_create', 'Campanha criada com sucesso!'),
+        )
+      }
+      onOpenChange(false)
+    } catch (error) {
+      console.error('Error saving campaign:', error)
+      toast.error(
+        t(
+          'vendor.form.error_save',
+          'Erro ao salvar a campanha. Verifique os dados e tente novamente.',
+        ),
+      )
     }
-    onOpenChange(false)
   }
 
   const handleTestLink = () => {
@@ -589,7 +613,15 @@ export function CampaignFormDialog({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <Form {...form}>
                 <form
-                  onSubmit={form.handleSubmit(onSubmit)}
+                  onSubmit={form.handleSubmit(onSubmit, (errors) => {
+                    console.log('Form errors:', errors)
+                    toast.error(
+                      t(
+                        'vendor.form.validation_error',
+                        'Por favor, verifique os campos obrigatórios e tente novamente.',
+                      ),
+                    )
+                  })}
                   className="space-y-6"
                 >
                   <div className="space-y-4">
@@ -1515,7 +1547,7 @@ export function CampaignFormDialog({
                     >
                       {t('vendor.form.cancel', 'Cancelar')}
                     </Button>
-                    <Button type="submit" disabled={!form.formState.isValid}>
+                    <Button type="submit">
                       {coupon
                         ? t('vendor.form.save', 'Salvar Alterações')
                         : t('vendor.form.create', 'Criar Campanha')}
