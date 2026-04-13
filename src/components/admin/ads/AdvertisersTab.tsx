@@ -20,6 +20,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { useForm } from 'react-hook-form'
+import { PhoneInput } from '@/components/PhoneInput'
 import { useLanguage } from '@/stores/LanguageContext'
 import { toast } from 'sonner'
 import {
@@ -32,7 +33,7 @@ export function AdvertisersTab() {
   const [advertisers, setAdvertisers] = useState<Advertiser[]>([])
   const [isOpen, setIsOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const { register, handleSubmit, reset } = useForm()
+  const { register, handleSubmit, reset, watch, setValue } = useForm()
   const { t } = useLanguage()
 
   const loadAdvertisers = async () => {
@@ -78,55 +79,89 @@ export function AdvertisersTab() {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>{t('ads.advertisers_companies')}</CardTitle>
+        <CardTitle>{t('ads.advertisers_companies', 'Anunciantes')}</CardTitle>
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>
-            <Button>{t('ads.new_advertiser')}</Button>
+            <Button>{t('ads.new_advertiser', 'Novo Anunciante')}</Button>
           </DialogTrigger>
           <DialogContent className="max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>{t('ads.register_advertiser')}</DialogTitle>
+              <DialogTitle>
+                {t('ads.register_advertiser', 'Cadastrar')}
+              </DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
-                <Label>{t('ads.company_name')}</Label>
+                <Label>{t('ads.company_name', 'Razão Social')}</Label>
                 <Input {...register('companyName')} required />
               </div>
               <div className="space-y-2">
-                <Label>{t('ads.tax_id')}</Label>
-                <Input {...register('taxId')} required />
+                <Label>{t('ads.tax_id', 'CNPJ / CPF')}</Label>
+                <Input
+                  {...register('taxId')}
+                  required
+                  onChange={(e) => {
+                    let v = e.target.value.replace(/\D/g, '')
+                    if (v.length <= 11) {
+                      v = v.replace(
+                        /(\d{3})(\d{3})(\d{3})(\d{1,2})/,
+                        '$1.$2.$3-$4',
+                      )
+                    } else {
+                      v = v.replace(
+                        /(\d{2})(\d{3})(\d{3})(\d{4})(\d{1,2})/,
+                        '$1.$2.$3/$4-$5',
+                      )
+                    }
+                    e.target.value = v
+                  }}
+                />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>{t('auth.email')}</Label>
+                  <Label>{t('auth.email', 'E-mail')}</Label>
                   <Input type="email" {...register('email')} required />
                 </div>
                 <div className="space-y-2">
-                  <Label>{t('phone.label')}</Label>
-                  <Input {...register('phone')} required />
+                  <Label>{t('phone.label', 'Telefone')}</Label>
+                  <PhoneInput
+                    value={watch('phone') || ''}
+                    onChange={(val) =>
+                      setValue('phone', val, { shouldValidate: true })
+                    }
+                    className="w-full"
+                  />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>{t('address.street')}</Label>
+                <Label>{t('address.street', 'Rua')}</Label>
                 <Input {...register('street')} required />
               </div>
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label>Número</Label>
+                  <Label>{t('address.number', 'Número')}</Label>
                   <Input {...register('number')} required />
                 </div>
                 <div className="space-y-2">
-                  <Label>{t('address.city')}</Label>
+                  <Label>{t('address.city', 'Cidade')}</Label>
                   <Input {...register('city')} required />
                 </div>
                 <div className="space-y-2">
-                  <Label>{t('address.state')}</Label>
+                  <Label>{t('address.state', 'Estado')}</Label>
                   <Input {...register('state')} required />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>{t('address.zip')}</Label>
-                <Input {...register('zip')} required />
+                <Label>{t('address.zip', 'CEP')}</Label>
+                <Input
+                  {...register('zip')}
+                  required
+                  onChange={(e) => {
+                    let v = e.target.value.replace(/\D/g, '')
+                    v = v.replace(/(\d{5})(\d{1,3})/, '$1-$2')
+                    e.target.value = v
+                  }}
+                />
               </div>
               <DialogFooter>
                 <Button type="submit" disabled={isLoading}>
@@ -143,10 +178,10 @@ export function AdvertisersTab() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>{t('ads.company')}</TableHead>
-              <TableHead>{t('ads.tax_id')}</TableHead>
-              <TableHead>{t('ads.contact')}</TableHead>
-              <TableHead>{t('ads.locality')}</TableHead>
+              <TableHead>{t('ads.company', 'Empresa')}</TableHead>
+              <TableHead>{t('ads.tax_id', 'CNPJ/CPF')}</TableHead>
+              <TableHead>{t('ads.contact', 'Contato')}</TableHead>
+              <TableHead>{t('ads.locality', 'Local')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -172,7 +207,7 @@ export function AdvertisersTab() {
                   colSpan={4}
                   className="text-center text-muted-foreground"
                 >
-                  {t('ads.no_advertisers')}
+                  {t('ads.no_advertisers', 'Nenhum anunciante.')}
                 </TableCell>
               </TableRow>
             )}

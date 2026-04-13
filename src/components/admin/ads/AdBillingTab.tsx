@@ -38,17 +38,17 @@ export function AdBillingTab() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t('ads.billing_invoicing')}</CardTitle>
+        <CardTitle>{t('ads.billing_invoicing', 'Faturamento')}</CardTitle>
       </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>{t('ads.ref_date')}</TableHead>
-              <TableHead>{t('ads.advertiser')}</TableHead>
-              <TableHead>{t('ads.amount')}</TableHead>
-              <TableHead>{t('ads.due_date')}</TableHead>
-              <TableHead>{t('admin.status')}</TableHead>
+              <TableHead>{t('ads.ref_date', 'Ref. / Data')}</TableHead>
+              <TableHead>{t('ads.advertiser', 'Anunciante')}</TableHead>
+              <TableHead>{t('ads.amount', 'Valor')}</TableHead>
+              <TableHead>{t('ads.due_date', 'Vencimento')}</TableHead>
+              <TableHead>{t('admin.status', 'Status')}</TableHead>
               <TableHead className="text-right">{t('admin.action')}</TableHead>
             </TableRow>
           </TableHeader>
@@ -60,7 +60,7 @@ export function AdBillingTab() {
                   <TableCell>
                     <div className="font-medium">{inv.referenceNumber}</div>
                     <div className="text-xs text-muted-foreground">
-                      {t('ads.issue_date')}:{' '}
+                      {t('ads.issue_date', 'Emissão')}:{' '}
                       {formatDate(inv.issueDate, 'pt-BR')}
                     </div>
                   </TableCell>
@@ -86,11 +86,12 @@ export function AdBillingTab() {
                       }
                       className={inv.status === 'paid' ? 'bg-green-500' : ''}
                     >
-                      {inv.status === 'draft' && t('ads.draft')}
-                      {inv.status === 'sent' && t('ads.sent')}
-                      {inv.status === 'paid' && t('ads.paid')}
-                      {inv.status === 'overdue' && t('ads.overdue')}
-                      {inv.status === 'canceled' && t('ads.canceled')}
+                      {inv.status === 'draft' && t('ads.draft', 'Rascunho')}
+                      {inv.status === 'sent' && t('ads.sent', 'Enviado')}
+                      {inv.status === 'paid' && t('ads.paid', 'Pago')}
+                      {inv.status === 'overdue' && t('ads.overdue', 'Atrasado')}
+                      {inv.status === 'canceled' &&
+                        t('ads.canceled', 'Cancelado')}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
@@ -101,7 +102,7 @@ export function AdBillingTab() {
                           size="sm"
                           onClick={() => updateInvoiceStatus(inv.id, 'sent')}
                         >
-                          {t('ads.send_invoice')}
+                          {t('ads.send_invoice', 'Enviar Fatura')}
                         </Button>
                       )}
 
@@ -123,20 +124,26 @@ export function AdBillingTab() {
                               size="sm"
                               className="text-green-600 border-green-200 hover:bg-green-50"
                             >
-                              {t('ads.register_payment')}
+                              {t('ads.register_payment', 'Registrar Pagamento')}
                             </Button>
                           </DialogTrigger>
                           <DialogContent>
                             <DialogHeader>
                               <DialogTitle>
-                                {t('ads.confirm_payment')}
+                                {t(
+                                  'ads.confirm_payment',
+                                  'Confirmar Pagamento',
+                                )}
                               </DialogTitle>
                             </DialogHeader>
                             <div className="space-y-4 py-4">
                               <p className="text-sm text-muted-foreground">
-                                {t('ads.reconciliation_desc')}
+                                {t(
+                                  'ads.reconciliation_desc',
+                                  'Informe o código de referência para conciliação.',
+                                )}
                               </p>
-                              <Label>{t('ads.ref_code')}</Label>
+                              <Label>{t('ads.ref_code', 'Código')}</Label>
                               <Input
                                 placeholder="Ex: INV-2024-..."
                                 value={refInput}
@@ -152,7 +159,10 @@ export function AdBillingTab() {
                                   setRefInput('')
                                 }}
                               >
-                                {t('ads.confirm_receipt')}
+                                {t(
+                                  'ads.confirm_receipt',
+                                  'Confirmar Recebimento',
+                                )}
                               </Button>
                             </DialogFooter>
                           </DialogContent>
@@ -172,7 +182,7 @@ export function AdBillingTab() {
                         <DialogContent>
                           <DialogHeader>
                             <DialogTitle>
-                              {t('ads.invoice_data')} (
+                              {t('ads.invoice_data', 'Dados da Fatura')} (
                               {selectedInvoice?.inv.referenceNumber})
                             </DialogTitle>
                           </DialogHeader>
@@ -183,7 +193,7 @@ export function AdBillingTab() {
                                   {selectedInvoice.adv.companyName}
                                 </p>
                                 <p className="text-sm text-muted-foreground">
-                                  {t('ads.tax_id_abbr')}:{' '}
+                                  {t('ads.tax_id_abbr', 'Doc')}:{' '}
                                   {selectedInvoice.adv.taxId}
                                 </p>
                               </div>
@@ -203,10 +213,10 @@ export function AdBillingTab() {
                               <div className="bg-muted p-4 rounded-md flex justify-between items-center">
                                 <div>
                                   <span className="font-bold block">
-                                    {t('ads.total_billed')}
+                                    {t('ads.total_billed', 'Total Faturado')}
                                   </span>
                                   <span className="text-xs text-muted-foreground">
-                                    {t('ads.due_date')}:{' '}
+                                    {t('ads.due_date', 'Vencimento')}:{' '}
                                     {formatDate(
                                       selectedInvoice.inv.dueDate,
                                       'pt-BR',

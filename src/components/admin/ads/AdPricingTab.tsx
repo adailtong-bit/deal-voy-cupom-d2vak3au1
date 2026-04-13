@@ -47,7 +47,7 @@ export function AdPricingTab() {
       billingType: data.billingType as AdBillingType,
       durationDays:
         data.billingType === 'fixed' ? parseInt(data.durationDays) : undefined,
-      price: parseFloat(data.price),
+      price: parseFloat(data.price?.replace(/\D/g, '') || '0') / 100,
     })
     setIsOpen(false)
     reset()
@@ -56,18 +56,18 @@ export function AdPricingTab() {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>{t('ads.pricing_table')}</CardTitle>
+        <CardTitle>{t('ads.pricing_table', 'Tabela de Preços')}</CardTitle>
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>
-            <Button>{t('ads.new_pricing_rule')}</Button>
+            <Button>{t('ads.new_pricing_rule', 'Nova Regra')}</Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>{t('ads.add_pricing')}</DialogTitle>
+              <DialogTitle>{t('ads.add_pricing', 'Adicionar')}</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
-                <Label>{t('ads.placement')}</Label>
+                <Label>{t('ads.location', 'Localização')}</Label>
                 <Select
                   onValueChange={(v) => setValue('placement', v)}
                   required
@@ -76,22 +76,32 @@ export function AdPricingTab() {
                     <SelectValue placeholder={t('common.select')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="top">Top Banner</SelectItem>
-                    <SelectItem value="bottom">Bottom Banner</SelectItem>
-                    <SelectItem value="sidebar">Sidebar</SelectItem>
-                    <SelectItem value="search">Search Results</SelectItem>
-                    <SelectItem value="offer_of_the_day">
-                      Offer of the Day
+                    <SelectItem value="top">
+                      {t('ads.placement_top', 'Top Banner')}
                     </SelectItem>
-                    <SelectItem value="top_ranking">Top Ranking</SelectItem>
+                    <SelectItem value="bottom">
+                      {t('ads.placement_bottom', 'Bottom Banner')}
+                    </SelectItem>
+                    <SelectItem value="sidebar">
+                      {t('ads.placement_sidebar', 'Sidebar')}
+                    </SelectItem>
+                    <SelectItem value="search">
+                      {t('ads.placement_search', 'Search Results')}
+                    </SelectItem>
+                    <SelectItem value="offer_of_the_day">
+                      {t('ads.placement_offer_of_the_day', 'Offer of the Day')}
+                    </SelectItem>
+                    <SelectItem value="top_ranking">
+                      {t('ads.placement_top_ranking', 'Top Ranking')}
+                    </SelectItem>
                     <SelectItem value="sponsored_push">
-                      Sponsored Push
+                      {t('ads.placement_sponsored_push', 'Sponsored Push')}
                     </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>{t('ads.billing_model')}</Label>
+                <Label>{t('ads.billing_model', 'Modelo de Cobrança')}</Label>
                 <Select
                   onValueChange={(v) => setValue('billingType', v)}
                   required
@@ -101,17 +111,17 @@ export function AdPricingTab() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="fixed">
-                      {t('ads.fixed_period')}
+                      {t('ads.fixed_period', 'Período Fixo')}
                     </SelectItem>
-                    <SelectItem value="cpc">{t('ads.cpc')}</SelectItem>
-                    <SelectItem value="cpa">{t('ads.cpa')}</SelectItem>
+                    <SelectItem value="cpc">{t('ads.cpc', 'CPC')}</SelectItem>
+                    <SelectItem value="cpa">{t('ads.cpa', 'CPA')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               {watchBillingType === 'fixed' && (
                 <div className="space-y-2">
-                  <Label>{t('ads.duration_days')}</Label>
+                  <Label>{t('ads.duration_days', 'Duração (Dias)')}</Label>
                   <Input
                     type="number"
                     {...register('durationDays')}
@@ -121,11 +131,23 @@ export function AdPricingTab() {
               )}
 
               <div className="space-y-2">
-                <Label>{t('ads.base_value')}</Label>
+                <Label>{t('ads.base_value', 'Valor Base')}</Label>
                 <Input
-                  type="number"
-                  step="0.01"
-                  {...register('price')}
+                  placeholder="Ex: R$ 100,00"
+                  value={watch('price') || ''}
+                  onChange={(e) => {
+                    const raw = e.target.value.replace(/\D/g, '')
+                    if (!raw) {
+                      setValue('price', '')
+                      return
+                    }
+                    const formatted = new Intl.NumberFormat('pt-BR', {
+                      style: 'currency',
+                      currency: 'BRL',
+                    }).format(parseFloat(raw) / 100)
+
+                    setValue('price', formatted, { shouldValidate: true })
+                  }}
                   required
                 />
               </div>
@@ -140,23 +162,26 @@ export function AdPricingTab() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>{t('ads.location')}</TableHead>
-              <TableHead>{t('ads.model')}</TableHead>
-              <TableHead>{t('ads.duration')}</TableHead>
-              <TableHead>{t('ads.price')}</TableHead>
+              <TableHead>{t('ads.location', 'Local')}</TableHead>
+              <TableHead>{t('ads.model', 'Modelo')}</TableHead>
+              <TableHead>{t('ads.duration', 'Duração')}</TableHead>
+              <TableHead>{t('ads.price', 'Preço')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {adPricing.map((p) => (
               <TableRow key={p.id}>
                 <TableCell className="capitalize">
-                  {p.placement.replace(/_/g, ' ')}
+                  {t(
+                    `ads.placement_${p.placement}`,
+                    p.placement.replace(/_/g, ' '),
+                  )}
                 </TableCell>
                 <TableCell className="uppercase">{p.billingType}</TableCell>
                 <TableCell>
                   {p.billingType === 'fixed'
-                    ? `${p.durationDays} ${t('ads.days')}`
-                    : t('ads.continuous')}
+                    ? `${p.durationDays} ${t('ads.days', 'dias')}`
+                    : t('ads.continuous', 'Contínuo')}
                 </TableCell>
                 <TableCell>
                   {formatCurrency(p.price, 'BRL')}{' '}
@@ -170,7 +195,7 @@ export function AdPricingTab() {
                   colSpan={4}
                   className="text-center text-muted-foreground"
                 >
-                  {t('ads.no_rules')}
+                  {t('ads.no_rules', 'Nenhuma regra')}
                 </TableCell>
               </TableRow>
             )}

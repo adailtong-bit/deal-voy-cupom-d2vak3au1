@@ -97,7 +97,9 @@ export function AdCampaignsTab() {
   const calculatedPrice = useMemo(() => {
     if (!selectedRule) return 0
     if (selectedRule.billingType === 'fixed') return selectedRule.price
-    return watchBudget ? parseFloat(watchBudget) : 0
+    return watchBudget
+      ? parseFloat(watchBudget.replace(/\D/g, '') || '0') / 100
+      : 0
   }, [selectedRule, watchBudget])
 
   const displayAds = useMemo(() => {
@@ -146,7 +148,9 @@ export function AdCampaignsTab() {
         link: data.link,
         price: selectedRule.billingType === 'fixed' ? calculatedPrice : null,
         budget:
-          selectedRule.billingType !== 'fixed' ? parseFloat(data.budget) : null,
+          selectedRule.billingType !== 'fixed'
+            ? parseFloat(data.budget?.replace(/\D/g, '') || '0') / 100
+            : null,
         cost_per_click:
           selectedRule.billingType === 'cpc' ? selectedRule.price : null,
         currency: 'BRL',
@@ -189,7 +193,7 @@ export function AdCampaignsTab() {
             selectedRule.billingType === 'fixed' ? calculatedPrice : undefined,
           budget:
             selectedRule.billingType !== 'fixed'
-              ? parseFloat(data.budget)
+              ? parseFloat(data.budget?.replace(/\D/g, '') || '0') / 100
               : undefined,
           costPerClick:
             selectedRule.billingType === 'cpc' ? selectedRule.price : undefined,
@@ -278,16 +282,29 @@ export function AdCampaignsTab() {
                       />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="top">Top Banner</SelectItem>
-                      <SelectItem value="bottom">Bottom Banner</SelectItem>
-                      <SelectItem value="sidebar">Sidebar</SelectItem>
-                      <SelectItem value="search">Search Results</SelectItem>
-                      <SelectItem value="offer_of_the_day">
-                        Offer of the Day
+                      <SelectItem value="top">
+                        {t('ads.placement_top', 'Top Banner')}
                       </SelectItem>
-                      <SelectItem value="top_ranking">Top Ranking</SelectItem>
+                      <SelectItem value="bottom">
+                        {t('ads.placement_bottom', 'Bottom Banner')}
+                      </SelectItem>
+                      <SelectItem value="sidebar">
+                        {t('ads.placement_sidebar', 'Sidebar')}
+                      </SelectItem>
+                      <SelectItem value="search">
+                        {t('ads.placement_search', 'Search Results')}
+                      </SelectItem>
+                      <SelectItem value="offer_of_the_day">
+                        {t(
+                          'ads.placement_offer_of_the_day',
+                          'Offer of the Day',
+                        )}
+                      </SelectItem>
+                      <SelectItem value="top_ranking">
+                        {t('ads.placement_top_ranking', 'Top Ranking')}
+                      </SelectItem>
                       <SelectItem value="sponsored_push">
-                        Sponsored Push
+                        {t('ads.placement_sponsored_push', 'Sponsored Push')}
                       </SelectItem>
                     </SelectContent>
                   </Select>
@@ -350,10 +367,21 @@ export function AdCampaignsTab() {
                   <div className="space-y-2">
                     <Label>{t('ads.total_budget', 'Orçamento Total')}</Label>
                     <Input
-                      type="number"
-                      step="0.01"
-                      {...register('budget')}
-                      placeholder="Ex: 1000.00"
+                      placeholder="Ex: R$ 1.000,00"
+                      value={watchBudget || ''}
+                      onChange={(e) => {
+                        const raw = e.target.value.replace(/\D/g, '')
+                        if (!raw) {
+                          setValue('budget', '')
+                          return
+                        }
+                        const formatted = new Intl.NumberFormat('pt-BR', {
+                          style: 'currency',
+                          currency: 'BRL',
+                        }).format(parseFloat(raw) / 100)
+
+                        setValue('budget', formatted, { shouldValidate: true })
+                      }}
                     />
                     <p className="text-xs text-muted-foreground">
                       {t('ads.applied_rate', 'Taxa Aplicada:')}{' '}
@@ -452,19 +480,24 @@ export function AdCampaignsTab() {
                       </span>
                     </TableCell>
                     <TableCell className="capitalize">
-                      {a.placement?.replace(/_/g, ' ')}
+                      {t(
+                        `ads.placement_${a.placement}`,
+                        a.placement?.replace(/_/g, ' '),
+                      )}
                       <Badge variant="outline" className="ml-2 uppercase">
                         {billingType}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <div className="text-sm">
-                        V: {formatNumber(a.views || 0)} | C:{' '}
+                        {t('ads.views_abbr', 'V')}: {formatNumber(a.views || 0)}{' '}
+                        | {t('ads.clicks_abbr', 'C')}:{' '}
                         {formatNumber(a.clicks || 0)}
                       </div>
                       {a.budget && (
                         <div className="text-xs text-muted-foreground">
-                          Budget: {formatCurrency(a.budget)}
+                          {t('ads.budget', 'Budget')}:{' '}
+                          {formatCurrency(a.budget)}
                         </div>
                       )}
                     </TableCell>
@@ -480,7 +513,7 @@ export function AdCampaignsTab() {
                     colSpan={4}
                     className="text-center text-muted-foreground py-8"
                   >
-                    Nenhuma campanha encontrada.
+                    {t('ads.no_rule_found', 'Nenhuma campanha encontrada.')}
                   </TableCell>
                 </TableRow>
               )}
