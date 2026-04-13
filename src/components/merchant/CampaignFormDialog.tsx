@@ -59,6 +59,7 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { useState, useMemo } from 'react'
+import { supabase } from '@/lib/supabase/client'
 
 const STORE_LOCATIONS = [
   'Matriz - Centro',
@@ -433,7 +434,9 @@ export function CampaignFormDialog({
     }
   }, [coupon, open, form, companyId, defaultIsSeasonal])
 
-  const onSubmit = (data: FormData) => {
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const onSubmit = async (data: FormData) => {
     const finalCompanyId = data.companyId || companyId || ''
     if (needsCompanySelection && !finalCompanyId) {
       form.setError('companyId', { message: 'Selecione uma loja.' })
@@ -470,8 +473,52 @@ export function CampaignFormDialog({
         ]
       : []
 
+    setIsSubmitting(true)
+
     try {
-      if (coupon) {
+      const dbPayload = {
+        title: data.title,
+        description: data.description,
+        category: data.category,
+        company_id: finalCompanyId,
+        store_name:
+          data.scope === 'specific' && data.specificStore
+            ? data.specificStore
+            : company?.name || 'Loja',
+        discount_rules: data.discountType,
+        discount: formattedDiscount,
+        discount_percentage:
+          data.discountType === 'percentage'
+            ? parseFloat(data.discountPercentage?.replace(/\D/g, '') || '0')
+            : null,
+        image_url: data.image || 'https://img.usecurling.com/p/400/300?q=sale',
+        product_link: finalUrl || null,
+        coverage: data.scope,
+        start_date: new Date(data.startDate).toISOString(),
+        end_date: new Date(data.endDate).toISOString(),
+        limit_type: data.limitType,
+        total_limit: totalLimit || null,
+        enable_proximity_alerts: data.enableProximityAlerts,
+        alert_radius: data.enableProximityAlerts ? data.alertRadius : null,
+        is_seasonal: data.isSeasonal,
+        enable_trigger: data.enableTrigger,
+        trigger_type: data.enableTrigger ? data.triggerType : null,
+        trigger_threshold: data.enableTrigger ? data.triggerThreshold : null,
+        reward_id: data.enableTrigger ? data.rewardId : null,
+        status: 'active',
+        campaign_name: data.title,
+      }
+
+      if (coupon && coupon.id && !coupon.id.toString().includes('.')) {
+        const { error } = await supabase
+          .from('discovered_promotions')
+          .update(dbPayload as any)
+          .eq('id', coupon.id)
+
+        if (error) {
+          console.warn('Update error in DB, updating locally instead', error)
+        }
+
         updateCampaign(coupon.id, {
           title: data.title,
           description: data.description,
@@ -505,14 +552,24 @@ export function CampaignFormDialog({
           t('vendor.form.success_update', 'Campanha atualizada com sucesso!'),
         )
       } else {
+        const { data: insertedData, error } = await supabase
+          .from('discovered_promotions')
+          .insert(dbPayload as any)
+          .select()
+          .single()
+
+        if (error) {
+          console.error('Insert error in DB', error)
+          throw new Error(error.message)
+        }
+
+        const newId = insertedData?.id || Math.random().toString()
+
         addCoupon({
-          id: Math.random().toString(),
+          id: newId,
           companyId: finalCompanyId,
           franchiseId: franchiseId,
-          storeName:
-            data.scope === 'specific' && data.specificStore
-              ? data.specificStore
-              : company?.name || 'Loja',
+          storeName: dbPayload.store_name,
           title: data.title,
           description: data.description,
           instructions: data.instructions,
@@ -546,14 +603,18 @@ export function CampaignFormDialog({
         )
       }
       onOpenChange(false)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving campaign:', error)
       toast.error(
         t(
           'vendor.form.error_save',
           'Erro ao salvar a campanha. Verifique os dados e tente novamente.',
-        ),
+        ) +
+          ' ' +
+          (error.message || ''),
       )
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -1544,13 +1605,21 @@ export function CampaignFormDialog({
                       type="button"
                       variant="outline"
                       onClick={() => onOpenChange(false)}
+                      disabled={isSubmitting}
                     >
                       {t('vendor.form.cancel', 'Cancelar')}
                     </Button>
-                    <Button type="submit">
-                      {coupon
-                        ? t('vendor.form.save', 'Salvar Alterações')
-                        : t('vendor.form.create', 'Criar Campanha')}
+                    <Button type="submit" disabled={isSubmitting}>
+                      {isSubmitting ? (
+                        <span className="flex items-center gap-2">
+                          <span className="h-4 w-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></span>
+                          Salvando...
+                        </span>
+                      ) : coupon ? (
+                        t('vendor.form.save', 'Salvar Alterações')
+                      ) : (
+                        t('vendor.form.create', 'Criar Campanha')
+                      )}
                     </Button>
                   </div>
                 </form>
