@@ -7,13 +7,19 @@ const corsHeaders = {
     'authorization, x-client-info, x-supabase-client-platform, apikey, content-type',
 }
 
-async function fetchAffiliateDeals(query: string, affiliateIds: Record<string, string>) {
+async function fetchAffiliateDeals(
+  query: string,
+  affiliateIds: Record<string, string>,
+) {
   // Mocking external affiliate API (CJ, Rakuten, Awin, Amazon)
   const basePrice = Math.floor(Math.random() * 100) + 50
-  
-  const amazonId = affiliateIds?.amazon || 'routevoy_amz'
-  const aliexpressId = affiliateIds?.aliexpress || 'routevoy_ali'
-  const shopeeId = affiliateIds?.shopee || 'routevoy_shp'
+
+  const amazonId =
+    affiliateIds?.amazon || affiliateIds?.Amazon || 'routevoy_amz'
+  const aliexpressId =
+    affiliateIds?.aliexpress || affiliateIds?.AliExpress || 'routevoy_ali'
+  const shopeeId =
+    affiliateIds?.shopee || affiliateIds?.Shopee || 'routevoy_shp'
 
   return [
     {
@@ -103,7 +109,9 @@ Deno.serve(async (req: Request) => {
   try {
     const { query, limit = 10, affiliateIds = {} } = await req.json()
 
-    const affiliateDeals = query ? await fetchAffiliateDeals(query, affiliateIds) : []
+    const affiliateDeals = query
+      ? await fetchAffiliateDeals(query, affiliateIds)
+      : []
     const enriched = enrichDeals(affiliateDeals)
     const ranked = rankDeals(enriched)
 

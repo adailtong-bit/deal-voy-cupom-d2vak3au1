@@ -68,7 +68,7 @@ export default function Login() {
     } else if (userRole === 'shopkeeper') {
       navigate('/merchant/scanner', { replace: true })
     } else if (userRole === 'affiliate') {
-      navigate('/profile', { replace: true })
+      navigate('/affiliate', { replace: true })
     } else {
       navigate(from !== '/' && !from.includes('/login') ? from : '/profile', {
         replace: true,
@@ -294,7 +294,9 @@ export default function Login() {
           >
             <Users className="w-4 h-4 mr-3 text-orange-500 shrink-0" />
             <div className="text-left">
-              <div className="font-semibold text-sm">Acesso Afiliado</div>
+              <div className="font-semibold text-sm">
+                Acesso Afiliado (Aprovado)
+              </div>
               <div className="text-xs text-slate-500">afiliado@dealvoy.com</div>
             </div>
           </Button>

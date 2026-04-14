@@ -5,7 +5,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  CardFooter,
+  CardDescription,
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -21,12 +21,8 @@ import {
   RefreshCw,
   Edit2,
   Trash2,
-  Download,
-  Save,
-  ExternalLink,
-  Search,
+  LayoutGrid,
 } from 'lucide-react'
-import { searchAffiliateDeals } from '@/services/affiliates'
 import { toast } from 'sonner'
 import { useRegionFormatting } from '@/hooks/useRegionFormatting'
 import { useLanguage } from '@/stores/LanguageContext'
@@ -38,24 +34,16 @@ export function AdminAffiliatesTab() {
 
   const [affiliates, setAffiliates] = useState<any[]>([])
   const [transactions, setTransactions] = useState<any[]>([])
+  const [platforms, setPlatforms] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+
   const [editingAffiliate, setEditingAffiliate] = useState<any>(null)
+  const [editPlatformComms, setEditPlatformComms] = useState<
+    Record<string, number>
+  >({})
 
-  const [selectedPendingId, setSelectedPendingId] = useState('')
-  const [newModel, setNewModel] = useState('percentage')
-  const [newRate, setNewRate] = useState('30')
-  const [newFee, setNewFee] = useState('0')
-  const [newRegion, setNewRegion] = useState('Global')
-
-  const [affiliateIds, setAffiliateIds] = useState({
-    amazon: '',
-    aliexpress: '',
-    shopee: '',
-  })
-  const [importQuery, setImportQuery] = useState('')
-  const [importResults, setImportResults] = useState<any[]>([])
-  const [isSearchingImport, setIsSearchingImport] = useState(false)
+  const [newPlatName, setNewPlatName] = useState('')
+  const [newPlatComm, setNewPlatComm] = useState('10')
 
   const savedSettings = localStorage.getItem('system_settings')
   const settings = savedSettings ? JSON.parse(savedSettings) : {}
@@ -69,7 +57,6 @@ export function AdminAffiliatesTab() {
         .from('affiliate_partners')
         .select('*')
         .order('created_at', { ascending: false })
-
       if (affErr) throw affErr
       setAffiliates(affData || [])
 
@@ -77,9 +64,15 @@ export function AdminAffiliatesTab() {
         .from('affiliate_transactions')
         .select('*, affiliate_partners(name)')
         .order('created_at', { ascending: false })
-
       if (txErr) throw txErr
       setTransactions(txData || [])
+
+      const { data: platData, error: platErr } = await supabase
+        .from('affiliate_platforms')
+        .select('*')
+        .order('created_at', { ascending: false })
+      if (platErr) throw platErr
+      setPlatforms(platData || [])
     } catch (error: any) {
       toast.error(t('common.error', 'An error occurred: ') + error.message)
     } finally {
@@ -89,88 +82,7 @@ export function AdminAffiliatesTab() {
 
   useEffect(() => {
     fetchData()
-    const savedIds = localStorage.getItem('master_affiliate_ids')
-    if (savedIds) {
-      try {
-        setAffiliateIds(JSON.parse(savedIds))
-      } catch (e) {
-        console.error('Failed to parse saved affiliate IDs', e)
-      }
-    }
   }, [])
-
-  const saveAffiliateIds = () => {
-    localStorage.setItem('master_affiliate_ids', JSON.stringify(affiliateIds))
-    toast.success(t('common.success', 'Configurações de integração salvas!'))
-  }
-
-  const handleSearchImport = async () => {
-    if (!importQuery.trim()) return
-    setIsSearchingImport(true)
-    try {
-      const results = await searchAffiliateDeals(importQuery, 10, affiliateIds)
-      setImportResults(results || [])
-      if (results?.length === 0) {
-        toast.info(t('common.info', 'Nenhuma campanha encontrada.'))
-      }
-    } catch (err: any) {
-      toast.error(t('common.error', 'Erro na busca: ') + err.message)
-    } finally {
-      setIsSearchingImport(false)
-    }
-  }
-
-  const handleImportToSite = async (deal: any) => {
-    try {
-      const { error } = await supabase.from('discovered_promotions').insert({
-        title: deal.title,
-        description: deal.description,
-        price: deal.price,
-        original_price: deal.originalPrice,
-        discount: deal.discount,
-        discount_percentage: deal.discountPercentage,
-        image_url: deal.imageUrl,
-        product_link: deal.productLink,
-        store_name: deal.storeName,
-        status: 'approved',
-        category: 'affiliate',
-        currency: deal.currency || 'BRL',
-      })
-      if (error) throw error
-      toast.success(t('common.success', 'Campanha importada para o site!'))
-      setImportResults((prev) => prev.filter((d) => d.id !== deal.id))
-    } catch (error: any) {
-      toast.error(t('common.error', 'Erro ao importar: ') + error.message)
-    }
-  }
-
-  const handleLinkAffiliate = async () => {
-    if (!selectedPendingId) {
-      toast.error(t('common.error', 'Select a pending affiliate.'))
-      return
-    }
-    try {
-      const { error } = await supabase
-        .from('affiliate_partners')
-        .update({
-          status: 'active',
-          commission_model: newModel,
-          commission_rate: parseFloat(newRate) || 0,
-          monthly_fee: parseFloat(newFee) || 0,
-          region: newRegion,
-          region_id: newRegion,
-        } as any)
-        .eq('id', selectedPendingId)
-
-      if (error) throw error
-      toast.success(t('common.success', 'Affiliate linked successfully!'))
-      setIsAddModalOpen(false)
-      setSelectedPendingId('')
-      fetchData()
-    } catch (error: any) {
-      toast.error(t('common.error', 'An error occurred: ') + error.message)
-    }
-  }
 
   const handleUpdateAffiliate = async () => {
     if (!editingAffiliate) return
@@ -184,11 +96,12 @@ export function AdminAffiliatesTab() {
           monthly_fee: parseFloat(editingAffiliate.monthly_fee) || 0,
           region: editingAffiliate.region || 'Global',
           region_id: editingAffiliate.region || 'Global',
+          platform_commissions: editPlatformComms,
         } as any)
         .eq('id', editingAffiliate.id)
 
       if (error) throw error
-      toast.success(t('common.success', 'Affiliate rules updated!'))
+      toast.success(t('common.success', 'Regras do afiliado atualizadas!'))
       setEditingAffiliate(null)
       fetchData()
     } catch (error: any) {
@@ -209,10 +122,41 @@ export function AdminAffiliatesTab() {
         .delete()
         .eq('id', id)
       if (error) throw error
-      toast.success(t('common.success', 'Affiliate deleted successfully!'))
+      toast.success(t('common.success', 'Afiliado removido!'))
       fetchData()
     } catch (error: any) {
       toast.error(t('common.error', 'An error occurred: ') + error.message)
+    }
+  }
+
+  const handleAddPlatform = async () => {
+    if (!newPlatName) return
+    try {
+      const { error } = await supabase.from('affiliate_platforms').insert({
+        name: newPlatName,
+        base_commission_rate: parseFloat(newPlatComm) || 0,
+      } as any)
+      if (error) throw error
+      toast.success('Plataforma adicionada com sucesso!')
+      setNewPlatName('')
+      fetchData()
+    } catch (e: any) {
+      toast.error('Erro ao adicionar plataforma: ' + e.message)
+    }
+  }
+
+  const handleDeletePlatform = async (id: string) => {
+    if (!confirm('Deseja remover esta plataforma?')) return
+    try {
+      const { error } = await supabase
+        .from('affiliate_platforms')
+        .delete()
+        .eq('id', id)
+      if (error) throw error
+      toast.success('Plataforma removida!')
+      fetchData()
+    } catch (error: any) {
+      toast.error('Erro: ' + error.message)
     }
   }
 
@@ -231,7 +175,7 @@ export function AdminAffiliatesTab() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex justify-between">
-              {t('admin.affiliates.active_sub', 'Active Sub-Affiliates')}{' '}
+              Afiliados Parceiros Ativos{' '}
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardTitle>
           </CardHeader>
@@ -240,17 +184,14 @@ export function AdminAffiliatesTab() {
               {affiliates.filter((a) => a.status === 'active').length}
             </div>
             <p className="text-xs text-muted-foreground">
-              {t(
-                'admin.affiliates.traffic_partners',
-                'Partners generating traffic',
-              )}
+              Parceiros gerando tráfego qualificado
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex justify-between">
-              {t('admin.affiliates.sales_generated', 'Sales Generated')}{' '}
+              Vendas Geradas{' '}
               <Activity className="h-4 w-4 text-muted-foreground" />
             </CardTitle>
           </CardHeader>
@@ -259,15 +200,14 @@ export function AdminAffiliatesTab() {
               {formatCurrency(totalSales)}
             </div>
             <p className="text-xs text-muted-foreground">
-              {t('admin.affiliates.total_volume', 'Total volume (GMV)')}
+              Volume total (GMV) via links
             </p>
           </CardContent>
         </Card>
         <Card className="border-green-200 bg-green-50/30">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-green-800 flex justify-between">
-              {t('admin.affiliates.net_profit', 'Your Net Profit')}{' '}
-              <Wallet className="h-4 w-4 text-green-600" />
+              Lucro da Plataforma <Wallet className="h-4 w-4 text-green-600" />
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -275,10 +215,7 @@ export function AdminAffiliatesTab() {
               {formatCurrency(totalPlatformFee)}
             </div>
             <p className="text-xs text-green-600">
-              {t(
-                'admin.affiliates.platform_fee',
-                'Platform fee + Monthly fees',
-              )}
+              Taxa de plataforma + Mensalidades
             </p>
           </CardContent>
         </Card>
@@ -287,27 +224,23 @@ export function AdminAffiliatesTab() {
       <Tabs defaultValue="partners" className="w-full">
         <TabsList className="mb-4">
           <TabsTrigger value="partners" className="gap-2">
-            <Users className="w-4 h-4" />{' '}
-            {t('admin.affiliates.partners_rules', 'Partners & Rules')}
+            <Users className="w-4 h-4" /> Parceiros & Regras
+          </TabsTrigger>
+          <TabsTrigger value="platforms" className="gap-2">
+            <LayoutGrid className="w-4 h-4" /> Plataformas
           </TabsTrigger>
           <TabsTrigger value="transactions" className="gap-2">
-            <DollarSign className="w-4 h-4" />{' '}
-            {t('admin.affiliates.transactions', 'Transactions (Split)')}
-          </TabsTrigger>
-          <TabsTrigger value="import" className="gap-2">
-            <Download className="w-4 h-4" />{' '}
-            {t('admin.affiliates.import', 'Importar Campanhas')}
+            <DollarSign className="w-4 h-4" /> Auditoria de Split
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="partners" className="space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold">
-              {t('admin.affiliates.manage_sub', 'Sub-Affiliates Management')}
+              Gestão de Afiliados Parceiros
             </h3>
-            <Button onClick={() => setIsAddModalOpen(true)} className="gap-2">
-              <Plus className="w-4 h-4" />{' '}
-              {t('admin.affiliates.link_affiliate', 'Link Affiliate')}
+            <Button variant="outline" size="sm" onClick={fetchData}>
+              <RefreshCw className="w-4 h-4 mr-2" /> Atualizar
             </Button>
           </div>
           <Card>
@@ -315,20 +248,14 @@ export function AdminAffiliatesTab() {
               <table className="w-full text-sm text-left">
                 <thead className="border-b bg-slate-50">
                   <tr>
+                    <th className="p-4 font-medium text-slate-600">Afiliado</th>
+                    <th className="p-4 font-medium text-slate-600">Modelo</th>
                     <th className="p-4 font-medium text-slate-600">
-                      {t('admin.affiliates.affiliate_name', 'Affiliate Name')}
+                      Sua Parte
                     </th>
-                    <th className="p-4 font-medium text-slate-600">
-                      {t('common.model', 'Model')}
-                    </th>
-                    <th className="p-4 font-medium text-slate-600">
-                      {t('admin.affiliates.your_share', 'Your Share')}
-                    </th>
-                    <th className="p-4 font-medium text-slate-600">
-                      {t('common.status', 'Status')}
-                    </th>
+                    <th className="p-4 font-medium text-slate-600">Status</th>
                     <th className="p-4 font-medium text-slate-600 text-right">
-                      {t('common.actions', 'Actions')}
+                      Ações
                     </th>
                   </tr>
                 </thead>
@@ -347,27 +274,18 @@ export function AdminAffiliatesTab() {
                             variant="outline"
                             className="bg-blue-50 text-blue-700 border-blue-200"
                           >
-                            {t(
-                              'admin.affiliates.commission_split',
-                              'Commission Split',
-                            )}
+                            Split de Comissão
                           </Badge>
                         ) : aff.commission_model === 'monthly' ? (
                           <Badge
                             variant="outline"
                             className="bg-purple-50 text-purple-700 border-purple-200"
                           >
-                            {t(
-                              'admin.affiliates.saas_monthly',
-                              'SaaS (Monthly)',
-                            )}
+                            SaaS (Mensal)
                           </Badge>
                         ) : (
                           <span className="text-muted-foreground text-xs italic">
-                            {t(
-                              'admin.affiliates.not_configured',
-                              'Not configured',
-                            )}
+                            Não config
                           </span>
                         )}
                       </td>
@@ -375,27 +293,32 @@ export function AdminAffiliatesTab() {
                         {aff.commission_model === 'percentage'
                           ? `${aff.commission_rate}%`
                           : aff.commission_model === 'monthly'
-                            ? `${formatCurrency(aff.monthly_fee)}/mo`
+                            ? `${formatCurrency(aff.monthly_fee)}/mês`
                             : '-'}
                       </td>
                       <td className="p-4">
                         <Badge
-                          className={`cursor-pointer ${aff.status === 'active' ? 'bg-green-100 text-green-800 border-none hover:bg-green-200' : 'bg-amber-100 text-amber-800 border-none hover:bg-amber-200'}`}
-                          onClick={() => setEditingAffiliate(aff)}
+                          className={`cursor-pointer ${aff.status === 'active' ? 'bg-green-100 text-green-800 border-none' : 'bg-amber-100 text-amber-800 border-none'}`}
+                          onClick={() => {
+                            setEditingAffiliate(aff)
+                            setEditPlatformComms(aff.platform_commissions || {})
+                          }}
                         >
                           {aff.status === 'active'
-                            ? t('common.active', 'Active')
+                            ? 'Ativo'
                             : aff.status === 'pending'
-                              ? t('common.pending', 'Pending')
-                              : t('common.suspended', 'Suspended')}
+                              ? 'Pendente'
+                              : 'Suspenso'}
                         </Badge>
                       </td>
                       <td className="p-4 text-right flex justify-end gap-2">
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => setEditingAffiliate(aff)}
-                          title={t('common.edit', 'Edit')}
+                          onClick={() => {
+                            setEditingAffiliate(aff)
+                            setEditPlatformComms(aff.platform_commissions || {})
+                          }}
                         >
                           <Edit2 className="w-4 h-4 text-slate-500" />
                         </Button>
@@ -403,7 +326,6 @@ export function AdminAffiliatesTab() {
                           variant="ghost"
                           size="sm"
                           onClick={() => handleDeleteAffiliate(aff.id)}
-                          title={t('common.delete', 'Delete')}
                         >
                           <Trash2 className="w-4 h-4 text-red-500" />
                         </Button>
@@ -416,7 +338,7 @@ export function AdminAffiliatesTab() {
                         colSpan={5}
                         className="p-4 text-center text-muted-foreground"
                       >
-                        {t('common.none', 'No records found.')}
+                        Nenhum afiliado registrado.
                       </td>
                     </tr>
                   )}
@@ -426,44 +348,122 @@ export function AdminAffiliatesTab() {
           </Card>
         </TabsContent>
 
+        <TabsContent value="platforms" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Plataformas de Afiliados</CardTitle>
+              <CardDescription>
+                Cadastre as redes (ex: Amazon, Shopee) que os afiliados
+                parceiros poderão utilizar.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex flex-col sm:flex-row items-end gap-4 bg-slate-50 p-4 rounded-lg border">
+                <div className="space-y-2 flex-1">
+                  <Label>Nome da Plataforma</Label>
+                  <Input
+                    value={newPlatName}
+                    onChange={(e) => setNewPlatName(e.target.value)}
+                    placeholder="Ex: Mercado Livre"
+                  />
+                </div>
+                <div className="space-y-2 w-full sm:w-32">
+                  <Label>Comissão Base (%)</Label>
+                  <Input
+                    type="number"
+                    value={newPlatComm}
+                    onChange={(e) => setNewPlatComm(e.target.value)}
+                  />
+                </div>
+                <Button
+                  onClick={handleAddPlatform}
+                  className="w-full sm:w-auto"
+                >
+                  <Plus className="w-4 h-4 mr-2" /> Adicionar
+                </Button>
+              </div>
+
+              <div className="border rounded-lg overflow-hidden">
+                <table className="w-full text-sm text-left">
+                  <thead className="bg-slate-50 border-b">
+                    <tr>
+                      <th className="p-4 font-medium text-slate-600">
+                        Plataforma
+                      </th>
+                      <th className="p-4 font-medium text-slate-600 text-center">
+                        Comissão Base
+                      </th>
+                      <th className="p-4 font-medium text-slate-600 text-center">
+                        Status
+                      </th>
+                      <th className="p-4 font-medium text-slate-600 text-right">
+                        Ações
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {platforms.map((p) => (
+                      <tr key={p.id} className="border-b hover:bg-slate-50/50">
+                        <td className="p-4 font-medium text-slate-800">
+                          {p.name}
+                        </td>
+                        <td className="p-4 text-center text-green-600 font-semibold">
+                          {p.base_commission_rate}%
+                        </td>
+                        <td className="p-4 text-center">
+                          <Badge
+                            variant="outline"
+                            className="bg-green-50 text-green-700 border-green-200"
+                          >
+                            Ativo
+                          </Badge>
+                        </td>
+                        <td className="p-4 text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeletePlatform(p.id)}
+                          >
+                            <Trash2 className="w-4 h-4 text-red-500" />
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                    {platforms.length === 0 && !loading && (
+                      <tr>
+                        <td
+                          colSpan={4}
+                          className="p-4 text-center text-muted-foreground"
+                        >
+                          Nenhuma plataforma cadastrada.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="transactions" className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold">
-              {t('admin.affiliates.audit', 'Commissions and Split Audit')}
-            </h3>
-            <Button variant="outline" size="sm" onClick={fetchData}>
-              <RefreshCw className="w-4 h-4 mr-2" />{' '}
-              {t('common.refresh', 'Refresh')}
-            </Button>
-          </div>
           <Card>
             <div className="w-full overflow-auto">
               <table className="w-full text-sm text-left">
                 <thead className="border-b bg-slate-50">
                   <tr>
+                    <th className="p-4 font-medium text-slate-600">Data</th>
                     <th className="p-4 font-medium text-slate-600">
-                      {t('common.date', 'Date')}
-                    </th>
-                    <th className="p-4 font-medium text-slate-600">
-                      {t(
-                        'admin.affiliates.product_partner',
-                        'Product / Partner',
-                      )}
+                      Produto / Parceiro
                     </th>
                     <th className="p-4 font-medium text-slate-600 text-right">
-                      {t('admin.affiliates.total_sale', 'Total Sale')}
-                    </th>
-                    <th className="p-4 font-medium text-slate-600 text-right">
-                      {t(
-                        'admin.affiliates.gross_commission',
-                        'Gross Commission',
-                      )}
+                      Venda Total
                     </th>
                     <th className="p-4 font-bold text-green-700 text-right">
-                      {t('admin.affiliates.your_profit', 'Your Profit (Fee)')}
+                      Seu Lucro (Fee)
                     </th>
                     <th className="p-4 font-medium text-slate-600 text-center">
-                      {t('common.status', 'Status')}
+                      Status
                     </th>
                   </tr>
                 </thead>
@@ -476,47 +476,36 @@ export function AdminAffiliatesTab() {
                       <td className="p-4 font-medium text-slate-700">
                         {tx.product_name}
                         <div className="text-xs text-muted-foreground font-normal">
-                          {tx.affiliate_partners?.name || 'Unknown'}
+                          {tx.affiliate_partners?.name || 'Desconhecido'}
                         </div>
                       </td>
                       <td className="p-4 text-right">
                         {formatCurrency(tx.sale_amount)}
                       </td>
-                      <td className="p-4 text-right">
-                        {formatCurrency(tx.total_commission)}
-                      </td>
                       <td className="p-4 text-right font-bold text-green-600 bg-green-50/30">
                         +{formatCurrency(tx.platform_fee)}
                       </td>
                       <td className="p-4 text-center">
-                        {tx.status === 'paid' ? (
-                          <Badge
-                            variant="outline"
-                            className="bg-green-50 text-green-700 border-green-200"
-                          >
-                            {t('common.paid', 'Paid')}
-                          </Badge>
-                        ) : (
-                          <Badge
-                            variant="outline"
-                            className="bg-amber-50 text-amber-700 border-amber-200"
-                          >
-                            {t('common.pending', 'Pending')}
-                          </Badge>
-                        )}
+                        <Badge
+                          variant="outline"
+                          className={
+                            tx.status === 'paid'
+                              ? 'bg-green-50 text-green-700 border-green-200'
+                              : 'bg-amber-50 text-amber-700 border-amber-200'
+                          }
+                        >
+                          {tx.status === 'paid' ? 'Pago' : 'Pendente'}
+                        </Badge>
                       </td>
                     </tr>
                   ))}
                   {transactions.length === 0 && !loading && (
                     <tr>
                       <td
-                        colSpan={6}
+                        colSpan={5}
                         className="p-4 text-center text-muted-foreground"
                       >
-                        {t(
-                          'admin.affiliates.no_transactions',
-                          'No transactions recorded.',
-                        )}
+                        Nenhuma transação registrada.
                       </td>
                     </tr>
                   )}
@@ -525,345 +514,23 @@ export function AdminAffiliatesTab() {
             </div>
           </Card>
         </TabsContent>
-
-        <TabsContent value="import" className="space-y-6">
-          <div className="grid md:grid-cols-3 gap-6">
-            <Card className="md:col-span-1 h-fit">
-              <CardHeader>
-                <CardTitle className="text-lg">
-                  {t(
-                    'admin.affiliates.integration_settings',
-                    'Configurações de Integração',
-                  )}
-                </CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  {t(
-                    'admin.affiliates.integration_desc',
-                    'Cadastre seus IDs de afiliado para rastreio e monetização.',
-                  )}
-                </p>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Amazon Affiliate ID</Label>
-                  <Input
-                    value={affiliateIds.amazon}
-                    onChange={(e) =>
-                      setAffiliateIds({
-                        ...affiliateIds,
-                        amazon: e.target.value,
-                      })
-                    }
-                    placeholder="ex: routevoy-20"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>AliExpress Affiliate ID</Label>
-                  <Input
-                    value={affiliateIds.aliexpress}
-                    onChange={(e) =>
-                      setAffiliateIds({
-                        ...affiliateIds,
-                        aliexpress: e.target.value,
-                      })
-                    }
-                    placeholder="ex: routevoy_ali"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Shopee Affiliate ID</Label>
-                  <Input
-                    value={affiliateIds.shopee}
-                    onChange={(e) =>
-                      setAffiliateIds({
-                        ...affiliateIds,
-                        shopee: e.target.value,
-                      })
-                    }
-                    placeholder="ex: routevoy_shp"
-                  />
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button onClick={saveAffiliateIds} className="w-full gap-2">
-                  <Save className="w-4 h-4" /> {t('common.save', 'Salvar IDs')}
-                </Button>
-              </CardFooter>
-            </Card>
-
-            <Card className="md:col-span-2">
-              <CardHeader>
-                <CardTitle className="text-lg">
-                  {t(
-                    'admin.affiliates.search_campaigns',
-                    'Buscar e Importar Campanhas',
-                  )}
-                </CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  {t(
-                    'admin.affiliates.search_desc',
-                    'Busque ofertas nas redes e importe diretamente para o site.',
-                  )}
-                </p>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex gap-2">
-                  <Input
-                    value={importQuery}
-                    onChange={(e) => setImportQuery(e.target.value)}
-                    placeholder={t(
-                      'admin.affiliates.search_placeholder',
-                      'Ex: iPhone 15, Notebook...',
-                    )}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSearchImport()}
-                  />
-                  <Button
-                    onClick={handleSearchImport}
-                    disabled={isSearchingImport}
-                  >
-                    {isSearchingImport ? (
-                      <RefreshCw className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Search className="w-4 h-4" />
-                    )}
-                  </Button>
-                </div>
-
-                <div className="space-y-3 mt-4 max-h-[500px] overflow-y-auto pr-2">
-                  {importResults.length === 0 && !isSearchingImport && (
-                    <div className="text-center py-8 text-muted-foreground border rounded-lg border-dashed">
-                      {t(
-                        'admin.affiliates.no_results',
-                        'Nenhuma campanha buscada ainda.',
-                      )}
-                    </div>
-                  )}
-                  {importResults.map((deal) => (
-                    <div
-                      key={deal.id}
-                      className="flex flex-col sm:flex-row gap-4 p-3 border rounded-lg hover:bg-slate-50 transition-colors bg-white"
-                    >
-                      <img
-                        src={deal.imageUrl}
-                        alt={deal.title}
-                        className="w-full sm:w-20 h-32 sm:h-20 object-cover rounded-md border"
-                      />
-                      <div className="flex-1 min-w-0 flex flex-col justify-between">
-                        <div>
-                          <h4 className="font-semibold text-sm line-clamp-2">
-                            {deal.title}
-                          </h4>
-                          <div className="flex flex-wrap items-center gap-2 mt-1">
-                            <Badge
-                              variant="secondary"
-                              className="text-xs bg-slate-100"
-                            >
-                              {deal.storeName}
-                            </Badge>
-                            <span className="text-xs text-green-600 font-bold">
-                              {deal.discountPercentage?.toFixed(0)}% OFF
-                            </span>
-                            <span className="text-xs text-muted-foreground line-through">
-                              R$ {deal.originalPrice}
-                            </span>
-                            <span className="text-sm font-bold">
-                              R$ {deal.price}
-                            </span>
-                          </div>
-                          <a
-                            href={deal.productLink}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-[10px] text-blue-500 hover:underline mt-2 inline-flex items-center gap-1"
-                          >
-                            <ExternalLink className="w-3 h-3" /> Testar Link com
-                            ID
-                          </a>
-                        </div>
-                      </div>
-                      <div className="flex flex-col justify-center mt-2 sm:mt-0">
-                        <Button
-                          size="sm"
-                          onClick={() => handleImportToSite(deal)}
-                          className="gap-2 w-full sm:w-auto"
-                        >
-                          <Download className="w-4 h-4" /> Importar
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
       </Tabs>
-
-      {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <Card className="w-full max-w-md shadow-lg animate-in zoom-in-95 duration-200">
-            <CardHeader>
-              <CardTitle>
-                {t('admin.affiliates.link_affiliate', 'Link Affiliate')}
-              </CardTitle>
-              <p className="text-sm text-muted-foreground">
-                {t(
-                  'admin.affiliates.link_desc',
-                  'Select a pending partner and set your profit rule (Split).',
-                )}
-              </p>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>
-                  {t(
-                    'admin.affiliates.select_pending',
-                    'Select Pending Affiliate',
-                  )}
-                </Label>
-                <select
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-                  value={selectedPendingId}
-                  onChange={(e) => setSelectedPendingId(e.target.value)}
-                >
-                  <option value="">{t('common.select', 'Select...')}</option>
-                  {affiliates
-                    .filter((a) => a.status === 'pending')
-                    .map((a) => (
-                      <option key={a.id} value={a.id}>
-                        {a.name} ({a.email})
-                      </option>
-                    ))}
-                </select>
-                {affiliates.filter((a) => a.status === 'pending').length ===
-                  0 && (
-                  <p className="text-xs text-amber-600 mt-1">
-                    {t(
-                      'admin.affiliates.no_pending',
-                      'No pending affiliates at the moment.',
-                    )}
-                  </p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label>
-                  {t(
-                    'admin.affiliates.commission_model',
-                    'Commission Model (Your Share)',
-                  )}
-                </Label>
-                <select
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-                  value={newModel}
-                  onChange={(e) => setNewModel(e.target.value)}
-                >
-                  <option value="percentage">
-                    {t(
-                      'admin.affiliates.percentage_profit',
-                      'Percentage of Their Profit',
-                    )}
-                  </option>
-                  <option value="monthly">
-                    {t(
-                      'admin.affiliates.fixed_monthly',
-                      'Fixed Monthly Fee (SaaS)',
-                    )}
-                  </option>
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>{t('admin.affiliates.region', 'Region')}</Label>
-                <select
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-                  value={newRegion}
-                  onChange={(e) => setNewRegion(e.target.value)}
-                >
-                  <option value="Global">Global</option>
-                  {ALL_REGIONS.filter((r) => r !== 'Global').map((r) => (
-                    <option key={r} value={r}>
-                      {r}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {newModel === 'percentage' ? (
-                <div className="space-y-2">
-                  <Label>
-                    {t('admin.affiliates.your_rate', 'Your Rate (%)')}
-                  </Label>
-                  <Input
-                    value={newRate}
-                    onChange={(e) => setNewRate(e.target.value)}
-                    type="number"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    {t(
-                      'admin.affiliates.rate_desc',
-                      'You retain this percentage.',
-                    )}
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <Label>
-                    {t('admin.affiliates.monthly_fee', 'Monthly Fee')}
-                  </Label>
-                  <Input
-                    value={newFee}
-                    onChange={(e) => setNewFee(e.target.value)}
-                    type="number"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    {t(
-                      'admin.affiliates.fee_desc',
-                      'Fixed amount charged for using the platform.',
-                    )}
-                  </p>
-                </div>
-              )}
-            </CardContent>
-            <CardFooter className="flex justify-end gap-2">
-              <Button variant="ghost" onClick={() => setIsAddModalOpen(false)}>
-                {t('common.cancel', 'Cancel')}
-              </Button>
-              <Button
-                onClick={handleLinkAffiliate}
-                disabled={!selectedPendingId}
-              >
-                {t('admin.affiliates.link_partner', 'Link Partner')}
-              </Button>
-            </CardFooter>
-          </Card>
-        </div>
-      )}
 
       {editingAffiliate && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <Card className="w-full max-w-md shadow-lg animate-in zoom-in-95 duration-200">
-            <CardHeader>
-              <CardTitle>
-                {t('admin.affiliates.edit_rules', 'Edit Affiliate Rules')}
-              </CardTitle>
-              <p className="text-sm text-muted-foreground">
-                {t(
-                  'admin.affiliates.adjust_status',
-                  'Adjust status and commission split for',
-                )}{' '}
-                <span className="font-semibold text-slate-800">
-                  {editingAffiliate.name}
-                </span>
-                .
-              </p>
+          <Card className="w-full max-w-md shadow-xl animate-in zoom-in-95 duration-200 overflow-y-auto max-h-[90vh]">
+            <CardHeader className="bg-slate-50 border-b pb-4">
+              <CardTitle>Editar Regras: {editingAffiliate.name}</CardTitle>
+              <CardDescription>
+                Ajuste aprovação e configure as comissões específicas por
+                plataforma para este parceiro.
+              </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-5 pt-6">
               <div className="space-y-2">
-                <Label>
-                  {t('admin.affiliates.account_status', 'Account Status')}
-                </Label>
+                <Label>Status da Conta</Label>
                 <select
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary"
                   value={editingAffiliate.status}
                   onChange={(e) =>
                     setEditingAffiliate({
@@ -872,126 +539,74 @@ export function AdminAffiliatesTab() {
                     })
                   }
                 >
-                  <option value="pending">
-                    {t(
-                      'admin.affiliates.pending_approval',
-                      'Pending (Awaiting)',
-                    )}
-                  </option>
-                  <option value="active">
-                    {t('admin.affiliates.active_released', 'Active (Released)')}
-                  </option>
-                  <option value="suspended">
-                    {t('admin.affiliates.suspended', 'Suspended')}
-                  </option>
-                </select>
-              </div>
-              <div className="space-y-2">
-                <Label>
-                  {t(
-                    'admin.affiliates.commission_model',
-                    'Commission Model (Your Share)',
-                  )}
-                </Label>
-                <select
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  value={editingAffiliate.commission_model}
-                  onChange={(e) =>
-                    setEditingAffiliate({
-                      ...editingAffiliate,
-                      commission_model: e.target.value,
-                    })
-                  }
-                >
-                  <option value="percentage">
-                    {t(
-                      'admin.affiliates.percentage_profit',
-                      'Percentage of Their Profit',
-                    )}
-                  </option>
-                  <option value="monthly">
-                    {t(
-                      'admin.affiliates.fixed_monthly',
-                      'Fixed Monthly Fee (SaaS)',
-                    )}
-                  </option>
+                  <option value="pending">Pendente (Aguardando)</option>
+                  <option value="active">Ativo (Aprovado)</option>
+                  <option value="suspended">Suspenso</option>
                 </select>
               </div>
 
-              <div className="space-y-2">
-                <Label>{t('admin.affiliates.region', 'Region')}</Label>
-                <select
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  value={editingAffiliate.region || 'Global'}
-                  onChange={(e) =>
-                    setEditingAffiliate({
-                      ...editingAffiliate,
-                      region: e.target.value,
-                    })
-                  }
-                >
-                  <option value="Global">Global</option>
-                  {ALL_REGIONS.filter((r) => r !== 'Global').map((r) => (
-                    <option key={r} value={r}>
-                      {r}
-                    </option>
+              <div className="space-y-4 pt-4 border-t">
+                <div>
+                  <Label className="text-base font-semibold text-slate-800">
+                    Comissões por Plataforma (%)
+                  </Label>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Defina comissões exclusivas para este parceiro. Se em
+                    branco, usa a regra base.
+                  </p>
+                </div>
+
+                {platforms
+                  .filter((p) => p.status === 'active')
+                  .map((plat) => (
+                    <div
+                      key={plat.id}
+                      className="flex items-center justify-between gap-4 bg-slate-50 p-3 rounded-lg border"
+                    >
+                      <Label className="flex-1 text-sm">
+                        {plat.name}{' '}
+                        <span className="text-xs text-muted-foreground block font-normal">
+                          Base: {plat.base_commission_rate}%
+                        </span>
+                      </Label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          className="w-20 text-right h-9"
+                          placeholder={plat.base_commission_rate.toString()}
+                          value={
+                            editPlatformComms[plat.name] !== undefined
+                              ? editPlatformComms[plat.name]
+                              : ''
+                          }
+                          onChange={(e) => {
+                            const val = e.target.value
+                            setEditPlatformComms((prev) => {
+                              const next = { ...prev }
+                              if (val === '') delete next[plat.name]
+                              else next[plat.name] = parseFloat(val)
+                              return next
+                            })
+                          }}
+                        />
+                        <span className="text-sm font-medium text-slate-500">
+                          %
+                        </span>
+                      </div>
+                    </div>
                   ))}
-                </select>
+                {platforms.length === 0 && (
+                  <div className="text-xs text-amber-600 bg-amber-50 p-2 rounded">
+                    Nenhuma plataforma cadastrada no painel.
+                  </div>
+                )}
               </div>
-
-              {editingAffiliate.commission_model === 'percentage' ? (
-                <div className="space-y-2">
-                  <Label>
-                    {t('admin.affiliates.your_rate', 'Your Rate (%)')}
-                  </Label>
-                  <Input
-                    value={editingAffiliate.commission_rate}
-                    onChange={(e) =>
-                      setEditingAffiliate({
-                        ...editingAffiliate,
-                        commission_rate: e.target.value,
-                      })
-                    }
-                    type="number"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    {t(
-                      'admin.affiliates.rate_desc',
-                      'You retain this percentage.',
-                    )}
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <Label>
-                    {t('admin.affiliates.monthly_fee', 'Monthly Fee')}
-                  </Label>
-                  <Input
-                    value={editingAffiliate.monthly_fee}
-                    onChange={(e) =>
-                      setEditingAffiliate({
-                        ...editingAffiliate,
-                        monthly_fee: e.target.value,
-                      })
-                    }
-                    type="number"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    {t(
-                      'admin.affiliates.fee_desc',
-                      'Fixed amount charged for using the platform.',
-                    )}
-                  </p>
-                </div>
-              )}
             </CardContent>
-            <CardFooter className="flex justify-end gap-2">
+            <CardFooter className="flex justify-end gap-3 bg-slate-50 border-t pt-4 mt-2">
               <Button variant="ghost" onClick={() => setEditingAffiliate(null)}>
-                {t('common.cancel', 'Cancel')}
+                Cancelar
               </Button>
-              <Button onClick={handleUpdateAffiliate}>
-                {t('common.save', 'Save Changes')}
-              </Button>
+              <Button onClick={handleUpdateAffiliate}>Salvar Alterações</Button>
             </CardFooter>
           </Card>
         </div>

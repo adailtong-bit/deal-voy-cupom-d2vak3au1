@@ -25,6 +25,7 @@ import TravelPage from '@/pages/TravelPage'
 import Explore from '@/pages/Explore'
 import Profile from '@/pages/Profile'
 import Login from '@/pages/Login'
+import AffiliateDashboard from '@/pages/AffiliateDashboard'
 import { useEffect } from 'react'
 import { UserRole } from '@/lib/types'
 import { AuthProvider, useAuth } from '@/hooks/use-auth'
@@ -249,6 +250,16 @@ export default function App() {
                         roles={['franchisee', 'super_admin', 'admin'] as any}
                       >
                         <FranchiseeDashboard />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route
+                    path="/affiliate"
+                    element={
+                      <RequireAuth
+                        roles={['affiliate', 'super_admin', 'admin'] as any}
+                      >
+                        <AffiliateDashboard />
                       </RequireAuth>
                     }
                   />
