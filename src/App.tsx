@@ -107,6 +107,8 @@ function PageTitleSync() {
       title = `Routevoy - ${t('nav.vendor', 'Vendor Dashboard')}`
     else if (path.startsWith('/franchisee'))
       title = `Routevoy - ${t('nav.franchisee', 'Regional Dashboard')}`
+    else if (path.startsWith('/affiliate'))
+      title = `Routevoy - ${t('nav.affiliate', 'Affiliate Dashboard')}`
     else if (path.startsWith('/explore'))
       title = `Routevoy - ${t('nav.explore', 'Explore')}`
     else if (path.startsWith('/vouchers'))

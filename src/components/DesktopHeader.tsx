@@ -128,12 +128,20 @@ export function DesktopHeader() {
                 {t('nav.franchisee', 'Painel Regional')}
               </Link>
             )}
-            {user?.role === 'shopkeeper' && (
+            {(user?.role === 'shopkeeper' || user?.role === 'merchant') && (
               <Link
-                to="/vendor"
+                to="/merchant"
                 className="transition-colors text-primary hover:text-primary/80 font-bold whitespace-nowrap"
               >
                 {t('nav.vendor', 'Painel do Lojista')}
+              </Link>
+            )}
+            {user?.role === 'affiliate' && (
+              <Link
+                to="/affiliate"
+                className="transition-colors text-primary hover:text-primary/80 font-bold whitespace-nowrap"
+              >
+                {t('nav.affiliate', 'Painel de Afiliado')}
               </Link>
             )}
           </nav>

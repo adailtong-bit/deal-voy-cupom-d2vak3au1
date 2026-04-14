@@ -12,11 +12,15 @@ import {
 import { cn } from '@/lib/utils'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useCouponStore } from '@/stores/CouponContext'
+import { useAuth } from '@/hooks/use-auth'
 
 export function MobileNav() {
   const location = useLocation()
   const { t } = useLanguage()
-  const { user } = useCouponStore()
+  const { user: storeUser } = useCouponStore()
+  const { role: authRole } = useAuth()
+
+  const role = authRole || storeUser?.role
 
   let navItems = [
     { icon: Home, label: t('nav.home', 'Início'), path: '/' },
@@ -26,21 +30,27 @@ export function MobileNav() {
     { icon: User, label: t('nav.profile', 'Perfil'), path: '/profile' },
   ]
 
-  if (user?.role === 'super_admin') {
+  if (role === 'super_admin' || role === 'admin') {
     navItems = [
       { icon: LayoutDashboard, label: 'Admin', path: '/admin' },
       { icon: Compass, label: t('nav.explore', 'Explorar'), path: '/explore' },
       { icon: User, label: t('nav.profile', 'Perfil'), path: '/profile' },
     ]
-  } else if (user?.role === 'shopkeeper') {
+  } else if (role === 'shopkeeper' || role === 'merchant') {
     navItems = [
-      { icon: Store, label: 'Vendor', path: '/vendor' },
+      { icon: Store, label: 'Vendor', path: '/merchant' },
       { icon: Compass, label: t('nav.explore', 'Explorar'), path: '/explore' },
       { icon: User, label: t('nav.profile', 'Perfil'), path: '/profile' },
     ]
-  } else if (user?.role === 'franchisee') {
+  } else if (role === 'franchisee') {
     navItems = [
       { icon: ShieldCheck, label: 'Franchise', path: '/franchisee' },
+      { icon: Compass, label: t('nav.explore', 'Explorar'), path: '/explore' },
+      { icon: User, label: t('nav.profile', 'Perfil'), path: '/profile' },
+    ]
+  } else if (role === 'affiliate') {
+    navItems = [
+      { icon: LayoutDashboard, label: 'Afiliado', path: '/affiliate' },
       { icon: Compass, label: t('nav.explore', 'Explorar'), path: '/explore' },
       { icon: User, label: t('nav.profile', 'Perfil'), path: '/profile' },
     ]
