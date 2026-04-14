@@ -93,7 +93,9 @@ export function AdminAffiliatesTab() {
     if (savedIds) {
       try {
         setAffiliateIds(JSON.parse(savedIds))
-      } catch (e) {}
+      } catch (e) {
+        console.error('Failed to parse saved affiliate IDs', e)
+      }
     }
   }, [])
 
