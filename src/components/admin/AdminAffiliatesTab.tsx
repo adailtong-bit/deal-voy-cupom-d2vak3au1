@@ -21,7 +21,12 @@ import {
   RefreshCw,
   Edit2,
   Trash2,
+  Download,
+  Save,
+  ExternalLink,
+  Search,
 } from 'lucide-react'
+import { searchAffiliateDeals } from '@/services/affiliates'
 import { toast } from 'sonner'
 import { useRegionFormatting } from '@/hooks/useRegionFormatting'
 import { useLanguage } from '@/stores/LanguageContext'
@@ -42,6 +47,15 @@ export function AdminAffiliatesTab() {
   const [newRate, setNewRate] = useState('30')
   const [newFee, setNewFee] = useState('0')
   const [newRegion, setNewRegion] = useState('Global')
+
+  const [affiliateIds, setAffiliateIds] = useState({
+    amazon: '',
+    aliexpress: '',
+    shopee: '',
+  })
+  const [importQuery, setImportQuery] = useState('')
+  const [importResults, setImportResults] = useState<any[]>([])
+  const [isSearchingImport, setIsSearchingImport] = useState(false)
 
   const savedSettings = localStorage.getItem('system_settings')
   const settings = savedSettings ? JSON.parse(savedSettings) : {}
@@ -75,7 +89,58 @@ export function AdminAffiliatesTab() {
 
   useEffect(() => {
     fetchData()
+    const savedIds = localStorage.getItem('master_affiliate_ids')
+    if (savedIds) {
+      try {
+        setAffiliateIds(JSON.parse(savedIds))
+      } catch (e) {}
+    }
   }, [])
+
+  const saveAffiliateIds = () => {
+    localStorage.setItem('master_affiliate_ids', JSON.stringify(affiliateIds))
+    toast.success(t('common.success', 'Configurações de integração salvas!'))
+  }
+
+  const handleSearchImport = async () => {
+    if (!importQuery.trim()) return
+    setIsSearchingImport(true)
+    try {
+      const results = await searchAffiliateDeals(importQuery, 10, affiliateIds)
+      setImportResults(results || [])
+      if (results?.length === 0) {
+        toast.info(t('common.info', 'Nenhuma campanha encontrada.'))
+      }
+    } catch (err: any) {
+      toast.error(t('common.error', 'Erro na busca: ') + err.message)
+    } finally {
+      setIsSearchingImport(false)
+    }
+  }
+
+  const handleImportToSite = async (deal: any) => {
+    try {
+      const { error } = await supabase.from('discovered_promotions').insert({
+        title: deal.title,
+        description: deal.description,
+        price: deal.price,
+        original_price: deal.originalPrice,
+        discount: deal.discount,
+        discount_percentage: deal.discountPercentage,
+        image_url: deal.imageUrl,
+        product_link: deal.productLink,
+        store_name: deal.storeName,
+        status: 'approved',
+        category: 'affiliate',
+        currency: deal.currency || 'BRL',
+      })
+      if (error) throw error
+      toast.success(t('common.success', 'Campanha importada para o site!'))
+      setImportResults((prev) => prev.filter((d) => d.id !== deal.id))
+    } catch (error: any) {
+      toast.error(t('common.error', 'Erro ao importar: ') + error.message)
+    }
+  }
 
   const handleLinkAffiliate = async () => {
     if (!selectedPendingId) {
@@ -226,6 +291,10 @@ export function AdminAffiliatesTab() {
           <TabsTrigger value="transactions" className="gap-2">
             <DollarSign className="w-4 h-4" />{' '}
             {t('admin.affiliates.transactions', 'Transactions (Split)')}
+          </TabsTrigger>
+          <TabsTrigger value="import" className="gap-2">
+            <Download className="w-4 h-4" />{' '}
+            {t('admin.affiliates.import', 'Importar Campanhas')}
           </TabsTrigger>
         </TabsList>
 
@@ -453,6 +522,178 @@ export function AdminAffiliatesTab() {
               </table>
             </div>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="import" className="space-y-6">
+          <div className="grid md:grid-cols-3 gap-6">
+            <Card className="md:col-span-1 h-fit">
+              <CardHeader>
+                <CardTitle className="text-lg">
+                  {t(
+                    'admin.affiliates.integration_settings',
+                    'Configurações de Integração',
+                  )}
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  {t(
+                    'admin.affiliates.integration_desc',
+                    'Cadastre seus IDs de afiliado para rastreio e monetização.',
+                  )}
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Amazon Affiliate ID</Label>
+                  <Input
+                    value={affiliateIds.amazon}
+                    onChange={(e) =>
+                      setAffiliateIds({
+                        ...affiliateIds,
+                        amazon: e.target.value,
+                      })
+                    }
+                    placeholder="ex: routevoy-20"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>AliExpress Affiliate ID</Label>
+                  <Input
+                    value={affiliateIds.aliexpress}
+                    onChange={(e) =>
+                      setAffiliateIds({
+                        ...affiliateIds,
+                        aliexpress: e.target.value,
+                      })
+                    }
+                    placeholder="ex: routevoy_ali"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Shopee Affiliate ID</Label>
+                  <Input
+                    value={affiliateIds.shopee}
+                    onChange={(e) =>
+                      setAffiliateIds({
+                        ...affiliateIds,
+                        shopee: e.target.value,
+                      })
+                    }
+                    placeholder="ex: routevoy_shp"
+                  />
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button onClick={saveAffiliateIds} className="w-full gap-2">
+                  <Save className="w-4 h-4" /> {t('common.save', 'Salvar IDs')}
+                </Button>
+              </CardFooter>
+            </Card>
+
+            <Card className="md:col-span-2">
+              <CardHeader>
+                <CardTitle className="text-lg">
+                  {t(
+                    'admin.affiliates.search_campaigns',
+                    'Buscar e Importar Campanhas',
+                  )}
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  {t(
+                    'admin.affiliates.search_desc',
+                    'Busque ofertas nas redes e importe diretamente para o site.',
+                  )}
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex gap-2">
+                  <Input
+                    value={importQuery}
+                    onChange={(e) => setImportQuery(e.target.value)}
+                    placeholder={t(
+                      'admin.affiliates.search_placeholder',
+                      'Ex: iPhone 15, Notebook...',
+                    )}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearchImport()}
+                  />
+                  <Button
+                    onClick={handleSearchImport}
+                    disabled={isSearchingImport}
+                  >
+                    {isSearchingImport ? (
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Search className="w-4 h-4" />
+                    )}
+                  </Button>
+                </div>
+
+                <div className="space-y-3 mt-4 max-h-[500px] overflow-y-auto pr-2">
+                  {importResults.length === 0 && !isSearchingImport && (
+                    <div className="text-center py-8 text-muted-foreground border rounded-lg border-dashed">
+                      {t(
+                        'admin.affiliates.no_results',
+                        'Nenhuma campanha buscada ainda.',
+                      )}
+                    </div>
+                  )}
+                  {importResults.map((deal) => (
+                    <div
+                      key={deal.id}
+                      className="flex flex-col sm:flex-row gap-4 p-3 border rounded-lg hover:bg-slate-50 transition-colors bg-white"
+                    >
+                      <img
+                        src={deal.imageUrl}
+                        alt={deal.title}
+                        className="w-full sm:w-20 h-32 sm:h-20 object-cover rounded-md border"
+                      />
+                      <div className="flex-1 min-w-0 flex flex-col justify-between">
+                        <div>
+                          <h4 className="font-semibold text-sm line-clamp-2">
+                            {deal.title}
+                          </h4>
+                          <div className="flex flex-wrap items-center gap-2 mt-1">
+                            <Badge
+                              variant="secondary"
+                              className="text-xs bg-slate-100"
+                            >
+                              {deal.storeName}
+                            </Badge>
+                            <span className="text-xs text-green-600 font-bold">
+                              {deal.discountPercentage?.toFixed(0)}% OFF
+                            </span>
+                            <span className="text-xs text-muted-foreground line-through">
+                              R$ {deal.originalPrice}
+                            </span>
+                            <span className="text-sm font-bold">
+                              R$ {deal.price}
+                            </span>
+                          </div>
+                          <a
+                            href={deal.productLink}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-[10px] text-blue-500 hover:underline mt-2 inline-flex items-center gap-1"
+                          >
+                            <ExternalLink className="w-3 h-3" /> Testar Link com
+                            ID
+                          </a>
+                        </div>
+                      </div>
+                      <div className="flex flex-col justify-center mt-2 sm:mt-0">
+                        <Button
+                          size="sm"
+                          onClick={() => handleImportToSite(deal)}
+                          className="gap-2 w-full sm:w-auto"
+                        >
+                          <Download className="w-4 h-4" /> Importar
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
 

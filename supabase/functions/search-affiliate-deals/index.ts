@@ -7,15 +7,23 @@ const corsHeaders = {
     'authorization, x-client-info, x-supabase-client-platform, apikey, content-type',
 }
 
-async function fetchAffiliateDeals(query: string) {
+async function fetchAffiliateDeals(
+  query: string,
+  affiliateIds: Record<string, string>,
+) {
   // Mocking external affiliate API (CJ, Rakuten, Awin, Amazon)
   const basePrice = Math.floor(Math.random() * 100) + 50
+
+  const amazonId = affiliateIds?.amazon || 'routevoy_amz'
+  const aliexpressId = affiliateIds?.aliexpress || 'routevoy_ali'
+  const shopeeId = affiliateIds?.shopee || 'routevoy_shp'
+
   return [
     {
       title: `Oferta Especial Afiliado: ${query} (Amazon)`,
       price: `$${basePrice}`,
       oldPrice: `$${basePrice + 20}`,
-      link: 'https://amazon.com?aff_id=routevoy',
+      link: `https://amazon.com/dp/B08N5WRWNW?tag=${amazonId}`,
       image: `https://img.usecurling.com/p/400/400?q=${encodeURIComponent(query)}`,
       source: 'affiliate',
       commission: 8, // %
@@ -24,7 +32,7 @@ async function fetchAffiliateDeals(query: string) {
       title: `${query} com Desconto Exclusivo (AliExpress)`,
       price: `$${basePrice - 15}`,
       oldPrice: `$${basePrice + 15}`,
-      link: 'https://aliexpress.com?aff_id=routevoy',
+      link: `https://aliexpress.com/item/100500.html?aff_id=${aliexpressId}`,
       image: `https://img.usecurling.com/p/400/400?q=${encodeURIComponent(query)}&color=red`,
       source: 'affiliate',
       commission: 12, // %
@@ -33,7 +41,7 @@ async function fetchAffiliateDeals(query: string) {
       title: `Promoção Parceiro: ${query} (Shopee)`,
       price: `$${basePrice - 5}`,
       oldPrice: `$${basePrice + 10}`,
-      link: 'https://shopee.com?aff_id=routevoy',
+      link: `https://shopee.com/product/123/456?aff_id=${shopeeId}`,
       image: `https://img.usecurling.com/p/400/400?q=${encodeURIComponent(query)}&color=orange`,
       source: 'affiliate',
       commission: 10, // %
@@ -96,9 +104,11 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const { query, limit = 10 } = await req.json()
+    const { query, limit = 10, affiliateIds = {} } = await req.json()
 
-    const affiliateDeals = query ? await fetchAffiliateDeals(query) : []
+    const affiliateDeals = query
+      ? await fetchAffiliateDeals(query, affiliateIds)
+      : []
     const enriched = enrichDeals(affiliateDeals)
     const ranked = rankDeals(enriched)
 

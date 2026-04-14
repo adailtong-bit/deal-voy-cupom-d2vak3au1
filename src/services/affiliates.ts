@@ -4,12 +4,13 @@ import { DiscoveredPromotion } from '@/lib/types'
 export const searchAffiliateDeals = async (
   query: string,
   limit: number = 10,
+  affiliateIds?: Record<string, string>,
 ): Promise<DiscoveredPromotion[]> => {
   try {
     const { data, error } = await supabase.functions.invoke(
       'search-affiliate-deals',
       {
-        body: { query, limit },
+        body: { query, limit, affiliateIds },
       },
     )
 

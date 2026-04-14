@@ -127,9 +127,12 @@ function IndexContent() {
       if (searchQuery.trim().length > 2) {
         setIsSearchingWeb(true)
         try {
+          const savedIds = localStorage.getItem('master_affiliate_ids')
+          const affiliateIds = savedIds ? JSON.parse(savedIds) : undefined
+
           const [results, affRes] = await Promise.all([
             searchWeb(searchQuery).catch(() => []),
-            searchAffiliateDeals(searchQuery).catch(() => []),
+            searchAffiliateDeals(searchQuery, 10, affiliateIds).catch(() => []),
           ])
           setWebResults(Array.isArray(results) ? results : [])
           setAffiliateResults(Array.isArray(affRes) ? affRes : [])
