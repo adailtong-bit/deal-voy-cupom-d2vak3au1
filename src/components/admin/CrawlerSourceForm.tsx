@@ -84,9 +84,15 @@ export function CrawlerSourceForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+
+    let finalUrl = formData.url.trim()
+    if (finalUrl && !/^https?:\/\//i.test(finalUrl)) {
+      finalUrl = 'https://' + finalUrl
+    }
+
     onSave({
       name: formData.name,
-      url: formData.url,
+      url: finalUrl,
       type: formData.type as 'web' | 'api' | 'app',
       region: formData.region,
       country: formData.country,

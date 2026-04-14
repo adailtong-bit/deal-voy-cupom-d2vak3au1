@@ -82,3 +82,55 @@ export const deletePromotion = async (id: string) => {
   if (error) throw error
   return true
 }
+
+export const fetchCrawlerSources = async () => {
+  const { data, error } = await supabase
+    .from('crawler_sources')
+    .select('*')
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching crawler sources', error)
+    return []
+  }
+  return data
+}
+
+export const saveCrawlerSource = async (source: any) => {
+  const { data, error } = await supabase
+    .from('crawler_sources')
+    .insert([source])
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error saving crawler source', error)
+    throw error
+  }
+  return data
+}
+
+export const updateCrawlerSource = async (id: string, source: any) => {
+  const { data, error } = await supabase
+    .from('crawler_sources')
+    .update(source)
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error updating crawler source', error)
+    throw error
+  }
+  return data
+}
+
+export const deleteCrawlerSource = async (id: string) => {
+  const { error } = await supabase.from('crawler_sources').delete().eq('id', id)
+
+  if (error) {
+    console.error('Error deleting crawler source', error)
+    throw error
+  }
+  return true
+}

@@ -36,34 +36,52 @@ import { cn } from '@/lib/utils'
 import { CrawlerSourceForm } from './CrawlerSourceForm'
 import { CrawlerSource } from '@/lib/types'
 import { useToast } from '@/hooks/use-toast'
+import {
+  fetchCrawlerSources,
+  saveCrawlerSource,
+  updateCrawlerSource,
+  deleteCrawlerSource,
+} from '@/services/crawler'
 
 export function CrawlerSourcesTab() {
   const { toast } = useToast()
-  const [sources, setSources] = useState<CrawlerSource[]>(() => {
-    const saved = localStorage.getItem('crawler_sources')
-    if (saved) return JSON.parse(saved)
-    return [
-      {
-        id: '1',
-        name: 'Amazon',
-        url: 'https://www.amazon.com.br',
-        type: 'web',
-        region: 'Global',
-        country: 'Brasil',
-        state: '',
-        city: '',
-        scanRadius: 50,
-        status: 'active',
-        category: 'Eletrônicos',
-        lastScan: null,
-      },
-    ]
-  })
+  const [sources, setSources] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
   const [isFormOpen, setIsFormOpen] = useState(false)
-  const [editingSource, setEditingSource] = useState<CrawlerSource | null>(null)
+  const [editingSource, setEditingSource] = useState<any>(null)
 
   const [progress, setProgress] = useState(getCrawlerProgress())
+
+  const loadSources = async () => {
+    try {
+      setIsLoading(true)
+      const data = await fetchCrawlerSources()
+      const mapped = data.map((item: any) => ({
+        id: item.id,
+        name: item.name,
+        url: item.url,
+        type: item.type,
+        region: item.region,
+        country: item.country,
+        state: item.state,
+        city: item.city,
+        scanRadius: item.scan_radius,
+        status: item.status,
+        category: item.category,
+        lastScan: item.last_scan,
+      }))
+      setSources(mapped)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadSources()
+  }, [])
 
   useEffect(() => {
     return subscribeCrawler(() => {
@@ -71,58 +89,64 @@ export function CrawlerSourcesTab() {
     })
   }, [])
 
-  useEffect(() => {
-    localStorage.setItem('crawler_sources', JSON.stringify(sources))
-  }, [sources])
-
-  const pingUrl = async (url: string) => {
-    try {
-      await fetch(url, { method: 'HEAD', mode: 'no-cors' })
-      return true
-    } catch (e) {
-      return false
-    }
-  }
-
   const handleSaveSource = async (
     data: Omit<CrawlerSource, 'id' | 'status' | 'lastScan'>,
   ) => {
-    const isValid = await pingUrl(data.url)
-    if (!isValid) {
+    try {
+      new URL(data.url)
+    } catch (e) {
       toast({
-        title: 'URL Inválida ou Inacessível',
-        description:
-          'Não foi possível estabelecer conexão (Handshake) com a fonte. A entrada foi descartada.',
+        title: 'URL Inválida',
+        description: 'Por favor, insira uma URL válida (ex: https://site.com)',
         variant: 'destructive',
       })
       return
     }
 
-    if (editingSource) {
-      setSources(
-        sources.map((s) => (s.id === editingSource.id ? { ...s, ...data } : s)),
-      )
-      toast({ title: 'Fonte atualizada com sucesso' })
-    } else {
-      const newSource: CrawlerSource = {
-        ...data,
-        id: Math.random().toString(36).substr(2, 9),
-        status: 'active',
-        lastScan: null,
+    try {
+      const dbPayload = {
+        name: data.name,
+        url: data.url,
+        type: data.type,
+        region: data.region,
+        country: data.country,
+        state: data.state,
+        city: data.city,
+        scan_radius: data.scanRadius,
+        category: data.category,
       }
-      setSources([newSource, ...sources])
-      toast({ title: 'Fonte adicionada com sucesso' })
+
+      if (editingSource) {
+        await updateCrawlerSource(editingSource.id, dbPayload)
+        toast({ title: 'Fonte atualizada com sucesso' })
+      } else {
+        await saveCrawlerSource(dbPayload)
+        toast({ title: 'Fonte adicionada com sucesso' })
+      }
+      setIsFormOpen(false)
+      setEditingSource(null)
+      loadSources()
+    } catch (error: any) {
+      toast({
+        title: 'Erro ao salvar fonte',
+        description:
+          error.message || 'Houve um problema ao comunicar com o servidor.',
+        variant: 'destructive',
+      })
     }
-    setIsFormOpen(false)
-    setEditingSource(null)
   }
 
-  const handleDelete = (id: string) => {
-    setSources(sources.filter((s) => s.id !== id))
-    toast({ title: 'Fonte removida' })
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteCrawlerSource(id)
+      toast({ title: 'Fonte removida' })
+      loadSources()
+    } catch (error) {
+      toast({ title: 'Erro ao remover', variant: 'destructive' })
+    }
   }
 
-  const handleStart = (source: CrawlerSource) => {
+  const handleStart = async (source: any) => {
     if (progress.isScanning) return
     startExtractionTask(source.name, 50, source.url, {
       country: source.country,
@@ -130,11 +154,15 @@ export function CrawlerSourcesTab() {
       city: source.city,
       category: source.category,
     })
-    setSources(
-      sources.map((s) =>
-        s.id === source.id ? { ...s, lastScan: new Date().toISOString() } : s,
-      ),
-    )
+    try {
+      const now = new Date().toISOString()
+      await updateCrawlerSource(source.id, { last_scan: now })
+      setSources(
+        sources.map((s) => (s.id === source.id ? { ...s, lastScan: now } : s)),
+      )
+    } catch (e) {
+      console.error(e)
+    }
   }
 
   const handleStop = () => {
@@ -183,7 +211,16 @@ export function CrawlerSourcesTab() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {sources.length === 0 ? (
+                  {isLoading ? (
+                    <tr>
+                      <td
+                        colSpan={6}
+                        className="px-4 py-8 text-center text-slate-500"
+                      >
+                        <Loader2 className="h-5 w-5 animate-spin mx-auto text-blue-600" />
+                      </td>
+                    </tr>
+                  ) : sources.length === 0 ? (
                     <tr>
                       <td
                         colSpan={6}
