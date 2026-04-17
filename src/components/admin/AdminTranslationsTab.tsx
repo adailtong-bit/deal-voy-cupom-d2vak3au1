@@ -2,13 +2,15 @@ import { useState, useMemo } from 'react'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { useLanguage } from '@/stores/LanguageContext'
-import { Plus, Search, Globe, Check, X } from 'lucide-react'
+import { Plus, Search, Globe, Check, X, Edit, Trash2 } from 'lucide-react'
 
 export function AdminTranslationsTab() {
   const {
     t,
     supportedLanguages,
     addLanguage,
+    updateLanguage,
+    deleteLanguage,
     getAllKeys,
     getDefaultTranslation,
     overrides,
@@ -18,8 +20,10 @@ export function AdminTranslationsTab() {
   const [selectedLang, setSelectedLang] = useState('en')
 
   const [isAddLangOpen, setIsAddLangOpen] = useState(false)
+  const [isEditLangOpen, setIsEditLangOpen] = useState(false)
   const [newLangCode, setNewLangCode] = useState('')
   const [newLangName, setNewLangName] = useState('')
+  const [editLangName, setEditLangName] = useState('')
 
   const allKeys = useMemo(() => getAllKeys(), [])
 
@@ -36,6 +40,37 @@ export function AdminTranslationsTab() {
       setNewLangCode('')
       setNewLangName('')
       setIsAddLangOpen(false)
+    }
+  }
+
+  const handleEditLanguage = () => {
+    if (selectedLang && editLangName) {
+      updateLanguage(selectedLang, editLangName)
+      setIsEditLangOpen(false)
+    }
+  }
+
+  const handleDeleteLanguage = () => {
+    if (
+      confirm(
+        t(
+          'admin.translations.confirm_delete',
+          'Are you sure you want to delete this language?',
+        ),
+      )
+    ) {
+      const nextLang =
+        supportedLanguages.find((l) => l.code !== selectedLang)?.code || 'en'
+      deleteLanguage(selectedLang)
+      setSelectedLang(nextLang)
+    }
+  }
+
+  const openEditModal = () => {
+    const lang = supportedLanguages.find((l) => l.code === selectedLang)
+    if (lang) {
+      setEditLangName(lang.name)
+      setIsEditLangOpen(true)
     }
   }
 
@@ -59,6 +94,48 @@ export function AdminTranslationsTab() {
           {t('admin.translations.add_lang', 'Add Language')}
         </Button>
       </div>
+
+      {isEditLangOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-md overflow-hidden animate-fade-in-up">
+            <div className="flex justify-between items-center p-4 border-b">
+              <h3 className="text-lg font-semibold">
+                {t('admin.translations.edit_lang_title', 'Edit Language')}
+              </h3>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsEditLangOpen(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="p-4 space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">
+                  {t('admin.translations.lang_name', 'Language Name')}
+                </label>
+                <input
+                  value={editLangName}
+                  onChange={(e) => setEditLangName(e.target.value)}
+                  className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end p-4 border-t gap-2 bg-slate-50">
+              <Button
+                variant="outline"
+                onClick={() => setIsEditLangOpen(false)}
+              >
+                {t('admin.translations.cancel', 'Cancel')}
+              </Button>
+              <Button onClick={handleEditLanguage} disabled={!editLangName}>
+                {t('admin.translations.save_lang', 'Save Language')}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {isAddLangOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -123,8 +200,8 @@ export function AdminTranslationsTab() {
       <Card>
         <CardHeader className="pb-3 border-b border-slate-100">
           <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-            <div className="flex items-center gap-2 w-full sm:w-1/3">
-              <Globe className="h-4 w-4 text-muted-foreground" />
+            <div className="flex items-center gap-2 w-full sm:w-1/2">
+              <Globe className="h-4 w-4 text-muted-foreground shrink-0" />
               <select
                 value={selectedLang}
                 onChange={(e) => setSelectedLang(e.target.value)}
@@ -136,6 +213,24 @@ export function AdminTranslationsTab() {
                   </option>
                 ))}
               </select>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={openEditModal}
+                title={t('common.edit', 'Edit')}
+              >
+                <Edit className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleDeleteLanguage}
+                disabled={supportedLanguages.length <= 1}
+                title={t('common.delete', 'Delete')}
+                className="text-red-500 hover:text-red-600 hover:bg-red-50"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
             </div>
             <div className="relative w-full sm:w-1/2">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />

@@ -27,6 +27,8 @@ type LanguageContextType = {
   locale: string
   supportedLanguages: { code: string; name: string }[]
   addLanguage: (code: string, name: string) => void
+  updateLanguage: (code: string, newName: string) => void
+  deleteLanguage: (code: string) => void
   overrides: Record<string, Record<string, string>>
   updateTranslation: (lang: string, path: string, value: string) => void
   getAllKeys: () => string[]
@@ -118,6 +120,29 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const updateLanguage = (code: string, newName: string) => {
+    setSupportedLanguages((prev: any) =>
+      prev.map((l: any) => (l.code === code ? { ...l, name: newName } : l)),
+    )
+  }
+
+  const deleteLanguage = (code: string) => {
+    setSupportedLanguages((prev: any) =>
+      prev.filter((l: any) => l.code !== code),
+    )
+    setOverrides((prev) => {
+      const newOverrides = { ...prev }
+      delete newOverrides[code]
+      return newOverrides
+    })
+    if (language === code) {
+      const remaining = supportedLanguages.filter((l: any) => l.code !== code)
+      if (remaining.length > 0) {
+        setLanguageState(remaining[0].code)
+      }
+    }
+  }
+
   const updateTranslation = (lang: string, path: string, value: string) => {
     setOverrides((prev) => ({
       ...prev,
@@ -192,6 +217,8 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         locale,
         supportedLanguages,
         addLanguage,
+        updateLanguage,
+        deleteLanguage,
         overrides,
         updateTranslation,
         getAllKeys,
