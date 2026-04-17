@@ -1,6 +1,7 @@
 {
   "_versions": {
     "crawl-promotions": 12,
-    "search-affiliate-deals": 7
+    "search-affiliate-deals": 7,
+    "send-invitation": 1
   }
 }

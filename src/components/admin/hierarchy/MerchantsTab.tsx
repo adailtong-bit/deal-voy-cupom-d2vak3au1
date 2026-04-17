@@ -31,6 +31,7 @@ import { Company } from '@/lib/types'
 import { AdvancedCompanyForm } from './AdvancedCompanyForm'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { supabase } from '@/lib/supabase/client'
 
 export function MerchantsTab({ franchiseId }: { franchiseId?: string }) {
   const { companies, franchises, addCompany, updateCompany, deleteCompany } =
@@ -144,9 +145,24 @@ export function MerchantsTab({ franchiseId }: { franchiseId?: string }) {
     }
   }
 
-  const handleSendCredentials = (c: Company) => {
-    updateCompany(c.id, { credentialsSent: true })
-    toast.success(t('common.success', `Credenciais enviadas para ${c.email}`))
+  const handleSendCredentials = async (c: Company) => {
+    try {
+      const { error } = await supabase.functions.invoke('send-invitation', {
+        body: {
+          email: c.email,
+          name: c.name,
+          role: 'lojista',
+          invitationUrl: `${window.location.origin}/login?tab=register&email=${encodeURIComponent(c.email)}`,
+        },
+      })
+      if (error) throw error
+
+      updateCompany(c.id, { credentialsSent: true })
+      toast.success(t('common.success', `Credenciais enviadas para ${c.email}`))
+    } catch (err: any) {
+      console.error('Error sending credentials:', err)
+      toast.error(t('common.error', 'Erro ao enviar credenciais'))
+    }
   }
 
   return (

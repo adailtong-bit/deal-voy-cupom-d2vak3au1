@@ -32,6 +32,7 @@ import { Plus, Edit2, Trash2, Mail, Send } from 'lucide-react'
 import { User } from '@/lib/types'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { supabase } from '@/lib/supabase/client'
 
 interface StaffTabProps {
   parentType?: 'franchise' | 'company' | 'global'
@@ -112,30 +113,45 @@ export function StaffTab({ parentType = 'global', parentId }: StaffTabProps) {
     setIsDialogOpen(false)
   }
 
-  const handleInvite = () => {
-    const newUser: User = {
-      id: Math.random().toString(),
-      name: inviteData.name,
-      email: inviteData.email,
-      role: 'staff',
-      staffRole: inviteData.staffRole,
-      companyId: parentType === 'company' ? parentId : undefined,
-      franchiseId: parentType === 'franchise' ? parentId : undefined,
-      status: 'invited',
+  const handleInvite = async () => {
+    try {
+      const { error } = await supabase.functions.invoke('send-invitation', {
+        body: {
+          email: inviteData.email,
+          name: inviteData.name,
+          role: inviteData.staffRole || 'membro da equipe',
+          invitationUrl: `${window.location.origin}/login?tab=register&email=${encodeURIComponent(inviteData.email)}`,
+        },
+      })
+      if (error) throw error
+
+      const newUser: User = {
+        id: Math.random().toString(),
+        name: inviteData.name,
+        email: inviteData.email,
+        role: 'staff',
+        staffRole: inviteData.staffRole,
+        companyId: parentType === 'company' ? parentId : undefined,
+        franchiseId: parentType === 'franchise' ? parentId : undefined,
+        status: 'invited',
+      }
+      addUser(newUser)
+      toast.success(
+        t(
+          'common.success',
+          `Convite enviado para ${inviteData.email} com link seguro.`,
+        ),
+      )
+      setIsInviteDialogOpen(false)
+      setInviteData({
+        name: '',
+        email: '',
+        staffRole: t('franchisee.staff.default_manager', 'Manager'),
+      })
+    } catch (err: any) {
+      console.error('Error sending invite:', err)
+      toast.error(t('common.error', 'Erro ao enviar convite'))
     }
-    addUser(newUser)
-    toast.success(
-      t(
-        'common.success',
-        `Convite enviado para ${inviteData.email} com link seguro.`,
-      ),
-    )
-    setIsInviteDialogOpen(false)
-    setInviteData({
-      name: '',
-      email: '',
-      staffRole: t('franchisee.staff.default_manager', 'Manager'),
-    })
   }
 
   const getParentName = (u: User) => {

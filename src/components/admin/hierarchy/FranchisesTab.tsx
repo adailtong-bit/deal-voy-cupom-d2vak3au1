@@ -149,14 +149,30 @@ export function FranchisesTab() {
     }
   }
 
-  const handleSendCredentials = (f: Franchise) => {
-    updateFranchise(f.id, { credentialsSent: true })
-    toast.success(
-      t(
-        'admin.franchises.credentials_emailed',
-        'Credentials emailed to Franchise Partner',
-      ),
-    )
+  const handleSendCredentials = async (f: Franchise) => {
+    try {
+      const email = f.email || f.contactEmail || f.ownerId
+      const { error } = await supabase.functions.invoke('send-invitation', {
+        body: {
+          email: email,
+          name: f.name || f.contactPerson,
+          role: 'franqueado',
+          invitationUrl: `${window.location.origin}/login?tab=register&email=${encodeURIComponent(email || '')}`,
+        },
+      })
+      if (error) throw error
+
+      updateFranchise(f.id, { credentialsSent: true })
+      toast.success(
+        t(
+          'admin.franchises.credentials_emailed',
+          'Credentials emailed to Franchise Partner',
+        ),
+      )
+    } catch (err: any) {
+      console.error('Error sending credentials:', err)
+      toast.error(t('common.error', 'Erro ao enviar credenciais'))
+    }
   }
 
   const handleAccountingExport = (f: Franchise) => {
