@@ -106,13 +106,11 @@ function IndexContent() {
         const { data, error } = await supabase
           .from('discovered_promotions')
           .select('*')
-          .in('status', ['approved', 'active'])
+          .eq('status', 'published')
           .order('captured_at', { ascending: false })
           .limit(20)
 
         if (data && !error) {
-          // Map snake_case back to camelCase for the frontend if needed,
-          // or just pass as is (PromotionCard handles both now)
           setSupabasePromos(data)
         }
       } catch (e) {
@@ -276,8 +274,35 @@ function IndexContent() {
         storeName.toLowerCase().includes(textToMatch) ||
         category.toLowerCase().includes(textToMatch)
 
-      const matchesCategory =
-        selectedCategory === 'all' || category === selectedCategory
+      let matchesCategory = selectedCategory === 'all'
+
+      if (!matchesCategory && category) {
+        const cCat = category.toLowerCase()
+        const sCat = selectedCategory.toLowerCase()
+
+        matchesCategory =
+          cCat === sCat ||
+          (sCat === 'electronics' &&
+            (cCat.includes('eletr') ||
+              cCat.includes('tech') ||
+              cCat.includes('smartphone'))) ||
+          (sCat === 'food' &&
+            (cCat.includes('aliment') ||
+              cCat.includes('comida') ||
+              cCat.includes('restaurante'))) ||
+          (sCat === 'fashion' &&
+            (cCat.includes('moda') ||
+              cCat.includes('roupa') ||
+              cCat.includes('vestuário'))) ||
+          (sCat === 'travel' &&
+            (cCat.includes('viagem') ||
+              cCat.includes('turismo') ||
+              cCat.includes('hotel'))) ||
+          (sCat === 'services' &&
+            (cCat.includes('serviço') || cCat.includes('assinatura'))) ||
+          cCat.includes(sCat) ||
+          sCat.includes(cCat)
+      }
 
       return isNearLocation && matchesText && matchesCategory
     })
@@ -295,18 +320,9 @@ function IndexContent() {
   ])
 
   const allDbPromotions = useMemo(() => {
-    const safePromos = Array.isArray(dbPromotions) ? dbPromotions : []
-    // Combine mock data from store with real data from supabase
-    const combined = [...safePromos]
-
-    // Add supabase promos avoiding duplicates by ID
-    supabasePromos.forEach((sp) => {
-      if (!combined.find((p) => p.id === sp.id)) {
-        combined.push(sp)
-      }
-    })
-    return combined
-  }, [dbPromotions, supabasePromos])
+    // Only use real data from supabase, avoiding mock data from store
+    return [...supabasePromos]
+  }, [supabasePromos])
 
   const filteredDbPromotions = useMemo(() => {
     return allDbPromotions.filter((p) => {
@@ -327,14 +343,42 @@ function IndexContent() {
         textToMatch === '' ||
         (p.title && p.title.toLowerCase().includes(textToMatch)) ||
         (p.storeName && p.storeName.toLowerCase().includes(textToMatch)) ||
+        (p.store_name && p.store_name.toLowerCase().includes(textToMatch)) ||
         (p.category && p.category.toLowerCase().includes(textToMatch))
 
-      const matchesCategory =
-        selectedCategory === 'all' || p.category === selectedCategory
+      let matchesCategory = selectedCategory === 'all'
+
+      if (!matchesCategory && p.category) {
+        const pCat = p.category.toLowerCase()
+        const sCat = selectedCategory.toLowerCase()
+
+        matchesCategory =
+          pCat === sCat ||
+          (sCat === 'electronics' &&
+            (pCat.includes('eletr') ||
+              pCat.includes('tech') ||
+              pCat.includes('smartphone'))) ||
+          (sCat === 'food' &&
+            (pCat.includes('aliment') ||
+              pCat.includes('comida') ||
+              pCat.includes('restaurante'))) ||
+          (sCat === 'fashion' &&
+            (pCat.includes('moda') ||
+              pCat.includes('roupa') ||
+              pCat.includes('vestuário'))) ||
+          (sCat === 'travel' &&
+            (pCat.includes('viagem') ||
+              pCat.includes('turismo') ||
+              pCat.includes('hotel'))) ||
+          (sCat === 'services' &&
+            (pCat.includes('serviço') || pCat.includes('assinatura'))) ||
+          pCat.includes(sCat) ||
+          sCat.includes(pCat)
+      }
 
       return matchesText && matchesCategory
     })
-  }, [dbPromotions, searchQuery, selectedCategory, searchLocationInfo])
+  }, [allDbPromotions, searchQuery, selectedCategory, searchLocationInfo])
 
   const safeFilteredCoupons = Array.isArray(filteredCoupons)
     ? filteredCoupons
