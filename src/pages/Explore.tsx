@@ -1,12 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import {
-  Search,
-  Map as MapIcon,
-  List,
-  Filter,
-  Radar,
-  MapPin,
-} from 'lucide-react'
+import { Search, Map as MapIcon, List, Filter, MapPin } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useCouponStore } from '@/stores/CouponContext'
 import { Input } from '@/components/ui/input'
@@ -15,6 +8,7 @@ import { CouponCard } from '@/components/CouponCard'
 import { AdSpace } from '@/components/AdSpace'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
+import { supabase } from '@/lib/supabase/client'
 
 import {
   Select,
@@ -50,18 +44,89 @@ export default function Explore() {
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
+  const [discoveredPromotions, setDiscoveredPromotions] = useState<any[]>([])
+
+  useEffect(() => {
+    const fetchDiscovered = async () => {
+      try {
+        const { data } = await supabase
+          .from('discovered_promotions')
+          .select('*')
+          .eq('status', 'published')
+          .order('captured_at', { ascending: false })
+          .limit(100)
+
+        if (data) {
+          setDiscoveredPromotions(
+            data.map((p) => ({
+              id: p.id,
+              title: p.title,
+              description: p.description || '',
+              category: p.category || 'Geral',
+              storeName: p.store_name || '',
+              image: p.image_url,
+              imageUrl: p.image_url,
+              discount: p.discount,
+              price: p.price,
+              originalPrice: p.original_price,
+              status: p.status,
+              link: p.product_link,
+              url: p.product_link,
+              sourceUrl: p.source_url,
+              isDiscovered: true,
+              expiryDate: p.end_date,
+            })),
+          )
+        }
+      } catch (e) {
+        console.warn('Erro ao carregar promoções orgânicas publicadas', e)
+      }
+    }
+    fetchDiscovered()
+  }, [])
+
+  const normalizeStr = (str: string) =>
+    (str || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim()
 
   const dynamicCategories = useMemo(() => {
     const cats = platformSettings?.categories || []
     const activeCats = cats.filter((c: any) => c.status === 'active')
-    return [
+
+    const baseCats = [
       { id: 'all', label: 'Todas' },
       ...activeCats.map((c: any) => ({
         id: c.id,
         label: c.label,
       })),
     ]
-  }, [platformSettings?.categories])
+
+    const existingIds = new Set(baseCats.map((c) => c.id.toLowerCase()))
+    const existingLabels = new Set(baseCats.map((c) => c.label.toLowerCase()))
+
+    discoveredPromotions.forEach((p) => {
+      if (p.category && p.category !== 'all') {
+        const catId = normalizeStr(p.category).replace(/\s+/g, '-')
+        if (
+          !existingIds.has(catId) &&
+          !existingLabels.has(p.category.toLowerCase())
+        ) {
+          baseCats.push({
+            id: catId,
+            label: p.category.charAt(0).toUpperCase() + p.category.slice(1),
+          })
+          existingIds.add(catId)
+          existingLabels.add(p.category.toLowerCase())
+        }
+      }
+    })
+
+    return baseCats
+  }, [platformSettings?.categories, discoveredPromotions])
+
   const [sortBy, setSortBy] = useState<'recommended' | 'distance'>(
     'recommended',
   )
@@ -93,11 +158,14 @@ export default function Explore() {
   }, [search])
 
   const filteredCoupons = useMemo(() => {
-    let processed = [...coupons]
+    let processed = [...coupons, ...discoveredPromotions]
 
-    // 1. Status Filter: Only show active/approved coupons
+    // 1. Status Filter: Only show active/approved/published coupons
     processed = processed.filter(
-      (c) => c.status === 'active' || c.status === 'approved',
+      (c) =>
+        c.status === 'active' ||
+        c.status === 'approved' ||
+        c.status === 'published',
     )
 
     // 2. Expiration Filter
@@ -115,20 +183,28 @@ export default function Explore() {
       )
     }
 
-    // 4. Category Filter
+    // 4. Category Filter (Robust text matching for user defined categories like "Eletrônico")
     if (selectedCategory !== 'all') {
       const categoryObj = dynamicCategories.find(
         (c) => c.id === selectedCategory,
       )
-      const labelToMatch = categoryObj
-        ? categoryObj.label.toLowerCase()
-        : selectedCategory.toLowerCase()
+      const labelToMatch = categoryObj ? categoryObj.label : selectedCategory
 
-      processed = processed.filter(
-        (c) =>
-          c.category?.toLowerCase() === labelToMatch ||
-          c.category === selectedCategory,
-      )
+      const matchCat = normalizeStr(labelToMatch)
+      const idCat = normalizeStr(selectedCategory)
+
+      processed = processed.filter((c) => {
+        if (!c.category) return false
+        const cCat = normalizeStr(c.category)
+        return (
+          cCat === matchCat ||
+          cCat === idCat ||
+          cCat.includes(matchCat) ||
+          matchCat.includes(cCat) ||
+          cCat.includes(idCat) ||
+          idCat.includes(cCat)
+        )
+      })
     }
 
     // 5. Search Filter
@@ -136,10 +212,14 @@ export default function Explore() {
       const q = debouncedSearch.toLowerCase()
       processed = processed.filter((c) => {
         const title = (
-          c.translations?.[language]?.title || c.title
+          c.translations?.[language]?.title ||
+          c.title ||
+          ''
         ).toLowerCase()
         const desc = (
-          c.translations?.[language]?.description || c.description
+          c.translations?.[language]?.description ||
+          c.description ||
+          ''
         ).toLowerCase()
         const store = (c.storeName || '').toLowerCase()
         return title.includes(q) || desc.includes(q) || store.includes(q)
@@ -173,12 +253,14 @@ export default function Explore() {
     return processed
   }, [
     coupons,
+    discoveredPromotions,
     selectedCategory,
     debouncedSearch,
     language,
     userLocation,
     sortBy,
     user?.franchiseId,
+    dynamicCategories,
   ])
 
   const displayCoupons = useMemo(() => {
@@ -201,7 +283,13 @@ export default function Explore() {
       setLoading(false)
     }, 400)
     return () => clearTimeout(timer)
-  }, [debouncedSearch, selectedCategory, selectedRegion, coupons])
+  }, [
+    debouncedSearch,
+    selectedCategory,
+    selectedRegion,
+    coupons,
+    discoveredPromotions,
+  ])
 
   const observer = useRef<IntersectionObserver | null>(null)
   const lastElementRef = useCallback(
