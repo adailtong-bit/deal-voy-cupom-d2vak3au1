@@ -14,6 +14,11 @@ export const fetchWebSearchPromotions = async (
     throw error
   }
 
+  if (data?.error) {
+    console.warn('Crawler returned an error:', data.error, data.debug_info)
+    throw new Error(data.error)
+  }
+
   return data?.items || []
 }
 

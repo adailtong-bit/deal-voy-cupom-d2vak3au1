@@ -1,4 +1,5 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
+import * as cheerio from 'cheerio'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -7,60 +8,121 @@ const corsHeaders = {
     'authorization, x-client-info, x-supabase-client-platform, apikey, content-type',
 }
 
-async function fetchMultiNetworkDeals(
+async function fetchOrganicAffiliateDeals(
   query: string,
+  limit: number,
   affiliateIds: Record<string, string>,
 ) {
-  const basePrice = Math.floor(Math.random() * 200) + 80
-
   const networks = [
     {
-      name: 'Amazon Associates',
-      id: affiliateIds?.amazon || 'amz_default',
-      domain: 'amazon.com.br',
+      name: 'Amazon',
+      id: affiliateIds?.amazon,
+      domain: 'amazon',
+      param: 'tag',
     },
     {
-      name: 'Awin / Booking',
-      id: affiliateIds?.awin || 'awin_default',
+      name: 'Booking',
+      id: affiliateIds?.awin,
       domain: 'booking.com',
+      param: 'aid',
     },
     {
-      name: 'Rakuten / RentCars',
-      id: affiliateIds?.rakuten || 'rak_default',
+      name: 'RentCars',
+      id: affiliateIds?.rakuten,
       domain: 'rentcars.com',
+      param: 'affiliate',
     },
     {
-      name: 'Shopee Affiliates',
-      id: affiliateIds?.shopee || 'shp_default',
-      domain: 'shopee.com.br',
+      name: 'Shopee',
+      id: affiliateIds?.shopee,
+      domain: 'shopee',
+      param: 'smtt',
     },
   ]
 
-  return networks.map((net) => {
-    const discount = Math.floor(Math.random() * 25) + 5
-    const finalPrice = basePrice - (basePrice * discount) / 100
-    return {
-      title: `${query || 'Oferta Destaque'} - Parceiro Oficial (${net.name})`,
-      price: `R$ ${finalPrice.toFixed(2)}`,
-      oldPrice: `R$ ${basePrice.toFixed(2)}`,
-      link: `https://www.${net.domain}/search?q=${encodeURIComponent(query || 'ofertas')}&tag=${net.id}`,
-      image: `https://img.usecurling.com/p/400/400?q=${encodeURIComponent(query || net.domain)}`,
-      source: 'affiliate_network',
-      storeName: net.domain,
-      commission: Math.floor(Math.random() * 8) + 3,
+  const searchFormData = new URLSearchParams()
+  searchFormData.append(
+    'q',
+    `${query || 'ofertas viagens'} comprar OR oferta OR desconto`,
+  )
+
+  const searchResp = await fetch('https://html.duckduckgo.com/html/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'User-Agent':
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)',
+    },
+    body: searchFormData.toString(),
+  })
+
+  if (!searchResp.ok) {
+    throw new Error(`DuckDuckGo Search Failed: ${searchResp.status}`)
+  }
+
+  const searchHtml = await searchResp.text()
+  const $search = cheerio.load(searchHtml)
+  const results: any[] = []
+
+  $search('.result').each((i, el) => {
+    if (results.length >= limit * 2) return
+
+    const titleEl = $search(el).find('.result__title a')
+    const title = titleEl.text().trim()
+    let rawUrl = titleEl.attr('href') || ''
+
+    if (rawUrl.includes('uddg=')) {
+      const match = rawUrl.match(/uddg=([^&]+)/)
+      if (match) rawUrl = decodeURIComponent(match[1])
+    }
+
+    const snippet = $search(el).find('.result__snippet').text().trim()
+
+    if (title && rawUrl.startsWith('http')) {
+      let extractedDomain = ''
+      try {
+        extractedDomain = new URL(rawUrl).hostname
+      } catch (e) {}
+
+      const matchedNetwork = networks.find((n) =>
+        extractedDomain.includes(n.domain),
+      )
+
+      let finalUrl = rawUrl
+      if (matchedNetwork && matchedNetwork.id) {
+        try {
+          const urlObj = new URL(finalUrl)
+          urlObj.searchParams.append(matchedNetwork.param, matchedNetwork.id)
+          finalUrl = urlObj.toString()
+        } catch (e) {}
+      }
+
+      const priceMatch = snippet.match(/(?:R\$|€|\$)\s*\d+(?:[.,]\d{2})?/)
+      const priceText = priceMatch ? priceMatch[0] : ''
+
+      results.push({
+        title: title,
+        price: priceText,
+        oldPrice: '',
+        link: finalUrl,
+        image: `https://img.usecurling.com/p/400/400?q=${encodeURIComponent(
+          extractedDomain.split('.')[0] || 'offer',
+        )}`,
+        source: matchedNetwork ? 'affiliate_network' : 'organic_search',
+        storeName: extractedDomain,
+        commission: matchedNetwork ? 5 : 0,
+        snippet: snippet,
+      })
     }
   })
+
+  return results.slice(0, limit)
 }
 
 function parsePrice(priceStr: string) {
   if (!priceStr) return 0
   const num = priceStr.replace(/[^0-9,.]/g, '').replace(',', '.')
   return parseFloat(num) || 0
-}
-
-function calculateDiscountValue(price: number, oldPrice: number) {
-  if (!price || !oldPrice || oldPrice <= price) return 0
-  return ((oldPrice - price) / oldPrice) * 100
 }
 
 Deno.serve(async (req: Request) => {
@@ -71,43 +133,35 @@ Deno.serve(async (req: Request) => {
   try {
     const { query, limit = 10, affiliateIds = {} } = await req.json()
 
-    const rawDeals = await fetchMultiNetworkDeals(query, affiliateIds)
+    const rawDeals = await fetchOrganicAffiliateDeals(
+      query,
+      limit,
+      affiliateIds,
+    )
 
     const enriched = rawDeals.map((item) => {
       const price = parsePrice(item.price)
-      const oldPrice = parsePrice(item.oldPrice)
-      const discountValue = calculateDiscountValue(price, oldPrice)
 
       return {
-        ...item,
-        price_value: price,
-        old_price_value: oldPrice,
-        discount_value: discountValue,
-        discount: discountValue ? `${discountValue.toFixed(0)}% OFF` : null,
+        id: crypto.randomUUID(),
+        title: item.title,
+        description: item.snippet,
+        price: price || null,
+        originalPrice: null,
+        discount: item.price ? `Preço: ${item.price}` : null,
+        discountPercentage: null,
+        imageUrl: item.image,
+        productLink: item.link,
+        storeName: item.storeName,
+        status: 'approved',
+        category: 'affiliate_deal',
+        currency: 'BRL',
+        matchConfidence: 0.8,
       }
     })
 
-    const ranked = enriched.sort((a, b) => b.discount_value - a.discount_value)
-
-    const mapped = ranked.slice(0, limit).map((r) => ({
-      id: crypto.randomUUID(),
-      title: r.title,
-      description: `Oferta capturada e validada via rede de afiliados. Desconto orgânico de ${r.discount}.`,
-      price: r.price_value,
-      originalPrice: r.old_price_value,
-      discount: r.discount,
-      discountPercentage: r.discount_value,
-      imageUrl: r.image,
-      productLink: r.link,
-      storeName: r.storeName,
-      status: 'approved',
-      category: 'affiliate_deal',
-      currency: 'BRL',
-      matchConfidence: r.discount_value / 100 + 0.5,
-    }))
-
     return new Response(
-      JSON.stringify({ items: mapped, total: mapped.length }),
+      JSON.stringify({ items: enriched, total: enriched.length }),
       {
         headers: { 'Content-Type': 'application/json', ...corsHeaders },
       },
