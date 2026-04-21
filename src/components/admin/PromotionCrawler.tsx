@@ -22,6 +22,7 @@ import {
   subscribeCrawler,
   stopExtractionTask,
 } from '@/lib/crawlerTask'
+import { supabase } from '@/lib/supabase/client'
 import { fetchCrawlerPromotions } from '@/services/crawler'
 import { DiscoveredPromotion } from '@/lib/types'
 import { Progress } from '@/components/ui/progress'
@@ -94,6 +95,9 @@ function PromotionCrawlerContent({ franchiseId }: { franchiseId?: string }) {
   ])
 
   const [dbPromotions, setDbPromotions] = useState<DiscoveredPromotion[]>([])
+  const [dbApprovedPromotions, setDbApprovedPromotions] = useState<
+    DiscoveredPromotion[]
+  >([])
   const [isLoadingPromotions, setIsLoadingPromotions] = useState(false)
 
   const loadPromotions = useCallback(async () => {
@@ -102,31 +106,47 @@ function PromotionCrawlerContent({ franchiseId }: { franchiseId?: string }) {
       const response = await fetchCrawlerPromotions({ limit: 500, franchiseId })
       const data = response?.data || []
       setDbPromotions(Array.isArray(data) ? data : [])
+
+      const { data: approvedData } = await supabase
+        .from('discovered_promotions')
+        .select('*')
+        .eq('status', 'approved')
+        .order('captured_at', { ascending: false })
+        .limit(500)
+
+      setDbApprovedPromotions(approvedData || [])
     } catch (e) {
       console.error('Failed to load promotions', e)
       setDbPromotions([])
+      setDbApprovedPromotions([])
     } finally {
       setIsLoadingPromotions(false)
     }
   }, [franchiseId])
 
   useEffect(() => {
-    if (activeTab === 'promotions') {
+    if (activeTab === 'promotions' || activeTab === 'approved') {
       loadPromotions()
     }
   }, [activeTab, loadPromotions])
 
   useEffect(() => {
-    if (!crawlerState.isScanning && activeTab === 'promotions') {
+    if (
+      !crawlerState.isScanning &&
+      (activeTab === 'promotions' || activeTab === 'approved')
+    ) {
       loadPromotions()
     }
   }, [crawlerState.isScanning, activeTab, loadPromotions])
 
   const basePendingPromotions = useMemo(() => {
     const allPromos = Array.isArray(dbPromotions) ? dbPromotions : []
-
     return allPromos.filter((p) => p && p.status === 'pending')
   }, [dbPromotions])
+
+  const baseApprovedPromotions = useMemo(() => {
+    return Array.isArray(dbApprovedPromotions) ? dbApprovedPromotions : []
+  }, [dbApprovedPromotions])
 
   const pendingPromotions = useMemo(() => {
     const safeDbPromotions = Array.isArray(dbPromotions) ? dbPromotions : []
@@ -164,7 +184,42 @@ function PromotionCrawlerContent({ franchiseId }: { franchiseId?: string }) {
     filterFetchDate,
   ])
 
+  const approvedPromotions = useMemo(() => {
+    const safeDbPromotions = Array.isArray(baseApprovedPromotions)
+      ? baseApprovedPromotions
+      : []
+    if (safeDbPromotions.length === 0) return []
+    return safeDbPromotions.filter((p) => {
+      if (!p) return false
+      if (filterState !== 'all' && p.state !== filterState) return false
+      if (filterCity !== 'all' && p.city !== filterCity) return false
+      if (
+        filterStore !== 'all' &&
+        p.storeName !== filterStore &&
+        p.store_name !== filterStore
+      )
+        return false
+      if (filterCategory !== 'all' && p.category !== filterCategory)
+        return false
+      if (filterSource !== 'all' && p.sourceId !== filterSource) return false
+      if (filterFetchDate !== 'all') {
+        const pDate = p.capturedAt ? p.capturedAt.split('T')[0] : ''
+        if (pDate !== filterFetchDate) return false
+      }
+      return true
+    })
+  }, [
+    baseApprovedPromotions,
+    filterState,
+    filterCity,
+    filterStore,
+    filterSource,
+    filterCategory,
+    filterFetchDate,
+  ])
+
   const pendingPromotionsCount = pendingPromotions.length
+  const approvedPromotionsCount = approvedPromotions.length
 
   return (
     <div
@@ -260,6 +315,13 @@ function PromotionCrawlerContent({ franchiseId }: { franchiseId?: string }) {
                 {formatNumber(pendingPromotionsCount)})
               </TabsTrigger>
               <TabsTrigger
+                value="approved"
+                className="py-2 px-4 whitespace-nowrap"
+              >
+                <Check className="h-4 w-4 mr-2 shrink-0" />
+                Aprovadas ({formatNumber(approvedPromotionsCount)})
+              </TabsTrigger>
+              <TabsTrigger
                 value="mappings"
                 className="py-2 px-4 whitespace-nowrap"
               >
@@ -287,6 +349,52 @@ function PromotionCrawlerContent({ franchiseId }: { franchiseId?: string }) {
               className="animate-in fade-in-50 min-w-0 w-full"
             >
               <CrawlerMappingsTab />
+            </TabsContent>
+
+            <TabsContent
+              value="approved"
+              className="animate-in fade-in-50 min-w-0 w-full overflow-x-hidden"
+            >
+              {isLoadingPromotions ? (
+                <div className="p-8 space-y-4">
+                  <div className="flex justify-center mb-6">
+                    <div className="flex flex-col items-center space-y-2">
+                      <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                      <p className="text-slate-500 font-medium">
+                        Carregando promoções...
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : !isLoadingPromotions &&
+                approvedPromotions.length === 0 &&
+                baseApprovedPromotions.length === 0 ? (
+                <div className="p-8 text-center bg-slate-50 rounded-lg border border-dashed border-slate-200">
+                  <p className="text-slate-500 font-medium">
+                    Nenhuma promoção aprovada encontrada.
+                  </p>
+                </div>
+              ) : (
+                <CrawlerPromotionsTab
+                  pendingPromotions={approvedPromotions}
+                  basePendingPromotions={baseApprovedPromotions}
+                  filterState={filterState}
+                  setFilterState={setFilterState}
+                  filterCity={filterCity}
+                  setFilterCity={setFilterCity}
+                  filterStore={filterStore}
+                  setFilterStore={setFilterStore}
+                  filterSource={filterSource}
+                  setFilterSource={setFilterSource}
+                  filterCategory={filterCategory}
+                  setFilterCategory={setFilterCategory}
+                  filterFetchDate={filterFetchDate}
+                  setFilterFetchDate={setFilterFetchDate}
+                  isLoading={isLoadingPromotions}
+                  onStatusChange={loadPromotions}
+                  type="approved"
+                />
+              )}
             </TabsContent>
 
             <TabsContent
@@ -348,10 +456,11 @@ function PromotionCrawlerContent({ franchiseId }: { franchiseId?: string }) {
                   setFilterFetchDate={setFilterFetchDate}
                   isLoading={isLoadingPromotions}
                   onStatusChange={loadPromotions}
+                  type="pending"
                 />
               )}
             </TabsContent>
-          </Tabs>
+          </Tabs>{' '}
         </CardContent>
       </Card>
     </div>

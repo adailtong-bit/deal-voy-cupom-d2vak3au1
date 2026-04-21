@@ -9,7 +9,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { ExternalLink, Check, X, Save, Copy, Filter } from 'lucide-react'
+import {
+  ExternalLink,
+  Check,
+  X,
+  Save,
+  Copy,
+  Filter,
+  RotateCcw,
+} from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import { Card, CardContent } from '@/components/ui/card'
@@ -31,6 +39,7 @@ export function CrawlerPromotionsTab({
   setFilterFetchDate,
   isLoading,
   onStatusChange,
+  type = 'pending',
 }: any) {
   const uniqueStates = useMemo(
     () =>
@@ -189,6 +198,7 @@ export function CrawlerPromotionsTab({
             key={promo.id}
             promo={promo}
             onSaved={onStatusChange}
+            type={type}
           />
         ))}
         {pendingPromotions.length === 0 && (
@@ -203,7 +213,7 @@ export function CrawlerPromotionsTab({
   )
 }
 
-function EditablePromotionCard({ promo, onSaved }: any) {
+function EditablePromotionCard({ promo, onSaved, type = 'pending' }: any) {
   const [title, setTitle] = useState(promo.title || '')
   const [description, setDescription] = useState(promo.description || '')
   const [storeName, setStoreName] = useState(
@@ -260,6 +270,20 @@ function EditablePromotionCard({ promo, onSaved }: any) {
       onSaved()
     } catch (err: any) {
       toast.error('Erro ao rejeitar: ' + err.message)
+    }
+  }
+
+  const handlePending = async () => {
+    try {
+      const { error } = await supabase
+        .from('discovered_promotions')
+        .update({ status: 'pending' })
+        .eq('id', promo.id)
+      if (error) throw error
+      toast.success('Promoção movida para pendentes!')
+      onSaved()
+    } catch (err: any) {
+      toast.error('Erro ao mover: ' + err.message)
     }
   }
 
@@ -357,14 +381,29 @@ function EditablePromotionCard({ promo, onSaved }: any) {
         >
           <Save className="h-4 w-4 mr-2 shrink-0" /> Salvar Edição
         </Button>
-        <Button
-          size="sm"
-          onClick={handleApprove}
-          variant="default"
-          className="bg-green-600 hover:bg-green-700 whitespace-nowrap flex-1 xl:flex-none justify-start"
-        >
-          <Check className="h-4 w-4 mr-2 shrink-0" /> Aprovar
-        </Button>
+
+        {type === 'pending' && (
+          <Button
+            size="sm"
+            onClick={handleApprove}
+            variant="default"
+            className="bg-green-600 hover:bg-green-700 whitespace-nowrap flex-1 xl:flex-none justify-start"
+          >
+            <Check className="h-4 w-4 mr-2 shrink-0" /> Aprovar
+          </Button>
+        )}
+
+        {type === 'approved' && (
+          <Button
+            size="sm"
+            onClick={handlePending}
+            variant="outline"
+            className="whitespace-nowrap flex-1 xl:flex-none justify-start"
+          >
+            <RotateCcw className="h-4 w-4 mr-2 shrink-0" /> Pendente
+          </Button>
+        )}
+
         <Button
           size="sm"
           onClick={handleReject}
