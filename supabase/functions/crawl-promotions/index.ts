@@ -33,7 +33,9 @@ Deno.serve(async (req: Request) => {
     let siteDomain = ''
     if (targetUrl && targetUrl !== 'all') {
       try {
-        const urlObj = new URL(targetUrl.startsWith('http') ? targetUrl : `https://${targetUrl}`)
+        const urlObj = new URL(
+          targetUrl.startsWith('http') ? targetUrl : `https://${targetUrl}`,
+        )
         siteDomain = urlObj.hostname
       } catch (e) {
         siteDomain = targetUrl.replace(/^https?:\/\//, '').split('/')[0]
@@ -45,10 +47,12 @@ Deno.serve(async (req: Request) => {
       searchQuery += ` site:${siteDomain}`
     }
     if (options?.category && options.category !== 'all') {
-       searchQuery += ` ${options.category}`
+      searchQuery += ` ${options.category}`
     }
 
-    addLog('Iniciando Busca Orgânica (Sem dados fictícios)', { query: searchQuery })
+    addLog('Iniciando Busca Orgânica (Sem dados fictícios)', {
+      query: searchQuery,
+    })
 
     const searchFormData = new URLSearchParams()
     searchFormData.append('q', searchQuery)
@@ -57,15 +61,17 @@ Deno.serve(async (req: Request) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        Accept:
+          'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
         'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
       },
       body: searchFormData.toString(),
     })
 
     if (!searchResp.ok) {
-       addLog(`Erro HTTP na busca DuckDuckGo: ${searchResp.status}`)
+      addLog(`Erro HTTP na busca DuckDuckGo: ${searchResp.status}`)
     } else {
       const searchHtml = await searchResp.text()
       const $search = cheerio.load(searchHtml)
@@ -91,17 +97,35 @@ Deno.serve(async (req: Request) => {
           let extractedDomain = ''
           try {
             extractedDomain = new URL(rawUrl).hostname
-          } catch(e) {}
+          } catch (e) {}
+
+          let price = null
+          if (priceText) {
+            const numStr = priceText.replace(/[^0-9,.]/g, '').replace(',', '.')
+            price = parseFloat(numStr)
+            if (isNaN(price)) price = null
+          }
 
           items.push({
-            raw_data: {
-              html_title: title,
-              detected_description_main: snippet,
-              extracted_url: rawUrl,
-              extracted_domain: extractedDomain,
-              campaign_name_default: siteDomain ? `Busca na fonte: ${siteDomain}` : 'Busca Multi-fontes Orgânica',
-              detected_money_text_1: priceText,
-            },
+            title: title.substring(0, 255),
+            description: snippet,
+            product_link: rawUrl,
+            source_url: rawUrl,
+            store_name: extractedDomain,
+            campaign_name: siteDomain
+              ? `Busca na fonte: ${siteDomain}`
+              : 'Busca Multi-fontes Orgânica',
+            price: price,
+            currency: priceText?.includes('€')
+              ? 'EUR'
+              : priceText?.includes('$') && !priceText.includes('R$')
+                ? 'USD'
+                : 'BRL',
+            status: 'pending',
+            category:
+              options?.category && options.category !== 'all'
+                ? options.category
+                : 'geral',
             captured_at: new Date().toISOString(),
           })
         }
@@ -111,55 +135,88 @@ Deno.serve(async (req: Request) => {
     addLog(`Busca multi-fontes concluída`, { items_encontrados: items.length })
 
     if (items.length === 0 && targetUrl && targetUrl !== 'all') {
-       addLog('Nenhum resultado na busca. Tentando extração direta da página', { url: targetUrl })
-       let directUrl = targetUrl.startsWith('http') ? targetUrl : `https://${targetUrl}`
-       
-       try {
-         const directResp = await fetch(directUrl, {
-            headers: {
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-              'Accept': 'text/html',
-            },
-         })
-         
-         if (directResp.ok) {
-           const html = await directResp.text()
-           const $ = cheerio.load(html)
-           let rawData: Record<string, any> = {
-             extracted_url: directResp.url,
-             extracted_domain: new URL(directResp.url).hostname,
-             campaign_name_default: 'Busca Orgânica Direta',
-             html_title: $('title').text().trim() || siteDomain,
-           }
+      addLog('Nenhum resultado na busca. Tentando extração direta da página', {
+        url: targetUrl,
+      })
+      let directUrl = targetUrl.startsWith('http')
+        ? targetUrl
+        : `https://${targetUrl}`
 
-           const metaDesc = $('meta[name="description"]').attr('content') || $('meta[property="og:description"]').attr('content')
-           if (metaDesc) rawData['detected_description_main'] = metaDesc
+      try {
+        const directResp = await fetch(directUrl, {
+          headers: {
+            'User-Agent':
+              'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            Accept: 'text/html',
+          },
+        })
 
-           const h1 = $('h1').first().text().trim()
-           if (h1) rawData['h1_text'] = h1
+        if (directResp.ok) {
+          const html = await directResp.text()
+          const $ = cheerio.load(html)
+          let rawData: Record<string, any> = {
+            extracted_url: directResp.url,
+            extracted_domain: new URL(directResp.url).hostname,
+            campaign_name_default: 'Busca Orgânica Direta',
+            html_title: $('title').text().trim() || siteDomain,
+          }
 
-           const priceRegex = /(?:R\$|€|\$)\s*\d+(?:[.,]\d{2})?/
-           const bodyText = $('body').text()
-           const priceMatch = bodyText.match(priceRegex)
-           if (priceMatch) rawData['detected_money_text_1'] = priceMatch[0]
+          const metaDesc =
+            $('meta[name="description"]').attr('content') ||
+            $('meta[property="og:description"]').attr('content')
 
-           const ogImage = $('meta[property="og:image"]').attr('content')
-           if (ogImage) rawData['detected_image_1'] = ogImage
+          const priceRegex = /(?:R\$|€|\$)\s*\d+(?:[.,]\d{2})?/
+          const bodyText = $('body').text()
+          const priceMatch = bodyText.match(priceRegex)
 
-           items.push({
-             raw_data: rawData,
-             captured_at: new Date().toISOString(),
-           })
-         } else {
-           addLog(`Falha na extração direta: HTTP ${directResp.status}`)
-         }
-       } catch (e: any) {
-         addLog(`Erro na extração direta: ${e.message}`)
-       }
+          let price = null
+          let priceText = undefined
+          if (priceMatch) {
+            priceText = priceMatch[0]
+            const numStr = priceText.replace(/[^0-9,.]/g, '').replace(',', '.')
+            price = parseFloat(numStr)
+            if (isNaN(price)) price = null
+          }
+
+          const ogImage = $('meta[property="og:image"]').attr('content')
+
+          items.push({
+            title: (
+              $('title').text().trim() ||
+              siteDomain ||
+              'Busca Direta'
+            ).substring(0, 255),
+            description: metaDesc,
+            product_link: directResp.url,
+            source_url: directResp.url,
+            store_name: new URL(directResp.url).hostname,
+            campaign_name: 'Busca Orgânica Direta',
+            price: price,
+            currency: priceText?.includes('€')
+              ? 'EUR'
+              : priceText?.includes('$') && !priceText.includes('R$')
+                ? 'USD'
+                : 'BRL',
+            image_url: ogImage,
+            status: 'pending',
+            category:
+              options?.category && options.category !== 'all'
+                ? options.category
+                : 'geral',
+            captured_at: new Date().toISOString(),
+          })
+        } else {
+          addLog(`Falha na extração direta: HTTP ${directResp.status}`)
+        }
+      } catch (e: any) {
+        addLog(`Erro na extração direta: ${e.message}`)
+      }
     }
 
     if (items.length === 0) {
-      throw new Error('Nenhum dado pôde ser extraído das fontes orgânicas (Sem resultados).')
+      throw new Error(
+        'Nenhum dado pôde ser extraído das fontes orgânicas (Sem resultados).',
+      )
     }
 
     return new Response(JSON.stringify({ items, debug_info: debugInfo }), {

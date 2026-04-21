@@ -23,14 +23,48 @@ export const fetchWebSearchPromotions = async (
 }
 
 export const saveDiscoveredPromotion = async (promo: any) => {
+  // Garantir que os dados mapeiem corretamente para a tabela e prevenir erros de colunas inexistentes.
+  const payload = {
+    title: promo.title ? promo.title.substring(0, 255) : 'Oferta sem título',
+    description: promo.description || null,
+    price: promo.price || null,
+    original_price: promo.original_price || null,
+    currency: promo.currency || 'BRL',
+    discount: promo.discount || null,
+    discount_percentage: promo.discount_percentage || null,
+    image_url: promo.image_url || null,
+    product_link: promo.product_link || null,
+    source_url: promo.source_url || null,
+    store_name: promo.store_name || null,
+    category: promo.category || 'geral',
+    country: promo.country || null,
+    status: promo.status || 'pending',
+    captured_at: promo.captured_at || new Date().toISOString(),
+    campaign_name: promo.campaign_name || null,
+    coverage: promo.coverage || 'toda a rede',
+    discount_rules: promo.discount_rules || 'percentual',
+    start_date: promo.start_date || null,
+    end_date: promo.end_date || null,
+    limit_type: promo.limit_type || null,
+    total_limit: promo.total_limit || null,
+    enable_proximity_alerts: promo.enable_proximity_alerts || false,
+    alert_radius: promo.alert_radius || null,
+    is_seasonal: promo.is_seasonal || false,
+    enable_trigger: promo.enable_trigger || false,
+    trigger_type: promo.trigger_type || null,
+    trigger_threshold: promo.trigger_threshold || null,
+    reward_id: promo.reward_id || null,
+    company_id: promo.company_id || null,
+  }
+
   const { data, error } = await supabase
     .from('discovered_promotions')
-    .insert([promo])
+    .insert([payload])
     .select()
     .single()
 
   if (error) {
-    console.error('Error saving promotion', error)
+    console.error('Error saving promotion:', error.message, error.details)
     throw error
   }
   return data
