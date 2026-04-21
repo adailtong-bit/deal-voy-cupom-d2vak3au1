@@ -92,15 +92,18 @@ export function CrawlerSourcesTab() {
   const handleSaveSource = async (
     data: Omit<CrawlerSource, 'id' | 'status' | 'lastScan'>,
   ) => {
-    try {
-      new URL(data.url)
-    } catch (e) {
-      toast({
-        title: 'URL Inválida',
-        description: 'Por favor, insira uma URL válida (ex: https://site.com)',
-        variant: 'destructive',
-      })
-      return
+    if (data.url && data.url !== 'all') {
+      try {
+        new URL(data.url)
+      } catch (e) {
+        toast({
+          title: 'URL Inválida',
+          description:
+            'Por favor, insira uma URL válida (ex: https://site.com) ou deixe em branco.',
+          variant: 'destructive',
+        })
+        return
+      }
     }
 
     try {
@@ -239,14 +242,20 @@ export function CrawlerSourcesTab() {
                           {source.name}
                         </td>
                         <td className="px-4 py-3">
-                          <a
-                            href={source.url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-blue-600 hover:underline max-w-[200px] truncate block"
-                          >
-                            {source.url}
-                          </a>
+                          {source.url && source.url !== 'all' ? (
+                            <a
+                              href={source.url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-blue-600 hover:underline max-w-[200px] truncate block"
+                            >
+                              {source.url}
+                            </a>
+                          ) : (
+                            <span className="text-slate-500 text-xs font-medium px-2 py-1 bg-slate-100 rounded-md">
+                              Multi-fontes
+                            </span>
+                          )}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
                           {source.country

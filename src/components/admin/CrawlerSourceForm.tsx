@@ -16,7 +16,6 @@ import { DialogFooter } from '@/components/ui/dialog'
 import { REGIONS } from '@/lib/data'
 import { CrawlerSource } from '@/lib/types'
 import { useCouponStore } from '@/stores/CouponContext'
-import { CATEGORIES } from '@/lib/data'
 
 interface CrawlerSourceFormProps {
   initialData?: CrawlerSource | null
@@ -34,8 +33,23 @@ export function CrawlerSourceForm({
   const { toast } = useToast()
   const { platformSettings } = useCouponStore()
 
+  const defaultCategories = [
+    { id: 'retail', label: 'Varejo' },
+    { id: 'food', label: 'Alimentação' },
+    { id: 'services', label: 'Serviços' },
+    { id: 'travel', label: 'Viagens' },
+    { id: 'hotels', label: 'Hotéis' },
+    { id: 'rental_cars', label: 'Aluguel de Carros' },
+    { id: 'electronics', label: 'Eletrônicos' },
+    { id: 'fashion', label: 'Moda' },
+    { id: 'entertainment', label: 'Entretenimento' },
+    { id: 'other', label: 'Outros' },
+  ]
+
   const categoriesList =
-    platformSettings?.categories || CATEGORIES.filter((c) => c.id !== 'all')
+    platformSettings?.categories?.length > 0
+      ? platformSettings.categories
+      : defaultCategories
 
   const [formData, setFormData] = useState({
     name: '',
@@ -71,7 +85,7 @@ export function CrawlerSourceForm({
     e.preventDefault()
 
     let finalUrl = formData.url.trim()
-    if (finalUrl && !/^https?:\/\//i.test(finalUrl)) {
+    if (finalUrl && finalUrl !== 'all' && !/^https?:\/\//i.test(finalUrl)) {
       finalUrl = 'https://' + finalUrl
     }
 
@@ -138,12 +152,13 @@ export function CrawlerSourceForm({
           />
         </div>
         <div className="space-y-2">
-          <Label>URL / Link da Fonte</Label>
+          <Label>
+            URL / Link da Fonte (Deixe em branco para busca Multi-fontes)
+          </Label>
           <Input
             value={formData.url}
             onChange={(e) => setFormData({ ...formData, url: e.target.value })}
-            required
-            placeholder="https://"
+            placeholder="Ex: https://site.com ou deixe vazio"
           />
         </div>
         <div className="grid grid-cols-2 gap-4">
@@ -156,7 +171,7 @@ export function CrawlerSourceForm({
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent position="popper">
                 <SelectItem value="web">Website Scraper</SelectItem>
                 <SelectItem value="api">JSON API</SelectItem>
                 <SelectItem value="app">Mobile App Link</SelectItem>
@@ -173,7 +188,7 @@ export function CrawlerSourceForm({
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent position="popper">
                 {REGIONS.map((r) => (
                   <SelectItem key={r.code} value={r.code}>
                     {r.name}
@@ -225,11 +240,14 @@ export function CrawlerSourceForm({
               <SelectTrigger>
                 <SelectValue placeholder="Selecione" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent position="popper" className="z-[100] max-h-60">
                 {categoriesList.length > 0 ? (
                   categoriesList.map((c: any) => (
-                    <SelectItem key={c.id} value={c.label}>
-                      {c.label}
+                    <SelectItem
+                      key={c.id || c.value || c.label}
+                      value={c.label || c.name || c.id}
+                    >
+                      {c.label || c.name || c.id}
                     </SelectItem>
                   ))
                 ) : (
@@ -294,7 +312,7 @@ export function CrawlerSourceForm({
                 2. Nome da Campanha
               </Label>
               <Input
-                value={`busca organica- site www.${formData.url.replace('https://', '').replace('www.', '').split('/')[0] || 'site.com'}`}
+                value={`busca organica- site ${formData.url ? formData.url.replace('https://', '').replace('www.', '').split('/')[0] : 'multi-fontes'}`}
                 disabled
                 className="h-7 text-xs bg-slate-100 text-slate-500"
               />
