@@ -14,14 +14,37 @@ async function fetchOrganicAffiliateDeals(
   affiliateIds: Record<string, string>,
 ) {
   const networks = [
-    { name: 'Amazon', id: affiliateIds?.amazon, domain: 'amazon', param: 'tag' },
-    { name: 'Booking', id: affiliateIds?.awin, domain: 'booking.com', param: 'aid' },
-    { name: 'RentCars', id: affiliateIds?.rakuten, domain: 'rentcars.com', param: 'affiliate' },
-    { name: 'Shopee', id: affiliateIds?.shopee, domain: 'shopee', param: 'smtt' },
+    {
+      name: 'Amazon',
+      id: affiliateIds?.amazon,
+      domain: 'amazon',
+      param: 'tag',
+    },
+    {
+      name: 'Booking',
+      id: affiliateIds?.awin,
+      domain: 'booking.com',
+      param: 'aid',
+    },
+    {
+      name: 'RentCars',
+      id: affiliateIds?.rakuten,
+      domain: 'rentcars.com',
+      param: 'affiliate',
+    },
+    {
+      name: 'Shopee',
+      id: affiliateIds?.shopee,
+      domain: 'shopee',
+      param: 'smtt',
+    },
   ]
 
   const searchFormData = new URLSearchParams()
-  searchFormData.append('q', `${query || 'ofertas viagens'} comprar OR oferta OR desconto`)
+  searchFormData.append(
+    'q',
+    `${query || 'ofertas viagens'} comprar OR oferta OR desconto`,
+  )
 
   const searchResp = await fetch('https://html.duckduckgo.com/html/', {
     method: 'POST',
@@ -59,7 +82,13 @@ async function fetchOrganicAffiliateDeals(
 
     const snippet = $search(el).find('.result__snippet').text().trim()
 
-    if (title && rawUrl.startsWith('http') && !rawUrl.includes('duckduckgo.com') && !rawUrl.includes('bing.com') && !rawUrl.includes('google.com')) {
+    if (
+      title &&
+      rawUrl.startsWith('http') &&
+      !rawUrl.includes('duckduckgo.com') &&
+      !rawUrl.includes('bing.com') &&
+      !rawUrl.includes('google.com')
+    ) {
       let extractedDomain = ''
       try {
         const parsedUrl = new URL(rawUrl)
@@ -70,7 +99,11 @@ async function fetchOrganicAffiliateDeals(
       }
 
       // Skip generic SEO titles
-      if (title.length < 5 || title.toLowerCase().includes('compre online') || title.toLowerCase().includes('encontre promoções')) {
+      if (
+        title.length < 5 ||
+        title.toLowerCase().includes('compre online') ||
+        title.toLowerCase().includes('encontre promoções')
+      ) {
         return
       }
 
