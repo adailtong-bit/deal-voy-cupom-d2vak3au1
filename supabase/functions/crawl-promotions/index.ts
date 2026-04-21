@@ -9,11 +9,13 @@ const corsHeaders = {
 }
 
 const browserHeaders = {
-  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+  'User-Agent':
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+  Accept:
+    'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
   'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
   'Accept-Encoding': 'gzip, deflate, br',
-  'Connection': 'keep-alive',
+  Connection: 'keep-alive',
   'Upgrade-Insecure-Requests': '1',
   'Sec-Fetch-Dest': 'document',
   'Sec-Fetch-Mode': 'navigate',
@@ -30,9 +32,12 @@ function buildSearchQuery(params: {
 }): string {
   const { query, siteDomain, category, region } = params
 
-  const isUS = region?.toLowerCase().includes('us') || region?.toLowerCase().includes('usa') || region?.toLowerCase().includes('eua')
+  const isUS =
+    region?.toLowerCase().includes('us') ||
+    region?.toLowerCase().includes('usa') ||
+    region?.toLowerCase().includes('eua')
 
-  const offerTerms = isUS 
+  const offerTerms = isUS
     ? ['deal', 'discount', 'limited time offer', 'sale', 'promo', 'coupon']
     : [
         'promoção',
@@ -60,7 +65,7 @@ function resolveUrl(url: string, base: string): string {
   if (!url) return base
   if (url.startsWith('http://') || url.startsWith('https://')) return url
   if (url.startsWith('//')) return `https:${url}`
-  
+
   try {
     const baseUrl = new URL(base.startsWith('http') ? base : `https://${base}`)
     if (url.startsWith('/')) {
@@ -72,25 +77,42 @@ function resolveUrl(url: string, base: string): string {
   }
 }
 
-function extractOfferFields($: cheerio.CheerioAPI, el: any, fallbackUrl: string, sourceName: string) {
-  const title = $(el).find('h2, h3, .title, [class*="title"], [class*="name"]').first().text().trim()
-    || $(el).find('a').first().text().trim()
+function extractOfferFields(
+  $: cheerio.CheerioAPI,
+  el: any,
+  fallbackUrl: string,
+  sourceName: string,
+) {
+  const title =
+    $(el)
+      .find('h2, h3, .title, [class*="title"], [class*="name"]')
+      .first()
+      .text()
+      .trim() || $(el).find('a').first().text().trim()
 
   let url = ''
   const links: string[] = []
-  $(el).find('a[href]').each((_: number, a: any) => {
-    const href = $(a).attr('href')
-    if (href) links.push(href)
-  })
+  $(el)
+    .find('a[href]')
+    .each((_: number, a: any) => {
+      const href = $(a).attr('href')
+      if (href) links.push(href)
+    })
 
   for (const href of links) {
     if (href.includes('uddg=')) {
       const match = href.match(/uddg=([^&]+)/)
-      if (match) { url = decodeURIComponent(match[1]); break; }
+      if (match) {
+        url = decodeURIComponent(match[1])
+        break
+      }
     }
     if (href.includes('/url?q=')) {
       const match = href.match(/\/url\?q=([^&]+)/)
-      if (match) { url = decodeURIComponent(match[1]); break; }
+      if (match) {
+        url = decodeURIComponent(match[1])
+        break
+      }
     }
   }
 
@@ -100,13 +122,22 @@ function extractOfferFields($: cheerio.CheerioAPI, el: any, fallbackUrl: string,
 
   url = resolveUrl(url, fallbackUrl)
 
-  // Avoid saving purely search engine URLs
-  if (url.includes('duckduckgo.com') || url.includes('bing.com') || url.includes('google.com')) {
-    return null; // Ignore purely search engine links completely
+  // Avoid saving purely search engine URLs and fictitious/example domains
+  if (
+    url.includes('duckduckgo.com') ||
+    url.includes('bing.com') ||
+    url.includes('google.com') ||
+    url.includes('example.com') ||
+    url.includes('test.com')
+  ) {
+    return null // Ignore purely search engine links completely
   }
 
-  const description =
-    $(el).find('[class*="desc"], [class*="snippet"], p, span').first().text().trim()
+  const description = $(el)
+    .find('[class*="desc"], [class*="snippet"], p, span')
+    .first()
+    .text()
+    .trim()
 
   const rawImage =
     $(el).find('img').first().attr('src') ||
@@ -115,38 +146,106 @@ function extractOfferFields($: cheerio.CheerioAPI, el: any, fallbackUrl: string,
 
   const bodyText = $(el).text()
 
-  const discountMatch = bodyText.match(/(\d+\s*%\s*(?:off|de desconto|desconto))|(?:R\$|€|\$)\s*\d+(?:[.,]\d{2})?/)
+  const discountMatch = bodyText.match(
+    /(\d+\s*%\s*(?:off|de desconto|desconto))|(?:R\$|€|\$)\s*\d+(?:[.,]\d{2})?/,
+  )
   const discount = discountMatch ? discountMatch[0] : undefined
 
-  const validityMatch = bodyText.match(/válid[oa] até\s*[\d\/]+|expira em\s*[\d\/]+|até\s*\d{2}\/\d{2}|valid until\s*[\d\/]+|expires\s*[\d\/]+/)
+  const validityMatch = bodyText.match(
+    /válid[oa] até\s*[\d\/]+|expira em\s*[\d\/]+|até\s*\d{2}\/\d{2}|valid until\s*[\d\/]+|expires\s*[\d\/]+/,
+  )
   const validity = validityMatch ? validityMatch[0] : undefined
 
-  const regionMatch = bodyText.match(/nacional|todo[s]? o brasil|são paulo|rio de janeiro|nationwide|[A-Z]{2}\b/)
+  // Content validation: Ensure there is at least some indication of a real offer/product
+  // If we can't find any price, discount, or clear call to action, we skip it
+  const ctaMatch = bodyText.match(
+    /comprar|buy now|add to cart|adicionar ao carrinho|shop now|shop sale|get deal|resgatar/i,
+  )
+
+  if (!discount && !ctaMatch && !title.match(/\d+%/)) {
+    return null
+  }
+
+  const regionMatch = bodyText.match(
+    /nacional|todo[s]? o brasil|são paulo|rio de janeiro|nationwide|[A-Z]{2}\b/,
+  )
   const coverage = regionMatch ? regionMatch[0] : 'National'
 
   const categoryKeywords: Record<string, string[]> = {
-    'Viagem': ['hotel', 'voo', 'viagem', 'hospedagem', 'resort', 'turismo', 'flight', 'travel', 'vacation'],
-    'Alimentação': ['restaurante', 'delivery', 'comida', 'ifood', 'pizza', 'food', 'restaurant', 'meal', 'burger'],
-    'Moda': ['roupa', 'moda', 'calçado', 'tênis', 'vestido', 'fashion', 'shoes', 'clothing', 'apparel'],
-    'Tecnologia': ['celular', 'notebook', 'tv', 'eletrônico', 'smartphone', 'laptop', 'electronics', 'phone'],
-    'Serviços': ['plano', 'assinatura', 'serviço', 'app', 'streaming', 'subscription', 'service'],
+    Viagem: [
+      'hotel',
+      'voo',
+      'viagem',
+      'hospedagem',
+      'resort',
+      'turismo',
+      'flight',
+      'travel',
+      'vacation',
+    ],
+    Alimentação: [
+      'restaurante',
+      'delivery',
+      'comida',
+      'ifood',
+      'pizza',
+      'food',
+      'restaurant',
+      'meal',
+      'burger',
+    ],
+    Moda: [
+      'roupa',
+      'moda',
+      'calçado',
+      'tênis',
+      'vestido',
+      'fashion',
+      'shoes',
+      'clothing',
+      'apparel',
+    ],
+    Tecnologia: [
+      'celular',
+      'notebook',
+      'tv',
+      'eletrônico',
+      'smartphone',
+      'laptop',
+      'electronics',
+      'phone',
+    ],
+    Serviços: [
+      'plano',
+      'assinatura',
+      'serviço',
+      'app',
+      'streaming',
+      'subscription',
+      'service',
+    ],
   }
 
   let detectedCategory = 'Geral'
   const lowerText = bodyText.toLowerCase()
   for (const [cat, keywords] of Object.entries(categoryKeywords)) {
-    if (keywords.some(k => lowerText.includes(k))) {
+    if (keywords.some((k) => lowerText.includes(k))) {
       detectedCategory = cat
       break
     }
   }
 
   let extractedDomain = ''
-  try { extractedDomain = new URL(url).hostname } catch (e) {}
+  try {
+    extractedDomain = new URL(url).hostname
+  } catch (e) {}
 
   let finalImage = rawImage
   if (!finalImage || finalImage.startsWith('data:image')) {
-    const query = detectedCategory !== 'Geral' ? detectedCategory : (extractedDomain.replace(/^www\./, '').split('.')[0] || 'offer')
+    const query =
+      detectedCategory !== 'Geral'
+        ? detectedCategory
+        : extractedDomain.replace(/^www\./, '').split('.')[0] || 'offer'
     finalImage = `https://img.usecurling.com/p/400/400?q=${encodeURIComponent(query)}`
   } else {
     finalImage = resolveUrl(finalImage, url)
@@ -161,8 +260,16 @@ function extractOfferFields($: cheerio.CheerioAPI, el: any, fallbackUrl: string,
     return null
   }
 
-  // Filter out generic SEO descriptions or empty titles
-  if (title.length < 5 || title.toLowerCase().includes('compre online') || title.toLowerCase().includes('encontre promoções')) {
+  // Filter out generic SEO descriptions, empty titles, or fictitious data
+  if (
+    title.length < 5 ||
+    title.toLowerCase().includes('compre online') ||
+    title.toLowerCase().includes('encontre promoções') ||
+    title.toLowerCase().includes('example') ||
+    title.toLowerCase().includes('fictíci') ||
+    title.toLowerCase().includes('mock') ||
+    title.toLowerCase().includes('teste')
+  ) {
     return null
   }
 
@@ -172,7 +279,9 @@ function extractOfferFields($: cheerio.CheerioAPI, el: any, fallbackUrl: string,
       campaign_name_default: `${sourceName} — ${title.substring(0, 40)}`,
       detected_description_main: description || title,
       category: detectedCategory,
-      campaign_rules: validity ? `Válido/Valid: ${validity}` : 'Consulte o parceiro para regras / Check partner for rules',
+      campaign_rules: validity
+        ? `Válido/Valid: ${validity}`
+        : 'Consulte o parceiro para regras / Check partner for rules',
       discount_rules: discount || 'Desconto disponível / Discount available',
       detected_money_text_1: discount,
       extracted_url: url,
@@ -207,7 +316,9 @@ Deno.serve(async (req: Request) => {
     let siteDomain = ''
     if (targetUrl && targetUrl !== 'all') {
       try {
-        const urlObj = new URL(targetUrl.startsWith('http') ? targetUrl : `https://${targetUrl}`)
+        const urlObj = new URL(
+          targetUrl.startsWith('http') ? targetUrl : `https://${targetUrl}`,
+        )
         siteDomain = urlObj.hostname
       } catch (e) {
         siteDomain = targetUrl.replace(/^https?:\/\//, '').split('/')[0]
@@ -225,7 +336,12 @@ Deno.serve(async (req: Request) => {
 
     // TENTATIVA 1: DuckDuckGo
     try {
-      const isUS = region.toLowerCase().includes('us') || region.toLowerCase().includes('usa') || region.toLowerCase().includes('eua') || targetUrl.includes('.com/us') || targetUrl.includes('.us/')
+      const isUS =
+        region.toLowerCase().includes('us') ||
+        region.toLowerCase().includes('usa') ||
+        region.toLowerCase().includes('eua') ||
+        targetUrl.includes('.com/us') ||
+        targetUrl.includes('.us/')
       const searchFormData = new URLSearchParams()
       searchFormData.append('q', searchQuery)
       searchFormData.append('kl', isUS ? 'us-en' : 'br-pt')
@@ -236,8 +352,8 @@ Deno.serve(async (req: Request) => {
         headers: {
           ...browserHeaders,
           'Content-Type': 'application/x-www-form-urlencoded',
-          'Origin': 'https://duckduckgo.com',
-          'Referer': 'https://duckduckgo.com/',
+          Origin: 'https://duckduckgo.com',
+          Referer: 'https://duckduckgo.com/',
         },
         body: searchFormData.toString(),
       })
@@ -248,7 +364,12 @@ Deno.serve(async (req: Request) => {
         const searchHtml = await searchResp.text()
         const $search = cheerio.load(searchHtml)
 
-        const selectors = ['.result', '.results_links', '[data-testid="result"]', '.web-result']
+        const selectors = [
+          '.result',
+          '.results_links',
+          '[data-testid="result"]',
+          '.web-result',
+        ]
         let resultEls: any = null
 
         for (const sel of selectors) {
@@ -264,18 +385,32 @@ Deno.serve(async (req: Request) => {
           resultEls.each((i: number, el: any) => {
             if (items.length >= limit) return
 
-            let rawUrl = $search(el).find('a[data-testid="result-title-a"], a.result__url').first().attr('href') || $search(el).find('a[href]').first().attr('href') || ''
+            let rawUrl =
+              $search(el)
+                .find('a[data-testid="result-title-a"], a.result__url')
+                .first()
+                .attr('href') ||
+              $search(el).find('a[href]').first().attr('href') ||
+              ''
             if (rawUrl.includes('uddg=')) {
               const match = rawUrl.match(/uddg=([^&]+)/)
               if (match) rawUrl = decodeURIComponent(match[1])
             } else if (rawUrl.startsWith('//')) {
-               rawUrl = 'https:' + rawUrl
+              rawUrl = 'https:' + rawUrl
             } else if (rawUrl.startsWith('/')) {
-               rawUrl = 'https://duckduckgo.com' + rawUrl
+              rawUrl = 'https://duckduckgo.com' + rawUrl
             }
 
-            const offer = extractOfferFields($search, el, rawUrl, siteDomain || 'Busca Orgânica')
-            if (offer && !offer.raw_data.extracted_url.includes('duckduckgo.com')) {
+            const offer = extractOfferFields(
+              $search,
+              el,
+              rawUrl,
+              siteDomain || 'Busca Orgânica',
+            )
+            if (
+              offer &&
+              !offer.raw_data.extracted_url.includes('duckduckgo.com')
+            ) {
               items.push(offer)
             }
           })
@@ -291,12 +426,17 @@ Deno.serve(async (req: Request) => {
     if (items.length === 0) {
       addLog('Tentando Bing')
       try {
-        const isUS = region.toLowerCase().includes('us') || region.toLowerCase().includes('usa') || region.toLowerCase().includes('eua') || targetUrl.includes('.com/us') || targetUrl.includes('.us/')
-        const bingUrl = isUS 
+        const isUS =
+          region.toLowerCase().includes('us') ||
+          region.toLowerCase().includes('usa') ||
+          region.toLowerCase().includes('eua') ||
+          targetUrl.includes('.com/us') ||
+          targetUrl.includes('.us/')
+        const bingUrl = isUS
           ? `https://www.bing.com/search?q=${encodeURIComponent(searchQuery)}&cc=US&setlang=en-US`
           : `https://www.bing.com/search?q=${encodeURIComponent(searchQuery)}&cc=BR&setlang=pt-BR`
         const bingResp = await fetch(bingUrl, {
-          headers: { ...browserHeaders, 'Referer': 'https://www.bing.com/' },
+          headers: { ...browserHeaders, Referer: 'https://www.bing.com/' },
         })
 
         addLog(`Bing status: ${bingResp.status}`)
@@ -307,15 +447,23 @@ Deno.serve(async (req: Request) => {
 
           $bing('.b_algo').each((i: number, el: any) => {
             if (items.length >= limit) return
-            let rawUrl = $bing(el).find('h2 a').attr('href') || $bing(el).find('a[href]').first().attr('href') || ''
-            
+            let rawUrl =
+              $bing(el).find('h2 a').attr('href') ||
+              $bing(el).find('a[href]').first().attr('href') ||
+              ''
+
             if (rawUrl.startsWith('//')) {
-               rawUrl = 'https:' + rawUrl
+              rawUrl = 'https:' + rawUrl
             } else if (rawUrl.startsWith('/')) {
-               rawUrl = 'https://www.bing.com' + rawUrl
+              rawUrl = 'https://www.bing.com' + rawUrl
             }
 
-            const offer = extractOfferFields($bing, el, rawUrl, siteDomain || 'Bing')
+            const offer = extractOfferFields(
+              $bing,
+              el,
+              rawUrl,
+              siteDomain || 'Bing',
+            )
             if (offer && !offer.raw_data.extracted_url.includes('bing.com')) {
               items.push(offer)
             }
@@ -331,11 +479,13 @@ Deno.serve(async (req: Request) => {
     // TENTATIVA 3: Extração direta no parceiro
     if (items.length === 0 && targetUrl && targetUrl !== 'all') {
       addLog('Tentando extração direta', { url: targetUrl })
-      const directUrl = targetUrl.startsWith('http') ? targetUrl : `https://${targetUrl}`
+      const directUrl = targetUrl.startsWith('http')
+        ? targetUrl
+        : `https://${targetUrl}`
 
       try {
         const directResp = await fetch(directUrl, {
-          headers: { ...browserHeaders, 'Referer': `https://${siteDomain}/` },
+          headers: { ...browserHeaders, Referer: `https://${siteDomain}/` },
         })
 
         addLog(`Extração direta status: ${directResp.status}`)
@@ -345,9 +495,15 @@ Deno.serve(async (req: Request) => {
           const $ = cheerio.load(html)
 
           const offerSelectors = [
-            '[class*="offer"]', '[class*="promo"]', '[class*="deal"]',
-            '[class*="discount"]', '[class*="campanha"]', '[class*="desconto"]',
-            'article', '.card', '[class*="card"]',
+            '[class*="offer"]',
+            '[class*="promo"]',
+            '[class*="deal"]',
+            '[class*="discount"]',
+            '[class*="campanha"]',
+            '[class*="desconto"]',
+            'article',
+            '.card',
+            '[class*="card"]',
           ]
 
           for (const sel of offerSelectors) {
@@ -358,7 +514,9 @@ Deno.serve(async (req: Request) => {
               if (offer) items.push(offer)
             })
             if (items.length > 0) {
-              addLog(`Seletor direto funcionou: ${sel}`, { count: items.length })
+              addLog(`Seletor direto funcionou: ${sel}`, {
+                count: items.length,
+              })
               break
             }
           }
@@ -371,7 +529,9 @@ Deno.serve(async (req: Request) => {
     }
 
     if (items.length === 0) {
-      throw new Error('Nenhuma oferta encontrada. Verifique se o parceiro tem promoções ativas ou tente uma query diferente.')
+      throw new Error(
+        'Nenhuma oferta encontrada. Verifique se o parceiro tem promoções ativas ou tente uma query diferente.',
+      )
     }
 
     return new Response(JSON.stringify({ items, debug_info: debugInfo }), {
@@ -381,7 +541,10 @@ Deno.serve(async (req: Request) => {
     addLog(`Erro geral`, { error_message: error.message })
     return new Response(
       JSON.stringify({ error: error.message, debug_info: debugInfo }),
-      { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } },
+      {
+        status: 200,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
+      },
     )
   }
 })
