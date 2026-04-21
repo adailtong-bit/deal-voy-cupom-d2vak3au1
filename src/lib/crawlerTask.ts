@@ -125,51 +125,50 @@ export const startExtractionTask = async (
       await Promise.all(
         batch.map(async (item, batchIndex) => {
           const globalIndex = i + batchIndex
-          // Auto-fill Missing Fields to Ensure Persistence
-          if (!item.title?.trim())
-            item.title = `Oferta Descoberta ${globalIndex + 1}`
+          // Strict Validation (Production Grade) - Não geramos dados falsos
+          if (!item.title?.trim() || item.title.length < 5) {
+            throw new Error(`Item ignorado: Título inválido ou ausente.`)
+          }
 
-          if (item.title && item.title.length > 250) {
+          if (item.title.length > 250) {
             item.title = item.title.substring(0, 247) + '...'
           }
 
           const siteName = item.storeName || item.siteName || ''
-          if (!siteName.trim())
+          if (!siteName.trim()) {
             item.storeName = source !== 'all' ? source : 'Web Search'
+          }
 
-          if (!item.description?.trim())
-            item.description = `Detalhes da oferta encontrada automaticamente na fonte ${item.storeName}.`
-
-          if (
-            item.price === undefined ||
-            item.price === null ||
-            item.price <= 0 ||
-            isNaN(Number(item.price))
-          )
-            item.price = Math.floor(Math.random() * 100) + 10
+          // Preço real ou nulo (nunca gerar preços aleatórios)
+          if (typeof item.price === 'string') {
+            const numericPrice = parseFloat(
+              item.price.replace(/[^0-9,.]/g, '').replace(',', '.'),
+            )
+            item.price = isNaN(numericPrice) ? null : numericPrice
+          } else if (item.price && isNaN(Number(item.price))) {
+            item.price = null
+          }
 
           item.currency = item.currency || 'BRL'
-          item.discount = String(item.discount || '0% OFF')
-
-          if (!item.image?.trim() && !item.imageUrl?.trim())
-            item.image = 'https://img.usecurling.com/p/400/400?q=offer'
+          item.imageUrl = item.imageUrl || item.image || null
+          item.discount = item.discount ? String(item.discount) : null
 
           item.country =
             item.country ||
             item.countryOfOrigin ||
             sourceOptions?.country ||
             'Brasil'
-          item.category = item.category || sourceOptions?.category || 'Outros'
-
+          item.category = item.category || sourceOptions?.category || 'Geral'
           item.capturedAt = item.capturedAt || new Date().toISOString()
           item.status = item.status || 'pending'
 
-          const linkToTest = item.sourceUrl || item.originalUrl || ''
+          const linkToTest =
+            item.productLink || item.sourceUrl || item.originalUrl || ''
           if (!linkToTest.trim() || !linkToTest.startsWith('http')) {
-            item.sourceUrl = `https://example.com/offer/${Date.now()}_${globalIndex}`
-          } else {
-            item.sourceUrl = linkToTest
+            throw new Error(`Item ignorado: URL de origem inválida.`)
           }
+          item.sourceUrl = linkToTest
+          item.productLink = linkToTest
 
           // Real-Time Link Validation (Log only, do not discard to ensure all items are saved)
           addLog(`Pinging URL for "${item.title.substring(0, 30)}..."`)
