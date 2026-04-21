@@ -301,9 +301,25 @@ function EditablePromotionCard({ promo, onSaved, type = 'pending' }: any) {
       {/* Content Area - CRITICAL: min-w-0 prevents this flex child from blowing past 100% width and pushing buttons off screen */}
       <div className="flex-1 min-w-0 space-y-3 overflow-hidden">
         <div>
-          <label className="text-xs font-semibold text-slate-500 mb-1 block">
-            Título
-          </label>
+          <div className="flex justify-between items-center mb-1">
+            <label className="text-xs font-semibold text-slate-500 block">
+              Título
+            </label>
+            {(promo.price || promo.original_price) && (
+              <div className="flex gap-2 text-xs">
+                {promo.original_price && (
+                  <span className="text-slate-400 line-through">
+                    R$ {promo.original_price}
+                  </span>
+                )}
+                {promo.price && (
+                  <span className="text-green-600 font-bold">
+                    R$ {promo.price}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
           <Input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -452,9 +468,15 @@ function EditablePromotionCard({ promo, onSaved, type = 'pending' }: any) {
           description: description || '',
           image: promo.image_url || '',
           externalUrl: link || '',
+          link: link || '',
           companyId: promo.company_id || '',
           category: promo.category || 'Outros',
-          discount: promo.discount || '',
+          discount:
+            promo.discount ||
+            (promo.original_price && promo.price
+              ? `De R$ ${promo.original_price} por R$ ${promo.price}`
+              : ''),
+          price: promo.price,
           startDate: promo.start_date || new Date().toISOString().split('T')[0],
           endDate:
             promo.end_date ||
