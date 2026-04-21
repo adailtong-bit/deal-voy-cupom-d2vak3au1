@@ -1,5 +1,5 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
-import * as cheerio from 'npm:cheerio'
+import * as cheerio from 'cheerio'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
