@@ -15,7 +15,8 @@ import {
 import { DialogFooter } from '@/components/ui/dialog'
 import { REGIONS } from '@/lib/data'
 import { CrawlerSource } from '@/lib/types'
-import { fetchCategories } from '@/lib/api'
+import { useCouponStore } from '@/stores/CouponContext'
+import { CATEGORIES } from '@/lib/data'
 
 interface CrawlerSourceFormProps {
   initialData?: CrawlerSource | null
@@ -31,26 +32,10 @@ export function CrawlerSourceForm({
   isFranchisee,
 }: CrawlerSourceFormProps) {
   const { toast } = useToast()
-  const [categories, setCategories] = useState<{ id: string; label: string }[]>(
-    [],
-  )
+  const { platformSettings } = useCouponStore()
 
-  useEffect(() => {
-    const loadCategories = async () => {
-      try {
-        const cats = await fetchCategories()
-        setCategories(
-          cats.map((c: any) => ({
-            id: c.id,
-            label: c.name || c.label || 'Categoria',
-          })),
-        )
-      } catch (err) {
-        console.error('Failed to load categories', err)
-      }
-    }
-    loadCategories()
-  }, [])
+  const categoriesList =
+    platformSettings?.categories || CATEGORIES.filter((c) => c.id !== 'all')
 
   const [formData, setFormData] = useState({
     name: '',
@@ -241,15 +226,15 @@ export function CrawlerSourceForm({
                 <SelectValue placeholder="Selecione" />
               </SelectTrigger>
               <SelectContent>
-                {categories.length > 0 ? (
-                  categories.map((c) => (
+                {categoriesList.length > 0 ? (
+                  categoriesList.map((c: any) => (
                     <SelectItem key={c.id} value={c.label}>
                       {c.label}
                     </SelectItem>
                   ))
                 ) : (
                   <SelectItem value="Geral" disabled>
-                    Carregando categorias...
+                    Nenhuma categoria disponível
                   </SelectItem>
                 )}
               </SelectContent>
