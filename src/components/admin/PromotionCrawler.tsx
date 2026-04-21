@@ -139,7 +139,12 @@ function PromotionCrawlerContent({ franchiseId }: { franchiseId?: string }) {
       if (!p) return false
       if (filterState !== 'all' && p.state !== filterState) return false
       if (filterCity !== 'all' && p.city !== filterCity) return false
-      if (filterStore !== 'all' && p.storeName !== filterStore) return false
+      if (
+        filterStore !== 'all' &&
+        p.storeName !== filterStore &&
+        p.store_name !== filterStore
+      )
+        return false
       if (filterCategory !== 'all' && p.category !== filterCategory)
         return false
       if (filterSource !== 'all' && p.sourceId !== filterSource) return false

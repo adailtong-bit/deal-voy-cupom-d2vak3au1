@@ -110,6 +110,18 @@ export const fetchCrawlerPromotions = async (filters?: any) => {
   return { data }
 }
 
+export const updatePromotion = async (id: string, updates: any) => {
+  const { data, error } = await supabase
+    .from('discovered_promotions')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) throw error
+  return data
+}
+
 export const updatePromotionStatus = async (id: string, status: string) => {
   const { data, error } = await supabase
     .from('discovered_promotions')

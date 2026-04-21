@@ -117,7 +117,7 @@ Deno.serve(async (req: Request) => {
             if (titleEl.length === 0) {
               titleEl = $search(el).find('a[href]').first()
             }
-            
+
             const title = titleEl.text().trim()
             let rawUrl = titleEl.attr('href') || ''
 
@@ -132,7 +132,9 @@ Deno.serve(async (req: Request) => {
               ''
 
             if (title && rawUrl.startsWith('http')) {
-              const priceMatch = snippet.match(/(?:R\$|€|\$)\s*\d+(?:[.,]\d{2})?/)
+              const priceMatch = snippet.match(
+                /(?:R\$|€|\$)\s*\d+(?:[.,]\d{2})?/,
+              )
               const priceText = priceMatch ? priceMatch[0] : undefined
 
               let extractedDomain = ''
@@ -221,10 +223,11 @@ Deno.serve(async (req: Request) => {
           const ogImage = $('meta[property="og:image"]').attr('content')
 
           items.push({
-            title: ($('title').text().trim() || siteDomain || 'Busca Direta').substring(
-              0,
-              255,
-            ),
+            title: (
+              $('title').text().trim() ||
+              siteDomain ||
+              'Busca Direta'
+            ).substring(0, 255),
             description: metaDesc,
             product_link: directResp.url,
             source_url: directResp.url,
