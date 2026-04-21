@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
+import { CampaignFormDialog } from '@/components/merchant/CampaignFormDialog'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import {
@@ -17,6 +18,7 @@ import {
   Copy,
   Filter,
   RotateCcw,
+  Sparkles,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { toast } from 'sonner'
@@ -221,6 +223,7 @@ function EditablePromotionCard({ promo, onSaved, type = 'pending' }: any) {
   )
   const [link, setLink] = useState(promo.product_link || promo.source_url || '')
   const [isSaving, setIsSaving] = useState(false)
+  const [showCampaignDialog, setShowCampaignDialog] = useState(false)
 
   const handleSave = async () => {
     setIsSaving(true)
@@ -394,14 +397,24 @@ function EditablePromotionCard({ promo, onSaved, type = 'pending' }: any) {
         )}
 
         {type === 'approved' && (
-          <Button
-            size="sm"
-            onClick={handlePending}
-            variant="outline"
-            className="whitespace-nowrap flex-1 xl:flex-none justify-start"
-          >
-            <RotateCcw className="h-4 w-4 mr-2 shrink-0" /> Pendente
-          </Button>
+          <>
+            <Button
+              size="sm"
+              onClick={() => setShowCampaignDialog(true)}
+              variant="default"
+              className="bg-blue-600 hover:bg-blue-700 whitespace-nowrap flex-1 xl:flex-none justify-start text-white"
+            >
+              <Sparkles className="h-4 w-4 mr-2 shrink-0" /> Publicar Campanha
+            </Button>
+            <Button
+              size="sm"
+              onClick={handlePending}
+              variant="outline"
+              className="whitespace-nowrap flex-1 xl:flex-none justify-start"
+            >
+              <RotateCcw className="h-4 w-4 mr-2 shrink-0" /> Pendente
+            </Button>
+          </>
         )}
 
         <Button
@@ -413,6 +426,30 @@ function EditablePromotionCard({ promo, onSaved, type = 'pending' }: any) {
           <X className="h-4 w-4 mr-2 shrink-0" /> Rejeitar
         </Button>
       </div>
+
+      <CampaignFormDialog
+        open={showCampaignDialog}
+        onOpenChange={(open) => {
+          setShowCampaignDialog(open)
+          if (!open) {
+            onSaved()
+          }
+        }}
+        coupon={{
+          id: promo.id,
+          title: title || '',
+          description: description || '',
+          image: promo.image_url || '',
+          externalUrl: link || '',
+          companyId: promo.company_id || '',
+          category: promo.category || 'Outros',
+          discount: promo.discount || '',
+          startDate: promo.start_date || new Date().toISOString().split('T')[0],
+          endDate:
+            promo.end_date ||
+            new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
+        }}
+      />
     </div>
   )
 }

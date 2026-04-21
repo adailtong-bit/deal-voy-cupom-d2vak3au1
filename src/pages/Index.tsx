@@ -106,7 +106,7 @@ function IndexContent() {
         const { data, error } = await supabase
           .from('discovered_promotions')
           .select('*')
-          .eq('status', 'approved')
+          .in('status', ['approved', 'active'])
           .order('captured_at', { ascending: false })
           .limit(20)
 
