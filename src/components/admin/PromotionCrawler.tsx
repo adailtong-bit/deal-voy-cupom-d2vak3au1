@@ -10,7 +10,15 @@ import {
   CardDescription,
 } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Globe, Box, History, Square, Loader2, Settings2 } from 'lucide-react'
+import {
+  Globe,
+  Box,
+  History,
+  Square,
+  Loader2,
+  Settings2,
+  Check,
+} from 'lucide-react'
 import { CrawlerSourcesTab } from './CrawlerSourcesTab'
 import { CrawlerPromotionsTab } from './CrawlerPromotionsTab'
 import { CrawlerHistoryTab } from './CrawlerHistoryTab'
