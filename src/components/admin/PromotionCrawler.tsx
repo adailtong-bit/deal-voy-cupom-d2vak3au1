@@ -291,7 +291,7 @@ function PromotionCrawlerContent({ franchiseId }: { franchiseId?: string }) {
 
             <TabsContent
               value="promotions"
-              className="animate-in fade-in-50 min-w-0 w-full"
+              className="animate-in fade-in-50 min-w-0 w-full overflow-x-hidden"
             >
               {isLoadingPromotions ? (
                 <div className="p-8 space-y-4">
