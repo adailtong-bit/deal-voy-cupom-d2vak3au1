@@ -14,37 +14,14 @@ async function fetchOrganicAffiliateDeals(
   affiliateIds: Record<string, string>,
 ) {
   const networks = [
-    {
-      name: 'Amazon',
-      id: affiliateIds?.amazon,
-      domain: 'amazon',
-      param: 'tag',
-    },
-    {
-      name: 'Booking',
-      id: affiliateIds?.awin,
-      domain: 'booking.com',
-      param: 'aid',
-    },
-    {
-      name: 'RentCars',
-      id: affiliateIds?.rakuten,
-      domain: 'rentcars.com',
-      param: 'affiliate',
-    },
-    {
-      name: 'Shopee',
-      id: affiliateIds?.shopee,
-      domain: 'shopee',
-      param: 'smtt',
-    },
+    { name: 'Amazon', id: affiliateIds?.amazon, domain: 'amazon', param: 'tag' },
+    { name: 'Booking', id: affiliateIds?.awin, domain: 'booking.com', param: 'aid' },
+    { name: 'RentCars', id: affiliateIds?.rakuten, domain: 'rentcars.com', param: 'affiliate' },
+    { name: 'Shopee', id: affiliateIds?.shopee, domain: 'shopee', param: 'smtt' },
   ]
 
   const searchFormData = new URLSearchParams()
-  searchFormData.append(
-    'q',
-    `${query || 'ofertas viagens'} comprar OR oferta OR desconto`,
-  )
+  searchFormData.append('q', `${query || 'ofertas viagens'} comprar OR oferta OR desconto`)
 
   const searchResp = await fetch('https://html.duckduckgo.com/html/', {
     method: 'POST',
