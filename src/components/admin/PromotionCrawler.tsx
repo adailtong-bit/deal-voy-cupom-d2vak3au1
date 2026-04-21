@@ -125,15 +125,7 @@ function PromotionCrawlerContent({ franchiseId }: { franchiseId?: string }) {
   const basePendingPromotions = useMemo(() => {
     const allPromos = Array.isArray(dbPromotions) ? dbPromotions : []
 
-    return allPromos.filter(
-      (p) =>
-        p &&
-        p.status === 'pending' &&
-        p.storeName?.trim() &&
-        p.title?.trim() &&
-        p.description?.trim() &&
-        (p.capturedAt || p.expiryDate),
-    )
+    return allPromos.filter((p) => p && p.status === 'pending')
   }, [dbPromotions])
 
   const pendingPromotions = useMemo(() => {
