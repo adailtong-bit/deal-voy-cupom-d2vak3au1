@@ -23,6 +23,7 @@ import {
 import { supabase } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import { Card, CardContent } from '@/components/ui/card'
+import { cn } from '@/lib/utils'
 
 export function CrawlerPromotionsTab({
   pendingPromotions,
@@ -339,14 +340,24 @@ function EditablePromotionCard({ promo, onSaved, type = 'pending' }: any) {
             />
           </div>
           <div className="min-w-0">
-            <label className="text-xs font-semibold text-slate-500 mb-1 block">
-              Link Direto
+            <label className="text-xs font-semibold text-slate-500 mb-1 flex justify-between items-center">
+              <span>Link Direto / Origem</span>
+              {link && !link.startsWith('http') && (
+                <span className="text-[10px] text-red-500 font-bold bg-red-50 px-1 py-0.5 rounded">
+                  Inválido
+                </span>
+              )}
             </label>
             <div className="flex gap-2 w-full min-w-0">
               <Input
                 value={link}
                 onChange={(e) => setLink(e.target.value)}
-                className="flex-1 min-w-0 font-mono text-xs"
+                className={cn(
+                  'flex-1 min-w-0 font-mono text-xs',
+                  link &&
+                    !link.startsWith('http') &&
+                    'border-red-300 focus-visible:ring-red-500',
+                )}
                 placeholder="https://..."
               />
               <Button
