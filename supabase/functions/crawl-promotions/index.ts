@@ -24,17 +24,132 @@ const browserHeaders = {
   'Cache-Control': 'max-age=0',
 }
 
+function buildSearchQuery(params: {
+  query?: string
+  siteDomain?: string
+  category?: string
+  region?: string
+}): string {
+  const { query, siteDomain, category, region } = params
+
+  const offerTerms = [
+    'promoção',
+    'desconto',
+    'oferta por tempo limitado',
+    'válido até',
+    'aproveite',
+    'imperdível',
+  ]
+
+  let parts: string[] = []
+
+  if (query) parts.push(query)
+  if (category && category !== 'all') parts.push(category)
+  if (region) parts.push(region)
+
+  parts.push(offerTerms[Math.floor(Math.random() * offerTerms.length)])
+
+  if (siteDomain) parts.push(`site:${siteDomain}`)
+
+  return parts.join(' ')
+}
+
+function extractOfferFields(
+  $: cheerio.CheerioAPI,
+  el: any,
+  fallbackUrl: string,
+  sourceName: string,
+) {
+  const title =
+    $(el)
+      .find('h2, h3, .title, [class*="title"], [class*="name"]')
+      .first()
+      .text()
+      .trim() || $(el).find('a').first().text().trim()
+
+  let url = $(el).find('a[href]').first().attr('href') || fallbackUrl
+  if (url && !url.startsWith('http')) url = fallbackUrl
+
+  const description = $(el)
+    .find('[class*="desc"], [class*="snippet"], p, span')
+    .first()
+    .text()
+    .trim()
+
+  const image =
+    $(el).find('img').first().attr('src') ||
+    $(el).find('img').first().attr('data-src') ||
+    undefined
+
+  const bodyText = $(el).text()
+
+  const discountMatch = bodyText.match(
+    /(\d+\s*%\s*(?:off|de desconto|desconto))|(?:R\$|€|\$)\s*\d+(?:[.,]\d{2})?/,
+  )
+  const discount = discountMatch ? discountMatch[0] : undefined
+
+  const validityMatch = bodyText.match(
+    /válid[oa] até\s*[\d\/]+|expira em\s*[\d\/]+|até\s*\d{2}\/\d{2}/,
+  )
+  const validity = validityMatch ? validityMatch[0] : undefined
+
+  const regionMatch = bodyText.match(
+    /nacional|todo[s]? o brasil|são paulo|rio de janeiro|[A-Z]{2}\b/,
+  )
+  const coverage = regionMatch ? regionMatch[0] : 'Nacional'
+
+  const categoryKeywords: Record<string, string[]> = {
+    Viagem: ['hotel', 'voo', 'viagem', 'hospedagem', 'resort', 'turismo'],
+    Alimentação: ['restaurante', 'delivery', 'comida', 'ifood', 'pizza'],
+    Moda: ['roupa', 'moda', 'calçado', 'tênis', 'vestido'],
+    Tecnologia: ['celular', 'notebook', 'tv', 'eletrônico', 'smartphone'],
+    Serviços: ['plano', 'assinatura', 'serviço', 'app', 'streaming'],
+  }
+
+  let detectedCategory = 'Geral'
+  const lowerText = bodyText.toLowerCase()
+  for (const [cat, keywords] of Object.entries(categoryKeywords)) {
+    if (keywords.some((k) => lowerText.includes(k))) {
+      detectedCategory = cat
+      break
+    }
+  }
+
+  let extractedDomain = ''
+  try {
+    extractedDomain = new URL(url).hostname
+  } catch (e) {}
+
+  if (!title || !url.startsWith('http')) return null
+
+  return {
+    raw_data: {
+      html_title: title,
+      campaign_name_default: `${sourceName} — ${title.substring(0, 40)}`,
+      detected_description_main: description || title,
+      category: detectedCategory,
+      campaign_rules: validity
+        ? `Válido: ${validity}`
+        : 'Consulte o parceiro para regras',
+      discount_rules: discount || 'Desconto disponível — consulte o site',
+      detected_money_text_1: discount,
+      extracted_url: url,
+      extracted_domain: extractedDomain,
+      detected_image_1: image,
+      coverage: coverage,
+      validity: validity || 'Tempo limitado',
+      source: sourceName,
+    },
+    captured_at: new Date().toISOString(),
+  }
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
-  let debugInfo: any = {
-    logs: [],
-    target_url: '',
-    final_url: '',
-    status: null,
-  }
+  let debugInfo: any = { logs: [], target_url: '', status: null }
   const addLog = (msg: string, data?: any) => {
     debugInfo.logs.push({ time: new Date().toISOString(), msg, data })
   }
@@ -44,6 +159,7 @@ Deno.serve(async (req: Request) => {
     const items: any[] = []
 
     let targetUrl = options?.url || ''
+    let region = options?.region || ''
     debugInfo.target_url = targetUrl
 
     let siteDomain = ''
@@ -58,15 +174,14 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    let searchQuery = query || 'ofertas'
-    if (siteDomain) {
-      searchQuery += ` site:${siteDomain}`
-    }
-    if (options?.category && options.category !== 'all') {
-      searchQuery += ` ${options.category}`
-    }
+    const searchQuery = buildSearchQuery({
+      query,
+      siteDomain,
+      category: options?.category,
+      region,
+    })
 
-    addLog('Iniciando busca', { query: searchQuery })
+    addLog('Query qualificada montada', { searchQuery })
 
     // TENTATIVA 1: DuckDuckGo
     try {
@@ -104,7 +219,7 @@ Deno.serve(async (req: Request) => {
           const found = $search(sel)
           if (found.length > 0) {
             resultEls = found
-            addLog(`Seletor funcionou: ${sel}`, { count: found.length })
+            addLog(`Seletor DDG funcionou: ${sel}`, { count: found.length })
             break
           }
         }
@@ -113,139 +228,144 @@ Deno.serve(async (req: Request) => {
           resultEls.each((i: number, el: any) => {
             if (items.length >= limit) return
 
-            let titleEl = $search(el).find('.result__title a').first()
-            if (titleEl.length === 0) {
-              titleEl = $search(el).find('a[href]').first()
-            }
-            
-            const title = titleEl.text().trim()
-            let rawUrl = titleEl.attr('href') || ''
-
+            let rawUrl = $search(el).find('a[href]').first().attr('href') || ''
             if (rawUrl.includes('uddg=')) {
               const match = rawUrl.match(/uddg=([^&]+)/)
               if (match) rawUrl = decodeURIComponent(match[1])
             }
 
-            const snippet =
-              $search(el).find('.result__snippet').text().trim() ||
-              $search(el).find('span').last().text().trim() ||
-              ''
-
-            if (title && rawUrl.startsWith('http')) {
-              const priceMatch = snippet.match(/(?:R\$|€|\$)\s*\d+(?:[.,]\d{2})?/)
-              const priceText = priceMatch ? priceMatch[0] : undefined
-
-              let extractedDomain = ''
-              try {
-                extractedDomain = new URL(rawUrl).hostname
-              } catch (e) {}
-
-              let price = null
-              if (priceText) {
-                const numStr = priceText
-                  .replace(/[^0-9,.]/g, '')
-                  .replace(',', '.')
-                price = parseFloat(numStr)
-                if (isNaN(price)) price = null
-              }
-
-              items.push({
-                title: title.substring(0, 255),
-                description: snippet,
-                product_link: rawUrl,
-                source_url: rawUrl,
-                store_name: extractedDomain,
-                campaign_name: siteDomain
-                  ? `Busca na fonte: ${siteDomain}`
-                  : 'Busca Multi-fontes Orgânica',
-                price: price,
-                currency: priceText?.includes('€')
-                  ? 'EUR'
-                  : priceText?.includes('$') && !priceText.includes('R$')
-                    ? 'USD'
-                    : 'BRL',
-                status: 'pending',
-                category:
-                  options?.category && options.category !== 'all'
-                    ? options.category
-                    : 'geral',
-                captured_at: new Date().toISOString(),
-              })
-            }
+            const offer = extractOfferFields(
+              $search,
+              el,
+              rawUrl,
+              siteDomain || 'Busca Orgânica',
+            )
+            if (offer) items.push(offer)
           })
+
+          addLog(`DDG encontrou: ${items.length} ofertas`)
         }
-      } else {
-        addLog(`Erro na requisição DDG`, await searchResp.text())
       }
-    } catch (err: any) {
-      addLog(`Erro na busca DDG: ${err.message}`)
+    } catch (e: any) {
+      addLog(`Erro no DuckDuckGo: ${e.message}`)
     }
 
-    addLog(`Busca multi-fontes concluída`, { items_encontrados: items.length })
+    // TENTATIVA 2: Bing
+    if (items.length === 0) {
+      addLog('Tentando Bing')
+      try {
+        const bingUrl = `https://www.bing.com/search?q=${encodeURIComponent(searchQuery)}&cc=BR&setlang=pt-BR`
+        const bingResp = await fetch(bingUrl, {
+          headers: { ...browserHeaders, Referer: 'https://www.bing.com/' },
+        })
 
+        addLog(`Bing status: ${bingResp.status}`)
+
+        if (bingResp.ok) {
+          const bingHtml = await bingResp.text()
+          const $bing = cheerio.load(bingHtml)
+
+          $bing('.b_algo').each((i: number, el: any) => {
+            if (items.length >= limit) return
+            const rawUrl = $bing(el).find('h2 a').attr('href') || ''
+            const offer = extractOfferFields(
+              $bing,
+              el,
+              rawUrl,
+              siteDomain || 'Bing',
+            )
+            if (offer) items.push(offer)
+          })
+
+          addLog(`Bing encontrou: ${items.length} ofertas`)
+        }
+      } catch (e: any) {
+        addLog(`Erro no Bing: ${e.message}`)
+      }
+    }
+
+    // TENTATIVA 3: Extração direta no parceiro
     if (items.length === 0 && targetUrl && targetUrl !== 'all') {
-      addLog('Nenhum resultado na busca. Tentando extração direta da página', {
-        url: targetUrl,
-      })
-      let directUrl = targetUrl.startsWith('http')
+      addLog('Tentando extração direta', { url: targetUrl })
+      const directUrl = targetUrl.startsWith('http')
         ? targetUrl
         : `https://${targetUrl}`
 
       try {
         const directResp = await fetch(directUrl, {
-          headers: browserHeaders,
+          headers: { ...browserHeaders, Referer: `https://${siteDomain}/` },
         })
+
+        addLog(`Extração direta status: ${directResp.status}`)
 
         if (directResp.ok) {
           const html = await directResp.text()
           const $ = cheerio.load(html)
 
-          const metaDesc =
-            $('meta[name="description"]').attr('content') ||
-            $('meta[property="og:description"]').attr('content') ||
-            ''
+          const offerSelectors = [
+            '[class*="offer"]',
+            '[class*="promo"]',
+            '[class*="deal"]',
+            '[class*="discount"]',
+            '[class*="campanha"]',
+            '[class*="desconto"]',
+            'article',
+            '.card',
+            '[class*="card"]',
+          ]
 
-          const priceRegex = /(?:R\$|€|\$)\s*\d+(?:[.,]\d{2})?/
-          const bodyText = $('body').text()
-          const priceMatch = bodyText.match(priceRegex)
-
-          let price = null
-          let priceText = undefined
-          if (priceMatch) {
-            priceText = priceMatch[0]
-            const numStr = priceText.replace(/[^0-9,.]/g, '').replace(',', '.')
-            price = parseFloat(numStr)
-            if (isNaN(price)) price = null
+          for (const sel of offerSelectors) {
+            if (items.length >= limit) break
+            $(sel).each((i: number, el: any) => {
+              if (items.length >= limit) return
+              const offer = extractOfferFields($, el, directUrl, siteDomain)
+              if (offer) items.push(offer)
+            })
+            if (items.length > 0) {
+              addLog(`Seletor direto funcionou: ${sel}`, {
+                count: items.length,
+              })
+              break
+            }
           }
 
-          const ogImage = $('meta[property="og:image"]').attr('content')
+          if (items.length === 0) {
+            const metaDesc =
+              $('meta[name="description"]').attr('content') ||
+              $('meta[property="og:description"]').attr('content') ||
+              ''
+            const ogImage = $('meta[property="og:image"]').attr('content')
+            const title = $('title').text().trim() || siteDomain
+            const bodyText = $('body').text()
+            const discountMatch = bodyText.match(
+              /(\d+\s*%\s*(?:off|de desconto))|(?:R\$|€|\$)\s*\d+(?:[.,]\d{2})?/,
+            )
 
-          items.push({
-            title: ($('title').text().trim() || siteDomain || 'Busca Direta').substring(
-              0,
-              255,
-            ),
-            description: metaDesc,
-            product_link: directResp.url,
-            source_url: directResp.url,
-            store_name: new URL(directResp.url).hostname,
-            campaign_name: 'Busca Orgânica Direta',
-            price: price,
-            currency: priceText?.includes('€')
-              ? 'EUR'
-              : priceText?.includes('$') && !priceText.includes('R$')
-                ? 'USD'
-                : 'BRL',
-            image_url: ogImage,
-            status: 'pending',
-            category:
-              options?.category && options.category !== 'all'
-                ? options.category
-                : 'geral',
-            captured_at: new Date().toISOString(),
-          })
+            items.push({
+              raw_data: {
+                html_title: title,
+                campaign_name_default: `Oferta — ${title.substring(0, 40)}`,
+                detected_description_main: metaDesc,
+                category: options?.category || 'Geral',
+                campaign_rules: 'Consulte o parceiro para regras',
+                discount_rules: discountMatch
+                  ? discountMatch[0]
+                  : 'Desconto disponível',
+                detected_money_text_1: discountMatch
+                  ? discountMatch[0]
+                  : undefined,
+                extracted_url: directUrl,
+                extracted_domain: siteDomain,
+                detected_image_1: ogImage,
+                coverage: 'Nacional',
+                validity: 'Tempo limitado',
+                source: siteDomain,
+              },
+              captured_at: new Date().toISOString(),
+            })
+          }
         } else {
-          addLog(`Falha na extração direta: HTTP ${directResp.status}`)
+          addLog(`Parceiro bloqueou: HTTP ${directResp.status}`)
         }
       } catch (e: any) {
         addLog(`Erro na extração direta: ${e.message}`)
@@ -254,7 +374,7 @@ Deno.serve(async (req: Request) => {
 
     if (items.length === 0) {
       throw new Error(
-        'Nenhum dado pôde ser extraído das fontes orgânicas (Sem resultados).',
+        'Nenhuma oferta encontrada. Verifique se o parceiro tem promoções ativas ou tente uma query diferente.',
       )
     }
 
@@ -262,7 +382,7 @@ Deno.serve(async (req: Request) => {
       headers: { 'Content-Type': 'application/json', ...corsHeaders },
     })
   } catch (error: any) {
-    addLog(`Erro capturado na execução`, { error_message: error.message })
+    addLog(`Erro geral`, { error_message: error.message })
     return new Response(
       JSON.stringify({ error: error.message, debug_info: debugInfo }),
       {
