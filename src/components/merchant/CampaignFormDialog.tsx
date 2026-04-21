@@ -373,7 +373,8 @@ export function CampaignFormDialog({
       form.reset({
         title: coupon.title,
         description: coupon.description,
-        companyId: coupon.companyId || companyId || '',
+        companyId:
+          coupon.companyId || (coupon.id ? 'organic' : companyId || ''),
         category: coupon.category || 'Outros',
         instructions: coupon.instructions || '',
         image: coupon.image || '',
@@ -406,7 +407,7 @@ export function CampaignFormDialog({
       form.reset({
         title: '',
         description: '',
-        companyId: companyId || '',
+        companyId: companyId || 'organic',
         category: 'Outros',
         instructions: 'Válido por 30 dias ou enquanto durar o estoque',
         image: '',
@@ -437,10 +438,17 @@ export function CampaignFormDialog({
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const onSubmit = async (data: FormData) => {
-    const finalCompanyId = data.companyId || companyId || ''
-    if (needsCompanySelection && !finalCompanyId) {
-      form.setError('companyId', { message: 'Selecione uma loja.' })
-      toast.error('Por favor, selecione uma loja parceira.')
+    const selectedCompanyValue = data.companyId || companyId || ''
+    const isOrganic = selectedCompanyValue === 'organic'
+    const finalCompanyId = isOrganic ? null : selectedCompanyValue
+
+    if (needsCompanySelection && !selectedCompanyValue) {
+      form.setError('companyId', {
+        message: 'Selecione uma loja ou marque como orgânica.',
+      })
+      toast.error(
+        'Por favor, selecione uma loja parceira ou marque como orgânica.',
+      )
       return
     }
 
@@ -484,7 +492,7 @@ export function CampaignFormDialog({
         store_name:
           data.scope === 'specific' && data.specificStore
             ? data.specificStore
-            : company?.name || 'Loja',
+            : company?.name || (isOrganic ? 'Oferta Orgânica' : 'Loja'),
         discount_rules: data.discountType,
         discount: formattedDiscount,
         discount_percentage:
@@ -523,7 +531,7 @@ export function CampaignFormDialog({
           title: data.title,
           description: data.description,
           category: data.category,
-          companyId: finalCompanyId,
+          companyId: finalCompanyId || '',
           franchiseId: franchiseId || coupon.franchiseId,
           instructions: data.instructions,
           discount: formattedDiscount,
@@ -567,7 +575,7 @@ export function CampaignFormDialog({
 
         addCoupon({
           id: newId,
-          companyId: finalCompanyId,
+          companyId: finalCompanyId || '',
           franchiseId: franchiseId,
           storeName: dbPayload.store_name,
           title: data.title,
@@ -711,6 +719,12 @@ export function CampaignFormDialog({
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
+                                <SelectItem
+                                  value="organic"
+                                  className="font-medium text-emerald-600"
+                                >
+                                  🌟 Oferta Orgânica (Sem Parceiro)
+                                </SelectItem>
                                 {displayCompanies.map((c) => (
                                   <SelectItem key={c.id} value={c.id}>
                                     {c.name}
