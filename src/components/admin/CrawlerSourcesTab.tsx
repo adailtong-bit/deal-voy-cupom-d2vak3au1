@@ -172,6 +172,35 @@ export function CrawlerSourcesTab() {
     stopExtractionTask()
   }
 
+  const handleStartAll = async () => {
+    if (progress.isScanning) return
+    const activeSources = sources.filter((s) => s.status === 'active')
+    if (activeSources.length === 0) {
+      toast({ title: 'Nenhuma fonte ativa', variant: 'destructive' })
+      return
+    }
+
+    startExtractionTask('Multi-Fontes (Batch)', 500, 'all', {
+      useConfiguredSources: true,
+      category: 'Geral',
+    })
+
+    try {
+      const now = new Date().toISOString()
+      await Promise.all(
+        activeSources.map((s) => updateCrawlerSource(s.id, { last_scan: now })),
+      )
+      setSources(
+        sources.map((s) =>
+          s.status === 'active' ? { ...s, lastScan: now } : s,
+        ),
+      )
+      toast({ title: 'Varredura em lote iniciada' })
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
   const percentage =
     progress.total > 0 ? (progress.current / progress.total) * 100 : 0
 
@@ -188,16 +217,27 @@ export function CrawlerSourcesTab() {
               Gerencie e monitore as fontes de busca orgânica na web ou via API.
             </CardDescription>
           </div>
-          <Button
-            onClick={() => {
-              setEditingSource(null)
-              setIsFormOpen(true)
-            }}
-            className="gap-2 shrink-0"
-          >
-            <Plus className="h-4 w-4" />
-            Adicionar Fonte
-          </Button>
+          <div className="flex items-center gap-2 shrink-0">
+            <Button
+              onClick={handleStartAll}
+              variant="secondary"
+              className="gap-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200"
+              disabled={progress.isScanning}
+            >
+              <Play className="h-4 w-4" />
+              Rodar Ativas
+            </Button>
+            <Button
+              onClick={() => {
+                setEditingSource(null)
+                setIsFormOpen(true)
+              }}
+              className="gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Adicionar Fonte
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="border rounded-md overflow-hidden">
