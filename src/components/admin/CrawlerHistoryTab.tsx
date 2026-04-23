@@ -34,8 +34,9 @@ export function CrawlerHistoryTab({ isScanning }: { isScanning?: boolean }) {
               <th className="px-5 py-4">Source Engine</th>
               <th className="px-5 py-4">Category</th>
               <th className="px-5 py-4">Status</th>
-              <th className="px-5 py-4 text-right">Items Found</th>
-              <th className="px-5 py-4 text-right">Imported</th>
+              <th className="px-5 py-4 text-right">Encontrados</th>
+              <th className="px-5 py-4 text-right">Novos (Importados)</th>
+              <th className="px-5 py-4 text-right">Duplicados (Ignorados)</th>
               <th className="px-5 py-4">Errors / Notes</th>
             </tr>
           </thead>
@@ -95,6 +96,12 @@ export function CrawlerHistoryTab({ isScanning }: { isScanning?: boolean }) {
                   </td>
                   <td className="px-5 py-4 text-right text-emerald-600 font-bold">
                     {log.itemsImported || 0}
+                  </td>
+                  <td className="px-5 py-4 text-right text-slate-400 font-medium">
+                    {Math.max(
+                      0,
+                      (log.itemsFound || 0) - (log.itemsImported || 0),
+                    )}
                   </td>
                   <td
                     className="px-5 py-4 text-red-500 max-w-[280px] truncate text-xs"

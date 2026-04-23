@@ -380,6 +380,8 @@ function EditablePromotionCard({ promo, onSaved, type = 'pending' }: any) {
     promo.store_name || promo.storeName || '',
   )
   const [link, setLink] = useState(promo.product_link || promo.source_url || '')
+  const [price, setPrice] = useState(promo.price || '')
+  const [currency, setCurrency] = useState(promo.currency || 'BRL')
   const [isSaving, setIsSaving] = useState(false)
   const [showCampaignDialog, setShowCampaignDialog] = useState(false)
   const { user: authUser } = useAuth()
@@ -394,6 +396,8 @@ function EditablePromotionCard({ promo, onSaved, type = 'pending' }: any) {
           description,
           store_name: storeName,
           product_link: link,
+          price: price ? parseFloat(price) : null,
+          currency: currency.toUpperCase(),
         })
         .eq('id', promo.id)
 
@@ -506,46 +510,40 @@ function EditablePromotionCard({ promo, onSaved, type = 'pending' }: any) {
             <label className="text-xs font-semibold text-slate-500 block">
               Título
             </label>
-            {(promo.price || promo.original_price) && (
-              <div className="flex items-center gap-2 text-xs">
-                {promo.original_price && (
-                  <span className="text-slate-400 line-through">
-                    {promo.currency === 'USD'
-                      ? '$'
-                      : promo.currency === 'EUR'
-                        ? '€'
-                        : promo.currency === 'GBP'
-                          ? '£'
-                          : 'R$'}{' '}
-                    {promo.original_price}
-                  </span>
-                )}
-                {promo.price && (
-                  <span className="text-green-600 font-bold">
-                    {promo.currency === 'USD'
-                      ? '$'
-                      : promo.currency === 'EUR'
-                        ? '€'
-                        : promo.currency === 'GBP'
-                          ? '£'
-                          : 'R$'}{' '}
-                    {promo.price}
-                  </span>
-                )}
-                {promo.currency && promo.currency !== 'BRL' && (
-                  <span className="text-[9px] bg-blue-100 text-blue-700 px-1 py-0.5 rounded font-bold uppercase tracking-wider">
-                    {promo.currency}
-                  </span>
-                )}
-              </div>
-            )}
+            </div>
           </div>
-          <Input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="w-full font-medium"
-            placeholder="Título da oferta"
-          />
+          <div className="flex gap-2">
+            <Input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="flex-1 font-medium"
+              placeholder="Título da oferta"
+            />
+            <Input
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              className="w-24 font-mono text-sm"
+              placeholder="0.00"
+              type="number"
+              step="0.01"
+              title="Valor bruto"
+            />
+            <Input
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value)}
+              className="w-16 font-mono text-sm uppercase text-center"
+              placeholder="BRL"
+              maxLength={3}
+              title="Moeda Original"
+            />
+          </div>
+          {currency && currency.toUpperCase() !== 'BRL' && (
+            <div className="mt-1.5 flex items-center">
+               <span className="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-bold uppercase tracking-wider flex items-center gap-1 border border-amber-200">
+                 ⚠️ Moeda Estrangeira ({currency}) - Sem Conversão Automática
+               </span>
+            </div>
+          )}
         </div>
 
         <div>
@@ -712,10 +710,10 @@ function EditablePromotionCard({ promo, onSaved, type = 'pending' }: any) {
           category: promo.category || 'Outros',
           discount:
             promo.discount ||
-            (promo.original_price && promo.price
-              ? `De ${promo.currency === 'USD' ? '$' : promo.currency === 'EUR' ? '€' : promo.currency === 'GBP' ? '£' : 'R$'} ${promo.original_price} por ${promo.currency === 'USD' ? '$' : promo.currency === 'EUR' ? '€' : promo.currency === 'GBP' ? '£' : 'R$'} ${promo.price}`
+            (promo.original_price && price
+              ? `De ${currency === 'USD' ? '$' : currency === 'EUR' ? '€' : currency === 'GBP' ? '£' : currency} ${promo.original_price} por ${currency === 'USD' ? '$' : currency === 'EUR' ? '€' : currency === 'GBP' ? '£' : currency} ${price}`
               : ''),
-          price: promo.price,
+          price: price ? parseFloat(price) : null,
           startDate: promo.start_date || new Date().toISOString().split('T')[0],
           endDate:
             promo.end_date ||

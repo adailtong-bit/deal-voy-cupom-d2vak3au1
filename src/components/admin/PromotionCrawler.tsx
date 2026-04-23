@@ -77,6 +77,9 @@ function EditPromotionModal({
       price: formData.get('price')
         ? parseFloat(formData.get('price') as string)
         : null,
+      currency: formData.get('currency')
+        ? (formData.get('currency') as string).toUpperCase()
+        : 'BRL',
     }
 
     const { error } = await supabase
@@ -150,14 +153,31 @@ function EditPromotionModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-slate-700">
-                Preço (opcional)
+                Preço e Moeda
               </label>
-              <Input
-                name="price"
-                type="number"
-                step="0.01"
-                defaultValue={promo.price || ''}
-              />
+              <div className="flex gap-2">
+                <Input
+                  name="price"
+                  type="number"
+                  step="0.01"
+                  defaultValue={promo.price || ''}
+                  className="flex-1"
+                  placeholder="0.00"
+                />
+                <Input
+                  name="currency"
+                  defaultValue={promo.currency || 'BRL'}
+                  className="w-20 uppercase font-mono text-center"
+                  placeholder="BRL"
+                  maxLength={3}
+                />
+              </div>
+              {promo.currency && promo.currency.toUpperCase() !== 'BRL' && (
+                <p className="text-[10px] text-amber-600 font-bold mt-1">
+                  ⚠️ Oferta em moeda estrangeira ({promo.currency}). O valor
+                  exibido é o original.
+                </p>
+              )}
             </div>
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-slate-700">
@@ -314,9 +334,32 @@ function ApprovedOffersManager({ promotions, onStatusChange }: any) {
               </div>
             </div>
             <div className="p-4 flex-1 flex flex-col">
-              <h4 className="font-semibold text-slate-900 line-clamp-2 text-sm mb-1">
-                {promo.title}
-              </h4>
+              <div className="flex justify-between items-start gap-2 mb-1">
+                <h4 className="font-semibold text-slate-900 line-clamp-2 text-sm">
+                  {promo.title}
+                </h4>
+                {promo.price && (
+                  <span
+                    className={cn(
+                      'text-xs font-bold whitespace-nowrap',
+                      promo.currency !== 'BRL'
+                        ? 'text-amber-600'
+                        : 'text-green-600',
+                    )}
+                  >
+                    {promo.currency === 'USD'
+                      ? '$'
+                      : promo.currency === 'EUR'
+                        ? '€'
+                        : promo.currency === 'GBP'
+                          ? '£'
+                          : promo.currency === 'BRL'
+                            ? 'R$'
+                            : promo.currency}{' '}
+                    {promo.price}
+                  </span>
+                )}
+              </div>
               <p className="text-xs text-slate-500 line-clamp-2 mb-3 flex-1">
                 {promo.description || 'Sem descrição'}
               </p>
@@ -330,6 +373,11 @@ function ApprovedOffersManager({ promotions, onStatusChange }: any) {
                 {promo.store_name && (
                   <span className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-medium">
                     {promo.store_name}
+                  </span>
+                )}
+                {promo.currency && promo.currency !== 'BRL' && (
+                  <span className="px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded text-[10px] font-bold">
+                    {promo.currency}
                   </span>
                 )}
               </div>

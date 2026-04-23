@@ -24,8 +24,53 @@ export const fetchWebSearchPromotions = async (
 
 export const saveDiscoveredPromotion = async (promo: any) => {
   try {
+    const rawLink = promo.product_link || promo.source_url || ''
+    const cleanLink = rawLink.split('?')[0].trim()
+    const titleClean = promo.title
+      ? promo.title.substring(0, 100).toLowerCase().trim()
+      : ''
+    const priceStr = promo.price ? promo.price.toString() : '0'
+
+    // De-duplicação: Hashing baseado em link + título + preço
+    const hashBase = `${cleanLink}|${titleClean}|${priceStr}`
+    let hashNum = 0
+    for (let i = 0; i < hashBase.length; i++) {
+      const char = hashBase.charCodeAt(i)
+      hashNum = (hashNum << 5) - hashNum + char
+      hashNum = hashNum & hashNum
+    }
+    const uniqueHash = `h_${Math.abs(hashNum).toString(16)}_${titleClean.substring(0, 8).replace(/[^a-z0-9]/g, '')}`
+
+    // Verificação preventiva para evitar erro de constraint no log
+    const { data: existing } = await supabase
+      .from('discovered_promotions')
+      .select('id')
+      .eq('unique_hash', uniqueHash)
+      .maybeSingle()
+
+    if (existing) {
+      console.log(`Skipping duplicate (hash match): ${promo.title}`)
+      return { skipped: true, reason: 'duplicate', id: existing.id }
+    }
+
+    // Alternativa: verificação por link exato
+    if (cleanLink && cleanLink.startsWith('http')) {
+      const { data: existingLink } = await supabase
+        .from('discovered_promotions')
+        .select('id')
+        .like('product_link', `${cleanLink}%`)
+        .limit(1)
+        .maybeSingle()
+
+      if (existingLink) {
+        console.log(`Skipping duplicate (link match): ${cleanLink}`)
+        return { skipped: true, reason: 'duplicate', id: existingLink.id }
+      }
+    }
+
     // Garantir que os dados mapeiem corretamente para a tabela e prevenir erros de colunas inexistentes.
     const payload = {
+      unique_hash: uniqueHash,
       title: promo.title ? promo.title.substring(0, 255) : 'Oferta sem título',
       description: promo.description || null,
       price: promo.price || null,
@@ -65,6 +110,10 @@ export const saveDiscoveredPromotion = async (promo: any) => {
       .single()
 
     if (error) {
+      if (error.code === '23505') {
+        // Unique violation fallback
+        return { skipped: true, reason: 'duplicate' }
+      }
       console.error(
         'Error saving promotion (DB insert):',
         error.message,
@@ -75,6 +124,9 @@ export const saveDiscoveredPromotion = async (promo: any) => {
     }
     return data
   } catch (err: any) {
+    if (err.code === '23505') {
+      return { skipped: true, reason: 'duplicate' }
+    }
     console.error('Fatal error in saveDiscoveredPromotion:', err)
     throw err
   }
