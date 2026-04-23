@@ -76,11 +76,6 @@ function RequireAuth({
     return <>{children}</>
   }
 
-  // 🛠️ QA BYPASS ACESSO: Se a role mockada (já inclusa em authRole) corresponder às roles permitidas, deixa passar
-  if (roles && roles.includes(role)) {
-    return <>{children}</>
-  }
-
   // Roteamento condicional seguro
   if (roles && roles.length > 0 && !roles.includes(role)) {
     // Tolerância para QA/Testes: se o papel for 'merchant', aceita rotas de 'shopkeeper'

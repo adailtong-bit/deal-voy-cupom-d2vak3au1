@@ -22,12 +22,8 @@ import {
   User,
   Eye,
   EyeOff,
-  ShieldAlert,
-  Store,
-  Users,
   LogOut,
   ArrowRight,
-  Building,
 } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
 import { toast } from 'sonner'
@@ -74,57 +70,6 @@ export default function Login() {
         replace: true,
       })
     }
-  }
-
-  const handleFakeLogin = async (roleType: string, fakeEmail: string) => {
-    setIsLoading(true)
-
-    let { error, data } = await signIn(fakeEmail, 'Skip@Pass')
-
-    if (error && fakeEmail === 'adailtong@gmail.com') {
-      const retry = await signIn(fakeEmail, '123456')
-      if (!retry.error) {
-        error = null
-        data = retry.data
-      }
-    }
-
-    if (error) {
-      toast.error(
-        `Falha no acesso rápido. Se você alterou sua senha recentemente, por favor, use o formulário de login manual normal com a sua nova senha.`,
-        { duration: 6000 },
-      )
-      setIsLoading(false)
-      return
-    }
-
-    toast.success(
-      t(
-        'auth.login_success',
-        'Autenticação concluída com sucesso! Carregando painel...',
-      ),
-    )
-
-    // Pequeno delay para assegurar que a sessão foi registrada globalmente e as claims atualizadas
-    setTimeout(async () => {
-      if (data?.user) {
-        try {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', data.user.id)
-            .single()
-
-          const userRole =
-            profile?.role || data.user.user_metadata?.role || roleType
-          performRedirect(userRole)
-        } catch (err) {
-          const userRole = data.user.user_metadata?.role || roleType
-          performRedirect(userRole)
-        }
-      }
-      setIsLoading(false)
-    }, 600)
   }
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -245,80 +190,6 @@ export default function Login() {
     )
   }
 
-  const qaTestingPanel = (
-    <div className="mt-8 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-      <Card className="border border-dashed border-slate-300 bg-slate-50 shadow-sm">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-lg font-semibold flex items-center text-slate-700">
-            <ShieldAlert className="w-5 h-5 mr-2 text-amber-500" />
-            Acessos de Teste (Validação QA)
-          </CardTitle>
-          <CardDescription className="text-sm">
-            Use estes acessos rápidos gerados via banco de dados para avaliar
-            toda a plataforma.{' '}
-            {sbUser ? 'Ao clicar, sua sessão atual será substituída.' : ''}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Button
-            variant="outline"
-            className="w-full justify-start h-auto py-3 bg-white hover:bg-slate-100 hover:text-purple-600 transition-colors shadow-sm"
-            onClick={() =>
-              handleFakeLogin('franchisee', 'franqueado@dealvoy.com')
-            }
-            disabled={isLoading}
-          >
-            <Building className="w-4 h-4 mr-3 text-purple-500 shrink-0" />
-            <div className="text-left">
-              <div className="font-semibold text-sm">Acesso Franqueado</div>
-              <div className="text-xs text-slate-500">
-                franqueado@dealvoy.com
-              </div>
-            </div>
-          </Button>
-          <Button
-            variant="outline"
-            className="w-full justify-start h-auto py-3 bg-white hover:bg-slate-100 hover:text-green-600 transition-colors shadow-sm"
-            onClick={() => handleFakeLogin('shopkeeper', 'vendor@dealvoy.com')}
-            disabled={isLoading}
-          >
-            <Store className="w-4 h-4 mr-3 text-green-500 shrink-0" />
-            <div className="text-left">
-              <div className="font-semibold text-sm">Acesso Lojista</div>
-              <div className="text-xs text-slate-500">vendor@dealvoy.com</div>
-            </div>
-          </Button>
-          <Button
-            variant="outline"
-            className="w-full justify-start h-auto py-3 bg-white hover:bg-slate-100 hover:text-blue-600 transition-colors shadow-sm"
-            onClick={() => handleFakeLogin('user', 'cliente@dealvoy.com')}
-            disabled={isLoading}
-          >
-            <User className="w-4 h-4 mr-3 text-blue-500 shrink-0" />
-            <div className="text-left">
-              <div className="font-semibold text-sm">Acesso Cliente Padrão</div>
-              <div className="text-xs text-slate-500">cliente@dealvoy.com</div>
-            </div>
-          </Button>
-          <Button
-            variant="outline"
-            className="w-full justify-start h-auto py-3 bg-white hover:bg-slate-100 hover:text-orange-600 transition-colors shadow-sm sm:col-span-2"
-            onClick={() => handleFakeLogin('affiliate', 'afiliado@dealvoy.com')}
-            disabled={isLoading}
-          >
-            <Users className="w-4 h-4 mr-3 text-orange-500 shrink-0" />
-            <div className="text-left">
-              <div className="font-semibold text-sm">
-                Acesso Afiliado (Aprovado)
-              </div>
-              <div className="text-xs text-slate-500">afiliado@dealvoy.com</div>
-            </div>
-          </Button>
-        </CardContent>
-      </Card>
-    </div>
-  )
-
   // Previne o "loop de rota" ao não auto-redirecionar cegamente.
   // Em vez disso, se o usuário estiver logado, exibe uma interface clara para prosseguir ou deslogar.
   if (sbUser) {
@@ -358,7 +229,6 @@ export default function Login() {
             </Button>
           </CardContent>
         </Card>
-        {qaTestingPanel}
       </div>
     )
   }
@@ -591,8 +461,6 @@ export default function Login() {
           </Tabs>
         </CardContent>
       </Card>
-
-      {qaTestingPanel}
     </div>
   )
 }

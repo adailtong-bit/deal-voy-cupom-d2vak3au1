@@ -42,11 +42,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true)
 
   const applyRole = (fetchedRole: string) => {
-    const override = localStorage.getItem('qa_bypass_role')
-    const finalRole = override || fetchedRole
-    setRole(finalRole)
-    localStorage.setItem('role', finalRole)
-    localStorage.setItem('userRole', finalRole)
+    setRole(fetchedRole)
+    localStorage.setItem('role', fetchedRole)
+    localStorage.setItem('userRole', fetchedRole)
   }
 
   useEffect(() => {
