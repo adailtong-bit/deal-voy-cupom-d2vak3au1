@@ -8,12 +8,13 @@ const corsHeaders = {
     'authorization, x-client-info, x-supabase-client-platform, apikey, content-type',
 }
 
-function detectCurrency(text: string): string {
-  if (!text) return 'BRL'
-  if (text.includes('$') && !text.includes('R$') && !text.includes('R $')) return 'USD'
+function detectCurrency(text: string, domain: string = ''): string {
+  if (!text) return domain.includes('.br') ? 'BRL' : 'USD'
+  if (text.includes('R$') || text.includes('R $')) return 'BRL'
   if (text.includes('€')) return 'EUR'
   if (text.includes('£')) return 'GBP'
-  return 'BRL'
+  if (text.includes('$')) return 'USD'
+  return domain.includes('.br') ? 'BRL' : 'USD'
 }
 
 async function fetchOrganicAffiliateDeals(
@@ -131,7 +132,7 @@ async function fetchOrganicAffiliateDeals(
 
       const priceMatch = snippet.match(/(?:R\$|€|\$|£)\s*\d+(?:[.,]\d{2})?/)
       const priceText = priceMatch ? priceMatch[0] : ''
-      const currency = detectCurrency(priceText)
+      const currency = detectCurrency(priceText, extractedDomain)
 
       results.push({
         title: title,

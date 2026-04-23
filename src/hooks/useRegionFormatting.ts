@@ -1,6 +1,10 @@
 import { useMemo } from 'react'
 
-export function useRegionFormatting(regionCode?: string, country?: string) {
+export function useRegionFormatting(
+  regionCode?: string,
+  country?: string,
+  explicitCurrency?: string,
+) {
   return useMemo(() => {
     let locale = 'en-US'
     let currency = 'USD'
@@ -48,6 +52,10 @@ export function useRegionFormatting(regionCode?: string, country?: string) {
       locale = 'en-US'
       currency = 'USD'
       distanceUnit = 'mi'
+    }
+
+    if (explicitCurrency) {
+      currency = explicitCurrency
     }
 
     const formatCurrency = (amount: number | null | undefined) => {

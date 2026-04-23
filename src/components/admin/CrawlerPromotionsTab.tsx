@@ -514,7 +514,9 @@ function EditablePromotionCard({ promo, onSaved, type = 'pending' }: any) {
                       ? '$'
                       : promo.currency === 'EUR'
                         ? '€'
-                        : 'R$'}{' '}
+                        : promo.currency === 'GBP'
+                          ? '£'
+                          : 'R$'}{' '}
                     {promo.original_price}
                   </span>
                 )}
@@ -524,7 +526,9 @@ function EditablePromotionCard({ promo, onSaved, type = 'pending' }: any) {
                       ? '$'
                       : promo.currency === 'EUR'
                         ? '€'
-                        : 'R$'}{' '}
+                        : promo.currency === 'GBP'
+                          ? '£'
+                          : 'R$'}{' '}
                     {promo.price}
                   </span>
                 )}
@@ -709,7 +713,7 @@ function EditablePromotionCard({ promo, onSaved, type = 'pending' }: any) {
           discount:
             promo.discount ||
             (promo.original_price && promo.price
-              ? `De ${promo.currency === 'USD' ? '$' : promo.currency === 'EUR' ? '€' : 'R$'} ${promo.original_price} por ${promo.currency === 'USD' ? '$' : promo.currency === 'EUR' ? '€' : 'R$'} ${promo.price}`
+              ? `De ${promo.currency === 'USD' ? '$' : promo.currency === 'EUR' ? '€' : promo.currency === 'GBP' ? '£' : 'R$'} ${promo.original_price} por ${promo.currency === 'USD' ? '$' : promo.currency === 'EUR' ? '€' : promo.currency === 'GBP' ? '£' : 'R$'} ${promo.price}`
               : ''),
           price: promo.price,
           startDate: promo.start_date || new Date().toISOString().split('T')[0],
