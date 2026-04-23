@@ -19,6 +19,9 @@ import {
   Filter,
   RotateCcw,
   Sparkles,
+  Trash2,
+  Clock,
+  Activity,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { toast } from 'sonner'
@@ -44,6 +47,9 @@ export function CrawlerPromotionsTab({
   onStatusChange,
   type = 'pending',
 }: any) {
+  const [isDeletingBatch, setIsDeletingBatch] = useState(false)
+  const [isCheckingLinks, setIsCheckingLinks] = useState(false)
+
   const uniqueStates = useMemo(
     () =>
       Array.from(
@@ -99,13 +105,146 @@ export function CrawlerPromotionsTab({
     [basePendingPromotions],
   )
 
+  const handleDeleteFiltered = async () => {
+    if (
+      !confirm(
+        'Tem certeza que deseja EXCLUIR TODAS as promoções listadas nestes filtros? Esta ação não pode ser desfeita.',
+      )
+    )
+      return
+
+    setIsDeletingBatch(true)
+    try {
+      const idsToDelete = pendingPromotions.map((p: any) => p.id)
+
+      const chunkSize = 100
+      for (let i = 0; i < idsToDelete.length; i += chunkSize) {
+        const chunk = idsToDelete.slice(i, i + chunkSize)
+        const { error } = await supabase
+          .from('discovered_promotions')
+          .delete()
+          .in('id', chunk)
+        if (error) throw error
+      }
+
+      toast.success(`${idsToDelete.length} promoções excluídas com sucesso!`)
+      onStatusChange()
+    } catch (err: any) {
+      toast.error('Erro ao excluir: ' + err.message)
+    } finally {
+      setIsDeletingBatch(false)
+    }
+  }
+
+  const handleExpireFiltered = async () => {
+    if (
+      !confirm(
+        'Tem certeza que deseja marcar como EXPIRADAS as promoções filtradas?',
+      )
+    )
+      return
+
+    setIsDeletingBatch(true)
+    try {
+      const idsToUpdate = pendingPromotions.map((p: any) => p.id)
+
+      const chunkSize = 100
+      for (let i = 0; i < idsToUpdate.length; i += chunkSize) {
+        const chunk = idsToUpdate.slice(i, i + chunkSize)
+        const { error } = await supabase
+          .from('discovered_promotions')
+          .update({ status: 'expired' })
+          .in('id', chunk)
+        if (error) throw error
+      }
+
+      toast.success(`${idsToUpdate.length} promoções expiradas com sucesso!`)
+      onStatusChange()
+    } catch (err: any) {
+      toast.error('Erro ao expirar: ' + err.message)
+    } finally {
+      setIsDeletingBatch(false)
+    }
+  }
+
+  const handleRunNightlyCheck = async () => {
+    if (
+      !confirm(
+        'Deseja rodar a varredura de links expirados agora? Isso verificará todas as ofertas aprovadas.',
+      )
+    )
+      return
+
+    setIsCheckingLinks(true)
+    try {
+      const { data, error } = await supabase.functions.invoke(
+        'check-expired-promotions',
+      )
+      if (error) throw error
+      toast.success(
+        `Varredura concluída! ${data?.expiredCount || 0} ofertas foram marcadas como expiradas.`,
+      )
+      if (data?.expiredCount > 0) {
+        onStatusChange()
+      }
+    } catch (err: any) {
+      toast.error('Erro na varredura: ' + err.message)
+    } finally {
+      setIsCheckingLinks(false)
+    }
+  }
+
   return (
     <div className="space-y-4 min-w-0 w-full overflow-hidden">
       <Card className="min-w-0 w-full border-none shadow-none bg-slate-50/50">
         <CardContent className="p-4">
-          <div className="flex items-center gap-2 mb-4 text-sm font-medium text-slate-700">
-            <Filter className="h-4 w-4" />
-            Filtros
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4">
+            <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
+              <Filter className="h-4 w-4" />
+              Filtros de Limpeza e Curadoria
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              {type === 'approved' && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRunNightlyCheck}
+                  disabled={isCheckingLinks}
+                  className="bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100"
+                >
+                  <Activity className="h-4 w-4 mr-2" />
+                  {isCheckingLinks ? 'Varrendo...' : 'Forçar Varredura'}
+                </Button>
+              )}
+
+              {pendingPromotions.length > 0 && (
+                <>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleDeleteFiltered}
+                    disabled={isDeletingBatch}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Excluir Filtrados ({pendingPromotions.length})
+                  </Button>
+
+                  {type === 'approved' && (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={handleExpireFiltered}
+                      disabled={isDeletingBatch}
+                      className="bg-amber-100 text-amber-800 hover:bg-amber-200"
+                    >
+                      <Clock className="h-4 w-4 mr-2" />
+                      Expirar Filtrados ({pendingPromotions.length})
+                    </Button>
+                  )}
+                </>
+              )}
+            </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
             <Select value={filterState} onValueChange={setFilterState}>
@@ -291,6 +430,35 @@ function EditablePromotionCard({ promo, onSaved, type = 'pending' }: any) {
     }
   }
 
+  const handleDelete = async () => {
+    if (!confirm('Deseja excluir esta oferta definitivamente?')) return
+    try {
+      const { error } = await supabase
+        .from('discovered_promotions')
+        .delete()
+        .eq('id', promo.id)
+      if (error) throw error
+      toast.success('Promoção excluída!')
+      onSaved()
+    } catch (err: any) {
+      toast.error('Erro ao excluir: ' + err.message)
+    }
+  }
+
+  const handleExpire = async () => {
+    try {
+      const { error } = await supabase
+        .from('discovered_promotions')
+        .update({ status: 'expired' })
+        .eq('id', promo.id)
+      if (error) throw error
+      toast.success('Promoção marcada como expirada!')
+      onSaved()
+    } catch (err: any) {
+      toast.error('Erro ao expirar: ' + err.message)
+    }
+  }
+
   const handleCopy = () => {
     navigator.clipboard.writeText(link)
     toast.success('Link copiado!')
@@ -402,7 +570,7 @@ function EditablePromotionCard({ promo, onSaved, type = 'pending' }: any) {
       </div>
 
       {/* Action Buttons - CRITICAL: shrink-0 keeps buttons fixed size. overflow-x-auto provides horizontal scroll on mobile */}
-      <div className="flex flex-row xl:flex-col gap-2 shrink-0 xl:w-36 overflow-x-auto pb-2 xl:pb-0 justify-start sm:justify-end xl:justify-start pt-2 xl:pt-0 border-t xl:border-t-0 xl:border-l border-slate-100 xl:pl-4">
+      <div className="flex flex-row xl:flex-col gap-2 shrink-0 xl:w-40 overflow-x-auto pb-2 xl:pb-0 justify-start sm:justify-end xl:justify-start pt-2 xl:pt-0 border-t xl:border-t-0 xl:border-l border-slate-100 xl:pl-4">
         <Button
           size="sm"
           onClick={handleSave}
@@ -431,7 +599,15 @@ function EditablePromotionCard({ promo, onSaved, type = 'pending' }: any) {
               variant="default"
               className="bg-blue-600 hover:bg-blue-700 whitespace-nowrap flex-1 xl:flex-none justify-start text-white"
             >
-              <Sparkles className="h-4 w-4 mr-2 shrink-0" /> Publicar Campanha
+              <Sparkles className="h-4 w-4 mr-2 shrink-0" /> Publicar
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleExpire}
+              variant="secondary"
+              className="bg-amber-100 text-amber-800 hover:bg-amber-200 whitespace-nowrap flex-1 xl:flex-none justify-start"
+            >
+              <Clock className="h-4 w-4 mr-2 shrink-0" /> Expirar
             </Button>
             <Button
               size="sm"
@@ -444,13 +620,24 @@ function EditablePromotionCard({ promo, onSaved, type = 'pending' }: any) {
           </>
         )}
 
+        {type !== 'approved' && (
+          <Button
+            size="sm"
+            onClick={handleReject}
+            variant="secondary"
+            className="whitespace-nowrap flex-1 xl:flex-none justify-start"
+          >
+            <X className="h-4 w-4 mr-2 shrink-0" /> Rejeitar
+          </Button>
+        )}
+
         <Button
           size="sm"
-          onClick={handleReject}
+          onClick={handleDelete}
           variant="destructive"
           className="whitespace-nowrap flex-1 xl:flex-none justify-start"
         >
-          <X className="h-4 w-4 mr-2 shrink-0" /> Rejeitar
+          <Trash2 className="h-4 w-4 mr-2 shrink-0" /> Excluir
         </Button>
       </div>
 
