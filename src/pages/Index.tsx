@@ -106,6 +106,8 @@ function IndexContent() {
   const [isSearchingWeb, setIsSearchingWeb] = useState(false)
   const [supabasePromos, setSupabasePromos] = useState<any[]>([])
   const [affiliateResults, setAffiliateResults] = useState<any[]>([])
+  const [page, setPage] = useState(1)
+  const itemsPerPage = 12
 
   useEffect(() => {
     const fetchPromos = async () => {
@@ -199,37 +201,6 @@ function IndexContent() {
     return null
   }, [searchQuery])
 
-  const couponsWithDistance = useMemo(() => {
-    const baseLoc = searchLocationInfo || userLocation
-    const safeCoupons = Array.isArray(coupons) ? coupons : []
-    const safeWebResults = Array.isArray(webResults) ? webResults : []
-
-    const combined = []
-    if (Array.isArray(safeCoupons)) combined.push(...safeCoupons)
-    if (Array.isArray(safeWebResults)) combined.push(...safeWebResults)
-
-    const allC = combined.filter(
-      (v, i, a) => v && a.findIndex((t) => t?.id === v?.id) === i,
-    )
-
-    return allC.map((c) => {
-      if (!c) return c
-      let dist = c.distance || 0
-
-      if (baseLoc && c.coordinates && typeof c.coordinates.lat === 'number') {
-        dist = Math.round(
-          getDistanceFromLatLonInKm(
-            baseLoc.lat,
-            baseLoc.lng,
-            c.coordinates.lat,
-            c.coordinates.lng,
-          ) * 1000,
-        )
-      }
-      return { ...c, distance: dist }
-    })
-  }, [coupons, webResults, dbPromotions, searchLocationInfo, userLocation])
-
   const activeEvents = useMemo(() => {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
@@ -246,40 +217,50 @@ function IndexContent() {
   }, [seasonalEvents, reservedIds])
 
   const filteredCoupons = useMemo(() => {
+    const safeCoupons = Array.isArray(coupons) ? coupons : []
+    const safeWebResults = Array.isArray(webResults) ? webResults : []
     const safeReservedIds = Array.isArray(reservedIds) ? reservedIds : []
-    const safeCouponsWithDistance = Array.isArray(couponsWithDistance)
-      ? couponsWithDistance
-      : []
 
-    const results = safeCouponsWithDistance.filter((c) => {
-      if (!c) return false
+    // 1. Fast Deduplication (O(N) instead of O(N^2))
+    const uniqueMap = new Map()
+    for (let i = 0; i < safeCoupons.length; i++) {
+      const c = safeCoupons[i]
+      if (c && !uniqueMap.has(c.id)) uniqueMap.set(c.id, c)
+    }
+    for (let i = 0; i < safeWebResults.length; i++) {
+      const c = safeWebResults[i]
+      if (c && !uniqueMap.has(c.id)) uniqueMap.set(c.id, c)
+    }
+    const combined = Array.from(uniqueMap.values())
+
+    // 2. Pre-process search query
+    let textToMatch = searchQuery.toLowerCase()
+    if (searchLocationInfo) {
+      textToMatch = textToMatch
+        .replace(searchLocationInfo.label.toLowerCase(), '')
+        .trim()
+      Object.keys(POPULAR_DESTINATIONS).forEach((k) => {
+        if (textToMatch.includes(k.toLowerCase())) {
+          textToMatch = textToMatch.replace(k.toLowerCase(), '').trim()
+        }
+      })
+    }
+
+    // 3. Filter by text and category first (reduces items drastically)
+    const textAndCategoryFiltered = combined.filter((c) => {
       if (safeReservedIds.includes(c.id)) return false
 
       const title = c.translations?.[language]?.title || c.title || ''
       const storeName = c.storeName || ''
       const category = c.category || ''
 
-      let textToMatch = searchQuery.toLowerCase()
-      const isNearLocation = searchLocationInfo
-        ? (c.distance || 0) < 50000
-        : true
-
-      if (searchLocationInfo) {
-        textToMatch = textToMatch
-          .replace(searchLocationInfo.label.toLowerCase(), '')
-          .trim()
-        Object.keys(POPULAR_DESTINATIONS).forEach((k) => {
-          if (textToMatch.includes(k.toLowerCase())) {
-            textToMatch = textToMatch.replace(k.toLowerCase(), '').trim()
-          }
-        })
-      }
-
       const matchesText =
         textToMatch === '' ||
         title.toLowerCase().includes(textToMatch) ||
         storeName.toLowerCase().includes(textToMatch) ||
         category.toLowerCase().includes(textToMatch)
+
+      if (!matchesText) return false
 
       let matchesCategory = selectedCategory === 'all'
 
@@ -311,28 +292,48 @@ function IndexContent() {
           sCat.includes(cCat)
       }
 
-      return isNearLocation && matchesText && matchesCategory
+      return matchesCategory
+    })
+
+    // 4. Calculate distance only for matching items
+    const baseLoc = searchLocationInfo || userLocation
+
+    const withDistance = textAndCategoryFiltered.map((c) => {
+      let dist = c.distance || 0
+      if (baseLoc && c.coordinates && typeof c.coordinates.lat === 'number') {
+        dist = Math.round(
+          getDistanceFromLatLonInKm(
+            baseLoc.lat,
+            baseLoc.lng,
+            c.coordinates.lat,
+            c.coordinates.lng,
+          ) * 1000,
+        )
+      }
+      return { ...c, distance: dist }
+    })
+
+    // 5. Final filter by distance and sort
+    const results = withDistance.filter((c) => {
+      return searchLocationInfo ? (c.distance || 0) < 50000 : true
     })
 
     results.sort((a, b) => (a.distance || 0) - (b.distance || 0))
 
     return results
   }, [
-    couponsWithDistance,
+    coupons,
+    webResults,
     searchQuery,
     selectedCategory,
     reservedIds,
     language,
     searchLocationInfo,
+    userLocation,
   ])
 
-  const allDbPromotions = useMemo(() => {
-    // Only use real data from supabase, avoiding mock data from store
-    return [...supabasePromos]
-  }, [supabasePromos])
-
   const filteredDbPromotions = useMemo(() => {
-    return allDbPromotions.filter((p) => {
+    return supabasePromos.filter((p) => {
       if (!p) return false
       let textToMatch = searchQuery.toLowerCase()
       if (searchLocationInfo) {
@@ -385,7 +386,7 @@ function IndexContent() {
 
       return matchesText && matchesCategory
     })
-  }, [allDbPromotions, searchQuery, selectedCategory, searchLocationInfo])
+  }, [supabasePromos, searchQuery, selectedCategory, searchLocationInfo])
 
   const safeFilteredCoupons = Array.isArray(filteredCoupons)
     ? filteredCoupons
@@ -400,9 +401,19 @@ function IndexContent() {
     trendingCoupons.length >= 4
       ? trendingCoupons
       : safeFilteredCoupons.slice(0, 4)
-  const moreCoupons = safeFilteredCoupons
-    .filter((c) => c && !finalTrending.find((tc) => tc.id === c.id))
-    .slice(0, 12)
+  // Pagination logic
+  useEffect(() => {
+    setPage(1)
+  }, [searchQuery, selectedCategory])
+
+  const moreCouponsAll = useMemo(() => {
+    return safeFilteredCoupons.filter(
+      (c) => c && !finalTrending.find((tc) => tc.id === c.id),
+    )
+  }, [safeFilteredCoupons, finalTrending])
+
+  const moreCoupons = moreCouponsAll.slice(0, page * itemsPerPage)
+  const hasMoreCoupons = moreCouponsAll.length > page * itemsPerPage
 
   const getCategoryIcon = (iconName: string) => {
     switch (iconName) {
@@ -844,6 +855,19 @@ function IndexContent() {
                       ) : null,
                     )}
                   </div>
+                  {hasMoreCoupons && (
+                    <div className="mt-8 text-center">
+                      <Button
+                        variant="outline"
+                        size="lg"
+                        className="rounded-full px-8 bg-white border-slate-200 shadow-sm hover:bg-slate-50 font-medium"
+                        onClick={() => setPage((p) => p + 1)}
+                      >
+                        <RefreshCw className="w-4 h-4 mr-2" />
+                        {t('common.load_more', 'Carregar mais')}
+                      </Button>
+                    </div>
+                  )}
                 </section>
               )}
 

@@ -66,9 +66,19 @@ export interface FetchCouponsResponse {
   total: number
 }
 
+// Simple memory cache for API requests
+const cache = new Map<string, { data: any; timestamp: number }>()
+const CACHE_TTL = 5 * 60 * 1000 // 5 minutes
+
 export const fetchCoupons = async (
   params: FetchCouponsParams = {},
 ): Promise<FetchCouponsResponse> => {
+  const cacheKey = `coupons_${JSON.stringify(params)}`
+  const cached = cache.get(cacheKey)
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    return cached.data as FetchCouponsResponse
+  }
+
   const {
     query = '',
     category = 'all',
@@ -107,11 +117,13 @@ export const fetchCoupons = async (
           : Array.isArray(data)
             ? data
             : []
-        return {
+        const responseData = {
           data: items,
           hasMore: (data?.page || 0) < (data?.totalPages || 0),
           total: data?.totalItems || items.length,
         }
+        cache.set(cacheKey, { data: responseData, timestamp: Date.now() })
+        return responseData
       } catch (jsonErr) {
         console.warn('Failed to parse coupons response as JSON', jsonErr)
         return { data: [], hasMore: false, total: 0 }
@@ -156,6 +168,12 @@ export const fetchWebSearchPromotions = async (
     page?: number
   } = {},
 ): Promise<DiscoveredPromotion[]> => {
+  const cacheKey = `websearch_${query}_${limit}_${JSON.stringify(options)}`
+  const cached = cache.get(cacheKey)
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    return cached.data as DiscoveredPromotion[]
+  }
+
   let token = localStorage.getItem('auth_token')
   if (!token) {
     const pbAuth = localStorage.getItem('pocketbase_auth')
@@ -202,11 +220,13 @@ export const fetchWebSearchPromotions = async (
     }
 
     const data = await res.json()
-    return Array.isArray(data?.items)
+    const responseData = Array.isArray(data?.items)
       ? data.items
       : Array.isArray(data)
         ? data
         : []
+    cache.set(cacheKey, { data: responseData, timestamp: Date.now() })
+    return responseData
   } catch (e: any) {
     console.error(
       `Failed to fetch from organic search engine API for query: ${query}`,
@@ -219,6 +239,12 @@ export const fetchWebSearchPromotions = async (
 export const fetchCrawlerPromotions = async (
   params: FetchCrawlerPromotionsParams = {},
 ): Promise<FetchCrawlerPromotionsResponse> => {
+  const cacheKey = `crawler_${JSON.stringify(params)}`
+  const cached = cache.get(cacheKey)
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    return cached.data as FetchCrawlerPromotionsResponse
+  }
+
   const { page = 1, limit = 20, franchiseId, region, query, category } = params
 
   let token = localStorage.getItem('auth_token')
@@ -272,11 +298,13 @@ export const fetchCrawlerPromotions = async (
           : Array.isArray(data)
             ? data
             : []
-        return {
+        const responseData = {
           data: apiData.slice(0, limit),
           hasMore: (data?.page || 0) < (data?.totalPages || 0),
           total: Math.max(data?.totalItems || 0, apiData.length),
         }
+        cache.set(cacheKey, { data: responseData, timestamp: Date.now() })
+        return responseData
       } catch (jsonErr) {
         console.warn(
           'Failed to parse crawler promotions response as JSON',
