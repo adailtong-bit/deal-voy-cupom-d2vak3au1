@@ -510,7 +510,6 @@ function EditablePromotionCard({ promo, onSaved, type = 'pending' }: any) {
             <label className="text-xs font-semibold text-slate-500 block">
               Título
             </label>
-            </div>
           </div>
           <div className="flex gap-2">
             <Input
@@ -539,9 +538,9 @@ function EditablePromotionCard({ promo, onSaved, type = 'pending' }: any) {
           </div>
           {currency && currency.toUpperCase() !== 'BRL' && (
             <div className="mt-1.5 flex items-center">
-               <span className="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-bold uppercase tracking-wider flex items-center gap-1 border border-amber-200">
-                 ⚠️ Moeda Estrangeira ({currency}) - Sem Conversão Automática
-               </span>
+              <span className="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-bold uppercase tracking-wider flex items-center gap-1 border border-amber-200">
+                ⚠️ Moeda Estrangeira ({currency}) - Sem Conversão Automática
+              </span>
             </div>
           )}
         </div>
