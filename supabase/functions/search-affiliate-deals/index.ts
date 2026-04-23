@@ -10,8 +10,7 @@ const corsHeaders = {
 
 function detectCurrency(text: string): string {
   if (!text) return 'BRL'
-  if (text.includes('$') && !text.includes('R$') && !text.includes('R $'))
-    return 'USD'
+  if (text.includes('$') && !text.includes('R$') && !text.includes('R $')) return 'USD'
   if (text.includes('€')) return 'EUR'
   if (text.includes('£')) return 'GBP'
   return 'BRL'
