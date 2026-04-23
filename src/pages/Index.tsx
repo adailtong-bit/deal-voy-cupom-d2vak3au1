@@ -105,6 +105,7 @@ function IndexContent() {
   const [webResults, setWebResults] = useState<any[]>([])
   const [isSearchingWeb, setIsSearchingWeb] = useState(false)
   const [supabasePromos, setSupabasePromos] = useState<any[]>([])
+  const [dbCoupons, setDbCoupons] = useState<any[]>([])
   const [affiliateResults, setAffiliateResults] = useState<any[]>([])
   const [page, setPage] = useState(1)
   const itemsPerPage = 12
@@ -126,7 +127,43 @@ function IndexContent() {
         console.error('Error fetching from supabase', e)
       }
     }
+
+    const fetchCoupons = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('coupons')
+          .select('*')
+          .eq('status', 'active')
+          .order('created_at', { ascending: false })
+
+        if (data && !error) {
+          const mapped = data.map((c: any) => ({
+            id: c.id,
+            title: c.title,
+            description: c.description,
+            discount: c.discount,
+            price: c.price,
+            originalPrice: c.original_price,
+            image: c.image_url,
+            storeName: c.store_name,
+            category: c.category,
+            startDate: c.start_date,
+            endDate: c.end_date,
+            coordinates: { lat: Number(c.latitude), lng: Number(c.longitude) },
+            locationName: c.location_name,
+            status: c.status,
+            isTrending: true,
+            source: 'local',
+          }))
+          setDbCoupons(mapped)
+        }
+      } catch (e) {
+        console.error('Error fetching coupons', e)
+      }
+    }
+
     fetchPromos()
+    fetchCoupons()
   }, [])
 
   useEffect(() => {
@@ -219,10 +256,15 @@ function IndexContent() {
   const filteredCoupons = useMemo(() => {
     const safeCoupons = Array.isArray(coupons) ? coupons : []
     const safeWebResults = Array.isArray(webResults) ? webResults : []
+    const safeDbCoupons = Array.isArray(dbCoupons) ? dbCoupons : []
     const safeReservedIds = Array.isArray(reservedIds) ? reservedIds : []
 
     // 1. Fast Deduplication (O(N) instead of O(N^2))
     const uniqueMap = new Map()
+    for (let i = 0; i < safeDbCoupons.length; i++) {
+      const c = safeDbCoupons[i]
+      if (c && !uniqueMap.has(c.id)) uniqueMap.set(c.id, c)
+    }
     for (let i = 0; i < safeCoupons.length; i++) {
       const c = safeCoupons[i]
       if (c && !uniqueMap.has(c.id)) uniqueMap.set(c.id, c)
@@ -322,6 +364,7 @@ function IndexContent() {
 
     return results
   }, [
+    dbCoupons,
     coupons,
     webResults,
     searchQuery,
@@ -820,10 +863,10 @@ function IndexContent() {
               {Array.isArray(finalTrending) && finalTrending.length > 0 && (
                 <section>
                   <h2 className="text-2xl font-bold flex items-center gap-2 mb-5 text-slate-800">
-                    <TrendingUp className="h-6 w-6 text-orange-500" />
+                    <MapPin className="h-6 w-6 text-primary" />
                     {searchQuery || selectedCategory !== 'all'
-                      ? t('home.search_results', 'Search Results')
-                      : t('home.trending', 'Trending')}
+                      ? t('home.search_results', 'Resultados da Busca')
+                      : t('home.nearby_offers', 'Ofertas Perto de Você')}
                   </h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                     {finalTrending.map((coupon) =>
