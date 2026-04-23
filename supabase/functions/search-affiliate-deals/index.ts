@@ -8,6 +8,15 @@ const corsHeaders = {
     'authorization, x-client-info, x-supabase-client-platform, apikey, content-type',
 }
 
+function detectCurrency(text: string): string {
+  if (!text) return 'BRL'
+  if (text.includes('$') && !text.includes('R$') && !text.includes('R $'))
+    return 'USD'
+  if (text.includes('€')) return 'EUR'
+  if (text.includes('£')) return 'GBP'
+  return 'BRL'
+}
+
 async function fetchOrganicAffiliateDeals(
   query: string,
   limit: number,
@@ -100,7 +109,6 @@ async function fetchOrganicAffiliateDeals(
         return
       }
 
-      // Skip generic SEO titles
       if (
         title.length < 5 ||
         title.toLowerCase().includes('compre online') ||
@@ -122,13 +130,15 @@ async function fetchOrganicAffiliateDeals(
         } catch (e) {}
       }
 
-      const priceMatch = snippet.match(/(?:R\$|€|\$)\s*\d+(?:[.,]\d{2})?/)
+      const priceMatch = snippet.match(/(?:R\$|€|\$|£)\s*\d+(?:[.,]\d{2})?/)
       const priceText = priceMatch ? priceMatch[0] : ''
+      const currency = detectCurrency(priceText)
 
       results.push({
         title: title,
         price: priceText,
         oldPrice: '',
+        currency,
         link: finalUrl,
         image: `https://img.usecurling.com/p/400/400?q=${encodeURIComponent(
           extractedDomain.split('.')[0] || 'offer',
@@ -180,7 +190,7 @@ Deno.serve(async (req: Request) => {
         storeName: item.storeName,
         status: 'approved',
         category: 'affiliate_deal',
-        currency: 'BRL',
+        currency: item.currency || 'BRL',
         matchConfidence: 0.8,
       }
     })

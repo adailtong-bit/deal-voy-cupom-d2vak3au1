@@ -507,15 +507,30 @@ function EditablePromotionCard({ promo, onSaved, type = 'pending' }: any) {
               Título
             </label>
             {(promo.price || promo.original_price) && (
-              <div className="flex gap-2 text-xs">
+              <div className="flex items-center gap-2 text-xs">
                 {promo.original_price && (
                   <span className="text-slate-400 line-through">
-                    R$ {promo.original_price}
+                    {promo.currency === 'USD'
+                      ? '$'
+                      : promo.currency === 'EUR'
+                        ? '€'
+                        : 'R$'}{' '}
+                    {promo.original_price}
                   </span>
                 )}
                 {promo.price && (
                   <span className="text-green-600 font-bold">
-                    R$ {promo.price}
+                    {promo.currency === 'USD'
+                      ? '$'
+                      : promo.currency === 'EUR'
+                        ? '€'
+                        : 'R$'}{' '}
+                    {promo.price}
+                  </span>
+                )}
+                {promo.currency && promo.currency !== 'BRL' && (
+                  <span className="text-[9px] bg-blue-100 text-blue-700 px-1 py-0.5 rounded font-bold uppercase tracking-wider">
+                    {promo.currency}
                   </span>
                 )}
               </div>
@@ -694,7 +709,7 @@ function EditablePromotionCard({ promo, onSaved, type = 'pending' }: any) {
           discount:
             promo.discount ||
             (promo.original_price && promo.price
-              ? `De R$ ${promo.original_price} por R$ ${promo.price}`
+              ? `De ${promo.currency === 'USD' ? '$' : promo.currency === 'EUR' ? '€' : 'R$'} ${promo.original_price} por ${promo.currency === 'USD' ? '$' : promo.currency === 'EUR' ? '€' : 'R$'} ${promo.price}`
               : ''),
           price: promo.price,
           startDate: promo.start_date || new Date().toISOString().split('T')[0],
