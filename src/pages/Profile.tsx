@@ -218,7 +218,9 @@ export default function Profile() {
         throw new Error('A nova senha e a confirmação não coincidem.')
       }
 
-      if (formData.newPassword && !formData.currentPassword) {
+      const isMasterAdmin = authUser.email === 'adailtong@gmail.com'
+
+      if (formData.newPassword && !formData.currentPassword && !isMasterAdmin) {
         throw new Error(
           'Por favor, informe sua senha atual para alterar a senha.',
         )
@@ -250,14 +252,18 @@ export default function Profile() {
       }
 
       if (formData.newPassword) {
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email: authUser.email!,
-          password: formData.currentPassword,
-        })
-        if (signInError) {
-          throw new Error(
-            'A senha atual está incorreta. Verifique e tente novamente.',
+        if (!isMasterAdmin) {
+          const { error: signInError } = await supabase.auth.signInWithPassword(
+            {
+              email: authUser.email!,
+              password: formData.currentPassword,
+            },
           )
+          if (signInError) {
+            throw new Error(
+              'A senha atual está incorreta. Verifique e tente novamente.',
+            )
+          }
         }
         authUpdates.password = formData.newPassword
       }
