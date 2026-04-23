@@ -707,9 +707,17 @@ export default function Profile() {
               </div>
 
               <div className="space-y-4 animate-in fade-in-50 mt-8">
-                <h3 className="text-sm font-medium text-slate-800 border-b pb-2">
-                  {t('profile.change_password', 'Alterar Senha')}
-                </h3>
+                <div className="flex flex-col space-y-1 border-b pb-2">
+                  <h3 className="text-sm font-medium text-slate-800">
+                    {t('profile.change_password', 'Alterar Senha')}
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    {t(
+                      'profile.password_security_notice',
+                      'Por questões de segurança, sua senha atual não é exibida. Para alterá-la, digite sua senha atual e a nova senha abaixo.',
+                    )}
+                  </p>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl">
                   <div className="space-y-2 md:col-span-2">
                     <Label>
@@ -721,7 +729,10 @@ export default function Profile() {
                         name="currentPassword"
                         value={formData.currentPassword}
                         onChange={handleChange}
-                        placeholder="••••••••"
+                        placeholder={t(
+                          'profile.enter_current_password',
+                          'Digite sua senha atual',
+                        )}
                         className="pr-10"
                       />
                       <button
@@ -752,7 +763,10 @@ export default function Profile() {
                         name="newPassword"
                         value={formData.newPassword}
                         onChange={handleChange}
-                        placeholder="••••••••"
+                        placeholder={t(
+                          'profile.enter_new_password',
+                          'Digite a nova senha',
+                        )}
                         className="pr-10"
                       />
                       <button
@@ -783,7 +797,10 @@ export default function Profile() {
                         name="confirmPassword"
                         value={formData.confirmPassword}
                         onChange={handleChange}
-                        placeholder="••••••••"
+                        placeholder={t(
+                          'profile.enter_confirm_password',
+                          'Confirme a nova senha',
+                        )}
                         className="pr-10"
                       />
                       <button
