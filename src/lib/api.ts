@@ -1,53 +1,13 @@
+import { supabase } from '@/lib/supabase/client'
 import { Coupon, DiscoveredPromotion } from './types'
 
-const API_URL =
-  import.meta.env.VITE_API_URL || 'https://routevoy.goskip.app/api'
+// Simple memory cache for API requests
+const cache = new Map<string, { data: any; timestamp: number }>()
+const CACHE_TTL = 5 * 60 * 1000 // 5 minutes
 
 export const fetchCategories = async (): Promise<any[]> => {
-  let token = localStorage.getItem('auth_token')
-  if (!token) {
-    const pbAuth = localStorage.getItem('pocketbase_auth')
-    if (pbAuth) {
-      try {
-        token = JSON.parse(pbAuth).token
-      } catch (e) {
-        /* ignore */
-      }
-    }
-  }
-
-  try {
-    const baseUrl = API_URL.replace(/\/$/, '')
-    const res = await fetch(
-      `${baseUrl}/collections/categories/records?perPage=100`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-          ...(token
-            ? {
-                Authorization: token.startsWith('Bearer')
-                  ? token
-                  : `Bearer ${token}`,
-              }
-            : {}),
-        },
-      },
-    )
-    if (!res.ok) {
-      throw new Error(`Failed to fetch categories: ${res.status}`)
-    }
-    const data = await res.json()
-    return Array.isArray(data?.items)
-      ? data.items
-      : Array.isArray(data)
-        ? data
-        : []
-  } catch (e) {
-    console.error('Failed to fetch categories', e)
-    return []
-  }
+  // Categories are handled locally via lib/data.ts now
+  return []
 }
 
 export interface FetchCouponsParams {
@@ -66,10 +26,6 @@ export interface FetchCouponsResponse {
   total: number
 }
 
-// Simple memory cache for API requests
-const cache = new Map<string, { data: any; timestamp: number }>()
-const CACHE_TTL = 5 * 60 * 1000 // 5 minutes
-
 export const fetchCoupons = async (
   params: FetchCouponsParams = {},
 ): Promise<FetchCouponsResponse> => {
@@ -79,65 +35,52 @@ export const fetchCoupons = async (
     return cached.data as FetchCouponsResponse
   }
 
-  const {
-    query = '',
-    category = 'all',
-    page = 1,
-    limit = 20,
-    franchiseId,
-    region,
-    language = 'pt',
-  } = params
+  const { query = '', category = 'all', page = 1, limit = 20 } = params
 
   try {
-    const queryParams = new URLSearchParams()
-    queryParams.append('page', page.toString())
-    queryParams.append('perPage', limit.toString())
-    if (query) queryParams.append('q', query)
-    if (category && category !== 'all') queryParams.append('category', category)
-    if (region) queryParams.append('region', region)
-    if (franchiseId) queryParams.append('franchiseId', franchiseId)
+    let supabaseQuery = supabase
+      .from('coupons')
+      .select('*', { count: 'exact' })
+      .eq('status', 'active')
 
-    const baseUrl = API_URL.replace(/\/$/, '')
-    const res = await fetch(
-      `${baseUrl}/collections/coupons/records?${queryParams.toString()}`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-      },
-    )
-    if (res.ok) {
-      try {
-        const data = await res.json()
-        const items = Array.isArray(data?.items)
-          ? data.items
-          : Array.isArray(data)
-            ? data
-            : []
-        const responseData = {
-          data: items,
-          hasMore: (data?.page || 0) < (data?.totalPages || 0),
-          total: data?.totalItems || items.length,
-        }
-        cache.set(cacheKey, { data: responseData, timestamp: Date.now() })
-        return responseData
-      } catch (jsonErr) {
-        console.warn('Failed to parse coupons response as JSON', jsonErr)
-        return { data: [], hasMore: false, total: 0 }
-      }
-    } else {
-      console.warn(`Fetch coupons failed: ${res.status} ${res.statusText}`)
+    if (query) {
+      supabaseQuery = supabaseQuery.ilike('title', `%${query}%`)
+    }
+    if (category && category !== 'all') {
+      supabaseQuery = supabaseQuery.eq('category', category)
+    }
+
+    const from = (page - 1) * limit
+    const to = from + limit - 1
+
+    const { data, count, error } = await supabaseQuery
+      .order('created_at', { ascending: false })
+      .range(from, to)
+
+    if (error) {
+      console.warn(`Fetch coupons failed:`, error)
       return { data: [], hasMore: false, total: 0 }
     }
-  } catch (e: any) {
-    if (e?.name === 'TypeError' && e?.message === 'Failed to fetch') {
-      console.warn('Network error: Failed to fetch coupons. Using fallback.')
-    } else {
-      console.error('Backend unavailable', e)
+
+    const mappedData = (data || []).map((c: any) => ({
+      ...c,
+      imageUrl: c.image_url,
+      storeName: c.store_name,
+      originalPrice: c.original_price,
+      startDate: c.start_date,
+      endDate: c.end_date,
+      locationName: c.location_name,
+    }))
+
+    const responseData = {
+      data: mappedData as any,
+      hasMore: count ? from + mappedData.length < count : false,
+      total: count || 0,
     }
+    cache.set(cacheKey, { data: responseData, timestamp: Date.now() })
+    return responseData
+  } catch (e) {
+    console.error('Fetch coupons error:', e)
     return { data: [], hasMore: false, total: 0 }
   }
 }
@@ -166,6 +109,7 @@ export const fetchWebSearchPromotions = async (
     minDiscount?: number
     platform?: string
     page?: number
+    url?: string
   } = {},
 ): Promise<DiscoveredPromotion[]> => {
   const cacheKey = `websearch_${query}_${limit}_${JSON.stringify(options)}`
@@ -174,64 +118,36 @@ export const fetchWebSearchPromotions = async (
     return cached.data as DiscoveredPromotion[]
   }
 
-  let token = localStorage.getItem('auth_token')
-  if (!token) {
-    const pbAuth = localStorage.getItem('pocketbase_auth')
-    if (pbAuth) {
-      try {
-        token = JSON.parse(pbAuth).token
-      } catch (e) {
-        /* ignore */
-      }
-    }
-  }
-
   try {
-    const baseUrl = API_URL.replace(/\/$/, '')
-    const url = new URL(`${baseUrl}/crawler/search`)
-    url.searchParams.append('q', query)
-    url.searchParams.append('limit', limit.toString())
-    if (options.region) url.searchParams.append('region', options.region)
-    if (options.category && options.category !== 'all')
-      url.searchParams.append('category', options.category)
-    if (options.minDiscount)
-      url.searchParams.append('minDiscount', options.minDiscount.toString())
-    if (options.page) url.searchParams.append('page', options.page.toString())
-    if (options.platform && options.platform !== 'all')
-      url.searchParams.append('platform', options.platform)
+    let functionName = 'search-affiliate-deals'
+    let bodyPayload: any = { query, limit, ...options }
 
-    const res = await fetch(url.toString(), {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-        ...(token
-          ? {
-              Authorization: token.startsWith('Bearer')
-                ? token
-                : `Bearer ${token}`,
-            }
-          : {}),
-      },
+    if (options.url || options.platform) {
+      functionName = 'crawl-promotions'
+      bodyPayload = { query, limit, options }
+    }
+
+    const { data, error } = await supabase.functions.invoke(functionName, {
+      body: bodyPayload,
     })
 
-    if (!res.ok) {
-      throw new Error(`Connection Error: ${res.status} ${res.statusText}`)
-    }
+    if (error) throw error
 
-    const data = await res.json()
-    const responseData = Array.isArray(data?.items)
-      ? data.items
-      : Array.isArray(data)
-        ? data
-        : []
+    const items = Array.isArray(data?.items) ? data.items : []
+    const responseData = items.map((item: any) => ({
+      ...item,
+      id: item.id || crypto.randomUUID(),
+      imageUrl: item.imageUrl || item.image_url || item.image,
+      productLink: item.productLink || item.product_link || item.link,
+      storeName: item.storeName || item.store_name,
+      originalPrice: item.originalPrice || item.original_price || item.oldPrice,
+      discountPercentage: item.discountPercentage || item.discount_percentage,
+    }))
+
     cache.set(cacheKey, { data: responseData, timestamp: Date.now() })
     return responseData
   } catch (e: any) {
-    console.error(
-      `Failed to fetch from organic search engine API for query: ${query}`,
-      e,
-    )
+    console.error(`Failed to fetch from organic search engine API:`, e)
     return []
   }
 }
@@ -245,87 +161,67 @@ export const fetchCrawlerPromotions = async (
     return cached.data as FetchCrawlerPromotionsResponse
   }
 
-  const { page = 1, limit = 20, franchiseId, region, query, category } = params
-
-  let token = localStorage.getItem('auth_token')
-  if (!token) {
-    const pbAuth = localStorage.getItem('pocketbase_auth')
-    if (pbAuth) {
-      try {
-        token = JSON.parse(pbAuth).token
-      } catch (e) {
-        /* ignore */
-      }
-    }
-  }
+  const { page = 1, limit = 20, query, category } = params
 
   try {
-    const queryParams = new URLSearchParams()
-    queryParams.append('page', page.toString())
-    queryParams.append('perPage', limit.toString())
-    if (query) queryParams.append('q', query)
-    if (category && category !== 'all') queryParams.append('category', category)
-    if (region) queryParams.append('region', region)
-    if (franchiseId) queryParams.append('franchiseId', franchiseId)
+    let supabaseQuery = supabase
+      .from('discovered_promotions')
+      .select('*', { count: 'exact' })
 
-    const baseUrl = API_URL.replace(/\/$/, '')
-    const res = await fetch(
-      `${baseUrl}/collections/discovered_promotions/records?${queryParams.toString()}`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-          ...(token
-            ? {
-                Authorization: token.startsWith('Bearer')
-                  ? token
-                  : `Bearer ${token}`,
-              }
-            : {}),
-        },
-      },
-    )
+    if (query) {
+      supabaseQuery = supabaseQuery.ilike('title', `%${query}%`)
+    }
+    if (category && category !== 'all') {
+      supabaseQuery = supabaseQuery.eq('category', category)
+    }
 
-    if (res.ok) {
-      try {
-        const text = await res.text()
-        if (!text) return { data: [], hasMore: false, total: 0 }
+    const from = (page - 1) * limit
+    const to = from + limit - 1
 
-        const data = JSON.parse(text)
-        const apiData = Array.isArray(data?.items)
-          ? data.items
-          : Array.isArray(data)
-            ? data
-            : []
-        const responseData = {
-          data: apiData.slice(0, limit),
-          hasMore: (data?.page || 0) < (data?.totalPages || 0),
-          total: Math.max(data?.totalItems || 0, apiData.length),
-        }
-        cache.set(cacheKey, { data: responseData, timestamp: Date.now() })
-        return responseData
-      } catch (jsonErr) {
-        console.warn(
-          'Failed to parse crawler promotions response as JSON',
-          jsonErr,
-        )
-        return { data: [], hasMore: false, total: 0 }
-      }
-    } else {
-      console.warn(
-        `Fetch crawler promotions failed: ${res.status} ${res.statusText}`,
-      )
+    const { data, count, error } = await supabaseQuery
+      .order('created_at', { ascending: false })
+      .range(from, to)
+
+    if (error) {
+      console.warn(`Fetch crawler promotions failed:`, error)
       return { data: [], hasMore: false, total: 0 }
     }
-  } catch (e: any) {
-    if (e?.name === 'TypeError' && e?.message === 'Failed to fetch') {
-      console.warn(
-        'Network error: Failed to fetch crawler promotions. Using fallback.',
-      )
-    } else {
-      console.error('Backend unavailable or fetch failed', e)
+
+    const mappedData = (data || []).map((p: any) => ({
+      ...p,
+      imageUrl: p.image_url,
+      productLink: p.product_link,
+      sourceUrl: p.source_url,
+      storeName: p.store_name,
+      originalPrice: p.original_price,
+      discountPercentage: p.discount_percentage,
+      capturedAt: p.captured_at,
+      campaignName: p.campaign_name,
+      discountRules: p.discount_rules,
+      startDate: p.start_date,
+      endDate: p.end_date,
+      limitType: p.limit_type,
+      totalLimit: p.total_limit,
+      enableProximityAlerts: p.enable_proximity_alerts,
+      alertRadius: p.alert_radius,
+      isSeasonal: p.is_seasonal,
+      enableTrigger: p.enable_trigger,
+      triggerType: p.trigger_type,
+      triggerThreshold: p.trigger_threshold,
+      rewardId: p.reward_id,
+      companyId: p.company_id,
+      uniqueHash: p.unique_hash,
+    }))
+
+    const responseData = {
+      data: mappedData as any,
+      hasMore: count ? from + mappedData.length < count : false,
+      total: count || 0,
     }
+    cache.set(cacheKey, { data: responseData, timestamp: Date.now() })
+    return responseData
+  } catch (e: any) {
+    console.error('Fetch crawler promotions error:', e)
     return { data: [], hasMore: false, total: 0 }
   }
 }
@@ -334,83 +230,62 @@ export const saveDiscoveredPromotion = async (
   data: Partial<DiscoveredPromotion>,
   retries = 3,
 ): Promise<any> => {
-  let token = localStorage.getItem('auth_token')
-  if (!token) {
-    const pbAuth = localStorage.getItem('pocketbase_auth')
-    if (pbAuth) {
-      try {
-        token = JSON.parse(pbAuth).token
-      } catch (e) {
-        /* ignore */
-      }
-    }
-  }
-
-  const baseUrl = API_URL.replace(/\/$/, '')
-
   for (let attempt = 0; attempt < retries; attempt++) {
     try {
-      const res = await fetch(
-        `${baseUrl}/collections/discovered_promotions/records`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-            ...(token
-              ? {
-                  Authorization: token.startsWith('Bearer')
-                    ? token
-                    : `Bearer ${token}`,
-                }
-              : {}),
-          },
-          body: JSON.stringify(data),
-        },
+      const payload = {
+        title: data.title,
+        description: data.description,
+        price: data.price,
+        original_price: data.originalPrice,
+        currency: data.currency || 'BRL',
+        discount: data.discount,
+        discount_percentage: data.discountPercentage,
+        image_url: data.imageUrl,
+        product_link: data.productLink,
+        source_url: data.sourceUrl,
+        store_name: data.storeName,
+        category: data.category,
+        country: data.country,
+        status: data.status || 'pending',
+        captured_at: data.capturedAt || new Date().toISOString(),
+        campaign_name: data.campaignName,
+        coverage: data.coverage,
+        discount_rules: data.discountRules,
+        start_date: data.startDate,
+        end_date: data.endDate,
+        limit_type: data.limitType,
+        total_limit: data.totalLimit,
+        enable_proximity_alerts: data.enableProximityAlerts,
+        alert_radius: data.alertRadius,
+        is_seasonal: data.isSeasonal,
+        enable_trigger: data.enableTrigger,
+        trigger_type: data.triggerType,
+        trigger_threshold: data.triggerThreshold,
+        reward_id: data.rewardId,
+        company_id: data.companyId,
+        unique_hash: data.uniqueHash,
+      }
+
+      // Remove undefined fields so Supabase defaults apply
+      Object.keys(payload).forEach(
+        (key) =>
+          payload[key as keyof typeof payload] === undefined &&
+          delete payload[key as keyof typeof payload],
       )
 
-      if (!res.ok) {
-        if (res.status === 401 || res.status === 403) {
-          throw new Error('AuthError: Session expired or invalid token.')
-        }
-        let errorMsg = `Failed to save promotion: ${res.status}`
-        try {
-          const errData = await res.json()
-          if (errData.message) errorMsg += ` - ${errData.message}`
-          if (errData.data) {
-            const fieldErrors = Object.entries(errData.data)
-              .map(
-                ([field, err]: [string, any]) =>
-                  `${field}: ${err?.message || err}`,
-              )
-              .join(', ')
-            if (fieldErrors) errorMsg += ` (${fieldErrors})`
-          }
-        } catch (_) {
-          /* ignore */
-        }
+      const { data: result, error } = await supabase
+        .from('discovered_promotions')
+        .insert(payload)
+        .select()
+        .single()
 
-        // Don't retry on 400 Bad Request, as it's a validation error that won't resolve
-        if (res.status >= 400 && res.status < 500) {
-          throw new Error(errorMsg)
-        }
-
-        if (attempt < retries - 1) {
-          await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)))
-          continue
-        }
-        throw new Error(errorMsg)
+      if (error) {
+        throw error
       }
-      return await res.json()
+      return result
     } catch (e: any) {
-      if (
-        e.message?.includes('AuthError') ||
-        e.message?.includes('Failed to save promotion: 4')
-      ) {
-        throw e
-      }
       console.error(
-        `Network error saving discovered promotion (attempt ${attempt + 1}):`,
+        `Error saving discovered promotion (attempt ${attempt + 1}):`,
         e,
       )
       if (attempt < retries - 1) {
@@ -423,181 +298,90 @@ export const saveDiscoveredPromotion = async (
 }
 
 export const saveCrawlerLog = async (data: any, retries = 3): Promise<any> => {
-  let token = localStorage.getItem('auth_token')
-  if (!token) {
-    const pbAuth = localStorage.getItem('pocketbase_auth')
-    if (pbAuth) {
-      try {
-        token = JSON.parse(pbAuth).token
-      } catch (e) {
-        /* ignore */
-      }
-    }
-  }
-
-  const baseUrl = API_URL.replace(/\/$/, '')
-
-  // Sanitize payload to prevent JSON stringify issues or huge payloads causing network drops
-  const payload = { ...data }
-  if (Array.isArray(payload.errorDetails)) {
-    payload.errorDetails = JSON.stringify(payload.errorDetails.slice(0, 100)) // Limit payload size
-  }
-
   for (let attempt = 0; attempt < retries; attempt++) {
     try {
-      const res = await fetch(`${baseUrl}/collections/crawler_logs/records`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-          ...(token
-            ? {
-                Authorization: token.startsWith('Bearer')
-                  ? token
-                  : `Bearer ${token}`,
-              }
-            : {}),
-        },
-        body: JSON.stringify(payload),
-      })
-
-      if (!res.ok) {
-        console.warn(
-          `Failed to save crawler log (attempt ${attempt + 1}):`,
-          res.status,
-        )
-        if (res.status >= 500 && attempt < retries - 1) {
-          await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)))
-          continue
-        }
-        // Instead of throwing, resolve gracefully to prevent pipeline crashes
-        return null
+      let errorDetails = data.error_details || data.errorDetails || null
+      if (Array.isArray(errorDetails)) {
+        errorDetails = errorDetails.slice(0, 100)
       }
 
-      return await res.json()
+      const payload = {
+        date: data.date || new Date().toISOString(),
+        store_name: data.store_name || data.storeName || null,
+        status: data.status || null,
+        items_found: Number(data.items_found ?? data.itemsFound ?? 0),
+        items_imported: Number(data.items_imported ?? data.itemsImported ?? 0),
+        source_id: data.source_id || data.sourceId || null,
+        error_message: data.error_message || data.errorMessage || null,
+        error_details: errorDetails,
+        category: data.category || null,
+      }
+
+      const { data: result, error } = await supabase
+        .from('crawler_logs')
+        .insert(payload)
+        .select()
+        .single()
+
+      if (error) {
+        throw error
+      }
+      return result
     } catch (e) {
-      console.error(
-        `Network error saving crawler log (attempt ${attempt + 1}):`,
-        e,
-      )
+      console.error(`Error saving crawler log (attempt ${attempt + 1}):`, e)
       if (attempt < retries - 1) {
         await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)))
         continue
       }
-      // Completely resolve "Failed to fetch" runtime error by not throwing
       return null
     }
   }
 }
 
 export const fetchCrawlerLogs = async (): Promise<any[]> => {
-  let token = localStorage.getItem('auth_token')
-  if (!token) {
-    const pbAuth = localStorage.getItem('pocketbase_auth')
-    if (pbAuth) {
-      try {
-        token = JSON.parse(pbAuth).token
-      } catch (e) {
-        /* ignore */
-      }
-    }
-  }
-
-  const baseUrl = API_URL.replace(/\/$/, '')
-  let apiLogs: any[] = []
   try {
-    const res = await fetch(
-      `${baseUrl}/collections/crawler_logs/records?sort=-created&perPage=100`,
-      {
-        headers: {
-          Accept: 'application/json',
-          ...(token
-            ? {
-                Authorization: token.startsWith('Bearer')
-                  ? token
-                  : `Bearer ${token}`,
-              }
-            : {}),
-        },
-      },
-    )
-    if (res.ok) {
-      const data = await res.json()
-      apiLogs = Array.isArray(data?.items)
-        ? data.items
-        : Array.isArray(data)
-          ? data
-          : []
+    const { data, error } = await supabase
+      .from('crawler_logs')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(100)
+
+    if (error) {
+      console.warn('Failed to fetch crawler logs from Supabase', error)
+      return []
     }
+
+    return (data || []).map((log: any) => ({
+      ...log,
+      // Map to camelCase properties expected by frontend components and ensuring zeroes aren't lost
+      itemsFound: log.items_found || 0,
+      itemsImported: log.items_imported || 0,
+      storeName: log.store_name,
+      sourceId: log.source_id,
+      errorMessage: log.error_message,
+      errorDetails: log.error_details,
+      created: log.created_at,
+    }))
   } catch (e) {
-    console.warn('Failed to fetch crawler logs from API', e)
-    apiLogs = []
+    console.error('Failed to fetch crawler logs', e)
+    return []
   }
-
-  const allLogs = (Array.isArray(apiLogs) ? [...apiLogs] : []).sort((a, b) => {
-    return (
-      new Date(b.created || b.date).getTime() -
-      new Date(a.created || a.date).getTime()
-    )
-  })
-
-  return allLogs.slice(0, 100)
 }
 
 export const updateUser = async (userId: string, data: any): Promise<any> => {
   try {
-    let token = localStorage.getItem('auth_token')
+    const { data: result, error } = await supabase
+      .from('profiles')
+      .update(data)
+      .eq('id', userId)
+      .select()
+      .single()
 
-    if (!token) {
-      const pbAuth = localStorage.getItem('pocketbase_auth')
-      if (pbAuth) {
-        try {
-          const parsed = JSON.parse(pbAuth)
-          token = parsed.token
-        } catch (e) {
-          // ignore parse error
-        }
-      }
+    if (error) {
+      throw new Error(error.message)
     }
 
-    const baseUrl = API_URL.replace(/\/$/, '')
-    const res = await fetch(`${baseUrl}/collections/users/records/${userId}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-        ...(token
-          ? {
-              Authorization: token.startsWith('Bearer')
-                ? token
-                : `Bearer ${token}`,
-            }
-          : {}),
-      },
-      body: JSON.stringify(data),
-    })
-
-    if (!res.ok) {
-      let errorMessage = `HTTP Error: ${res.status}`
-      try {
-        const errorData = await res.json()
-        if (errorData.message) errorMessage = errorData.message
-        if (errorData.data) {
-          const fieldErrors = Object.entries(errorData.data)
-            .map(
-              ([field, err]: [string, any]) =>
-                `${field}: ${err?.message || err}`,
-            )
-            .join(', ')
-          if (fieldErrors) errorMessage += ` (${fieldErrors})`
-        }
-      } catch (e) {
-        // Ignore JSON parse error
-      }
-      throw new Error(errorMessage)
-    }
-
-    return await res.json()
+    return result
   } catch (e) {
     console.error('Failed to update user', e)
     throw e
