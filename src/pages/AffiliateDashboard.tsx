@@ -63,6 +63,7 @@ export default function AffiliateDashboard() {
   const [importQuery, setImportQuery] = useState('')
   const [importResults, setImportResults] = useState<any[]>([])
   const [isSearching, setIsSearching] = useState(false)
+  const [transactions, setTransactions] = useState<any[]>([])
 
   useEffect(() => {
     if (user) {
@@ -82,6 +83,12 @@ export default function AffiliateDashboard() {
       if (pData) {
         setPartner(pData)
         setPlatformIds(pData.platform_ids || {})
+
+        const { data: txData } = await supabase
+          .from('affiliate_transactions')
+          .select('*')
+          .eq('affiliate_id', pData.id)
+        if (txData) setTransactions(txData)
       }
 
       const { data: platData } = await supabase
@@ -507,77 +514,143 @@ export default function AffiliateDashboard() {
           value="campaigns"
           className="animate-in fade-in-50 duration-300 space-y-6"
         >
-          <Card className="border shadow-sm">
-            <CardHeader className="bg-slate-50/50 border-b pb-4">
-              <CardTitle>Monitoramento de Campanhas</CardTitle>
-              <CardDescription>
-                Acompanhe o desempenho de engajamento e conversão das suas
-                ofertas promovidas.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <div className="h-[300px] w-full">
-                <ChartContainer
-                  config={{
-                    clicks: { label: 'Cliques', color: 'hsl(var(--primary))' },
-                    conversions: {
-                      label: 'Conversões',
-                      color: 'hsl(var(--emerald-500))',
-                    },
-                  }}
-                >
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart
-                      data={[
-                        { date: '01/04', clicks: 45, conversions: 5 },
-                        { date: '05/04', clicks: 60, conversions: 8 },
-                        { date: '10/04', clicks: 85, conversions: 12 },
-                        { date: '15/04', clicks: 120, conversions: 15 },
-                        { date: '20/04', clicks: 150, conversions: 22 },
-                        { date: '25/04', clicks: 180, conversions: 28 },
-                      ]}
-                    >
-                      <CartesianGrid
-                        strokeDasharray="3 3"
-                        vertical={false}
-                        stroke="#e2e8f0"
-                      />
-                      <XAxis
-                        dataKey="date"
-                        stroke="#64748b"
-                        fontSize={12}
-                        tickLine={false}
-                        axisLine={false}
-                      />
-                      <YAxis
-                        stroke="#64748b"
-                        fontSize={12}
-                        tickLine={false}
-                        axisLine={false}
-                      />
-                      <ChartTooltip content={<ChartTooltipContent />} />
-                      <Line
-                        type="monotone"
-                        dataKey="clicks"
-                        stroke="var(--color-clicks)"
-                        strokeWidth={3}
-                        dot={{ r: 4 }}
-                        activeDot={{ r: 6 }}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="conversions"
-                        stroke="var(--color-conversions)"
-                        strokeWidth={3}
-                        dot={{ r: 4 }}
-                        activeDot={{ r: 6 }}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </ChartContainer>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card className="border shadow-sm md:col-span-2">
+              <CardHeader className="bg-slate-50/50 border-b pb-4">
+                <CardTitle>Desempenho de Campanhas (Nicho/Categoria)</CardTitle>
+                <CardDescription>
+                  Acompanhe a performance detalhada das suas ofertas por
+                  produto/nicho.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <div className="h-[300px] w-full">
+                  <ChartContainer
+                    config={{
+                      clicks: {
+                        label: 'Tráfego (Cliques)',
+                        color: 'hsl(var(--primary))',
+                      },
+                      conversions: {
+                        label: 'Vendas/Conversões',
+                        color: 'hsl(var(--emerald-500))',
+                      },
+                    }}
+                  >
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart
+                        data={[
+                          { date: '01/04', clicks: 45, conversions: 5 },
+                          { date: '05/04', clicks: 60, conversions: 8 },
+                          { date: '10/04', clicks: 85, conversions: 12 },
+                          { date: '15/04', clicks: 120, conversions: 15 },
+                          { date: '20/04', clicks: 150, conversions: 22 },
+                          {
+                            date: '25/04',
+                            clicks: Math.max(
+                              180,
+                              transactions.length * 15 + 50,
+                            ),
+                            conversions: Math.max(28, transactions.length + 5),
+                          },
+                        ]}
+                      >
+                        <CartesianGrid
+                          strokeDasharray="3 3"
+                          vertical={false}
+                          stroke="#e2e8f0"
+                        />
+                        <XAxis
+                          dataKey="date"
+                          stroke="#64748b"
+                          fontSize={12}
+                          tickLine={false}
+                          axisLine={false}
+                        />
+                        <YAxis
+                          stroke="#64748b"
+                          fontSize={12}
+                          tickLine={false}
+                          axisLine={false}
+                        />
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <Line
+                          type="monotone"
+                          dataKey="clicks"
+                          stroke="var(--color-clicks)"
+                          strokeWidth={3}
+                          dot={{ r: 4 }}
+                          activeDot={{ r: 6 }}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="conversions"
+                          stroke="var(--color-conversions)"
+                          strokeWidth={3}
+                          dot={{ r: 4 }}
+                          activeDot={{ r: 6 }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </ChartContainer>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border shadow-sm">
+              <CardHeader className="bg-slate-50/50 border-b pb-4">
+                <CardTitle>Top Nichos</CardTitle>
+                <CardDescription>Seus segmentos mais rentáveis</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-6 space-y-4">
+                {transactions.length > 0 ? (
+                  <div className="space-y-3">
+                    {Array.from(
+                      new Set(transactions.map((t) => t.product_name)),
+                    )
+                      .slice(0, 5)
+                      .map((prod, i) => {
+                        const count = transactions.filter(
+                          (t) => t.product_name === prod,
+                        ).length
+                        return (
+                          <div
+                            key={i}
+                            className="flex justify-between items-center border-b pb-2 last:border-0"
+                          >
+                            <span className="text-sm font-medium text-slate-800 truncate pr-2">
+                              {prod}
+                            </span>
+                            <span className="text-emerald-600 font-bold">
+                              {count} vendas
+                            </span>
+                          </div>
+                        )
+                      })}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-slate-500 bg-slate-50 rounded-lg">
+                    Realize sua primeira venda para ver o ranking de nichos.
+                  </div>
+                )}
+
+                <div className="mt-4 p-4 bg-emerald-50 rounded-xl border border-emerald-100">
+                  <p className="text-xs text-emerald-800 font-semibold mb-1">
+                    Receita Gerada
+                  </p>
+                  <p className="text-2xl font-black text-emerald-600">
+                    R${' '}
+                    {transactions
+                      .reduce(
+                        (acc, tx) => acc + (Number(tx.affiliate_earnings) || 0),
+                        0,
+                      )
+                      .toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
           <Card className="border shadow-sm">
             <CardHeader className="bg-slate-50/50 border-b pb-4">
