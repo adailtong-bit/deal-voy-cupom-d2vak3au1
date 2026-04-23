@@ -97,16 +97,19 @@ export function AdminPerformanceTab() {
   }, [])
 
   const popularOffers = [
-    { title: t('admin.performance.mock.offer1', '50% Nike'), favorites: 1420 },
+    {
+      title: t('admin.performance.mock.offer1', '50% OFF Nike'),
+      favorites: 1420,
+    },
     {
       title: t(
         'admin.performance.mock.offer2',
-        'Compre 1 Leve 2 - Brooklyn Coffee',
+        'Buy 1 Get 2 - Brooklyn Coffee',
       ),
       favorites: 950,
     },
     {
-      title: t('admin.performance.mock.offer3', 'Echo Dot (5ª Geração)'),
+      title: t('admin.performance.mock.offer3', 'Echo Dot (5th Gen)'),
       favorites: 834,
     },
     {
@@ -129,17 +132,16 @@ export function AdminPerformanceTab() {
         </p>
       </div>
 
-      {/* NOVO: Performance de Fontes */}
       <div>
         <h3 className="text-xl font-semibold mb-4 tracking-tight flex items-center gap-2">
           <Link2 className="h-5 w-5 text-slate-500" />
-          Performance de Fontes & Ofertas
+          {t('admin.performance.sources_title', 'Sources & Offers Performance')}
         </h3>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-8">
           <Card className="bg-primary/5 border-primary/20 shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Ofertas Ativas
+                {t('admin.performance.active_offers', 'Active Offers')}
               </CardTitle>
               <CheckCircle2 className="h-4 w-4 text-primary" />
             </CardHeader>
@@ -148,14 +150,17 @@ export function AdminPerformanceTab() {
                 {activeOffers}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                Cupons atualmente válidos
+                {t(
+                  'admin.performance.active_offers_desc',
+                  'Currently valid coupons',
+                )}
               </p>
             </CardContent>
           </Card>
           <Card className="bg-amber-500/5 border-amber-500/20 shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-amber-900">
-                Ofertas Vencidas
+                {t('admin.performance.expired_offers', 'Expired Offers')}
               </CardTitle>
               <AlertTriangle className="h-4 w-4 text-amber-500" />
             </CardHeader>
@@ -164,14 +169,17 @@ export function AdminPerformanceTab() {
                 {expiredOffers}
               </div>
               <p className="text-xs text-amber-700/70 mt-1">
-                Cupons inativos ou passados
+                {t(
+                  'admin.performance.expired_offers_desc',
+                  'Inactive or past coupons',
+                )}
               </p>
             </CardContent>
           </Card>
           <Card className="shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Distribuição de Fontes
+                {t('admin.performance.sources_dist', 'Sources Distribution')}
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-4">
@@ -179,7 +187,7 @@ export function AdminPerformanceTab() {
                 <ChartContainer
                   config={{
                     count: {
-                      label: 'Ofertas',
+                      label: t('admin.performance.offers_count', 'Offers'),
                       color: 'hsl(var(--primary))',
                     },
                   }}

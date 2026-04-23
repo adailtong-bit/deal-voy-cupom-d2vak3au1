@@ -148,7 +148,7 @@ export function CRMPerformanceDashboard({
             cLogs.length * 5 + 50
           return {
             id: cat,
-            name: cat || 'Geral',
+            name: cat || t('common.general', 'General'),
             redemptions: cLogs.length,
             clicks: clicks,
             revenue: cLogs.length * 40,
@@ -176,7 +176,7 @@ export function CRMPerformanceDashboard({
       result = [
         {
           id: 'global',
-          name: 'Visão Global',
+          name: t('crm.performance.global_view', 'Global View'),
           redemptions: baseLogs.length,
           clicks:
             baseCoupons.reduce((sum, c) => sum + (c.visitCount || 0), 0) ||
@@ -196,6 +196,7 @@ export function CRMPerformanceDashboard({
     affiliates,
     affiliateTx,
     franchiseId,
+    t,
   ])
 
   const chartData = data.slice(0, 10)
@@ -206,29 +207,45 @@ export function CRMPerformanceDashboard({
         <div>
           <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
             <Target className="w-5 h-5 text-primary" />
-            Desempenho Granular (CRM)
+            {t('crm.performance.title', 'Granular Performance (CRM)')}
           </h3>
           <p className="text-sm text-slate-500">
-            Meça o desempenho geral ou individual por nicho, campanha, lojista
-            ou afiliado.
+            {t(
+              'crm.performance.desc',
+              'Measure overall or individual performance by niche, campaign, merchant, or affiliate.',
+            )}
           </p>
         </div>
         <div className="w-full sm:w-64">
           <Select value={viewLevel} onValueChange={(v: any) => setViewLevel(v)}>
             <SelectTrigger>
-              <SelectValue placeholder="Selecione a visão" />
+              <SelectValue
+                placeholder={t('crm.performance.select_view', 'Select view')}
+              />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="global">Visão Geral Global</SelectItem>
+              <SelectItem value="global">
+                {t('crm.performance.global_view', 'Global View')}
+              </SelectItem>
               {!franchiseId && (
-                <SelectItem value="franchise">Por Franqueado</SelectItem>
+                <SelectItem value="franchise">
+                  {t('crm.performance.by_franchise', 'By Franchise')}
+                </SelectItem>
               )}
-              <SelectItem value="merchant">Por Lojista</SelectItem>
+              <SelectItem value="merchant">
+                {t('crm.performance.by_merchant', 'By Merchant')}
+              </SelectItem>
               {!franchiseId && (
-                <SelectItem value="affiliate">Por Afiliado</SelectItem>
+                <SelectItem value="affiliate">
+                  {t('crm.performance.by_affiliate', 'By Affiliate')}
+                </SelectItem>
               )}
-              <SelectItem value="campaign">Por Campanha (Oferta)</SelectItem>
-              <SelectItem value="category">Por Nicho / Categoria</SelectItem>
+              <SelectItem value="campaign">
+                {t('crm.performance.by_campaign', 'By Campaign (Offer)')}
+              </SelectItem>
+              <SelectItem value="category">
+                {t('crm.performance.by_category', 'By Niche / Category')}
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -237,18 +254,32 @@ export function CRMPerformanceDashboard({
       <div className="grid gap-6 md:grid-cols-3">
         <Card className="md:col-span-2">
           <CardHeader>
-            <CardTitle>Engajamento vs Conversão</CardTitle>
+            <CardTitle>
+              {t(
+                'crm.performance.engagement_vs_conversion',
+                'Engagement vs Conversion',
+              )}
+            </CardTitle>
             <CardDescription>
-              Comparativo de Cliques e Resgates no nível selecionado
+              {t(
+                'crm.performance.engagement_desc',
+                'Comparison of Clicks and Redemptions at the selected level',
+              )}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-[300px] w-full">
               <ChartContainer
                 config={{
-                  clicks: { label: 'Cliques', color: 'hsl(var(--primary))' },
+                  clicks: {
+                    label: t('crm.performance.clicks', 'Clicks'),
+                    color: 'hsl(var(--primary))',
+                  },
                   redemptions: {
-                    label: 'Resgates/Vendas',
+                    label: t(
+                      'crm.performance.redemptions',
+                      'Redemptions/Sales',
+                    ),
                     color: 'hsl(var(--emerald-500))',
                   },
                 }}
@@ -290,8 +321,12 @@ export function CRMPerformanceDashboard({
 
         <Card>
           <CardHeader>
-            <CardTitle>Ranking de Receita</CardTitle>
-            <CardDescription>Top geradores de volume (R$)</CardDescription>
+            <CardTitle>
+              {t('crm.performance.revenue_ranking', 'Revenue Ranking')}
+            </CardTitle>
+            <CardDescription>
+              {t('crm.performance.revenue_desc', 'Top volume generators ($)')}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -308,12 +343,13 @@ export function CRMPerformanceDashboard({
                         {item.name}
                       </p>
                       <p className="text-xs text-slate-500">
-                        {item.redemptions} conversões
+                        {item.redemptions}{' '}
+                        {t('crm.performance.conversions', 'conversions')}
                       </p>
                     </div>
                     <div className="font-bold text-emerald-600 whitespace-nowrap">
-                      R${' '}
-                      {item.revenue.toLocaleString('pt-BR', {
+                      ${' '}
+                      {item.revenue.toLocaleString('en-US', {
                         minimumFractionDigits: 2,
                       })}
                     </div>
@@ -321,7 +357,7 @@ export function CRMPerformanceDashboard({
                 ))}
               {chartData.length === 0 && (
                 <p className="text-sm text-slate-500 text-center py-4">
-                  Sem dados para exibir.
+                  {t('common.no_data', 'No data to display.')}
                 </p>
               )}
             </div>
@@ -331,23 +367,35 @@ export function CRMPerformanceDashboard({
 
       <Card>
         <CardHeader>
-          <CardTitle>Detalhamento Analítico</CardTitle>
+          <CardTitle>
+            {t('crm.performance.analytical_details', 'Analytical Breakdown')}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="rounded-md border overflow-x-auto">
             <Table>
               <TableHeader className="bg-slate-50">
                 <TableRow>
-                  <TableHead>Nome / Título</TableHead>
+                  <TableHead>
+                    {t('crm.performance.name_title', 'Name / Title')}
+                  </TableHead>
                   {viewLevel === 'campaign' && (
-                    <TableHead>Nicho/Categoria</TableHead>
+                    <TableHead>
+                      {t('crm.performance.niche_category', 'Niche/Category')}
+                    </TableHead>
                   )}
                   <TableHead className="text-right">
-                    Cliques (Tráfego)
+                    {t('crm.performance.clicks_traffic', 'Clicks (Traffic)')}
                   </TableHead>
-                  <TableHead className="text-right">Conversões</TableHead>
-                  <TableHead className="text-right">Taxa (CR)</TableHead>
-                  <TableHead className="text-right">Receita Estimada</TableHead>
+                  <TableHead className="text-right">
+                    {t('crm.performance.conversions_col', 'Conversions')}
+                  </TableHead>
+                  <TableHead className="text-right">
+                    {t('crm.performance.cr_rate', 'Rate (CR)')}
+                  </TableHead>
+                  <TableHead className="text-right">
+                    {t('crm.performance.est_revenue', 'Estimated Revenue')}
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -376,8 +424,8 @@ export function CRMPerformanceDashboard({
                         {cr}%
                       </TableCell>
                       <TableCell className="text-right font-bold">
-                        R${' '}
-                        {item.revenue.toLocaleString('pt-BR', {
+                        ${' '}
+                        {item.revenue.toLocaleString('en-US', {
                           minimumFractionDigits: 2,
                         })}
                       </TableCell>
@@ -390,7 +438,10 @@ export function CRMPerformanceDashboard({
                       colSpan={6}
                       className="text-center py-6 text-slate-500"
                     >
-                      Nenhum registro encontrado para esta visão.
+                      {t(
+                        'crm.performance.no_records',
+                        'No records found for this view.',
+                      )}
                     </TableCell>
                   </TableRow>
                 )}

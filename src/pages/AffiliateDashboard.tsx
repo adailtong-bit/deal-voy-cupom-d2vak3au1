@@ -113,9 +113,9 @@ export default function AffiliateDashboard() {
         .eq('id', partner.id)
 
       if (error) throw error
-      toast.success(t('common.success', 'IDs atualizados com sucesso!'))
+      toast.success(t('common.success', 'IDs updated successfully!'))
     } catch (err: any) {
-      toast.error(t('common.error', 'Erro ao salvar IDs: ') + err.message)
+      toast.error(t('common.error', 'Error saving IDs: ') + err.message)
     }
   }
 
@@ -126,10 +126,10 @@ export default function AffiliateDashboard() {
       const results = await searchAffiliateDeals(importQuery, 10, platformIds)
       setImportResults(results || [])
       if (results?.length === 0) {
-        toast.info(t('common.info', 'Nenhuma campanha encontrada.'))
+        toast.info(t('common.info', 'No campaigns found.'))
       }
     } catch (err: any) {
-      toast.error(t('common.error', 'Erro na busca: ') + err.message)
+      toast.error(t('common.error', 'Search error: ') + err.message)
     } finally {
       setIsSearching(false)
     }
@@ -149,22 +149,24 @@ export default function AffiliateDashboard() {
         store_name: deal.storeName,
         status: 'approved',
         category: 'affiliate',
-        currency: deal.currency || 'BRL',
+        currency: deal.currency || 'USD',
         reward_id: partner?.id,
       })
       if (error) throw error
       toast.success(
-        t('common.success', 'Campanha importada para o site com seu link!'),
+        t('common.success', 'Campaign imported to site with your link!'),
       )
       setImportResults((prev) => prev.filter((d) => d.id !== deal.id))
     } catch (error: any) {
-      toast.error(t('common.error', 'Erro ao importar: ') + error.message)
+      toast.error(t('common.error', 'Import error: ') + error.message)
     }
   }
 
   if (loading) {
     return (
-      <div className="p-8 text-center">Carregando painel de afiliado...</div>
+      <div className="p-8 text-center">
+        {t('affiliate.loading', 'Loading affiliate dashboard...')}
+      </div>
     )
   }
 
@@ -173,11 +175,13 @@ export default function AffiliateDashboard() {
       <div className="container max-w-4xl py-12">
         <Card className="text-center p-8 border-dashed">
           <CardTitle className="text-2xl text-amber-600 mb-4">
-            Perfil de Afiliado Não Encontrado
+            {t('affiliate.not_found_title', 'Affiliate Profile Not Found')}
           </CardTitle>
           <CardDescription>
-            Não localizamos seu registro de parceiro. Entre em contato com o
-            suporte.
+            {t(
+              'affiliate.not_found_desc',
+              'We could not locate your partner record. Contact support.',
+            )}
           </CardDescription>
         </Card>
       </div>
@@ -190,13 +194,13 @@ export default function AffiliateDashboard() {
         <Card className="text-center p-12 border-dashed border-2">
           <Activity className="w-16 h-16 text-amber-500 mx-auto mb-4 animate-pulse" />
           <CardTitle className="text-3xl font-bold text-slate-800 mb-2">
-            Conta em Análise
+            {t('affiliate.pending_title', 'Account Under Review')}
           </CardTitle>
           <CardDescription className="text-lg">
-            Seu cadastro como afiliado parceiro está em fase de aprovação pela
-            nossa equipe.
-            <br />
-            Você receberá um aviso assim que os recursos forem liberados.
+            {t(
+              'affiliate.pending_desc',
+              'Your registration as an affiliate partner is pending approval by our team. You will receive a notice as soon as features are released.',
+            )}
           </CardDescription>
         </Card>
       </div>
@@ -208,17 +212,20 @@ export default function AffiliateDashboard() {
       <div className="flex items-center justify-between border-b pb-4">
         <div>
           <h1 className="text-3xl font-bold text-slate-900">
-            Painel do Afiliado
+            {t('affiliate.dashboard_title', 'Affiliate Dashboard')}
           </h1>
           <p className="text-muted-foreground mt-1">
-            Gerencie seus links de rastreio e encontre ofertas para divulgar.
+            {t(
+              'affiliate.dashboard_desc',
+              'Manage your tracking links and find offers to promote.',
+            )}
           </p>
         </div>
         <Badge
           variant="outline"
           className="bg-green-50 text-green-700 border-green-200 px-4 py-1 text-sm font-semibold"
         >
-          Status da Conta: Ativo
+          {t('affiliate.status_active', 'Account Status: Active')}
         </Badge>
       </div>
 
@@ -228,25 +235,29 @@ export default function AffiliateDashboard() {
             value="platforms"
             className="gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent"
           >
-            <LinkIcon className="w-4 h-4" /> Minhas Plataformas (IDs)
+            <LinkIcon className="w-4 h-4" />{' '}
+            {t('affiliate.tabs.platforms', 'My Platforms (IDs)')}
           </TabsTrigger>
           <TabsTrigger
             value="search"
             className="gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent"
           >
-            <Search className="w-4 h-4" /> Buscar Ofertas
+            <Search className="w-4 h-4" />{' '}
+            {t('affiliate.tabs.search', 'Search Offers')}
           </TabsTrigger>
           <TabsTrigger
             value="crm"
             className="gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent"
           >
-            <Users className="w-4 h-4" /> CRM & Compradores
+            <Users className="w-4 h-4" />{' '}
+            {t('affiliate.tabs.crm', 'CRM & Buyers')}
           </TabsTrigger>
           <TabsTrigger
             value="campaigns"
             className="gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent"
           >
-            <TrendingUp className="w-4 h-4" /> Monitoramento & Disparos
+            <TrendingUp className="w-4 h-4" />{' '}
+            {t('affiliate.tabs.campaigns', 'Monitoring & Dispatches')}
           </TabsTrigger>
         </TabsList>
 
@@ -256,16 +267,23 @@ export default function AffiliateDashboard() {
         >
           <Card className="border shadow-sm">
             <CardHeader className="bg-slate-50/50 border-b pb-4">
-              <CardTitle>Identificadores de Afiliado</CardTitle>
+              <CardTitle>
+                {t('affiliate.platforms.title', 'Affiliate Identifiers')}
+              </CardTitle>
               <CardDescription>
-                Cadastre seus IDs exclusivos para cada plataforma. O
-                administrador habilitou estas redes para você.
+                {t(
+                  'affiliate.platforms.desc',
+                  'Register your unique IDs for each platform. The administrator has enabled these networks for you.',
+                )}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 pt-6">
               {platforms.length === 0 ? (
                 <div className="text-center text-muted-foreground py-8">
-                  Nenhuma plataforma configurada pelo administrador no momento.
+                  {t(
+                    'affiliate.platforms.empty',
+                    'No platform configured by the administrator at the moment.',
+                  )}
                 </div>
               ) : (
                 platforms.map((plat) => {
@@ -285,15 +303,22 @@ export default function AffiliateDashboard() {
                           {plat.name}
                         </Label>
                         <p className="text-sm text-green-600 font-medium">
-                          Comissão negociada: {actualComm}%
+                          {t(
+                            'affiliate.platforms.commission',
+                            'Negotiated commission:',
+                          )}{' '}
+                          {actualComm}%
                         </p>
                       </div>
                       <div className="space-y-2">
                         <Label className="text-slate-600">
-                          Seu ID / Tag de Afiliado na plataforma
+                          {t(
+                            'affiliate.platforms.id_label',
+                            'Your ID / Affiliate Tag on the platform',
+                          )}
                         </Label>
                         <Input
-                          placeholder={`Ex: meu_id_${plat.name.toLowerCase()}`}
+                          placeholder={`Ex: my_id_${plat.name.toLowerCase()}`}
                           value={platformIds[plat.name] || ''}
                           onChange={(e) =>
                             setPlatformIds((prev) => ({
@@ -315,7 +340,7 @@ export default function AffiliateDashboard() {
                 className="w-full md:w-auto ml-auto font-bold"
                 disabled={platforms.length === 0}
               >
-                Salvar Identificadores
+                {t('affiliate.platforms.save', 'Save Identifiers')}
               </Button>
             </CardFooter>
           </Card>
@@ -327,10 +352,14 @@ export default function AffiliateDashboard() {
         >
           <Card className="border shadow-sm">
             <CardHeader className="bg-slate-50/50 border-b pb-4">
-              <CardTitle>Buscar e Importar Campanhas</CardTitle>
+              <CardTitle>
+                {t('affiliate.search.title', 'Search and Import Campaigns')}
+              </CardTitle>
               <CardDescription>
-                Pesquise ofertas nas plataformas cadastradas. Os links já virão
-                com o seu ID de afiliado injetado.
+                {t(
+                  'affiliate.search.desc',
+                  'Search for offers on registered platforms. The links will already come with your affiliate ID injected.',
+                )}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6 pt-6">
@@ -340,7 +369,10 @@ export default function AffiliateDashboard() {
                   <Input
                     value={importQuery}
                     onChange={(e) => setImportQuery(e.target.value)}
-                    placeholder="Ex: iPhone 15, TV OLED, Tenis Nike..."
+                    placeholder={t(
+                      'affiliate.search.placeholder',
+                      'Ex: iPhone 15, OLED TV, Nike Sneakers...',
+                    )}
                     className="pl-9 h-11"
                     onKeyDown={(e) => e.key === 'Enter' && handleSearchImport()}
                   />
@@ -355,7 +387,7 @@ export default function AffiliateDashboard() {
                   ) : (
                     <Search className="w-4 h-4 mr-2" />
                   )}
-                  Buscar
+                  {t('common.search', 'Search')}
                 </Button>
               </div>
 
@@ -363,7 +395,10 @@ export default function AffiliateDashboard() {
                 {importResults.length === 0 && !isSearching && (
                   <div className="text-center py-16 text-muted-foreground border-2 rounded-lg border-dashed bg-slate-50">
                     <Search className="w-8 h-8 text-slate-300 mx-auto mb-3" />
-                    Realize uma busca para encontrar e promover produtos.
+                    {t(
+                      'affiliate.search.empty',
+                      'Perform a search to find and promote products.',
+                    )}
                   </div>
                 )}
                 {importResults.map((deal) => (
@@ -388,14 +423,18 @@ export default function AffiliateDashboard() {
                           >
                             {deal.storeName}
                           </Badge>
-                          <span className="text-sm bg-green-100 text-green-800 px-2 py-0.5 rounded font-bold">
-                            {deal.discountPercentage?.toFixed(0)}% OFF
-                          </span>
-                          <span className="text-sm text-slate-400 line-through">
-                            R$ {deal.originalPrice}
-                          </span>
+                          {deal.discountPercentage && (
+                            <span className="text-sm bg-green-100 text-green-800 px-2 py-0.5 rounded font-bold">
+                              {deal.discountPercentage?.toFixed(0)}% OFF
+                            </span>
+                          )}
+                          {deal.originalPrice && (
+                            <span className="text-sm text-slate-400 line-through">
+                              $ {deal.originalPrice}
+                            </span>
+                          )}
                           <span className="text-xl font-extrabold text-slate-900">
-                            R$ {deal.price}
+                            $ {deal.price}
                           </span>
                         </div>
                         <a
@@ -404,8 +443,11 @@ export default function AffiliateDashboard() {
                           rel="noreferrer"
                           className="text-sm text-blue-600 hover:text-blue-800 hover:underline mt-3 inline-flex items-center gap-1 font-medium"
                         >
-                          <ExternalLink className="w-3.5 h-3.5" /> Testar meu
-                          Link Afiliado
+                          <ExternalLink className="w-3.5 h-3.5" />{' '}
+                          {t(
+                            'affiliate.search.test_link',
+                            'Test my Affiliate Link',
+                          )}
                         </a>
                       </div>
                     </div>
@@ -414,7 +456,8 @@ export default function AffiliateDashboard() {
                         onClick={() => handleImportToSite(deal)}
                         className="gap-2 w-full font-bold h-11 bg-green-600 hover:bg-green-700 text-white"
                       >
-                        <Download className="w-4 h-4" /> Promover no Site
+                        <Download className="w-4 h-4" />{' '}
+                        {t('affiliate.search.promote', 'Promote on Site')}
                       </Button>
                     </div>
                   </div>
@@ -427,10 +470,14 @@ export default function AffiliateDashboard() {
         <TabsContent value="crm" className="animate-in fade-in-50 duration-300">
           <Card className="border shadow-sm">
             <CardHeader className="bg-slate-50/50 border-b pb-4">
-              <CardTitle>CRM de Compradores (Leads)</CardTitle>
+              <CardTitle>
+                {t('affiliate.crm.title', 'Buyers CRM (Leads)')}
+              </CardTitle>
               <CardDescription>
-                Monitore os usuários que interagiram com seus links de afiliado
-                e realize ações direcionadas.
+                {t(
+                  'affiliate.crm.desc',
+                  'Monitor users who interacted with your affiliate links and perform targeted actions.',
+                )}
               </CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
@@ -438,13 +485,17 @@ export default function AffiliateDashboard() {
                 <Table>
                   <TableHeader className="bg-slate-50">
                     <TableRow>
-                      <TableHead>Nome / Email</TableHead>
-                      <TableHead className="text-center">
-                        Cliques (Links)
+                      <TableHead>
+                        {t('affiliate.crm.name_email', 'Name / Email')}
                       </TableHead>
-                      <TableHead className="text-center">Conversões</TableHead>
+                      <TableHead className="text-center">
+                        {t('affiliate.crm.clicks', 'Clicks (Links)')}
+                      </TableHead>
+                      <TableHead className="text-center">
+                        {t('affiliate.crm.conversions', 'Conversions')}
+                      </TableHead>
                       <TableHead className="text-right">
-                        Última Atividade
+                        {t('affiliate.crm.last_active', 'Last Active')}
                       </TableHead>
                     </TableRow>
                   </TableHeader>
@@ -452,15 +503,15 @@ export default function AffiliateDashboard() {
                     {[
                       {
                         id: '1',
-                        name: 'João Silva',
-                        email: 'joao@email.com',
+                        name: 'John Doe',
+                        email: 'john@email.com',
                         clicks: 45,
                         conversions: 5,
                         lastActive: '2026-04-20',
                       },
                       {
                         id: '2',
-                        name: 'Maria Souza',
+                        name: 'Mary Smith',
                         email: 'maria@email.com',
                         clicks: 12,
                         conversions: 1,
@@ -468,7 +519,7 @@ export default function AffiliateDashboard() {
                       },
                       {
                         id: '3',
-                        name: 'Carlos Santos',
+                        name: 'Charles Santos',
                         email: 'carlos@email.com',
                         clicks: 89,
                         conversions: 12,
@@ -476,7 +527,7 @@ export default function AffiliateDashboard() {
                       },
                       {
                         id: '4',
-                        name: 'Ana Oliveira',
+                        name: 'Anna Oliveira',
                         email: 'ana@email.com',
                         clicks: 34,
                         conversions: 3,
@@ -497,9 +548,7 @@ export default function AffiliateDashboard() {
                           {lead.conversions}
                         </TableCell>
                         <TableCell className="text-right text-sm text-slate-500">
-                          {new Date(lead.lastActive).toLocaleDateString(
-                            'pt-BR',
-                          )}
+                          {new Date(lead.lastActive).toLocaleDateString()}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -517,10 +566,17 @@ export default function AffiliateDashboard() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card className="border shadow-sm md:col-span-2">
               <CardHeader className="bg-slate-50/50 border-b pb-4">
-                <CardTitle>Desempenho de Campanhas (Nicho/Categoria)</CardTitle>
+                <CardTitle>
+                  {t(
+                    'affiliate.campaigns.performance_title',
+                    'Campaign Performance (Niche/Category)',
+                  )}
+                </CardTitle>
                 <CardDescription>
-                  Acompanhe a performance detalhada das suas ofertas por
-                  produto/nicho.
+                  {t(
+                    'affiliate.campaigns.performance_desc',
+                    'Track the detailed performance of your offers by product/niche.',
+                  )}
                 </CardDescription>
               </CardHeader>
               <CardContent className="pt-6">
@@ -528,11 +584,17 @@ export default function AffiliateDashboard() {
                   <ChartContainer
                     config={{
                       clicks: {
-                        label: 'Tráfego (Cliques)',
+                        label: t(
+                          'affiliate.campaigns.clicks',
+                          'Traffic (Clicks)',
+                        ),
                         color: 'hsl(var(--primary))',
                       },
                       conversions: {
-                        label: 'Vendas/Conversões',
+                        label: t(
+                          'affiliate.campaigns.sales',
+                          'Sales/Conversions',
+                        ),
                         color: 'hsl(var(--emerald-500))',
                       },
                     }}
@@ -599,8 +661,15 @@ export default function AffiliateDashboard() {
 
             <Card className="border shadow-sm">
               <CardHeader className="bg-slate-50/50 border-b pb-4">
-                <CardTitle>Top Nichos</CardTitle>
-                <CardDescription>Seus segmentos mais rentáveis</CardDescription>
+                <CardTitle>
+                  {t('affiliate.campaigns.top_niches', 'Top Niches')}
+                </CardTitle>
+                <CardDescription>
+                  {t(
+                    'affiliate.campaigns.top_niches_desc',
+                    'Your most profitable segments',
+                  )}
+                </CardDescription>
               </CardHeader>
               <CardContent className="pt-6 space-y-4">
                 {transactions.length > 0 ? (
@@ -622,7 +691,8 @@ export default function AffiliateDashboard() {
                               {prod}
                             </span>
                             <span className="text-emerald-600 font-bold">
-                              {count} vendas
+                              {count}{' '}
+                              {t('affiliate.campaigns.sales_unit', 'sales')}
                             </span>
                           </div>
                         )
@@ -630,22 +700,28 @@ export default function AffiliateDashboard() {
                   </div>
                 ) : (
                   <div className="text-center py-8 text-slate-500 bg-slate-50 rounded-lg">
-                    Realize sua primeira venda para ver o ranking de nichos.
+                    {t(
+                      'affiliate.campaigns.no_sales_niche',
+                      'Make your first sale to see the niche ranking.',
+                    )}
                   </div>
                 )}
 
                 <div className="mt-4 p-4 bg-emerald-50 rounded-xl border border-emerald-100">
                   <p className="text-xs text-emerald-800 font-semibold mb-1">
-                    Receita Gerada
+                    {t(
+                      'affiliate.campaigns.generated_revenue',
+                      'Generated Revenue',
+                    )}
                   </p>
                   <p className="text-2xl font-black text-emerald-600">
-                    R${' '}
+                    ${' '}
                     {transactions
                       .reduce(
                         (acc, tx) => acc + (Number(tx.affiliate_earnings) || 0),
                         0,
                       )
-                      .toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      .toLocaleString('en-US', { minimumFractionDigits: 2 })}
                   </p>
                 </div>
               </CardContent>
@@ -654,17 +730,26 @@ export default function AffiliateDashboard() {
 
           <Card className="border shadow-sm">
             <CardHeader className="bg-slate-50/50 border-b pb-4">
-              <CardTitle>Novo Disparo (CRM)</CardTitle>
+              <CardTitle>
+                {t('affiliate.dispatch.title', 'New Dispatch (CRM)')}
+              </CardTitle>
               <CardDescription>
-                Envie ofertas, novidades ou cupons diretamente para sua base de
-                leads via E-mail ou WhatsApp.
+                {t(
+                  'affiliate.dispatch.desc',
+                  'Send offers, news or coupons directly to your leads base via Email or WhatsApp.',
+                )}
               </CardDescription>
             </CardHeader>
             <CardContent className="pt-6 space-y-4">
               <div className="space-y-2">
-                <Label>Mensagem da Campanha</Label>
+                <Label>
+                  {t('affiliate.dispatch.msg_label', 'Campaign Message')}
+                </Label>
                 <Textarea
-                  placeholder="Olá! Tenho uma oferta especial de cashback para você nesta semana..."
+                  placeholder={t(
+                    'affiliate.dispatch.msg_ph',
+                    'Hello! I have a special cashback offer for you this week...',
+                  )}
                   className="h-24 resize-none"
                 />
               </div>
@@ -673,7 +758,12 @@ export default function AffiliateDashboard() {
                   variant="outline"
                   className="gap-2 text-slate-600"
                   onClick={() =>
-                    toast.success('Redirecionando para WhatsApp Web...')
+                    toast.success(
+                      t(
+                        'affiliate.dispatch.whatsapp_toast',
+                        'Redirecting to WhatsApp Web...',
+                      ),
+                    )
                   }
                 >
                   <MessageCircle className="w-4 h-4 text-green-600" /> WhatsApp
@@ -681,10 +771,16 @@ export default function AffiliateDashboard() {
                 <Button
                   className="gap-2"
                   onClick={() =>
-                    toast.success('Campanha disparada para sua base!')
+                    toast.success(
+                      t(
+                        'affiliate.dispatch.email_toast',
+                        'Campaign dispatched to your base!',
+                      ),
+                    )
                   }
                 >
-                  <Send className="w-4 h-4" /> Enviar por E-mail
+                  <Send className="w-4 h-4" />{' '}
+                  {t('affiliate.dispatch.send_email', 'Send via Email')}
                 </Button>
               </div>
             </CardContent>

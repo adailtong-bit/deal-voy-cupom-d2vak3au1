@@ -26,10 +26,12 @@ import { TestingSandboxTab } from '@/components/admin/TestingSandboxTab'
 import { FranchiseeSettingsTab } from '@/components/franchisee/FranchiseeSettingsTab'
 import { PartnerPoliciesTab } from '@/components/admin/PartnerPoliciesTab'
 import { AdminCategoriesTab } from '@/components/admin/AdminCategoriesTab'
+import { useLanguage } from '@/stores/LanguageContext'
 
 export default function FranchiseeDashboard() {
   const { franchises, companies, coupons: allCoupons } = useCouponStore()
   const { user, role, profile } = useAuth()
+  const { t } = useLanguage()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const activeTab = searchParams.get('tab') || 'overview'
@@ -50,7 +52,7 @@ export default function FranchiseeDashboard() {
   const mockFranchise = {
     id: 'mock-franchise-admin',
     name: 'Franquia Teste (Visão Admin)',
-    addressCountry: 'Brasil',
+    addressCountry: 'USA',
   } as any
 
   // Fallback to first franchise for super admins testing the view
@@ -62,15 +64,16 @@ export default function FranchiseeDashboard() {
       <div className="container py-16 text-center animate-fade-in flex flex-col items-center justify-center min-h-[60vh]">
         <Store className="w-16 h-16 text-slate-300 mb-4" />
         <h2 className="text-2xl font-bold text-slate-800 mb-2">
-          Nenhuma franquia associada encontrada
+          {t('franchisee.no_franchise', 'No associated franchise found')}
         </h2>
         <p className="text-slate-500 mb-6 max-w-md">
-          Seu perfil está configurado como Franqueado, mas ainda não existe uma
-          unidade regional vinculada ao seu e-mail ({user?.email}). Entre em
-          contato com o Administrador do sistema.
+          {t(
+            'franchisee.no_franchise_desc',
+            'Your profile is configured as a Franchisee, but there is no regional unit linked to your email ({email}) yet. Contact the Administrator.',
+          ).replace('{email}', user?.email || '')}
         </p>
         <Button onClick={() => navigate('/')} variant="outline">
-          Voltar para a Home
+          {t('common.back_home', 'Back to Home')}
         </Button>
       </div>
     )
@@ -134,9 +137,14 @@ export default function FranchiseeDashboard() {
           )}
           {activeTab === 'crm' && (
             <div className="animate-fade-in-up bg-white p-6 rounded-xl border shadow-sm">
-              <h2 className="text-xl font-bold mb-4">CRM Regional</h2>
+              <h2 className="text-xl font-bold mb-4">
+                {t('franchisee.crm_regional_title', 'Regional CRM')}
+              </h2>
               <p className="text-slate-600 mb-4">
-                Gerencie os grupos de audiência de toda a sua rede de franquia.
+                {t(
+                  'franchisee.crm_regional_desc',
+                  'Manage audience groups for your entire franchise network.',
+                )}
               </p>
               <TargetGroupsTab />
             </div>
@@ -233,11 +241,13 @@ export default function FranchiseeDashboard() {
           ].includes(activeTab) && (
             <div className="bg-white p-12 text-center rounded-xl border border-dashed border-slate-300 animate-fade-in-up">
               <h3 className="text-lg font-semibold text-slate-700 mb-2">
-                Módulo em Desenvolvimento
+                {t('franchisee.module_dev', 'Module in Development')}
               </h3>
               <p className="text-slate-500">
-                A funcionalidade selecionada ({activeTab}) está em fase de
-                implantação no seu painel.
+                {t(
+                  'franchisee.module_dev_desc',
+                  'The selected feature ({tab}) is currently being deployed to your dashboard.',
+                ).replace('{tab}', activeTab)}
               </p>
             </div>
           )}

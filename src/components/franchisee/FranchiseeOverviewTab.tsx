@@ -209,7 +209,7 @@ export function FranchiseeOverviewTab({
             className="font-medium"
           >
             <Download className="w-4 h-4 mr-2" />
-            Export CSV
+            {t('admin.exportCsv', 'Export CSV')}
           </Button>
           <Button
             variant="outline"
@@ -218,7 +218,7 @@ export function FranchiseeOverviewTab({
             className="font-medium"
           >
             <FileText className="w-4 h-4 mr-2" />
-            Export PDF
+            {t('admin.exportPdf', 'Export PDF')}
           </Button>
         </div>
       </div>

@@ -203,19 +203,19 @@ export function LeadsProfileTab({ franchiseId }: { franchiseId?: string }) {
           <CardTitle>
             {t(
               'franchisee.leads.profile_tab_title',
-              'Perfis de Consumo (Leads)',
+              'Consumption Profiles (Leads)',
             )}
           </CardTitle>
           <CardDescription>
             {t(
               'franchisee.leads.profile_tab_desc',
-              'Visualize o comportamento de compra e identifique os melhores perfis para suas campanhas.',
+              'View purchasing behavior and identify the best profiles for your campaigns.',
             )}
           </CardDescription>
         </div>
         <Button variant="outline" className="gap-2" onClick={exportCSV}>
           <Download className="h-4 w-4" />{' '}
-          {t('franchisee.leads.export_data', 'Exportar Dados')}
+          {t('franchisee.leads.export_data', 'Export Data')}
         </Button>
       </CardHeader>
       <CardContent>
@@ -223,7 +223,7 @@ export function LeadsProfileTab({ franchiseId }: { franchiseId?: string }) {
           <div className="relative">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder={t('franchisee.crm.search', 'Buscar usuários...')}
+              placeholder={t('franchisee.crm.search', 'Search users...')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9"
@@ -232,12 +232,12 @@ export function LeadsProfileTab({ franchiseId }: { franchiseId?: string }) {
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
             <SelectTrigger>
               <SelectValue
-                placeholder={t('franchisee.crm.category', 'Categoria')}
+                placeholder={t('franchisee.crm.category', 'Category')}
               />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">
-                {t('franchisee.crm.all_categories', 'Todas as Categorias')}
+                {t('franchisee.crm.all_categories', 'All Categories')}
               </SelectItem>
               {CATEGORIES.filter((c) => c.id !== 'all').map((c) => (
                 <SelectItem key={c.id} value={c.id}>
@@ -249,12 +249,12 @@ export function LeadsProfileTab({ franchiseId }: { franchiseId?: string }) {
           <Select value={locationFilter} onValueChange={setLocationFilter}>
             <SelectTrigger>
               <SelectValue
-                placeholder={t('franchisee.crm.location', 'Localização')}
+                placeholder={t('franchisee.crm.location', 'Location')}
               />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">
-                {t('franchisee.crm.all_locations', 'Todas as Localizações')}
+                {t('franchisee.crm.all_locations', 'All Locations')}
               </SelectItem>
               {locations.map((loc) => (
                 <SelectItem key={loc} value={loc}>
@@ -268,25 +268,25 @@ export function LeadsProfileTab({ franchiseId }: { franchiseId?: string }) {
               <SelectValue
                 placeholder={t(
                   'franchisee.leads.profile_filter',
-                  'Perfil de Consumo',
+                  'Consumption Profile',
                 )}
               />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">
-                {t('franchisee.leads.any_profile', 'Qualquer Perfil')}
+                {t('franchisee.leads.any_profile', 'Any Profile')}
               </SelectItem>
               <SelectItem value="High Value">
-                {t('franchisee.leads.high_value', 'Alto Valor')}
+                {t('franchisee.leads.high_value', 'High Value')}
               </SelectItem>
               <SelectItem value="Frequent Buyer">
-                {t('franchisee.leads.frequent_buyer', 'Comprador Frequente')}
+                {t('franchisee.leads.frequent_buyer', 'Frequent Buyer')}
               </SelectItem>
               <SelectItem value="Occasional">
-                {t('franchisee.leads.occasional', 'Ocasional')}
+                {t('franchisee.leads.occasional', 'Occasional')}
               </SelectItem>
               <SelectItem value="Inactive">
-                {t('franchisee.leads.inactive', 'Inativo')}
+                {t('franchisee.leads.inactive', 'Inactive')}
               </SelectItem>
             </SelectContent>
           </Select>
@@ -297,19 +297,19 @@ export function LeadsProfileTab({ franchiseId }: { franchiseId?: string }) {
             <TableHeader>
               <TableRow>
                 <TableHead>
-                  {t('franchisee.crm.user_location', 'Usuário / Local')}
+                  {t('franchisee.crm.user_location', 'User / Location')}
                 </TableHead>
                 <TableHead>
-                  {t('franchisee.leads.profile_col', 'Perfil de Consumo')}
+                  {t('franchisee.leads.profile_col', 'Consumption Profile')}
                 </TableHead>
                 <TableHead>
-                  {t('franchisee.crm.redemptions', 'Resgates')}
+                  {t('franchisee.crm.redemptions', 'Redemptions')}
                 </TableHead>
                 <TableHead>
-                  {t('franchisee.crm.top_category', 'Categoria Principal')}
+                  {t('franchisee.crm.top_category', 'Top Category')}
                 </TableHead>
                 <TableHead>
-                  {t('franchisee.crm.last_active', 'Último Acesso')}
+                  {t('franchisee.crm.last_active', 'Last Active')}
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -322,7 +322,7 @@ export function LeadsProfileTab({ franchiseId }: { franchiseId?: string }) {
                   >
                     {t(
                       'franchisee.leads.no_profile_users',
-                      'Nenhum usuário corresponde aos filtros de perfil.',
+                      'No users match the profile filters.',
                     )}
                   </TableCell>
                 </TableRow>
@@ -363,7 +363,7 @@ export function LeadsProfileTab({ franchiseId }: { franchiseId?: string }) {
                     <TableCell>
                       <Badge variant="outline" className="bg-slate-50">
                         {u.topCategory === 'None'
-                          ? t('common.none', 'Nenhum')
+                          ? t('common.none', 'None')
                           : t(
                               CATEGORIES.find((c) => c.id === u.topCategory)
                                 ?.translationKey || 'category.others',
@@ -371,14 +371,14 @@ export function LeadsProfileTab({ franchiseId }: { franchiseId?: string }) {
                             )}
                       </Badge>
                       <p className="text-[10px] text-muted-foreground mt-1 truncate max-w-[150px]">
-                        {t('franchisee.leads.preference', 'Preferência:')}{' '}
+                        {t('franchisee.leads.preference', 'Preference:')}{' '}
                         {u.topMerchant}
                       </p>
                     </TableCell>
                     <TableCell className="text-sm">
                       {u.lastActive
                         ? formatDate(u.lastActive)
-                        : t('franchisee.crm.never', 'Nunca')}
+                        : t('franchisee.crm.never', 'Never')}
                     </TableCell>
                   </TableRow>
                 ))

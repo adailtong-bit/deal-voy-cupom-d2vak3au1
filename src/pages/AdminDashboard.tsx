@@ -6,8 +6,10 @@ import { Trash2, Download, History, Search } from 'lucide-react'
 import { toast } from 'sonner'
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase/client'
+import { useLanguage } from '@/stores/LanguageContext'
 
 export default function AdminDashboard() {
+  const { t } = useLanguage()
   const [isClearing, setIsClearing] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
   const [stats, setStats] = useState({
@@ -54,7 +56,10 @@ export default function AdminDashboard() {
   const handleClearHistory = async () => {
     if (
       !window.confirm(
-        'Tem certeza que deseja limpar todo o histórico de buscas do sistema? Esta ação não pode ser desfeita.',
+        t(
+          'admin.crawler.clear_history_confirm',
+          'Are you sure you want to clear all search history from the system? This action cannot be undone.',
+        ),
       )
     )
       return
@@ -63,12 +68,22 @@ export default function AdminDashboard() {
     try {
       const success = await clearCrawlerLogs()
       if (success) {
-        toast.success('Histórico de buscas limpo com sucesso')
+        toast.success(
+          t(
+            'admin.crawler.clear_history_success',
+            'Search history cleared successfully',
+          ),
+        )
         setStats({ totalFound: 0, totalImported: 0, totalSearches: 0 })
         // Force reload to update inner component state after a short delay
         setTimeout(() => window.location.reload(), 1500)
       } else {
-        toast.error('Erro ao limpar histórico. Tente novamente.')
+        toast.error(
+          t(
+            'admin.crawler.clear_history_error',
+            'Error clearing history. Try again.',
+          ),
+        )
       }
     } finally {
       setIsClearing(false)
@@ -81,34 +96,38 @@ export default function AdminDashboard() {
       const logs = await fetchCrawlerLogs()
       if (logs && logs.length > 0) {
         const headers = [
-          'Data e Hora',
-          'Fonte/Loja',
-          'Status',
-          'Itens Encontrados',
-          'Itens Importados',
-          'Categoria',
-          'Detalhes do Erro',
+          t('admin.crawler.csv_datetime', 'Date and Time'),
+          t('admin.crawler.csv_source', 'Source/Store'),
+          t('admin.crawler.csv_status', 'Status'),
+          t('admin.crawler.csv_found', 'Items Found'),
+          t('admin.crawler.csv_imported', 'Items Imported'),
+          t('admin.crawler.csv_category', 'Category'),
+          t('admin.crawler.csv_error', 'Error Details'),
         ]
         const rows = logs.map((log) => [
-          log.created ? new Date(log.created).toLocaleString('pt-BR') : '',
-          log.storeName || log.sourceId || 'Busca Orgânica',
-          log.status || 'concluído',
+          log.created ? new Date(log.created).toLocaleString() : '',
+          log.storeName || log.sourceId || 'Organic Search',
+          log.status || 'completed',
           (log.itemsFound ?? 0).toString(),
           (log.itemsImported ?? 0).toString(),
-          log.category || 'Geral',
+          log.category || 'General',
           log.errorMessage || '',
         ])
         exportToCSV(
           headers,
           rows,
-          `historico_buscas_routevoy_${new Date().toISOString().split('T')[0]}.csv`,
+          `search_history_routevoy_${new Date().toISOString().split('T')[0]}.csv`,
         )
-        toast.success('Histórico exportado com sucesso!')
+        toast.success(
+          t('admin.crawler.export_success', 'History exported successfully!'),
+        )
       } else {
-        toast.error('Nenhum dado encontrado para exportar.')
+        toast.error(
+          t('admin.crawler.no_data_export', 'No data found to export.'),
+        )
       }
     } catch (e) {
-      toast.error('Erro ao exportar dados.')
+      toast.error(t('admin.crawler.export_error', 'Error exporting data.'))
     } finally {
       setIsExporting(false)
     }
@@ -124,24 +143,24 @@ export default function AdminDashboard() {
           </div>
           <div>
             <h2 className="text-lg font-bold text-slate-800 leading-tight">
-              Painel de Controle
+              {t('admin.dashboardTitle', 'Admin Panel')}
             </h2>
             <div className="flex items-center gap-3 text-xs sm:text-sm text-slate-500 mt-1">
               <span className="flex items-center gap-1">
                 <History className="w-3 h-3" />
-                Buscas:{' '}
+                {t('admin.crawler.searches', 'Searches:')}{' '}
                 <strong className="text-slate-900">
                   {stats.totalSearches}
                 </strong>
               </span>
               <span className="w-1 h-1 rounded-full bg-slate-300 hidden sm:block"></span>
               <span className="hidden sm:inline">
-                Encontrados:{' '}
+                {t('admin.crawler.found', 'Found:')}{' '}
                 <strong className="text-emerald-600">{stats.totalFound}</strong>
               </span>
               <span className="w-1 h-1 rounded-full bg-slate-300 hidden sm:block"></span>
               <span className="hidden sm:inline">
-                Importados:{' '}
+                {t('admin.crawler.imported', 'Imported:')}{' '}
                 <strong className="text-blue-600">{stats.totalImported}</strong>
               </span>
             </div>
@@ -157,7 +176,7 @@ export default function AdminDashboard() {
             className="flex-1 sm:flex-none bg-white border-slate-200 hover:bg-slate-50 font-medium"
           >
             <Download className="w-4 h-4 mr-2 text-slate-500" />
-            Exportar CSV
+            {t('admin.exportCsv', 'Export CSV')}
           </Button>
           <Button
             variant="destructive"
@@ -167,7 +186,7 @@ export default function AdminDashboard() {
             className="flex-1 sm:flex-none font-medium shadow-sm"
           >
             <Trash2 className="w-4 h-4 mr-2" />
-            Limpar Histórico
+            {t('admin.crawler.clear_history', 'Clear History')}
           </Button>
         </div>
       </div>
