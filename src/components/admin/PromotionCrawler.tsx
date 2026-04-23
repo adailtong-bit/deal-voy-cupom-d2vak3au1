@@ -321,15 +321,8 @@ function ApprovedOffersManager({ promotions, onStatusChange }: any) {
                 </div>
               )}
               <div className="absolute top-2 right-2">
-                <span
-                  className={cn(
-                    'px-2 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full shadow-sm',
-                    promo.status === 'published'
-                      ? 'bg-green-100 text-green-700'
-                      : 'bg-slate-100 text-slate-700',
-                  )}
-                >
-                  {promo.status === 'published' ? 'Publicada' : 'Aprovada'}
+                <span className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full shadow-sm bg-slate-100 text-slate-700">
+                  Aprovada
                 </span>
               </div>
             </div>
@@ -490,7 +483,7 @@ function PromotionCrawlerContent({ franchiseId }: { franchiseId?: string }) {
       const { data: approvedData } = await supabase
         .from('discovered_promotions')
         .select('*')
-        .in('status', ['approved', 'published'])
+        .eq('status', 'approved')
         .order('captured_at', { ascending: false })
         .limit(500)
 
@@ -665,7 +658,7 @@ function PromotionCrawlerContent({ franchiseId }: { franchiseId?: string }) {
                 className="py-2 px-4 whitespace-nowrap"
               >
                 <Check className="h-4 w-4 mr-2 shrink-0" />
-                Aprovadas & Publicadas ({formatNumber(approvedPromotionsCount)})
+                Aprovadas ({formatNumber(approvedPromotionsCount)})
               </TabsTrigger>
               <TabsTrigger
                 value="mappings"
@@ -716,7 +709,7 @@ function PromotionCrawlerContent({ franchiseId }: { franchiseId?: string }) {
                 baseApprovedPromotions.length === 0 ? (
                 <div className="p-8 text-center bg-slate-50 rounded-lg border border-dashed border-slate-200">
                   <p className="text-slate-500 font-medium">
-                    Nenhuma promoção aprovada ou publicada encontrada.
+                    Nenhuma promoção aprovada encontrada.
                   </p>
                 </div>
               ) : (

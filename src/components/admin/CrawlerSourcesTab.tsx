@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   Card,
   CardContent,
@@ -41,6 +41,7 @@ import {
   saveCrawlerSource,
   updateCrawlerSource,
   deleteCrawlerSource,
+  saveCrawlerLog,
 } from '@/services/crawler'
 
 export function CrawlerSourcesTab() {
@@ -52,6 +53,36 @@ export function CrawlerSourcesTab() {
   const [editingSource, setEditingSource] = useState<any>(null)
 
   const [progress, setProgress] = useState(getCrawlerProgress())
+  const prevScanningRef = useRef(false)
+  const scanSourceRef = useRef<any>(null)
+
+  useEffect(() => {
+    if (
+      prevScanningRef.current &&
+      !progress.isScanning &&
+      (progress.found > 0 || progress.errors > 0 || progress.imported > 0)
+    ) {
+      saveCrawlerLog({
+        date: new Date().toISOString(),
+        store_name: scanSourceRef.current?.name || 'Varredura Manual',
+        source_id: scanSourceRef.current?.id || null,
+        category: scanSourceRef.current?.category || 'Geral',
+        status:
+          progress.errors > 0
+            ? progress.imported > 0
+              ? 'warning'
+              : 'error'
+            : 'success',
+        items_found: progress.found,
+        items_imported: progress.imported,
+        error_message:
+          progress.errors > 0
+            ? `${progress.errors} itens descartados (erros ou duplicados).`
+            : null,
+      })
+    }
+    prevScanningRef.current = progress.isScanning
+  }, [progress.isScanning, progress.found, progress.imported, progress.errors])
 
   const loadSources = async () => {
     try {
@@ -151,6 +182,7 @@ export function CrawlerSourcesTab() {
 
   const handleStart = async (source: any) => {
     if (progress.isScanning) return
+    scanSourceRef.current = source
     startExtractionTask(source.name, 50, source.url, {
       country: source.country,
       state: source.state,
@@ -180,6 +212,11 @@ export function CrawlerSourcesTab() {
       return
     }
 
+    scanSourceRef.current = {
+      name: 'Multi-Fontes (Batch)',
+      id: null,
+      category: 'Geral',
+    }
     startExtractionTask('Multi-Fontes (Batch)', 500, 'all', {
       useConfiguredSources: true,
       category: 'Geral',
