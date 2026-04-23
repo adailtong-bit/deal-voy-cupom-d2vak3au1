@@ -513,7 +513,7 @@ export function CampaignFormDialog({
         trigger_type: data.enableTrigger ? data.triggerType : null,
         trigger_threshold: data.enableTrigger ? data.triggerThreshold : null,
         reward_id: data.enableTrigger ? data.rewardId : null,
-        status: 'active',
+        status: 'published',
         campaign_name: data.title,
       }
 
@@ -597,7 +597,7 @@ export function CampaignFormDialog({
           distance: 0,
           code: `CMP-${Math.floor(Math.random() * 10000)}`,
           coordinates: { lat: -23.55052, lng: -46.633308 },
-          status: 'active',
+          status: 'published',
           source: 'partner',
           enableProximityAlerts: data.enableProximityAlerts,
           alertRadius: data.enableProximityAlerts

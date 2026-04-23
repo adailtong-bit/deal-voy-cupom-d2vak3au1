@@ -33,7 +33,9 @@ import { AdminPerformanceTab } from '@/components/admin/AdminPerformanceTab'
 import { AdminNotificationsTab } from '@/components/admin/AdminNotificationsTab'
 import { AdminSettingsTab } from '@/components/admin/AdminSettingsTab'
 import { FinanceDashboardTab } from '@/components/finance/FinanceDashboardTab'
+import { AdminOffersTab } from '@/components/admin/AdminOffersTab'
 import { useLanguage } from '@/stores/LanguageContext'
+import { Tags } from 'lucide-react'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useAuth } from '@/hooks/use-auth'
 import { useRegionFormatting } from '@/hooks/useRegionFormatting'
@@ -281,6 +283,13 @@ export default function AdminDashboard() {
               <TabsTrigger value="interests">
                 {t('admin.interestsTab', 'Interests')}
               </TabsTrigger>
+              <TabsTrigger
+                value="offers"
+                className="gap-2 bg-primary/5 data-[state=active]:bg-primary/20 text-primary font-semibold border border-primary/20 rounded-md"
+              >
+                <Tags className="h-4 w-4" />
+                {t('admin.offersTab', 'Gestão de Ofertas')}
+              </TabsTrigger>
               <TabsTrigger value="crm">
                 {t('admin.crm_campaigns', 'CRM & Campaigns')}
               </TabsTrigger>
@@ -415,6 +424,9 @@ export default function AdminDashboard() {
             </TabsContent>
             <TabsContent value="interests">
               <AdminInterestsTab />
+            </TabsContent>
+            <TabsContent value="offers">
+              <AdminOffersTab />
             </TabsContent>
             <TabsContent value="crm">
               <AdminCRM />

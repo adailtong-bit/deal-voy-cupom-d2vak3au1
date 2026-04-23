@@ -47,6 +47,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { supabase } from '@/lib/supabase/client'
+import { useAuth } from '@/hooks/use-auth'
 
 function getDistanceFromLatLonInKm(
   lat1: number,
@@ -91,6 +92,12 @@ function IndexContent() {
     !!store.isLoadingLocation || !!store.isLoadingCoupons
   const hasErrorLoading = !!store.hasErrorLoading
   const refreshCoupons = store.refreshCoupons || (() => {})
+
+  const { user: authUser, role: authRole } = useAuth()
+  const isMaster =
+    authRole === 'super_admin' ||
+    authRole === 'admin' ||
+    authUser?.email === 'adailtong@gmail.com'
 
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
@@ -440,9 +447,23 @@ function IndexContent() {
       <AdSpace position="top" className="border-b bg-white" />
 
       <section className="bg-white pt-4 pb-3 px-4 border-b shadow-sm">
-        <div className="container mx-auto max-w-5xl">
+        <div className="container mx-auto max-w-5xl relative">
+          {isMaster && (
+            <div className="absolute -top-2 right-0 z-10 hidden sm:block">
+              <Button
+                variant="default"
+                size="sm"
+                asChild
+                className="shadow-md bg-slate-900 hover:bg-slate-800"
+              >
+                <Link to="/admin">
+                  Acessar Painel Admin <ChevronRight className="w-4 h-4 ml-1" />
+                </Link>
+              </Button>
+            </div>
+          )}
           <div className="flex flex-col gap-2.5 max-w-2xl mx-auto md:mx-0">
-            <div className="flex items-center mb-2">
+            <div className="flex items-center justify-between mb-2">
               <Button
                 variant="outline"
                 size="sm"
@@ -452,6 +473,16 @@ function IndexContent() {
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 {t('common.back', 'Back')}
               </Button>
+              {isMaster && (
+                <Button
+                  variant="default"
+                  size="sm"
+                  asChild
+                  className="sm:hidden shadow-md bg-slate-900 hover:bg-slate-800 h-8 text-xs px-2"
+                >
+                  <Link to="/admin">Painel Admin</Link>
+                </Button>
+              )}
             </div>
 
             <div className="relative">

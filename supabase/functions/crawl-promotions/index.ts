@@ -5,7 +5,8 @@ import { createClient } from 'jsr:@supabase/supabase-js@2'
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, x-supabase-client-platform, apikey, content-type',
+  'Access-Control-Allow-Headers':
+    'authorization, x-client-info, x-supabase-client-platform, apikey, content-type',
 }
 
 const USER_AGENTS = [
@@ -33,9 +34,14 @@ function resolveUrl(url: string, base: string): string {
 
 function extractDomain(url: string): string {
   try {
-    return new URL(url.startsWith('http') ? url : `https://${url}`).hostname.replace(/^www\./, '')
+    return new URL(
+      url.startsWith('http') ? url : `https://${url}`,
+    ).hostname.replace(/^www\./, '')
   } catch (e) {
-    return url.replace(/^https?:\/\//, '').split('/')[0].replace(/^www\./, '')
+    return url
+      .replace(/^https?:\/\//, '')
+      .split('/')[0]
+      .replace(/^www\./, '')
   }
 }
 
@@ -49,21 +55,21 @@ function detectCurrency(text: string, baseUrl: string = ''): string {
 }
 
 function cleanPrice(priceStr: string | null | undefined): number | null {
-  if (!priceStr) return null;
-  const cleanStr = priceStr.replace(/[^\d.,]/g, '');
-  if (!cleanStr) return null;
-  const lastComma = cleanStr.lastIndexOf(',');
-  const lastDot = cleanStr.lastIndexOf('.');
-  let decimalStr = cleanStr;
+  if (!priceStr) return null
+  const cleanStr = priceStr.replace(/[^\d.,]/g, '')
+  if (!cleanStr) return null
+  const lastComma = cleanStr.lastIndexOf(',')
+  const lastDot = cleanStr.lastIndexOf('.')
+  let decimalStr = cleanStr
   if (lastComma > lastDot) {
-    decimalStr = cleanStr.replace(/\./g, '').replace(',', '.');
+    decimalStr = cleanStr.replace(/\./g, '').replace(',', '.')
   } else if (lastDot > lastComma) {
-    decimalStr = cleanStr.replace(/,/g, '');
+    decimalStr = cleanStr.replace(/,/g, '')
   } else if (lastComma > -1) {
-    decimalStr = cleanStr.replace(',', '.');
+    decimalStr = cleanStr.replace(',', '.')
   }
-  const val = parseFloat(decimalStr);
-  return isNaN(val) ? null : val;
+  const val = parseFloat(decimalStr)
+  return isNaN(val) ? null : val
 }
 
 function isValidPromoLink(link: string): boolean {
@@ -71,32 +77,47 @@ function isValidPromoLink(link: string): boolean {
   try {
     const url = new URL(link)
     // Delivery platforms generic links filter
-    if (url.hostname.includes('ubereats.com') || url.hostname.includes('ifood.com.br') || url.hostname.includes('rappi.com')) {
-        // Must contain an item ID or specific promotion path.
-        // Discard generic homepage, store feeds or search pages without specific items.
-        if (!url.pathname.includes('/item/') && !url.pathname.includes('?item_id=')) {
-           return false; // Ignorar domínios de delivery se não for o checkout direto do item
-        }
-        
-        if (url.pathname.includes('/search') || url.pathname.includes('/feed')) {
-           return false;
-        }
+    if (
+      url.hostname.includes('ubereats.com') ||
+      url.hostname.includes('ifood.com.br') ||
+      url.hostname.includes('rappi.com')
+    ) {
+      // Must contain an item ID or specific promotion path.
+      // Discard generic homepage, store feeds or search pages without specific items.
+      if (
+        !url.pathname.includes('/item/') &&
+        !url.pathname.includes('?item_id=')
+      ) {
+        return false // Ignorar domínios de delivery se não for o checkout direto do item
+      }
+
+      if (url.pathname.includes('/search') || url.pathname.includes('/feed')) {
+        return false
+      }
     }
-    
+
     // Discard links that just point to homepages of big chains without specific offer paths
-    if (url.hostname.includes('tacobell.com') || url.hostname.includes('mcdonalds.com') || url.hostname.includes('burgerking.com')) {
-        if (url.pathname === '/' || url.pathname === '') {
-            return false;
-        }
+    if (
+      url.hostname.includes('tacobell.com') ||
+      url.hostname.includes('mcdonalds.com') ||
+      url.hostname.includes('burgerking.com')
+    ) {
+      if (url.pathname === '/' || url.pathname === '') {
+        return false
+      }
     }
-    
+
     return true
   } catch (e) {
     return false
   }
 }
 
-async function fetchWithRetry(url: string, options: any, retries = 2): Promise<Response> {
+async function fetchWithRetry(
+  url: string,
+  options: any,
+  retries = 2,
+): Promise<Response> {
   let lastError: any
   for (let i = 0; i < retries; i++) {
     try {
@@ -104,14 +125,14 @@ async function fetchWithRetry(url: string, options: any, retries = 2): Promise<R
       const timeoutId = setTimeout(() => controller.abort(), 15000)
       const res = await fetch(url, { ...options, signal: controller.signal })
       clearTimeout(timeoutId)
-      if (res.ok || res.status === 404) return res 
+      if (res.ok || res.status === 404) return res
       if (res.status === 429 || res.status >= 500) {
         throw new Error(`HTTP ${res.status}`)
       }
-      return res 
+      return res
     } catch (e) {
       lastError = e
-      await new Promise(resolve => setTimeout(resolve, 2000 * (i + 1))) 
+      await new Promise((resolve) => setTimeout(resolve, 2000 * (i + 1)))
     }
   }
   throw lastError
@@ -142,17 +163,44 @@ class ProfessionalScraper {
     return this.debugLogs
   }
 
-  parseWithRules($: cheerio.CheerioAPI, html: string, baseUrl: string, rules: any): ScrapedItem[] {
+  parseWithRules(
+    $: cheerio.CheerioAPI,
+    html: string,
+    baseUrl: string,
+    rules: any,
+  ): ScrapedItem[] {
     const items: ScrapedItem[] = []
     const domain = extractDomain(baseUrl)
-    const container = rules.containerSelector || rules.container || 'article, .card, [class*="product"]'
-    
+    const container =
+      rules.containerSelector ||
+      rules.container ||
+      'article, .card, [class*="product"]'
+
     $(container).each((_, el) => {
-      const title = $(el).find(rules.titleSelector || rules.title).first().text().trim()
-      const priceText = $(el).find(rules.priceSelector || rules.price).first().text().trim()
-      let link = $(el).find(rules.linkSelector || rules.link || 'a').first().attr('href')
-      const img = $(el).find(rules.imageSelector || rules.image || 'img').first().attr('src') || $(el).find(rules.imageSelector || rules.image || 'img').first().attr('data-src')
-      
+      const title = $(el)
+        .find(rules.titleSelector || rules.title)
+        .first()
+        .text()
+        .trim()
+      const priceText = $(el)
+        .find(rules.priceSelector || rules.price)
+        .first()
+        .text()
+        .trim()
+      let link = $(el)
+        .find(rules.linkSelector || rules.link || 'a')
+        .first()
+        .attr('href')
+      const img =
+        $(el)
+          .find(rules.imageSelector || rules.image || 'img')
+          .first()
+          .attr('src') ||
+        $(el)
+          .find(rules.imageSelector || rules.image || 'img')
+          .first()
+          .attr('data-src')
+
       const currency = detectCurrency(priceText, baseUrl)
       const fullLink = resolveUrl(link || '', baseUrl)
 
@@ -176,33 +224,62 @@ class ProfessionalScraper {
       'div[data-component-type="s-search-result"]',
       '.sg-col-inner',
       '.a-carousel-card',
-      '[class*="DealGridItem"]'
+      '[class*="DealGridItem"]',
     ]
 
     let elements = $(selectors.join(', '))
-    
+
     elements.each((_, el) => {
-      const titleTag = $(el).find('span.a-size-base-plus, h2, [class*="dealTitle"], .a-truncate-cut').first()
+      const titleTag = $(el)
+        .find(
+          'span.a-size-base-plus, h2, [class*="dealTitle"], .a-truncate-cut',
+        )
+        .first()
       const title = titleTag.text().trim()
-      
+
       const priceWhole = $(el).find('span.a-price-whole').first().text().trim()
-      const priceFraction = $(el).find('span.a-price-fraction').first().text().trim()
-      let price = priceWhole ? `${priceWhole}${priceFraction ? ','+priceFraction : ''}` : null
-      
+      const priceFraction = $(el)
+        .find('span.a-price-fraction')
+        .first()
+        .text()
+        .trim()
+      let price = priceWhole
+        ? `${priceWhole}${priceFraction ? ',' + priceFraction : ''}`
+        : null
+
       if (!price) {
-         price = $(el).find('span.a-price, [class*="priceBlock"]').first().text().trim()
+        price = $(el)
+          .find('span.a-price, [class*="priceBlock"]')
+          .first()
+          .text()
+          .trim()
       }
 
-      const oldPrice = $(el).find('span.a-price.a-text-price span[aria-hidden="true"]').first().text().trim() || 
-                       $(el).find('span.a-price.a-text-price').first().text().trim()
+      const oldPrice =
+        $(el)
+          .find('span.a-price.a-text-price span[aria-hidden="true"]')
+          .first()
+          .text()
+          .trim() ||
+        $(el).find('span.a-price.a-text-price').first().text().trim()
 
-      let link = $(el).find('a.a-link-normal').first().attr('href') || $(el).find('a').first().attr('href')
-      let img = $(el).find('img.s-image, img.a-dynamic-image').first().attr('src')
+      let link =
+        $(el).find('a.a-link-normal').first().attr('href') ||
+        $(el).find('a').first().attr('href')
+      let img = $(el)
+        .find('img.s-image, img.a-dynamic-image')
+        .first()
+        .attr('src')
 
       const currency = detectCurrency(price || oldPrice || '', baseUrl)
       const fullLink = resolveUrl(link || '', 'https://www.amazon.com')
 
-      if (title && link && !link.includes('javascript:') && isValidPromoLink(fullLink)) {
+      if (
+        title &&
+        link &&
+        !link.includes('javascript:') &&
+        isValidPromoLink(fullLink)
+      ) {
         items.push({
           title,
           price: cleanPrice(price),
@@ -216,46 +293,82 @@ class ProfessionalScraper {
     })
 
     const unique = new Map<string, ScrapedItem>()
-    items.forEach(item => {
-      const id = item.productLink.split('?')[0] 
+    items.forEach((item) => {
+      const id = item.productLink.split('?')[0]
       if (!unique.has(id)) unique.set(id, item)
     })
-    
+
     return Array.from(unique.values())
   }
 
   parseMercadoLivre($: cheerio.CheerioAPI, baseUrl: string): ScrapedItem[] {
     const items: ScrapedItem[] = []
     const domain = extractDomain(baseUrl)
-    
-    const elements = $('.ui-search-result__wrapper, .ui-search-layout__item, .andes-card, .poly-card')
-    
+
+    const elements = $(
+      '.ui-search-result__wrapper, .ui-search-layout__item, .andes-card, .poly-card',
+    )
+
     elements.each((_, el) => {
-      const title = $(el).find('h2, .ui-search-item__title, .poly-component__title').first().text().trim()
-      
+      const title = $(el)
+        .find('h2, .ui-search-item__title, .poly-component__title')
+        .first()
+        .text()
+        .trim()
+
       let currentPrice: string | null = null
       let oldPrice: string | null = null
 
-      const oldPriceStr = $(el).find('s .andes-money-amount__fraction, .poly-price__original .andes-money-amount__fraction').first().text().trim()
+      const oldPriceStr = $(el)
+        .find(
+          's .andes-money-amount__fraction, .poly-price__original .andes-money-amount__fraction',
+        )
+        .first()
+        .text()
+        .trim()
       if (oldPriceStr) oldPrice = `R$ ${oldPriceStr}`
 
-      const currentPriceStr = $(el).find('.andes-money-amount__fraction').not('s .andes-money-amount__fraction').first().text().trim()
+      const currentPriceStr = $(el)
+        .find('.andes-money-amount__fraction')
+        .not('s .andes-money-amount__fraction')
+        .first()
+        .text()
+        .trim()
       if (currentPriceStr) currentPrice = `R$ ${currentPriceStr}`
 
       if (!currentPrice) {
-         const allPrices = $(el).find('.andes-money-amount__fraction').map((_, p) => $(p).text().trim()).get()
-         if (allPrices.length > 0) {
-           currentPrice = `R$ ${allPrices[allPrices.length - 1]}` 
-         }
+        const allPrices = $(el)
+          .find('.andes-money-amount__fraction')
+          .map((_, p) => $(p).text().trim())
+          .get()
+        if (allPrices.length > 0) {
+          currentPrice = `R$ ${allPrices[allPrices.length - 1]}`
+        }
       }
 
-      let link = $(el).find('a.ui-search-link, a.ui-search-item__group__element, a.poly-component__title').first().attr('href')
-      let img = $(el).find('img.ui-search-result-image__image, img.poly-component__picture').first().attr('data-src') || $(el).find('img').first().attr('src')
+      let link = $(el)
+        .find(
+          'a.ui-search-link, a.ui-search-item__group__element, a.poly-component__title',
+        )
+        .first()
+        .attr('href')
+      let img =
+        $(el)
+          .find(
+            'img.ui-search-result-image__image, img.poly-component__picture',
+          )
+          .first()
+          .attr('data-src') || $(el).find('img').first().attr('src')
 
       const currency = detectCurrency(currentPrice || oldPrice || '', baseUrl)
       const fullLink = resolveUrl((link || '').split('#')[0], baseUrl)
 
-      if (title && link && !link.includes('javascript:') && isValidPromoLink(fullLink)) {
+      if (
+        title &&
+        link &&
+        !link.includes('javascript:') &&
+        isValidPromoLink(fullLink)
+      ) {
         items.push({
           title,
           price: cleanPrice(currentPrice),
@@ -269,7 +382,7 @@ class ProfessionalScraper {
     })
 
     const unique = new Map<string, ScrapedItem>()
-    items.forEach(item => {
+    items.forEach((item) => {
       const id = item.productLink.split('?')[0]
       if (!unique.has(id)) unique.set(id, item)
     })
@@ -280,11 +393,16 @@ class ProfessionalScraper {
   parseGeneric($: cheerio.CheerioAPI, baseUrl: string): ScrapedItem[] {
     const items: ScrapedItem[] = []
     const domain = extractDomain(baseUrl)
-    
+
     const containerSelectors = [
-      '[class*="product-card"]', '[class*="ProductCard"]',
-      '[class*="item-card"]', '[class*="ItemCard"]',
-      'article', '.card', '.item', 'li[class*="product"]'
+      '[class*="product-card"]',
+      '[class*="ProductCard"]',
+      '[class*="item-card"]',
+      '[class*="ItemCard"]',
+      'article',
+      '.card',
+      '.item',
+      'li[class*="product"]',
     ]
 
     let containers = $(containerSelectors.join(', '))
@@ -293,40 +411,53 @@ class ProfessionalScraper {
     }
 
     containers.each((_, el) => {
-      let title = $(el).find('h2, h3, [class*="title"], [class*="name"]').first().text().trim()
+      let title = $(el)
+        .find('h2, h3, [class*="title"], [class*="name"]')
+        .first()
+        .text()
+        .trim()
       if (!title) title = $(el).find('img').first().attr('alt') || ''
       if (!title) title = $(el).find('a').first().text().trim()
 
-      const prices = $(el).find('[class*="price"], [class*="valor"], [class*="preco"], [class*="amount"]')
-      
+      const prices = $(el).find(
+        '[class*="price"], [class*="valor"], [class*="preco"], [class*="amount"]',
+      )
+
       let oldPrice: string | null = null
       let currentPrice: string | null = null
-      
-      const strikethrough = $(el).find('s, strike, del, [class*="old"], [class*="original"]').first().text().trim()
+
+      const strikethrough = $(el)
+        .find('s, strike, del, [class*="old"], [class*="original"]')
+        .first()
+        .text()
+        .trim()
       if (strikethrough) {
-          const match = strikethrough.match(/(?:R\$|€|\$|£)\s*\d+(?:[.,]\d{2})?/)
-          if (match) oldPrice = match[0]
+        const match = strikethrough.match(/(?:R\$|€|\$|£)\s*\d+(?:[.,]\d{2})?/)
+        if (match) oldPrice = match[0]
       }
-      
+
       const allPrices: string[] = []
       prices.each((_, p) => {
-          const pt = $(p).text().trim()
-          const match = pt.match(/(?:R\$|€|\$|£)\s*\d+(?:[.,]\d{2})?/)
-          if (match && !allPrices.includes(match[0])) {
-              allPrices.push(match[0])
-          }
+        const pt = $(p).text().trim()
+        const match = pt.match(/(?:R\$|€|\$|£)\s*\d+(?:[.,]\d{2})?/)
+        if (match && !allPrices.includes(match[0])) {
+          allPrices.push(match[0])
+        }
       })
-      
+
       if (allPrices.length === 1) {
-          currentPrice = allPrices[0]
+        currentPrice = allPrices[0]
       } else if (allPrices.length > 1) {
-          const parsedPrices = allPrices.map(p => ({ str: p, val: parseFloat(p.replace(/[^\d,]/g, '').replace(',', '.')) }))
-          parsedPrices.sort((a, b) => a.val - b.val)
-          
-          currentPrice = parsedPrices[0].str
-          if (!oldPrice) {
-              oldPrice = parsedPrices[parsedPrices.length - 1].str
-          }
+        const parsedPrices = allPrices.map((p) => ({
+          str: p,
+          val: parseFloat(p.replace(/[^\d,]/g, '').replace(',', '.')),
+        }))
+        parsedPrices.sort((a, b) => a.val - b.val)
+
+        currentPrice = parsedPrices[0].str
+        if (!oldPrice) {
+          oldPrice = parsedPrices[parsedPrices.length - 1].str
+        }
       } else {
         const priceText = $(el).text().trim()
         const priceMatch = priceText.match(/(?:R\$|€|\$|£)\s*\d+(?:[.,]\d{2})?/)
@@ -334,12 +465,20 @@ class ProfessionalScraper {
       }
 
       let link = $(el).find('a[href]').first().attr('href')
-      let img = $(el).find('img[src], img[data-src]').first().attr('src') || $(el).find('img').first().attr('data-src')
+      let img =
+        $(el).find('img[src], img[data-src]').first().attr('src') ||
+        $(el).find('img').first().attr('data-src')
 
       const currency = detectCurrency(currentPrice || oldPrice || '', baseUrl)
       const fullLink = resolveUrl(link || '', baseUrl)
 
-      if (title && title.length > 10 && link && !link.startsWith('javascript:') && isValidPromoLink(fullLink)) {
+      if (
+        title &&
+        title.length > 10 &&
+        link &&
+        !link.startsWith('javascript:') &&
+        isValidPromoLink(fullLink)
+      ) {
         items.push({
           title: title.substring(0, 200),
           price: cleanPrice(currentPrice),
@@ -353,7 +492,7 @@ class ProfessionalScraper {
     })
 
     const unique = new Map<string, ScrapedItem>()
-    items.forEach(item => {
+    items.forEach((item) => {
       const id = item.title.toLowerCase().substring(0, 30)
       if (!unique.has(id)) unique.set(id, item)
     })
@@ -375,7 +514,7 @@ Deno.serve(async (req: Request) => {
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { global: { headers: { Authorization: authHeader } } }
+      { global: { headers: { Authorization: authHeader } } },
     )
 
     const payload = await req.json()
@@ -383,16 +522,26 @@ Deno.serve(async (req: Request) => {
     let targetSources: any[] = []
     let siteMappings: Record<string, any> = {}
 
-    const { data: mappingsData } = await supabaseClient.from('site_mappings').select('*')
+    const { data: mappingsData } = await supabaseClient
+      .from('site_mappings')
+      .select('*')
     if (mappingsData && mappingsData.length > 0) {
-      mappingsData.forEach(m => {
+      mappingsData.forEach((m) => {
         siteMappings[m.domain.toLowerCase()] = m.mapping_rules
       })
-      scraper.addLog(`Carregados ${mappingsData.length} mapeamentos estruturados de sites.`)
+      scraper.addLog(
+        `Carregados ${mappingsData.length} mapeamentos estruturados de sites.`,
+      )
     }
 
     if (options?.url && options.url !== 'all') {
-      targetSources = [{ url: options.url, name: extractDomain(options.url), category: options.category }]
+      targetSources = [
+        {
+          url: options.url,
+          name: extractDomain(options.url),
+          category: options.category,
+        },
+      ]
     } else if (options?.useConfiguredSources || options?.url === 'all') {
       scraper.addLog('Buscando fontes ativas configuradas no banco de dados...')
       const { data: sourcesData, error: sourcesError } = await supabaseClient
@@ -401,7 +550,9 @@ Deno.serve(async (req: Request) => {
         .eq('status', 'active')
 
       if (sourcesError) throw sourcesError
-      targetSources = (sourcesData || []).filter(s => s.url && s.url !== 'all')
+      targetSources = (sourcesData || []).filter(
+        (s) => s.url && s.url !== 'all',
+      )
       scraper.addLog(`Encontradas ${targetSources.length} fontes ativas.`)
     }
 
@@ -415,22 +566,27 @@ Deno.serve(async (req: Request) => {
       if (finalItems.length >= limit) break
 
       const source = targetSources[i]
-      const targetUrl = source.url.startsWith('http') ? source.url : `https://${source.url}`
+      const targetUrl = source.url.startsWith('http')
+        ? source.url
+        : `https://${source.url}`
       const domain = extractDomain(targetUrl)
 
       scraper.addLog(`Iniciando extração em: ${domain} (${targetUrl})`)
 
       if (i > 0) {
-        scraper.addLog('Aguardando 2.5s (Delay de Segurança) para evitar bloqueios de IP...')
-        await new Promise(r => setTimeout(r, 2500))
+        scraper.addLog(
+          'Aguardando 2.5s (Delay de Segurança) para evitar bloqueios de IP...',
+        )
+        await new Promise((r) => setTimeout(r, 2500))
       }
 
       const headers: Record<string, string> = {
         'User-Agent': getRandomUserAgent(),
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+        Accept:
+          'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
         'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
         'Accept-Encoding': 'gzip, deflate, br',
-        'Connection': 'keep-alive',
+        Connection: 'keep-alive',
         'Upgrade-Insecure-Requests': '1',
       }
 
@@ -454,29 +610,43 @@ Deno.serve(async (req: Request) => {
         const $ = cheerio.load(html)
         let extracted: ScrapedItem[] = []
 
-        const mapping = siteMappings[domain.toLowerCase()] || Object.values(siteMappings).find((m: any) => domain.includes(m.domain))
-        
+        const mapping =
+          siteMappings[domain.toLowerCase()] ||
+          Object.values(siteMappings).find((m: any) =>
+            domain.includes(m.domain),
+          )
+
         if (domain.includes('amazon')) {
           scraper.addLog(`Aplicando parser ultra-específico para Amazon...`)
           extracted = scraper.parseAmazon($, targetUrl)
-        } else if (domain.includes('mercadolivre') || domain.includes('mercadolibre')) {
-          scraper.addLog(`Aplicando parser ultra-específico para Mercado Livre...`)
+        } else if (
+          domain.includes('mercadolivre') ||
+          domain.includes('mercadolibre')
+        ) {
+          scraper.addLog(
+            `Aplicando parser ultra-específico para Mercado Livre...`,
+          )
           extracted = scraper.parseMercadoLivre($, targetUrl)
         } else if (mapping) {
-          scraper.addLog(`Aplicando mapeamento estrito (De/Para) para ${domain}...`)
+          scraper.addLog(
+            `Aplicando mapeamento estrito (De/Para) para ${domain}...`,
+          )
           extracted = scraper.parseWithRules($, html, targetUrl, mapping)
         } else {
-          scraper.addLog(`Nenhum mapeamento encontrado. Aplicando heurística avançada (Genérica) para ${domain}...`)
+          scraper.addLog(
+            `Nenhum mapeamento encontrado. Aplicando heurística avançada (Genérica) para ${domain}...`,
+          )
           extracted = scraper.parseGeneric($, targetUrl)
         }
 
-        scraper.addLog(`Encontrados ${extracted.length} itens brutos em ${domain}.`)
+        scraper.addLog(
+          `Encontrados ${extracted.length} itens brutos em ${domain}.`,
+        )
 
-        extracted.forEach(item => {
+        extracted.forEach((item) => {
           item.category = source.category || options?.category || 'Geral'
           if (finalItems.length < limit) finalItems.push(item)
         })
-
       } catch (err: any) {
         scraper.addLog(`Erro Crítico na extração de ${domain}: ${err.message}`)
       }
@@ -484,22 +654,41 @@ Deno.serve(async (req: Request) => {
 
     if (finalItems.length === 0) {
       scraper.addLog('Processo concluído, mas nenhum item válido foi extraído.')
-      return new Response(JSON.stringify({ items: [], debug_info: { logs: scraper.getLogs(), target_url: options?.url } }), {
-        headers: { 'Content-Type': 'application/json', ...corsHeaders },
-      })
+      return new Response(
+        JSON.stringify({
+          items: [],
+          debug_info: { logs: scraper.getLogs(), target_url: options?.url },
+        }),
+        {
+          headers: { 'Content-Type': 'application/json', ...corsHeaders },
+        },
+      )
     }
 
-    scraper.addLog(`Extração bem sucedida. Retornando ${finalItems.length} itens normalizados.`)
+    scraper.addLog(
+      `Extração bem sucedida. Retornando ${finalItems.length} itens normalizados.`,
+    )
 
-    return new Response(JSON.stringify({ items: finalItems, debug_info: { logs: scraper.getLogs(), target_url: options?.url } }), {
-      headers: { 'Content-Type': 'application/json', ...corsHeaders },
-    })
-
+    return new Response(
+      JSON.stringify({
+        items: finalItems,
+        debug_info: { logs: scraper.getLogs(), target_url: options?.url },
+      }),
+      {
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
+      },
+    )
   } catch (error: any) {
     scraper.addLog(`Falha Fatal na Execução: ${error.message}`)
-    return new Response(JSON.stringify({ error: error.message, debug_info: { logs: scraper.getLogs() } }), {
-      status: 200, 
-      headers: { 'Content-Type': 'application/json', ...corsHeaders },
-    })
+    return new Response(
+      JSON.stringify({
+        error: error.message,
+        debug_info: { logs: scraper.getLogs() },
+      }),
+      {
+        status: 200,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
+      },
+    )
   }
 })
