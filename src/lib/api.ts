@@ -338,6 +338,21 @@ export const saveCrawlerLog = async (data: any, retries = 3): Promise<any> => {
   }
 }
 
+export const clearCrawlerLogs = async (): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('crawler_logs')
+      .delete()
+      .not('id', 'is', null)
+
+    if (error) throw error
+    return true
+  } catch (e) {
+    console.error('Failed to clear crawler logs', e)
+    return false
+  }
+}
+
 export const fetchCrawlerLogs = async (): Promise<any[]> => {
   try {
     const { data, error } = await supabase
@@ -354,8 +369,8 @@ export const fetchCrawlerLogs = async (): Promise<any[]> => {
     return (data || []).map((log: any) => ({
       ...log,
       // Map to camelCase properties expected by frontend components and ensuring zeroes aren't lost
-      itemsFound: log.items_found || 0,
-      itemsImported: log.items_imported || 0,
+      itemsFound: log.items_found ?? 0,
+      itemsImported: log.items_imported ?? 0,
       storeName: log.store_name,
       sourceId: log.source_id,
       errorMessage: log.error_message,

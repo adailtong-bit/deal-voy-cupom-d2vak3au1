@@ -71,6 +71,11 @@ function RequireAuth({
     role === 'admin' ||
     email === 'adailtong@gmail.com'
 
+  // Refinamento de Acesso: Proteção estrita para a rota de administração
+  if (isAdminPath && !isMaster) {
+    return <Navigate to="/" replace />
+  }
+
   // 🔥 MASTER ACESSO ABSOLUTO: Se for super_admin, admin ou o email master, tem acesso liberado global
   if (isMaster) {
     return <>{children}</>
