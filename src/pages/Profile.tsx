@@ -22,12 +22,11 @@ import {
 } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { useToast } from '@/hooks/use-toast'
 import { COUNTRIES, LOCATION_DATA } from '@/lib/locationData'
 import { User } from '@/lib/types'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
-import { updateUser } from '@/lib/api'
 import { supabase } from '@/lib/supabase/client'
+import { toast } from 'sonner'
 
 function FieldDisplay({ value }: { value: string | undefined }) {
   return (
@@ -40,7 +39,6 @@ function FieldDisplay({ value }: { value: string | undefined }) {
 export default function Profile() {
   const { user, updateUserProfile, platformSettings } = useCouponStore()
   const { t } = useLanguage()
-  const { toast } = useToast()
 
   const [isEditing] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
@@ -113,12 +111,11 @@ export default function Profile() {
         })
         .eq('id', affiliateData.id)
       if (error) throw error
-      toast({
-        title: 'Sucesso',
+      toast.success('Sucesso', {
         description: 'Chaves de API salvas com sucesso!',
       })
     } catch (e: any) {
-      toast({ title: 'Erro', description: e.message, variant: 'destructive' })
+      toast.error('Erro', { description: e.message })
     } finally {
       setIsSaving(false)
     }
@@ -203,10 +200,25 @@ export default function Profile() {
   }
 
   const handleSave = async () => {
-    // Bypassed front-end validations based on AC
     setIsSaving(true)
     try {
-      const updateData: any = {
+      const {
+        data: { user: authUser },
+        error: authUserError,
+      } = await supabase.auth.getUser()
+
+      if (authUserError || !authUser) {
+        throw new Error('Usuário não autenticado ou sessão expirada.')
+      }
+
+      if (
+        formData.newPassword &&
+        formData.newPassword !== formData.confirmPassword
+      ) {
+        throw new Error('A nova senha e a confirmação não coincidem.')
+      }
+
+      const metaDataUpdates = {
         name: formData.name,
         phone: formData.phone,
         birthday: formData.birthday,
@@ -225,36 +237,44 @@ export default function Profile() {
         },
       }
 
-      // Only include email if it has changed to avoid validation issues with the backend
-      if (formData.email !== user?.email) {
-        updateData.email = formData.email
+      const authUpdates: any = { data: metaDataUpdates }
+
+      if (formData.email !== authUser.email && formData.email) {
+        authUpdates.email = formData.email
       }
 
       if (formData.newPassword) {
-        updateData.oldPassword = formData.currentPassword
-        updateData.password = formData.newPassword
-        updateData.passwordConfirm = formData.confirmPassword
+        authUpdates.password = formData.newPassword
       }
 
-      if (user?.id) {
-        await updateUser(user.id, updateData)
-      } else {
-        console.warn('Bypassed API update because user is not authenticated.')
+      const { error: updateError } = await supabase.auth.updateUser(authUpdates)
+      if (updateError) throw updateError
+
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          name: formData.name,
+          ...(formData.email !== authUser.email && formData.email
+            ? { email: formData.email }
+            : {}),
+        })
+        .eq('id', authUser.id)
+
+      if (profileError) {
+        console.warn('Falha ao atualizar a tabela de profiles:', profileError)
       }
 
       updateUserProfile({
-        ...updateData,
-        ...(formData.newPassword ? { password: formData.newPassword } : {}),
+        ...metaDataUpdates,
+        email: formData.email || authUser.email,
       } as any)
 
-      toast({
-        title: t('profile.successTitle', 'Sucesso!'),
+      toast.success(t('profile.successTitle', 'Sucesso!'), {
         description: t('profile.successDesc', 'Alterações salvas com sucesso!'),
       })
 
       if (formData.newPassword) {
-        toast({
-          title: t('profile.passwordUpdated', 'Senha Atualizada'),
+        toast.success(t('profile.passwordUpdated', 'Senha Atualizada'), {
           description: t(
             'profile.passwordUpdatedDesc',
             'Sua senha foi alterada com sucesso.',
@@ -269,15 +289,13 @@ export default function Profile() {
         confirmPassword: '',
       }))
     } catch (error: any) {
-      toast({
-        title: t('common.error', 'Erro'),
+      toast.error(t('common.error', 'Erro'), {
         description:
           error.message ||
           t(
             'profile.errorDesc',
             'Ocorreu um erro ao salvar as alterações. Por favor, tente novamente.',
           ),
-        variant: 'destructive',
       })
     } finally {
       setIsSaving(false)
