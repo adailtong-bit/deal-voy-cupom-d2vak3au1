@@ -4,7 +4,8 @@ import { createClient } from 'jsr:@supabase/supabase-js@2'
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, x-supabase-client-platform, apikey, content-type',
+  'Access-Control-Allow-Headers':
+    'authorization, x-client-info, x-supabase-client-platform, apikey, content-type',
 }
 
 Deno.serve(async (req: Request) => {
@@ -15,7 +16,7 @@ Deno.serve(async (req: Request) => {
   try {
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
     )
 
     // Fetch approved promotions that have links
@@ -32,15 +33,16 @@ Deno.serve(async (req: Request) => {
     for (const promo of promotions || []) {
       const link = promo.product_link || promo.source_url
       if (!link || !link.startsWith('http')) {
-         continue
+        continue
       }
 
       try {
         const response = await fetch(link, {
           method: 'GET',
           headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9',
+            'User-Agent':
+              'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+            Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9',
             'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
           },
         })
@@ -51,24 +53,50 @@ Deno.serve(async (req: Request) => {
             .from('discovered_promotions')
             .update({ status: 'expired' })
             .eq('id', promo.id)
-            
+
           expiredCount++
-          results.push({ id: promo.id, link, status: 'expired', reason: `HTTP ${response.status}` })
+          results.push({
+            id: promo.id,
+            link,
+            status: 'expired',
+            reason: `HTTP ${response.status}`,
+          })
         } else {
-          results.push({ id: promo.id, link, status: 'active', reason: `HTTP ${response.status}` })
+          results.push({
+            id: promo.id,
+            link,
+            status: 'active',
+            reason: `HTTP ${response.status}`,
+          })
         }
       } catch (err: any) {
-        results.push({ id: promo.id, link, status: 'error', reason: err.message })
+        results.push({
+          id: promo.id,
+          link,
+          status: 'error',
+          reason: err.message,
+        })
       }
-      
+
       // Delay to avoid being aggressive against single domains
-      await new Promise(resolve => setTimeout(resolve, 800))
+      await new Promise((resolve) => setTimeout(resolve, 800))
     }
 
-    return new Response(JSON.stringify({ success: true, expiredCount, results }), {
-      headers: { 'Content-Type': 'application/json', ...corsHeaders },
-    })
+    if (expiredCount > 0) {
+      await supabaseClient.from('audit_logs').insert({
+        action: 'SYSTEM_CRON',
+        entity_type: 'promotion',
+        details: `Varredura noturna concluída: ${expiredCount} ofertas marcadas como expiradas.`,
+        user_email: 'system@routevoy.com',
+      })
+    }
 
+    return new Response(
+      JSON.stringify({ success: true, expiredCount, results }),
+      {
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
+      },
+    )
   } catch (error: any) {
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,

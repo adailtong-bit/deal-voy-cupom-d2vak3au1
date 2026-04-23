@@ -89,6 +89,20 @@ export const saveCrawlerLog = async (log: any) => {
   return data
 }
 
+export const fetchCrawlerLogs = async () => {
+  const { data, error } = await supabase
+    .from('crawler_logs')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(100)
+
+  if (error) {
+    console.error('Error fetching crawler logs', error)
+    throw error
+  }
+  return data || []
+}
+
 export const fetchCrawlerPromotions = async (filters?: any) => {
   let query = supabase
     .from('discovered_promotions')

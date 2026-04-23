@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { fetchCrawlerLogs } from '@/lib/api'
+import { fetchCrawlerLogs } from '@/services/crawler'
 import { Badge } from '@/components/ui/badge'
 import { format } from 'date-fns'
 

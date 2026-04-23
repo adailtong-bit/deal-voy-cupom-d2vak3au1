@@ -27,6 +27,8 @@ import { supabase } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
+import { logAudit } from '@/services/audit'
+import { useAuth } from '@/hooks/use-auth'
 
 export function CrawlerPromotionsTab({
   pendingPromotions,
@@ -105,6 +107,8 @@ export function CrawlerPromotionsTab({
     [basePendingPromotions],
   )
 
+  const { user: authUser } = useAuth()
+
   const handleDeleteFiltered = async () => {
     if (
       !confirm(
@@ -127,6 +131,13 @@ export function CrawlerPromotionsTab({
         if (error) throw error
       }
 
+      await logAudit(
+        'BATCH_DELETE',
+        'promotion',
+        'multiple',
+        `${idsToDelete.length} promoções excluídas em lote pelos filtros`,
+        authUser?.email,
+      )
       toast.success(`${idsToDelete.length} promoções excluídas com sucesso!`)
       onStatusChange()
     } catch (err: any) {
@@ -158,6 +169,13 @@ export function CrawlerPromotionsTab({
         if (error) throw error
       }
 
+      await logAudit(
+        'BATCH_EXPIRE',
+        'promotion',
+        'multiple',
+        `${idsToUpdate.length} promoções marcadas como expiradas em lote`,
+        authUser?.email,
+      )
       toast.success(`${idsToUpdate.length} promoções expiradas com sucesso!`)
       onStatusChange()
     } catch (err: any) {
@@ -364,6 +382,7 @@ function EditablePromotionCard({ promo, onSaved, type = 'pending' }: any) {
   const [link, setLink] = useState(promo.product_link || promo.source_url || '')
   const [isSaving, setIsSaving] = useState(false)
   const [showCampaignDialog, setShowCampaignDialog] = useState(false)
+  const { user: authUser } = useAuth()
 
   const handleSave = async () => {
     setIsSaving(true)
@@ -438,6 +457,13 @@ function EditablePromotionCard({ promo, onSaved, type = 'pending' }: any) {
         .delete()
         .eq('id', promo.id)
       if (error) throw error
+      await logAudit(
+        'DELETE',
+        'promotion',
+        promo.id,
+        `Oferta "${promo.title}" excluída manualmente`,
+        authUser?.email,
+      )
       toast.success('Promoção excluída!')
       onSaved()
     } catch (err: any) {
@@ -452,6 +478,13 @@ function EditablePromotionCard({ promo, onSaved, type = 'pending' }: any) {
         .update({ status: 'expired' })
         .eq('id', promo.id)
       if (error) throw error
+      await logAudit(
+        'EXPIRE',
+        'promotion',
+        promo.id,
+        `Oferta "${promo.title}" expirada manualmente`,
+        authUser?.email,
+      )
       toast.success('Promoção marcada como expirada!')
       onSaved()
     } catch (err: any) {

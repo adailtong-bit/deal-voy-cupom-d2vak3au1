@@ -69,9 +69,18 @@ export default function AdminDashboard() {
     ? storeUser?.franchiseId || myFranchise?.id
     : undefined
 
-  const [activeTab, setActiveTab] = useState(
-    isSuperAdmin ? (isCrawling ? 'crawler' : 'overview') : 'finance',
-  )
+  const [activeTab, setActiveTab] = useState(() => {
+    const savedTab = sessionStorage.getItem('admin_active_tab')
+    if (savedTab) return savedTab
+    return isSuperAdmin ? (isCrawling ? 'crawler' : 'overview') : 'finance'
+  })
+
+  // Persist tab state to avoid reset when crawler actions trigger App.tsx re-renders
+  useEffect(() => {
+    if (activeTab) {
+      sessionStorage.setItem('admin_active_tab', activeTab)
+    }
+  }, [activeTab])
 
   const pendingMerchants = companies.filter((c) => c.status === 'pending')
   const incompleteCompanies = companies.filter(

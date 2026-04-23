@@ -1,6 +1,6 @@
-import { useState } from 'react'
-import { useCouponStore } from '@/stores/CouponContext'
+import { useState, useEffect } from 'react'
 import { useLanguage } from '@/stores/LanguageContext'
+import { fetchAuditLogs } from '@/services/audit'
 import {
   Table,
   TableBody,
@@ -11,18 +11,34 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { Search } from 'lucide-react'
+import { Search, Loader2 } from 'lucide-react'
 
 export function AuditLogsTab() {
-  const { systemLogs } = useCouponStore()
   const { locale, t } = useLanguage()
   const [search, setSearch] = useState('')
+  const [logs, setLogs] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const filtered = systemLogs.filter(
+  useEffect(() => {
+    const loadLogs = async () => {
+      try {
+        setLoading(true)
+        const data = await fetchAuditLogs()
+        setLogs(data)
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadLogs()
+  }, [])
+
+  const filtered = logs.filter(
     (log) =>
-      log.action.toLowerCase().includes(search.toLowerCase()) ||
-      log.details.toLowerCase().includes(search.toLowerCase()) ||
-      log.user.toLowerCase().includes(search.toLowerCase()),
+      (log.action || '').toLowerCase().includes(search.toLowerCase()) ||
+      (log.details || '').toLowerCase().includes(search.toLowerCase()) ||
+      (log.user || '').toLowerCase().includes(search.toLowerCase()),
   )
 
   return (
@@ -66,35 +82,17 @@ export function AuditLogsTab() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.slice(0, 50).map((log) => (
-              <TableRow key={log.id}>
-                <TableCell className="text-xs whitespace-nowrap">
-                  {new Date(log.date).toLocaleString(locale)}
-                </TableCell>
-                <TableCell className="font-mono text-xs">{log.user}</TableCell>
-                <TableCell className="font-medium">{log.action}</TableCell>
+            {loading ? (
+              <TableRow>
                 <TableCell
-                  className="text-sm text-muted-foreground max-w-[300px] truncate"
-                  title={log.details}
+                  colSpan={5}
+                  className="text-center py-8 text-muted-foreground"
                 >
-                  {log.details}
-                </TableCell>
-                <TableCell>
-                  <Badge
-                    variant={
-                      log.status === 'success'
-                        ? 'default'
-                        : log.status === 'warning'
-                          ? 'secondary'
-                          : 'destructive'
-                    }
-                  >
-                    {log.status}
-                  </Badge>
+                  <Loader2 className="h-5 w-5 animate-spin mx-auto mb-2 text-primary" />
+                  Carregando logs...
                 </TableCell>
               </TableRow>
-            ))}
-            {filtered.length === 0 && (
+            ) : filtered.length === 0 ? (
               <TableRow>
                 <TableCell
                   colSpan={5}
@@ -103,6 +101,37 @@ export function AuditLogsTab() {
                   {t('common.none', 'No logs found.')}
                 </TableCell>
               </TableRow>
+            ) : (
+              filtered.slice(0, 50).map((log) => (
+                <TableRow key={log.id}>
+                  <TableCell className="text-xs whitespace-nowrap">
+                    {new Date(log.date).toLocaleString(locale)}
+                  </TableCell>
+                  <TableCell className="font-mono text-xs">
+                    {log.user}
+                  </TableCell>
+                  <TableCell className="font-medium">{log.action}</TableCell>
+                  <TableCell
+                    className="text-sm text-muted-foreground max-w-[300px] truncate"
+                    title={log.details}
+                  >
+                    {log.details}
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant={
+                        log.status === 'success'
+                          ? 'default'
+                          : log.status === 'warning'
+                            ? 'secondary'
+                            : 'destructive'
+                      }
+                    >
+                      {log.status || 'success'}
+                    </Badge>
+                  </TableCell>
+                </TableRow>
+              ))
             )}
           </TableBody>
         </Table>

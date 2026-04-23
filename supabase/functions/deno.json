@@ -1,8 +1,8 @@
 {
   "_versions": {
-    "crawl-promotions": 29,
+    "crawl-promotions": 30,
     "search-affiliate-deals": 15,
     "send-invitation": 4,
-    "check-expired-promotions": 1
+    "check-expired-promotions": 2
   }
 }

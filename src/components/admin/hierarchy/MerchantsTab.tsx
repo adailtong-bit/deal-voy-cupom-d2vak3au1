@@ -32,8 +32,11 @@ import { AdvancedCompanyForm } from './AdvancedCompanyForm'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase/client'
+import { logAudit } from '@/services/audit'
+import { useAuth } from '@/hooks/use-auth'
 
 export function MerchantsTab({ franchiseId }: { franchiseId?: string }) {
+  const { user: authUser } = useAuth()
   const { companies, franchises, addCompany, updateCompany, deleteCompany } =
     useCouponStore()
   const { t } = useLanguage()
@@ -44,6 +47,7 @@ export function MerchantsTab({ franchiseId }: { franchiseId?: string }) {
 
   const [searchQuery, setSearchQuery] = useState(urlSearch)
   const [statusFilter, setStatusFilter] = useState('all')
+  const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set())
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingMerchant, setEditingMerchant] = useState<Company | null>(null)
@@ -53,6 +57,8 @@ export function MerchantsTab({ franchiseId }: { franchiseId?: string }) {
       ? companies.filter((c) => c.franchiseId === franchiseId)
       : companies
   ).filter((c) => {
+    if (deletedIds.has(c.id)) return false
+
     const matchesSearch =
       !searchQuery ||
       c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -142,6 +148,41 @@ export function MerchantsTab({ franchiseId }: { franchiseId?: string }) {
         </body></html>
       `)
       w.document.close()
+    }
+  }
+
+  const handleDeleteCompany = async (company: Company) => {
+    if (!confirm(`Tem certeza que deseja excluir o lojista ${company.name}?`))
+      return
+
+    try {
+      // Optimistic UI update to prevent screen from looking stuck
+      setDeletedIds((prev) => new Set(prev).add(company.id))
+
+      const { error } = await supabase
+        .from('merchants')
+        .delete()
+        .eq('id', company.id)
+      if (error) throw error
+
+      deleteCompany(company.id)
+      await logAudit(
+        'DELETE',
+        'merchant',
+        company.id,
+        `Lojista ${company.name} excluído do sistema`,
+        authUser?.email,
+      )
+      toast.success(t('common.success', 'Lojista excluído com sucesso!'))
+    } catch (error) {
+      console.error('Delete error', error)
+      toast.error(t('common.error', 'Erro ao excluir lojista'))
+      // Revert optimistic update
+      setDeletedIds((prev) => {
+        const next = new Set(prev)
+        next.delete(company.id)
+        return next
+      })
     }
   }
 
@@ -361,7 +402,7 @@ export function MerchantsTab({ franchiseId }: { franchiseId?: string }) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => deleteCompany(c.id)}
+                      onClick={() => handleDeleteCompany(c)}
                       className="text-red-400 hover:text-red-600 hover:bg-red-50"
                     >
                       <Trash2 className="h-4 w-4" />
