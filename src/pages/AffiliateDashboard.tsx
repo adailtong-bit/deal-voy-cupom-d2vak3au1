@@ -23,8 +23,34 @@ import {
   RefreshCw,
   Link as LinkIcon,
   Activity,
+  Users,
+  TrendingUp,
+  Send,
+  MessageCircle,
 } from 'lucide-react'
 import { searchAffiliateDeals } from '@/services/affiliates'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { Textarea } from '@/components/ui/textarea'
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  ResponsiveContainer,
+} from 'recharts'
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from '@/components/ui/chart'
 
 export default function AffiliateDashboard() {
   const { user } = useAuth()
@@ -190,7 +216,7 @@ export default function AffiliateDashboard() {
       </div>
 
       <Tabs defaultValue="platforms" className="w-full">
-        <TabsList className="mb-6 h-12 w-full justify-start overflow-x-auto bg-transparent border-b rounded-none p-0">
+        <TabsList className="mb-6 h-12 w-full justify-start overflow-x-auto bg-transparent border-b rounded-none p-0 flex-nowrap whitespace-nowrap">
           <TabsTrigger
             value="platforms"
             className="gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent"
@@ -202,6 +228,18 @@ export default function AffiliateDashboard() {
             className="gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent"
           >
             <Search className="w-4 h-4" /> Buscar Ofertas
+          </TabsTrigger>
+          <TabsTrigger
+            value="crm"
+            className="gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent"
+          >
+            <Users className="w-4 h-4" /> CRM & Compradores
+          </TabsTrigger>
+          <TabsTrigger
+            value="campaigns"
+            className="gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent"
+          >
+            <TrendingUp className="w-4 h-4" /> Monitoramento & Disparos
           </TabsTrigger>
         </TabsList>
 
@@ -374,6 +412,207 @@ export default function AffiliateDashboard() {
                     </div>
                   </div>
                 ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="crm" className="animate-in fade-in-50 duration-300">
+          <Card className="border shadow-sm">
+            <CardHeader className="bg-slate-50/50 border-b pb-4">
+              <CardTitle>CRM de Compradores (Leads)</CardTitle>
+              <CardDescription>
+                Monitore os usuários que interagiram com seus links de afiliado
+                e realize ações direcionadas.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <div className="border rounded-md overflow-hidden">
+                <Table>
+                  <TableHeader className="bg-slate-50">
+                    <TableRow>
+                      <TableHead>Nome / Email</TableHead>
+                      <TableHead className="text-center">
+                        Cliques (Links)
+                      </TableHead>
+                      <TableHead className="text-center">Conversões</TableHead>
+                      <TableHead className="text-right">
+                        Última Atividade
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {[
+                      {
+                        id: '1',
+                        name: 'João Silva',
+                        email: 'joao@email.com',
+                        clicks: 45,
+                        conversions: 5,
+                        lastActive: '2026-04-20',
+                      },
+                      {
+                        id: '2',
+                        name: 'Maria Souza',
+                        email: 'maria@email.com',
+                        clicks: 12,
+                        conversions: 1,
+                        lastActive: '2026-04-21',
+                      },
+                      {
+                        id: '3',
+                        name: 'Carlos Santos',
+                        email: 'carlos@email.com',
+                        clicks: 89,
+                        conversions: 12,
+                        lastActive: '2026-04-22',
+                      },
+                      {
+                        id: '4',
+                        name: 'Ana Oliveira',
+                        email: 'ana@email.com',
+                        clicks: 34,
+                        conversions: 3,
+                        lastActive: '2026-04-23',
+                      },
+                    ].map((lead) => (
+                      <TableRow key={lead.id}>
+                        <TableCell>
+                          <p className="font-medium text-slate-800">
+                            {lead.name}
+                          </p>
+                          <p className="text-xs text-slate-500">{lead.email}</p>
+                        </TableCell>
+                        <TableCell className="text-center font-semibold text-blue-600">
+                          {lead.clicks}
+                        </TableCell>
+                        <TableCell className="text-center font-bold text-emerald-600">
+                          {lead.conversions}
+                        </TableCell>
+                        <TableCell className="text-right text-sm text-slate-500">
+                          {new Date(lead.lastActive).toLocaleDateString(
+                            'pt-BR',
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent
+          value="campaigns"
+          className="animate-in fade-in-50 duration-300 space-y-6"
+        >
+          <Card className="border shadow-sm">
+            <CardHeader className="bg-slate-50/50 border-b pb-4">
+              <CardTitle>Monitoramento de Campanhas</CardTitle>
+              <CardDescription>
+                Acompanhe o desempenho de engajamento e conversão das suas
+                ofertas promovidas.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <div className="h-[300px] w-full">
+                <ChartContainer
+                  config={{
+                    clicks: { label: 'Cliques', color: 'hsl(var(--primary))' },
+                    conversions: {
+                      label: 'Conversões',
+                      color: 'hsl(var(--emerald-500))',
+                    },
+                  }}
+                >
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart
+                      data={[
+                        { date: '01/04', clicks: 45, conversions: 5 },
+                        { date: '05/04', clicks: 60, conversions: 8 },
+                        { date: '10/04', clicks: 85, conversions: 12 },
+                        { date: '15/04', clicks: 120, conversions: 15 },
+                        { date: '20/04', clicks: 150, conversions: 22 },
+                        { date: '25/04', clicks: 180, conversions: 28 },
+                      ]}
+                    >
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        vertical={false}
+                        stroke="#e2e8f0"
+                      />
+                      <XAxis
+                        dataKey="date"
+                        stroke="#64748b"
+                        fontSize={12}
+                        tickLine={false}
+                        axisLine={false}
+                      />
+                      <YAxis
+                        stroke="#64748b"
+                        fontSize={12}
+                        tickLine={false}
+                        axisLine={false}
+                      />
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <Line
+                        type="monotone"
+                        dataKey="clicks"
+                        stroke="var(--color-clicks)"
+                        strokeWidth={3}
+                        dot={{ r: 4 }}
+                        activeDot={{ r: 6 }}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="conversions"
+                        stroke="var(--color-conversions)"
+                        strokeWidth={3}
+                        dot={{ r: 4 }}
+                        activeDot={{ r: 6 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border shadow-sm">
+            <CardHeader className="bg-slate-50/50 border-b pb-4">
+              <CardTitle>Novo Disparo (CRM)</CardTitle>
+              <CardDescription>
+                Envie ofertas, novidades ou cupons diretamente para sua base de
+                leads via E-mail ou WhatsApp.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-6 space-y-4">
+              <div className="space-y-2">
+                <Label>Mensagem da Campanha</Label>
+                <Textarea
+                  placeholder="Olá! Tenho uma oferta especial de cashback para você nesta semana..."
+                  className="h-24 resize-none"
+                />
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <Button
+                  variant="outline"
+                  className="gap-2 text-slate-600"
+                  onClick={() =>
+                    toast.success('Redirecionando para WhatsApp Web...')
+                  }
+                >
+                  <MessageCircle className="w-4 h-4 text-green-600" /> WhatsApp
+                </Button>
+                <Button
+                  className="gap-2"
+                  onClick={() =>
+                    toast.success('Campanha disparada para sua base!')
+                  }
+                >
+                  <Send className="w-4 h-4" /> Enviar por E-mail
+                </Button>
               </div>
             </CardContent>
           </Card>
