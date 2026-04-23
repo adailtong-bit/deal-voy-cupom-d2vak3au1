@@ -218,6 +218,12 @@ export default function Profile() {
         throw new Error('A nova senha e a confirmação não coincidem.')
       }
 
+      if (formData.newPassword && !formData.currentPassword) {
+        throw new Error(
+          'Por favor, informe sua senha atual para alterar a senha.',
+        )
+      }
+
       const metaDataUpdates = {
         name: formData.name,
         phone: formData.phone,
@@ -244,11 +250,24 @@ export default function Profile() {
       }
 
       if (formData.newPassword) {
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: authUser.email!,
+          password: formData.currentPassword,
+        })
+        if (signInError) {
+          throw new Error(
+            'A senha atual está incorreta. Verifique e tente novamente.',
+          )
+        }
         authUpdates.password = formData.newPassword
       }
 
-      const { error: updateError } = await supabase.auth.updateUser(authUpdates)
+      const { data: updatedUserData, error: updateError } =
+        await supabase.auth.updateUser(authUpdates)
       if (updateError) throw updateError
+
+      const emailChanged = formData.email !== authUser.email && !!formData.email
+      const isEmailPending = emailChanged && updatedUserData?.user?.new_email
 
       const { error: profileError } = await supabase
         .from('profiles')
@@ -266,18 +285,27 @@ export default function Profile() {
 
       updateUserProfile({
         ...metaDataUpdates,
-        email: formData.email || authUser.email,
+        email:
+          emailChanged && !isEmailPending ? formData.email : authUser.email,
       } as any)
 
       toast.success(t('profile.successTitle', 'Sucesso!'), {
         description: t('profile.successDesc', 'Alterações salvas com sucesso!'),
       })
 
+      if (isEmailPending) {
+        toast.info('Confirmação Necessária', {
+          description:
+            'Um link de confirmação foi enviado para o seu novo e-mail. Verifique sua caixa de entrada antes que a alteração seja concluída.',
+          duration: 6000,
+        })
+      }
+
       if (formData.newPassword) {
         toast.success(t('profile.passwordUpdated', 'Senha Atualizada'), {
           description: t(
             'profile.passwordUpdatedDesc',
-            'Sua senha foi alterada com sucesso.',
+            'Sua senha foi alterada com sucesso. Você já pode usá-la no próximo login.',
           ),
         })
       }
