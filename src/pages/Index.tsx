@@ -224,7 +224,7 @@ function IndexContent() {
     const success = reserveCoupon(id)
     if (success) {
       toast.success(
-        t('voucher_detail.reserved_success', 'Voucher reservado com sucesso!'),
+        t('voucher_detail.reserved_success', 'Voucher successfully reserved!'),
       )
     }
   }
@@ -518,7 +518,8 @@ function IndexContent() {
                   className="shadow-md bg-white border-primary text-primary hover:bg-primary/5"
                 >
                   <Link to="/merchant">
-                    Painel do Lojista <ChevronRight className="w-4 h-4 ml-1" />
+                    {t('nav.vendor', 'Vendor Dashboard')}{' '}
+                    <ChevronRight className="w-4 h-4 ml-1" />
                   </Link>
                 </Button>
               )}
@@ -530,7 +531,8 @@ function IndexContent() {
                   className="shadow-md bg-slate-900 hover:bg-slate-800"
                 >
                   <Link to="/admin">
-                    Painel Admin <ChevronRight className="w-4 h-4 ml-1" />
+                    {t('nav.admin', 'Admin Dashboard')}{' '}
+                    <ChevronRight className="w-4 h-4 ml-1" />
                   </Link>
                 </Button>
               )}
@@ -555,7 +557,9 @@ function IndexContent() {
                     asChild
                     className="shadow-md bg-white text-primary border-primary/20 h-8 text-xs px-2"
                   >
-                    <Link to="/merchant">Painel Lojista</Link>
+                    <Link to="/merchant">
+                      {t('nav.vendor', 'Vendor Dashboard')}
+                    </Link>
                   </Button>
                 )}
                 {isMaster && (
@@ -565,7 +569,7 @@ function IndexContent() {
                     asChild
                     className="shadow-md bg-slate-900 hover:bg-slate-800 h-8 text-xs px-2"
                   >
-                    <Link to="/admin">Painel Admin</Link>
+                    <Link to="/admin">{t('nav.admin', 'Admin Dashboard')}</Link>
                   </Button>
                 )}
               </div>
@@ -897,8 +901,8 @@ function IndexContent() {
                   <h2 className="text-2xl font-bold flex items-center gap-2 mb-5 text-slate-800">
                     <MapPin className="h-6 w-6 text-primary" />
                     {searchQuery || selectedCategory !== 'all'
-                      ? t('home.search_results', 'Resultados da Busca')
-                      : t('home.nearby_offers', 'Ofertas Perto de Você')}
+                      ? t('home.search_results', 'Search Results')
+                      : t('home.nearby_offers', 'Offers Near You')}
                   </h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                     {finalTrending.map((coupon) =>
@@ -939,7 +943,7 @@ function IndexContent() {
                         onClick={() => setPage((p) => p + 1)}
                       >
                         <RefreshCw className="w-4 h-4 mr-2" />
-                        {t('common.load_more', 'Carregar mais')}
+                        {t('common.load_more', 'Load more')}
                       </Button>
                     </div>
                   )}

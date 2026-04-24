@@ -98,12 +98,12 @@ export default function Login() {
       }
 
       if (error) {
-        toast.error(t('auth.login_error', 'Email ou senha inválidos.'))
+        toast.error(t('auth.login_error', 'Invalid email or password.'))
         setIsLoading(false)
         return
       }
 
-      toast.success(t('auth.login_success', 'Bem-vindo de volta!'))
+      toast.success(t('auth.login_success', 'Welcome back!'))
       if (data?.user) {
         try {
           const { data: profile } = await supabase
@@ -127,13 +127,18 @@ export default function Login() {
     e.preventDefault()
 
     if (password !== confirmPassword) {
-      toast.error(t('auth.passwords_mismatch', 'As senhas não coincidem.'))
+      toast.error(t('auth.passwords_mismatch', 'Passwords do not match.'))
       return
     }
 
     if (email && password && name) {
       if (role === 'affiliate' && !taxId) {
-        toast.error('CPF/CNPJ é obrigatório para cadastro de Afiliado.')
+        toast.error(
+          t(
+            'auth.tax_id_required',
+            'Tax ID is required for Affiliate registration.',
+          ),
+        )
         return
       }
 
@@ -149,7 +154,9 @@ export default function Login() {
       })
 
       if (error) {
-        toast.error(error.message || 'Erro ao criar conta')
+        toast.error(
+          error.message || t('auth.register_error', 'Error creating account'),
+        )
         setIsLoading(false)
         return
       }
@@ -164,7 +171,7 @@ export default function Login() {
       toast.success(
         t(
           'auth.register_success',
-          'Conta criada com sucesso! Verifique seu e-mail.',
+          'Account successfully created! Please check your email.',
         ),
       )
       if (data?.user) {
@@ -177,7 +184,7 @@ export default function Login() {
     setIsLoading(true)
     await signOut()
     setIsLoading(false)
-    toast.success('Desconectado com sucesso.')
+    toast.success(t('auth.logout_success', 'Successfully logged out.'))
   }
 
   const [currentRole, setCurrentRole] = useState<string | null>(null)
@@ -224,10 +231,10 @@ export default function Login() {
               <User className="w-8 h-8 text-green-600" />
             </div>
             <CardTitle className="text-2xl font-bold">
-              Você já está logado
+              {t('auth.already_logged_in', 'You are already logged in')}
             </CardTitle>
             <CardDescription className="text-base mt-2">
-              Conectado como{' '}
+              {t('auth.logged_in_as', 'Logged in as')}{' '}
               <strong className="text-slate-800">{sbUser.email}</strong>
             </CardDescription>
           </CardHeader>
@@ -236,7 +243,8 @@ export default function Login() {
               className="w-full h-12 text-base font-bold"
               onClick={() => performRedirect(uRole)}
             >
-              Ir para o meu Painel <ArrowRight className="ml-2 w-5 h-5" />
+              {t('auth.go_to_dashboard', 'Go to my Dashboard')}{' '}
+              <ArrowRight className="ml-2 w-5 h-5" />
             </Button>
             <Button
               variant="outline"
@@ -244,7 +252,8 @@ export default function Login() {
               onClick={handleLogout}
               disabled={isLoading}
             >
-              <LogOut className="mr-2 w-5 h-5" /> Sair desta conta
+              <LogOut className="mr-2 w-5 h-5" />{' '}
+              {t('auth.logout_this_account', 'Sign out of this account')}
             </Button>
           </CardContent>
         </Card>
@@ -260,7 +269,7 @@ export default function Login() {
             Routevoy
           </CardTitle>
           <CardDescription className="text-base mt-2">
-            {t('auth.welcome', 'Bem-vindo! Acesse sua conta ou cadastre-se.')}
+            {t('auth.welcome', 'Welcome! Access your account or register.')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -275,14 +284,14 @@ export default function Login() {
                 className="rounded-md font-semibold text-sm transition-all data-[state=active]:bg-white data-[state=active]:shadow-sm"
               >
                 <LogIn className="w-4 h-4 mr-2" />
-                {t('auth.login_tab', 'Entrar')}
+                {t('auth.login_tab', 'Sign In')}
               </TabsTrigger>
               <TabsTrigger
                 value="register"
                 className="rounded-md font-semibold text-sm transition-all data-[state=active]:bg-white data-[state=active]:shadow-sm"
               >
                 <UserPlus className="w-4 h-4 mr-2" />
-                {t('auth.register_tab', 'Cadastrar')}
+                {t('auth.register_tab', 'Register')}
               </TabsTrigger>
             </TabsList>
 
@@ -311,7 +320,7 @@ export default function Login() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="password" className="text-slate-700">
-                      {t('auth.password', 'Senha')}
+                      {t('auth.password', 'Password')}
                     </Label>
                   </div>
                   <div className="relative">
@@ -344,8 +353,8 @@ export default function Login() {
                   disabled={isLoading}
                 >
                   {isLoading
-                    ? t('common.loading', 'Carregando...')
-                    : t('auth.login', 'Entrar na Plataforma')}
+                    ? t('common.loading', 'Loading...')
+                    : t('auth.login', 'Sign In to Platform')}
                 </Button>
               </form>
             </TabsContent>
@@ -357,7 +366,7 @@ export default function Login() {
               <form onSubmit={handleRegister} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="reg-name" className="text-slate-700">
-                    {t('auth.name', 'Nome Completo')}
+                    {t('auth.name', 'Full Name')}
                   </Label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -402,7 +411,10 @@ export default function Login() {
                     htmlFor="is-affiliate"
                     className="text-slate-700 font-medium cursor-pointer text-base"
                   >
-                    Desejo me cadastrar como Afiliado Parceiro
+                    {t(
+                      'auth.register_affiliate',
+                      'I want to register as an Affiliate Partner',
+                    )}
                   </Label>
                 </div>
                 {role === 'affiliate' && (
@@ -423,14 +435,16 @@ export default function Login() {
                       />
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Documento necessário para repasse de comissões e
-                      validação.
+                      {t(
+                        'auth.tax_id_help',
+                        'Document required for commission transfer and validation.',
+                      )}
                     </p>
                   </div>
                 )}
                 <div className="space-y-2">
                   <Label htmlFor="reg-password" className="text-slate-700">
-                    {t('auth.password', 'Senha')}
+                    {t('auth.password', 'Password')}
                   </Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -461,7 +475,7 @@ export default function Login() {
                     htmlFor="reg-confirm-password"
                     className="text-slate-700"
                   >
-                    {t('auth.confirm_password', 'Confirmar Senha')}
+                    {t('auth.confirm_password', 'Confirm Password')}
                   </Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -495,8 +509,8 @@ export default function Login() {
                   disabled={isLoading}
                 >
                   {isLoading
-                    ? t('common.loading', 'Carregando...')
-                    : t('auth.create_account', 'Criar Conta')}
+                    ? t('common.loading', 'Loading...')
+                    : t('auth.create_account', 'Create Account')}
                 </Button>
               </form>
             </TabsContent>

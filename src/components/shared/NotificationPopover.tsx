@@ -41,11 +41,11 @@ export function NotificationPopover() {
         <div className="bg-slate-50 border-b border-slate-100 px-4 py-3 flex items-center justify-between">
           <h4 className="font-semibold text-sm text-slate-800 flex items-center gap-2">
             <BellRing className="w-4 h-4 text-primary" />
-            {t('notifications.title', 'Notificações')}
+            {t('notifications.title', 'Notifications')}
           </h4>
           {unreadCount > 0 && (
             <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full uppercase tracking-wider">
-              {unreadCount} novas
+              {unreadCount} {t('notifications.new', 'new')}
             </span>
           )}
         </div>
@@ -53,7 +53,7 @@ export function NotificationPopover() {
           {notifications.length === 0 ? (
             <div className="px-4 py-8 text-center text-sm text-muted-foreground flex flex-col items-center justify-center gap-2">
               <Bell className="w-8 h-8 text-slate-200" />
-              Nenhuma notificação no momento.
+              {t('notifications.empty', 'No notifications at the moment.')}
             </div>
           ) : (
             <div className="flex flex-col">
@@ -85,7 +85,8 @@ export function NotificationPopover() {
                       to={notif.link}
                       className="mt-1 flex items-center text-[11px] font-semibold text-primary hover:underline w-fit"
                     >
-                      Ver Detalhes <ArrowRight className="w-3 h-3 ml-1" />
+                      {t('notifications.view_details', 'View Details')}{' '}
+                      <ArrowRight className="w-3 h-3 ml-1" />
                     </Link>
                   )}
                 </div>
@@ -99,7 +100,9 @@ export function NotificationPopover() {
             className="w-full text-xs font-medium h-8 text-slate-600 hover:text-slate-900"
             asChild
           >
-            <Link to="/notifications">Ver Todas Atividades</Link>
+            <Link to="/notifications">
+              {t('notifications.view_all', 'View All Activities')}
+            </Link>
           </Button>
         </div>
       </PopoverContent>

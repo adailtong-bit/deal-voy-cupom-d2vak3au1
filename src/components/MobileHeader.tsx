@@ -139,7 +139,7 @@ export function MobileHeader() {
                   type="search"
                   value={searchQuery}
                   onChange={handleSearchChange}
-                  placeholder={t('nav.search', 'Buscar ofertas...')}
+                  placeholder={t('nav.search', 'Search offers...')}
                   className="w-full pl-9 bg-slate-50 border-slate-200 h-10 rounded-xl text-sm transition-all focus:bg-white"
                 />
               </form>
@@ -160,7 +160,7 @@ export function MobileHeader() {
                   className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors"
                 >
                   <Compass className="h-5 w-5 text-slate-400" />
-                  {t('nav.explore', 'Explorar')}
+                  {t('nav.explore', 'Explore')}
                 </Link>
 
                 <Link
@@ -169,7 +169,7 @@ export function MobileHeader() {
                   className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors"
                 >
                   <Gift className="h-5 w-5 text-slate-400" />
-                  {t('nav.seasonal', 'Ofertas Sazonais')}
+                  {t('nav.seasonal', 'Seasonal Offers')}
                 </Link>
 
                 {user && (
@@ -179,7 +179,7 @@ export function MobileHeader() {
                     className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors"
                   >
                     <Ticket className="h-5 w-5 text-slate-400" />
-                    {t('nav.vouchers', 'Meus Vouchers')}
+                    {t('nav.vouchers', 'My Vouchers')}
                   </Link>
                 )}
 
@@ -189,14 +189,14 @@ export function MobileHeader() {
                   className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors"
                 >
                   <MapPin className="h-5 w-5 text-slate-400" />
-                  {t('nav.travel', 'Experiências')}
+                  {t('nav.travel', 'Experiences')}
                 </Link>
 
                 <div className="my-2 border-t border-slate-100"></div>
 
                 <h4 className="text-sm font-semibold text-slate-900 px-3 flex items-center gap-2 mb-2 mt-2">
                   <Filter className="h-4 w-4 text-slate-500" />
-                  {t('nav.categories', 'Categorias')}
+                  {t('nav.categories', 'Categories')}
                 </h4>
                 <div className="flex flex-wrap gap-2 px-3 mb-2">
                   {CATEGORIES.filter((c) => c.id !== 'all').map((cat) => (
@@ -216,7 +216,7 @@ export function MobileHeader() {
                 <div className="px-3 py-2 flex flex-col gap-2">
                   <h4 className="text-sm font-semibold text-slate-900 flex items-center gap-2 mb-1">
                     <Globe className="h-4 w-4 text-slate-500" />
-                    {t('common.language', 'Idioma')}
+                    {t('common.language', 'Language')}
                   </h4>
                   <Select
                     value={language}
@@ -261,7 +261,7 @@ export function MobileHeader() {
                       className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-base font-bold text-primary bg-primary/5 hover:bg-primary/10 transition-colors"
                     >
                       <Building className="h-5 w-5 text-primary" />
-                      {t('nav.franchisee', 'Painel Regional')}
+                      {t('nav.franchisee', 'Regional Panel')}
                     </Link>
                   </>
                 )}
@@ -280,7 +280,7 @@ export function MobileHeader() {
                       className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-base font-bold text-primary bg-primary/5 hover:bg-primary/10 transition-colors"
                     >
                       <Building className="h-5 w-5 text-primary" />
-                      {t('nav.vendor', 'Painel do Lojista')}
+                      {t('nav.vendor', 'Vendor Dashboard')}
                     </Link>
                   </>
                 )}
@@ -335,7 +335,7 @@ export function MobileHeader() {
                   <DropdownMenuItem asChild className="cursor-pointer">
                     <Link to="/profile" className="flex items-center w-full">
                       <User className="mr-2 h-4 w-4" />
-                      {t('profile.title', 'Meu Perfil')}
+                      {t('profile.title', 'My Profile')}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem
@@ -343,7 +343,7 @@ export function MobileHeader() {
                     onClick={handleLogout}
                   >
                     <LogOut className="mr-2 h-4 w-4" />
-                    {t('auth.logout', 'Sair')}
+                    {t('auth.logout', 'Sign Out')}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -355,7 +355,7 @@ export function MobileHeader() {
               variant="default"
               className="font-bold rounded-full ml-1"
             >
-              <Link to="/login">{t('auth.login', 'Entrar')}</Link>
+              <Link to="/login">{t('auth.login', 'Sign In')}</Link>
             </Button>
           )}
         </div>

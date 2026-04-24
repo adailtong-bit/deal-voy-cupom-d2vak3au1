@@ -63,12 +63,10 @@ export function AdminContentTab() {
       )
 
       if (error) throw error
-      toast.success(
-        t('admin.settings_saved', 'Configurações salvas com sucesso!'),
-      )
+      toast.success(t('admin.settings_saved', 'Settings saved successfully!'))
     } catch (err) {
       console.error('Error saving footer content:', err)
-      toast.error(t('admin.settings_error', 'Erro ao salvar configurações.'))
+      toast.error(t('admin.settings_error', 'Error saving settings.'))
     } finally {
       setSaving(false)
     }
@@ -85,16 +83,18 @@ export function AdminContentTab() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Conteúdo do Rodapé</CardTitle>
+        <CardTitle>{t('admin.content_tab.title', 'Footer Content')}</CardTitle>
         <CardDescription>
-          Gerencie os textos exibidos no rodapé do site (Quem Somos, Nossa
-          Empresa, Nossa Missão, Fale Conosco).
+          {t(
+            'admin.content_tab.desc',
+            'Manage the texts displayed in the website footer (About Us, Our Company, Our Mission, Contact Us).',
+          )}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-2">
           <label htmlFor="about" className="text-sm font-medium leading-none">
-            Quem Somos (About Us)
+            {t('admin.content_tab.about', 'About Us')}
           </label>
           <textarea
             id="about"
@@ -108,7 +108,7 @@ export function AdminContentTab() {
 
         <div className="space-y-2">
           <label htmlFor="company" className="text-sm font-medium leading-none">
-            Nossa Empresa (Our Company)
+            {t('admin.content_tab.company', 'Our Company')}
           </label>
           <textarea
             id="company"
@@ -122,7 +122,7 @@ export function AdminContentTab() {
 
         <div className="space-y-2">
           <label htmlFor="mission" className="text-sm font-medium leading-none">
-            Nossa Missão (Our Mission)
+            {t('admin.content_tab.mission', 'Our Mission')}
           </label>
           <textarea
             id="mission"
@@ -136,7 +136,7 @@ export function AdminContentTab() {
 
         <div className="space-y-2">
           <label htmlFor="contact" className="text-sm font-medium leading-none">
-            Fale Conosco (Contact Us)
+            {t('admin.content_tab.contact', 'Contact Us')}
           </label>
           <textarea
             id="contact"
@@ -158,7 +158,7 @@ export function AdminContentTab() {
           ) : (
             <Save className="w-4 h-4 mr-2" />
           )}
-          Salvar Alterações
+          {t('common.save_changes', 'Save Changes')}
         </Button>
       </CardContent>
     </Card>

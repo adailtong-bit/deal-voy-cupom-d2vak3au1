@@ -68,15 +68,32 @@ export function AdminApprovalsTab() {
         })
         .catch(console.error)
 
-      toast.success('Afiliado parceiro aprovado com sucesso!')
+      toast.success(
+        t(
+          'admin.approvals.affiliate_approved_success',
+          'Affiliate partner approved successfully!',
+        ),
+      )
       fetchPendingAffiliates()
     } catch (err: any) {
-      toast.error('Erro ao aprovar afiliado: ' + err.message)
+      toast.error(
+        t(
+          'admin.approvals.affiliate_approve_error',
+          'Error approving affiliate: ',
+        ) + err.message,
+      )
     }
   }
 
   const handleRejectAffiliate = async (id: string) => {
-    if (!confirm('Tem certeza que deseja rejeitar o cadastro deste afiliado?'))
+    if (
+      !confirm(
+        t(
+          'admin.approvals.confirm_reject',
+          'Are you sure you want to reject this affiliate registration?',
+        ),
+      )
+    )
       return
     try {
       const { error } = await supabase
@@ -84,12 +101,21 @@ export function AdminApprovalsTab() {
         .update({ status: 'suspended' })
         .eq('id', id)
       if (error) throw error
-      toast.success('Cadastro de afiliado rejeitado.')
+      toast.success(
+        t(
+          'admin.approvals.affiliate_rejected',
+          'Affiliate registration rejected.',
+        ),
+      )
       fetchPendingAffiliates()
     } catch (err: any) {
-      toast.error('Erro ao rejeitar: ' + err.message)
+      toast.error(
+        t('admin.approvals.reject_error', 'Error rejecting: ') + err.message,
+      )
     }
   }
+
+  const { t } = useLanguage()
 
   return (
     <div className="space-y-6 animate-fade-in-up">
@@ -97,7 +123,7 @@ export function AdminApprovalsTab() {
         <Card className="border-amber-200 bg-amber-50/50">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-amber-800 flex justify-between">
-              Lojistas Pendentes
+              {t('admin.approvals.pending_merchants', 'Pending Merchants')}
               <Store className="h-4 w-4 text-amber-600" />
             </CardTitle>
           </CardHeader>
@@ -106,14 +132,17 @@ export function AdminApprovalsTab() {
               {pendingMerchants.length}
             </div>
             <p className="text-xs text-amber-600/80 mt-1">
-              Aguardando validação da rede
+              {t(
+                'admin.approvals.merchants_waiting',
+                'Awaiting network validation',
+              )}
             </p>
           </CardContent>
         </Card>
         <Card className="border-blue-200 bg-blue-50/50">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-blue-800 flex justify-between">
-              Afiliados Pendentes
+              {t('admin.approvals.pending_affiliates', 'Pending Affiliates')}
               <Users className="h-4 w-4 text-blue-600" />
             </CardTitle>
           </CardHeader>
@@ -122,14 +151,17 @@ export function AdminApprovalsTab() {
               {pendingAffiliates.length}
             </div>
             <p className="text-xs text-blue-600/80 mt-1">
-              Aguardando verificação de documentos
+              {t(
+                'admin.approvals.affiliates_waiting',
+                'Awaiting document verification',
+              )}
             </p>
           </CardContent>
         </Card>
         <Card className="border-slate-200">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-slate-800 flex justify-between">
-              Total de Aprovações
+              {t('admin.approvals.total_approvals', 'Total Approvals')}
               <ShieldCheck className="h-4 w-4 text-slate-600" />
             </CardTitle>
           </CardHeader>
@@ -137,7 +169,9 @@ export function AdminApprovalsTab() {
             <div className="text-2xl font-bold text-slate-800">
               {pendingMerchants.length + pendingAffiliates.length}
             </div>
-            <p className="text-xs text-slate-500 mt-1">Ações requeridas</p>
+            <p className="text-xs text-slate-500 mt-1">
+              {t('admin.approvals.actions_required', 'Actions required')}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -145,10 +179,14 @@ export function AdminApprovalsTab() {
       <Tabs defaultValue="merchants" className="w-full">
         <TabsList className="mb-4">
           <TabsTrigger value="merchants" className="gap-2">
-            <Store className="w-4 h-4" /> Lojistas ({pendingMerchants.length})
+            <Store className="w-4 h-4" />{' '}
+            {t('admin.approvals.merchants', 'Merchants')} (
+            {pendingMerchants.length})
           </TabsTrigger>
           <TabsTrigger value="affiliates" className="gap-2">
-            <Users className="w-4 h-4" /> Afiliados ({pendingAffiliates.length})
+            <Users className="w-4 h-4" />{' '}
+            {t('admin.approvals.affiliates', 'Affiliates')} (
+            {pendingAffiliates.length})
           </TabsTrigger>
         </TabsList>
 
@@ -159,11 +197,17 @@ export function AdminApprovalsTab() {
         <TabsContent value="affiliates" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Aprovação de Afiliados Parceiros</CardTitle>
+              <CardTitle>
+                {t(
+                  'admin.approvals.affiliate_approval',
+                  'Affiliate Partner Approval',
+                )}
+              </CardTitle>
               <CardDescription>
-                Revise os documentos (CPF/CNPJ) e valide o cadastro de novos
-                afiliados antes de liberar o acesso à geração de links e
-                repasses.
+                {t(
+                  'admin.approvals.affiliate_approval_desc',
+                  'Review documents (Tax ID) and validate new affiliate registrations before granting access to link generation and payouts.',
+                )}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -172,16 +216,19 @@ export function AdminApprovalsTab() {
                   <thead className="border-b bg-slate-50">
                     <tr>
                       <th className="p-4 font-medium text-slate-600">
-                        Afiliado
+                        {t('admin.approvals.affiliate', 'Affiliate')}
                       </th>
                       <th className="p-4 font-medium text-slate-600">
-                        Documento (CPF/CNPJ)
+                        {t('admin.approvals.document', 'Document (Tax ID)')}
                       </th>
                       <th className="p-4 font-medium text-slate-600">
-                        Data de Cadastro
+                        {t(
+                          'admin.approvals.registration_date',
+                          'Registration Date',
+                        )}
                       </th>
                       <th className="p-4 font-medium text-slate-600 text-right">
-                        Ações
+                        {t('common.actions', 'Actions')}
                       </th>
                     </tr>
                   </thead>
@@ -207,7 +254,7 @@ export function AdminApprovalsTab() {
                             </Badge>
                           ) : (
                             <span className="text-muted-foreground text-xs italic">
-                              Não informado
+                              {t('common.not_informed', 'Not informed')}
                             </span>
                           )}
                         </td>
@@ -221,7 +268,8 @@ export function AdminApprovalsTab() {
                             onClick={() => handleRejectAffiliate(aff.id)}
                             className="text-red-500 hover:text-red-600 hover:bg-red-50"
                           >
-                            <XCircle className="w-4 h-4 mr-1" /> Rejeitar
+                            <XCircle className="w-4 h-4 mr-1" />{' '}
+                            {t('common.reject', 'Reject')}
                           </Button>
                           <Button
                             variant="default"
@@ -229,7 +277,8 @@ export function AdminApprovalsTab() {
                             onClick={() => handleApproveAffiliate(aff)}
                             className="bg-green-600 hover:bg-green-700"
                           >
-                            <CheckCircle className="w-4 h-4 mr-1" /> Aprovar
+                            <CheckCircle className="w-4 h-4 mr-1" />{' '}
+                            {t('common.approve', 'Approve')}
                           </Button>
                         </td>
                       </tr>
@@ -240,7 +289,10 @@ export function AdminApprovalsTab() {
                           colSpan={4}
                           className="p-8 text-center text-muted-foreground"
                         >
-                          Nenhum afiliado aguardando aprovação no momento.
+                          {t(
+                            'admin.approvals.no_pending_affiliates',
+                            'No affiliates awaiting approval at the moment.',
+                          )}
                         </td>
                       </tr>
                     )}

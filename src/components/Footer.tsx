@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
+import { useLanguage } from '@/stores/LanguageContext'
 
 export function Footer() {
   const [content, setContent] = useState({
@@ -33,37 +34,47 @@ export function Footer() {
     fetchSettings()
   }, [])
 
+  const { t } = useLanguage()
+
   return (
     <footer className="bg-slate-900 text-slate-200 py-12 border-t border-slate-800">
       <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
         <div>
-          <h3 className="font-bold text-lg mb-4 text-white">Quem Somos</h3>
+          <h3 className="font-bold text-lg mb-4 text-white">
+            {t('footer.about', 'About Us')}
+          </h3>
           <p className="text-sm leading-relaxed text-slate-400 whitespace-pre-wrap">
             {content.about}
           </p>
         </div>
         <div>
-          <h3 className="font-bold text-lg mb-4 text-white">Nossa Empresa</h3>
+          <h3 className="font-bold text-lg mb-4 text-white">
+            {t('footer.company', 'Our Company')}
+          </h3>
           <p className="text-sm leading-relaxed text-slate-400 whitespace-pre-wrap">
             {content.company}
           </p>
         </div>
         <div>
-          <h3 className="font-bold text-lg mb-4 text-white">Nossa Missão</h3>
+          <h3 className="font-bold text-lg mb-4 text-white">
+            {t('footer.mission', 'Our Mission')}
+          </h3>
           <p className="text-sm leading-relaxed text-slate-400 whitespace-pre-wrap">
             {content.mission}
           </p>
         </div>
         <div>
-          <h3 className="font-bold text-lg mb-4 text-white">Fale Conosco</h3>
+          <h3 className="font-bold text-lg mb-4 text-white">
+            {t('footer.contact', 'Contact Us')}
+          </h3>
           <p className="text-sm leading-relaxed text-slate-400 whitespace-pre-wrap">
             {content.contact}
           </p>
         </div>
       </div>
       <div className="container mx-auto px-4 mt-8 pt-8 border-t border-slate-800/50 text-center text-xs text-slate-500">
-        &copy; {new Date().getFullYear()} Routevoy. Todos os direitos
-        reservados.
+        &copy; {new Date().getFullYear()} Routevoy.{' '}
+        {t('footer.rights', 'All rights reserved.')}
       </div>
     </footer>
   )

@@ -86,33 +86,33 @@ export function DesktopHeader() {
               className="flex items-center gap-1.5 transition-colors hover:text-primary whitespace-nowrap"
             >
               <Home className="h-4 w-4" />
-              {t('nav.home', 'Início')}
+              {t('nav.home', 'Home')}
             </Link>
             {user && (
               <Link
                 to="/vouchers"
                 className="transition-colors hover:text-primary whitespace-nowrap"
               >
-                {t('nav.vouchers', 'Meus Vouchers')}
+                {t('nav.vouchers', 'My Vouchers')}
               </Link>
             )}
             <Link
               to="/explore"
               className="transition-colors hover:text-primary whitespace-nowrap"
             >
-              {t('nav.explore', 'Explorar')}
+              {t('nav.explore', 'Explore')}
             </Link>
             <Link
               to="/seasonal"
               className="transition-colors hover:text-primary whitespace-nowrap"
             >
-              {t('nav.seasonal', 'Sazonal')}
+              {t('nav.seasonal', 'Seasonal')}
             </Link>
             <Link
               to="/travel"
               className="transition-colors hover:text-primary whitespace-nowrap"
             >
-              {t('nav.travel', 'Experiências')}
+              {t('nav.travel', 'Experiences')}
             </Link>
             {(user?.role === 'super_admin' || user?.role === 'admin') && (
               <Link
@@ -127,7 +127,7 @@ export function DesktopHeader() {
                 to="/franchisee"
                 className="transition-colors text-primary hover:text-primary/80 font-bold whitespace-nowrap"
               >
-                {t('nav.franchisee', 'Painel Regional')}
+                {t('nav.franchisee', 'Regional Panel')}
               </Link>
             )}
             {(user?.role === 'shopkeeper' ||
@@ -139,7 +139,7 @@ export function DesktopHeader() {
                 to="/merchant"
                 className="transition-colors text-primary hover:text-primary/80 font-bold whitespace-nowrap"
               >
-                {t('nav.vendor', 'Painel do Lojista')}
+                {t('nav.vendor', 'Vendor Dashboard')}
               </Link>
             )}
             {user?.role === 'affiliate' && (
@@ -147,7 +147,7 @@ export function DesktopHeader() {
                 to="/affiliate"
                 className="transition-colors text-primary hover:text-primary/80 font-bold whitespace-nowrap"
               >
-                {t('nav.affiliate', 'Painel de Afiliado')}
+                {t('nav.affiliate', 'Affiliate Dashboard')}
               </Link>
             )}
           </nav>
@@ -202,7 +202,7 @@ export function DesktopHeader() {
                   <DropdownMenuItem asChild className="cursor-pointer">
                     <Link to="/profile" className="flex items-center w-full">
                       <User className="mr-2 h-4 w-4" />
-                      {t('profile.title', 'Meu Perfil')}
+                      {t('profile.title', 'My Profile')}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem
@@ -210,7 +210,7 @@ export function DesktopHeader() {
                     onClick={handleLogout}
                   >
                     <LogOut className="mr-2 h-4 w-4" />
-                    {t('auth.logout', 'Sair')}
+                    {t('auth.logout', 'Sign Out')}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -221,7 +221,7 @@ export function DesktopHeader() {
               variant="default"
               className="font-bold rounded-full px-4 lg:px-6 shrink-0"
             >
-              <Link to="/login">{t('auth.login', 'Entrar')}</Link>
+              <Link to="/login">{t('auth.login', 'Sign In')}</Link>
             </Button>
           )}
         </div>
