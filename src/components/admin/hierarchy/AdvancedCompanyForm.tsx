@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Separator } from '@/components/ui/separator'
-import { COUNTRIES, REGIONS } from '@/lib/locationData'
+import { COUNTRIES, REGIONS, LOCATION_DATA } from '@/lib/locationData'
 import { useLanguage } from '@/stores/LanguageContext'
 
 interface Props {
