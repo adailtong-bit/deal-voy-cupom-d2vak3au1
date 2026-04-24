@@ -302,3 +302,8 @@ export function AdminApprovalsTab() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  )
+}
