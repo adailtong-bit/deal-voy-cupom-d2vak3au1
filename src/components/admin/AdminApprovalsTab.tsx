@@ -49,13 +49,25 @@ export function AdminApprovalsTab() {
     fetchPendingAffiliates()
   }, [])
 
-  const handleApproveAffiliate = async (id: string) => {
+  const handleApproveAffiliate = async (affiliate: any) => {
     try {
       const { error } = await supabase
         .from('affiliate_partners')
         .update({ status: 'active' })
-        .eq('id', id)
+        .eq('id', affiliate.id)
       if (error) throw error
+
+      // Disparar e-mail de aprovação
+      supabase.functions
+        .invoke('send-email', {
+          body: {
+            type: 'affiliate_approved',
+            email: affiliate.email,
+            name: affiliate.name,
+          },
+        })
+        .catch(console.error)
+
       toast.success('Afiliado parceiro aprovado com sucesso!')
       fetchPendingAffiliates()
     } catch (err: any) {
@@ -214,7 +226,7 @@ export function AdminApprovalsTab() {
                           <Button
                             variant="default"
                             size="sm"
-                            onClick={() => handleApproveAffiliate(aff.id)}
+                            onClick={() => handleApproveAffiliate(aff)}
                             className="bg-green-600 hover:bg-green-700"
                           >
                             <CheckCircle className="w-4 h-4 mr-1" /> Aprovar

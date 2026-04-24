@@ -3,6 +3,7 @@
     "crawl-promotions": 38,
     "search-affiliate-deals": 22,
     "send-invitation": 9,
-    "check-expired-promotions": 7
+    "check-expired-promotions": 7,
+    "send-email": 1
   }
 }

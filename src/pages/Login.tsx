@@ -154,7 +154,19 @@ export default function Login() {
         return
       }
 
-      toast.success(t('auth.register_success', 'Conta criada com sucesso!'))
+      // Disparar e-mail de boas-vindas customizado
+      supabase.functions
+        .invoke('send-email', {
+          body: { type: 'welcome', email, name },
+        })
+        .catch(console.error)
+
+      toast.success(
+        t(
+          'auth.register_success',
+          'Conta criada com sucesso! Verifique seu e-mail.',
+        ),
+      )
       if (data?.user) {
         performRedirect(finalRole)
       }
