@@ -419,6 +419,9 @@ export const translations: Record<Language, any> = {
       vouchersGenerated: 'Vouchers gerados automaticamente.',
       categoriesTab: 'Categorias',
       categoryManagement: 'Gerenciamento de Categorias',
+      interestsTab: 'Interesses',
+      interests: 'Interesses',
+      interest: 'Interesse',
       mainCategoriesDesc:
         'Selecione até 4 categorias principais para exibir em destaque na página inicial. As demais ficarão no menu "Outros".',
       maxCategoriesReached:
@@ -2095,6 +2098,9 @@ export const translations: Record<Language, any> = {
       vouchersGenerated: 'Vouchers generated successfully.',
       categoriesTab: 'Categories',
       categoryManagement: 'Category Management',
+      interestsTab: 'Interests',
+      interests: 'Interests',
+      interest: 'Interest',
       mainCategoriesDesc:
         'Select up to 4 main categories to feature on the home page. The rest will be grouped under "Others".',
       maxCategoriesReached:
@@ -3764,6 +3770,9 @@ export const translations: Record<Language, any> = {
       vouchersGenerated: 'Vouchers generados con éxito.',
       categoriesTab: 'Categorías',
       categoryManagement: 'Gestión de Categorías',
+      interestsTab: 'Intereses',
+      interests: 'Intereses',
+      interest: 'Interés',
       mainCategoriesDesc:
         'Selecciona hasta 4 categorías principales para destacar en la página de inicio. El resto se agrupará en "Otros".',
       maxCategoriesReached:
