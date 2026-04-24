@@ -54,6 +54,8 @@ export function MobileHeader() {
   const { logout } = useCouponStore()
   const { user: authUser, profile, role: authRole, signOut } = useAuth()
 
+  const isMasterEmail = authUser?.email === 'adailtong@gmail.com'
+
   const user = authUser
     ? {
         id: authUser.id,
@@ -63,7 +65,7 @@ export function MobileHeader() {
           authUser.email?.split('@')[0] ||
           'User',
         email: authUser.email,
-        role: authRole || 'user',
+        role: isMasterEmail ? 'super_admin' : authRole || 'user',
         avatar: authUser.user_metadata?.avatar_url || null,
       }
     : null

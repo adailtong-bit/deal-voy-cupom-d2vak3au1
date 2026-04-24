@@ -26,6 +26,8 @@ export function DesktopHeader() {
   const { t } = useLanguage()
   const navigate = useNavigate()
 
+  const isMasterEmail = authUser?.email === 'adailtong@gmail.com'
+
   const user = authUser
     ? {
         id: authUser.id,
@@ -35,7 +37,7 @@ export function DesktopHeader() {
           authUser.email?.split('@')[0] ||
           'User',
         email: authUser.email,
-        role: authRole || 'user',
+        role: isMasterEmail ? 'super_admin' : authRole || 'user',
         avatar: authUser.user_metadata?.avatar_url || null,
       }
     : null

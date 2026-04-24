@@ -99,6 +99,12 @@ function IndexContent() {
     authRole === 'admin' ||
     authUser?.email === 'adailtong@gmail.com'
 
+  const isMerchantOrAdmin =
+    isMaster ||
+    authRole === 'merchant' ||
+    authRole === 'shopkeeper' ||
+    authRole === 'franchisee'
+
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({})
@@ -502,18 +508,32 @@ function IndexContent() {
 
       <section className="bg-white pt-4 pb-3 px-4 border-b shadow-sm">
         <div className="container mx-auto max-w-5xl relative">
-          {isMaster && (
-            <div className="absolute -top-2 right-0 z-10 hidden sm:block">
-              <Button
-                variant="default"
-                size="sm"
-                asChild
-                className="shadow-md bg-slate-900 hover:bg-slate-800"
-              >
-                <Link to="/admin">
-                  Acessar Painel Admin <ChevronRight className="w-4 h-4 ml-1" />
-                </Link>
-              </Button>
+          {(isMaster || isMerchantOrAdmin) && (
+            <div className="absolute -top-2 right-0 z-10 hidden sm:flex gap-2 items-center">
+              {isMerchantOrAdmin && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  asChild
+                  className="shadow-md bg-white border-primary text-primary hover:bg-primary/5"
+                >
+                  <Link to="/merchant">
+                    Painel do Lojista <ChevronRight className="w-4 h-4 ml-1" />
+                  </Link>
+                </Button>
+              )}
+              {isMaster && (
+                <Button
+                  variant="default"
+                  size="sm"
+                  asChild
+                  className="shadow-md bg-slate-900 hover:bg-slate-800"
+                >
+                  <Link to="/admin">
+                    Painel Admin <ChevronRight className="w-4 h-4 ml-1" />
+                  </Link>
+                </Button>
+              )}
             </div>
           )}
           <div className="flex flex-col gap-2.5 max-w-2xl mx-auto md:mx-0">
@@ -527,16 +547,28 @@ function IndexContent() {
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 {t('common.back', 'Back')}
               </Button>
-              {isMaster && (
-                <Button
-                  variant="default"
-                  size="sm"
-                  asChild
-                  className="sm:hidden shadow-md bg-slate-900 hover:bg-slate-800 h-8 text-xs px-2"
-                >
-                  <Link to="/admin">Painel Admin</Link>
-                </Button>
-              )}
+              <div className="flex gap-2 sm:hidden">
+                {isMerchantOrAdmin && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    asChild
+                    className="shadow-md bg-white text-primary border-primary/20 h-8 text-xs px-2"
+                  >
+                    <Link to="/merchant">Painel Lojista</Link>
+                  </Button>
+                )}
+                {isMaster && (
+                  <Button
+                    variant="default"
+                    size="sm"
+                    asChild
+                    className="shadow-md bg-slate-900 hover:bg-slate-800 h-8 text-xs px-2"
+                  >
+                    <Link to="/admin">Painel Admin</Link>
+                  </Button>
+                )}
+              </div>
             </div>
 
             <div className="relative">
