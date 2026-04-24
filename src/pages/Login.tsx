@@ -39,6 +39,7 @@ export default function Login() {
   const [showRegPassword, setShowRegPassword] = useState(false)
   const [showRegConfirmPassword, setShowRegConfirmPassword] = useState(false)
   const [role, setRole] = useState('user')
+  const [taxId, setTaxId] = useState('')
 
   const {
     user: sbUser,
@@ -131,6 +132,11 @@ export default function Login() {
     }
 
     if (email && password && name) {
+      if (role === 'affiliate' && !taxId) {
+        toast.error('CPF/CNPJ é obrigatório para cadastro de Afiliado.')
+        return
+      }
+
       setIsLoading(true)
       const finalRole = role === 'affiliate' ? 'affiliate' : 'user'
 
@@ -138,6 +144,7 @@ export default function Login() {
         data: {
           name,
           role: finalRole,
+          tax_id: taxId,
         },
       })
 
@@ -386,6 +393,29 @@ export default function Login() {
                     Desejo me cadastrar como Afiliado Parceiro
                   </Label>
                 </div>
+                {role === 'affiliate' && (
+                  <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
+                    <Label htmlFor="reg-tax-id" className="text-slate-700">
+                      CPF / CNPJ <span className="text-red-500">*</span>
+                    </Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 opacity-0" />
+                      <Input
+                        id="reg-tax-id"
+                        type="text"
+                        placeholder="000.000.000-00 ou 00.000.000/0001-00"
+                        value={taxId}
+                        onChange={(e) => setTaxId(e.target.value)}
+                        className="pl-3 h-11 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
+                        required={role === 'affiliate'}
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Documento necessário para repasse de comissões e
+                      validação.
+                    </p>
+                  </div>
+                )}
                 <div className="space-y-2">
                   <Label htmlFor="reg-password" className="text-slate-700">
                     {t('auth.password', 'Senha')}

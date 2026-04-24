@@ -265,8 +265,13 @@ export function AdminAffiliatesTab() {
                     <tr key={aff.id} className="border-b hover:bg-slate-50/50">
                       <td className="p-4 font-medium">
                         {aff.name}
-                        <div className="text-xs text-muted-foreground font-normal">
-                          {aff.email}
+                        <div className="text-xs text-muted-foreground font-normal flex flex-col gap-0.5 mt-0.5">
+                          <span>{aff.email}</span>
+                          {aff.tax_id && (
+                            <span className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded w-fit font-mono">
+                              Doc: {aff.tax_id}
+                            </span>
+                          )}
                         </div>
                       </td>
                       <td className="p-4">

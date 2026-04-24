@@ -34,6 +34,9 @@ import { AdminNotificationsTab } from '@/components/admin/AdminNotificationsTab'
 import { AdminSettingsTab } from '@/components/admin/AdminSettingsTab'
 import { FinanceDashboardTab } from '@/components/finance/FinanceDashboardTab'
 import { AdminOffersTab } from '@/components/admin/AdminOffersTab'
+import { AdminApprovalsTab } from '@/components/admin/AdminApprovalsTab'
+import { ShieldCheck } from 'lucide-react'
+import { supabase } from '@/lib/supabase/client'
 import { useLanguage } from '@/stores/LanguageContext'
 import { Tags } from 'lucide-react'
 import { useCouponStore } from '@/stores/CouponContext'
@@ -84,13 +87,27 @@ export default function AdminDashboard() {
     }
   }, [activeTab])
 
+  const [pendingAffiliates, setPendingAffiliates] = useState<any[]>([])
+
+  useEffect(() => {
+    if (isSuperAdmin) {
+      supabase
+        .from('affiliate_partners')
+        .select('id')
+        .eq('status', 'pending')
+        .then(({ data }) => {
+          if (data) setPendingAffiliates(data)
+        })
+    }
+  }, [isSuperAdmin])
+
   const pendingMerchants = companies.filter((c) => c.status === 'pending')
   const incompleteCompanies = companies.filter(
     (c) => c.status === 'active' && (!c.taxId || !c.billingEmail),
   )
 
   const [unreadIds, setUnreadIds] = useState<Set<string>>(
-    new Set(['notif-1', 'notif-2', 'notif-3']),
+    new Set(['notif-1', 'notif-2', 'notif-3', 'notif-aff']),
   )
 
   const notifications = [
@@ -103,8 +120,19 @@ export default function AdminDashboard() {
               'admin.notif.pending_desc',
               '{count} new merchants waiting for review.',
             ).replace('{count}', pendingMerchants.length.toString()),
-            tab: 'hierarchy',
+            tab: 'approvals',
             time: t('admin.notif.just_now', 'Just now'),
+          },
+        ]
+      : []),
+    ...(pendingAffiliates.length > 0
+      ? [
+          {
+            id: 'notif-aff',
+            title: 'Novos Afiliados Pendentes',
+            desc: `${pendingAffiliates.length} afiliado(s) aguardando verificação de documentos.`,
+            tab: 'approvals',
+            time: 'Agora mesmo',
           },
         ]
       : []),
@@ -271,6 +299,18 @@ export default function AdminDashboard() {
           </TabsTrigger>
           {isSuperAdmin && (
             <>
+              <TabsTrigger
+                value="approvals"
+                className="gap-2 bg-amber-50 text-amber-700 data-[state=active]:bg-amber-100 data-[state=active]:text-amber-900 border border-amber-200"
+              >
+                <ShieldCheck className="h-4 w-4" />
+                Aprovações
+                {pendingMerchants.length + pendingAffiliates.length > 0 && (
+                  <span className="ml-1 bg-amber-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                    {pendingMerchants.length + pendingAffiliates.length}
+                  </span>
+                )}
+              </TabsTrigger>
               <TabsTrigger value="monetization">
                 {t('admin.monetization')}
               </TabsTrigger>
@@ -457,6 +497,9 @@ export default function AdminDashboard() {
             </TabsContent>
             <TabsContent value="settings">
               <AdminSettingsTab />
+            </TabsContent>
+            <TabsContent value="approvals">
+              <AdminApprovalsTab />
             </TabsContent>
           </>
         )}
