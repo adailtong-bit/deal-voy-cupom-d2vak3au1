@@ -219,6 +219,7 @@ export default function App() {
                             'merchant',
                             'admin',
                             'super_admin',
+                            'franchisee',
                           ] as any
                         }
                       >

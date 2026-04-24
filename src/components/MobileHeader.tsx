@@ -234,7 +234,7 @@ export function MobileHeader() {
                   </Select>
                 </div>
 
-                {user?.role === 'super_admin' && (
+                {(user?.role === 'super_admin' || user?.role === 'admin') && (
                   <>
                     <div className="my-2 border-t border-slate-100"></div>
 
@@ -264,12 +264,16 @@ export function MobileHeader() {
                   </>
                 )}
 
-                {user?.role === 'shopkeeper' && (
+                {(user?.role === 'shopkeeper' ||
+                  user?.role === 'merchant' ||
+                  user?.role === 'admin' ||
+                  user?.role === 'super_admin' ||
+                  user?.role === 'franchisee') && (
                   <>
                     <div className="my-2 border-t border-slate-100"></div>
 
                     <Link
-                      to="/vendor"
+                      to="/merchant"
                       onClick={() => setIsMenuOpen(false)}
                       className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-base font-bold text-primary bg-primary/5 hover:bg-primary/10 transition-colors"
                     >

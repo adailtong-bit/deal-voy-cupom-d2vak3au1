@@ -50,8 +50,11 @@ export default function VendorDashboard() {
     setSearchParams({ tab })
   }
 
-  const isSuperAdmin =
-    authRole === 'super_admin' || authUser?.email === 'adailtong@gmail.com'
+  const isAdminOrFranchisee =
+    authRole === 'super_admin' ||
+    authRole === 'admin' ||
+    authRole === 'franchisee' ||
+    authUser?.email === 'adailtong@gmail.com'
 
   const mockCompany = {
     id: 'mock-company-admin',
@@ -69,12 +72,12 @@ export default function VendorDashboard() {
   )
 
   const myCompany =
-    matchedCompany || (isSuperAdmin ? companies[0] || mockCompany : null)
+    matchedCompany || (isAdminOrFranchisee ? companies[0] || mockCompany : null)
 
   const coupons = allCoupons.filter(
     (c) =>
       c.source !== 'aggregated' &&
-      (c.companyId === myCompany?.id || isSuperAdmin),
+      (c.companyId === myCompany?.id || isAdminOrFranchisee),
   )
 
   const myBookings = bookings.filter((b) => b.storeName === myCompany?.name)

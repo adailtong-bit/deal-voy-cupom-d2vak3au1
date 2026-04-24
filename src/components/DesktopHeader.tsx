@@ -112,7 +112,7 @@ export function DesktopHeader() {
             >
               {t('nav.travel', 'Experiências')}
             </Link>
-            {user?.role === 'super_admin' && (
+            {(user?.role === 'super_admin' || user?.role === 'admin') && (
               <Link
                 to="/admin"
                 className="transition-colors text-primary hover:text-primary/80 font-bold whitespace-nowrap"
@@ -128,7 +128,11 @@ export function DesktopHeader() {
                 {t('nav.franchisee', 'Painel Regional')}
               </Link>
             )}
-            {(user?.role === 'shopkeeper' || user?.role === 'merchant') && (
+            {(user?.role === 'shopkeeper' ||
+              user?.role === 'merchant' ||
+              user?.role === 'admin' ||
+              user?.role === 'super_admin' ||
+              user?.role === 'franchisee') && (
               <Link
                 to="/merchant"
                 className="transition-colors text-primary hover:text-primary/80 font-bold whitespace-nowrap"
