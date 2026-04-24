@@ -1,18 +1,40 @@
-import { useMemo } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useLanguage } from '@/stores/LanguageContext'
 import { useRegionFormatting } from '@/hooks/useRegionFormatting'
 import { useCouponStore } from '@/stores/CouponContext'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { CreditCard, Users, Ticket, DollarSign } from 'lucide-react'
+import {
+  CreditCard,
+  Users,
+  Ticket,
+  DollarSign,
+  Download,
+  FileText,
+  Settings2,
+  TrendingUp,
+  TrendingDown,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { CouponPerformance } from '@/components/shared/CouponPerformance'
-
-import { useEffect } from 'react'
-import { Download, FileText } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { exportToCSV, exportToPDF } from '@/lib/exportUtils'
 import { useNotification } from '@/stores/NotificationContext'
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 export function FranchiseeOverviewTab({
   franchiseId,
@@ -31,6 +53,14 @@ export function FranchiseeOverviewTab({
   } = useCouponStore()
   const location = useLocation()
   const isFranchisee = location.pathname.includes('/franchisee')
+
+  const [period, setPeriod] = useState('this_month')
+  const [widgets, setWidgets] = useState({
+    sales: true,
+    leads: true,
+    campaigns: true,
+    royalties: true,
+  })
 
   const myFranchise = franchises.find((f) => f.id === franchiseId)
   const { formatCurrency, formatNumber } = useRegionFormatting(
@@ -89,28 +119,53 @@ export function FranchiseeOverviewTab({
   )
   const totalRoyalties = adRevenue * (royaltyRate / 100)
 
+  // Mock comparison data based on period
+  const comparisons = useMemo(() => {
+    const factor =
+      period === 'this_month' ? 1 : period === 'last_month' ? -0.5 : 2.5
+    return {
+      sales: 12.5 * factor,
+      leads: 8.2 * factor,
+      campaigns: 2.0 * factor,
+      royalties: 10.1 * factor,
+    }
+  }, [period])
+
   useEffect(() => {
     if (!myFranchise || franchiseCoupons.length === 0) return
 
-    // Check if alert already exists to prevent spam
-    if (notifications.some((n) => n.title.includes('High Performance'))) return
+    // 1. High Performance Alert
+    if (!notifications.some((n) => n.title.includes('High Performance'))) {
+      const bestCoupon = franchiseCoupons.reduce((best, current) => {
+        const currentClicks = current.visitCount || 0
+        const bestClicks = best?.visitCount || 0
+        return currentClicks > bestClicks ? current : best
+      }, franchiseCoupons[0])
 
-    // Find best performing coupon
-    const bestCoupon = franchiseCoupons.reduce((best, current) => {
-      const currentClicks = current.visitCount || 0
-      const bestClicks = best?.visitCount || 0
-      return currentClicks > bestClicks ? current : best
-    }, franchiseCoupons[0])
+      if (bestCoupon && (bestCoupon.visitCount || 0) >= 10) {
+        addNotification({
+          title: `🚀 High Performance Alert!`,
+          message: `The offer "${bestCoupon.title}" is performing exceptionally well in ${myFranchise.region}.`,
+          type: 'alert',
+          link: `/voucher/${bestCoupon.id}`,
+          priority: 'high',
+        })
+      }
+    }
 
-    // Generate alert if performance is notably high
-    if (bestCoupon && (bestCoupon.visitCount || 0) >= 10) {
-      addNotification({
-        title: `🚀 High Performance Alert!`,
-        message: `The offer "${bestCoupon.title}" is performing exceptionally well in ${myFranchise.region} with high click ratios. Check out the analytics to optimize further!`,
-        type: 'alert',
-        link: `/voucher/${bestCoupon.id}`,
-        priority: 'high',
-      })
+    // 2. Performance Drop Alert
+    if (!notifications.some((n) => n.title.includes('Performance Drop'))) {
+      const underperforming = franchiseCoupons.find(
+        (c) => c.status === 'active' && (c.visitCount || 0) === 0,
+      )
+      if (underperforming) {
+        addNotification({
+          title: `⚠️ Performance Drop Alert`,
+          message: `The campaign "${underperforming.title}" has had no engagement recently. Consider revising it.`,
+          type: 'alert',
+          priority: 'medium',
+        })
+      }
     }
   }, [franchiseCoupons, myFranchise, notifications, addNotification])
 
@@ -179,6 +234,26 @@ export function FranchiseeOverviewTab({
 
   if (!myFranchise) return null
 
+  const TrendIndicator = ({ value }: { value: number }) => {
+    const isPositive = value >= 0
+    return (
+      <span
+        className={cn(
+          'text-xs font-medium flex items-center ml-2',
+          isPositive ? 'text-emerald-600' : 'text-rose-600',
+        )}
+      >
+        {isPositive ? (
+          <TrendingUp className="w-3 h-3 mr-1" />
+        ) : (
+          <TrendingDown className="w-3 h-3 mr-1" />
+        )}
+        {Math.abs(value).toFixed(1)}%{' '}
+        {t('dashboard.compare_previous', 'vs last period')}
+      </span>
+    )
+  }
+
   return (
     <div
       className={cn(
@@ -201,98 +276,185 @@ export function FranchiseeOverviewTab({
             )}
           </p>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <Select value={period} onValueChange={setPeriod}>
+            <SelectTrigger className="w-[140px] h-9">
+              <SelectValue
+                placeholder={t('dashboard.period.this_month', 'This Month')}
+              />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="this_month">
+                {t('dashboard.period.this_month', 'This Month')}
+              </SelectItem>
+              <SelectItem value="last_month">
+                {t('dashboard.period.last_month', 'Last Month')}
+              </SelectItem>
+              <SelectItem value="this_year">
+                {t('dashboard.period.this_year', 'This Year')}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="h-9">
+                <Settings2 className="w-4 h-4 mr-2" />
+                {t('dashboard.customize', 'Customize')}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuLabel>
+                {t('dashboard.visible_widgets', 'Visible Widgets')}
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuCheckboxItem
+                checked={widgets.sales}
+                onCheckedChange={(c) => setWidgets((p) => ({ ...p, sales: c }))}
+              >
+                {t('dashboard.widgets.sales', 'Sales')}
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={widgets.leads}
+                onCheckedChange={(c) => setWidgets((p) => ({ ...p, leads: c }))}
+              >
+                {t('dashboard.widgets.leads', 'Leads')}
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={widgets.campaigns}
+                onCheckedChange={(c) =>
+                  setWidgets((p) => ({ ...p, campaigns: c }))
+                }
+              >
+                {t('dashboard.widgets.campaigns', 'Campaigns')}
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={widgets.royalties}
+                onCheckedChange={(c) =>
+                  setWidgets((p) => ({ ...p, royalties: c }))
+                }
+              >
+                {t('dashboard.widgets.royalties', 'Royalties')}
+              </DropdownMenuCheckboxItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           <Button
             variant="outline"
             size="sm"
             onClick={handleExportCSV}
-            className="font-medium"
+            className="font-medium h-9"
+            title="Export CSV"
           >
-            <Download className="w-4 h-4 mr-2" />
-            {t('admin.exportCsv', 'Export CSV')}
+            <Download className="w-4 h-4" />
           </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={handleExportPDF}
-            className="font-medium"
+            className="font-medium h-9"
+            title="Export PDF"
           >
-            <FileText className="w-4 h-4 mr-2" />
-            {t('admin.exportPdf', 'Export PDF')}
+            <FileText className="w-4 h-4" />
           </Button>
         </div>
       </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 min-w-0">
-        <Card className="shadow-sm border-slate-200 min-w-0 overflow-hidden">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 min-w-0">
-            <CardTitle className="text-sm font-semibold text-slate-600 uppercase truncate">
-              {t('franchisee.overview.sales', 'Vendas Regionais')}
-            </CardTitle>
-            <CreditCard className="h-4 w-4 text-emerald-500 shrink-0" />
-          </CardHeader>
-          <CardContent className="min-w-0">
-            <div className="text-2xl font-black text-slate-800 truncate">
-              {formatCurrency(totalSales)}
-            </div>
-            <p className="text-xs text-emerald-600 mt-1 font-medium truncate">
-              {t('franchisee.overview.sales_desc', 'Volume transacionado')}
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="shadow-sm border-slate-200 min-w-0 overflow-hidden">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 min-w-0">
-            <CardTitle className="text-sm font-semibold text-slate-600 uppercase truncate">
-              {t('franchisee.overview.leads', 'Leads Capturados')}
-            </CardTitle>
-            <Users className="h-4 w-4 text-blue-500 shrink-0" />
-          </CardHeader>
-          <CardContent className="min-w-0">
-            <div className="text-2xl font-black text-slate-800 truncate">
-              {formatNumber(totalLeads)}
-            </div>
-            <p className="text-xs text-slate-400 mt-1 font-medium truncate">
-              {t('franchisee.overview.leads_desc', 'Clientes adquiridos')}
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="shadow-sm border-slate-200 min-w-0 overflow-hidden">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 min-w-0">
-            <CardTitle className="text-sm font-semibold text-slate-600 uppercase truncate">
-              {t('franchisee.overview.campaigns', 'Campanhas Ativas')}
-            </CardTitle>
-            <Ticket className="h-4 w-4 text-orange-500 shrink-0" />
-          </CardHeader>
-          <CardContent className="min-w-0">
-            <div className="text-2xl font-black text-slate-800 truncate">
-              {formatNumber(activeCampaigns)}
-            </div>
-            <p className="text-xs text-slate-400 mt-1 font-medium truncate">
-              {t(
-                'franchisee.overview.campaigns_desc',
-                'De {total} no total',
-              ).replace('{total}', String(franchiseCoupons.length))}
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="shadow-sm border-slate-200 border-l-4 border-l-orange-500 min-w-0 overflow-hidden">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 min-w-0">
-            <CardTitle className="text-sm font-semibold text-slate-600 uppercase truncate">
-              {t('franchisee.overview.royalties', 'Royalties Devidos')}
-            </CardTitle>
-            <DollarSign className="h-4 w-4 text-orange-500 shrink-0" />
-          </CardHeader>
-          <CardContent className="min-w-0">
-            <div className="text-2xl font-black text-orange-600 truncate">
-              {formatCurrency(totalRoyalties)}
-            </div>
-            <p className="text-xs text-slate-400 mt-1 font-medium truncate">
-              {t(
-                'franchisee.overview.royalties_desc',
-                '{rate}% sobre publicidade',
-              ).replace('{rate}', String(royaltyRate))}
-            </p>
-          </CardContent>
-        </Card>
+        {widgets.sales && (
+          <Card className="shadow-sm border-slate-200 min-w-0 overflow-hidden animate-fade-in">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 min-w-0">
+              <CardTitle className="text-sm font-semibold text-slate-600 uppercase truncate">
+                {t('franchisee.overview.sales', 'Vendas Regionais')}
+              </CardTitle>
+              <CreditCard className="h-4 w-4 text-emerald-500 shrink-0" />
+            </CardHeader>
+            <CardContent className="min-w-0">
+              <div className="text-2xl font-black text-slate-800 truncate flex items-baseline">
+                {formatCurrency(totalSales)}
+              </div>
+              <div className="flex items-center justify-between mt-1">
+                <p className="text-xs text-slate-500 truncate">
+                  {t('franchisee.overview.sales_desc', 'Volume transacionado')}
+                </p>
+                <TrendIndicator value={comparisons.sales} />
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {widgets.leads && (
+          <Card className="shadow-sm border-slate-200 min-w-0 overflow-hidden animate-fade-in">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 min-w-0">
+              <CardTitle className="text-sm font-semibold text-slate-600 uppercase truncate">
+                {t('franchisee.overview.leads', 'Leads Capturados')}
+              </CardTitle>
+              <Users className="h-4 w-4 text-blue-500 shrink-0" />
+            </CardHeader>
+            <CardContent className="min-w-0">
+              <div className="text-2xl font-black text-slate-800 truncate">
+                {formatNumber(totalLeads)}
+              </div>
+              <div className="flex items-center justify-between mt-1">
+                <p className="text-xs text-slate-500 truncate">
+                  {t('franchisee.overview.leads_desc', 'Clientes adquiridos')}
+                </p>
+                <TrendIndicator value={comparisons.leads} />
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {widgets.campaigns && (
+          <Card className="shadow-sm border-slate-200 min-w-0 overflow-hidden animate-fade-in">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 min-w-0">
+              <CardTitle className="text-sm font-semibold text-slate-600 uppercase truncate">
+                {t('franchisee.overview.campaigns', 'Campanhas Ativas')}
+              </CardTitle>
+              <Ticket className="h-4 w-4 text-orange-500 shrink-0" />
+            </CardHeader>
+            <CardContent className="min-w-0">
+              <div className="text-2xl font-black text-slate-800 truncate">
+                {formatNumber(activeCampaigns)}
+              </div>
+              <div className="flex items-center justify-between mt-1">
+                <p className="text-xs text-slate-500 truncate">
+                  {t(
+                    'franchisee.overview.campaigns_desc',
+                    'De {total} no total',
+                  ).replace('{total}', String(franchiseCoupons.length))}
+                </p>
+                <TrendIndicator value={comparisons.campaigns} />
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {widgets.royalties && (
+          <Card className="shadow-sm border-slate-200 border-l-4 border-l-orange-500 min-w-0 overflow-hidden animate-fade-in">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 min-w-0">
+              <CardTitle className="text-sm font-semibold text-slate-600 uppercase truncate">
+                {t('franchisee.overview.royalties', 'Royalties Devidos')}
+              </CardTitle>
+              <DollarSign className="h-4 w-4 text-orange-500 shrink-0" />
+            </CardHeader>
+            <CardContent className="min-w-0">
+              <div className="text-2xl font-black text-orange-600 truncate">
+                {formatCurrency(totalRoyalties)}
+              </div>
+              <div className="flex items-center justify-between mt-1">
+                <p className="text-xs text-slate-500 truncate">
+                  {t(
+                    'franchisee.overview.royalties_desc',
+                    '{rate}% sobre publicidade',
+                  ).replace('{rate}', String(royaltyRate))}
+                </p>
+                <TrendIndicator value={comparisons.royalties} />
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       <CouponPerformance franchiseId={myFranchise.id} />

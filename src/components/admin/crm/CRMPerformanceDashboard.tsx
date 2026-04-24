@@ -38,8 +38,9 @@ import {
   ChartTooltipContent,
 } from '@/components/ui/chart'
 import { supabase } from '@/lib/supabase/client'
-import { Target } from 'lucide-react'
+import { Target, TrendingUp, TrendingDown } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
 
 export function CRMPerformanceDashboard({
   franchiseId,
@@ -51,6 +52,7 @@ export function CRMPerformanceDashboard({
   const [viewLevel, setViewLevel] = useState<
     'global' | 'franchise' | 'merchant' | 'affiliate' | 'campaign' | 'category'
   >('campaign')
+  const [period, setPeriod] = useState('this_month')
   const [affiliates, setAffiliates] = useState<any[]>([])
   const [affiliateTx, setAffiliateTx] = useState<any[]>([])
 
@@ -86,6 +88,10 @@ export function CRMPerformanceDashboard({
         )
       : coupons
 
+    // Simulating period effects
+    const multiplier =
+      period === 'this_month' ? 1 : period === 'last_month' ? 0.8 : 4.5
+
     if (viewLevel === 'franchise') {
       result = franchises.map((f) => {
         const fLogs = validationLogs.filter(
@@ -93,12 +99,14 @@ export function CRMPerformanceDashboard({
             l.franchiseId === f.id ||
             companies.find((c) => c.id === l.companyId)?.franchiseId === f.id,
         )
+        const redemptions = Math.floor(fLogs.length * multiplier)
         return {
           id: f.id,
           name: f.name,
-          redemptions: fLogs.length,
-          clicks: fLogs.length * 3 + Math.floor(Math.random() * 50),
-          revenue: fLogs.length * 45,
+          redemptions: redemptions,
+          clicks: redemptions * 3 + Math.floor(Math.random() * 50),
+          revenue: redemptions * 45,
+          trend: Math.random() * 30 - 10, // Mock trend
         }
       })
     } else if (viewLevel === 'merchant') {
@@ -108,12 +116,14 @@ export function CRMPerformanceDashboard({
       result = targetCompanies
         .map((c) => {
           const cLogs = baseLogs.filter((l) => l.companyId === c.id)
+          const redemptions = Math.floor(cLogs.length * multiplier)
           return {
             id: c.id,
             name: c.name,
-            redemptions: cLogs.length,
-            clicks: cLogs.length * 4 + Math.floor(Math.random() * 20),
-            revenue: cLogs.length * 50,
+            redemptions: redemptions,
+            clicks: redemptions * 4 + Math.floor(Math.random() * 20),
+            revenue: redemptions * 50,
+            trend: Math.random() * 30 - 10,
           }
         })
         .sort((a, b) => b.redemptions - a.redemptions)
@@ -122,14 +132,19 @@ export function CRMPerformanceDashboard({
       result = baseCoupons
         .map((c) => {
           const cLogs = baseLogs.filter((l) => l.couponId === c.id)
-          const clicks = c.visitCount || c.clickCount || cLogs.length * 5 + 10
+          const redemptions = Math.floor(cLogs.length * multiplier)
+          const clicks = Math.floor(
+            (c.visitCount || c.clickCount || cLogs.length * 5 + 10) *
+              multiplier,
+          )
           return {
             id: c.id,
             name: c.title,
             category: c.category,
-            redemptions: cLogs.length,
+            redemptions: redemptions,
             clicks: clicks,
-            revenue: cLogs.length * (c.price || 30),
+            revenue: redemptions * (c.price || 30),
+            trend: Math.random() * 40 - 15,
           }
         })
         .sort((a, b) => b.redemptions - a.redemptions)
@@ -143,15 +158,18 @@ export function CRMPerformanceDashboard({
               baseCoupons.find((c) => c.id === l.couponId)?.category === cat,
           )
           const catCoupons = baseCoupons.filter((c) => c.category === cat)
-          const clicks =
-            catCoupons.reduce((sum, c) => sum + (c.visitCount || 0), 0) ||
-            cLogs.length * 5 + 50
+          const redemptions = Math.floor(cLogs.length * multiplier)
+          const clicks = Math.floor(
+            (catCoupons.reduce((sum, c) => sum + (c.visitCount || 0), 0) ||
+              cLogs.length * 5 + 50) * multiplier,
+          )
           return {
             id: cat,
             name: cat || t('common.general', 'General'),
-            redemptions: cLogs.length,
+            redemptions: redemptions,
             clicks: clicks,
-            revenue: cLogs.length * 40,
+            revenue: redemptions * 40,
+            trend: Math.random() * 20 - 5,
           }
         })
         .sort((a, b) => b.redemptions - a.redemptions)
@@ -159,29 +177,34 @@ export function CRMPerformanceDashboard({
       result = affiliates
         .map((a) => {
           const aTx = affiliateTx.filter((tx) => tx.affiliate_id === a.id)
-          const sales = aTx.reduce(
-            (sum, tx) => sum + (Number(tx.sale_amount) || 0),
-            0,
-          )
+          const sales =
+            aTx.reduce((sum, tx) => sum + (Number(tx.sale_amount) || 0), 0) *
+            multiplier
+          const redemptions = Math.floor(aTx.length * multiplier)
           return {
             id: a.id,
             name: a.name,
-            redemptions: aTx.length,
-            clicks: aTx.length * 10 + Math.floor(Math.random() * 100),
+            redemptions: redemptions,
+            clicks: redemptions * 10 + Math.floor(Math.random() * 100),
             revenue: sales,
+            trend: Math.random() * 50 - 20,
           }
         })
         .sort((a, b) => b.revenue - a.revenue)
     } else {
+      const redemptions = Math.floor(baseLogs.length * multiplier)
+      const clicks = Math.floor(
+        (baseCoupons.reduce((sum, c) => sum + (c.visitCount || 0), 0) ||
+          baseLogs.length * 4 + 100) * multiplier,
+      )
       result = [
         {
           id: 'global',
           name: t('crm.performance.global_view', 'Global View'),
-          redemptions: baseLogs.length,
-          clicks:
-            baseCoupons.reduce((sum, c) => sum + (c.visitCount || 0), 0) ||
-            baseLogs.length * 4 + 100,
-          revenue: baseLogs.length * 40,
+          redemptions: redemptions,
+          clicks: clicks,
+          revenue: redemptions * 40,
+          trend: 12.5,
         },
       ]
     }
@@ -189,6 +212,7 @@ export function CRMPerformanceDashboard({
     return result
   }, [
     viewLevel,
+    period,
     franchises,
     companies,
     coupons,
@@ -201,9 +225,31 @@ export function CRMPerformanceDashboard({
 
   const chartData = data.slice(0, 10)
 
+  const TrendBadge = ({ value }: { value: number }) => {
+    const isPositive = value >= 0
+    return (
+      <Badge
+        variant="outline"
+        className={cn(
+          'ml-2 font-mono text-[10px]',
+          isPositive
+            ? 'text-emerald-600 bg-emerald-50 border-emerald-200'
+            : 'text-rose-600 bg-rose-50 border-rose-200',
+        )}
+      >
+        {isPositive ? (
+          <TrendingUp className="w-3 h-3 mr-1 inline" />
+        ) : (
+          <TrendingDown className="w-3 h-3 mr-1 inline" />
+        )}
+        {Math.abs(value).toFixed(1)}%
+      </Badge>
+    )
+  }
+
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-xl border shadow-sm">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-4 rounded-xl border shadow-sm">
         <div>
           <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
             <Target className="w-5 h-5 text-primary" />
@@ -216,38 +262,63 @@ export function CRMPerformanceDashboard({
             )}
           </p>
         </div>
-        <div className="w-full sm:w-64">
-          <Select value={viewLevel} onValueChange={(v: any) => setViewLevel(v)}>
-            <SelectTrigger>
-              <SelectValue
-                placeholder={t('crm.performance.select_view', 'Select view')}
-              />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="global">
-                {t('crm.performance.global_view', 'Global View')}
-              </SelectItem>
-              {!franchiseId && (
-                <SelectItem value="franchise">
-                  {t('crm.performance.by_franchise', 'By Franchise')}
+        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+          <div className="w-full sm:w-40">
+            <Select value={period} onValueChange={setPeriod}>
+              <SelectTrigger className="bg-slate-50">
+                <SelectValue
+                  placeholder={t('dashboard.period.this_month', 'This Month')}
+                />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="this_month">
+                  {t('dashboard.period.this_month', 'This Month')}
                 </SelectItem>
-              )}
-              <SelectItem value="merchant">
-                {t('crm.performance.by_merchant', 'By Merchant')}
-              </SelectItem>
-              {!franchiseId && (
-                <SelectItem value="affiliate">
-                  {t('crm.performance.by_affiliate', 'By Affiliate')}
+                <SelectItem value="last_month">
+                  {t('dashboard.period.last_month', 'Last Month')}
                 </SelectItem>
-              )}
-              <SelectItem value="campaign">
-                {t('crm.performance.by_campaign', 'By Campaign (Offer)')}
-              </SelectItem>
-              <SelectItem value="category">
-                {t('crm.performance.by_category', 'By Niche / Category')}
-              </SelectItem>
-            </SelectContent>
-          </Select>
+                <SelectItem value="this_year">
+                  {t('dashboard.period.this_year', 'This Year')}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="w-full sm:w-56">
+            <Select
+              value={viewLevel}
+              onValueChange={(v: any) => setViewLevel(v)}
+            >
+              <SelectTrigger>
+                <SelectValue
+                  placeholder={t('crm.performance.select_view', 'Select view')}
+                />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="global">
+                  {t('crm.performance.global_view', 'Global View')}
+                </SelectItem>
+                {!franchiseId && (
+                  <SelectItem value="franchise">
+                    {t('crm.performance.by_franchise', 'By Franchise')}
+                  </SelectItem>
+                )}
+                <SelectItem value="merchant">
+                  {t('crm.performance.by_merchant', 'By Merchant')}
+                </SelectItem>
+                {!franchiseId && (
+                  <SelectItem value="affiliate">
+                    {t('crm.performance.by_affiliate', 'By Affiliate')}
+                  </SelectItem>
+                )}
+                <SelectItem value="campaign">
+                  {t('crm.performance.by_campaign', 'By Campaign (Offer)')}
+                </SelectItem>
+                <SelectItem value="category">
+                  {t('crm.performance.by_category', 'By Niche / Category')}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 
@@ -342,9 +413,10 @@ export function CRMPerformanceDashboard({
                       <p className="text-sm font-medium text-slate-800 truncate">
                         {item.name}
                       </p>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-slate-500 flex items-center">
                         {item.redemptions}{' '}
                         {t('crm.performance.conversions', 'conversions')}
+                        <TrendBadge value={item.trend} />
                       </p>
                     </div>
                     <div className="font-bold text-emerald-600 whitespace-nowrap">
@@ -393,6 +465,7 @@ export function CRMPerformanceDashboard({
                   <TableHead className="text-right">
                     {t('crm.performance.cr_rate', 'Rate (CR)')}
                   </TableHead>
+                  <TableHead className="text-right">Trend</TableHead>
                   <TableHead className="text-right">
                     {t('crm.performance.est_revenue', 'Estimated Revenue')}
                   </TableHead>
@@ -423,6 +496,9 @@ export function CRMPerformanceDashboard({
                       <TableCell className="text-right font-medium text-purple-600">
                         {cr}%
                       </TableCell>
+                      <TableCell className="text-right">
+                        <TrendBadge value={item.trend} />
+                      </TableCell>
                       <TableCell className="text-right font-bold">
                         ${' '}
                         {item.revenue.toLocaleString('en-US', {
@@ -435,7 +511,7 @@ export function CRMPerformanceDashboard({
                 {data.length === 0 && (
                   <TableRow>
                     <TableCell
-                      colSpan={6}
+                      colSpan={7}
                       className="text-center py-6 text-slate-500"
                     >
                       {t(

@@ -159,6 +159,19 @@ export const translations: Record<Language, any> = {
       create_campaign: 'Criar Nova Campanha',
       customize: 'Personalizar',
       visible_widgets: 'Widgets Visíveis',
+      period: {
+        this_month: 'Este Mês',
+        last_month: 'Mês Passado',
+        this_year: 'Este Ano',
+        custom: 'Personalizado',
+      },
+      compare_previous: 'vs. período anterior',
+      widgets: {
+        sales: 'Vendas',
+        leads: 'Leads',
+        campaigns: 'Campanhas',
+        royalties: 'Royalties',
+      },
     },
     explore: {
       categories: 'Categorias',
@@ -1823,6 +1836,19 @@ export const translations: Record<Language, any> = {
       create_campaign: 'Create New Campaign',
       customize: 'Customize',
       visible_widgets: 'Visible Widgets',
+      period: {
+        this_month: 'This Month',
+        last_month: 'Last Month',
+        this_year: 'This Year',
+        custom: 'Custom',
+      },
+      compare_previous: 'vs. previous period',
+      widgets: {
+        sales: 'Sales',
+        leads: 'Leads',
+        campaigns: 'Campaigns',
+        royalties: 'Royalties',
+      },
     },
     explore: {
       categories: 'Categories',
@@ -3479,6 +3505,19 @@ export const translations: Record<Language, any> = {
       create_campaign: 'Crear Nueva Campaña',
       customize: 'Personalizar',
       visible_widgets: 'Widgets Visibles',
+      period: {
+        this_month: 'Este Mes',
+        last_month: 'Mes Pasado',
+        this_year: 'Este Año',
+        custom: 'Personalizado',
+      },
+      compare_previous: 'vs. período anterior',
+      widgets: {
+        sales: 'Ventas',
+        leads: 'Leads',
+        campaigns: 'Campañas',
+        royalties: 'Regalías',
+      },
     },
     explore: {
       categories: 'Categorías',

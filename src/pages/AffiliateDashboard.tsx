@@ -17,6 +17,13 @@ import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 import { useLanguage } from '@/stores/LanguageContext'
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
   Search,
   Download,
   ExternalLink,
@@ -64,6 +71,7 @@ export default function AffiliateDashboard() {
   const [importResults, setImportResults] = useState<any[]>([])
   const [isSearching, setIsSearching] = useState(false)
   const [transactions, setTransactions] = useState<any[]>([])
+  const [period, setPeriod] = useState('this_month')
 
   useEffect(() => {
     if (user) {
@@ -565,19 +573,37 @@ export default function AffiliateDashboard() {
         >
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card className="border shadow-sm md:col-span-2">
-              <CardHeader className="bg-slate-50/50 border-b pb-4">
-                <CardTitle>
-                  {t(
-                    'affiliate.campaigns.performance_title',
-                    'Campaign Performance (Niche/Category)',
-                  )}
-                </CardTitle>
-                <CardDescription>
-                  {t(
-                    'affiliate.campaigns.performance_desc',
-                    'Track the detailed performance of your offers by product/niche.',
-                  )}
-                </CardDescription>
+              <CardHeader className="bg-slate-50/50 border-b pb-4 flex flex-row items-start justify-between">
+                <div>
+                  <CardTitle>
+                    {t(
+                      'affiliate.campaigns.performance_title',
+                      'Campaign Performance (Niche/Category)',
+                    )}
+                  </CardTitle>
+                  <CardDescription className="mt-1">
+                    {t(
+                      'affiliate.campaigns.performance_desc',
+                      'Track the detailed performance of your offers by product/niche.',
+                    )}
+                  </CardDescription>
+                </div>
+                <Select value={period} onValueChange={setPeriod}>
+                  <SelectTrigger className="w-[140px] h-8 text-xs bg-white">
+                    <SelectValue placeholder="Period" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="this_month">
+                      {t('dashboard.period.this_month', 'This Month')}
+                    </SelectItem>
+                    <SelectItem value="last_month">
+                      {t('dashboard.period.last_month', 'Last Month')}
+                    </SelectItem>
+                    <SelectItem value="this_year">
+                      {t('dashboard.period.this_year', 'This Year')}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </CardHeader>
               <CardContent className="pt-6">
                 <div className="h-[300px] w-full">

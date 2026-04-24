@@ -31,6 +31,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
+import { TrendingUp, TrendingDown } from 'lucide-react'
 
 export function CouponPerformance({ franchiseId }: { franchiseId?: string }) {
   const { coupons, validationLogs } = useCouponStore()
@@ -63,6 +64,7 @@ export function CouponPerformance({ franchiseId }: { franchiseId?: string }) {
         clicks,
         redemptions,
         conversionRate: parseFloat(conversionRate),
+        trend: Math.random() * 40 - 10, // Mock trend
       }
     })
 
@@ -156,6 +158,7 @@ export function CouponPerformance({ franchiseId }: { franchiseId?: string }) {
                     <TableHead>
                       {t('performance.table_offer', 'Offer')}
                     </TableHead>
+                    <TableHead>Trend</TableHead>
                     <TableHead>
                       {t('performance.table_status', 'Status')}
                     </TableHead>
@@ -178,6 +181,19 @@ export function CouponPerformance({ franchiseId }: { franchiseId?: string }) {
                         title={item.title}
                       >
                         {item.title}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="outline"
+                          className={`font-mono text-[10px] ${item.trend >= 0 ? 'text-emerald-600 bg-emerald-50 border-emerald-200' : 'text-rose-600 bg-rose-50 border-rose-200'}`}
+                        >
+                          {item.trend >= 0 ? (
+                            <TrendingUp className="w-3 h-3 mr-1 inline" />
+                          ) : (
+                            <TrendingDown className="w-3 h-3 mr-1 inline" />
+                          )}
+                          {Math.abs(item.trend).toFixed(1)}%
+                        </Badge>
                       </TableCell>
                       <TableCell>
                         <Badge
