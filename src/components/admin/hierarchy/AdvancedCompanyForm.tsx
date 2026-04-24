@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import { Company } from '@/lib/types'
+import { Company, Franchise } from '@/lib/types'
+import { useCouponStore } from '@/stores/CouponContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -32,8 +33,9 @@ export function AdvancedCompanyForm({
   onCancel,
 }: Props) {
   const { t } = useLanguage()
+  const { franchises } = useCouponStore()
   const [formData, setFormData] = useState<
-    Partial<Company & { country?: string }>
+    Partial<Company & Franchise & { country?: string }>
   >({
     name: '',
     email: '',
@@ -69,6 +71,9 @@ export function AdvancedCompanyForm({
     addressZip: '',
     addressLat: undefined,
     addressLng: undefined,
+    coverageScope: 'national',
+    coverageStates: [],
+    coverageCities: [],
   })
 
   useEffect(() => {
@@ -103,10 +108,33 @@ export function AdvancedCompanyForm({
   const ALL_REGIONS = Array.from(new Set([...REGIONS, ...customRegions]))
   const ALL_COUNTRIES = Array.from(new Set([...COUNTRIES, ...customRegions]))
 
+  const parentFranchise =
+    formData.franchiseId && formData.franchiseId !== 'independent'
+      ? franchises.find((f) => f.id === formData.franchiseId)
+      : null
+
+  const allowedStates =
+    parentFranchise &&
+    (parentFranchise.coverageScope === 'state' ||
+      parentFranchise.coverageScope === 'city')
+      ? parentFranchise.coverageStates
+      : undefined
+
+  const allowedCities =
+    parentFranchise && parentFranchise.coverageScope === 'city'
+      ? parentFranchise.coverageCities
+      : undefined
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6 py-4">
       <Tabs defaultValue="general" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList
+          className={
+            type === 'franchise'
+              ? 'grid w-full grid-cols-5'
+              : 'grid w-full grid-cols-4'
+          }
+        >
           <TabsTrigger value="general">
             {t('admin.company.tabs.general', 'General')}
           </TabsTrigger>
@@ -119,6 +147,11 @@ export function AdvancedCompanyForm({
           <TabsTrigger value="address">
             {t('admin.company.tabs.address', 'Addressing')}
           </TabsTrigger>
+          {type === 'franchise' && (
+            <TabsTrigger value="coverage">
+              {t('admin.company.tabs.coverage', 'Coverage')}
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="general" className="space-y-4 mt-4">
@@ -184,6 +217,8 @@ export function AdvancedCompanyForm({
                     region: prev.region || v,
                     addressState: '',
                     addressCity: '',
+                    coverageStates: [],
+                    coverageCities: [],
                   }))
                 }
               >
@@ -221,6 +256,8 @@ export function AdvancedCompanyForm({
                           addressCountry: v,
                           addressState: '',
                           addressCity: '',
+                          coverageStates: [],
+                          coverageCities: [],
                         }
                       : {}),
                   }))
@@ -429,26 +466,74 @@ export function AdvancedCompanyForm({
               />
             </div>
             <div className="space-y-2">
-              <Label>{t('admin.company.address.city', 'City')}</Label>
-              <Input
-                required
-                value={formData.addressCity || ''}
-                onChange={(e) =>
-                  setFormData({ ...formData, addressCity: e.target.value })
-                }
-              />
-            </div>
-            <div className="space-y-2">
               <Label>
                 {t('admin.company.address.state', 'State / Province')}
               </Label>
-              <Input
+              <Select
                 required
                 value={formData.addressState || ''}
-                onChange={(e) =>
-                  setFormData({ ...formData, addressState: e.target.value })
+                onValueChange={(val) =>
+                  setFormData({
+                    ...formData,
+                    addressState: val,
+                    addressCity: '',
+                  })
                 }
-              />
+                disabled={!formData.addressCountry}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={t('common.select', 'Select...')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.keys(
+                    LOCATION_DATA[formData.addressCountry || '']?.states || {},
+                  )
+                    .filter(
+                      (s) =>
+                        !allowedStates ||
+                        allowedStates.length === 0 ||
+                        allowedStates.includes(s),
+                    )
+                    .map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {s}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>{t('admin.company.address.city', 'City')}</Label>
+              <Select
+                required
+                value={formData.addressCity || ''}
+                onValueChange={(val) =>
+                  setFormData({ ...formData, addressCity: val })
+                }
+                disabled={!formData.addressState}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={t('common.select', 'Select...')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {(
+                    LOCATION_DATA[formData.addressCountry || '']?.states[
+                      formData.addressState || ''
+                    ] || []
+                  )
+                    .filter(
+                      (c) =>
+                        !allowedCities ||
+                        allowedCities.length === 0 ||
+                        allowedCities.includes(c),
+                    )
+                    .map((c) => (
+                      <SelectItem key={c} value={c}>
+                        {c}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label>{t('admin.company.address.zip', 'ZIP Code')}</Label>
@@ -486,6 +571,126 @@ export function AdvancedCompanyForm({
             </div>
           </div>
         </TabsContent>
+        {type === 'franchise' && (
+          <TabsContent value="coverage" className="space-y-4 mt-4">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>
+                  {t('admin.franchise.coverage_scope', 'Coverage Scope')}
+                </Label>
+                <Select
+                  value={formData.coverageScope || 'national'}
+                  onValueChange={(val: any) =>
+                    setFormData({
+                      ...formData,
+                      coverageScope: val,
+                      coverageStates: [],
+                      coverageCities: [],
+                    })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue
+                      placeholder={t('common.select', 'Select...')}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="national">
+                      {t('admin.franchise.scope.national', 'National')}
+                    </SelectItem>
+                    <SelectItem value="state">
+                      {t('admin.franchise.scope.state', 'Specific States')}
+                    </SelectItem>
+                    <SelectItem value="city">
+                      {t('admin.franchise.scope.city', 'Specific Cities')}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {(formData.coverageScope === 'state' ||
+                formData.coverageScope === 'city') && (
+                <div className="space-y-2">
+                  <Label>
+                    {t('admin.franchise.coverage_states', 'Allowed States')}
+                  </Label>
+                  <div className="border rounded-md p-4 max-h-48 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {Object.keys(
+                      LOCATION_DATA[formData.addressCountry || '']?.states ||
+                        {},
+                    ).map((s) => (
+                      <label
+                        key={s}
+                        className="flex items-center space-x-2 text-sm"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={(formData.coverageStates || []).includes(s)}
+                          onChange={(e) => {
+                            const newStates = e.target.checked
+                              ? [...(formData.coverageStates || []), s]
+                              : (formData.coverageStates || []).filter(
+                                  (st) => st !== s,
+                                )
+                            setFormData({
+                              ...formData,
+                              coverageStates: newStates,
+                            })
+                          }}
+                          className="rounded border-gray-300"
+                        />
+                        <span>{s}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {formData.coverageScope === 'city' && (
+                <div className="space-y-2">
+                  <Label>
+                    {t('admin.franchise.coverage_cities', 'Allowed Cities')}
+                  </Label>
+                  <div className="border rounded-md p-4 max-h-48 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {(formData.coverageStates || [])
+                      .flatMap(
+                        (s) =>
+                          LOCATION_DATA[formData.addressCountry || '']?.states[
+                            s
+                          ] || [],
+                      )
+                      .map((c) => (
+                        <label
+                          key={c}
+                          className="flex items-center space-x-2 text-sm"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={(formData.coverageCities || []).includes(
+                              c,
+                            )}
+                            onChange={(e) => {
+                              const newCities = e.target.checked
+                                ? [...(formData.coverageCities || []), c]
+                                : (formData.coverageCities || []).filter(
+                                    (ci) => ci !== c,
+                                  )
+                              setFormData({
+                                ...formData,
+                                coverageCities: newCities,
+                              })
+                            }}
+                            className="rounded border-gray-300"
+                          />
+                          <span>{c}</span>
+                        </label>
+                      ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+        )}
       </Tabs>
 
       <DialogFooter className="mt-6 pt-4 border-t">

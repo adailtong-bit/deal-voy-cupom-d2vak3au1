@@ -15,6 +15,8 @@ interface AddressFormProps {
   country: string
   state: string
   city: string
+  allowedStates?: string[]
+  allowedCities?: string[]
   onChange: (data: {
     state: string
     city: string
@@ -27,6 +29,8 @@ export function AddressForm({
   country,
   state,
   city,
+  allowedStates,
+  allowedCities,
   onChange,
 }: AddressFormProps) {
   const { t } = useLanguage()
@@ -34,11 +38,23 @@ export function AddressForm({
   const [address, setAddress] = useState('')
 
   const availableStates = country
-    ? Object.keys(LOCATION_DATA[country]?.states || {})
+    ? Object.keys(LOCATION_DATA[country]?.states || {}).filter(
+        (s) =>
+          !allowedStates ||
+          allowedStates.length === 0 ||
+          allowedStates.includes(s),
+      )
     : []
 
   const availableCities =
-    country && state ? LOCATION_DATA[country]?.states[state] || [] : []
+    country && state
+      ? (LOCATION_DATA[country]?.states[state] || []).filter(
+          (c) =>
+            !allowedCities ||
+            allowedCities.length === 0 ||
+            allowedCities.includes(c),
+        )
+      : []
 
   const handleZipChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let val = e.target.value.replace(/\D/g, '')

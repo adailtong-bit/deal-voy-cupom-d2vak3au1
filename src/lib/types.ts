@@ -625,6 +625,9 @@ export interface Franchise {
   stateRegistration?: string
   credentialsSent?: boolean
   documents?: CompanyDocument[]
+  coverageScope?: 'national' | 'state' | 'city'
+  coverageStates?: string[]
+  coverageCities?: string[]
 }
 
 export type TravelOfferType =
