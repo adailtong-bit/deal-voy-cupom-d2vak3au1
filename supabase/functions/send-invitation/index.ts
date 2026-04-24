@@ -7,21 +7,38 @@ const corsHeaders = {
     'authorization, x-client-info, x-supabase-client-platform, apikey, content-type',
 }
 
+import { createClient } from 'jsr:@supabase/supabase-js@2'
+
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
+  const supabaseClient = createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+  )
+
+  let type = 'invitation'
+  let email = ''
+  let subject = 'Convite para acessar Routevoy'
+  let provider = 'mock'
+  let emailSent = false
+  let errorMessage: string | null = null
+
   try {
-    const { email, name, role, invitationUrl } = await req.json()
+    const body = await req.json()
+    email = body.email
+    const name = body.name
+    const role = body.role
+    const invitationUrl = body.invitationUrl
 
     if (!email) {
       throw new Error('Email is required')
     }
 
+    subject = `Convite para acessar Routevoy (${role})`
     const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
-    let emailSent = false
-    let provider = 'mock'
 
     if (RESEND_API_KEY) {
       const res = await fetch('https://api.resend.com/emails', {
@@ -33,7 +50,7 @@ Deno.serve(async (req: Request) => {
         body: JSON.stringify({
           from: 'Routevoy <invites@routevoy.com>',
           to: [email],
-          subject: `Convite para acessar Routevoy (${role})`,
+          subject: subject,
           html: `
             <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
               <h2>Olá ${name || ''},</h2>
@@ -69,6 +86,15 @@ Deno.serve(async (req: Request) => {
       emailSent = true
     }
 
+    await supabaseClient.from('email_logs').insert({
+      recipient: email,
+      subject: subject,
+      type: type,
+      status: 'success',
+      provider: provider,
+      error_message: null,
+    })
+
     return new Response(
       JSON.stringify({ success: true, emailSent, provider, email }),
       {
@@ -76,7 +102,20 @@ Deno.serve(async (req: Request) => {
       },
     )
   } catch (error: any) {
-    return new Response(JSON.stringify({ error: error.message }), {
+    errorMessage = error.message
+
+    if (email) {
+      await supabaseClient.from('email_logs').insert({
+        recipient: email,
+        subject: subject,
+        type: type,
+        status: 'failed',
+        provider: provider,
+        error_message: errorMessage,
+      })
+    }
+
+    return new Response(JSON.stringify({ error: errorMessage }), {
       status: 400,
       headers: { 'Content-Type': 'application/json', ...corsHeaders },
     })

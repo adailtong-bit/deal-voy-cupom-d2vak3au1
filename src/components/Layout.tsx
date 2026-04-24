@@ -3,6 +3,7 @@ import { DesktopHeader } from './DesktopHeader'
 import { MobileHeader } from './MobileHeader'
 import { ProximityAlertsToggle } from './ProximityAlertsToggle'
 import { DevNavigation } from './DevNavigation'
+import { Footer } from './Footer'
 
 export default function Layout() {
   const location = useLocation()
@@ -13,6 +14,7 @@ export default function Layout() {
       <main className="flex-1 w-full min-w-0 relative max-w-full overflow-x-hidden">
         <Outlet />
       </main>
+      <Footer />
       <ProximityAlertsToggle />
 
       {/* Botão flutuante para QA / Admin transitar de forma fácil entre ambientes (disponível globalmente, minimizado por padrão) */}

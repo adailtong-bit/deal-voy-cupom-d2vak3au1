@@ -7,23 +7,37 @@ const corsHeaders = {
     'authorization, x-client-info, x-supabase-client-platform, apikey, content-type',
 }
 
+import { createClient } from 'jsr:@supabase/supabase-js@2'
+
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
+  const supabaseClient = createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+  )
+
+  let type = 'unknown'
+  let email = ''
+  let subject = 'Bem-vindo ao Routevoy!'
+  let provider = 'mock'
+  let emailSent = false
+  let errorMessage: string | null = null
+
   try {
-    const { type, email, name } = await req.json()
+    const body = await req.json()
+    type = body.type || 'unknown'
+    email = body.email
+    const name = body.name
 
     if (!email) {
       throw new Error('Email is required')
     }
 
     const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
-    let emailSent = false
-    let provider = 'mock'
 
-    let subject = 'Bem-vindo ao Routevoy!'
     let html = `<h1>Olá ${name || ''},</h1><p>Bem-vindo ao Routevoy!</p>`
 
     if (type === 'welcome') {
@@ -87,6 +101,15 @@ Deno.serve(async (req: Request) => {
       emailSent = true
     }
 
+    await supabaseClient.from('email_logs').insert({
+      recipient: email,
+      subject: subject,
+      type: type,
+      status: 'success',
+      provider: provider,
+      error_message: null,
+    })
+
     return new Response(
       JSON.stringify({ success: true, emailSent, provider, email }),
       {
@@ -94,7 +117,20 @@ Deno.serve(async (req: Request) => {
       },
     )
   } catch (error: any) {
-    return new Response(JSON.stringify({ error: error.message }), {
+    errorMessage = error.message
+
+    if (email) {
+      await supabaseClient.from('email_logs').insert({
+        recipient: email,
+        subject: subject,
+        type: type,
+        status: 'failed',
+        provider: provider,
+        error_message: errorMessage,
+      })
+    }
+
+    return new Response(JSON.stringify({ error: errorMessage }), {
       status: 400,
       headers: { 'Content-Type': 'application/json', ...corsHeaders },
     })

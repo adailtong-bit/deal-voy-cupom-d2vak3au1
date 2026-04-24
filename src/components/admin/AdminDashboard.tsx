@@ -32,6 +32,8 @@ import { AdminTranslationsTab } from '@/components/admin/AdminTranslationsTab'
 import { AdminPerformanceTab } from '@/components/admin/AdminPerformanceTab'
 import { AdminNotificationsTab } from '@/components/admin/AdminNotificationsTab'
 import { AdminSettingsTab } from '@/components/admin/AdminSettingsTab'
+import { AdminContentTab } from '@/components/admin/AdminContentTab'
+import { AdminEmailLogsTab } from '@/components/admin/AdminEmailLogsTab'
 import { FinanceDashboardTab } from '@/components/finance/FinanceDashboardTab'
 import { AdminOffersTab } from '@/components/admin/AdminOffersTab'
 import { AdminApprovalsTab } from '@/components/admin/AdminApprovalsTab'
@@ -360,6 +362,12 @@ export default function AdminDashboard() {
               <TabsTrigger value="settings">
                 {t('admin.settings', 'Settings')}
               </TabsTrigger>
+              <TabsTrigger value="content">
+                {t('admin.content', 'Rodapé & Conteúdo')}
+              </TabsTrigger>
+              <TabsTrigger value="emails">
+                {t('admin.emails', 'Relatório de E-mails')}
+              </TabsTrigger>
             </>
           )}
           <TabsTrigger value="hierarchy">
@@ -497,6 +505,12 @@ export default function AdminDashboard() {
             </TabsContent>
             <TabsContent value="settings">
               <AdminSettingsTab />
+            </TabsContent>
+            <TabsContent value="content">
+              <AdminContentTab />
+            </TabsContent>
+            <TabsContent value="emails">
+              <AdminEmailLogsTab />
             </TabsContent>
             <TabsContent value="approvals">
               <AdminApprovalsTab />
