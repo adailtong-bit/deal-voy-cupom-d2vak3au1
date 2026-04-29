@@ -9,15 +9,17 @@ import { useNotification } from '@/stores/NotificationContext'
 import { useLanguage } from '@/stores/LanguageContext'
 import { Link } from 'react-router-dom'
 import { cn } from '@/lib/utils'
+import { useState } from 'react'
 
 export function NotificationPopover() {
   const { notifications, markAsRead, clearAll } = useNotification()
   const { t } = useLanguage()
+  const [isOpen, setIsOpen] = useState(false)
 
   const unreadCount = notifications.filter((n) => !n.read).length
 
   return (
-    <Popover>
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
         <Button
           variant="ghost"
@@ -58,6 +60,8 @@ export function NotificationPopover() {
           ) : (
             <div className="flex flex-col">
               {notifications.map((notif) => {
+                const isExternal = notif.link?.startsWith('http')
+
                 const content = (
                   <>
                     {!notif.read && (
@@ -84,6 +88,27 @@ export function NotificationPopover() {
                 )
 
                 if (notif.link) {
+                  if (isExternal) {
+                    return (
+                      <a
+                        key={notif.id}
+                        href={notif.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={cn(
+                          'group flex flex-col gap-1.5 p-4 border-b border-slate-100 transition-colors hover:bg-slate-50 cursor-pointer relative',
+                          !notif.read && 'bg-blue-50/30',
+                        )}
+                        onClick={() => {
+                          markAsRead(notif.id)
+                          setIsOpen(false)
+                        }}
+                      >
+                        {content}
+                      </a>
+                    )
+                  }
+
                   return (
                     <Link
                       key={notif.id}
@@ -92,7 +117,10 @@ export function NotificationPopover() {
                         'group flex flex-col gap-1.5 p-4 border-b border-slate-100 transition-colors hover:bg-slate-50 cursor-pointer relative',
                         !notif.read && 'bg-blue-50/30',
                       )}
-                      onClick={() => markAsRead(notif.id)}
+                      onClick={() => {
+                        markAsRead(notif.id)
+                        setIsOpen(false)
+                      }}
                     >
                       {content}
                     </Link>
@@ -119,7 +147,10 @@ export function NotificationPopover() {
           <Button
             variant="ghost"
             className="w-full text-xs font-medium h-8 text-slate-600 hover:text-slate-900"
-            onClick={clearAll}
+            onClick={() => {
+              clearAll()
+              setIsOpen(false)
+            }}
           >
             {t('common.clear', 'Clear All')}
           </Button>
