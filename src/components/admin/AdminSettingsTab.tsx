@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import {
   Card,
   CardContent,
@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { REGIONS } from '@/lib/locationData'
+import { REGIONS, LOCATION_DATA } from '@/lib/locationData'
 
 export function AdminSettingsTab() {
   const { t } = useLanguage()
@@ -37,8 +37,6 @@ export function AdminSettingsTab() {
         }
   })
 
-  const [newRegion, setNewRegion] = useState('')
-
   const handleSave = () => {
     localStorage.setItem('system_settings', JSON.stringify(settings))
     toast.success(
@@ -49,30 +47,87 @@ export function AdminSettingsTab() {
     )
   }
 
-  const handleAddRegion = () => {
-    if (!newRegion.trim()) return
-    const current = settings.customRegions || []
-    if (!current.includes(newRegion.trim())) {
-      setSettings({
-        ...settings,
-        customRegions: [...current, newRegion.trim()],
-      })
-      setNewRegion('')
-    }
-  }
-
-  const handleRemoveRegion = (regionToRemove: string) => {
-    setSettings({
-      ...settings,
-      customRegions: (settings.customRegions || []).filter(
-        (r: string) => r !== regionToRemove,
-      ),
-    })
-  }
-
   const ALL_REGIONS = Array.from(
     new Set([...REGIONS, ...(settings.customRegions || [])]),
   )
+
+  const [selectedCountry, setSelectedCountry] = useState<string | null>(null)
+  const [selectedState, setSelectedState] = useState<string | null>(null)
+  const [newCountryName, setNewCountryName] = useState('')
+  const [newStateName, setNewStateName] = useState('')
+  const [newCityName, setNewCityName] = useState('')
+
+  const geoTree = useMemo(() => {
+    const tree = JSON.parse(JSON.stringify(LOCATION_DATA))
+
+    const customLocs = settings.customLocations || {}
+    for (const [c, cData] of Object.entries(customLocs as any)) {
+      if (!tree[c]) tree[c] = { states: {} }
+      for (const [s, cities] of Object.entries((cData as any).states || {})) {
+        if (!tree[c].states[s]) tree[c].states[s] = []
+        tree[c].states[s] = Array.from(
+          new Set([...tree[c].states[s], ...(cities as any)]),
+        ).sort()
+      }
+    }
+
+    const cRegions = settings.customRegions || []
+    cRegions.forEach((r: string) => {
+      if (!tree[r]) tree[r] = { states: {} }
+    })
+
+    return tree
+  }, [settings.customLocations, settings.customRegions])
+
+  const handleAddCountry = () => {
+    if (!newCountryName.trim()) return
+    const name = newCountryName.trim()
+    const current = settings.customRegions || []
+    if (!current.includes(name)) {
+      setSettings({
+        ...settings,
+        customRegions: [...current, name],
+        customLocations: {
+          ...(settings.customLocations || {}),
+          [name]: { states: {} },
+        },
+      })
+    }
+    setNewCountryName('')
+    setSelectedCountry(name)
+    setSelectedState(null)
+  }
+
+  const handleAddState = () => {
+    if (!selectedCountry || !newStateName.trim()) return
+    const sName = newStateName.trim()
+    const customLocs = { ...(settings.customLocations || {}) }
+    if (!customLocs[selectedCountry])
+      customLocs[selectedCountry] = { states: {} }
+    if (!customLocs[selectedCountry].states[sName])
+      customLocs[selectedCountry].states[sName] = []
+
+    setSettings({ ...settings, customLocations: customLocs })
+    setNewStateName('')
+    setSelectedState(sName)
+  }
+
+  const handleAddCity = () => {
+    if (!selectedCountry || !selectedState || !newCityName.trim()) return
+    const cName = newCityName.trim()
+    const customLocs = { ...(settings.customLocations || {}) }
+    if (!customLocs[selectedCountry])
+      customLocs[selectedCountry] = { states: {} }
+    if (!customLocs[selectedCountry].states[selectedState])
+      customLocs[selectedCountry].states[selectedState] = []
+
+    if (!customLocs[selectedCountry].states[selectedState].includes(cName)) {
+      customLocs[selectedCountry].states[selectedState].push(cName)
+    }
+
+    setSettings({ ...settings, customLocations: customLocs })
+    setNewCityName('')
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -136,60 +191,168 @@ export function AdminSettingsTab() {
                 )}
               </p>
             </div>
+          </CardContent>
+        </Card>
 
-            <div className="pt-4 border-t">
-              <Label className="mb-2 block">
-                {t(
-                  'admin.settings_tab.manage_regions',
-                  'Manage Custom Regions / Countries',
-                )}
-              </Label>
-              <div className="flex gap-2 max-w-md">
-                <Input
-                  value={newRegion}
-                  onChange={(e) => setNewRegion(e.target.value)}
-                  placeholder={t(
-                    'admin.settings_tab.new_region_placeholder',
-                    'e.g. Argentina',
-                  )}
-                  onKeyDown={(e) => e.key === 'Enter' && handleAddRegion()}
-                />
-                <Button
-                  onClick={handleAddRegion}
-                  type="button"
-                  variant="secondary"
-                >
-                  <Plus className="w-4 h-4 mr-1" />
-                  {t('common.add', 'Add')}
-                </Button>
-              </div>
-              <div className="flex flex-wrap gap-2 mt-4">
-                {(settings.customRegions || []).map((r: string) => (
-                  <div
-                    key={r}
-                    className="flex items-center gap-2 bg-slate-100 text-slate-800 px-3 py-1.5 rounded-full text-sm font-medium"
-                  >
-                    {r}
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveRegion(r)}
-                      className="text-slate-400 hover:text-red-500 transition-colors"
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle>Geographic Hierarchy Manager</CardTitle>
+            <CardDescription>
+              Manage Countries, States, and Cities for your franchises and
+              merchants. Select an item to view or add children.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-[400px]">
+              {/* Countries */}
+              <div className="border rounded-md flex flex-col h-full">
+                <div className="p-3 border-b bg-slate-50 font-medium">
+                  Countries
+                </div>
+                <div className="flex-1 overflow-y-auto p-2 space-y-1">
+                  {Object.keys(geoTree)
+                    .sort()
+                    .map((c) => (
+                      <button
+                        key={c}
+                        onClick={() => {
+                          setSelectedCountry(c)
+                          setSelectedState(null)
+                        }}
+                        className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${selectedCountry === c ? 'bg-primary text-primary-foreground' : 'hover:bg-slate-100'}`}
+                      >
+                        {c}
+                      </button>
+                    ))}
+                </div>
+                <div className="p-2 border-t mt-auto bg-slate-50">
+                  <div className="flex gap-2">
+                    <Input
+                      size={1}
+                      className="h-8 text-sm"
+                      placeholder="New Country"
+                      value={newCountryName}
+                      onChange={(e) => setNewCountryName(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleAddCountry()}
+                    />
+                    <Button
+                      size="sm"
+                      className="h-8 px-2"
+                      onClick={handleAddCountry}
                     >
-                      <X className="w-3 h-3" />
-                    </button>
+                      <Plus className="w-4 h-4" />
+                    </Button>
                   </div>
-                ))}
-                {(!settings.customRegions ||
-                  settings.customRegions.length === 0) && (
-                  <p className="text-sm text-muted-foreground italic">
-                    {t(
-                      'admin.settings_tab.no_custom_regions',
-                      'No custom regions added yet.',
+                </div>
+              </div>
+
+              {/* States */}
+              <div className="border rounded-md flex flex-col h-full">
+                <div className="p-3 border-b bg-slate-50 font-medium">
+                  {selectedCountry
+                    ? `States in ${selectedCountry}`
+                    : 'Select a Country'}
+                </div>
+                <div className="flex-1 overflow-y-auto p-2 space-y-1">
+                  {selectedCountry &&
+                    Object.keys(geoTree[selectedCountry]?.states || {})
+                      .sort()
+                      .map((s) => (
+                        <button
+                          key={s}
+                          onClick={() => setSelectedState(s)}
+                          className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${selectedState === s ? 'bg-primary text-primary-foreground' : 'hover:bg-slate-100'}`}
+                        >
+                          {s}
+                        </button>
+                      ))}
+                  {selectedCountry &&
+                    Object.keys(geoTree[selectedCountry]?.states || {})
+                      .length === 0 && (
+                      <p className="text-xs text-muted-foreground p-2">
+                        No states found.
+                      </p>
                     )}
-                  </p>
+                </div>
+                {selectedCountry && (
+                  <div className="p-2 border-t mt-auto bg-slate-50">
+                    <div className="flex gap-2">
+                      <Input
+                        size={1}
+                        className="h-8 text-sm"
+                        placeholder="New State"
+                        value={newStateName}
+                        onChange={(e) => setNewStateName(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleAddState()}
+                      />
+                      <Button
+                        size="sm"
+                        className="h-8 px-2"
+                        onClick={handleAddState}
+                      >
+                        <Plus className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Cities */}
+              <div className="border rounded-md flex flex-col h-full">
+                <div className="p-3 border-b bg-slate-50 font-medium">
+                  {selectedState
+                    ? `Cities in ${selectedState}`
+                    : 'Select a State'}
+                </div>
+                <div className="flex-1 overflow-y-auto p-2 space-y-1">
+                  {selectedCountry &&
+                    selectedState &&
+                    (geoTree[selectedCountry]?.states[selectedState] || []).map(
+                      (city: string) => (
+                        <div
+                          key={city}
+                          className="w-full text-left px-3 py-2 rounded-md text-sm bg-slate-50"
+                        >
+                          {city}
+                        </div>
+                      ),
+                    )}
+                  {selectedCountry &&
+                    selectedState &&
+                    (geoTree[selectedCountry]?.states[selectedState] || [])
+                      .length === 0 && (
+                      <p className="text-xs text-muted-foreground p-2">
+                        No cities found.
+                      </p>
+                    )}
+                </div>
+                {selectedCountry && selectedState && (
+                  <div className="p-2 border-t mt-auto bg-slate-50">
+                    <div className="flex gap-2">
+                      <Input
+                        size={1}
+                        className="h-8 text-sm"
+                        placeholder="New City"
+                        value={newCityName}
+                        onChange={(e) => setNewCityName(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleAddCity()}
+                      />
+                      <Button
+                        size="sm"
+                        className="h-8 px-2"
+                        onClick={handleAddCity}
+                      >
+                        <Plus className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
+            <p className="text-xs text-muted-foreground mt-4">
+              * Remember to click <strong>Save Changes</strong> at the bottom of
+              the page to persist these locations.
+            </p>
           </CardContent>
         </Card>
 

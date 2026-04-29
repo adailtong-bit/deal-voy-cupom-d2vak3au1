@@ -2,7 +2,7 @@ interface LocationData {
   states: Record<string, string[]>
 }
 
-export const LOCATION_DATA: Record<string, LocationData> = {
+const STATIC_LOCATION_DATA: Record<string, LocationData> = {
   Brasil: {
     states: {
       'São Paulo': [
@@ -126,21 +126,50 @@ export const LOCATION_DATA: Record<string, LocationData> = {
   },
 }
 
+export const getMergedLocationData = (): Record<string, LocationData> => {
+  try {
+    const saved = localStorage.getItem('system_settings')
+    if (saved) {
+      const settings = JSON.parse(saved)
+      const customLocations = settings.customLocations || {}
+      const merged = JSON.parse(JSON.stringify(STATIC_LOCATION_DATA))
+
+      const customRegions = settings.customRegions || []
+      customRegions.forEach((r: string) => {
+        if (!merged[r]) merged[r] = { states: {} }
+      })
+
+      for (const [country, data] of Object.entries(
+        customLocations as Record<string, LocationData>,
+      )) {
+        if (!merged[country]) {
+          merged[country] = { states: {} }
+        }
+        for (const [state, cities] of Object.entries(
+          (data as any).states || {},
+        )) {
+          if (!merged[country].states[state]) {
+            merged[country].states[state] = []
+          }
+          const allCities = [
+            ...merged[country].states[state],
+            ...(cities as string[]),
+          ]
+          merged[country].states[state] = Array.from(new Set(allCities)).sort()
+        }
+      }
+      return merged
+    }
+  } catch (e) {
+    console.error('Failed to merge location data', e)
+  }
+  return JSON.parse(JSON.stringify(STATIC_LOCATION_DATA))
+}
+
+export const LOCATION_DATA = getMergedLocationData()
+
 export const COUNTRIES = Object.keys(LOCATION_DATA).sort()
 
-export const REGIONS = [
-  'Global',
-  'Brasil',
-  'USA',
-  'Mexico',
-  'Spain',
-  'Portugal',
-  'France',
-  'Germany',
-  'Italy',
-  'China',
-  'Japan',
-  'Europe',
-  'North America',
-  'South America',
-]
+export const REGIONS = Array.from(
+  new Set(['Global', ...COUNTRIES, 'Europe', 'North America', 'South America']),
+)

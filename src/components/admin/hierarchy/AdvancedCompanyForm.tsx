@@ -14,7 +14,12 @@ import {
 } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Separator } from '@/components/ui/separator'
-import { COUNTRIES, REGIONS, LOCATION_DATA } from '@/lib/locationData'
+import {
+  COUNTRIES,
+  REGIONS,
+  LOCATION_DATA,
+  getMergedLocationData,
+} from '@/lib/locationData'
 import { useLanguage } from '@/stores/LanguageContext'
 
 interface Props {
@@ -124,6 +129,8 @@ export function AdvancedCompanyForm({
     parentFranchise && parentFranchise.coverageScope === 'city'
       ? parentFranchise.coverageCities
       : undefined
+
+  const dynamicLocationData = React.useMemo(() => getMergedLocationData(), [])
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 py-4">
@@ -486,7 +493,8 @@ export function AdvancedCompanyForm({
                 </SelectTrigger>
                 <SelectContent>
                   {Object.keys(
-                    LOCATION_DATA[formData.addressCountry || '']?.states || {},
+                    dynamicLocationData[formData.addressCountry || '']
+                      ?.states || {},
                   )
                     .filter(
                       (s) =>
@@ -517,7 +525,7 @@ export function AdvancedCompanyForm({
                 </SelectTrigger>
                 <SelectContent>
                   {(
-                    LOCATION_DATA[formData.addressCountry || '']?.states[
+                    dynamicLocationData[formData.addressCountry || '']?.states[
                       formData.addressState || ''
                     ] || []
                   )
@@ -616,8 +624,8 @@ export function AdvancedCompanyForm({
                   </Label>
                   <div className="border rounded-md p-4 max-h-48 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {Object.keys(
-                      LOCATION_DATA[formData.addressCountry || '']?.states ||
-                        {},
+                      dynamicLocationData[formData.addressCountry || '']
+                        ?.states || {},
                     ).map((s) => (
                       <label
                         key={s}
@@ -655,9 +663,8 @@ export function AdvancedCompanyForm({
                     {(formData.coverageStates || [])
                       .flatMap(
                         (s) =>
-                          LOCATION_DATA[formData.addressCountry || '']?.states[
-                            s
-                          ] || [],
+                          dynamicLocationData[formData.addressCountry || '']
+                            ?.states[s] || [],
                       )
                       .map((c) => (
                         <label
