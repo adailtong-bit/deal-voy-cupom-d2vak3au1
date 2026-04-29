@@ -45,6 +45,7 @@ export function AdCampaignsTab() {
   } = useCouponStore()
   const [isOpen, setIsOpen] = useState(false)
   const [dbAds, setDbAds] = useState<any[]>([])
+  const [dbAdvertisers, setDbAdvertisers] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -72,12 +73,37 @@ export function AdCampaignsTab() {
       } else if (data) {
         setDbAds(data)
       }
+
+      const { data: advData } = await supabase
+        .from('ad_advertisers')
+        .select('*')
+        .eq('status', 'active')
+
+      if (advData) {
+        setDbAdvertisers(advData)
+      }
     } catch (err) {
       console.error('Failed to load ads', err)
     } finally {
       setIsLoading(false)
     }
   }
+
+  const allAdvertisers = useMemo(() => {
+    const combined = [...advertisers]
+    dbAdvertisers.forEach((da) => {
+      if (!combined.find((c) => c.id === da.id)) {
+        combined.push({
+          id: da.id,
+          companyName: da.company_name,
+          contactName: da.contact_name,
+          email: da.email,
+          status: da.status,
+        } as any)
+      }
+    })
+    return combined
+  }, [advertisers, dbAdvertisers])
 
   const availableRules = useMemo(() => {
     if (!watchPlacement) return []
@@ -257,7 +283,7 @@ export function AdCampaignsTab() {
                     />
                   </SelectTrigger>
                   <SelectContent>
-                    {advertisers.map((a) => (
+                    {allAdvertisers.map((a) => (
                       <SelectItem key={a.id} value={a.id}>
                         {a.companyName}
                       </SelectItem>
@@ -468,7 +494,7 @@ export function AdCampaignsTab() {
             <TableBody>
               {displayAds.map((a) => {
                 const advertiserId = a.advertiser_id || a.advertiserId
-                const adv = advertisers.find((ad) => ad.id === advertiserId)
+                const adv = allAdvertisers.find((ad) => ad.id === advertiserId)
                 const billingType = a.billing_type || a.billingType
 
                 return (

@@ -204,8 +204,49 @@ export const MOCK_CHATS: ChatThread[] = []
 export const MOCK_CRAWLER_HISTORY: CrawlerHistory[] = []
 export const MOCK_CRAWLER_SOURCES: CrawlerSource[] = []
 export const MOCK_DISCOVERED_PROMOTIONS: DiscoveredPromotion[] = []
-export const MOCK_AD_PRICING: AdPricing[] = []
-export const MOCK_ADVERTISERS: Advertiser[] = []
+export const MOCK_AD_PRICING: AdPricing[] = [
+  { id: 'adp-1', placement: 'top', billingType: 'cpc', price: 0.5 },
+  {
+    id: 'adp-2',
+    placement: 'top',
+    billingType: 'fixed',
+    durationDays: 7,
+    price: 150.0,
+  },
+  { id: 'adp-3', placement: 'bottom', billingType: 'cpc', price: 0.3 },
+  {
+    id: 'adp-4',
+    placement: 'sidebar',
+    billingType: 'fixed',
+    durationDays: 30,
+    price: 500.0,
+  },
+  { id: 'adp-5', placement: 'search', billingType: 'cpc', price: 0.4 },
+  {
+    id: 'adp-6',
+    placement: 'offer_of_the_day',
+    billingType: 'fixed',
+    durationDays: 1,
+    price: 100.0,
+  },
+]
+
+export const MOCK_ADVERTISERS: Advertiser[] = [
+  {
+    id: 'adv-internal',
+    companyName: 'Routevoy (Parceiro Interno)',
+    contactName: 'Administração',
+    email: 'admin@routevoy.com',
+    status: 'active',
+  },
+  {
+    id: 'adv-demo',
+    companyName: 'Anunciante Demonstração',
+    contactName: 'Cliente',
+    email: 'anunciante@exemplo.com',
+    status: 'active',
+  },
+]
 export const MOCK_AD_INVOICES: AdInvoice[] = []
 export const MOCK_PARTNER_POLICIES: PartnerPolicy[] = []
 export const MOCK_PARTNER_INVOICES: PartnerInvoice[] = []
