@@ -131,6 +131,10 @@ export const getMergedLocationData = (): Record<string, LocationData> => {
     const saved = localStorage.getItem('system_settings')
     if (saved) {
       const settings = JSON.parse(saved)
+      if (settings.fullLocationData) {
+        return settings.fullLocationData
+      }
+
       const customLocations = settings.customLocations || {}
       const merged = JSON.parse(JSON.stringify(STATIC_LOCATION_DATA))
 

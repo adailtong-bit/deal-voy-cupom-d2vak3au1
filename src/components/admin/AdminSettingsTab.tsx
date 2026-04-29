@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Card,
   CardContent,
@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
-import { Save, X, Plus } from 'lucide-react'
+import { Save, X, Plus, Pencil, Trash2, Check } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
 import {
   Select,
@@ -19,23 +19,124 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { REGIONS, LOCATION_DATA } from '@/lib/locationData'
+import { getMergedLocationData } from '@/lib/locationData'
+
+function EditableListItem({
+  name,
+  isSelected,
+  onClick,
+  onEdit,
+  onDelete,
+}: {
+  name: string
+  isSelected: boolean
+  onClick: () => void
+  onEdit: (newName: string) => void
+  onDelete: () => void
+}) {
+  const [isEditing, setIsEditing] = useState(false)
+  const [editValue, setEditValue] = useState(name)
+
+  if (isEditing) {
+    return (
+      <div className="flex items-center gap-1 px-2 py-1 bg-slate-100 rounded-md mb-1 border border-slate-200 shadow-sm">
+        <Input
+          autoFocus
+          size={1}
+          className="h-7 text-sm px-2 flex-1 min-w-0 bg-white"
+          value={editValue}
+          onChange={(e) => setEditValue(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              onEdit(editValue)
+              setIsEditing(false)
+            } else if (e.key === 'Escape') {
+              setIsEditing(false)
+              setEditValue(name)
+            }
+          }}
+        />
+        <Button
+          size="icon"
+          variant="ghost"
+          className="h-7 w-7 shrink-0 hover:bg-green-100"
+          onClick={() => {
+            onEdit(editValue)
+            setIsEditing(false)
+          }}
+        >
+          <Check className="h-4 w-4 text-green-600" />
+        </Button>
+        <Button
+          size="icon"
+          variant="ghost"
+          className="h-7 w-7 shrink-0 hover:bg-red-100"
+          onClick={() => {
+            setIsEditing(false)
+            setEditValue(name)
+          }}
+        >
+          <X className="h-4 w-4 text-red-600" />
+        </Button>
+      </div>
+    )
+  }
+
+  return (
+    <div
+      className={`group flex items-center justify-between px-3 py-2 mb-1 rounded-md text-sm transition-colors ${isSelected ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:bg-slate-100'}`}
+    >
+      <button className="flex-1 text-left truncate" onClick={onClick}>
+        {name}
+      </button>
+      <div className="hidden group-hover:flex gap-1 shrink-0">
+        <button
+          className={`p-1 rounded ${isSelected ? 'hover:bg-white/20' : 'hover:bg-slate-200'}`}
+          onClick={(e) => {
+            e.stopPropagation()
+            setIsEditing(true)
+            setEditValue(name)
+          }}
+        >
+          <Pencil className="h-3.5 w-3.5" />
+        </button>
+        <button
+          className={`p-1 rounded ${isSelected ? 'hover:bg-red-500/50' : 'hover:bg-red-100 text-red-600'}`}
+          onClick={(e) => {
+            e.stopPropagation()
+            onDelete()
+          }}
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </button>
+      </div>
+    </div>
+  )
+}
 
 export function AdminSettingsTab() {
   const { t } = useLanguage()
   const [settings, setSettings] = useState(() => {
     const saved = localStorage.getItem('system_settings')
-    return saved
-      ? JSON.parse(saved)
-      : {
-          geoRadius: 50,
-          maxPushPerDay: 3,
-          sessionTimeout: 30,
-          maintenanceMode: false,
-          defaultRegion: 'Global',
-          customRegions: [],
-        }
+    const parsed = saved ? JSON.parse(saved) : {}
+    return {
+      geoRadius: 50,
+      maxPushPerDay: 3,
+      sessionTimeout: 30,
+      maintenanceMode: false,
+      defaultRegion: 'Global',
+      ...parsed,
+      fullLocationData: parsed.fullLocationData || getMergedLocationData(),
+    }
   })
+
+  const [geoTree, setGeoTree] = useState<Record<string, any>>(
+    settings.fullLocationData,
+  )
+
+  useEffect(() => {
+    setSettings((prev: any) => ({ ...prev, fullLocationData: geoTree }))
+  }, [geoTree])
 
   const handleSave = () => {
     localStorage.setItem('system_settings', JSON.stringify(settings))
@@ -45,11 +146,20 @@ export function AdminSettingsTab() {
         'System parameters updated successfully.',
       ),
     )
+    setTimeout(() => {
+      window.location.reload()
+    }, 800)
   }
 
   const ALL_REGIONS = Array.from(
-    new Set([...REGIONS, ...(settings.customRegions || [])]),
-  )
+    new Set([
+      'Global',
+      ...Object.keys(geoTree).sort(),
+      'Europe',
+      'North America',
+      'South America',
+    ]),
+  ).sort()
 
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null)
   const [selectedState, setSelectedState] = useState<string | null>(null)
@@ -57,76 +167,130 @@ export function AdminSettingsTab() {
   const [newStateName, setNewStateName] = useState('')
   const [newCityName, setNewCityName] = useState('')
 
-  const geoTree = useMemo(() => {
-    const tree = JSON.parse(JSON.stringify(LOCATION_DATA))
-
-    const customLocs = settings.customLocations || {}
-    for (const [c, cData] of Object.entries(customLocs as any)) {
-      if (!tree[c]) tree[c] = { states: {} }
-      for (const [s, cities] of Object.entries((cData as any).states || {})) {
-        if (!tree[c].states[s]) tree[c].states[s] = []
-        tree[c].states[s] = Array.from(
-          new Set([...tree[c].states[s], ...(cities as any)]),
-        ).sort()
-      }
-    }
-
-    const cRegions = settings.customRegions || []
-    cRegions.forEach((r: string) => {
-      if (!tree[r]) tree[r] = { states: {} }
-    })
-
-    return tree
-  }, [settings.customLocations, settings.customRegions])
-
   const handleAddCountry = () => {
     if (!newCountryName.trim()) return
     const name = newCountryName.trim()
-    const current = settings.customRegions || []
-    if (!current.includes(name)) {
-      setSettings({
-        ...settings,
-        customRegions: [...current, name],
-        customLocations: {
-          ...(settings.customLocations || {}),
-          [name]: { states: {} },
-        },
-      })
+    if (!geoTree[name]) {
+      setGeoTree({ ...geoTree, [name]: { states: {} } })
     }
     setNewCountryName('')
     setSelectedCountry(name)
     setSelectedState(null)
   }
 
+  const handleEditCountry = (oldName: string, newName: string) => {
+    const name = newName.trim()
+    if (!name || oldName === name) return
+    const newTree = { ...geoTree }
+    newTree[name] = newTree[oldName]
+    delete newTree[oldName]
+    setGeoTree(newTree)
+    if (selectedCountry === oldName) setSelectedCountry(name)
+  }
+
+  const handleDeleteCountry = (name: string) => {
+    if (
+      !confirm(
+        t(
+          'admin.geo.confirm_delete',
+          `Are you sure you want to delete ${name}?`,
+        ),
+      )
+    )
+      return
+    const newTree = { ...geoTree }
+    delete newTree[name]
+    setGeoTree(newTree)
+    if (selectedCountry === name) {
+      setSelectedCountry(null)
+      setSelectedState(null)
+    }
+  }
+
   const handleAddState = () => {
     if (!selectedCountry || !newStateName.trim()) return
-    const sName = newStateName.trim()
-    const customLocs = { ...(settings.customLocations || {}) }
-    if (!customLocs[selectedCountry])
-      customLocs[selectedCountry] = { states: {} }
-    if (!customLocs[selectedCountry].states[sName])
-      customLocs[selectedCountry].states[sName] = []
-
-    setSettings({ ...settings, customLocations: customLocs })
+    const name = newStateName.trim()
+    const newTree = { ...geoTree }
+    if (!newTree[selectedCountry].states[name]) {
+      newTree[selectedCountry].states[name] = []
+      setGeoTree(newTree)
+    }
     setNewStateName('')
-    setSelectedState(sName)
+    setSelectedState(name)
+  }
+
+  const handleEditState = (oldName: string, newName: string) => {
+    if (!selectedCountry) return
+    const name = newName.trim()
+    if (!name || oldName === name) return
+    const newTree = { ...geoTree }
+    newTree[selectedCountry].states[name] =
+      newTree[selectedCountry].states[oldName]
+    delete newTree[selectedCountry].states[oldName]
+    setGeoTree(newTree)
+    if (selectedState === oldName) setSelectedState(name)
+  }
+
+  const handleDeleteState = (name: string) => {
+    if (!selectedCountry) return
+    if (
+      !confirm(
+        t(
+          'admin.geo.confirm_delete',
+          `Are you sure you want to delete ${name}?`,
+        ),
+      )
+    )
+      return
+    const newTree = { ...geoTree }
+    delete newTree[selectedCountry].states[name]
+    setGeoTree(newTree)
+    if (selectedState === name) setSelectedState(null)
   }
 
   const handleAddCity = () => {
     if (!selectedCountry || !selectedState || !newCityName.trim()) return
-    const cName = newCityName.trim()
-    const customLocs = { ...(settings.customLocations || {}) }
-    if (!customLocs[selectedCountry])
-      customLocs[selectedCountry] = { states: {} }
-    if (!customLocs[selectedCountry].states[selectedState])
-      customLocs[selectedCountry].states[selectedState] = []
-
-    if (!customLocs[selectedCountry].states[selectedState].includes(cName)) {
-      customLocs[selectedCountry].states[selectedState].push(cName)
+    const name = newCityName.trim()
+    const newTree = { ...geoTree }
+    if (!newTree[selectedCountry].states[selectedState].includes(name)) {
+      newTree[selectedCountry].states[selectedState] = [
+        ...newTree[selectedCountry].states[selectedState],
+        name,
+      ].sort()
+      setGeoTree(newTree)
     }
-
-    setSettings({ ...settings, customLocations: customLocs })
     setNewCityName('')
+  }
+
+  const handleEditCity = (oldName: string, newName: string) => {
+    if (!selectedCountry || !selectedState) return
+    const name = newName.trim()
+    if (!name || oldName === name) return
+    const newTree = { ...geoTree }
+    let cities = newTree[selectedCountry].states[selectedState]
+    cities = cities.filter((c: string) => c !== oldName)
+    if (!cities.includes(name)) cities.push(name)
+    cities.sort()
+    newTree[selectedCountry].states[selectedState] = cities
+    setGeoTree(newTree)
+  }
+
+  const handleDeleteCity = (name: string) => {
+    if (!selectedCountry || !selectedState) return
+    if (
+      !confirm(
+        t(
+          'admin.geo.confirm_delete',
+          `Are you sure you want to delete ${name}?`,
+        ),
+      )
+    )
+      return
+    const newTree = { ...geoTree }
+    newTree[selectedCountry].states[selectedState] = newTree[
+      selectedCountry
+    ].states[selectedState].filter((c: string) => c !== name)
+    setGeoTree(newTree)
   }
 
   return (
@@ -198,34 +362,35 @@ export function AdminSettingsTab() {
           <CardHeader>
             <CardTitle>Geographic Hierarchy Manager</CardTitle>
             <CardDescription>
-              Manage Countries, States, and Cities for your franchises and
-              merchants. Select an item to view or add children.
+              Manage Countries, States, and Cities. You can add, edit, or remove
+              locations.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-[400px]">
               {/* Countries */}
-              <div className="border rounded-md flex flex-col h-full">
-                <div className="p-3 border-b bg-slate-50 font-medium">
+              <div className="border rounded-md flex flex-col h-full overflow-hidden">
+                <div className="p-3 border-b bg-slate-50 font-medium shrink-0">
                   Countries
                 </div>
-                <div className="flex-1 overflow-y-auto p-2 space-y-1">
+                <div className="flex-1 overflow-y-auto p-2">
                   {Object.keys(geoTree)
                     .sort()
                     .map((c) => (
-                      <button
+                      <EditableListItem
                         key={c}
+                        name={c}
+                        isSelected={selectedCountry === c}
                         onClick={() => {
                           setSelectedCountry(c)
                           setSelectedState(null)
                         }}
-                        className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${selectedCountry === c ? 'bg-primary text-primary-foreground' : 'hover:bg-slate-100'}`}
-                      >
-                        {c}
-                      </button>
+                        onEdit={(newName) => handleEditCountry(c, newName)}
+                        onDelete={() => handleDeleteCountry(c)}
+                      />
                     ))}
                 </div>
-                <div className="p-2 border-t mt-auto bg-slate-50">
+                <div className="p-2 border-t mt-auto bg-slate-50 shrink-0">
                   <div className="flex gap-2">
                     <Input
                       size={1}
@@ -247,24 +412,25 @@ export function AdminSettingsTab() {
               </div>
 
               {/* States */}
-              <div className="border rounded-md flex flex-col h-full">
-                <div className="p-3 border-b bg-slate-50 font-medium">
+              <div className="border rounded-md flex flex-col h-full overflow-hidden">
+                <div className="p-3 border-b bg-slate-50 font-medium shrink-0">
                   {selectedCountry
                     ? `States in ${selectedCountry}`
                     : 'Select a Country'}
                 </div>
-                <div className="flex-1 overflow-y-auto p-2 space-y-1">
+                <div className="flex-1 overflow-y-auto p-2">
                   {selectedCountry &&
                     Object.keys(geoTree[selectedCountry]?.states || {})
                       .sort()
                       .map((s) => (
-                        <button
+                        <EditableListItem
                           key={s}
+                          name={s}
+                          isSelected={selectedState === s}
                           onClick={() => setSelectedState(s)}
-                          className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${selectedState === s ? 'bg-primary text-primary-foreground' : 'hover:bg-slate-100'}`}
-                        >
-                          {s}
-                        </button>
+                          onEdit={(newName) => handleEditState(s, newName)}
+                          onDelete={() => handleDeleteState(s)}
+                        />
                       ))}
                   {selectedCountry &&
                     Object.keys(geoTree[selectedCountry]?.states || {})
@@ -275,7 +441,7 @@ export function AdminSettingsTab() {
                     )}
                 </div>
                 {selectedCountry && (
-                  <div className="p-2 border-t mt-auto bg-slate-50">
+                  <div className="p-2 border-t mt-auto bg-slate-50 shrink-0">
                     <div className="flex gap-2">
                       <Input
                         size={1}
@@ -298,23 +464,25 @@ export function AdminSettingsTab() {
               </div>
 
               {/* Cities */}
-              <div className="border rounded-md flex flex-col h-full">
-                <div className="p-3 border-b bg-slate-50 font-medium">
+              <div className="border rounded-md flex flex-col h-full overflow-hidden">
+                <div className="p-3 border-b bg-slate-50 font-medium shrink-0">
                   {selectedState
                     ? `Cities in ${selectedState}`
                     : 'Select a State'}
                 </div>
-                <div className="flex-1 overflow-y-auto p-2 space-y-1">
+                <div className="flex-1 overflow-y-auto p-2">
                   {selectedCountry &&
                     selectedState &&
                     (geoTree[selectedCountry]?.states[selectedState] || []).map(
                       (city: string) => (
-                        <div
+                        <EditableListItem
                           key={city}
-                          className="w-full text-left px-3 py-2 rounded-md text-sm bg-slate-50"
-                        >
-                          {city}
-                        </div>
+                          name={city}
+                          isSelected={false}
+                          onClick={() => {}}
+                          onEdit={(newName) => handleEditCity(city, newName)}
+                          onDelete={() => handleDeleteCity(city)}
+                        />
                       ),
                     )}
                   {selectedCountry &&
@@ -327,7 +495,7 @@ export function AdminSettingsTab() {
                     )}
                 </div>
                 {selectedCountry && selectedState && (
-                  <div className="p-2 border-t mt-auto bg-slate-50">
+                  <div className="p-2 border-t mt-auto bg-slate-50 shrink-0">
                     <div className="flex gap-2">
                       <Input
                         size={1}
@@ -351,7 +519,7 @@ export function AdminSettingsTab() {
             </div>
             <p className="text-xs text-muted-foreground mt-4">
               * Remember to click <strong>Save Changes</strong> at the bottom of
-              the page to persist these locations.
+              the page to persist these locations globally across the app.
             </p>
           </CardContent>
         </Card>

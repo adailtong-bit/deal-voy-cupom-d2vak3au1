@@ -107,11 +107,24 @@ export function AdvancedCompanyForm({
     setFormData((prev) => ({ ...prev, [field]: isNaN(num) ? undefined : num }))
   }
 
-  const savedSettings = localStorage.getItem('system_settings')
-  const settings = savedSettings ? JSON.parse(savedSettings) : {}
-  const customRegions = settings.customRegions || []
-  const ALL_REGIONS = Array.from(new Set([...REGIONS, ...customRegions]))
-  const ALL_COUNTRIES = Array.from(new Set([...COUNTRIES, ...customRegions]))
+  const dynamicLocationData = React.useMemo(() => getMergedLocationData(), [])
+  const ALL_COUNTRIES = React.useMemo(
+    () => Object.keys(dynamicLocationData).sort(),
+    [dynamicLocationData],
+  )
+  const ALL_REGIONS = React.useMemo(
+    () =>
+      Array.from(
+        new Set([
+          'Global',
+          ...ALL_COUNTRIES,
+          'Europe',
+          'North America',
+          'South America',
+        ]),
+      ).sort(),
+    [ALL_COUNTRIES],
+  )
 
   const parentFranchise =
     formData.franchiseId && formData.franchiseId !== 'independent'
@@ -129,8 +142,6 @@ export function AdvancedCompanyForm({
     parentFranchise && parentFranchise.coverageScope === 'city'
       ? parentFranchise.coverageCities
       : undefined
-
-  const dynamicLocationData = React.useMemo(() => getMergedLocationData(), [])
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 py-4">
