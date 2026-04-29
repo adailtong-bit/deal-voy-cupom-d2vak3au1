@@ -11,7 +11,7 @@ import { Link } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 
 export function NotificationPopover() {
-  const { notifications, markAsRead } = useNotification()
+  const { notifications, markAsRead, clearAll } = useNotification()
   const { t } = useLanguage()
 
   const unreadCount = notifications.filter((n) => !n.read).length
