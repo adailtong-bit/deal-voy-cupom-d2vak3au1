@@ -558,17 +558,27 @@ function IndexContent() {
                 </Button>
               )}
               {isMaster && (
-                <Button
-                  variant="default"
-                  size="sm"
-                  asChild
-                  className="shadow-md bg-slate-900 hover:bg-slate-800"
-                >
-                  <Link to="/admin">
-                    {t('nav.admin', 'Admin Dashboard')}{' '}
-                    <ChevronRight className="w-4 h-4 ml-1" />
-                  </Link>
-                </Button>
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    asChild
+                    className="shadow-md bg-white border-slate-200 text-slate-800 hover:bg-slate-50"
+                  >
+                    <Link to="/admin?tab=publicidade">Publicidade</Link>
+                  </Button>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    asChild
+                    className="shadow-md bg-slate-900 hover:bg-slate-800"
+                  >
+                    <Link to="/admin">
+                      {t('nav.admin', 'Admin Dashboard')}{' '}
+                      <ChevronRight className="w-4 h-4 ml-1" />
+                    </Link>
+                  </Button>
+                </>
               )}
             </div>
           )}
@@ -603,7 +613,7 @@ function IndexContent() {
                     asChild
                     className="shadow-md bg-slate-900 hover:bg-slate-800 h-8 text-xs px-2"
                   >
-                    <Link to="/admin">{t('nav.admin', 'Admin Dashboard')}</Link>
+                    <Link to="/admin">{t('nav.admin', 'Admin')}</Link>
                   </Button>
                 )}
               </div>

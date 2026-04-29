@@ -1,5 +1,4 @@
-import { useState } from 'react'
-import { useCouponStore } from '@/stores/CouponContext'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Table,
@@ -29,28 +28,95 @@ import {
 } from '@/components/ui/select'
 import { useForm } from 'react-hook-form'
 import { formatCurrency } from '@/lib/utils'
-import { AdBillingType } from '@/lib/types'
 import { useLanguage } from '@/stores/LanguageContext'
+import { supabase } from '@/lib/supabase/client'
+import { toast } from 'sonner'
+import { Loader2, Trash2 } from 'lucide-react'
 
 export function AdPricingTab() {
-  const { adPricing, addAdPricing } = useCouponStore()
+  const [adPricing, setAdPricing] = useState<any[]>([])
   const [isOpen, setIsOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const { register, handleSubmit, reset, watch, setValue } = useForm()
   const { t } = useLanguage()
 
   const watchBillingType = watch('billingType')
 
-  const onSubmit = (data: any) => {
-    addAdPricing({
-      id: Math.random().toString(),
-      placement: data.placement,
-      billingType: data.billingType as AdBillingType,
-      durationDays:
-        data.billingType === 'fixed' ? parseInt(data.durationDays) : undefined,
-      price: parseFloat(data.price?.replace(/\D/g, '') || '0') / 100,
-    })
-    setIsOpen(false)
-    reset()
+  const fetchPricing = async () => {
+    setIsLoading(true)
+    try {
+      const { data, error } = await supabase
+        .from('ad_pricing')
+        .select('*')
+        .order('created_at', { ascending: false })
+      if (!error && data) {
+        setAdPricing(data)
+      } else if (error && error.code === '42P01') {
+        // Table doesn't exist yet, it's fine
+        setAdPricing([])
+      }
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchPricing()
+  }, [])
+
+  const onSubmit = async (data: any) => {
+    setIsSubmitting(true)
+    try {
+      const payload = {
+        placement: data.placement,
+        billing_type: data.billingType,
+        duration_days:
+          data.billingType === 'fixed' ? parseInt(data.durationDays) : null,
+        price: parseFloat(data.price?.replace(/\D/g, '') || '0') / 100,
+      }
+
+      const { data: inserted, error } = await supabase
+        .from('ad_pricing')
+        .insert(payload)
+        .select()
+        .single()
+      if (error) throw error
+
+      setAdPricing((prev) => [inserted, ...prev])
+      toast.success(
+        t('ads.pricing_created', 'Regra de precificação criada com sucesso!'),
+      )
+      setIsOpen(false)
+      reset()
+    } catch (err: any) {
+      toast.error(
+        t('ads.pricing_error', 'Erro ao criar regra de precificação.'),
+      )
+      console.error(err)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    if (
+      !window.confirm(
+        t('common.confirm_delete', 'Tem certeza que deseja excluir?'),
+      )
+    )
+      return
+    try {
+      const { error } = await supabase.from('ad_pricing').delete().eq('id', id)
+      if (error) throw error
+      setAdPricing((prev) => prev.filter((p) => p.id !== id))
+      toast.success(t('common.deleted', 'Excluído com sucesso'))
+    } catch (e) {
+      console.error(e)
+      toast.error(t('common.error', 'Ocorreu um erro'))
+    }
   }
 
   return (
@@ -152,57 +218,82 @@ export function AdPricingTab() {
                 />
               </div>
               <DialogFooter>
-                <Button type="submit">{t('common.save')}</Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting && (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  )}
+                  {t('common.save')}
+                </Button>
               </DialogFooter>
             </form>
           </DialogContent>
         </Dialog>
       </CardHeader>
       <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{t('ads.location', 'Local')}</TableHead>
-              <TableHead>{t('ads.model', 'Modelo')}</TableHead>
-              <TableHead>{t('ads.duration', 'Duração')}</TableHead>
-              <TableHead>{t('ads.price', 'Preço')}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {adPricing.map((p) => (
-              <TableRow key={p.id}>
-                <TableCell className="capitalize">
-                  {t(
-                    `ads.placement_${p.placement || 'unknown'}`,
-                    (p.placement || '').replace(/_/g, ' '),
-                  )}
-                </TableCell>
-                <TableCell className="uppercase">
-                  {p.billingType || 'N/A'}
-                </TableCell>
-                <TableCell>
-                  {p.billingType === 'fixed'
-                    ? `${p.durationDays || 0} ${t('ads.days', 'dias')}`
-                    : t('ads.continuous', 'Contínuo')}
-                </TableCell>
-                <TableCell>
-                  {formatCurrency(p.price || 0, 'BRL')}{' '}
-                  {p.billingType !== 'fixed' && `/ ${p.billingType || ''}`}
-                </TableCell>
-              </TableRow>
-            ))}
-            {adPricing.length === 0 && (
+        {isLoading ? (
+          <div className="flex justify-center p-8">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell
-                  colSpan={4}
-                  className="text-center text-muted-foreground"
-                >
-                  {t('ads.no_rules', 'Nenhuma regra')}
-                </TableCell>
+                <TableHead>{t('ads.location', 'Local')}</TableHead>
+                <TableHead>{t('ads.model', 'Modelo')}</TableHead>
+                <TableHead>{t('ads.duration', 'Duração')}</TableHead>
+                <TableHead>{t('ads.price', 'Preço')}</TableHead>
               </TableRow>
-            )}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {adPricing.map((p) => {
+                const billingType = p.billing_type || p.billingType
+                const durationDays = p.duration_days || p.durationDays
+                return (
+                  <TableRow key={p.id}>
+                    <TableCell className="capitalize">
+                      {t(
+                        `ads.placement_${p.placement || 'unknown'}`,
+                        (p.placement || '').replace(/_/g, ' '),
+                      )}
+                    </TableCell>
+                    <TableCell className="uppercase">
+                      {billingType || 'N/A'}
+                    </TableCell>
+                    <TableCell>
+                      {billingType === 'fixed'
+                        ? `${durationDays || 0} ${t('ads.days', 'dias')}`
+                        : t('ads.continuous', 'Contínuo')}
+                    </TableCell>
+                    <TableCell className="flex justify-between items-center">
+                      <span>
+                        {formatCurrency(p.price || 0, 'BRL')}{' '}
+                        {billingType !== 'fixed' && `/ ${billingType || ''}`}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDelete(p.id)}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
+              {adPricing.length === 0 && (
+                <TableRow>
+                  <TableCell
+                    colSpan={4}
+                    className="text-center text-muted-foreground"
+                  >
+                    {t('ads.no_rules', 'Nenhuma regra')}
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        )}
       </CardContent>
     </Card>
   )

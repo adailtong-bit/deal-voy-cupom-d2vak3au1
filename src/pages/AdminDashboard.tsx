@@ -1,4 +1,5 @@
 import AdminDashboardComponent from '@/components/admin/AdminDashboard'
+import { AdminAdsManager } from '@/components/admin/AdminAdsManager'
 import { Button } from '@/components/ui/button'
 import { clearCrawlerLogs, fetchCrawlerLogs } from '@/lib/api'
 import { exportToCSV } from '@/lib/exportUtils'
@@ -7,9 +8,13 @@ import { toast } from 'sonner'
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { useLanguage } from '@/stores/LanguageContext'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 export default function AdminDashboard() {
   const { t } = useLanguage()
+  const searchParams = new URLSearchParams(window.location.search)
+  const defaultTab =
+    searchParams.get('tab') === 'publicidade' ? 'publicidade' : 'geral'
   const [isClearing, setIsClearing] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
   const [stats, setStats] = useState({
@@ -192,8 +197,31 @@ export default function AdminDashboard() {
       </div>
 
       {/* Componente Administrativo Original */}
-      <div className="flex-1 relative">
-        <AdminDashboardComponent />
+      <div className="flex-1 relative p-2 sm:p-6 max-w-full overflow-hidden">
+        <Tabs defaultValue={defaultTab} className="w-full">
+          <TabsList className="mb-6 flex-wrap h-auto w-full sm:w-auto overflow-x-auto justify-start border-b rounded-none bg-transparent">
+            <TabsTrigger
+              value="geral"
+              className="data-[state=active]:bg-primary/5 data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-6"
+            >
+              {t('admin.dashboard', 'Painel Geral')}
+            </TabsTrigger>
+            <TabsTrigger
+              value="publicidade"
+              className="data-[state=active]:bg-primary/5 data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-6"
+            >
+              {t('admin.ads', 'Publicidade & Anúncios')}
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="geral" className="mt-0">
+            <AdminDashboardComponent />
+          </TabsContent>
+          <TabsContent value="publicidade" className="mt-0">
+            <div className="bg-white rounded-xl shadow-sm border p-4 sm:p-6">
+              <AdminAdsManager />
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   )

@@ -38,14 +38,15 @@ import { Loader2 } from 'lucide-react'
 
 export function AdCampaignsTab() {
   const {
-    ads: storeAds,
-    advertisers,
-    adPricing,
+    ads: storeAds = [],
+    advertisers = [],
     createAdCampaign,
-  } = useCouponStore()
+  } = useCouponStore() || {}
+
   const [isOpen, setIsOpen] = useState(false)
   const [dbAds, setDbAds] = useState<any[]>([])
   const [dbAdvertisers, setDbAdvertisers] = useState<any[]>([])
+  const [adPricing, setAdPricing] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -82,6 +83,23 @@ export function AdCampaignsTab() {
       if (advData) {
         setDbAdvertisers(advData)
       }
+
+      const { data: pricingData } = await supabase
+        .from('ad_pricing')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+      if (pricingData) {
+        setAdPricing(
+          pricingData.map((p) => ({
+            id: p.id,
+            placement: p.placement,
+            billingType: p.billing_type,
+            durationDays: p.duration_days,
+            price: p.price,
+          })),
+        )
+      }
     } catch (err) {
       console.error('Failed to load ads', err)
     } finally {
@@ -102,11 +120,18 @@ export function AdCampaignsTab() {
         } as any)
       }
     })
+    if (combined.length === 0) {
+      combined.push({
+        id: 'adv-internal',
+        companyName: 'Routevoy (Parceiro Interno)',
+        status: 'active',
+      })
+    }
     return combined
   }, [advertisers, dbAdvertisers])
 
   const availableRules = useMemo(() => {
-    if (!watchPlacement) return []
+    if (!watchPlacement || !Array.isArray(adPricing)) return []
     return adPricing.filter((p) => p.placement === watchPlacement)
   }, [watchPlacement, adPricing])
 
@@ -198,45 +223,55 @@ export function AdCampaignsTab() {
       dueDate.setDate(now.getDate() + 15)
       const refNumber = `INV-${now.getFullYear()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`
 
-      createAdCampaign(
-        {
-          id: adId,
-          title: data.title,
-          companyId: 'admin_created',
-          advertiserId: data.advertiserId,
-          region: 'Global',
-          category: data.category || 'all',
-          billingType: selectedRule.billingType,
-          placement: data.placement,
-          status: 'active',
-          views: 0,
-          clicks: 0,
-          startDate: now.toISOString(),
-          endDate: endDate.toISOString(),
-          image: data.image,
-          link: data.link,
-          price:
-            selectedRule.billingType === 'fixed' ? calculatedPrice : undefined,
-          budget:
-            selectedRule.billingType !== 'fixed'
-              ? parseFloat(data.budget?.replace(/\D/g, '') || '0') / 100
-              : undefined,
-          costPerClick:
-            selectedRule.billingType === 'cpc' ? selectedRule.price : undefined,
-          currency: 'BRL',
-          durationDays: selectedRule.durationDays,
-        },
-        {
-          id: Math.random().toString(),
-          referenceNumber: refNumber,
-          adId,
-          advertiserId: data.advertiserId,
-          amount: calculatedPrice,
-          issueDate: now.toISOString(),
-          dueDate: dueDate.toISOString(),
-          status: 'draft',
-        },
-      )
+      if (createAdCampaign) {
+        try {
+          createAdCampaign(
+            {
+              id: adId,
+              title: data.title,
+              companyId: 'admin_created',
+              advertiserId: data.advertiserId,
+              region: 'Global',
+              category: data.category || 'all',
+              billingType: selectedRule.billingType,
+              placement: data.placement,
+              status: 'active',
+              views: 0,
+              clicks: 0,
+              startDate: now.toISOString(),
+              endDate: endDate.toISOString(),
+              image: data.image,
+              link: data.link,
+              price:
+                selectedRule.billingType === 'fixed'
+                  ? calculatedPrice
+                  : undefined,
+              budget:
+                selectedRule.billingType !== 'fixed'
+                  ? parseFloat(data.budget?.replace(/\D/g, '') || '0') / 100
+                  : undefined,
+              costPerClick:
+                selectedRule.billingType === 'cpc'
+                  ? selectedRule.price
+                  : undefined,
+              currency: 'BRL',
+              durationDays: selectedRule.durationDays,
+            },
+            {
+              id: Math.random().toString(),
+              referenceNumber: refNumber,
+              adId,
+              advertiserId: data.advertiserId,
+              amount: calculatedPrice,
+              issueDate: now.toISOString(),
+              dueDate: dueDate.toISOString(),
+              status: 'draft',
+            },
+          )
+        } catch (e) {
+          console.warn('Store ad creation failed, but db succeeded', e)
+        }
+      }
 
       toast.success(
         t('ads.campaign_created', 'Campanha de ADS criada com sucesso!'),
