@@ -593,7 +593,7 @@ function IndexContent() {
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 {t('common.back', 'Back')}
               </Button>
-              <div className="flex gap-2 sm:hidden">
+              <div className="flex gap-2 sm:hidden flex-wrap justify-end">
                 {isMerchantOrAdmin && (
                   <Button
                     variant="outline"
@@ -601,20 +601,28 @@ function IndexContent() {
                     asChild
                     className="shadow-md bg-white text-primary border-primary/20 h-8 text-xs px-2"
                   >
-                    <Link to="/merchant">
-                      {t('nav.vendor', 'Área do Anunciante')}
-                    </Link>
+                    <Link to="/merchant">{t('nav.vendor', 'Anunciante')}</Link>
                   </Button>
                 )}
                 {isMaster && (
-                  <Button
-                    variant="default"
-                    size="sm"
-                    asChild
-                    className="shadow-md bg-slate-900 hover:bg-slate-800 h-8 text-xs px-2"
-                  >
-                    <Link to="/admin">{t('nav.admin', 'Admin')}</Link>
-                  </Button>
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      asChild
+                      className="shadow-md bg-white border-slate-200 text-slate-800 hover:bg-slate-50 h-8 text-xs px-2"
+                    >
+                      <Link to="/admin?tab=publicidade">Ads</Link>
+                    </Button>
+                    <Button
+                      variant="default"
+                      size="sm"
+                      asChild
+                      className="shadow-md bg-slate-900 hover:bg-slate-800 h-8 text-xs px-2"
+                    >
+                      <Link to="/admin">Admin</Link>
+                    </Button>
+                  </>
                 )}
               </div>
             </div>

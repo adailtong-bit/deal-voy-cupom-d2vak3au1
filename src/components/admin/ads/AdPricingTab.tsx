@@ -12,14 +12,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-} from '@/components/ui/dialog'
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -31,11 +23,10 @@ import { formatCurrency } from '@/lib/utils'
 import { useLanguage } from '@/stores/LanguageContext'
 import { supabase } from '@/lib/supabase/client'
 import { toast } from 'sonner'
-import { Loader2, Trash2 } from 'lucide-react'
+import { Loader2, Trash2, PlusCircle } from 'lucide-react'
 
 export function AdPricingTab() {
   const [adPricing, setAdPricing] = useState<any[]>([])
-  const [isOpen, setIsOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { register, handleSubmit, reset, watch, setValue } = useForm()
@@ -89,7 +80,6 @@ export function AdPricingTab() {
       toast.success(
         t('ads.pricing_created', 'Regra de precificação criada com sucesso!'),
       )
-      setIsOpen(false)
       reset()
     } catch (err: any) {
       toast.error(
@@ -120,17 +110,16 @@ export function AdPricingTab() {
   }
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>{t('ads.pricing_table', 'Tabela de Preços')}</CardTitle>
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
-          <DialogTrigger asChild>
-            <Button>{t('ads.new_pricing_rule', 'Nova Regra')}</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{t('ads.add_pricing', 'Adicionar')}</DialogTitle>
-            </DialogHeader>
+    <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+      <div className="xl:col-span-1">
+        <Card className="border-primary/20 shadow-sm sticky top-4">
+          <CardHeader className="bg-slate-50/50 pb-4">
+            <CardTitle className="text-lg flex items-center gap-2 text-primary">
+              <PlusCircle className="w-5 h-5" />
+              {t('ads.add_pricing', 'Adicionar Nova Regra')}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-4">
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
                 <Label>{t('ads.location', 'Localização')}</Label>
@@ -217,84 +206,112 @@ export function AdPricingTab() {
                   required
                 />
               </div>
-              <DialogFooter>
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting && (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  )}
-                  {t('common.save')}
-                </Button>
-              </DialogFooter>
+
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full font-bold"
+              >
+                {isSubmitting && (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                )}
+                {t('common.save', 'Salvar Regra')}
+              </Button>
             </form>
-          </DialogContent>
-        </Dialog>
-      </CardHeader>
-      <CardContent>
-        {isLoading ? (
-          <div className="flex justify-center p-8">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          </div>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t('ads.location', 'Local')}</TableHead>
-                <TableHead>{t('ads.model', 'Modelo')}</TableHead>
-                <TableHead>{t('ads.duration', 'Duração')}</TableHead>
-                <TableHead>{t('ads.price', 'Preço')}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {adPricing.map((p) => {
-                const billingType = p.billing_type || p.billingType
-                const durationDays = p.duration_days || p.durationDays
-                return (
-                  <TableRow key={p.id}>
-                    <TableCell className="capitalize">
-                      {t(
-                        `ads.placement_${p.placement || 'unknown'}`,
-                        (p.placement || '').replace(/_/g, ' '),
-                      )}
-                    </TableCell>
-                    <TableCell className="uppercase">
-                      {billingType || 'N/A'}
-                    </TableCell>
-                    <TableCell>
-                      {billingType === 'fixed'
-                        ? `${durationDays || 0} ${t('ads.days', 'dias')}`
-                        : t('ads.continuous', 'Contínuo')}
-                    </TableCell>
-                    <TableCell className="flex justify-between items-center">
-                      <span>
-                        {formatCurrency(p.price || 0, 'BRL')}{' '}
-                        {billingType !== 'fixed' && `/ ${billingType || ''}`}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDelete(p.id)}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
-              {adPricing.length === 0 && (
-                <TableRow>
-                  <TableCell
-                    colSpan={4}
-                    className="text-center text-muted-foreground"
-                  >
-                    {t('ads.no_rules', 'Nenhuma regra')}
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        )}
-      </CardContent>
-    </Card>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="xl:col-span-2">
+        <Card className="shadow-sm">
+          <CardHeader>
+            <CardTitle>
+              {t('ads.pricing_table', 'Tabela de Preços Ativas')}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="flex justify-center p-8">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              </div>
+            ) : (
+              <div className="rounded-md border overflow-x-auto">
+                <Table>
+                  <TableHeader className="bg-slate-50">
+                    <TableRow>
+                      <TableHead>{t('ads.location', 'Local')}</TableHead>
+                      <TableHead>{t('ads.model', 'Modelo')}</TableHead>
+                      <TableHead>{t('ads.duration', 'Duração')}</TableHead>
+                      <TableHead>{t('ads.price', 'Preço')}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {adPricing.map((p) => {
+                      const billingType = p.billing_type || p.billingType
+                      const durationDays = p.duration_days || p.durationDays
+                      return (
+                        <TableRow key={p.id}>
+                          <TableCell className="capitalize font-medium">
+                            {t(
+                              `ads.placement_${p.placement || 'unknown'}`,
+                              (p.placement || '').replace(/_/g, ' '),
+                            )}
+                          </TableCell>
+                          <TableCell className="uppercase">
+                            <span className="px-2 py-1 rounded bg-slate-100 text-slate-800 text-xs font-semibold">
+                              {billingType || 'N/A'}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            {billingType === 'fixed'
+                              ? `${durationDays || 0} ${t('ads.days', 'dias')}`
+                              : t('ads.continuous', 'Contínuo')}
+                          </TableCell>
+                          <TableCell className="flex justify-between items-center">
+                            <span className="font-semibold text-primary">
+                              {formatCurrency(p.price || 0, 'BRL')}{' '}
+                              <span className="text-muted-foreground text-xs font-normal">
+                                {billingType !== 'fixed' &&
+                                  `/ ${billingType || ''}`}
+                              </span>
+                            </span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDelete(p.id)}
+                              className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })}
+                    {adPricing.length === 0 && (
+                      <TableRow>
+                        <TableCell
+                          colSpan={4}
+                          className="text-center text-muted-foreground py-12"
+                        >
+                          <div className="flex flex-col items-center justify-center gap-2">
+                            <span className="text-lg font-medium">
+                              {t('ads.no_rules', 'Nenhuma regra configurada')}
+                            </span>
+                            <span className="text-sm">
+                              Utilize o formulário ao lado para criar as regras
+                              de precificação.
+                            </span>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   )
 }

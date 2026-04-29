@@ -13,14 +13,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-} from '@/components/ui/dialog'
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -34,7 +26,7 @@ import { useLanguage } from '@/stores/LanguageContext'
 import { useRegionFormatting } from '@/hooks/useRegionFormatting'
 import { supabase } from '@/lib/supabase/client'
 import { toast } from 'sonner'
-import { Loader2 } from 'lucide-react'
+import { Loader2, PlusCircle } from 'lucide-react'
 
 export function AdCampaignsTab() {
   const {
@@ -43,7 +35,6 @@ export function AdCampaignsTab() {
     createAdCampaign,
   } = useCouponStore() || {}
 
-  const [isOpen, setIsOpen] = useState(false)
   const [dbAds, setDbAds] = useState<any[]>([])
   const [dbAdvertisers, setDbAdvertisers] = useState<any[]>([])
   const [adPricing, setAdPricing] = useState<any[]>([])
@@ -162,7 +153,10 @@ export function AdCampaignsTab() {
   const onSubmit = async (data: any) => {
     if (!selectedRule)
       return toast.error(
-        t('ads.no_rule_found', 'Regra de precificação não encontrada.'),
+        t(
+          'ads.no_rule_found',
+          'Regra de precificação não encontrada. Por favor crie uma regra em "Pricing" primeiro.',
+        ),
       )
     if (selectedRule.billingType !== 'fixed' && !data.budget)
       return toast.error(
@@ -226,37 +220,7 @@ export function AdCampaignsTab() {
       if (createAdCampaign) {
         try {
           createAdCampaign(
-            {
-              id: adId,
-              title: data.title,
-              companyId: 'admin_created',
-              advertiserId: data.advertiserId,
-              region: 'Global',
-              category: data.category || 'all',
-              billingType: selectedRule.billingType,
-              placement: data.placement,
-              status: 'active',
-              views: 0,
-              clicks: 0,
-              startDate: now.toISOString(),
-              endDate: endDate.toISOString(),
-              image: data.image,
-              link: data.link,
-              price:
-                selectedRule.billingType === 'fixed'
-                  ? calculatedPrice
-                  : undefined,
-              budget:
-                selectedRule.billingType !== 'fixed'
-                  ? parseFloat(data.budget?.replace(/\D/g, '') || '0') / 100
-                  : undefined,
-              costPerClick:
-                selectedRule.billingType === 'cpc'
-                  ? selectedRule.price
-                  : undefined,
-              currency: 'BRL',
-              durationDays: selectedRule.durationDays,
-            },
+            { ...dbPayload, id: adId },
             {
               id: Math.random().toString(),
               referenceNumber: refNumber,
@@ -276,7 +240,6 @@ export function AdCampaignsTab() {
       toast.success(
         t('ads.campaign_created', 'Campanha de ADS criada com sucesso!'),
       )
-      setIsOpen(false)
       reset()
     } catch (err: any) {
       console.error('Error creating ad campaign:', err)
@@ -289,19 +252,16 @@ export function AdCampaignsTab() {
   }
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>{t('ads.active_campaigns', 'Campanhas Ativas')}</CardTitle>
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
-          <DialogTrigger asChild>
-            <Button>{t('ads.create_campaign', 'Criar Campanha')}</Button>
-          </DialogTrigger>
-          <DialogContent className="max-h-[90vh] overflow-y-auto max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>
-                {t('ads.new_campaign', 'Nova Campanha')}
-              </DialogTitle>
-            </DialogHeader>
+    <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+      <div className="xl:col-span-1">
+        <Card className="border-primary/20 shadow-sm sticky top-4">
+          <CardHeader className="bg-slate-50/50 pb-4">
+            <CardTitle className="text-lg flex items-center gap-2 text-primary">
+              <PlusCircle className="w-5 h-5" />
+              {t('ads.new_campaign', 'Criar Nova Campanha')}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-4">
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
                 <Label>{t('ads.advertiser', 'Anunciante')}</Label>
@@ -330,69 +290,66 @@ export function AdCampaignsTab() {
                 <Label>{t('ads.ad_title', 'Título do Anúncio')}</Label>
                 <Input {...register('title')} required />
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>{t('ads.location', 'Localização (Placement)')}</Label>
-                  <Select
-                    onValueChange={(v) => setValue('placement', v)}
-                    required
-                  >
-                    <SelectTrigger>
-                      <SelectValue
-                        placeholder={t('common.select', 'Selecione')}
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="top">
-                        {t('ads.placement_top', 'Top Banner')}
+
+              <div className="space-y-2">
+                <Label>{t('ads.location', 'Localização (Placement)')}</Label>
+                <Select
+                  onValueChange={(v) => setValue('placement', v)}
+                  required
+                >
+                  <SelectTrigger>
+                    <SelectValue
+                      placeholder={t('common.select', 'Selecione')}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="top">
+                      {t('ads.placement_top', 'Top Banner')}
+                    </SelectItem>
+                    <SelectItem value="bottom">
+                      {t('ads.placement_bottom', 'Bottom Banner')}
+                    </SelectItem>
+                    <SelectItem value="sidebar">
+                      {t('ads.placement_sidebar', 'Sidebar')}
+                    </SelectItem>
+                    <SelectItem value="search">
+                      {t('ads.placement_search', 'Search Results')}
+                    </SelectItem>
+                    <SelectItem value="offer_of_the_day">
+                      {t('ads.placement_offer_of_the_day', 'Offer of the Day')}
+                    </SelectItem>
+                    <SelectItem value="top_ranking">
+                      {t('ads.placement_top_ranking', 'Top Ranking')}
+                    </SelectItem>
+                    <SelectItem value="sponsored_push">
+                      {t('ads.placement_sponsored_push', 'Sponsored Push')}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>{t('ads.target_category', 'Categoria Alvo')}</Label>
+                <Select
+                  onValueChange={(v) => setValue('category', v)}
+                  defaultValue="all"
+                >
+                  <SelectTrigger>
+                    <SelectValue
+                      placeholder={t('category.all', 'Todas as Categorias')}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">
+                      {t('category.all', 'Todas as Categorias')}
+                    </SelectItem>
+                    {CATEGORIES.filter((c) => c.id !== 'all').map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.label}
                       </SelectItem>
-                      <SelectItem value="bottom">
-                        {t('ads.placement_bottom', 'Bottom Banner')}
-                      </SelectItem>
-                      <SelectItem value="sidebar">
-                        {t('ads.placement_sidebar', 'Sidebar')}
-                      </SelectItem>
-                      <SelectItem value="search">
-                        {t('ads.placement_search', 'Search Results')}
-                      </SelectItem>
-                      <SelectItem value="offer_of_the_day">
-                        {t(
-                          'ads.placement_offer_of_the_day',
-                          'Offer of the Day',
-                        )}
-                      </SelectItem>
-                      <SelectItem value="top_ranking">
-                        {t('ads.placement_top_ranking', 'Top Ranking')}
-                      </SelectItem>
-                      <SelectItem value="sponsored_push">
-                        {t('ads.placement_sponsored_push', 'Sponsored Push')}
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>{t('ads.target_category', 'Categoria Alvo')}</Label>
-                  <Select
-                    onValueChange={(v) => setValue('category', v)}
-                    defaultValue="all"
-                  >
-                    <SelectTrigger>
-                      <SelectValue
-                        placeholder={t('category.all', 'Todas as Categorias')}
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">
-                        {t('category.all', 'Todas as Categorias')}
-                      </SelectItem>
-                      {CATEGORIES.filter((c) => c.id !== 'all').map((c) => (
-                        <SelectItem key={c.id} value={c.id}>
-                          {c.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               {availableRules.length > 0 &&
@@ -453,7 +410,7 @@ export function AdCampaignsTab() {
                   </div>
                 )}
 
-              <div className="p-4 bg-muted rounded-md text-center">
+              <div className="p-4 bg-muted/50 rounded-lg text-center border border-dashed border-slate-200">
                 <span className="text-sm text-muted-foreground block mb-1">
                   {t('ads.amount_to_bill', 'Valor a Faturar')}
                 </span>
@@ -461,6 +418,7 @@ export function AdCampaignsTab() {
                   {formatCurrency(calculatedPrice)}
                 </span>
               </div>
+
               <div className="space-y-2">
                 <Label>{t('ads.campaign_banner', 'Banner da Campanha')}</Label>
                 <div className="flex flex-col gap-2">
@@ -484,6 +442,7 @@ export function AdCampaignsTab() {
                   />
                 </div>
               </div>
+
               <div className="space-y-2">
                 <Label>
                   {t('ads.redirect_url', 'URL de Redirecionamento')}
@@ -494,94 +453,124 @@ export function AdCampaignsTab() {
                   required
                 />
               </div>
-              <DialogFooter>
-                <Button
-                  type="submit"
-                  disabled={calculatedPrice === 0 || isSubmitting}
-                >
-                  {isSubmitting && (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  )}
-                  {t('ads.save_generate_billing', 'Salvar e Gerar Fatura')}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </CardHeader>
-      <CardContent>
-        {isLoading ? (
-          <div className="flex justify-center p-8">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          </div>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t('ads.campaign', 'Campanha')}</TableHead>
-                <TableHead>
-                  {t('ads.location_model', 'Local & Modelo')}
-                </TableHead>
-                <TableHead>{t('ads.performance', 'Performance')}</TableHead>
-                <TableHead>{t('admin.status', 'Status')}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {displayAds.map((a) => {
-                const advertiserId = a.advertiser_id || a.advertiserId
-                const adv = allAdvertisers.find((ad) => ad.id === advertiserId)
-                const billingType = a.billing_type || a.billingType
 
-                return (
-                  <TableRow key={a.id}>
-                    <TableCell>
-                      <span className="font-bold block">{a.title}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {adv?.companyName || 'N/A'}
-                      </span>
-                    </TableCell>
-                    <TableCell className="capitalize">
-                      {t(
-                        `ads.placement_${a.placement || 'unknown'}`,
-                        (a.placement || '').replace(/_/g, ' '),
-                      )}
-                      <Badge variant="outline" className="ml-2 uppercase">
-                        {billingType || 'N/A'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-sm">
-                        {t('ads.views_abbr', 'V')}: {formatNumber(a.views || 0)}{' '}
-                        | {t('ads.clicks_abbr', 'C')}:{' '}
-                        {formatNumber(a.clicks || 0)}
-                      </div>
-                      {a.budget && (
-                        <div className="text-xs text-muted-foreground">
-                          {t('ads.budget', 'Budget')}:{' '}
-                          {formatCurrency(Number(a.budget) || 0)}
-                        </div>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Badge>{a.status}</Badge>
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
-              {displayAds.length === 0 && (
-                <TableRow>
-                  <TableCell
-                    colSpan={4}
-                    className="text-center text-muted-foreground py-8"
-                  >
-                    {t('ads.no_rule_found', 'Nenhuma campanha encontrada.')}
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        )}
-      </CardContent>
-    </Card>
+              <Button
+                className="w-full font-bold"
+                type="submit"
+                disabled={calculatedPrice === 0 || isSubmitting}
+              >
+                {isSubmitting && (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                )}
+                {t('ads.save_generate_billing', 'Salvar e Gerar Fatura')}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="xl:col-span-2">
+        <Card className="shadow-sm">
+          <CardHeader>
+            <CardTitle>
+              {t('ads.active_campaigns', 'Campanhas Ativas')}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="flex justify-center p-8">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              </div>
+            ) : (
+              <div className="rounded-md border overflow-x-auto">
+                <Table>
+                  <TableHeader className="bg-slate-50">
+                    <TableRow>
+                      <TableHead>{t('ads.campaign', 'Campanha')}</TableHead>
+                      <TableHead>
+                        {t('ads.location_model', 'Local & Modelo')}
+                      </TableHead>
+                      <TableHead>
+                        {t('ads.performance', 'Performance')}
+                      </TableHead>
+                      <TableHead>{t('admin.status', 'Status')}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {displayAds.map((a) => {
+                      const advertiserId = a.advertiser_id || a.advertiserId
+                      const adv = allAdvertisers.find(
+                        (ad) => ad.id === advertiserId,
+                      )
+                      const billingType = a.billing_type || a.billingType
+
+                      return (
+                        <TableRow key={a.id}>
+                          <TableCell>
+                            <span className="font-bold block">{a.title}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {adv?.companyName || 'N/A'}
+                            </span>
+                          </TableCell>
+                          <TableCell className="capitalize">
+                            {t(
+                              `ads.placement_${a.placement || 'unknown'}`,
+                              (a.placement || '').replace(/_/g, ' '),
+                            )}
+                            <Badge variant="outline" className="ml-2 uppercase">
+                              {billingType || 'N/A'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-sm">
+                              {t('ads.views_abbr', 'V')}:{' '}
+                              {formatNumber(a.views || 0)} |{' '}
+                              {t('ads.clicks_abbr', 'C')}:{' '}
+                              {formatNumber(a.clicks || 0)}
+                            </div>
+                            {a.budget && (
+                              <div className="text-xs text-muted-foreground">
+                                {t('ads.budget', 'Budget')}:{' '}
+                                {formatCurrency(Number(a.budget) || 0)}
+                              </div>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border-emerald-200">
+                              {a.status}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })}
+                    {displayAds.length === 0 && (
+                      <TableRow>
+                        <TableCell
+                          colSpan={4}
+                          className="text-center text-muted-foreground py-12"
+                        >
+                          <div className="flex flex-col items-center justify-center gap-2">
+                            <span className="text-lg font-medium">
+                              {t(
+                                'ads.no_rule_found',
+                                'Nenhuma campanha encontrada.',
+                              )}
+                            </span>
+                            <span className="text-sm">
+                              Utilize o formulário ao lado para criar a primeira
+                              campanha.
+                            </span>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   )
 }
