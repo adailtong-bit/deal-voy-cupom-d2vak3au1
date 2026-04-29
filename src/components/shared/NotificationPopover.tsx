@@ -7,7 +7,7 @@ import {
 } from '@/components/ui/popover'
 import { useNotification } from '@/stores/NotificationContext'
 import { useLanguage } from '@/stores/LanguageContext'
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { useState } from 'react'
 
@@ -15,6 +15,7 @@ export function NotificationPopover() {
   const { notifications, markAsRead, clearAll } = useNotification()
   const { t } = useLanguage()
   const [isOpen, setIsOpen] = useState(false)
+  const navigate = useNavigate()
 
   const unreadCount = notifications.filter((n) => !n.read).length
 
@@ -88,31 +89,9 @@ export function NotificationPopover() {
                 )
 
                 if (notif.link) {
-                  if (isExternal) {
-                    return (
-                      <a
-                        key={notif.id}
-                        href={notif.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={cn(
-                          'group flex flex-col gap-1.5 p-4 border-b border-slate-100 transition-colors hover:bg-slate-50 cursor-pointer relative',
-                          !notif.read && 'bg-blue-50/30',
-                        )}
-                        onClick={() => {
-                          markAsRead(notif.id)
-                          setIsOpen(false)
-                        }}
-                      >
-                        {content}
-                      </a>
-                    )
-                  }
-
                   return (
-                    <Link
+                    <div
                       key={notif.id}
-                      to={notif.link}
                       className={cn(
                         'group flex flex-col gap-1.5 p-4 border-b border-slate-100 transition-colors hover:bg-slate-50 cursor-pointer relative',
                         !notif.read && 'bg-blue-50/30',
@@ -120,10 +99,21 @@ export function NotificationPopover() {
                       onClick={() => {
                         markAsRead(notif.id)
                         setIsOpen(false)
+                        if (notif.link) {
+                          if (isExternal) {
+                            window.open(
+                              notif.link,
+                              '_blank',
+                              'noopener,noreferrer',
+                            )
+                          } else {
+                            navigate(notif.link)
+                          }
+                        }
                       }}
                     >
                       {content}
-                    </Link>
+                    </div>
                   )
                 }
 
