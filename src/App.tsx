@@ -215,6 +215,7 @@ export default function App() {
                       <RequireAuth
                         roles={
                           [
+                            'user',
                             'shopkeeper',
                             'merchant',
                             'admin',

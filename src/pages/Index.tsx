@@ -554,7 +554,7 @@ function IndexContent() {
                   className="shadow-md bg-white border-primary text-primary hover:bg-primary/5"
                 >
                   <Link to="/merchant">
-                    {t('nav.vendor', 'Vendor Dashboard')}{' '}
+                    {t('nav.vendor', 'Área do Anunciante')}{' '}
                     <ChevronRight className="w-4 h-4 ml-1" />
                   </Link>
                 </Button>
@@ -594,7 +594,7 @@ function IndexContent() {
                     className="shadow-md bg-white text-primary border-primary/20 h-8 text-xs px-2"
                   >
                     <Link to="/merchant">
-                      {t('nav.vendor', 'Vendor Dashboard')}
+                      {t('nav.vendor', 'Área do Anunciante')}
                     </Link>
                   </Button>
                 )}
