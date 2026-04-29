@@ -29,20 +29,26 @@ import {
   Advertiser,
 } from '@/services/ad_advertisers'
 
+import { Loader2, Building2, MapPin, CreditCard } from 'lucide-react'
+
 export function AdvertisersTab() {
   const [advertisers, setAdvertisers] = useState<Advertiser[]>([])
   const [isOpen, setIsOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [isFetching, setIsFetching] = useState(true)
   const { register, handleSubmit, reset, watch, setValue } = useForm()
   const { t } = useLanguage()
 
   const loadAdvertisers = async () => {
+    setIsFetching(true)
     try {
       const data = await fetchAdvertisers()
       setAdvertisers(data || [])
     } catch (err) {
       console.error(err)
       toast.error(t('common.error', 'Erro ao carregar anunciantes'))
+    } finally {
+      setIsFetching(false)
     }
   }
 
@@ -90,84 +96,153 @@ export function AdvertisersTab() {
                 {t('ads.register_advertiser', 'Cadastrar')}
               </DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div className="space-y-2">
-                <Label>{t('ads.company_name', 'Razão Social')}</Label>
-                <Input {...register('companyName')} required />
-              </div>
-              <div className="space-y-2">
-                <Label>{t('ads.tax_id', 'CNPJ / CPF')}</Label>
-                <Input
-                  {...register('taxId')}
-                  required
-                  onChange={(e) => {
-                    let v = e.target.value.replace(/\D/g, '')
-                    if (v.length <= 11) {
-                      v = v.replace(
-                        /(\d{3})(\d{3})(\d{3})(\d{1,2})/,
-                        '$1.$2.$3-$4',
-                      )
-                    } else {
-                      v = v.replace(
-                        /(\d{2})(\d{3})(\d{3})(\d{4})(\d{1,2})/,
-                        '$1.$2.$3/$4-$5',
-                      )
-                    }
-                    e.target.value = v
-                  }}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>{t('auth.email', 'E-mail')}</Label>
-                  <Input type="email" {...register('email')} required />
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 pb-6">
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 text-primary font-semibold border-b pb-2">
+                  <Building2 className="w-5 h-5" />
+                  <h4>Dados Base do Anunciante</h4>
                 </div>
+                <div className="grid gap-4">
+                  <div className="space-y-2">
+                    <Label>
+                      {t('ads.company_name', 'Razão Social / Nome')}
+                    </Label>
+                    <Input
+                      {...register('companyName')}
+                      required
+                      placeholder="Nome da empresa ou anunciante"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>{t('auth.email', 'E-mail de Contato')}</Label>
+                      <Input
+                        type="email"
+                        {...register('email')}
+                        required
+                        placeholder="contato@empresa.com"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>{t('phone.label', 'Telefone / WhatsApp')}</Label>
+                      <PhoneInput
+                        value={watch('phone') || ''}
+                        onChange={(val) =>
+                          setValue('phone', val, { shouldValidate: true })
+                        }
+                        className="w-full"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 text-primary font-semibold border-b pb-2">
+                  <CreditCard className="w-5 h-5" />
+                  <h4>Dados de Cobrança & Faturamento</h4>
+                </div>
+
                 <div className="space-y-2">
-                  <Label>{t('phone.label', 'Telefone')}</Label>
-                  <PhoneInput
-                    value={watch('phone') || ''}
-                    onChange={(val) =>
-                      setValue('phone', val, { shouldValidate: true })
-                    }
-                    className="w-full"
+                  <Label>{t('ads.tax_id', 'CNPJ / CPF')}</Label>
+                  <Input
+                    {...register('taxId')}
+                    required
+                    placeholder="00.000.000/0000-00"
+                    onChange={(e) => {
+                      let v = e.target.value.replace(/\D/g, '')
+                      if (v.length <= 11) {
+                        v = v.replace(
+                          /(\d{3})(\d{3})(\d{3})(\d{1,2})/,
+                          '$1.$2.$3-$4',
+                        )
+                      } else {
+                        v = v.replace(
+                          /(\d{2})(\d{3})(\d{3})(\d{4})(\d{1,2})/,
+                          '$1.$2.$3/$4-$5',
+                        )
+                      }
+                      e.target.value = v
+                    }}
                   />
                 </div>
-              </div>
-              <div className="space-y-2">
-                <Label>{t('address.street', 'Rua')}</Label>
-                <Input {...register('street')} required />
-              </div>
-              <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label>{t('address.number', 'Número')}</Label>
-                  <Input {...register('number')} required />
+
+                <div className="grid gap-4">
+                  <div className="space-y-2">
+                    <Label>{t('address.street', 'Logradouro / Rua')}</Label>
+                    <Input
+                      {...register('street')}
+                      required
+                      placeholder="Av. Principal"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label>{t('address.number', 'Número')}</Label>
+                      <Input
+                        {...register('number')}
+                        required
+                        placeholder="123"
+                      />
+                    </div>
+                    <div className="space-y-2 md:col-span-2">
+                      <Label>{t('address.city', 'Cidade')}</Label>
+                      <Input
+                        {...register('city')}
+                        required
+                        placeholder="São Paulo"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>{t('address.state', 'Estado (UF)')}</Label>
+                      <Input
+                        {...register('state')}
+                        required
+                        placeholder="SP"
+                        maxLength={2}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>{t('address.zip', 'CEP')}</Label>
+                      <Input
+                        {...register('zip')}
+                        required
+                        placeholder="00000-000"
+                        onChange={(e) => {
+                          let v = e.target.value.replace(/\D/g, '')
+                          v = v.replace(/(\d{5})(\d{1,3})/, '$1-$2')
+                          e.target.value = v
+                        }}
+                      />
+                    </div>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label>{t('address.city', 'Cidade')}</Label>
-                  <Input {...register('city')} required />
-                </div>
-                <div className="space-y-2">
-                  <Label>{t('address.state', 'Estado')}</Label>
-                  <Input {...register('state')} required />
-                </div>
               </div>
-              <div className="space-y-2">
-                <Label>{t('address.zip', 'CEP')}</Label>
-                <Input
-                  {...register('zip')}
-                  required
-                  onChange={(e) => {
-                    let v = e.target.value.replace(/\D/g, '')
-                    v = v.replace(/(\d{5})(\d{1,3})/, '$1-$2')
-                    e.target.value = v
-                  }}
-                />
-              </div>
-              <DialogFooter>
-                <Button type="submit" disabled={isLoading}>
+
+              <DialogFooter className="pt-4 border-t sticky bottom-0 bg-white">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  className="font-bold"
+                >
+                  {isLoading && (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  )}
                   {isLoading
                     ? t('common.loading', 'Salvando...')
-                    : t('common.save')}
+                    : 'Salvar Cadastro Base'}
                 </Button>
               </DialogFooter>
             </form>
@@ -175,44 +250,73 @@ export function AdvertisersTab() {
         </Dialog>
       </CardHeader>
       <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{t('ads.company', 'Empresa')}</TableHead>
-              <TableHead>{t('ads.tax_id', 'CNPJ/CPF')}</TableHead>
-              <TableHead>{t('ads.contact', 'Contato')}</TableHead>
-              <TableHead>{t('ads.locality', 'Local')}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {advertisers.map((a) => (
-              <TableRow key={a.id || Math.random().toString()}>
-                <TableCell className="font-bold">{a.company_name}</TableCell>
-                <TableCell>{a.tax_id}</TableCell>
-                <TableCell>
-                  {a.email}
-                  <br />
-                  <span className="text-xs text-muted-foreground">
-                    {a.phone}
-                  </span>
-                </TableCell>
-                <TableCell>
-                  {a.city}, {a.state}
-                </TableCell>
-              </TableRow>
-            ))}
-            {advertisers.length === 0 && (
-              <TableRow>
-                <TableCell
-                  colSpan={4}
-                  className="text-center text-muted-foreground"
-                >
-                  {t('ads.no_advertisers', 'Nenhum anunciante.')}
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+        {isFetching ? (
+          <div className="flex justify-center p-8">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
+        ) : (
+          <div className="rounded-md border overflow-x-auto">
+            <Table>
+              <TableHeader className="bg-slate-50">
+                <TableRow>
+                  <TableHead>
+                    {t('ads.company', 'Empresa (Cadastro Base)')}
+                  </TableHead>
+                  <TableHead>
+                    {t('ads.tax_id', 'CNPJ/CPF (Cobrança)')}
+                  </TableHead>
+                  <TableHead>{t('ads.contact', 'Contato')}</TableHead>
+                  <TableHead>{t('ads.locality', 'Localidade')}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {advertisers.map((a) => (
+                  <TableRow key={a.id || Math.random().toString()}>
+                    <TableCell className="font-bold text-slate-800">
+                      {a.company_name}
+                    </TableCell>
+                    <TableCell className="font-mono text-sm">
+                      {a.tax_id}
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-sm font-medium">{a.email}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {a.phone}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-sm">
+                        {a.city}, {a.state}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {advertisers.length === 0 && (
+                  <TableRow>
+                    <TableCell
+                      colSpan={4}
+                      className="text-center text-muted-foreground py-12"
+                    >
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        <Building2 className="w-8 h-8 text-slate-300" />
+                        <span className="text-lg font-medium">
+                          {t(
+                            'ads.no_advertisers',
+                            'Nenhum anunciante cadastrado',
+                          )}
+                        </span>
+                        <span className="text-sm">
+                          Cadastre o primeiro anunciante para iniciar o
+                          faturamento.
+                        </span>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        )}
       </CardContent>
     </Card>
   )

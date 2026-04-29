@@ -20,17 +20,23 @@ import {
 } from '@/components/ui/select'
 import { useForm } from 'react-hook-form'
 import { formatCurrency } from '@/lib/utils'
-import { useLanguage } from '@/stores/LanguageContext'
 import { supabase } from '@/lib/supabase/client'
 import { toast } from 'sonner'
-import { Loader2, Trash2, PlusCircle } from 'lucide-react'
+import { Loader2, Trash2, PlusCircle, DollarSign } from 'lucide-react'
+
+const AD_PLACEMENTS = [
+  { id: 'top', label: 'Topo da Página (Header Hero)' },
+  { id: 'bottom', label: 'Rodapé da Página (Footer)' },
+  { id: 'sidebar', label: 'Barra Lateral (Sidebar)' },
+  { id: 'search', label: 'Resultados de Busca' },
+  { id: 'offer_of_the_day', label: 'Destaque: Oferta do Dia' },
+]
 
 export function AdPricingTab() {
   const [adPricing, setAdPricing] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { register, handleSubmit, reset, watch, setValue } = useForm()
-  const { t } = useLanguage()
 
   const watchBillingType = watch('billingType')
 
@@ -43,9 +49,6 @@ export function AdPricingTab() {
         .order('created_at', { ascending: false })
       if (!error && data) {
         setAdPricing(data)
-      } else if (error && error.code === '42P01') {
-        // Table doesn't exist yet, it's fine
-        setAdPricing([])
       }
     } catch (e) {
       console.error(e)
@@ -77,35 +80,25 @@ export function AdPricingTab() {
       if (error) throw error
 
       setAdPricing((prev) => [inserted, ...prev])
-      toast.success(
-        t('ads.pricing_created', 'Regra de precificação criada com sucesso!'),
-      )
+      toast.success('Tabela de Preço adicionada com sucesso!')
       reset()
     } catch (err: any) {
-      toast.error(
-        t('ads.pricing_error', 'Erro ao criar regra de precificação.'),
-      )
-      console.error(err)
+      toast.error('Erro ao adicionar preço na tabela.')
     } finally {
       setIsSubmitting(false)
     }
   }
 
   const handleDelete = async (id: string) => {
-    if (
-      !window.confirm(
-        t('common.confirm_delete', 'Tem certeza que deseja excluir?'),
-      )
-    )
+    if (!window.confirm('Tem certeza que deseja excluir esta regra de preço?'))
       return
     try {
       const { error } = await supabase.from('ad_pricing').delete().eq('id', id)
       if (error) throw error
       setAdPricing((prev) => prev.filter((p) => p.id !== id))
-      toast.success(t('common.deleted', 'Excluído com sucesso'))
+      toast.success('Regra excluída com sucesso')
     } catch (e) {
-      console.error(e)
-      toast.error(t('common.error', 'Ocorreu um erro'))
+      toast.error('Erro ao excluir regra')
     }
   }
 
@@ -116,79 +109,62 @@ export function AdPricingTab() {
           <CardHeader className="bg-slate-50/50 pb-4">
             <CardTitle className="text-lg flex items-center gap-2 text-primary">
               <PlusCircle className="w-5 h-5" />
-              {t('ads.add_pricing', 'Adicionar Nova Regra')}
+              Cadastrar Novo Preço
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-4">
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
-                <Label>{t('ads.location', 'Localização')}</Label>
+                <Label>Onde vai aparecer? (Localização)</Label>
                 <Select
                   onValueChange={(v) => setValue('placement', v)}
                   required
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder={t('common.select')} />
+                    <SelectValue placeholder="Selecione o local de exibição" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="top">
-                      {t('ads.placement_top', 'Top Banner')}
-                    </SelectItem>
-                    <SelectItem value="bottom">
-                      {t('ads.placement_bottom', 'Bottom Banner')}
-                    </SelectItem>
-                    <SelectItem value="sidebar">
-                      {t('ads.placement_sidebar', 'Sidebar')}
-                    </SelectItem>
-                    <SelectItem value="search">
-                      {t('ads.placement_search', 'Search Results')}
-                    </SelectItem>
-                    <SelectItem value="offer_of_the_day">
-                      {t('ads.placement_offer_of_the_day', 'Offer of the Day')}
-                    </SelectItem>
-                    <SelectItem value="top_ranking">
-                      {t('ads.placement_top_ranking', 'Top Ranking')}
-                    </SelectItem>
-                    <SelectItem value="sponsored_push">
-                      {t('ads.placement_sponsored_push', 'Sponsored Push')}
-                    </SelectItem>
+                    {AD_PLACEMENTS.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>{t('ads.billing_model', 'Modelo de Cobrança')}</Label>
+                <Label>Modelo de Cobrança</Label>
                 <Select
                   onValueChange={(v) => setValue('billingType', v)}
                   required
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder={t('common.select')} />
+                    <SelectValue placeholder="Selecione o modelo" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="fixed">
-                      {t('ads.fixed_period', 'Período Fixo')}
-                    </SelectItem>
-                    <SelectItem value="cpc">{t('ads.cpc', 'CPC')}</SelectItem>
-                    <SelectItem value="cpa">{t('ads.cpa', 'CPA')}</SelectItem>
+                    <SelectItem value="fixed">Tempo Fixo (Dias)</SelectItem>
+                    <SelectItem value="cpc">CPC (Custo por Clique)</SelectItem>
+                    <SelectItem value="cpa">CPA (Custo por Ação)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               {watchBillingType === 'fixed' && (
                 <div className="space-y-2">
-                  <Label>{t('ads.duration_days', 'Duração (Dias)')}</Label>
+                  <Label>Tempo que aparece (Em Dias)</Label>
                   <Input
                     type="number"
                     {...register('durationDays')}
                     required={watchBillingType === 'fixed'}
+                    placeholder="Ex: 30"
                   />
                 </div>
               )}
 
               <div className="space-y-2">
-                <Label>{t('ads.base_value', 'Valor Base')}</Label>
+                <Label>Valor Base de Cobrança</Label>
                 <Input
-                  placeholder="Ex: R$ 100,00"
+                  placeholder="Ex: R$ 1.500,00"
                   value={watch('price') || ''}
                   onChange={(e) => {
                     const raw = e.target.value.replace(/\D/g, '')
@@ -200,7 +176,6 @@ export function AdPricingTab() {
                       style: 'currency',
                       currency: 'BRL',
                     }).format(parseFloat(raw) / 100)
-
                     setValue('price', formatted, { shouldValidate: true })
                   }}
                   required
@@ -210,12 +185,12 @@ export function AdPricingTab() {
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full font-bold"
+                className="w-full font-bold shadow-md"
               >
                 {isSubmitting && (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 )}
-                {t('common.save', 'Salvar Regra')}
+                Salvar Preço
               </Button>
             </form>
           </CardContent>
@@ -225,9 +200,7 @@ export function AdPricingTab() {
       <div className="xl:col-span-2">
         <Card className="shadow-sm">
           <CardHeader>
-            <CardTitle>
-              {t('ads.pricing_table', 'Tabela de Preços Ativas')}
-            </CardTitle>
+            <CardTitle>Tabela de Preços Cadastrados</CardTitle>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -239,42 +212,46 @@ export function AdPricingTab() {
                 <Table>
                   <TableHeader className="bg-slate-50">
                     <TableRow>
-                      <TableHead>{t('ads.location', 'Local')}</TableHead>
-                      <TableHead>{t('ads.model', 'Modelo')}</TableHead>
-                      <TableHead>{t('ads.duration', 'Duração')}</TableHead>
-                      <TableHead>{t('ads.price', 'Preço')}</TableHead>
+                      <TableHead>Onde vai aparecer</TableHead>
+                      <TableHead>Modelo / Tempo</TableHead>
+                      <TableHead>Valor de Cobrança</TableHead>
+                      <TableHead></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {adPricing.map((p) => {
-                      const billingType = p.billing_type || p.billingType
-                      const durationDays = p.duration_days || p.durationDays
+                      const pLabel =
+                        AD_PLACEMENTS.find((pl) => pl.id === p.placement)
+                          ?.label || p.placement
                       return (
                         <TableRow key={p.id}>
-                          <TableCell className="capitalize font-medium">
-                            {t(
-                              `ads.placement_${p.placement || 'unknown'}`,
-                              (p.placement || '').replace(/_/g, ' '),
-                            )}
-                          </TableCell>
-                          <TableCell className="uppercase">
-                            <span className="px-2 py-1 rounded bg-slate-100 text-slate-800 text-xs font-semibold">
-                              {billingType || 'N/A'}
-                            </span>
+                          <TableCell className="font-semibold text-slate-800">
+                            {pLabel}
                           </TableCell>
                           <TableCell>
-                            {billingType === 'fixed'
-                              ? `${durationDays || 0} ${t('ads.days', 'dias')}`
-                              : t('ads.continuous', 'Contínuo')}
-                          </TableCell>
-                          <TableCell className="flex justify-between items-center">
-                            <span className="font-semibold text-primary">
-                              {formatCurrency(p.price || 0, 'BRL')}{' '}
-                              <span className="text-muted-foreground text-xs font-normal">
-                                {billingType !== 'fixed' &&
-                                  `/ ${billingType || ''}`}
+                            <div className="flex items-center gap-2">
+                              <span className="px-2 py-1 rounded bg-slate-100 text-slate-700 text-xs font-bold uppercase">
+                                {p.billing_type}
                               </span>
-                            </span>
+                              <span className="text-sm text-slate-600">
+                                {p.billing_type === 'fixed'
+                                  ? `${p.duration_days} dias`
+                                  : 'Contínuo'}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2 text-primary font-bold text-lg">
+                              {formatCurrency(p.price || 0, 'BRL')}
+                              {p.billing_type !== 'fixed' && (
+                                <span className="text-xs font-normal text-slate-500">
+                                  {' '}
+                                  / {p.billing_type}
+                                </span>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
                             <Button
                               variant="ghost"
                               size="sm"
@@ -291,15 +268,16 @@ export function AdPricingTab() {
                       <TableRow>
                         <TableCell
                           colSpan={4}
-                          className="text-center text-muted-foreground py-12"
+                          className="text-center text-slate-500 py-16"
                         >
-                          <div className="flex flex-col items-center justify-center gap-2">
-                            <span className="text-lg font-medium">
-                              {t('ads.no_rules', 'Nenhuma regra configurada')}
+                          <div className="flex flex-col items-center gap-2">
+                            <DollarSign className="w-10 h-10 text-slate-300" />
+                            <span className="text-lg font-medium text-slate-700">
+                              Tabela de Preços Vazia
                             </span>
-                            <span className="text-sm">
-                              Utilize o formulário ao lado para criar as regras
-                              de precificação.
+                            <span>
+                              Cadastre as regras de precificação e tempo de
+                              exibição para seus anúncios.
                             </span>
                           </div>
                         </TableCell>
