@@ -101,7 +101,10 @@ export function AdminContentTab() {
             rows={4}
             value={content.about}
             onChange={(e) => handleChange('about', e.target.value)}
-            placeholder="Texto para a seção Quem Somos"
+            placeholder={t(
+              'admin.content_tab.about_ph',
+              'Texto para a seção Quem Somos',
+            )}
             className="flex min-h-[80px] w-full rounded-md border border-slate-200 bg-transparent px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50"
           />
         </div>
@@ -115,7 +118,10 @@ export function AdminContentTab() {
             rows={4}
             value={content.company}
             onChange={(e) => handleChange('company', e.target.value)}
-            placeholder="Texto para a seção Nossa Empresa"
+            placeholder={t(
+              'admin.content_tab.company_ph',
+              'Texto para a seção Nossa Empresa',
+            )}
             className="flex min-h-[80px] w-full rounded-md border border-slate-200 bg-transparent px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50"
           />
         </div>
@@ -129,7 +135,10 @@ export function AdminContentTab() {
             rows={4}
             value={content.mission}
             onChange={(e) => handleChange('mission', e.target.value)}
-            placeholder="Texto para a seção Nossa Missão"
+            placeholder={t(
+              'admin.content_tab.mission_ph',
+              'Texto para a seção Nossa Missão',
+            )}
             className="flex min-h-[80px] w-full rounded-md border border-slate-200 bg-transparent px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50"
           />
         </div>
@@ -143,7 +152,10 @@ export function AdminContentTab() {
             rows={4}
             value={content.contact}
             onChange={(e) => handleChange('contact', e.target.value)}
-            placeholder="Texto para a seção Fale Conosco (Email, telefone, endereço...)"
+            placeholder={t(
+              'admin.content_tab.contact_ph',
+              'Texto para a seção Fale Conosco (Email, telefone, endereço...)',
+            )}
             className="flex min-h-[80px] w-full rounded-md border border-slate-200 bg-transparent px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50"
           />
         </div>

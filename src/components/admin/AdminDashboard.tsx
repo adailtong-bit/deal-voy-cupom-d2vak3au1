@@ -131,10 +131,16 @@ export default function AdminDashboard() {
       ? [
           {
             id: 'notif-aff',
-            title: 'Novos Afiliados Pendentes',
-            desc: `${pendingAffiliates.length} afiliado(s) aguardando verificação de documentos.`,
+            title: t(
+              'admin.notif.pending_affiliates',
+              'Novos Afiliados Pendentes',
+            ),
+            desc: t(
+              'admin.notif.pending_affiliates_desc',
+              '{count} afiliado(s) aguardando verificação de documentos.',
+            ).replace('{count}', pendingAffiliates.length.toString()),
             tab: 'approvals',
-            time: 'Agora mesmo',
+            time: t('admin.notif.just_now', 'Agora mesmo'),
           },
         ]
       : []),
@@ -297,7 +303,7 @@ export default function AdminDashboard() {
             <TabsTrigger value="overview">{t('admin.overview')}</TabsTrigger>
           )}
           <TabsTrigger value="finance">
-            {t('finance.dashboard_title', 'Financeiro')}
+            {t('admin.finance.dashboard_title', 'Financeiro')}
           </TabsTrigger>
           {isSuperAdmin && (
             <>
@@ -306,7 +312,7 @@ export default function AdminDashboard() {
                 className="gap-2 bg-amber-50 text-amber-700 data-[state=active]:bg-amber-100 data-[state=active]:text-amber-900 border border-amber-200"
               >
                 <ShieldCheck className="h-4 w-4" />
-                Aprovações
+                {t('admin.approvalsTab', 'Aprovações')}
                 {pendingMerchants.length + pendingAffiliates.length > 0 && (
                   <span className="ml-1 bg-amber-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">
                     {pendingMerchants.length + pendingAffiliates.length}
@@ -320,10 +326,10 @@ export default function AdminDashboard() {
               <TabsTrigger value="billing">{t('admin.billing')}</TabsTrigger>
               <TabsTrigger value="seasonal">{t('admin.seasonal')}</TabsTrigger>
               <TabsTrigger value="categories">
-                {t('admin.categoriesTab', 'Categories')}
+                {t('admin.categoriesTab', 'Categorias')}
               </TabsTrigger>
               <TabsTrigger value="interests">
-                {t('admin.interestsTab', 'Interests')}
+                {t('admin.interestsTab', 'Interesses')}
               </TabsTrigger>
               <TabsTrigger
                 value="offers"
@@ -333,22 +339,24 @@ export default function AdminDashboard() {
                 {t('admin.offersTab', 'Gestão de Ofertas')}
               </TabsTrigger>
               <TabsTrigger value="crm">
-                {t('admin.crm_campaigns', 'CRM & Campaigns')}
+                {t('admin.crm_campaigns', 'CRM & Campanhas')}
               </TabsTrigger>
               <TabsTrigger value="crawler">
-                {t('admin.crawler', 'Offers Crawler')}
+                {t('admin.crawler.title', 'Crawler de Ofertas')}
               </TabsTrigger>
-              <TabsTrigger value="ads">{t('admin.ads', 'Ads')}</TabsTrigger>
+              <TabsTrigger value="ads">
+                {t('admin.ads', 'Anúncios')}
+              </TabsTrigger>
               <TabsTrigger value="network-ads" className="gap-2">
                 <Megaphone className="h-4 w-4" />
-                {t('admin.network_ads', 'Network Advertising')}
+                {t('admin.network_ads', 'Publicidade de Rede')}
               </TabsTrigger>
               <TabsTrigger value="affiliates" className="gap-2">
                 <Users className="h-4 w-4" />
-                {t('admin.affiliates', 'Affiliate Network')}
+                {t('admin.affiliates_tab', 'Rede de Afiliados')}
               </TabsTrigger>
               <TabsTrigger value="translations">
-                {t('admin.translations.title', 'Translations')}
+                {t('admin.translations.title', 'Traduções')}
               </TabsTrigger>
               <TabsTrigger value="insights">
                 {t('admin.insights', 'Data Insights')}
@@ -357,10 +365,10 @@ export default function AdminDashboard() {
                 {t('admin.performance.title', 'Performance')}
               </TabsTrigger>
               <TabsTrigger value="notifications">
-                {t('admin.push_notifications', 'Push Notifications')}
+                {t('admin.push_notifications', 'Notificações Push')}
               </TabsTrigger>
               <TabsTrigger value="settings">
-                {t('admin.settings', 'Settings')}
+                {t('admin.settings', 'Configurações')}
               </TabsTrigger>
               <TabsTrigger value="content">
                 {t('admin.content', 'Rodapé & Conteúdo')}

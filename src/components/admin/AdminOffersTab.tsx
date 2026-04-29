@@ -90,7 +90,9 @@ export function AdminOffersTab() {
       if (error) throw error
 
       toast.success(
-        `Oferta ${newStatus === 'published' ? 'ativada' : 'inativada'} com sucesso!`,
+        newStatus === 'published'
+          ? t('admin.offersTab.activated', 'Oferta ativada com sucesso!')
+          : t('admin.offersTab.inactivated', 'Oferta inativada com sucesso!'),
       )
       fetchOffers()
     } catch (error) {
@@ -100,7 +102,14 @@ export function AdminOffersTab() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Tem certeza que deseja excluir esta oferta permanentemente?'))
+    if (
+      !confirm(
+        t(
+          'admin.offersTab.confirm_delete',
+          'Tem certeza que deseja excluir esta oferta permanentemente?',
+        ),
+      )
+    )
       return
     try {
       const { error } = await supabase
@@ -110,11 +119,13 @@ export function AdminOffersTab() {
 
       if (error) throw error
 
-      toast.success('Oferta excluída com sucesso!')
+      toast.success(
+        t('admin.offersTab.deleted_success', 'Oferta excluída com sucesso!'),
+      )
       fetchOffers()
     } catch (error) {
       console.error('Error deleting offer:', error)
-      toast.error('Erro ao excluir oferta.')
+      toast.error(t('admin.offersTab.delete_error', 'Erro ao excluir oferta.'))
     }
   }
 
@@ -139,12 +150,16 @@ export function AdminOffersTab() {
             {t('admin.offers_management', 'Gestão de Ofertas e Campanhas')}
           </h2>
           <p className="text-muted-foreground">
-            Crie, edite, ative ou inative campanhas publicadas na plataforma.
+            {t(
+              'admin.offers_management_desc',
+              'Crie, edite, ative ou inative campanhas publicadas na plataforma.',
+            )}
           </p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={fetchOffers}>
-            <RefreshCw className="w-4 h-4 mr-2" /> Atualizar
+            <RefreshCw className="w-4 h-4 mr-2" />{' '}
+            {t('common.refresh', 'Atualizar')}
           </Button>
           <Button
             onClick={() => {
@@ -152,7 +167,8 @@ export function AdminOffersTab() {
               setIsDialogOpen(true)
             }}
           >
-            <Plus className="w-4 h-4 mr-2" /> Nova Campanha
+            <Plus className="w-4 h-4 mr-2" />{' '}
+            {t('admin.offersTab.new_campaign', 'Nova Campanha')}
           </Button>
         </div>
       </div>
@@ -162,7 +178,10 @@ export function AdminOffersTab() {
           <div className="relative w-full md:w-96">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar por título ou loja..."
+              placeholder={t(
+                'admin.offersTab.search_placeholder',
+                'Buscar por título ou loja...',
+              )}
               className="pl-8"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -179,12 +198,22 @@ export function AdminOffersTab() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Oferta</TableHead>
-                    <TableHead>Loja / Categoria</TableHead>
-                    <TableHead>Desconto</TableHead>
-                    <TableHead>Data Criação</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
+                    <TableHead>
+                      {t('admin.offersTab.offer', 'Oferta')}
+                    </TableHead>
+                    <TableHead>
+                      {t('admin.offersTab.store_category', 'Loja / Categoria')}
+                    </TableHead>
+                    <TableHead>
+                      {t('admin.offersTab.discount', 'Desconto')}
+                    </TableHead>
+                    <TableHead>
+                      {t('admin.offersTab.created_at', 'Data Criação')}
+                    </TableHead>
+                    <TableHead>{t('admin.status', 'Status')}</TableHead>
+                    <TableHead className="text-right">
+                      {t('common.actions', 'Ações')}
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -194,7 +223,10 @@ export function AdminOffersTab() {
                         colSpan={6}
                         className="text-center py-8 text-muted-foreground"
                       >
-                        Nenhuma oferta encontrada.
+                        {t(
+                          'admin.offersTab.no_offers',
+                          'Nenhuma oferta encontrada.',
+                        )}
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -226,7 +258,9 @@ export function AdminOffersTab() {
                                 {offer.product_link ? (
                                   <Globe className="w-3 h-3 text-blue-500" />
                                 ) : null}
-                                {offer.product_link ? 'Online' : 'Física'}
+                                {offer.product_link
+                                  ? t('admin.offersTab.online', 'Online')
+                                  : t('admin.offersTab.physical', 'Física')}
                               </div>
                             </div>
                           </div>
@@ -236,7 +270,8 @@ export function AdminOffersTab() {
                             {offer.store_name || 'N/A'}
                           </div>
                           <div className="text-xs text-muted-foreground">
-                            {offer.category || 'Geral'}
+                            {offer.category ||
+                              t('admin.offersTab.general', 'Geral')}
                           </div>
                         </TableCell>
                         <TableCell>
@@ -247,7 +282,10 @@ export function AdminOffersTab() {
                             {offer.discount ||
                               (offer.discount_percentage
                                 ? `${offer.discount_percentage}% OFF`
-                                : 'Ver Oferta')}
+                                : t(
+                                    'admin.offersTab.view_offer',
+                                    'Ver Oferta',
+                                  ))}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
@@ -271,9 +309,9 @@ export function AdminOffersTab() {
                             }
                           >
                             {offer.status === 'published'
-                              ? 'Publicado'
+                              ? t('admin.offersTab.published', 'Publicado')
                               : offer.status === 'inactive'
-                                ? 'Inativo'
+                                ? t('admin.offersTab.inactive', 'Inativo')
                                 : offer.status}
                           </Badge>
                         </TableCell>
@@ -285,8 +323,14 @@ export function AdminOffersTab() {
                               onClick={() => handleToggleStatus(offer)}
                               title={
                                 offer.status === 'published'
-                                  ? 'Pausar/Inativar'
-                                  : 'Publicar/Ativar'
+                                  ? t(
+                                      'admin.offersTab.pause',
+                                      'Pausar/Inativar',
+                                    )
+                                  : t(
+                                      'admin.offersTab.publish',
+                                      'Publicar/Ativar',
+                                    )
                               }
                             >
                               {offer.status === 'published' ? (
@@ -299,7 +343,7 @@ export function AdminOffersTab() {
                               variant="ghost"
                               size="icon"
                               onClick={() => openEdit(offer)}
-                              title="Editar"
+                              title={t('common.edit', 'Editar')}
                             >
                               <Edit className="w-4 h-4 text-blue-500" />
                             </Button>
@@ -307,7 +351,7 @@ export function AdminOffersTab() {
                               variant="ghost"
                               size="icon"
                               onClick={() => handleDelete(offer.id)}
-                              title="Excluir"
+                              title={t('common.delete', 'Excluir')}
                             >
                               <Trash2 className="w-4 h-4 text-red-500" />
                             </Button>

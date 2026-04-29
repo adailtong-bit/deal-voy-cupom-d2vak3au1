@@ -17,12 +17,12 @@ export function FinanceDashboardTab({ franchiseId }: { franchiseId?: string }) {
       <div className="flex flex-col gap-1">
         <h2 className="text-2xl font-bold tracking-tight text-slate-800 flex items-center gap-2">
           <Wallet className="w-6 h-6 text-primary" />
-          {t('finance.dashboard_title', 'Finance')}
+          {t('admin.finance.dashboard_title', 'Financeiro')}
         </h2>
         <p className="text-muted-foreground text-sm">
           {t(
-            'finance.dashboard_desc',
-            'Manage statements, track future projections, and reconcile bank accounts.',
+            'admin.finance.dashboard_desc',
+            'Gerencie extratos, acompanhe projeções futuras e concilie contas bancárias.',
           )}
         </p>
       </div>
@@ -39,7 +39,7 @@ export function FinanceDashboardTab({ franchiseId }: { franchiseId?: string }) {
             )}
           >
             <LineChart className="w-4 h-4" />
-            {t('finance.statement_tab', 'Statement & Projections')}
+            {t('admin.finance.statement_tab', 'Extrato e Projeções')}
           </button>
           <button
             onClick={() => setActiveView('reconciliation')}
@@ -51,7 +51,7 @@ export function FinanceDashboardTab({ franchiseId }: { franchiseId?: string }) {
             )}
           >
             <CheckSquare className="w-4 h-4" />
-            {t('finance.reconciliation', 'Bank Reconciliation')}
+            {t('admin.finance.reconciliation', 'Conciliação Bancária')}
           </button>
           <button
             onClick={() => setActiveView('billing')}
@@ -63,7 +63,7 @@ export function FinanceDashboardTab({ franchiseId }: { franchiseId?: string }) {
             )}
           >
             <Receipt className="w-4 h-4" />
-            {t('finance.billing', 'Billing')}
+            {t('admin.finance.billing', 'Faturamento')}
           </button>
         </div>
 
