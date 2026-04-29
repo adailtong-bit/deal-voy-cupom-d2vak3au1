@@ -57,40 +57,61 @@ export function NotificationPopover() {
             </div>
           ) : (
             <div className="flex flex-col">
-              {notifications.map((notif) => (
-                <div
-                  key={notif.id}
-                  className={cn(
-                    'group flex flex-col gap-1.5 p-4 border-b border-slate-100 transition-colors hover:bg-slate-50 cursor-default relative',
-                    !notif.read && 'bg-blue-50/30',
-                  )}
-                  onMouseEnter={() => !notif.read && markAsRead(notif.id)}
-                >
-                  {!notif.read && (
-                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r" />
-                  )}
-                  <div className="flex items-start justify-between gap-2">
-                    <span className="font-semibold text-sm text-slate-800 leading-tight pr-4">
-                      {notif.title}
-                    </span>
-                    <span className="text-[10px] text-slate-400 whitespace-nowrap shrink-0 pt-0.5">
-                      {new Date(notif.date).toLocaleDateString()}
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
-                    {notif.message}
-                  </p>
-                  {notif.link && (
+              {notifications.map((notif) => {
+                const content = (
+                  <>
+                    {!notif.read && (
+                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r" />
+                    )}
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="font-semibold text-sm text-slate-800 leading-tight pr-4 group-hover:text-primary transition-colors">
+                        {notif.title}
+                      </span>
+                      <span className="text-[10px] text-slate-400 whitespace-nowrap shrink-0 pt-0.5">
+                        {new Date(notif.date).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
+                      {notif.message}
+                    </p>
+                    {notif.link && (
+                      <span className="mt-1 flex items-center text-[11px] font-semibold text-primary group-hover:underline w-fit">
+                        {t('notifications.view_details', 'View Details')}{' '}
+                        <ArrowRight className="w-3 h-3 ml-1 transition-transform group-hover:translate-x-0.5" />
+                      </span>
+                    )}
+                  </>
+                )
+
+                if (notif.link) {
+                  return (
                     <Link
+                      key={notif.id}
                       to={notif.link}
-                      className="mt-1 flex items-center text-[11px] font-semibold text-primary hover:underline w-fit"
+                      className={cn(
+                        'group flex flex-col gap-1.5 p-4 border-b border-slate-100 transition-colors hover:bg-slate-50 cursor-pointer relative',
+                        !notif.read && 'bg-blue-50/30',
+                      )}
+                      onClick={() => markAsRead(notif.id)}
                     >
-                      {t('notifications.view_details', 'View Details')}{' '}
-                      <ArrowRight className="w-3 h-3 ml-1" />
+                      {content}
                     </Link>
-                  )}
-                </div>
-              ))}
+                  )
+                }
+
+                return (
+                  <div
+                    key={notif.id}
+                    className={cn(
+                      'group flex flex-col gap-1.5 p-4 border-b border-slate-100 transition-colors hover:bg-slate-50 cursor-default relative',
+                      !notif.read && 'bg-blue-50/30',
+                    )}
+                    onMouseEnter={() => !notif.read && markAsRead(notif.id)}
+                  >
+                    {content}
+                  </div>
+                )
+              })}
             </div>
           )}
         </div>
@@ -98,11 +119,9 @@ export function NotificationPopover() {
           <Button
             variant="ghost"
             className="w-full text-xs font-medium h-8 text-slate-600 hover:text-slate-900"
-            asChild
+            onClick={clearAll}
           >
-            <Link to="/notifications">
-              {t('notifications.view_all', 'View All Activities')}
-            </Link>
+            {t('common.clear', 'Clear All')}
           </Button>
         </div>
       </PopoverContent>

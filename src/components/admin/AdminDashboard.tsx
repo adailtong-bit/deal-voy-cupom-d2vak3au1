@@ -37,7 +37,7 @@ import { AdminEmailLogsTab } from '@/components/admin/AdminEmailLogsTab'
 import { FinanceDashboardTab } from '@/components/finance/FinanceDashboardTab'
 import { AdminOffersTab } from '@/components/admin/AdminOffersTab'
 import { AdminApprovalsTab } from '@/components/admin/AdminApprovalsTab'
-import { ShieldCheck } from 'lucide-react'
+import { ShieldCheck, ArrowRight } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { useLanguage } from '@/stores/LanguageContext'
 import { Tags } from 'lucide-react'
@@ -133,14 +133,14 @@ export default function AdminDashboard() {
             id: 'notif-aff',
             title: t(
               'admin.notif.pending_affiliates',
-              'Novos Afiliados Pendentes',
+              'New Pending Affiliates',
             ),
             desc: t(
               'admin.notif.pending_affiliates_desc',
-              '{count} afiliado(s) aguardando verificação de documentos.',
+              '{count} affiliate(s) waiting for document verification.',
             ).replace('{count}', pendingAffiliates.length.toString()),
             tab: 'approvals',
-            time: t('admin.notif.just_now', 'Agora mesmo'),
+            time: t('admin.notif.just_now', 'Just now'),
           },
         ]
       : []),
@@ -190,7 +190,7 @@ export default function AdminDashboard() {
       <div className="container py-16 text-center text-muted-foreground animate-fade-in">
         {t(
           'admin.restricted_access',
-          'Acesso restrito. Área exclusiva para administradores e franqueados.',
+          'Restricted access. Exclusive area for administrators and franchisees.',
         )}
       </div>
     )
@@ -203,14 +203,14 @@ export default function AdminDashboard() {
           <h1 className="text-3xl font-bold tracking-tight">
             {isSuperAdmin
               ? t('admin.dashboardTitle')
-              : t('franchisee.dashboard', 'Painel Regional')}
+              : t('franchisee.dashboard', 'Regional Panel')}
           </h1>
           <p className="text-muted-foreground mt-2">
             {isSuperAdmin
               ? t('admin.dashboardDesc')
               : t(
                   'franchisee.settings.desc',
-                  'Gerencie sua rede de lojistas e colaboradores locais.',
+                  'Manage your network of merchants and local collaborators.',
                 )}
           </p>
         </div>
@@ -237,7 +237,7 @@ export default function AdminDashboard() {
             >
               <div className="flex items-center justify-between p-4 border-b bg-slate-50 rounded-t-lg">
                 <span className="font-semibold text-slate-800">
-                  {t('nav.notifications', 'Notificações')}
+                  {t('nav.notifications', 'Alerts')}
                 </span>
                 <Button
                   variant="ghost"
@@ -256,7 +256,7 @@ export default function AdminDashboard() {
                       key={n.id}
                       onClick={() => handleNotifClick(n)}
                       className={cn(
-                        'p-4 border-b cursor-pointer transition-colors',
+                        'p-4 border-b cursor-pointer transition-all group',
                         isUnread
                           ? 'bg-blue-50/50 hover:bg-blue-50'
                           : 'hover:bg-slate-50',
@@ -265,7 +265,7 @@ export default function AdminDashboard() {
                       <div className="flex justify-between items-start mb-1">
                         <p
                           className={cn(
-                            'text-sm',
+                            'text-sm group-hover:text-primary transition-colors',
                             isUnread
                               ? 'font-semibold text-slate-900'
                               : 'font-medium text-slate-700',
@@ -280,15 +280,21 @@ export default function AdminDashboard() {
                       <p className="text-xs text-muted-foreground leading-relaxed">
                         {n.desc}
                       </p>
-                      <p className="text-[10px] text-slate-400 mt-2 font-medium">
-                        {n.time}
-                      </p>
+                      <div className="flex items-center justify-between mt-2">
+                        <p className="text-[10px] text-slate-400 font-medium">
+                          {n.time}
+                        </p>
+                        <span className="text-[10px] font-semibold text-primary opacity-0 group-hover:opacity-100 transition-opacity flex items-center">
+                          {t('common.view', 'View')}{' '}
+                          <ArrowRight className="w-3 h-3 ml-0.5" />
+                        </span>
+                      </div>
                     </div>
                   )
                 })}
                 {notifications.length === 0 && (
                   <div className="p-8 text-center text-sm text-muted-foreground">
-                    {t('common.none', 'Nenhum')}
+                    {t('common.none', 'None')}
                   </div>
                 )}
               </div>
@@ -303,7 +309,7 @@ export default function AdminDashboard() {
             <TabsTrigger value="overview">{t('admin.overview')}</TabsTrigger>
           )}
           <TabsTrigger value="finance">
-            {t('admin.finance.dashboard_title', 'Financeiro')}
+            {t('admin.finance.dashboard_title', 'Finance')}
           </TabsTrigger>
           {isSuperAdmin && (
             <>
@@ -312,7 +318,7 @@ export default function AdminDashboard() {
                 className="gap-2 bg-amber-50 text-amber-700 data-[state=active]:bg-amber-100 data-[state=active]:text-amber-900 border border-amber-200"
               >
                 <ShieldCheck className="h-4 w-4" />
-                {t('admin.approvalsTab', 'Aprovações')}
+                {t('admin.approvalsTab', 'Approvals')}
                 {pendingMerchants.length + pendingAffiliates.length > 0 && (
                   <span className="ml-1 bg-amber-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">
                     {pendingMerchants.length + pendingAffiliates.length}
@@ -326,37 +332,35 @@ export default function AdminDashboard() {
               <TabsTrigger value="billing">{t('admin.billing')}</TabsTrigger>
               <TabsTrigger value="seasonal">{t('admin.seasonal')}</TabsTrigger>
               <TabsTrigger value="categories">
-                {t('admin.categoriesTab', 'Categorias')}
+                {t('admin.categoriesTab', 'Categories')}
               </TabsTrigger>
               <TabsTrigger value="interests">
-                {t('admin.interestsTab', 'Interesses')}
+                {t('admin.interestsTab', 'Interests')}
               </TabsTrigger>
               <TabsTrigger
                 value="offers"
                 className="gap-2 bg-primary/5 data-[state=active]:bg-primary/20 text-primary font-semibold border border-primary/20 rounded-md"
               >
                 <Tags className="h-4 w-4" />
-                {t('admin.offersTab', 'Gestão de Ofertas')}
+                {t('admin.offersTab', 'Offers Management')}
               </TabsTrigger>
               <TabsTrigger value="crm">
-                {t('admin.crm_campaigns', 'CRM & Campanhas')}
+                {t('admin.crm_campaigns', 'CRM & Campaigns')}
               </TabsTrigger>
               <TabsTrigger value="crawler">
-                {t('admin.crawler.title', 'Crawler de Ofertas')}
+                {t('admin.crawler.title', 'Offers Crawler')}
               </TabsTrigger>
-              <TabsTrigger value="ads">
-                {t('admin.ads', 'Anúncios')}
-              </TabsTrigger>
+              <TabsTrigger value="ads">{t('admin.ads', 'Ads')}</TabsTrigger>
               <TabsTrigger value="network-ads" className="gap-2">
                 <Megaphone className="h-4 w-4" />
-                {t('admin.network_ads', 'Publicidade de Rede')}
+                {t('admin.network_ads', 'Network Advertising')}
               </TabsTrigger>
               <TabsTrigger value="affiliates" className="gap-2">
                 <Users className="h-4 w-4" />
-                {t('admin.affiliates_tab', 'Rede de Afiliados')}
+                {t('admin.affiliates_tab', 'Affiliate Network')}
               </TabsTrigger>
               <TabsTrigger value="translations">
-                {t('admin.translations.title', 'Traduções')}
+                {t('admin.translations.title', 'Translations')}
               </TabsTrigger>
               <TabsTrigger value="insights">
                 {t('admin.insights', 'Data Insights')}
@@ -365,16 +369,16 @@ export default function AdminDashboard() {
                 {t('admin.performance.title', 'Performance')}
               </TabsTrigger>
               <TabsTrigger value="notifications">
-                {t('admin.push_notifications', 'Notificações Push')}
+                {t('admin.push_notifications', 'Push Notifications')}
               </TabsTrigger>
               <TabsTrigger value="settings">
-                {t('admin.settings', 'Configurações')}
+                {t('admin.settings', 'Settings')}
               </TabsTrigger>
               <TabsTrigger value="content">
-                {t('admin.content', 'Rodapé & Conteúdo')}
+                {t('admin.content', 'Footer & Content')}
               </TabsTrigger>
               <TabsTrigger value="emails">
-                {t('admin.emails', 'Relatório de E-mails')}
+                {t('admin.emails', 'Email Reports')}
               </TabsTrigger>
             </>
           )}

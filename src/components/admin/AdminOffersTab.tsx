@@ -54,7 +54,7 @@ export function AdminOffersTab() {
       }
     } catch (error) {
       console.error('Error fetching offers:', error)
-      toast.error(t('common.error', 'Ocorreu um erro'))
+      toast.error(t('common.error', 'An error occurred'))
     } finally {
       setIsLoading(false)
     }
@@ -91,13 +91,13 @@ export function AdminOffersTab() {
 
       toast.success(
         newStatus === 'published'
-          ? t('admin.offers.activated', 'Oferta ativada com sucesso!')
-          : t('admin.offers.inactivated', 'Oferta inativada com sucesso!'),
+          ? t('admin.offers.activated', 'Offer activated successfully!')
+          : t('admin.offers.inactivated', 'Offer deactivated successfully!'),
       )
       fetchOffers()
     } catch (error) {
       console.error('Error toggling status:', error)
-      toast.error(t('common.error', 'Ocorreu um erro'))
+      toast.error(t('common.error', 'An error occurred'))
     }
   }
 
@@ -120,12 +120,12 @@ export function AdminOffersTab() {
       if (error) throw error
 
       toast.success(
-        t('admin.offers.deleted_success', 'Oferta excluída com sucesso!'),
+        t('admin.offers.deleted_success', 'Offer deleted successfully!'),
       )
       fetchOffers()
     } catch (error) {
       console.error('Error deleting offer:', error)
-      toast.error(t('admin.offers.delete_error', 'Erro ao excluir oferta.'))
+      toast.error(t('admin.offers.delete_error', 'Error deleting offer.'))
     }
   }
 
@@ -147,19 +147,19 @@ export function AdminOffersTab() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-2xl font-bold">
-            {t('admin.offers_management', 'Gestão de Ofertas e Campanhas')}
+            {t('admin.offers_management', 'Offers and Campaigns Management')}
           </h2>
           <p className="text-muted-foreground">
             {t(
               'admin.offers_management_desc',
-              'Crie, edite, ative ou inative campanhas publicadas na plataforma.',
+              'Create, edit, activate, or deactivate campaigns published on the platform.',
             )}
           </p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={fetchOffers}>
             <RefreshCw className="w-4 h-4 mr-2" />{' '}
-            {t('common.refresh', 'Atualizar')}
+            {t('common.refresh', 'Refresh')}
           </Button>
           <Button
             onClick={() => {
@@ -168,7 +168,7 @@ export function AdminOffersTab() {
             }}
           >
             <Plus className="w-4 h-4 mr-2" />{' '}
-            {t('admin.offers.new_campaign', 'Nova Campanha')}
+            {t('admin.offers.new_campaign', 'New Campaign')}
           </Button>
         </div>
       </div>
@@ -180,7 +180,7 @@ export function AdminOffersTab() {
             <Input
               placeholder={t(
                 'admin.offers.search_placeholder',
-                'Buscar por título ou loja...',
+                'Search by title or store...',
               )}
               className="pl-8"
               value={searchQuery}
@@ -198,19 +198,19 @@ export function AdminOffersTab() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>{t('admin.offers.offer', 'Oferta')}</TableHead>
+                    <TableHead>{t('admin.offers.offer', 'Offer')}</TableHead>
                     <TableHead>
-                      {t('admin.offers.store_category', 'Loja / Categoria')}
+                      {t('admin.offers.store_category', 'Store / Category')}
                     </TableHead>
                     <TableHead>
-                      {t('admin.offers.discount', 'Desconto')}
+                      {t('admin.offers.discount', 'Discount')}
                     </TableHead>
                     <TableHead>
-                      {t('admin.offers.created_at', 'Data Criação')}
+                      {t('admin.offers.created_at', 'Created At')}
                     </TableHead>
                     <TableHead>{t('admin.status', 'Status')}</TableHead>
                     <TableHead className="text-right">
-                      {t('common.actions', 'Ações')}
+                      {t('common.actions', 'Actions')}
                     </TableHead>
                   </TableRow>
                 </TableHeader>
@@ -221,10 +221,7 @@ export function AdminOffersTab() {
                         colSpan={6}
                         className="text-center py-8 text-muted-foreground"
                       >
-                        {t(
-                          'admin.offers.no_offers',
-                          'Nenhuma oferta encontrada.',
-                        )}
+                        {t('admin.offers.no_offers', 'No offers found.')}
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -258,7 +255,7 @@ export function AdminOffersTab() {
                                 ) : null}
                                 {offer.product_link
                                   ? t('admin.offers.online', 'Online')
-                                  : t('admin.offers.physical', 'Física')}
+                                  : t('admin.offers.physical', 'Physical')}
                               </div>
                             </div>
                           </div>
@@ -269,7 +266,7 @@ export function AdminOffersTab() {
                           </div>
                           <div className="text-xs text-muted-foreground">
                             {offer.category ||
-                              t('admin.offers.general', 'Geral')}
+                              t('admin.offers.general', 'General')}
                           </div>
                         </TableCell>
                         <TableCell>
@@ -280,7 +277,7 @@ export function AdminOffersTab() {
                             {offer.discount ||
                               (offer.discount_percentage
                                 ? `${offer.discount_percentage}% OFF`
-                                : t('admin.offers.view_offer', 'Ver Oferta'))}
+                                : t('admin.offers.view_offer', 'View Offer'))}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
@@ -304,9 +301,9 @@ export function AdminOffersTab() {
                             }
                           >
                             {offer.status === 'published'
-                              ? t('admin.offers.published', 'Publicado')
+                              ? t('admin.offers.published', 'Published')
                               : offer.status === 'inactive'
-                                ? t('admin.offers.inactive', 'Inativo')
+                                ? t('admin.offers.inactive', 'Inactive')
                                 : offer.status}
                           </Badge>
                         </TableCell>
@@ -318,8 +315,11 @@ export function AdminOffersTab() {
                               onClick={() => handleToggleStatus(offer)}
                               title={
                                 offer.status === 'published'
-                                  ? t('admin.offers.pause', 'Pausar/Inativar')
-                                  : t('admin.offers.publish', 'Publicar/Ativar')
+                                  ? t('admin.offers.pause', 'Pause/Deactivate')
+                                  : t(
+                                      'admin.offers.publish',
+                                      'Publish/Activate',
+                                    )
                               }
                             >
                               {offer.status === 'published' ? (
@@ -332,7 +332,7 @@ export function AdminOffersTab() {
                               variant="ghost"
                               size="icon"
                               onClick={() => openEdit(offer)}
-                              title={t('common.edit', 'Editar')}
+                              title={t('common.edit', 'Edit')}
                             >
                               <Edit className="w-4 h-4 text-blue-500" />
                             </Button>
@@ -340,7 +340,7 @@ export function AdminOffersTab() {
                               variant="ghost"
                               size="icon"
                               onClick={() => handleDelete(offer.id)}
-                              title={t('common.delete', 'Excluir')}
+                              title={t('common.delete', 'Delete')}
                             >
                               <Trash2 className="w-4 h-4 text-red-500" />
                             </Button>

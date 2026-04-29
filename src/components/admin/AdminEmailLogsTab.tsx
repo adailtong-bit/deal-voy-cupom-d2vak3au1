@@ -44,20 +44,20 @@ export function AdminEmailLogsTab() {
         <div className="flex items-center gap-2">
           <Mail className="w-5 h-5 text-slate-500" />
           <CardTitle>
-            {t('admin.emails_logs.title', 'Relatório de E-mails Enviados')}
+            {t('admin.emails_logs.title', 'Sent Emails Report')}
           </CardTitle>
         </div>
         <CardDescription>
           {t(
             'admin.emails_logs.desc',
-            'Acompanhe o histórico de comunicações disparadas pela plataforma para os usuários.',
+            'Track the history of communications sent by the platform to users.',
           )}
         </CardDescription>
       </CardHeader>
       <CardContent>
         {logs.length === 0 ? (
           <div className="text-center py-8 text-slate-500">
-            {t('admin.emails_logs.empty', 'Nenhum e-mail registrado ainda.')}
+            {t('admin.emails_logs.empty', 'No emails recorded yet.')}
           </div>
         ) : (
           <div className="overflow-x-auto rounded-md border border-slate-200">
@@ -65,16 +65,16 @@ export function AdminEmailLogsTab() {
               <thead className="bg-slate-50 text-slate-600 font-medium border-b border-slate-200">
                 <tr>
                   <th className="px-4 py-3">
-                    {t('admin.emails_logs.date', 'Data')}
+                    {t('admin.emails_logs.date', 'Date')}
                   </th>
                   <th className="px-4 py-3">
-                    {t('admin.emails_logs.recipient', 'Destinatário')}
+                    {t('admin.emails_logs.recipient', 'Recipient')}
                   </th>
                   <th className="px-4 py-3">
-                    {t('admin.emails_logs.subject', 'Assunto')}
+                    {t('admin.emails_logs.subject', 'Subject')}
                   </th>
                   <th className="px-4 py-3">
-                    {t('admin.emails_logs.type', 'Tipo')}
+                    {t('admin.emails_logs.type', 'Type')}
                   </th>
                   <th className="px-4 py-3">
                     {t('admin.emails_logs.status', 'Status')}
@@ -104,17 +104,17 @@ export function AdminEmailLogsTab() {
                     <td className="px-4 py-3">
                       {log.status === 'success' ? (
                         <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-800 border border-emerald-200">
-                          {t('admin.emails_logs.sent', 'Enviado')}
+                          {t('admin.emails_logs.sent', 'Sent')}
                         </span>
                       ) : (
                         <span
                           className="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-[10px] font-semibold text-red-800 border border-red-200 cursor-help"
                           title={
                             log.error_message ||
-                            t('admin.emails_logs.error', 'Erro no envio')
+                            t('admin.emails_logs.error', 'Sending error')
                           }
                         >
-                          {t('admin.emails_logs.failed', 'Falha')}
+                          {t('admin.emails_logs.failed', 'Failed')}
                         </span>
                       )}
                     </td>
