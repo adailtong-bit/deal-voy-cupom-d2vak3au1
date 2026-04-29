@@ -64,7 +64,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             data?.role || currentUser.user_metadata?.role || 'user'
 
           if (
-            currentUser.email === 'adailtong@gmail.com' ||
+            currentUser.email?.toLowerCase() === 'adailtong@gmail.com' ||
             resolvedRole === 'super_admin'
           ) {
             applyRole('super_admin')

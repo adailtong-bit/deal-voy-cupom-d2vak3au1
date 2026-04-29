@@ -411,9 +411,9 @@ export function AdCampaignsTab() {
                     />
                     <p className="text-xs text-muted-foreground">
                       {t('ads.applied_rate', 'Taxa Aplicada:')}{' '}
-                      {formatCurrency(availableRules[0].price)}{' '}
+                      {formatCurrency(availableRules[0].price || 0)}{' '}
                       {t('ads.per', 'por')}{' '}
-                      {availableRules[0].billingType.toUpperCase()}
+                      {availableRules[0].billingType?.toUpperCase() || ''}
                     </p>
                   </div>
                 )}
@@ -507,11 +507,11 @@ export function AdCampaignsTab() {
                     </TableCell>
                     <TableCell className="capitalize">
                       {t(
-                        `ads.placement_${a.placement}`,
-                        a.placement?.replace(/_/g, ' '),
+                        `ads.placement_${a.placement || 'unknown'}`,
+                        (a.placement || '').replace(/_/g, ' '),
                       )}
                       <Badge variant="outline" className="ml-2 uppercase">
-                        {billingType}
+                        {billingType || 'N/A'}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -523,7 +523,7 @@ export function AdCampaignsTab() {
                       {a.budget && (
                         <div className="text-xs text-muted-foreground">
                           {t('ads.budget', 'Budget')}:{' '}
-                          {formatCurrency(a.budget)}
+                          {formatCurrency(Number(a.budget) || 0)}
                         </div>
                       )}
                     </TableCell>

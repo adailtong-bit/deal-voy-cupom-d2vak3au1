@@ -173,19 +173,21 @@ export function AdPricingTab() {
               <TableRow key={p.id}>
                 <TableCell className="capitalize">
                   {t(
-                    `ads.placement_${p.placement}`,
-                    p.placement.replace(/_/g, ' '),
+                    `ads.placement_${p.placement || 'unknown'}`,
+                    (p.placement || '').replace(/_/g, ' '),
                   )}
                 </TableCell>
-                <TableCell className="uppercase">{p.billingType}</TableCell>
+                <TableCell className="uppercase">
+                  {p.billingType || 'N/A'}
+                </TableCell>
                 <TableCell>
                   {p.billingType === 'fixed'
-                    ? `${p.durationDays} ${t('ads.days', 'dias')}`
+                    ? `${p.durationDays || 0} ${t('ads.days', 'dias')}`
                     : t('ads.continuous', 'Contínuo')}
                 </TableCell>
                 <TableCell>
-                  {formatCurrency(p.price, 'BRL')}{' '}
-                  {p.billingType !== 'fixed' && `/ ${p.billingType}`}
+                  {formatCurrency(p.price || 0, 'BRL')}{' '}
+                  {p.billingType !== 'fixed' && `/ ${p.billingType || ''}`}
                 </TableCell>
               </TableRow>
             ))}

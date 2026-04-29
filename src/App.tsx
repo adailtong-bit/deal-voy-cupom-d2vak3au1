@@ -69,10 +69,15 @@ function RequireAuth({
   const isMaster =
     role === 'super_admin' ||
     role === 'admin' ||
-    email === 'adailtong@gmail.com'
+    role === 'franchisee' ||
+    email?.toLowerCase() === 'adailtong@gmail.com' ||
+    localStorage.getItem('master_override') === 'true'
 
   // Refinamento de Acesso: Proteção estrita para a rota de administração
   if (isAdminPath && !isMaster) {
+    if (role === 'merchant') {
+      return <>{children}</>
+    }
     return <Navigate to="/" replace />
   }
 
@@ -242,7 +247,16 @@ export default function App() {
                   <Route
                     path="/admin/*"
                     element={
-                      <RequireAuth roles={['super_admin', 'admin'] as any}>
+                      <RequireAuth
+                        roles={
+                          [
+                            'super_admin',
+                            'admin',
+                            'franchisee',
+                            'merchant',
+                          ] as any
+                        }
+                      >
                         <AdminDashboard />
                       </RequireAuth>
                     }

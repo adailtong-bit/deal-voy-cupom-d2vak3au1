@@ -5,6 +5,7 @@ import { AdCampaignsTab } from './ads/AdCampaignsTab'
 import { AdBillingTab } from './ads/AdBillingTab'
 import { LayoutDashboard, Users, DollarSign, FileText } from 'lucide-react'
 import { useLanguage } from '@/stores/LanguageContext'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 
 export function AdminAdsManager() {
   const { t } = useLanguage()
@@ -42,16 +43,24 @@ export function AdminAdsManager() {
         </TabsList>
 
         <TabsContent value="campaigns" className="animate-in fade-in-50">
-          <AdCampaignsTab />
+          <ErrorBoundary>
+            <AdCampaignsTab />
+          </ErrorBoundary>
         </TabsContent>
         <TabsContent value="advertisers" className="animate-in fade-in-50">
-          <AdvertisersTab />
+          <ErrorBoundary>
+            <AdvertisersTab />
+          </ErrorBoundary>
         </TabsContent>
         <TabsContent value="pricing" className="animate-in fade-in-50">
-          <AdPricingTab />
+          <ErrorBoundary>
+            <AdPricingTab />
+          </ErrorBoundary>
         </TabsContent>
         <TabsContent value="billing" className="animate-in fade-in-50">
-          <AdBillingTab />
+          <ErrorBoundary>
+            <AdBillingTab />
+          </ErrorBoundary>
         </TabsContent>
       </Tabs>
     </div>

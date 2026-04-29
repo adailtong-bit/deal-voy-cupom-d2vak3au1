@@ -97,13 +97,11 @@ function IndexContent() {
   const isMaster =
     authRole === 'super_admin' ||
     authRole === 'admin' ||
-    authUser?.email === 'adailtong@gmail.com'
+    authRole === 'franchisee' || // Relax restriction so franchisee can see admin panels
+    authUser?.email?.toLowerCase() === 'adailtong@gmail.com'
 
   const isMerchantOrAdmin =
-    isMaster ||
-    authRole === 'merchant' ||
-    authRole === 'shopkeeper' ||
-    authRole === 'franchisee'
+    isMaster || authRole === 'merchant' || authRole === 'shopkeeper'
 
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
