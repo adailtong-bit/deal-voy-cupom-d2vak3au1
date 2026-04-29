@@ -1,93 +1,92 @@
-import { useCouponStore } from '@/stores/CouponContext'
+import { useEffect, useState } from 'react'
+import { supabase } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
-import { ImageOff } from 'lucide-react'
-import { useLanguage } from '@/stores/LanguageContext'
-import { Advertisement } from '@/lib/types'
-import { getCategoryTranslationKey } from '@/lib/data'
-import { useState, useEffect } from 'react'
 
 interface AdSpaceProps {
-  position?: 'top' | 'bottom' | 'sidebar' | 'search'
+  position?: 'top' | 'bottom' | 'sidebar' | 'inline'
   className?: string
-  customAds?: Advertisement[]
-  categoryContext?: string
 }
 
-export function AdSpace({
-  position = 'top',
-  className,
-  customAds,
-  categoryContext,
-}: AdSpaceProps) {
-  const { ads: storeAds } = useCouponStore()
-  const { t } = useLanguage()
-  const [imgError, setImgError] = useState(false)
-
-  const adsToUse = customAds || storeAds
-  const availableAds = adsToUse.filter(
-    (ad) =>
-      ad.status === 'active' &&
-      ad.placement === position &&
-      (!categoryContext ||
-        categoryContext === 'all' ||
-        ad.category === 'all' ||
-        ad.category === categoryContext),
-  )
-
-  const ad = availableAds[0]
+export function AdSpace({ position = 'inline', className }: AdSpaceProps) {
+  const [ad, setAd] = useState<any | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    setImgError(false)
-  }, [ad?.id])
+    let isMounted = true
 
-  if (!ad) return null
+    const fetchAd = async () => {
+      try {
+        setLoading(true)
+        const { data, error } = await supabase
+          .from('ad_campaigns')
+          .select('*')
+          .eq('status', 'active')
+          .eq('placement', position)
+          .limit(1)
+          .maybeSingle()
+
+        if (error && error.code !== 'PGRST116') {
+          console.warn('Error fetching ad:', error)
+        }
+
+        if (isMounted) {
+          setAd(data || null)
+        }
+      } catch (err) {
+        console.warn('Failed to fetch ad:', err)
+      } finally {
+        if (isMounted) {
+          setLoading(false)
+        }
+      }
+    }
+
+    fetchAd()
+
+    return () => {
+      isMounted = false
+    }
+  }, [position])
+
+  if (loading) {
+    return null
+  }
+
+  // Only render if a real ad from the database exists.
+  // No mock/fake ads will be displayed in production.
+  if (!ad) {
+    return null
+  }
 
   return (
-    <div className={cn('w-full py-1.5 md:py-2 bg-slate-50/50', className)}>
-      <div className="container mx-auto px-4">
-        <div className="relative group overflow-hidden rounded-md border border-slate-200 shadow-sm bg-white hover:border-primary/30 transition-colors">
-          <div className="absolute top-0 right-0 bg-slate-100 text-slate-400 text-[8px] px-1.5 py-0.5 z-10 font-medium rounded-bl-sm uppercase tracking-wider">
-            {t('ad.sponsored', 'Patrocinado')}
-          </div>
-          <a
-            href={ad.link || '#'}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center h-14 md:h-16"
-          >
-            <div className="w-20 md:w-28 h-full relative overflow-hidden shrink-0 bg-slate-100 flex items-center justify-center">
-              {!imgError ? (
-                <img
-                  src={
-                    ad.image ||
-                    `https://img.usecurling.com/p/400/100?q=${ad.category || 'ad'}`
-                  }
-                  alt={ad.title}
-                  crossOrigin="anonymous"
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  onError={() => setImgError(true)}
-                />
-              ) : (
-                <ImageOff className="h-4 w-4 text-slate-300" />
-              )}
-            </div>
-            <div className="flex-1 px-3 py-1 flex flex-col justify-center min-w-0 h-full">
-              <div className="flex items-center justify-between mb-0.5">
-                <span className="text-[9px] md:text-[10px] font-bold text-primary uppercase tracking-wider truncate mr-2">
-                  {ad.category && ad.category !== 'all'
-                    ? t(getCategoryTranslationKey(ad.category))
-                    : t('ad.sponsored', 'Patrocinado')}
-                </span>
-              </div>
-              <div className="flex items-center justify-between gap-2">
-                <h4 className="font-semibold text-xs md:text-sm text-slate-800 line-clamp-1 flex-1">
-                  {ad.title}
-                </h4>
-              </div>
-            </div>
-          </a>
-        </div>
+    <a
+      href={ad.link || '#'}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={cn(
+        'block w-full overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm hover:shadow-md transition-shadow group relative',
+        className,
+      )}
+    >
+      <div className="absolute top-2 right-2 bg-black/60 text-white text-[10px] uppercase font-bold px-2 py-0.5 rounded backdrop-blur-sm z-10">
+        Ad
       </div>
-    </div>
+      {ad.image ? (
+        <div className="h-24 sm:h-32 w-full relative overflow-hidden bg-slate-50">
+          <img
+            src={ad.image}
+            alt={ad.title}
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            onError={(e) => {
+              ;(e.target as HTMLImageElement).style.display = 'none'
+            }}
+          />
+        </div>
+      ) : (
+        <div className="h-24 sm:h-32 w-full bg-gradient-to-r from-slate-800 to-slate-900 flex items-center justify-center p-4 text-center">
+          <h3 className="text-white font-bold text-lg">{ad.title}</h3>
+        </div>
+      )}
+    </a>
   )
 }
