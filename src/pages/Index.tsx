@@ -279,7 +279,23 @@ function IndexContent() {
       const c = safeWebResults[i]
       if (c && !uniqueMap.has(c.id)) uniqueMap.set(c.id, c)
     }
-    const combined = Array.from(uniqueMap.values())
+
+    // Filter out lingering mock data
+    const mockSignatures = [
+      '50% Off Burger',
+      '10% Off Electronics',
+      'Buy 1 Get 1 Free Shoes',
+      'Burger King',
+      'Tech Store',
+      'Shoe Store',
+    ]
+    const combined = Array.from(uniqueMap.values()).filter((c) => {
+      const titleMatchesMock =
+        c.title && mockSignatures.some((m) => c.title.includes(m))
+      const storeMatchesMock =
+        c.storeName && mockSignatures.some((m) => c.storeName.includes(m))
+      return !titleMatchesMock && !storeMatchesMock
+    })
 
     // 2. Pre-process search query
     let textToMatch = searchQuery.toLowerCase()
@@ -384,6 +400,26 @@ function IndexContent() {
   const filteredDbPromotions = useMemo(() => {
     return supabasePromos.filter((p) => {
       if (!p) return false
+
+      // Filter out lingering mock data
+      const mockSignatures = [
+        '50% Off Burger',
+        '10% Off Electronics',
+        'Buy 1 Get 1 Free Shoes',
+        'Burger King',
+        'Tech Store',
+        'Shoe Store',
+      ]
+      const titleMatchesMock =
+        p.title && mockSignatures.some((m) => p.title.includes(m))
+      const storeMatchesMock =
+        p.storeName && mockSignatures.some((m) => p.storeName.includes(m))
+      const storeNameMatchesMock =
+        p.store_name && mockSignatures.some((m) => p.store_name.includes(m))
+
+      if (titleMatchesMock || storeMatchesMock || storeNameMatchesMock)
+        return false
+
       let textToMatch = searchQuery.toLowerCase()
       if (searchLocationInfo) {
         textToMatch = textToMatch

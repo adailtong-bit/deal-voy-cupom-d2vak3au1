@@ -14,15 +14,7 @@ interface AggregatorFeedProps {
   className?: string
 }
 
-const BRANDS = [
-  'Groupon',
-  'ShopSimon',
-  'Burger King',
-  'Sephora',
-  'Ulta',
-  'Publix',
-  'Walmart',
-]
+const BRANDS = ['Groupon', 'ShopSimon', 'Sephora', 'Ulta', 'Publix', 'Walmart']
 
 export function AggregatorFeed({
   coupons,

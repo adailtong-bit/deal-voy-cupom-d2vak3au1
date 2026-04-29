@@ -160,6 +160,23 @@ export default function Explore() {
   const filteredCoupons = useMemo(() => {
     let processed = [...coupons, ...discoveredPromotions]
 
+    // Filter out lingering mock data
+    const mockSignatures = [
+      '50% Off Burger',
+      '10% Off Electronics',
+      'Buy 1 Get 1 Free Shoes',
+      'Burger King',
+      'Tech Store',
+      'Shoe Store',
+    ]
+    processed = processed.filter((c) => {
+      const titleMatchesMock =
+        c.title && mockSignatures.some((m) => c.title.includes(m))
+      const storeMatchesMock =
+        c.storeName && mockSignatures.some((m) => c.storeName.includes(m))
+      return !titleMatchesMock && !storeMatchesMock
+    })
+
     // 1. Status Filter: Only show active/approved/published coupons
     processed = processed.filter(
       (c) =>
