@@ -54,7 +54,7 @@ export function AdminOffersTab() {
       }
     } catch (error) {
       console.error('Error fetching offers:', error)
-      toast.error('Erro ao carregar ofertas.')
+      toast.error(t('common.error', 'Ocorreu um erro'))
     } finally {
       setIsLoading(false)
     }
@@ -91,13 +91,13 @@ export function AdminOffersTab() {
 
       toast.success(
         newStatus === 'published'
-          ? t('admin.offersTab.activated', 'Oferta ativada com sucesso!')
-          : t('admin.offersTab.inactivated', 'Oferta inativada com sucesso!'),
+          ? t('admin.offers.activated', 'Oferta ativada com sucesso!')
+          : t('admin.offers.inactivated', 'Oferta inativada com sucesso!'),
       )
       fetchOffers()
     } catch (error) {
       console.error('Error toggling status:', error)
-      toast.error('Erro ao atualizar status.')
+      toast.error(t('common.error', 'Ocorreu um erro'))
     }
   }
 
@@ -105,7 +105,7 @@ export function AdminOffersTab() {
     if (
       !confirm(
         t(
-          'admin.offersTab.confirm_delete',
+          'admin.offers.confirm_delete',
           'Tem certeza que deseja excluir esta oferta permanentemente?',
         ),
       )
@@ -120,12 +120,12 @@ export function AdminOffersTab() {
       if (error) throw error
 
       toast.success(
-        t('admin.offersTab.deleted_success', 'Oferta excluída com sucesso!'),
+        t('admin.offers.deleted_success', 'Oferta excluída com sucesso!'),
       )
       fetchOffers()
     } catch (error) {
       console.error('Error deleting offer:', error)
-      toast.error(t('admin.offersTab.delete_error', 'Erro ao excluir oferta.'))
+      toast.error(t('admin.offers.delete_error', 'Erro ao excluir oferta.'))
     }
   }
 
@@ -168,7 +168,7 @@ export function AdminOffersTab() {
             }}
           >
             <Plus className="w-4 h-4 mr-2" />{' '}
-            {t('admin.offersTab.new_campaign', 'Nova Campanha')}
+            {t('admin.offers.new_campaign', 'Nova Campanha')}
           </Button>
         </div>
       </div>
@@ -179,7 +179,7 @@ export function AdminOffersTab() {
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder={t(
-                'admin.offersTab.search_placeholder',
+                'admin.offers.search_placeholder',
                 'Buscar por título ou loja...',
               )}
               className="pl-8"
@@ -198,17 +198,15 @@ export function AdminOffersTab() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead>{t('admin.offers.offer', 'Oferta')}</TableHead>
                     <TableHead>
-                      {t('admin.offersTab.offer', 'Oferta')}
+                      {t('admin.offers.store_category', 'Loja / Categoria')}
                     </TableHead>
                     <TableHead>
-                      {t('admin.offersTab.store_category', 'Loja / Categoria')}
+                      {t('admin.offers.discount', 'Desconto')}
                     </TableHead>
                     <TableHead>
-                      {t('admin.offersTab.discount', 'Desconto')}
-                    </TableHead>
-                    <TableHead>
-                      {t('admin.offersTab.created_at', 'Data Criação')}
+                      {t('admin.offers.created_at', 'Data Criação')}
                     </TableHead>
                     <TableHead>{t('admin.status', 'Status')}</TableHead>
                     <TableHead className="text-right">
@@ -224,7 +222,7 @@ export function AdminOffersTab() {
                         className="text-center py-8 text-muted-foreground"
                       >
                         {t(
-                          'admin.offersTab.no_offers',
+                          'admin.offers.no_offers',
                           'Nenhuma oferta encontrada.',
                         )}
                       </TableCell>
@@ -259,8 +257,8 @@ export function AdminOffersTab() {
                                   <Globe className="w-3 h-3 text-blue-500" />
                                 ) : null}
                                 {offer.product_link
-                                  ? t('admin.offersTab.online', 'Online')
-                                  : t('admin.offersTab.physical', 'Física')}
+                                  ? t('admin.offers.online', 'Online')
+                                  : t('admin.offers.physical', 'Física')}
                               </div>
                             </div>
                           </div>
@@ -271,7 +269,7 @@ export function AdminOffersTab() {
                           </div>
                           <div className="text-xs text-muted-foreground">
                             {offer.category ||
-                              t('admin.offersTab.general', 'Geral')}
+                              t('admin.offers.general', 'Geral')}
                           </div>
                         </TableCell>
                         <TableCell>
@@ -282,10 +280,7 @@ export function AdminOffersTab() {
                             {offer.discount ||
                               (offer.discount_percentage
                                 ? `${offer.discount_percentage}% OFF`
-                                : t(
-                                    'admin.offersTab.view_offer',
-                                    'Ver Oferta',
-                                  ))}
+                                : t('admin.offers.view_offer', 'Ver Oferta'))}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
@@ -309,9 +304,9 @@ export function AdminOffersTab() {
                             }
                           >
                             {offer.status === 'published'
-                              ? t('admin.offersTab.published', 'Publicado')
+                              ? t('admin.offers.published', 'Publicado')
                               : offer.status === 'inactive'
-                                ? t('admin.offersTab.inactive', 'Inativo')
+                                ? t('admin.offers.inactive', 'Inativo')
                                 : offer.status}
                           </Badge>
                         </TableCell>
@@ -323,14 +318,8 @@ export function AdminOffersTab() {
                               onClick={() => handleToggleStatus(offer)}
                               title={
                                 offer.status === 'published'
-                                  ? t(
-                                      'admin.offersTab.pause',
-                                      'Pausar/Inativar',
-                                    )
-                                  : t(
-                                      'admin.offersTab.publish',
-                                      'Publicar/Ativar',
-                                    )
+                                  ? t('admin.offers.pause', 'Pausar/Inativar')
+                                  : t('admin.offers.publish', 'Publicar/Ativar')
                               }
                             >
                               {offer.status === 'published' ? (

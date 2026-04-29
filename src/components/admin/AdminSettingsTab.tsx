@@ -194,7 +194,7 @@ export function AdminSettingsTab() {
         t(
           'admin.geo.confirm_delete',
           `Are you sure you want to delete ${name}?`,
-        ),
+        ).replace('{name}', name),
       )
     )
       return
@@ -238,7 +238,7 @@ export function AdminSettingsTab() {
         t(
           'admin.geo.confirm_delete',
           `Are you sure you want to delete ${name}?`,
-        ),
+        ).replace('{name}', name),
       )
     )
       return
@@ -282,7 +282,7 @@ export function AdminSettingsTab() {
         t(
           'admin.geo.confirm_delete',
           `Are you sure you want to delete ${name}?`,
-        ),
+        ).replace('{name}', name),
       )
     )
       return
@@ -360,10 +360,14 @@ export function AdminSettingsTab() {
 
         <Card className="md:col-span-2">
           <CardHeader>
-            <CardTitle>Geographic Hierarchy Manager</CardTitle>
+            <CardTitle>
+              {t('admin.geo.manager_title', 'Geographic Hierarchy Manager')}
+            </CardTitle>
             <CardDescription>
-              Manage Countries, States, and Cities. You can add, edit, or remove
-              locations.
+              {t(
+                'admin.geo.manager_desc',
+                'Manage Countries, States, and Cities. You can add, edit, or remove locations.',
+              )}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -371,7 +375,7 @@ export function AdminSettingsTab() {
               {/* Countries */}
               <div className="border rounded-md flex flex-col h-full overflow-hidden">
                 <div className="p-3 border-b bg-slate-50 font-medium shrink-0">
-                  Countries
+                  {t('admin.geo.countries', 'Countries')}
                 </div>
                 <div className="flex-1 overflow-y-auto p-2">
                   {Object.keys(geoTree)
@@ -395,7 +399,7 @@ export function AdminSettingsTab() {
                     <Input
                       size={1}
                       className="h-8 text-sm"
-                      placeholder="New Country"
+                      placeholder={t('admin.geo.new_country', 'New Country')}
                       value={newCountryName}
                       onChange={(e) => setNewCountryName(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && handleAddCountry()}
@@ -415,8 +419,11 @@ export function AdminSettingsTab() {
               <div className="border rounded-md flex flex-col h-full overflow-hidden">
                 <div className="p-3 border-b bg-slate-50 font-medium shrink-0">
                   {selectedCountry
-                    ? `States in ${selectedCountry}`
-                    : 'Select a Country'}
+                    ? t(
+                        'admin.geo.states_in',
+                        `States in ${selectedCountry}`,
+                      ).replace('{country}', selectedCountry)
+                    : t('admin.geo.select_country', 'Select a Country')}
                 </div>
                 <div className="flex-1 overflow-y-auto p-2">
                   {selectedCountry &&
@@ -436,7 +443,7 @@ export function AdminSettingsTab() {
                     Object.keys(geoTree[selectedCountry]?.states || {})
                       .length === 0 && (
                       <p className="text-xs text-muted-foreground p-2">
-                        No states found.
+                        {t('admin.geo.no_states', 'No states found.')}
                       </p>
                     )}
                 </div>
@@ -446,7 +453,7 @@ export function AdminSettingsTab() {
                       <Input
                         size={1}
                         className="h-8 text-sm"
-                        placeholder="New State"
+                        placeholder={t('admin.geo.new_state', 'New State')}
                         value={newStateName}
                         onChange={(e) => setNewStateName(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleAddState()}
@@ -467,8 +474,11 @@ export function AdminSettingsTab() {
               <div className="border rounded-md flex flex-col h-full overflow-hidden">
                 <div className="p-3 border-b bg-slate-50 font-medium shrink-0">
                   {selectedState
-                    ? `Cities in ${selectedState}`
-                    : 'Select a State'}
+                    ? t(
+                        'admin.geo.cities_in',
+                        `Cities in ${selectedState}`,
+                      ).replace('{state}', selectedState)
+                    : t('admin.geo.select_state', 'Select a State')}
                 </div>
                 <div className="flex-1 overflow-y-auto p-2">
                   {selectedCountry &&
@@ -490,7 +500,7 @@ export function AdminSettingsTab() {
                     (geoTree[selectedCountry]?.states[selectedState] || [])
                       .length === 0 && (
                       <p className="text-xs text-muted-foreground p-2">
-                        No cities found.
+                        {t('admin.geo.no_cities', 'No cities found.')}
                       </p>
                     )}
                 </div>
@@ -500,7 +510,7 @@ export function AdminSettingsTab() {
                       <Input
                         size={1}
                         className="h-8 text-sm"
-                        placeholder="New City"
+                        placeholder={t('admin.geo.new_city', 'New City')}
                         value={newCityName}
                         onChange={(e) => setNewCityName(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleAddCity()}
@@ -518,8 +528,10 @@ export function AdminSettingsTab() {
               </div>
             </div>
             <p className="text-xs text-muted-foreground mt-4">
-              * Remember to click <strong>Save Changes</strong> at the bottom of
-              the page to persist these locations globally across the app.
+              {t(
+                'admin.geo.remember_save',
+                '* Remember to click Save Changes at the bottom of the page to persist these locations globally.',
+              )}
             </p>
           </CardContent>
         </Card>
