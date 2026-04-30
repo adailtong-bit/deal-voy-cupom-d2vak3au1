@@ -6,6 +6,7 @@ import {
   DollarSign,
   Bell,
   Megaphone,
+  ShieldAlert,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -45,8 +46,10 @@ import { useCouponStore } from '@/stores/CouponContext'
 import { useAuth } from '@/hooks/use-auth'
 import { useRegionFormatting } from '@/hooks/useRegionFormatting'
 import { cn } from '@/lib/utils'
+import { useEnvironment } from '@/hooks/use-environment'
 
 export default function AdminDashboard() {
+  const { isDevelopment } = useEnvironment()
   const { t } = useLanguage()
   const { companies, franchises, user: storeUser } = useCouponStore()
   const { user: authUser, role: authRole } = useAuth()
@@ -198,6 +201,24 @@ export default function AdminDashboard() {
 
   return (
     <div className="container py-8 max-w-7xl mx-auto space-y-8 animate-fade-in mb-16 md:mb-0">
+      {isDevelopment && (
+        <div className="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-md shadow-sm flex items-start animate-fade-in-down">
+          <ShieldAlert className="h-6 w-6 text-amber-500 mr-3 shrink-0 mt-0.5" />
+          <div>
+            <h3 className="text-amber-800 font-bold text-sm uppercase">
+              Trava de Segurança: Ambiente de Desenvolvimento
+            </h3>
+            <p className="text-amber-700 text-xs mt-1 leading-relaxed">
+              Você está acessando o sistema fora do domínio oficial de produção.
+              Para proteger os dados reais (parceiros, ofertas e anúncios), as{' '}
+              <strong>alterações no banco de dados estão interceptadas</strong>.
+              Ações como criar ou excluir campanhas serão apenas simuladas
+              localmente e <strong>não afetarão a produção</strong>.
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">

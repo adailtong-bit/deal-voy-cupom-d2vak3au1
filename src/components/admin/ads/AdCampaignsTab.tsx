@@ -24,7 +24,14 @@ import { useLanguage } from '@/stores/LanguageContext'
 import { useRegionFormatting } from '@/hooks/useRegionFormatting'
 import { supabase } from '@/lib/supabase/client'
 import { toast } from 'sonner'
-import { Loader2, PlusCircle, Megaphone, Trash2 } from 'lucide-react'
+import {
+  Loader2,
+  PlusCircle,
+  Megaphone,
+  Trash2,
+  ShieldAlert,
+} from 'lucide-react'
+import { useEnvironment } from '@/hooks/use-environment'
 
 const AD_CATEGORIES = [
   { id: 'all', label: 'Todas as Categorias (Global)' },
@@ -45,6 +52,7 @@ const AD_PLACEMENTS = [
 ]
 
 export function AdCampaignsTab() {
+  const { isDevelopment } = useEnvironment()
   const [dbAds, setDbAds] = useState<any[]>([])
   const [dbAdvertisers, setDbAdvertisers] = useState<any[]>([])
   const [adPricing, setAdPricing] = useState<any[]>([])
@@ -177,6 +185,24 @@ export function AdCampaignsTab() {
         duration_days: selectedRule.durationDays,
       }
 
+      if (isDevelopment) {
+        // TRAVA DE SEGURANÇA: Simula inserção sem tocar na produção
+        const mockId = `mock-ad-${Date.now()}`
+        const insertedData = {
+          id: mockId,
+          ...dbPayload,
+          created_at: now.toISOString(),
+        }
+        setDbAds((prev) => [insertedData, ...prev])
+        toast.success(
+          '[DEV MOCK] Campanha simulada criada localmente. A produção permanece intacta!',
+          { duration: 4000 },
+        )
+        reset()
+        setIsSubmitting(false)
+        return
+      }
+
       const { data: insertedData, error } = await supabase
         .from('ad_campaigns')
         .insert(dbPayload)
@@ -213,7 +239,21 @@ export function AdCampaignsTab() {
 
   const handleDelete = async (id: string) => {
     if (!window.confirm('Tem certeza que deseja excluir esta campanha?')) return
+
+    if (isDevelopment && !id.startsWith('mock-')) {
+      toast.error(
+        'Trava de Segurança: Não é possível excluir dados reais de produção no ambiente de desenvolvimento.',
+      )
+      return
+    }
+
     try {
+      if (isDevelopment && id.startsWith('mock-')) {
+        setDbAds((prev) => prev.filter((a) => a.id !== id))
+        toast.success('[DEV MOCK] Campanha simulada excluída.')
+        return
+      }
+
       const { error } = await supabase
         .from('ad_campaigns')
         .delete()
@@ -387,20 +427,57 @@ export function AdCampaignsTab() {
               </div>
 
               <div className="space-y-2">
-                <Label>Banner da Campanha (URL da Imagem)</Label>
+                <Label>Banner da Campanha (Upload de Imagem)</Label>
                 <div className="flex flex-col gap-2">
                   <Input
                     type="file"
                     accept="image/*"
-                    onChange={(e) => {
+                    onChange={async (e) => {
                       if (e.target.files && e.target.files[0]) {
-                        const mockUrl = `https://img.usecurling.com/p/800/200?q=${encodeURIComponent(e.target.files[0].name.split('.')[0] || 'banner')}`
-                        setValue('image', mockUrl)
+                        const file = e.target.files[0]
+
+                        if (isDevelopment) {
+                          const mockUrl = `https://img.usecurling.com/p/800/200?q=${encodeURIComponent(file.name.split('.')[0] || 'banner')}`
+                          setValue('image', mockUrl)
+                          toast.success(
+                            '[DEV MOCK] Upload simulado com sucesso (Produção Intacta).',
+                          )
+                          return
+                        }
+
+                        const fileExt = file.name.split('.').pop()
+                        const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`
+                        const filePath = `campaigns/${fileName}`
+
+                        toast.loading('Enviando imagem para a nuvem...', {
+                          id: 'upload-img',
+                        })
+                        const { error: uploadError } = await supabase.storage
+                          .from('public_assets')
+                          .upload(filePath, file)
+
+                        if (uploadError) {
+                          toast.error(
+                            'Erro ao enviar imagem. Verifique as permissões do Storage.',
+                            { id: 'upload-img' },
+                          )
+                          console.error('Storage Upload Error:', uploadError)
+                        } else {
+                          const { data: publicUrlData } = supabase.storage
+                            .from('public_assets')
+                            .getPublicUrl(filePath)
+
+                          setValue('image', publicUrlData.publicUrl)
+                          toast.success(
+                            'Imagem armazenada com sucesso na nuvem!',
+                            { id: 'upload-img' },
+                          )
+                        }
                       }
                     }}
                   />
                   <span className="text-xs text-muted-foreground text-center">
-                    Ou cole a URL direta da imagem
+                    Ou cole a URL direta da imagem abaixo
                   </span>
                   <Input
                     {...register('image')}
@@ -420,7 +497,7 @@ export function AdCampaignsTab() {
               </div>
 
               <Button
-                className="w-full font-bold shadow-md"
+                className={`w-full font-bold shadow-md ${isDevelopment ? 'bg-amber-600 hover:bg-amber-700 text-white' : ''}`}
                 type="submit"
                 disabled={
                   calculatedPrice === 0 ||
@@ -428,10 +505,14 @@ export function AdCampaignsTab() {
                   availableRules.length === 0
                 }
               >
-                {isSubmitting && (
+                {isSubmitting ? (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                )}
-                Salvar Anúncio e Gerar Fatura
+                ) : isDevelopment ? (
+                  <ShieldAlert className="w-4 h-4 mr-2" />
+                ) : null}
+                {isDevelopment
+                  ? 'Simular Criação (Trava Ativa)'
+                  : 'Salvar Anúncio e Gerar Fatura'}
               </Button>
             </form>
           </CardContent>
