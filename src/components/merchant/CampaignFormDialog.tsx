@@ -261,11 +261,6 @@ export function CampaignFormDialog({
     : companies
 
   const [dbCategories, setDbCategories] = useState<string[]>([])
-  const { locale, currency } = useRegionFormatting(company?.country)
-  const formattedPlaceholder = new Intl.NumberFormat(locale, {
-    style: 'currency',
-    currency,
-  }).format(0)
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -324,6 +319,12 @@ export function CampaignFormDialog({
 
   const selectedCompanyId = form.watch('companyId') || companyId || ''
   const company = companies.find((c) => c.id === selectedCompanyId)
+
+  const { locale, currency } = useRegionFormatting(company?.country)
+  const formattedPlaceholder = new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency,
+  }).format(0)
 
   const myRules = selectedCompanyId
     ? standardRules.filter((r) => r.companyId === selectedCompanyId)
