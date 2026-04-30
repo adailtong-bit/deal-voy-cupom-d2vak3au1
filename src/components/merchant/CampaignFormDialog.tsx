@@ -180,7 +180,10 @@ function parseDiscountString(discountStr: string) {
   if (!discountStr)
     return { type: 'percentage', percentage: '', minSpend: '', fixed: '' }
 
-  if (discountStr.toLowerCase().includes('gaste') || discountStr.toLowerCase().includes('spend')) {
+  if (
+    discountStr.toLowerCase().includes('gaste') ||
+    discountStr.toLowerCase().includes('spend')
+  ) {
     const parts = discountStr.toLowerCase().split(/ganhe|get/i)
     if (parts.length >= 2) {
       const minSpendMatch = parts[0].match(/(?:R\$|€|\$|£)\s*[\d.,]+/i)
@@ -203,7 +206,13 @@ function parseDiscountString(discountStr: string) {
   }
 }
 
-const CurrencyInput = ({ field, label, placeholder, locale = 'en-US', currency = 'USD' }: any) => (
+const CurrencyInput = ({
+  field,
+  label,
+  placeholder,
+  locale = 'en-US',
+  currency = 'USD',
+}: any) => (
   <FormItem>
     <FormLabel>{label}</FormLabel>
     <FormControl>
@@ -252,17 +261,28 @@ export function CampaignFormDialog({
 
   const [dbCategories, setDbCategories] = useState<string[]>([])
   const { locale, currency } = useRegionFormatting(company?.country)
-  const formattedPlaceholder = new Intl.NumberFormat(locale, { style: 'currency', currency }).format(0)
+  const formattedPlaceholder = new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency,
+  }).format(0)
 
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const { data } = await supabase.from('site_settings').select('value').eq('key', 'categories').single()
+        const { data } = await supabase
+          .from('site_settings')
+          .select('value')
+          .eq('key', 'categories')
+          .single()
         if (data?.value && Array.isArray(data.value)) {
-          const cats = data.value.map((c: any) => typeof c === 'string' ? c : c.name || c.id)
+          const cats = data.value.map((c: any) =>
+            typeof c === 'string' ? c : c.name || c.id,
+          )
           setDbCategories(cats)
         }
-      } catch { /* intentionally ignored */ }
+      } catch {
+        /* intentionally ignored */
+      }
     }
     fetchCategories()
   }, [])
@@ -275,7 +295,10 @@ export function CampaignFormDialog({
       description: '',
       companyId: '',
       category: 'Outros',
-      instructions: t('vendor.form.default_instructions', 'Válido por 30 dias ou enquanto durar o estoque'),
+      instructions: t(
+        'vendor.form.default_instructions',
+        'Válido por 30 dias ou enquanto durar o estoque',
+      ),
       image: '',
       companyUrl: '',
       scope: 'network',
@@ -350,8 +373,6 @@ export function CampaignFormDialog({
       suggested = 'Serviços'
     } else if (/celular|computador|eletrônico|tv|fone/i.test(text)) {
       suggested = 'Eletrônicos'
-    }
-
     } else if (/hotel|pousada|resort|hospedagem|quarto/i.test(text)) {
       suggested = 'Hotéis'
     } else if (/carro|veículo|aluguel|locação|rent/i.test(text)) {
@@ -433,7 +454,10 @@ export function CampaignFormDialog({
         description: '',
         companyId: companyId || 'organic',
         category: 'Outros',
-        instructions: t('vendor.form.default_instructions', 'Válido por 30 dias ou enquanto durar o estoque'),
+        instructions: t(
+          'vendor.form.default_instructions',
+          'Válido por 30 dias ou enquanto durar o estoque',
+        ),
         image: '',
         companyUrl: '',
         scope: 'network',
@@ -479,7 +503,9 @@ export function CampaignFormDialog({
     const formattedDiscount =
       data.discountType === 'percentage'
         ? `${data.discountPercentage} OFF`
-        : t('vendor.form.spend_get_format', 'Gaste {min}, ganhe {fixed} OFF').replace('{min}', data.minSpend || '').replace('{fixed}', data.fixedDiscount || '')
+        : t('vendor.form.spend_get_format', 'Gaste {min}, ganhe {fixed} OFF')
+            .replace('{min}', data.minSpend || '')
+            .replace('{fixed}', data.fixedDiscount || '')
 
     let finalUrl = data.companyUrl
     if (finalUrl && !finalUrl.startsWith('http')) {
@@ -516,7 +542,10 @@ export function CampaignFormDialog({
         store_name:
           data.scope === 'specific' && data.specificStore
             ? data.specificStore
-            : company?.name || (isOrganic ? t('vendor.form.organic_offer', 'Oferta Orgânica') : t('vendor.form.store', 'Loja')),
+            : company?.name ||
+              (isOrganic
+                ? t('vendor.form.organic_offer', 'Oferta Orgânica')
+                : t('vendor.form.store', 'Loja')),
         discount_rules: data.discountType,
         discount: formattedDiscount,
         discount_percentage:
@@ -667,7 +696,9 @@ export function CampaignFormDialog({
   const formattedPreviewDiscount =
     watchedVals.discountType === 'percentage'
       ? `${watchedVals.discountPercentage || '0%'} OFF`
-      : t('vendor.form.spend_get_format', 'Gaste {min}, ganhe {fixed} OFF').replace('{min}', watchedVals.minSpend || formattedPlaceholder).replace('{fixed}', watchedVals.fixedDiscount || formattedPlaceholder)
+      : t('vendor.form.spend_get_format', 'Gaste {min}, ganhe {fixed} OFF')
+          .replace('{min}', watchedVals.minSpend || formattedPlaceholder)
+          .replace('{fixed}', watchedVals.fixedDiscount || formattedPlaceholder)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -845,22 +876,47 @@ export function CampaignFormDialog({
                               {dbCategories.length > 0 ? (
                                 dbCategories.map((catName) => (
                                   <SelectItem key={catName} value={catName}>
-                                    {t(`category.${catName.toLowerCase()}`, catName)}
+                                    {t(
+                                      `category.${catName.toLowerCase()}`,
+                                      catName,
+                                    )}
                                   </SelectItem>
                                 ))
                               ) : (
                                 <>
-                                  <SelectItem value="Alimentação">{t('category.food', 'Alimentação')}</SelectItem>
-                                  <SelectItem value="Moda">{t('category.fashion', 'Moda')}</SelectItem>
-                                  <SelectItem value="Serviços">{t('category.services', 'Serviços')}</SelectItem>
-                                  <SelectItem value="Eletrônicos">{t('category.electronics', 'Eletrônicos')}</SelectItem>
-                                  <SelectItem value="Lazer">{t('category.leisure', 'Lazer')}</SelectItem>
-                                  <SelectItem value="Mercado">{t('category.market', 'Mercado')}</SelectItem>
-                                  <SelectItem value="Beleza">{t('category.beauty', 'Beleza')}</SelectItem>
-                                  <SelectItem value="Hotéis">{t('hub.hotels', 'Hotéis')}</SelectItem>
-                                  <SelectItem value="Carros">{t('hub.cars', 'Carros')}</SelectItem>
-                                  <SelectItem value="Atividades">{t('hub.activities', 'Atividades')}</SelectItem>
-                                  <SelectItem value="Outros">{t('category.others', 'Outros')}</SelectItem>
+                                  <SelectItem value="Alimentação">
+                                    {t('category.food', 'Alimentação')}
+                                  </SelectItem>
+                                  <SelectItem value="Moda">
+                                    {t('category.fashion', 'Moda')}
+                                  </SelectItem>
+                                  <SelectItem value="Serviços">
+                                    {t('category.services', 'Serviços')}
+                                  </SelectItem>
+                                  <SelectItem value="Eletrônicos">
+                                    {t('category.electronics', 'Eletrônicos')}
+                                  </SelectItem>
+                                  <SelectItem value="Lazer">
+                                    {t('category.leisure', 'Lazer')}
+                                  </SelectItem>
+                                  <SelectItem value="Mercado">
+                                    {t('category.market', 'Mercado')}
+                                  </SelectItem>
+                                  <SelectItem value="Beleza">
+                                    {t('category.beauty', 'Beleza')}
+                                  </SelectItem>
+                                  <SelectItem value="Hotéis">
+                                    {t('hub.hotels', 'Hotéis')}
+                                  </SelectItem>
+                                  <SelectItem value="Carros">
+                                    {t('hub.cars', 'Carros')}
+                                  </SelectItem>
+                                  <SelectItem value="Atividades">
+                                    {t('hub.activities', 'Atividades')}
+                                  </SelectItem>
+                                  <SelectItem value="Outros">
+                                    {t('category.others', 'Outros')}
+                                  </SelectItem>
                                 </>
                               )}
                             </SelectContent>
