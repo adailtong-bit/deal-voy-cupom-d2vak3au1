@@ -660,6 +660,7 @@ export interface TravelOffer {
     { title?: string; description?: string; destination?: string }
   >
   roomTypeKey?: string
+  isSponsored?: boolean
 }
 
 export interface Region {

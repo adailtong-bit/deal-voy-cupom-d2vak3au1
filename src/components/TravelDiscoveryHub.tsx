@@ -1,6 +1,7 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useLanguage } from '@/stores/LanguageContext'
+import { supabase } from '@/lib/supabase/client'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -16,7 +17,7 @@ import {
 } from '@/components/ui/dialog'
 import { BookingForm } from './BookingForm'
 import { StarRating } from './StarRating'
-import { TravelOffer } from '@/lib/types'
+import { TravelOffer, TravelOfferType } from '@/lib/types'
 import {
   Hotel,
   Car,
@@ -47,14 +48,44 @@ export function TravelDiscoveryHub({
   const [activeTab, setActiveTab] = useState('hotel')
   const [guests, setGuests] = useState('2')
   const [requirePrivacy, setRequirePrivacy] = useState(false)
+  const [ads, setAds] = useState<any[]>([])
 
   const [detailsOffer, setDetailsOffer] = useState<TravelOffer | null>(null)
   const [bookingOffer, setBookingOffer] = useState<TravelOffer | null>(null)
 
   const numGuests = parseInt(guests)
 
+  useEffect(() => {
+    const fetchAds = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('ad_campaigns')
+          .select('*')
+          .eq('status', 'active')
+          .eq('placement', 'experiences_tab')
+
+        if (error) throw error
+        if (data && data.length > 0) {
+          setAds(data)
+          // Increment views asynchronously
+          Promise.all(
+            data.map((ad) =>
+              supabase
+                .from('ad_campaigns')
+                .update({ views: (ad.views || 0) + 1 })
+                .eq('id', ad.id),
+            ),
+          ).catch(console.error)
+        }
+      } catch (err) {
+        console.error('Error fetching ads for experiences:', err)
+      }
+    }
+    fetchAds()
+  }, [])
+
   const filteredOffers = useMemo(() => {
-    return travelOffers.filter((offer) => {
+    const regularOffers = travelOffers.filter((offer) => {
       if (activeTab === 'hotel' && offer.type !== 'hotel') return false
       if (activeTab === 'car_rental' && offer.type !== 'car_rental')
         return false
@@ -74,7 +105,35 @@ export function TravelDiscoveryHub({
 
       return true
     })
-  }, [travelOffers, activeTab, numGuests, requirePrivacy])
+
+    const sponsoredAds = ads
+      .filter((ad) => {
+        if (ad.category === 'all') return true
+        if (activeTab === 'hotel' && ad.category !== 'hotel') return false
+        if (activeTab === 'car_rental' && ad.category !== 'car_rental')
+          return false
+        if (activeTab === 'activity' && ad.category !== 'activity') return false
+        return true
+      })
+      .map((ad) => ({
+        id: ad.id,
+        type: (ad.category === 'all'
+          ? activeTab
+          : ad.category) as TravelOfferType,
+        provider: 'Patrocinador',
+        title: ad.title,
+        description: 'Oferta patrocinada especial em destaque.',
+        price: ad.price || 0,
+        currency: ad.currency || 'BRL',
+        image: ad.image || 'https://img.usecurling.com/p/400/300?q=travel',
+        destination: ad.region || 'Global',
+        link: ad.link || '#',
+        source: 'partner' as const,
+        isSponsored: true,
+      }))
+
+    return [...sponsoredAds, ...regularOffers]
+  }, [travelOffers, activeTab, numGuests, requirePrivacy, ads])
 
   const getTranslated = (
     offer: TravelOffer,
@@ -88,6 +147,26 @@ export function TravelDiscoveryHub({
       return offer.translations[language][field]
     }
     return offer[field]
+  }
+
+  const handleSponsoredClick = (offer: TravelOffer) => {
+    if (offer.isSponsored && offer.link && offer.link !== '#') {
+      window.open(offer.link, '_blank')
+      supabase
+        .from('ad_campaigns')
+        .select('clicks')
+        .eq('id', offer.id)
+        .single()
+        .then(({ data }) => {
+          if (data) {
+            supabase
+              .from('ad_campaigns')
+              .update({ clicks: (data.clicks || 0) + 1 })
+              .eq('id', offer.id)
+              .then()
+          }
+        })
+    }
   }
 
   return (
@@ -200,7 +279,11 @@ export function TravelDiscoveryHub({
             filteredOffers.map((offer) => (
               <Card
                 key={offer.id}
-                className="overflow-hidden flex flex-col hover:shadow-lg transition-all duration-300 group border-slate-200"
+                className={`overflow-hidden flex flex-col hover:shadow-lg transition-all duration-300 group ${
+                  offer.isSponsored
+                    ? 'border-amber-300 shadow-[0_0_15px_rgba(245,158,11,0.1)] ring-1 ring-amber-100'
+                    : 'border-slate-200'
+                }`}
               >
                 <div className="h-48 relative overflow-hidden bg-slate-100">
                   <img
@@ -210,7 +293,15 @@ export function TravelDiscoveryHub({
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                   <div className="absolute top-3 left-3">
-                    {offer.source === 'partner' ? (
+                    {offer.isSponsored ? (
+                      <Badge
+                        variant="secondary"
+                        className="bg-amber-500 text-white hover:bg-amber-600 border-none shadow-sm font-bold"
+                      >
+                        <Megaphone className="w-3 h-3 mr-1" />{' '}
+                        {t('hub.sponsored', 'Patrocinado')}
+                      </Badge>
+                    ) : offer.source === 'partner' ? (
                       <Badge
                         variant="secondary"
                         className="bg-purple-600 text-white hover:bg-purple-700 border-none shadow-sm"
@@ -234,7 +325,7 @@ export function TravelDiscoveryHub({
                         {t('marketing.unmissable_offer', 'Oferta Imperdível')}
                       </Badge>
                     )}
-                    {offer.price && offer.price < 100 && (
+                    {offer.price && offer.price < 100 && !offer.isSponsored && (
                       <Badge className="bg-red-500 hover:bg-red-600 text-white border-none shadow-sm font-bold">
                         {t('marketing.super_offer', 'Super Oferta')}
                       </Badge>
@@ -252,9 +343,13 @@ export function TravelDiscoveryHub({
                     )}
                   </div>
                 </div>
-                <CardContent className="p-5 flex flex-col flex-1 bg-white">
+                <CardContent
+                  className={`p-5 flex flex-col flex-1 ${offer.isSponsored ? 'bg-amber-50/10' : 'bg-white'}`}
+                >
                   <div className="mb-2">
-                    <p className="text-xs text-primary font-bold mb-1 uppercase tracking-wider">
+                    <p
+                      className={`text-xs font-bold mb-1 uppercase tracking-wider ${offer.isSponsored ? 'text-amber-600' : 'text-primary'}`}
+                    >
                       {offer.provider}
                     </p>
                     <h3 className="font-extrabold text-lg text-slate-900 leading-tight line-clamp-1">
@@ -262,7 +357,7 @@ export function TravelDiscoveryHub({
                     </h3>
                   </div>
 
-                  {offer.type === 'hotel' && (
+                  {offer.type === 'hotel' && !offer.isSponsored && (
                     <div className="flex items-center gap-1.5 mt-1 mb-2 text-xs font-medium text-slate-600 bg-slate-50 p-1.5 rounded-md border border-slate-100">
                       <Hotel className="w-3.5 h-3.5 text-primary" />
                       <span>
@@ -295,21 +390,37 @@ export function TravelDiscoveryHub({
 
                   <div className="grid grid-cols-2 gap-2 mt-auto">
                     <Button
-                      variant="outline"
+                      variant={offer.isSponsored ? 'secondary' : 'outline'}
                       className="w-full font-bold shadow-sm text-xs px-2"
-                      onClick={() => setDetailsOffer(offer)}
+                      onClick={() => {
+                        if (offer.isSponsored) {
+                          handleSponsoredClick(offer)
+                        } else {
+                          setDetailsOffer(offer)
+                        }
+                      }}
                     >
-                      {t('hub.view_details', 'Ver Detalhes')}
+                      {offer.isSponsored
+                        ? t('hub.view_site', 'Ver Site')
+                        : t('hub.view_details', 'Ver Detalhes')}
                     </Button>
                     <Button
-                      className="w-full font-bold shadow-sm text-xs px-2"
-                      onClick={() => setBookingOffer(offer)}
+                      className={`w-full font-bold shadow-sm text-xs px-2 ${offer.isSponsored ? 'bg-amber-500 hover:bg-amber-600 text-white' : ''}`}
+                      onClick={() => {
+                        if (offer.isSponsored) {
+                          handleSponsoredClick(offer)
+                        } else {
+                          setBookingOffer(offer)
+                        }
+                      }}
                     >
-                      {activeTab === 'hotel'
-                        ? t('hub.book', 'Reservar')
-                        : activeTab === 'car_rental'
-                          ? t('hub.rent', 'Alugar')
-                          : t('hub.buy', 'Comprar')}
+                      {offer.isSponsored
+                        ? t('hub.access_offer', 'Acessar Oferta')
+                        : activeTab === 'hotel'
+                          ? t('hub.book', 'Reservar')
+                          : activeTab === 'car_rental'
+                            ? t('hub.rent', 'Alugar')
+                            : t('hub.buy', 'Comprar')}
                     </Button>
                   </div>
                 </CardContent>

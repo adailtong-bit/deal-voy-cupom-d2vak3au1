@@ -35,9 +35,11 @@ import { useEnvironment } from '@/hooks/use-environment'
 
 const AD_CATEGORIES = [
   { id: 'all', label: 'Todas as Categorias (Global)' },
-  { id: 'hotel', label: 'Hotéis / Hospedagem' },
+  { id: 'hotel', label: 'Experiências: Hotéis / Hospedagem' },
+  { id: 'car_rental', label: 'Experiências: Aluguel de Carros' },
+  { id: 'activity', label: 'Experiências: Atividades / Ingressos' },
   { id: 'food', label: 'Alimentação / Restaurantes' },
-  { id: 'travel', label: 'Turismo / Viagens' },
+  { id: 'travel', label: 'Turismo / Viagens (Geral)' },
   { id: 'retail', label: 'Varejo / Shopping' },
   { id: 'services', label: 'Serviços' },
   { id: 'entertainment', label: 'Entretenimento' },
@@ -49,6 +51,7 @@ const AD_PLACEMENTS = [
   { id: 'sidebar', label: 'Barra Lateral (Sidebar)' },
   { id: 'search', label: 'Resultados de Busca' },
   { id: 'offer_of_the_day', label: 'Destaque: Oferta do Dia' },
+  { id: 'experiences_tab', label: 'Aba de Experiências (Viagens/Turismo)' },
 ]
 
 export function AdCampaignsTab() {
