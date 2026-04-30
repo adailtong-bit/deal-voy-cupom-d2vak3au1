@@ -42,6 +42,7 @@ import { ShieldCheck, ArrowRight } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { useLanguage } from '@/stores/LanguageContext'
 import { Tags } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
 import { useCouponStore } from '@/stores/CouponContext'
 import { useAuth } from '@/hooks/use-auth'
 import { useRegionFormatting } from '@/hooks/useRegionFormatting'
@@ -221,11 +222,22 @@ export default function AdminDashboard() {
 
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            {isSuperAdmin
-              ? t('admin.dashboardTitle')
-              : t('franchisee.dashboard', 'Regional Panel')}
-          </h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-bold tracking-tight">
+              {isSuperAdmin
+                ? t('admin.dashboardTitle')
+                : t('franchisee.dashboard', 'Regional Panel')}
+            </h1>
+            {isDevelopment && (
+              <Badge
+                variant="outline"
+                className="bg-amber-100 text-amber-800 border-amber-300 mt-1"
+              >
+                <ShieldAlert className="w-3 h-3 mr-1" />
+                DEV MODE
+              </Badge>
+            )}
+          </div>
           <p className="text-muted-foreground mt-2">
             {isSuperAdmin
               ? t('admin.dashboardDesc')

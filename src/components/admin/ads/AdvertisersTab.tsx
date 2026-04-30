@@ -29,9 +29,17 @@ import {
   Advertiser,
 } from '@/services/ad_advertisers'
 
-import { Loader2, Building2, MapPin, CreditCard } from 'lucide-react'
+import {
+  Loader2,
+  Building2,
+  MapPin,
+  CreditCard,
+  ShieldAlert,
+} from 'lucide-react'
+import { useEnvironment } from '@/hooks/use-environment'
 
 export function AdvertisersTab() {
+  const { isDevelopment } = useEnvironment()
   const [advertisers, setAdvertisers] = useState<Advertiser[]>([])
   const [isOpen, setIsOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -59,6 +67,30 @@ export function AdvertisersTab() {
   const onSubmit = async (data: any) => {
     setIsLoading(true)
     try {
+      if (isDevelopment) {
+        const mockAdvertiser = {
+          id: `mock-adv-${Date.now()}`,
+          company_name: data.companyName,
+          tax_id: data.taxId,
+          email: data.email,
+          phone: data.phone,
+          street: data.street,
+          address_number: data.number,
+          city: data.city,
+          state: data.state,
+          zip: data.zip,
+        } as Advertiser
+        setAdvertisers((prev) => [mockAdvertiser, ...prev])
+        toast.success(
+          '[DEV MOCK] Anunciante simulado com sucesso. Produção intacta!',
+          { duration: 4000 },
+        )
+        setIsOpen(false)
+        reset()
+        setIsLoading(false)
+        return
+      }
+
       await createAdvertiser({
         company_name: data.companyName,
         tax_id: data.taxId,
@@ -235,14 +267,18 @@ export function AdvertisersTab() {
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="font-bold"
+                  className={`font-bold ${isDevelopment ? 'bg-amber-600 hover:bg-amber-700 text-white' : ''}`}
                 >
-                  {isLoading && (
+                  {isLoading ? (
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  )}
+                  ) : isDevelopment ? (
+                    <ShieldAlert className="w-4 h-4 mr-2" />
+                  ) : null}
                   {isLoading
                     ? t('common.loading', 'Salvando...')
-                    : 'Salvar Cadastro Base'}
+                    : isDevelopment
+                      ? 'Simular Cadastro (Trava Ativa)'
+                      : 'Salvar Cadastro Base'}
                 </Button>
               </DialogFooter>
             </form>

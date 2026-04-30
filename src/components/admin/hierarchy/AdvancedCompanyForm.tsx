@@ -21,6 +21,8 @@ import {
   getMergedLocationData,
 } from '@/lib/locationData'
 import { useLanguage } from '@/stores/LanguageContext'
+import { useEnvironment } from '@/hooks/use-environment'
+import { ShieldAlert } from 'lucide-react'
 
 interface Props {
   type: 'merchant' | 'franchise' | 'advertiser' | string
@@ -39,6 +41,7 @@ export function AdvancedCompanyForm({
 }: Props) {
   const { t } = useLanguage()
   const { franchises } = useCouponStore()
+  const { isDevelopment } = useEnvironment()
   const [formData, setFormData] = useState<
     Partial<Company & Franchise & { country?: string }>
   >({
@@ -145,6 +148,13 @@ export function AdvancedCompanyForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 py-4">
+      {isDevelopment && (
+        <div className="mb-4 p-3 bg-amber-50 text-amber-800 rounded-md border border-amber-200 text-sm flex items-center gap-2">
+          <ShieldAlert className="w-4 h-4" />
+          <strong>Trava de Segurança:</strong> As alterações feitas aqui serão
+          apenas simuladas e não afetarão a produção.
+        </div>
+      )}
       <Tabs defaultValue="general" className="w-full">
         <TabsList
           className={
@@ -715,7 +725,21 @@ export function AdvancedCompanyForm({
         <Button variant="outline" type="button" onClick={onCancel}>
           {t('common.cancel', 'Cancel')}
         </Button>
-        <Button type="submit">{t('common.save', 'Save')}</Button>
+        <Button
+          type="submit"
+          className={
+            isDevelopment ? 'bg-amber-600 hover:bg-amber-700 text-white' : ''
+          }
+        >
+          {isDevelopment ? (
+            <>
+              <ShieldAlert className="w-4 h-4 mr-2" />
+              Simular (Trava Ativa)
+            </>
+          ) : (
+            t('common.save', 'Save')
+          )}
+        </Button>
       </DialogFooter>
     </form>
   )
