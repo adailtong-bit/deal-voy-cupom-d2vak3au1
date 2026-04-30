@@ -59,6 +59,7 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { supabase } from '@/lib/supabase/client'
+import { useRegionFormatting } from '@/hooks/useRegionFormatting'
 
 const STORE_LOCATIONS = [
   'Matriz - Centro',
