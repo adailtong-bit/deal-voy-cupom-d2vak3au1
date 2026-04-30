@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -58,7 +58,6 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
-import { useState, useMemo } from 'react'
 import { supabase } from '@/lib/supabase/client'
 
 const STORE_LOCATIONS = [
@@ -665,14 +664,17 @@ export function CampaignFormDialog({
                 value="details"
                 className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none shadow-none bg-transparent h-10 px-2"
               >
-                Detalhes da Oferta
+                {t('vendor.form.offer_details', 'Detalhes da Oferta')}
               </TabsTrigger>
               {coupon && (
                 <TabsTrigger
                   value="history"
                   className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none shadow-none bg-transparent h-10 px-2"
                 >
-                  Histórico de Alterações (Audit Trail)
+                  {t(
+                    'vendor.form.audit_trail',
+                    'Trilha de Auditoria (Audit Trail)',
+                  )}
                 </TabsTrigger>
               )}
             </TabsList>
@@ -723,7 +725,11 @@ export function CampaignFormDialog({
                                   value="organic"
                                   className="font-medium text-emerald-600"
                                 >
-                                  🌟 Oferta Orgânica (Sem Parceiro)
+                                  🌟{' '}
+                                  {t(
+                                    'vendor.form.organic_offer',
+                                    'Oferta Orgânica (Sem Parceiro)',
+                                  )}
                                 </SelectItem>
                                 {displayCompanies.map((c) => (
                                   <SelectItem key={c.id} value={c.id}>
@@ -802,22 +808,39 @@ export function CampaignFormDialog({
                           >
                             <FormControl>
                               <SelectTrigger className="bg-white">
-                                <SelectValue placeholder="Selecione a categoria" />
+                                <SelectValue
+                                  placeholder={t(
+                                    'vendor.form.category',
+                                    'Selecione a categoria',
+                                  )}
+                                />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
                               <SelectItem value="Alimentação">
-                                Alimentação
+                                {t('category.food', 'Alimentação')}
                               </SelectItem>
-                              <SelectItem value="Moda">Moda</SelectItem>
-                              <SelectItem value="Serviços">Serviços</SelectItem>
+                              <SelectItem value="Moda">
+                                {t('category.fashion', 'Moda')}
+                              </SelectItem>
+                              <SelectItem value="Serviços">
+                                {t('category.services', 'Serviços')}
+                              </SelectItem>
                               <SelectItem value="Eletrônicos">
-                                Eletrônicos
+                                {t('category.electronics', 'Eletrônicos')}
                               </SelectItem>
-                              <SelectItem value="Lazer">Lazer</SelectItem>
-                              <SelectItem value="Mercado">Mercado</SelectItem>
-                              <SelectItem value="Beleza">Beleza</SelectItem>
-                              <SelectItem value="Outros">Outros</SelectItem>
+                              <SelectItem value="Lazer">
+                                {t('category.leisure', 'Lazer')}
+                              </SelectItem>
+                              <SelectItem value="Mercado">
+                                {t('category.market', 'Mercado')}
+                              </SelectItem>
+                              <SelectItem value="Beleza">
+                                {t('category.beauty', 'Beleza')}
+                              </SelectItem>
+                              <SelectItem value="Outros">
+                                {t('category.others', 'Outros')}
+                              </SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -911,7 +934,10 @@ export function CampaignFormDialog({
                                 ))}
                                 {myRules.length === 0 && (
                                   <DropdownMenuItem disabled>
-                                    Nenhuma regra cadastrada
+                                    {t(
+                                      'vendor.form.no_rules',
+                                      'Nenhuma regra cadastrada',
+                                    )}
                                   </DropdownMenuItem>
                                 )}
                               </DropdownMenuContent>
@@ -1272,7 +1298,10 @@ export function CampaignFormDialog({
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 text-orange-800 font-semibold">
                           <Zap className="w-5 h-5 text-orange-500" />
-                          Lógica de Campanha (Gatilhos e Metas)
+                          {t(
+                            'vendor.form.logic_title',
+                            'Lógica de Campanha (Gatilhos e Metas)',
+                          )}
                         </div>
                       </div>
                       <FormField
@@ -1282,11 +1311,13 @@ export function CampaignFormDialog({
                           <FormItem className="flex flex-row items-center justify-between rounded-lg border border-orange-200 bg-white p-4 shadow-sm">
                             <div className="space-y-0.5">
                               <FormLabel className="text-base cursor-pointer">
-                                Ativar Lógica
+                                {t('vendor.form.enable_logic', 'Ativar Lógica')}
                               </FormLabel>
                               <p className="text-xs text-muted-foreground">
-                                Se ativo, o sistema rastreará a meta para
-                                conceder a recompensa automaticamente.
+                                {t(
+                                  'vendor.form.enable_logic_desc',
+                                  'Se ativo, o sistema rastreará a meta para conceder a recompensa automaticamente.',
+                                )}
                               </p>
                             </div>
                             <FormControl>
@@ -1307,7 +1338,12 @@ export function CampaignFormDialog({
                             name="triggerType"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Tipo de Meta</FormLabel>
+                                <FormLabel>
+                                  {t(
+                                    'vendor.rules_module.trigger_type',
+                                    'Tipo de Meta',
+                                  )}
+                                </FormLabel>
                                 <Select
                                   onValueChange={field.onChange}
                                   defaultValue={field.value}
@@ -1320,16 +1356,25 @@ export function CampaignFormDialog({
                                   </FormControl>
                                   <SelectContent>
                                     <SelectItem value="share">
-                                      Compartilhamento
+                                      {t('triggers.share', 'Compartilhamento')}
                                     </SelectItem>
                                     <SelectItem value="coupon_usage">
-                                      Uso de Cupom
+                                      {t(
+                                        'triggers.coupon_usage',
+                                        'Uso de Cupom',
+                                      )}
                                     </SelectItem>
                                     <SelectItem value="visualization">
-                                      Visualização
+                                      {t(
+                                        'triggers.visualization',
+                                        'Visualização',
+                                      )}
                                     </SelectItem>
                                     <SelectItem value="link_click">
-                                      Clique em Link
+                                      {t(
+                                        'triggers.link_click',
+                                        'Clique no Link',
+                                      )}
                                     </SelectItem>
                                   </SelectContent>
                                 </Select>
@@ -1342,13 +1387,21 @@ export function CampaignFormDialog({
                             name="triggerThreshold"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Valor Alvo (Quantia)</FormLabel>
+                                <FormLabel>
+                                  {t(
+                                    'vendor.rules_module.trigger_threshold',
+                                    'Valor Alvo (Quantia)',
+                                  )}
+                                </FormLabel>
                                 <FormControl>
                                   <Input
                                     type="number"
                                     min="1"
                                     className="bg-white"
-                                    placeholder="Ex: 5"
+                                    placeholder={t(
+                                      'vendor.rules_module.threshold_ph',
+                                      'Ex: 5',
+                                    )}
                                     {...field}
                                     value={field.value || ''}
                                   />
@@ -1362,7 +1415,12 @@ export function CampaignFormDialog({
                             name="rewardId"
                             render={({ field }) => (
                               <FormItem className="sm:col-span-2">
-                                <FormLabel>Recompensa a Conceder</FormLabel>
+                                <FormLabel>
+                                  {t(
+                                    'vendor.rules_module.reward_to_grant',
+                                    'Recompensa a Conceder',
+                                  )}
+                                </FormLabel>
                                 <Select
                                   onValueChange={field.onChange}
                                   defaultValue={field.value}
@@ -1370,13 +1428,21 @@ export function CampaignFormDialog({
                                 >
                                   <FormControl>
                                     <SelectTrigger className="bg-white">
-                                      <SelectValue placeholder="Selecione do catálogo..." />
+                                      <SelectValue
+                                        placeholder={t(
+                                          'vendor.rules_module.select_catalog',
+                                          'Selecione do catálogo...',
+                                        )}
+                                      />
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent>
                                     {myRewards.length === 0 && (
                                       <SelectItem value="none" disabled>
-                                        Nenhuma recompensa aprovada no catálogo
+                                        {t(
+                                          'vendor.rules_module.reward_desc',
+                                          'Nenhuma recompensa aprovada no catálogo',
+                                        )}
                                       </SelectItem>
                                     )}
                                     {myRewards.map((r) => (
@@ -1393,13 +1459,15 @@ export function CampaignFormDialog({
                                     <div className="flex items-center gap-2 text-amber-700 bg-amber-50 border border-amber-200 p-2.5 rounded-md text-xs font-semibold mt-3 animate-in fade-in">
                                       <AlertTriangle className="h-4 w-4 shrink-0" />
                                       <span>
-                                        Aviso de Risco: Esta recompensa tem um
-                                        custo estimado alto (
-                                        {formatCurrency(
-                                          selectedReward.estimatedCost,
+                                        {t(
+                                          'vendor.rules_module.financial_risk',
+                                          'Aviso de Risco Financeiro: Esta recompensa tem um custo estimado alto ({cost}). Certifique-se de que a meta justifica o custo.',
+                                        ).replace(
+                                          '{cost}',
+                                          formatCurrency(
+                                            selectedReward.estimatedCost,
+                                          ),
                                         )}
-                                        ). Certifique-se de que a meta justifica
-                                        o custo.
                                       </span>
                                     </div>
                                   )}
@@ -1627,7 +1695,7 @@ export function CampaignFormDialog({
                       {isSubmitting ? (
                         <span className="flex items-center gap-2">
                           <span className="h-4 w-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></span>
-                          Salvando...
+                          {t('vendor.form.saving', 'Salvando...')}
                         </span>
                       ) : coupon ? (
                         t('vendor.form.save', 'Salvar Alterações')
@@ -1665,15 +1733,24 @@ export function CampaignFormDialog({
             <TabsContent value="history" className="p-6 m-0">
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-slate-800">
-                  Trilha de Auditoria (Audit Trail)
+                  {t(
+                    'vendor.form.audit_trail',
+                    'Trilha de Auditoria (Audit Trail)',
+                  )}
                 </h3>
                 <div className="rounded-md border">
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Data e Hora</TableHead>
-                        <TableHead>Usuário</TableHead>
-                        <TableHead>Ação Realizada</TableHead>
+                        <TableHead>
+                          {t('vendor.form.date_time', 'Data e Hora')}
+                        </TableHead>
+                        <TableHead>
+                          {t('vendor.form.user', 'Usuário')}
+                        </TableHead>
+                        <TableHead>
+                          {t('vendor.form.action_performed', 'Ação Realizada')}
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
